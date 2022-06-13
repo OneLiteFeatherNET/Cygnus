@@ -1,6 +1,7 @@
 plugins {
     id("java")
     `java-library`
+    checkstyle
     // FIXME
     // Bukkit
     // id("net.minecrell.plugin-yml.bukkit") version "0.5.1"
