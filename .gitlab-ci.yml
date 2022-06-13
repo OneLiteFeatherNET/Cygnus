@@ -1,0 +1,9 @@
+include:
+  - project: onelitefeather/ci-template
+    ref: main
+    file: spigot/S3-ci-cd.yml
+
+variables:
+  JAR_FILE: "BuildEssentials.jar"
+  BUCKET: "cloudnet"
+  TEMPLATE: "default"
