@@ -1,0 +1,74 @@
+metadata.format.version = "1.1"
+
+[versions]
+# Paper
+paper = "1.18.2-R0.1-SNAPSHOT"
+# CloudNet
+cloudnet = "3.4.5-RELEASE"
+# Error Tracking
+sentry = "6.0.0"
+# Plugins
+shadow = "7.1.2"
+runPaper = "1.0.6"
+pluginYmlBukkit = "0.5.1"
+liquibase = "2.1.0"
+# Chat
+adventure = "4.10.1"
+# Commands
+cloud = "1.6.2"
+commodore = "1.13"
+# Database
+hibernate = "6.1.0.Final"
+hikaricp = "5.0.1"
+mariadbJavaClient = "3.0.5"
+redisson = "3.17.3"
+# Database Changelog
+liquibaseCore = "3.4.1"
+liquibaseHibernate5 = "4.9.1"
+
+
+[libraries]
+
+# Paper
+paper = { group = "io.papermc.paper", name = "paper-api", version.ref = "paper" }
+# Chat
+adventureApi = { group = "net.kyori", name = "adventure-api", version.ref = "adventure" }
+adventureMinimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "adventure" }
+adventureSerializerPlain = { group = "net.kyori", name = "adventure-text-serializer-plain", version.ref = "adventure" }
+# Error Tracking
+sentry = { group = "io.sentry", name = "sentry", version.ref = "sentry" }
+sentryJul = { group = "io.sentry", name = "sentry-jul", version.ref = "sentry" }
+# CloudNet
+cloudnetPerms = { group = "de.dytanic.cloudnet", name = "cloudnet-cloudperms", version.ref = "cloudnet" }
+cloudnetBridge = { group = "de.dytanic.cloudnet", name = "cloudnet-bridge", version.ref = "cloudnet" }
+cloudnetDriver = { group = "de.dytanic.cloudnet", name = "cloudnet-driver", version.ref = "cloudnet" }
+# Cloud
+cloudPaper = { group = "cloud.commandframework", name = "cloud-paper", version.ref = "cloud" }
+cloudAnnotions = { group = "cloud.commandframework", name = "cloud-annotations", version.ref = "cloud" }
+cloudMinecraftExtras = { group = "cloud.commandframework", name = "cloud-minecraft-extras", version.ref = "cloud" }
+commodore = { group = "me.lucko", name = "commodore", version.ref = "commodore" }
+# Database
+hibernate = { group = "org.hibernate", name = "hibernate-core", version.ref = "hibernate" }
+hibernateEnvers = { group = "org.hibernate", name = "hibernate-envers", version.ref = "hibernate" }
+hibernateHikariCP = { group = "org.hibernate", name = "hibernate-hikaricp", version.ref = "hibernate" }
+mariadbJavaClient = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariadbJavaClient" }
+redisson = { group = "org.redisson", name = "redisson", version.ref = "redisson" }
+# Database Changelog
+liquibaseCore = { group = "org.liquibase", name = "liquibase-core", version.ref = "liquibaseCore" }
+liquibaseHibernate5 = { group = "org.liquibase.ext", name = "liquibase-hibernate5", version.ref = "liquibaseHibernate5" }
+
+[bundles]
+
+cloudnet = ["cloudnetPerms", "cloudnetBridge", "cloudnetDriver"]
+sentry = ["sentry", "sentryJul"]
+adventure = ["adventureApi", "adventureMinimessage", "adventureSerializerPlain"]
+cloud = ["cloudPaper", "cloudAnnotions", "cloudMinecraftExtras"]
+hibernate = ["hibernate", "hibernateHikariCP", "mariadbJavaClient", "hibernateEnvers"]
+liquibase = ["liquibaseCore", "liquibaseHibernate5"]
+
+[plugins]
+
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
+pluginYmlBukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYmlBukkit" }
+liquibase = { id = "org.liquibase.gradle", version.ref = "liquibase" }
