@@ -10,6 +10,8 @@ plugins {
 
     // LIQUIBASE
     // alias(libs.plugins.liquibase)
+    // SonarQube
+    // id("org.sonarqube") version "3.4.0.2513"
 }
 
 group = "net.onelitefeather"
@@ -107,3 +109,10 @@ tasks {
         }
     }
 }*/
+/*sonarqube {
+    properties {
+        property("sonar.projectKey", "cliar_alwilda-loup_AYHtte8H7chqtZHGSV5T")
+        property("sonar.qualitygate.wait", true)
+    }
+}
+*/
