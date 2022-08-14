@@ -3,4 +3,10 @@ services:
   keydb:
     image: eqalpha/keydb
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+  mariadb:
+    image: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: 'password'
+    ports:
+      - "127.0.0.1:3306:3306"
