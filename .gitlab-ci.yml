@@ -1,9 +1,9 @@
 include:
   - project: onelitefeather/ci-template
     ref: main
-    file: spigot/S3-ci-cd.yml
+    file: s3-upload.yaml
 
 variables:
-  JAR_FILE: "BuildEssentials.jar"
-  BUCKET: "cloudnet"
+  JAR_FILE: "ExampleProject.jar"
+  BUCKET: "olf-dev"
   TEMPLATE: "default"
