@@ -20,6 +20,5 @@
 | Id                              | Version | 
 |---------------------------------|---------|
 | com.github.johnrengelman.shadow | 7.1.2   |
-| xyz.jpenilla.run-paper          | 1.0.6   |
-| net.minecrell.plugin-yml.bukkit | 0.5.1   |
-| org.liquibase.gradle            | 2.1.0   |
+| xyz.jpenilla.run-paper          | 2.0.0   |
+| net.minecrell.plugin-yml.bukkit | 0.5.2   |
