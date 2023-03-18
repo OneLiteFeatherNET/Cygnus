@@ -1,3 +1,2 @@
-//TODO: Change project
-rootProject.name = "Stardust"
+rootProject.name = "ExampleProject"
 
