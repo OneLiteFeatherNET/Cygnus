@@ -1,0 +1,15 @@
+database:
+  jdbcUrl: 'jdbc:mariadb://localhost:3307/stardust?useSSL=false'
+  username: 'root'
+  password: '%Schueler90'
+  driver: 'org.mariadb.jdbc.Driver'
+  dialect: 'org.hibernate.dialect.MariaDBDialect'
+
+settings:
+  afk-kick-time: 600
+  auto-afk-time: 300
+  use-cooldown-bypass: true
+command-cooldowns:
+  skull:
+    timeunit: DAYS
+    time: 1

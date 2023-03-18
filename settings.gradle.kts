@@ -1,2 +1,3 @@
-rootProject.name = "ExampleProject"
+//TODO: Change project
+rootProject.name = "Stardust"
 

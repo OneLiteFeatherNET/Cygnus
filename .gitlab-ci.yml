@@ -1,13 +1,14 @@
 include:
   - project: onelitefeather/ci-template
-    ref: main
+    ref: Better-Pipelines
     file: s3-upload.yaml
   - project: onelitefeather/ci-template
-    ref: main
+    ref: Better-Pipelines
     file: sonarqube.yaml
 
+
 variables:
-  JAR_FILE: "ExampleProject.jar"
+  JAR_FILE: "Stardust.jar"
   BUCKET: "olf-dev"
   TEMPLATE: "default"
 
