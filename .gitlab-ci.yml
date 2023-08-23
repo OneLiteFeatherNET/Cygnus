@@ -1,3 +1,6 @@
+include:
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+
 # TODO: Rework later
 #include:
 #  - project: onelitefeather/ci-template
