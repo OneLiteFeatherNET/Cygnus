@@ -1,14 +1,16 @@
-# Template Project
+# Template Projekt
 
-[[_TOC_]]
+## Wie bereite ich meine Projekt vor ?
 
-## How to prepare my project
+Bearbeite folgende Dateien:
+- [settings.gradle.kts](settings.gradle.kts)
+- [build.gradle.kts](build.gradle.kts)
 
-Edit following files:
-- settings.gradle.kts
-- build.gradle.kts
-- .gitlab-ci.yml
+Optional für AutoDeployment(Bukkit/Velocity/Paper/Minestom)
+- [.gitlab-ci.yml](.gitlab-ci.yml)
 
-## Additional Content
+## Zusätzliche Hilfestellungen
+- [Lokale Entwicklungsumgebung mit Docker](onelitefeather/templateproject$1)
+- [Hilfreiche Abhängikeiten oder Plugins](onelitefeather/templateproject$2)
 
 
