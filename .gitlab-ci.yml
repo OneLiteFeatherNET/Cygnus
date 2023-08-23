@@ -1,6 +1,6 @@
 include:
   - template: Jobs/Dependency-Scanning.gitlab-ci.yml
-
+  - template: Security/Secret-Detection.gitlab-ci.yml
 # TODO: Rework later
 #include:
 #  - project: onelitefeather/ci-template
