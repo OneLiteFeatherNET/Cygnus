@@ -7,12 +7,9 @@ version = "0.0.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    maven("https://papermc.io/repo/repository/maven-public/")
 }
 
 dependencies {
-    // Paper
-    compileOnly(libs.paper)
 }
 java {
     sourceCompatibility = JavaVersion.VERSION_17
