@@ -9,48 +9,6 @@ Edit following files:
 - build.gradle.kts
 - .gitlab-ci.yml
 
+## Additional Content
 
----
-### runPaper plugin configuration
-
-Tasks section
-```kt
-tasks {
-    runServer {
-       minecraftVersion("1.19.3")
-    }
-}
-```
-
-
-### shadowJar plugin configuration
-
-Tasks section
-```kt
-tasks {
-    shadowJar {
-        archiveFileName.set("${rootProject.name}.${archiveExtension.getOrElse("jar")}")
-    }
-}
-```
-
-### bukkit plugin configuration
-
-Bukkit section
-
-```kt
-tasks {
-    TODO("")
-}
-bukkit {
-    main = "${rootProject.group}.MAINCLASS"
-    apiVersion = "1.19"
-    author = "ExampleDeveloper"
-    depend = listOf("FastAsyncWorldEdit")
-}
-
-```
-### sonarqube plugin configuration
-
-sonarqube section
 
