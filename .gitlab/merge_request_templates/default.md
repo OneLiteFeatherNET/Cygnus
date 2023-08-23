@@ -32,3 +32,5 @@ Gib Hinweise oder spezifische Punkte an, auf die die Reviewer besonders achten s
 - [ ] Die Dokumentation wurde aktualisiert, falls erforderlich.
 - [ ] Der Code folgt den Projekt-Richtlinien und -Standards.
 - [ ] Alle automatisierten Tests wurden erfolgreich durchgeführt.
+
+/label ~support
