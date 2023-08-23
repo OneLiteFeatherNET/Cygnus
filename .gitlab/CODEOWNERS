@@ -1,0 +1,4 @@
+* @onelitefeather/teams/developers
+/.gitlab/CODEOWNERS @onelitefeather/teams/core
+.gitlab-ci.yml @onelitefeather/teams/devops @onelitefeather/teams/core
+

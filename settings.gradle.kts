@@ -1,2 +1,2 @@
-rootProject.name = "ExampleProject"
+rootProject.name = "ExampleProject" // Todo: Rename project name
 
