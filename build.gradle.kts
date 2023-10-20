@@ -10,6 +10,7 @@ repositories {
 }
 
 dependencies {
+    implementation("info.picocli:picocli:4.7.5")
 }
 java {
     sourceCompatibility = JavaVersion.VERSION_17
