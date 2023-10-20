@@ -1,2 +1,2 @@
-rootProject.name = "MergeMaestro"
+rootProject.name = "ExampleProject" // Todo: Rename project name
 
