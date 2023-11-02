@@ -1,15 +1,58 @@
 plugins {
-    id("java")
+    java
+    jacoco
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 group = "net.onelitefeather"
 version = "0.0.1-SNAPSHOT" // Change
 
 repositories {
+    mavenLocal()
     mavenCentral()
+    maven("https://jitpack.io")
+    maven {
+        val groupdId = "dungeon" // Gitlab Group
+        url = if (System.getenv().containsKey("CI")) {
+            val ciApiv4Url = System.getenv("CI_API_V4_URL")
+            uri("$ciApiv4Url/groups/$groupdId/-/packages/maven")
+        } else {
+            uri("https://gitlab.themeinerlp.dev/api/v4/groups/$groupdId/-/packages/maven")
+        }
+        name = "GitLab"
+        credentials(HttpHeaderCredentials::class.java) {
+            name = if (System.getenv().containsKey("CI")) {
+                "Job-Token"
+            } else {
+                "Private-Token"
+            }
+            value = if (System.getenv().containsKey("CI")) {
+                System.getenv("CI_JOB_TOKEN")
+            } else {
+                val gitLabPrivateToken: String? by project
+                gitLabPrivateToken
+            }
+        }
+        authentication {
+            create<HttpHeaderAuthentication>("header")
+        }
+    }
 }
 
 dependencies {
+    implementation(libs.mini)
+    compileOnly(libs.minestom)
+    compileOnly(libs.aves)
+    compileOnly(libs.xerus)
+    compileOnly(libs.canis)
+
+    compileOnly(libs.bundles.cloudnet)
+
+    testImplementation(libs.minestom)
+    testImplementation(libs.minestom.test)
+    testImplementation(libs.xerus)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.jupiter.engine)
 }
 java {
     sourceCompatibility = JavaVersion.VERSION_17

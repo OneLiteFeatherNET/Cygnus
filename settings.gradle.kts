@@ -1,5 +1,5 @@
 rootProject.name = "Cygnus"
-
+val cloudNetVersion = "4.0.0-RC9"
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
@@ -13,6 +13,11 @@ dependencyResolutionManagement {
             library("xerus", "net.theevilreaper.xerus", "Xerus").version("1.2.0-SNAPSHOT+0971da3a")
             library("canis", "com.github.theEvilReaper", "Canis").version("master-SNAPSHOT")
             library("mini", "net.kyori", "adventure-text-minimessage").version("4.14.0")
+            val cloudnetBaseGroup = "eu.cloudnetservice.cloudnet"
+            library("cloudnet-wrapper", cloudnetBaseGroup, "wrapper-jvm").version(cloudNetVersion)
+            library("cloudnet-bridge", cloudnetBaseGroup, "bridge").version(cloudNetVersion)
+            library("cloudnet-driver", cloudnetBaseGroup, "driver").version(cloudNetVersion)
+            bundle("cloudnet", listOf("cloudnet-wrapper", "cloudnet-bridge", "cloudnet-driver"))
         }
     }
 }
