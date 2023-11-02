@@ -19,6 +19,8 @@ import net.minestom.server.event.player.*;
 import net.minestom.server.extensions.Extension;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.listener.EntityActionListener;
+import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.minestom.server.utils.PacketUtils;
 import net.minestom.server.utils.PropertyUtils;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
@@ -42,6 +44,7 @@ import net.onelitefeather.cygnus.listener.setup.MapSetupSelectListener;
 import net.onelitefeather.cygnus.listener.setup.PageCreationListener;
 import net.onelitefeather.cygnus.listener.setup.SetupItemListener;
 import net.onelitefeather.cygnus.map.MapProvider;
+import net.onelitefeather.cygnus.movement.CygnusEntityActionListener;
 import net.onelitefeather.cygnus.page.PageProvider;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
@@ -147,6 +150,7 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
         manager.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(
                 SlenderReviveEvent.class, new GameReviveListener(this.mapProvider.getGameMap(), this.items, this.staminaService));
+        MinecraftServer.getPacketListenerManager().setListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 
     private void registerSetupComponents() {
@@ -197,6 +201,7 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
         this.staminaService.cleanUp();
         this.ambientProvider.stopTask();
         this.staminaService.cleanUp();
+        MinecraftServer.getPacketListenerManager().setListener(ClientEntityActionPacket.class, EntityActionListener::listener);
     }
 
     private @NotNull Component getViewComponent() {
