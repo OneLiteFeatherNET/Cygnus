@@ -9,9 +9,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
 
+import static net.onelitefeather.cygnus.config.StaminaConfig.*;
+
 public non-sealed class FoodBar extends StaminaBar {
 
-    private static final int MAX_FOOD = 20;
     private static final int FOOD_TAKE = 1;
     private float currentSpeedCount;
 
@@ -57,6 +58,12 @@ public non-sealed class FoodBar extends StaminaBar {
         }
     }
 
+    /**
+     * Normalizes the current value to a value between 0 and 1.
+     * The exp bar from the game accepts only values between 0 and 1
+     * @param current The current value
+     * @return the normalized value
+     */
     private float normalize(float current) {
         return (current) / MAX_FOOD;
     }
@@ -70,6 +77,9 @@ public non-sealed class FoodBar extends StaminaBar {
         }
     }
 
+    /**
+     * Changes the current state to the REGENERATING state which cancels the draining process and the ability from the player to spring
+     */
     public void switchToRegenerating() {
         if (status == Status.REGENERATING) return;
         status = Status.REGENERATING;

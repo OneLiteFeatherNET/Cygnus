@@ -10,11 +10,14 @@ import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
+import net.onelitefeather.cygnus.config.StaminaConfig;
 import net.onelitefeather.cygnus.utils.Tags;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
 import java.util.function.BiFunction;
+
+import static net.onelitefeather.cygnus.config.StaminaConfig.SLENDER_RANGE;
 
 /**
  * @author theEvilReaper
@@ -61,15 +64,7 @@ public non-sealed class SlenderBar extends StaminaBar {
             case DRAINING -> {
                 if (currentTime >= 0) {
                     currentTime -= TIME_STEP;
-                    var nearbyEntities = player.getInstance().getNearbyEntities(player.getPosition(), 2);
-
-                    if (nearbyEntities.isEmpty()) return;
-
-                    for (Entity nearbyEntity : nearbyEntities) {
-                        if (nearbyEntity instanceof Player target && !player.getUuid().equals(target.getUuid()) && (target.getHealth() > 0)) {
-                            target.setHealth(target.getHealth() - TIME_STEP);
-                        }
-                    }
+                    this.damageTargets();
                 } else {
                     status = Status.REGENERATING;
                     this.accept.apply(player, status);
@@ -89,7 +84,7 @@ public non-sealed class SlenderBar extends StaminaBar {
                 player.sendActionBar(Components.getProgressBar((int) currentTime, 17, 17, tileChar, NamedTextColor.GOLD, NamedTextColor.GRAY));
             }
             default -> {
-
+                // Nothing to do in this case
             }
         }
     }
@@ -124,13 +119,29 @@ public non-sealed class SlenderBar extends StaminaBar {
     }
 
     private void playSoundToTarget(boolean spawn) {
-        var nearbyEntities = player.getInstance().getNearbyEntities(player.getPosition(), 2);
+        var nearbyEntities = player.getInstance().getNearbyEntities(player.getPosition(), SLENDER_RANGE);
 
         if (nearbyEntities.isEmpty()) return;
 
         for (Entity nearbyEntity : nearbyEntities) {
             if (nearbyEntity instanceof Player target && !target.getUuid().equals(player.getUuid())) {
                 target.playSound(spawn ? SPAWN : TELEPORT, target.getPosition());
+            }
+        }
+    }
+
+    /**
+     * Damage all targets which are in the range of the player who is the slender for the round.
+     * The range is defined in the {@link StaminaConfig}.
+     */
+    private void damageTargets() {
+        var nearbyEntities = player.getInstance().getNearbyEntities(player.getPosition(), SLENDER_RANGE);
+
+        if (nearbyEntities.isEmpty()) return;
+
+        for (Entity nearbyEntity : nearbyEntities) {
+            if (nearbyEntity instanceof Player target && !player.getUuid().equals(target.getUuid()) && (target.getHealth() > 0)) {
+                target.setHealth(target.getHealth() - TIME_STEP);
             }
         }
     }

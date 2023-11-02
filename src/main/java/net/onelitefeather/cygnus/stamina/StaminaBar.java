@@ -77,12 +77,12 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         StaminaBar that = (StaminaBar) o;
-        return Objects.equals(player, that.player);
+        return Objects.equals(player.getUuid(), that.player.getUuid());
     }
 
     @Override
     public int hashCode() {
-        return player.hashCode();
+        return player.getUuid().hashCode();
     }
 
     /**
