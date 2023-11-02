@@ -61,8 +61,27 @@ java {
 
 tasks {
     compileJava {
-        options.release.set(17)
         options.encoding = "UTF-8"
+        options.release.set(17)
+    }
+
+    jacocoTestReport {
+        dependsOn(rootProject.tasks.test)
+        reports {
+            xml.required.set(true)
+        }
+    }
+
+    test {
+        finalizedBy(rootProject.tasks.jacocoTestReport)
+        useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
+    }
+
+    jar {
+        dependsOn("shadowJar")
     }
 }
 
