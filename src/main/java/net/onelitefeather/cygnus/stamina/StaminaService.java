@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.stamina;
 
 import de.icevizion.xerus.api.team.Team;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.utils.PacketUtils;
 import net.minestom.server.utils.validate.Check;
@@ -46,13 +47,19 @@ public final class StaminaService {
         Check.argCondition(team.getPlayers().isEmpty(), "Can't add players from a team without teams");
         ((SlenderBar)this.slenderBar).setAccept((player, status) -> {
             if (status == StaminaBar.Status.DRAINING) {
-                player.getEntityMeta().setInvisible(false);
+                PacketUtils.broadcastPacket(player.getMetadataPacket());
+                MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(p -> {
+                    player.updateNewViewer(p);
+                });
                 PacketUtils.broadcastPacket(player.getMetadataPacket());
                 return null;
             }
 
             if (status == StaminaBar.Status.REGENERATING) {
-                player.getEntityMeta().setInvisible(true);
+                PacketUtils.broadcastPacket(player.getMetadataPacket());
+                MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(p -> {
+                    player.updateOldViewer(p);
+                });
                 PacketUtils.broadcastPacket(player.getMetadataPacket());
                 return null;
             }

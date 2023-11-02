@@ -138,13 +138,13 @@ public final class PageProvider {
         ++this.currentPageCount;
         this.updatePageDisplay();
 
+        updatePageData(pageEntity);
         if (this.currentPageCount >= maxPageAmount) {
             var gamePhase = (GamePhase) this.phaseSeries.getCurrentPhase();
             gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_PAGES_FOUND));
             gamePhase.finish();
             return;
         }
-        updatePageData(pageEntity);
     }
 
     private void updatePageData(@NotNull PageEntity entity) {

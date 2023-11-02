@@ -51,7 +51,7 @@ public final class Messages {
                 withMini("<gray>has <green>won the game!")
                 .append(Component.newline());
 
-        SURVIVOR_WIN_MESSAGE = withMini("<black>(<team>) <gray>has <green>won the game!",
+        SURVIVOR_WIN_MESSAGE = withMini("<red>(<team>) <gray>has <green>won the game!",
                         TagResolver.builder().tag("team", (argumentQueue, context) ->
                                         Tag.preProcessParsed(GameConfig.SURVIVOR_TEAM_NAME)).build());
 
@@ -165,11 +165,5 @@ public final class Messages {
         return SURVIVOR_JOIN_PART_UPPER.append(withMini("<red>(" + pageCount + " TO WIN)"))
                 .append(Component.newline())
                 .append(SURVIVOR_JOIN_LOWER_PART);
-    }
-
-    @Contract
-    public static @NotNull Component getTimeComponent(int time) {
-        var secondString = time > 1 ? "seconds" : "second";
-        return withMiniPrefix("<gray>Restart in <red>" + time + " <gray>" + secondString);
     }
 }

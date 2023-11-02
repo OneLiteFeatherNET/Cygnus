@@ -24,8 +24,8 @@ import java.util.function.BiFunction;
 @SuppressWarnings({"java:S3252"})
 public non-sealed class SlenderBar extends StaminaBar {
 
-    private static final TimedPotion NIGHT_VISION = new TimedPotion(new Potion(PotionEffect.NIGHT_VISION, (byte) 1, Integer.MAX_VALUE), 0);
-    private static final TimedPotion BLINDNESS = new TimedPotion(new Potion(PotionEffect.BLINDNESS, (byte) 1, Integer.MAX_VALUE), 0);
+    private static final TimedPotion NIGHT_VISION = new TimedPotion(new Potion(PotionEffect.NIGHT_VISION, (byte) 1, -1), 0);
+    private static final TimedPotion BLINDNESS = new TimedPotion(new Potion(PotionEffect.BLINDNESS, (byte) 1, -1), 0);
     private static final Sound TELEPORT = Sound.sound(SoundEvent.ENTITY_ENDERMAN_TELEPORT, Sound.Source.MASTER, 1F, 0.2F);
     private static final Sound SPAWN = Sound.sound(SoundEvent.ENTITY_WITHER_SPAWN, Sound.Source.MASTER, 0.4F, 0F);
     private static final Sound LEVEL = Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F);
@@ -61,7 +61,7 @@ public non-sealed class SlenderBar extends StaminaBar {
             case DRAINING -> {
                 if (currentTime >= 0) {
                     currentTime -= TIME_STEP;
-                    var nearbyEntities = player.getInstance().getNearbyEntities(player.getPosition(), 2);
+                    var nearbyEntities = player.getInstance().getNearbyEntities(player.getPosition(), 3);
 
                     if (nearbyEntities.isEmpty()) return;
 

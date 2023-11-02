@@ -9,6 +9,7 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.utils.Helper;
 import net.onelitefeather.cygnus.utils.Messages;
+import net.onelitefeather.cygnus.utils.Tags;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
@@ -28,8 +29,11 @@ public class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
 
     @Override
     public void accept(PlayerDeathEvent event) {
+        event.setChatMessage(Messages.getDeathComponent(event.getPlayer()));
         survivorTeam.removePlayer(event.getPlayer());
-        if (survivorTeam.getPlayers().isEmpty()) {
+        event.getPlayer().removeTag(Tags.TEAM_ID);
+        event.getPlayer().kick(Messages.withMini("<red>Thanks for playing it. <3"));
+        if (survivorTeam.getPlayers().isEmpty() && linearPhaseSeries.getCurrentPhase() instanceof GamePhase) {
             event.setChatMessage(null);
             GamePhase gamePhase = (GamePhase) linearPhaseSeries.getCurrentPhase();
             var slenderPlayer = this.slenderGetter.apply(null).getPlayers().iterator().next();
@@ -37,6 +41,6 @@ public class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
             gamePhase.finish();
             return;
         }
-        event.setChatMessage(Messages.getDeathComponent(event.getPlayer()));
+
     }
 }

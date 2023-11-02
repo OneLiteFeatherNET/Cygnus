@@ -114,7 +114,6 @@ public final class LobbyPhase extends TimedPhase {
             System.out.println("Slender is " + player.getUsername());
             this.staminaService.setSlenderBar(player);
             this.staminaService.createStaminaBars(survivorTeam);
-            Broadcaster.broadcast(Component.text("Preparing data"));
         }
     }
 

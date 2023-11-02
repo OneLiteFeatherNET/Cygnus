@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.listener;
 import de.icevizion.aves.util.Broadcaster;
 import de.icevizion.xerus.api.phase.LinearPhaseSeries;
 import de.icevizion.xerus.api.phase.TimedPhase;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.onelitefeather.cygnus.map.MapProvider;
@@ -11,8 +12,6 @@ import net.onelitefeather.cygnus.config.GameConfig;
 import net.onelitefeather.cygnus.utils.Messages;
 import net.onelitefeather.cygnus.utils.Tags;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Consumer;
 
 /**
  * @author theEvilReaper

@@ -59,9 +59,6 @@ import net.onelitefeather.cygnus.command.SetupCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.config.ConfigHolder;
 import net.onelitefeather.cygnus.config.GameConfig;
-import net.theevilreaper.cygnus.listener.*;
-import net.theevilreaper.cygnus.listener.game.*;
-import net.theevilreaper.cygnus.listener.setup.*;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.utils.Helper;
 import net.onelitefeather.cygnus.utils.Items;
@@ -213,11 +210,9 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
     private void setMainInstance(@NotNull Player player, @NotNull Instance instance) {
         player.setInstance(instance, Vec.ZERO);
     }
-
     private void triggerGameStart() {
         var slenderPlayer = this.teamService.getTeams().get(Helper.SLENDER_ID).getPlayers().stream().findFirst().get();
         slenderPlayer.setTag(Tags.HIDDEN, (byte) 1);
-        //slenderPlayer.updateViewableRule(ViewRuleUpdater::isViewAble);
         slenderPlayer.sendMessage(Messages.SLENDER_JOIN_PART);
         this.items.setSlenderEye(slenderPlayer);
         this.staminaService.start();
@@ -229,7 +224,11 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
             player.setTag(Tags.HIDDEN, (byte) 0);
         });
         Helper.updateTabList(this.teamService);
-        slenderPlayer.getEntityMeta().setInvisible(true);
+        PacketUtils.broadcastPacket(slenderPlayer.getMetadataPacket());
+        MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(slenderPlayer.getUuid())).forEach(p -> {
+            slenderPlayer.updateOldViewer(p);
+        });
+        MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(player -> player.setRespawnPoint(mapProvider.getGameMap().getSpawn()));
         PacketUtils.broadcastPacket(slenderPlayer.getMetadataPacket());
     }
 

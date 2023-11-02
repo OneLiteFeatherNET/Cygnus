@@ -6,6 +6,7 @@ import net.minestom.server.MinecraftServer;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.config.GameConfig;
 import net.onelitefeather.cygnus.view.GameView;
+import net.theevilreaper.cygnus.cloudnet.CloudGameAPI;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
@@ -46,6 +47,7 @@ public final class GamePhase extends TimedPhase {
     @Override
     public void start() {
         super.start();
+        CloudGameAPI.cloudGameAPI().switchInGame();
         this.startRunnable.run();
     }
 
