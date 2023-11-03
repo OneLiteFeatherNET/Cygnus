@@ -1,9 +1,8 @@
 package net.onelitefeather.cygnus.stamina;
 
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.attribute.Attribute;
 import net.minestom.server.entity.Player;
-import net.minestom.server.event.player.PlayerStopSprintingEvent;
+import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
 import net.onelitefeather.cygnus.utils.Helper;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,7 +11,7 @@ import java.time.temporal.ChronoUnit;
 public non-sealed class FoodBar extends StaminaBar {
 
     private static final int MAX_FOOD = 20;
-    private static final int FOOD_TAKE = 1;
+    private static final int FOOD_TAKE = 2;
     private float currentSpeedCount;
 
     FoodBar(@NotNull Player player) {
@@ -37,12 +36,10 @@ public non-sealed class FoodBar extends StaminaBar {
                 if (this.currentSpeedCount <= 0.0D) {
                     player.setSprinting(false);
                     MinecraftServer.getGlobalEventHandler().call(new PlayerStopSprintingEvent(player));
-                    Helper.changeSpeedValue(player, false);
                     status = Status.REGENERATING;
                 }
             }
             case REGENERATING -> {
-                player.setSprinting(false);
                 if (this.currentSpeedCount == MAX_FOOD) {
                     status = Status.READY;
                     Helper.changeSpeedValue(player, true);
@@ -61,13 +58,18 @@ public non-sealed class FoodBar extends StaminaBar {
         return (current) / MAX_FOOD;
     }
 
-    public void tryToConsume() {
-        if (status == Status.READY || (status == Status.REGENERATING && currentSpeedCount >= 7)) {
-            if (player.getAttributeValue(Attribute.MOVEMENT_SPEED) == 0.05f) {
-                Helper.changeSpeedValue(player, true);
-            }
+    public boolean canConsume() {
+        if (status == Status.READY) {
             status = Status.DRAINING;
+            return true;
         }
+        if (status == Status.REGENERATING && currentSpeedCount > 7D) {
+            status = Status.DRAINING;
+            return true;
+        }
+
+        System.out.println("Can't consume because the status is " + status + " and the currentSpeed is " + currentSpeedCount);
+        return false;
     }
 
     public void switchToRegenerating() {
