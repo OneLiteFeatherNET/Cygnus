@@ -1,7 +1,7 @@
 package net.onelitefeather.cygnus.listener.game;
 
 import net.minestom.server.entity.Player;
-import net.minestom.server.event.player.PlayerStartSprintingEvent;
+import net.onelitefeather.cygnus.movement.PlayerStartSprintingEvent;
 import net.onelitefeather.cygnus.stamina.FoodBar;
 import net.onelitefeather.cygnus.utils.Helper;
 import net.onelitefeather.cygnus.utils.Tags;
@@ -26,6 +26,8 @@ public final class PlayerStartSprintingListener implements Consumer<PlayerStartS
         if (player.getTag(Tags.TEAM_ID) != Helper.SURVIVOR_ID) return;
 
         FoodBar staminaBarRef = staminaFunction.apply(player);
-        staminaBarRef.tryToConsume();
+        if (!staminaBarRef.canConsume()) {
+            event.setCancelled(true);
+        }
     }
 }
