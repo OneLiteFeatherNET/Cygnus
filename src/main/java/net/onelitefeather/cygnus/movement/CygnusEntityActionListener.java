@@ -1,5 +1,9 @@
 package net.onelitefeather.cygnus.movement;
 
+import net.minestom.server.attribute.Attribute;
+import net.minestom.server.attribute.AttributeInstance;
+import net.minestom.server.attribute.AttributeModifier;
+import net.minestom.server.attribute.AttributeOperation;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerStartFlyingWithElytraEvent;
@@ -8,13 +12,19 @@ import net.minestom.server.event.player.PlayerStopSneakingEvent;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.UUID;
+
 /**
  * @author theEvilReaper
  * @version 1.0.0
  * @since
  **/
 
-public class CygnusEntityActionListener {
+public final class CygnusEntityActionListener {
+
+    private static final AttributeModifier SPEED_MODIFIER_SPRINTING = new AttributeModifier(UUID.fromString("662A6B8D-DA3E-4C1C-8813-96EA6097278D"), "Sprinting speed boost", 0.30000001192092896D, AttributeOperation.MULTIPLY_TOTAL);
+
+    private CygnusEntityActionListener() { }
 
     public static void listener(ClientEntityActionPacket packet, Player player) {
         switch (packet.action()) {
@@ -24,7 +34,10 @@ public class CygnusEntityActionListener {
                 var sprintEvent = new PlayerStartSprintingEvent(player);
                 EventDispatcher.callCancellable(sprintEvent, () -> setSprinting(player, true));
             }
-            case STOP_SPRINTING -> setSprinting(player, false);
+            case STOP_SPRINTING -> {
+                EventDispatcher.call(new PlayerStopSprintingEvent(player));
+                setSprinting(player, false);
+            }
             case START_FLYING_ELYTRA -> startFlyingElytra(player);
 
             // TODO do remaining actions
@@ -33,6 +46,12 @@ public class CygnusEntityActionListener {
 
     private static void setSprinting(@NotNull Player player, boolean sprinting) {
         player.setSprinting(sprinting);
+
+        AttributeInstance attribute = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        attribute.removeModifier(SPEED_MODIFIER_SPRINTING);
+        if (sprinting) {
+            attribute.addModifier(SPEED_MODIFIER_SPRINTING);
+        }
     }
 
     private static void setSneaking(Player player, boolean sneaking) {
