@@ -32,7 +32,8 @@ public final class CygnusEntityActionListener {
             case STOP_SNEAKING -> setSneaking(player, false);
             case START_SPRINTING -> {
                 var sprintEvent = new PlayerStartSprintingEvent(player);
-                EventDispatcher.callCancellable(sprintEvent, () -> setSprinting(player, true));
+                EventDispatcher.call(sprintEvent);
+                setSprinting(player, !sprintEvent.isCancelled());
             }
             case STOP_SPRINTING -> {
                 EventDispatcher.call(new PlayerStopSprintingEvent(player));
