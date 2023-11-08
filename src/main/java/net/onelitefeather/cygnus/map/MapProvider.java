@@ -70,6 +70,7 @@ public final class MapProvider {
     }
 
     public void loadGameMap() {
+        if (this.gameMap != null && this.gameInstance != null) return;
         var mapEntry = this.mapPool.getMapEntry();
         var gameData = this.fileHandler.load(mapEntry.path().resolve(GameConfig.MAP_FILE_NAME), GameMap.class);
         this.pageProvider.loadPageData(gameData.get().getPageFaces());
