@@ -77,6 +77,7 @@ public final class LobbyPhase extends TimedPhase {
             this.setPaused(true);
             this.updateComponent();
             this.setCurrentTicks(LOBBY_PHASE_TIME);
+            this.forceStarted = false;
             setLevel();
         }
     }
