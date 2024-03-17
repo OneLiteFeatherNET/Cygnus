@@ -1,4 +1,4 @@
-package net.theevilreaper.cygnus.cloudnet;
+package net.onelitefeather.cygnus.cloudnet;
 
 public sealed interface CloudGameAPI permits CloudNetCloudGameAPI, DummyCloudGameAPI {
 

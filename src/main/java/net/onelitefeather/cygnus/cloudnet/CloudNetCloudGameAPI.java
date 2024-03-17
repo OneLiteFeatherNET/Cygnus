@@ -1,4 +1,4 @@
-package net.theevilreaper.cygnus.cloudnet;
+package net.onelitefeather.cygnus.cloudnet;
 
 import eu.cloudnetservice.driver.inject.InjectionLayer;
 import eu.cloudnetservice.modules.bridge.BridgeServiceHelper;
