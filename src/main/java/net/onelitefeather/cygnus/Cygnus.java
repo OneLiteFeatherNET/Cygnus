@@ -15,12 +15,12 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.AddEntityToInstanceEvent;
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
+import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerChatEvent;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
-import net.minestom.server.event.player.PlayerLoginEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.extensions.Extension;
@@ -143,7 +143,7 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
         var manager = MinecraftServer.getGlobalEventHandler();
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(this.mapProvider, this.linearPhaseSeries));
         manager.addListener(PlayerDisconnectEvent.class, new PlayerQuitListener(linearPhaseSeries, teamService, this.staminaService::forceStopSlenderBar));
-        manager.addListener(PlayerLoginEvent.class, new PlayerLoginListener(mapProvider.getInstance(), GameConfig.MAX_PLAYERS));
+        manager.addListener(AsyncPlayerConfigurationEvent.class, new PlayerLoginListener(mapProvider.getInstance(), GameConfig.MAX_PLAYERS));
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener(this.linearPhaseSeries.getCurrentPhase()));
         registerCancelListener(manager);
     }
@@ -179,7 +179,7 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
         var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         MinecraftServer.getInstanceManager().registerInstance(instance);
 
-        manager.addListener(PlayerLoginEvent.class, playerLoginEvent -> playerLoginEvent.setSpawningInstance(instance));
+        manager.addListener(AsyncPlayerConfigurationEvent.class, playerLoginEvent -> playerLoginEvent.setSpawningInstance(instance));
         manager.addListener(PlayerSpawnEvent.class, playerSpawnEvent -> {
             playerSpawnEvent.getPlayer().teleport(spawnPos);
             playerSpawnEvent.getPlayer().setGameMode(GameMode.CREATIVE);
@@ -238,12 +238,12 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
             player.setTag(Tags.HIDDEN, (byte) 0);
         });
         Helper.updateTabList(this.teamService);
-        PacketUtils.broadcastPacket(slenderPlayer.getMetadataPacket());
+        PacketUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
         MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(slenderPlayer.getUuid())).forEach(p -> {
             slenderPlayer.updateOldViewer(p);
         });
         MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(player -> player.setRespawnPoint(mapProvider.getGameMap().getSpawn()));
-        PacketUtils.broadcastPacket(slenderPlayer.getMetadataPacket());
+        PacketUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
     }
 
     private void triggerViewRuleUpdate(@NotNull Player player) {

@@ -4,6 +4,7 @@ import de.icevizion.aves.util.Components;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.attribute.Attribute;
+import net.minestom.server.attribute.Attributes;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.potion.Potion;
@@ -102,7 +103,7 @@ public non-sealed class SlenderBar extends StaminaBar {
                 player.setTag(Tags.HIDDEN, (byte)1);
                 player.removeEffect(NIGHT_VISION.getPotion().effect());
                 player.addEffect(BLINDNESS.getPotion());
-                player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1f);
+                player.getAttribute(Attributes.GENERIC_MOVEMENT_SPEED.attribute()).setBaseValue(0.1f);
                 this.accept.apply(player, Status.DRAINING);
             }
             case REGENERATING -> {

@@ -8,6 +8,7 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.attribute.Attribute;
+import net.minestom.server.attribute.Attributes;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
@@ -130,7 +131,7 @@ public final class Helper {
     }
 
     public static void changeSpeedValue(@NotNull Player player, boolean reset) {
-        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(reset ? 0.1f : 0.13f);
+        player.getAttribute(Attributes.GENERIC_MOVEMENT_SPEED.attribute()).setBaseValue(reset ? 0.1f : 0.13f);
         if (reset) {
             player.setSprinting(false);
             player.sendPacketToViewersAndSelf(player.getMetadataPacket());

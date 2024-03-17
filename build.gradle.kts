@@ -7,8 +7,13 @@ plugins {
 group = "net.onelitefeather"
 version = "1.0.1-SNAPSHOT" // Change
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 repositories {
-    mavenLocal()
     mavenCentral()
     maven("https://jitpack.io")
     maven {
@@ -44,7 +49,7 @@ dependencies {
     compileOnly(libs.minestom)
     compileOnly(libs.aves)
     compileOnly(libs.xerus)
-    compileOnly(libs.canis)
+    //compileOnly(libs.canis)
 
     compileOnly(libs.bundles.cloudnet)
 
@@ -54,15 +59,11 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.jupiter.engine)
 }
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
 
 tasks {
     compileJava {
         options.encoding = "UTF-8"
-        options.release.set(17)
+        options.release.set(21)
     }
 
     jacocoTestReport {

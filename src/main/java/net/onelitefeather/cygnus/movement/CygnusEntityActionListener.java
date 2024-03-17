@@ -1,9 +1,9 @@
 package net.onelitefeather.cygnus.movement;
 
-import net.minestom.server.attribute.Attribute;
 import net.minestom.server.attribute.AttributeInstance;
 import net.minestom.server.attribute.AttributeModifier;
 import net.minestom.server.attribute.AttributeOperation;
+import net.minestom.server.attribute.Attributes;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerStartFlyingWithElytraEvent;
@@ -54,7 +54,7 @@ public final class CygnusEntityActionListener {
 
     private static void setSprinting(@NotNull Player player, boolean sprinting) {
         player.setSprinting(sprinting);
-        AttributeInstance attribute = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        AttributeInstance attribute = player.getAttribute(Attributes.GENERIC_MOVEMENT_SPEED.attribute());
         attribute.removeModifier(SPEED_MODIFIER_SPRINTING);
         if (sprinting) {
             attribute.addModifier(SPEED_MODIFIER_SPRINTING);

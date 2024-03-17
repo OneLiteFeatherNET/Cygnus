@@ -2,7 +2,7 @@ package net.onelitefeather.cygnus.listener;
 
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.event.player.PlayerLoginEvent;
+import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.utils.Messages;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  * @version 1.0.0
  * @since 1.0.0
  **/
-public final class PlayerLoginListener implements Consumer<PlayerLoginEvent> {
+public final class PlayerLoginListener implements Consumer<AsyncPlayerConfigurationEvent> {
 
     private static final Component KICK_COMPONENT = Messages.withMini("<red>The game has already started! Unable to join!");
     private final Instance instance;
@@ -26,7 +26,7 @@ public final class PlayerLoginListener implements Consumer<PlayerLoginEvent> {
     }
 
     @Override
-    public void accept(@NotNull PlayerLoginEvent event) {
+    public void accept(@NotNull AsyncPlayerConfigurationEvent event) {
         event.setSpawningInstance(this.instance);
         if (MinecraftServer.getConnectionManager().getOnlinePlayers().size() + 1 > maxPlayers) {
             event.getPlayer().kick(KICK_COMPONENT);

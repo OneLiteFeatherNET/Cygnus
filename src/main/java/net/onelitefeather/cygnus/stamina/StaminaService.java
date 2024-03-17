@@ -47,20 +47,20 @@ public final class StaminaService {
         Check.argCondition(team.getPlayers().isEmpty(), "Can't add players from a team without teams");
         ((SlenderBar)this.slenderBar).setAccept((player, status) -> {
             if (status == StaminaBar.Status.DRAINING) {
-                PacketUtils.broadcastPacket(player.getMetadataPacket());
+                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
                 MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(p -> {
                     player.updateNewViewer(p);
                 });
-                PacketUtils.broadcastPacket(player.getMetadataPacket());
+                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
                 return null;
             }
 
             if (status == StaminaBar.Status.REGENERATING) {
-                PacketUtils.broadcastPacket(player.getMetadataPacket());
+                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
                 MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(p -> {
                     player.updateOldViewer(p);
                 });
-                PacketUtils.broadcastPacket(player.getMetadataPacket());
+                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
                 return null;
             }
             return null;
