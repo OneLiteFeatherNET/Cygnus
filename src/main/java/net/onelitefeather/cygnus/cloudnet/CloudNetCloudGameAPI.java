@@ -5,7 +5,7 @@ import eu.cloudnetservice.modules.bridge.BridgeServiceHelper;
 
 final class CloudNetCloudGameAPI implements CloudGameAPI{
 
-    private final static BridgeServiceHelper BRIDGE_SERVICE_HELPER;
+    private static final BridgeServiceHelper BRIDGE_SERVICE_HELPER;
     static {
         BRIDGE_SERVICE_HELPER = InjectionLayer.ext().instance(BridgeServiceHelper.class);
     }

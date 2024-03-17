@@ -1,8 +1,10 @@
 package net.onelitefeather.cygnus.cloudnet;
 
+import org.jetbrains.annotations.NotNull;
+
 public sealed interface CloudGameAPI permits CloudNetCloudGameAPI, DummyCloudGameAPI {
 
-    public static CloudGameAPI cloudGameAPI() {
+    static @NotNull CloudGameAPI cloudGameAPI() {
         try {
             Class.forName("eu.cloudnetservice.wrapper.Main");
             return new CloudNetCloudGameAPI();
@@ -10,6 +12,7 @@ public sealed interface CloudGameAPI permits CloudNetCloudGameAPI, DummyCloudGam
             return new DummyCloudGameAPI();
         }
     }
+
     void switchInGame();
 
 }
