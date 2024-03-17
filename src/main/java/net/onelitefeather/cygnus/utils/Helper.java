@@ -131,6 +131,10 @@ public final class Helper {
 
     public static void changeSpeedValue(@NotNull Player player, boolean reset) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(reset ? 0.1f : 0.13f);
+        if (reset) {
+            player.setSprinting(false);
+            player.sendPacketToViewersAndSelf(player.getMetadataPacket());
+        }
     }
 
     @Contract(pure = true)

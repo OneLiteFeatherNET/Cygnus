@@ -1,7 +1,7 @@
 package net.onelitefeather.cygnus.listener.game;
 
 import net.minestom.server.entity.Player;
-import net.minestom.server.event.player.PlayerStopSprintingEvent;
+import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
 import net.onelitefeather.cygnus.stamina.FoodBar;
 import net.onelitefeather.cygnus.utils.Helper;
 import net.onelitefeather.cygnus.utils.Tags;
