@@ -5,11 +5,13 @@ import de.icevizion.aves.file.GsonFileHandler;
 import de.icevizion.aves.file.gson.PositionGsonAdapter;
 import de.icevizion.aves.map.BaseMap;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.instance.AnvilLoader;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.utils.chunk.ChunkUtils;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.game.adapter.PageResourceAdapter;
 import net.onelitefeather.cygnus.page.PageProvider;
@@ -67,6 +69,10 @@ public final class MapProvider {
         var lobbyData = this.fileHandler.load(this.mapPool.getLobbyEntry().path().resolve(GameConfig.MAP_FILE_NAME), BaseMap.class);
         this.instance.setChunkLoader(new AnvilLoader(mapPool.getLobbyEntry().path()));
         this.activeMap = lobbyData.get();
+
+        if (this.activeMap.getSpawn() != null) {
+            loadChunk(this.instance, this.activeMap.getSpawn());
+        }
     }
 
     public void loadGameMap() {
@@ -88,6 +94,12 @@ public final class MapProvider {
     public void saveMap(@NotNull Path path, @NotNull BaseMap baseMap) {
         Check.argCondition(!debug, "The method can only be used in the setup mode!");
         this.fileHandler.save(path, baseMap instanceof GameMap gameMap ? gameMap : baseMap);
+    }
+
+    private <T extends Point> void loadChunk(@NotNull InstanceContainer instance, @NotNull T pos) {
+        if (!ChunkUtils.isLoaded(instance, pos)) {
+            instance.loadChunk(pos);
+        }
     }
 
     public void switchToGameMap() {
