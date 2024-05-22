@@ -14,7 +14,7 @@ dependencyResolutionManagement {
             library("aves", "de.icevizion.lib", "Aves").version("1.3.0+f7b17be8")
             library("xerus", "net.theevilreaper.xerus", "Xerus").version("1.2.0-SNAPSHOT+0971da3a")
             library("canis", "com.github.theEvilReaper", "Canis").version("master-SNAPSHOT")
-            library("mini", "net.kyori", "adventure-text-minimessage").version("4.14.0")
+            library("mini", "net.kyori", "adventure-text-minimessage").version("4.17.0")
             val cloudnetBaseGroup = "eu.cloudnetservice.cloudnet"
             library("cloudnet-wrapper", cloudnetBaseGroup, "wrapper-jvm").version(cloudNetVersion)
             library("cloudnet-bridge", cloudnetBaseGroup, "bridge").version(cloudNetVersion)
