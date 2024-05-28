@@ -20,7 +20,7 @@ repositories {
         name = "GitLab"
         credentials(HttpHeaderCredentials::class.java) {
             name =  "Private-Token"
-            value = providers.gradleProperty("gitLabPrivateToken").get()
+            value = providers.gradleProperty("gitLabPrivateToken").getOrElse("")
         }
         authentication {
             create<HttpHeaderAuthentication>("header")
