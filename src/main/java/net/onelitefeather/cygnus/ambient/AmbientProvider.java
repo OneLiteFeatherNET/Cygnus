@@ -68,7 +68,7 @@ public final class AmbientProvider {
                 break;
             case 77:
                 for (Player player : this.team.getPlayers()) {
-                    player.addEffect(potionEffect.getPotion());
+                    player.addEffect(potionEffect.potion());
                     player.playSound(sounds[1], player.getPosition());
                     player.playSound(sounds[2], player.getPosition());
                     player.playSound(sounds[3], player.getPosition());

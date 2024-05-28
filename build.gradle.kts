@@ -1,42 +1,26 @@
 plugins {
     java
     jacoco
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.github.goooler.shadow") version "8.1.7"
+    alias(libs.plugins.publishdata)
+    `maven-publish`
+
 }
 
 group = "net.onelitefeather"
 version = "1.0.1-SNAPSHOT" // Change
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 repositories {
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
     mavenCentral()
     maven("https://jitpack.io")
     maven {
-        val groupdId = "dungeon" // Gitlab Group
-        url = if (System.getenv().containsKey("CI")) {
-            val ciApiv4Url = System.getenv("CI_API_V4_URL")
-            uri("$ciApiv4Url/groups/$groupdId/-/packages/maven")
-        } else {
-            uri("https://gitlab.themeinerlp.dev/api/v4/groups/$groupdId/-/packages/maven")
-        }
+        val groupdId = 28 // Gitlab Group
+        url = uri("https://gitlab.themeinerlp.dev/api/v4/groups/$groupdId/-/packages/maven")
         name = "GitLab"
         credentials(HttpHeaderCredentials::class.java) {
-            name = if (System.getenv().containsKey("CI")) {
-                "Job-Token"
-            } else {
-                "Private-Token"
-            }
-            value = if (System.getenv().containsKey("CI")) {
-                System.getenv("CI_JOB_TOKEN")
-            } else {
-                val gitLabPrivateToken: String? by project
-                gitLabPrivateToken
-            }
+            name =  "Private-Token"
+            value = providers.gradleProperty("gitLabPrivateToken").getOrElse("")
         }
         authentication {
             create<HttpHeaderAuthentication>("header")
@@ -44,17 +28,24 @@ repositories {
     }
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 dependencies {
     implementation(libs.mini)
-    compileOnly(libs.minestom)
+    implementation(platform(libs.microtus.bom))
+    compileOnly(libs.microtus.core)
     compileOnly(libs.aves)
     compileOnly(libs.xerus)
     //compileOnly(libs.canis)
 
     compileOnly(libs.bundles.cloudnet)
 
-    testImplementation(libs.minestom)
-    testImplementation(libs.minestom.test)
+    testImplementation(libs.microtus.core)
+    testImplementation(libs.microtus.test)
     testImplementation(libs.xerus)
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.jupiter.engine)
@@ -85,4 +76,34 @@ tasks {
         dependsOn("shadowJar")
     }
 }
+publishData {
+    addBuildData()
+    useGitlabReposForProject("245", "https://gitlab.themeinerlp.dev/")
+    publishTask("shadowJar")
+}
+publishing {
+    publications.create<MavenPublication>("maven") {
+        // configure the publication as defined previously.
+        publishData.configurePublication(this)
+        version = publishData.getVersion(false)
+    }
+
+    repositories {
+        maven {
+            credentials(HttpHeaderCredentials::class) {
+                name = "Job-Token"
+                value = System.getenv("CI_JOB_TOKEN")
+            }
+            authentication {
+                create("header", HttpHeaderAuthentication::class)
+            }
+
+
+            name = "Gitlab"
+            // Get the detected repository from the publish data
+            url = uri(publishData.getRepository())
+        }
+    }
+}
+
 
