@@ -1,7 +1,15 @@
 rootProject.name = "Cygnus"
 val cloudNetVersion = "4.0.0-RC9"
-dependencyResolutionManagement {
 
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven("https://eldonexus.de/repository/maven-public/")
+    }
+}
+
+
+dependencyResolutionManagement {
     if (System.getenv("CI") != null) {
         repositoriesMode = RepositoriesMode.PREFER_SETTINGS
         repositories {
@@ -45,6 +53,10 @@ dependencyResolutionManagement {
         create("libs") {
             version("microtus","1.4.2-SNAPSHOT")
             version("junit", "5.10.2")
+            version("publishdata", "1.2.5-DEV")
+
+            plugin("publishdata", "de.chojo.publishdata").versionRef("publishdata")
+
             library("microtus-bom", "net.onelitefeather.microtus", "bom").versionRef("microtus")
             library("microtus-core", "net.onelitefeather.microtus", "Microtus").withoutVersion()
             library("microtus-test", "net.onelitefeather.microtus.testing", "testing").withoutVersion()

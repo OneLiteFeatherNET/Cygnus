@@ -1,7 +1,10 @@
 plugins {
     java
     jacoco
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.github.goooler.shadow") version "8.1.7"
+    alias(libs.plugins.publishdata)
+    `maven-publish`
+
 }
 
 group = "net.onelitefeather"
@@ -73,4 +76,34 @@ tasks {
         dependsOn("shadowJar")
     }
 }
+publishData {
+    addBuildData()
+    useGitlabReposForProject("245", "https://gitlab.themeinerlp.dev/")
+    publishTask("shadowJar")
+}
+publishing {
+    publications.create<MavenPublication>("maven") {
+        // configure the publication as defined previously.
+        publishData.configurePublication(this)
+        version = publishData.getVersion(false)
+    }
+
+    repositories {
+        maven {
+            credentials(HttpHeaderCredentials::class) {
+                name = "Job-Token"
+                value = System.getenv("CI_JOB_TOKEN")
+            }
+            authentication {
+                create("header", HttpHeaderAuthentication::class)
+            }
+
+
+            name = "Gitlab"
+            // Get the detected repository from the publish data
+            url = uri(publishData.getRepository())
+        }
+    }
+}
+
 

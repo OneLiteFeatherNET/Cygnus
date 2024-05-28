@@ -1,3 +1,7 @@
 include:
   - template: Jobs/Dependency-Scanning.gitlab-ci.yml
-  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - component: gitlab.themeinerlp.dev/onelitefeather/ci-components/paper-plugin@0.0.3
+variables:
+  SECURE_ANALYZERS_PREFIX: "${HTL_NEXUS_PROXY}/security-products"
