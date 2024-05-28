@@ -1,12 +1,65 @@
 rootProject.name = "Cygnus"
 val cloudNetVersion = "4.0.0-RC9"
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven("https://eldonexus.de/repository/maven-public/")
+    }
+}
+
+
 dependencyResolutionManagement {
+    if (System.getenv("CI") != null) {
+        repositoriesMode = RepositoriesMode.PREFER_SETTINGS
+        repositories {
+            maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            maven("https://repo.htl-md.schule/repository/Gitlab-Runner/")
+            maven {
+                val groupdId = 28 // Gitlab Group
+                val ciApiv4Url = System.getenv("CI_API_V4_URL")
+                url = uri("$ciApiv4Url/groups/$groupdId/-/packages/maven")
+                name = "GitLab"
+                credentials(HttpHeaderCredentials::class.java) {
+                    name = "Job-Token"
+                    value = System.getenv("CI_JOB_TOKEN")
+                }
+                authentication {
+                    create<HttpHeaderAuthentication>("header")
+                }
+            }
+        }
+    } else {
+        repositories {
+            maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            mavenCentral()
+            maven("https://jitpack.io")
+            maven {
+                val groupdId = 28 // Gitlab Group
+                url = uri("https://gitlab.themeinerlp.dev/api/v4/groups/$groupdId/-/packages/maven")
+                name = "GitLab"
+                credentials(HttpHeaderCredentials::class.java) {
+                    name =  "Private-Token"
+                    value = providers.gradleProperty("gitLabPrivateToken").get()
+                }
+                authentication {
+                    create<HttpHeaderAuthentication>("header")
+                }
+            }
+        }
+    }
+
     versionCatalogs {
         create("libs") {
-            version("minestom","1.3.1")
+            version("microtus","1.4.2-SNAPSHOT")
             version("junit", "5.10.2")
-            library("minestom", "net.onelitefeather.microtus", "Minestom").versionRef("minestom")
-            library("minestom-test", "net.onelitefeather.microtus.testing", "testing").versionRef("minestom")
+            version("publishdata", "1.2.5-DEV")
+
+            plugin("publishdata", "de.chojo.publishdata").versionRef("publishdata")
+
+            library("microtus-bom", "net.onelitefeather.microtus", "bom").versionRef("microtus")
+            library("microtus-core", "net.onelitefeather.microtus", "Microtus").withoutVersion()
+            library("microtus-test", "net.onelitefeather.microtus.testing", "testing").withoutVersion()
             library("junit-jupiter", "org.junit.jupiter", "junit-jupiter").versionRef("junit")
             library("junit-jupiter-engine", "org.junit.jupiter", "junit-jupiter-engine").versionRef("junit")
             library("mockito-core", "org.mockito", "mockito-core").version("5.12.0")
