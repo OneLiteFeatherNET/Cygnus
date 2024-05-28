@@ -3,8 +3,7 @@ package net.onelitefeather.cygnus.stamina;
 import de.icevizion.aves.util.Components;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.minestom.server.attribute.Attribute;
-import net.minestom.server.attribute.Attributes;
+import net.minestom.server.attribute.VanillaAttribute;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.potion.Potion;
@@ -53,7 +52,7 @@ public non-sealed class SlenderBar extends StaminaBar {
     @Override
     protected void onStart() {
         this.status = Status.READY;
-        this.player.addEffect(NIGHT_VISION.getPotion());
+        this.player.addEffect(NIGHT_VISION.potion());
     }
 
     @Override
@@ -75,8 +74,8 @@ public non-sealed class SlenderBar extends StaminaBar {
                     status = Status.REGENERATING;
                     this.accept.apply(player, status);
                     player.setTag(Tags.HIDDEN, (byte) 0);
-                    player.removeEffect(BLINDNESS.getPotion().effect());
-                    player.addEffect(NIGHT_VISION.getPotion());
+                    player.removeEffect(BLINDNESS.potion().effect());
+                    player.addEffect(NIGHT_VISION.potion());
                 }
                 this.sendProgressBar();
             }
@@ -101,9 +100,9 @@ public non-sealed class SlenderBar extends StaminaBar {
             case READY -> {
                 status = Status.DRAINING;
                 player.setTag(Tags.HIDDEN, (byte)1);
-                player.removeEffect(NIGHT_VISION.getPotion().effect());
-                player.addEffect(BLINDNESS.getPotion());
-                player.getAttribute(Attributes.GENERIC_MOVEMENT_SPEED.attribute()).setBaseValue(0.1f);
+                player.removeEffect(NIGHT_VISION.potion().effect());
+                player.addEffect(BLINDNESS.potion());
+                player.getAttribute(VanillaAttribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.1f);
                 this.accept.apply(player, Status.DRAINING);
             }
             case REGENERATING -> {
@@ -116,8 +115,8 @@ public non-sealed class SlenderBar extends StaminaBar {
                 status = Status.REGENERATING;
                 player.setTag(Tags.HIDDEN, (byte)0);
                 playSoundToTarget(true);
-                player.removeEffect(BLINDNESS.getPotion().effect());
-                player.addEffect(NIGHT_VISION.getPotion());
+                player.removeEffect(BLINDNESS.potion().effect());
+                player.addEffect(NIGHT_VISION.potion());
                 this.accept.apply(player, Status.REGENERATING);
             }
         }
