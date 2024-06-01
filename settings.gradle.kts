@@ -53,7 +53,7 @@ dependencyResolutionManagement {
         create("libs") {
             version("microtus","1.4.2-SNAPSHOT")
             version("junit", "5.10.2")
-            version("publishdata", "1.2.5-DEV")
+            version("publishdata", "1.4.0")
 
             plugin("publishdata", "de.chojo.publishdata").versionRef("publishdata")
 
