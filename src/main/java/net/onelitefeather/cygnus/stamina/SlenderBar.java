@@ -99,7 +99,6 @@ public non-sealed class SlenderBar extends StaminaBar {
         switch (status) {
             case READY -> {
                 status = Status.DRAINING;
-                player.setTag(Tags.HIDDEN, (byte)1);
                 player.removeEffect(NIGHT_VISION.potion().effect());
                 player.addEffect(BLINDNESS.potion());
                 player.getAttribute(VanillaAttribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.1f);
@@ -107,13 +106,11 @@ public non-sealed class SlenderBar extends StaminaBar {
             }
             case REGENERATING -> {
                 status = Status.DRAINING;
-                player.setTag(Tags.HIDDEN, (byte)1);
                 playSoundToTarget(false);
                 this.accept.apply(player, Status.DRAINING);
             }
             case DRAINING -> {
                 status = Status.REGENERATING;
-                player.setTag(Tags.HIDDEN, (byte)0);
                 playSoundToTarget(true);
                 player.removeEffect(BLINDNESS.potion().effect());
                 player.addEffect(NIGHT_VISION.potion());

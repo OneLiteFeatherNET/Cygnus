@@ -64,6 +64,7 @@ import net.onelitefeather.cygnus.setup.SetupItems;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
 import net.onelitefeather.cygnus.setup.functional.SaveMapFunction;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
+import net.onelitefeather.cygnus.utils.*;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
@@ -72,10 +73,6 @@ import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.config.ConfigHolder;
 import net.onelitefeather.cygnus.config.GameConfig;
 import net.onelitefeather.cygnus.stamina.StaminaService;
-import net.onelitefeather.cygnus.utils.Helper;
-import net.onelitefeather.cygnus.utils.Items;
-import net.onelitefeather.cygnus.utils.Messages;
-import net.onelitefeather.cygnus.utils.Tags;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
@@ -151,7 +148,7 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
     private void registerGameListener() {
         var manager = MinecraftServer.getGlobalEventHandler();
         manager.addListener(GameFinishEvent.class, new GameFinishListener());
-        manager.addListener(PlayerUseItemEvent.class, new PlayerItemListener(this.staminaService, this::triggerViewRuleUpdate));
+        manager.addListener(PlayerUseItemEvent.class, new PlayerItemListener(this.staminaService));
         manager.addListener(PlayerDeathEvent.class, new PlayerDeathListener(this.linearPhaseSeries, this.teamService));
         manager.addListener(PlayerEntityInteractEvent.class, new PlayerPageInteractListener(this.pageProvider));
         manager.addListener(PageEvent.class, new GamePageListener(this.pageProvider));
@@ -228,6 +225,7 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
         var slenderPlayer = this.teamService.getTeams().get(Helper.SLENDER_ID).getPlayers().stream().findFirst().get();
         slenderPlayer.setTag(Tags.HIDDEN, (byte) 1);
         slenderPlayer.sendMessage(Messages.SLENDER_JOIN_PART);
+        slenderPlayer.updateViewableRule(ViewRuleUpdater::isViewAble);
         this.items.setSlenderEye(slenderPlayer);
         this.staminaService.start();
         this.pageProvider.spawn();
@@ -235,18 +233,10 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
         var message = Messages.getSurvivorJoinMessage(String.valueOf(this.pageProvider.getMaxPageAmount()));
         this.teamService.getTeams().get(Helper.SURVIVOR_ID).getPlayers().forEach(player -> {
             player.sendMessage(message);
-            player.setTag(Tags.HIDDEN, (byte) 0);
         });
         Helper.updateTabList(this.teamService);
         PacketUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
-        MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(slenderPlayer.getUuid())).forEach(p -> {
-            slenderPlayer.updateOldViewer(p);
-        });
         MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(player -> player.setRespawnPoint(mapProvider.getGameMap().getSpawn()));
         PacketUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
-    }
-
-    private void triggerViewRuleUpdate(@NotNull Player player) {
-      //  ViewRuleUpdater.updateViewer(player, this.teamService.getTeams().get(Helper.SURVIVOR_ID));
     }
 }

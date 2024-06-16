@@ -14,11 +14,9 @@ import java.util.function.Consumer;
 public final class PlayerItemListener implements Consumer<PlayerUseItemEvent> {
 
     private final StaminaService staminaService;
-    private final Consumer<Player> updateRuleFunction;
 
-    public PlayerItemListener(@Nullable StaminaService staminaService, @NotNull Consumer<Player> updateRuleFunction) {
+    public PlayerItemListener(@Nullable StaminaService staminaService) {
         this.staminaService = staminaService;
-        this.updateRuleFunction = updateRuleFunction;
     }
 
     @Override
@@ -33,7 +31,6 @@ public final class PlayerItemListener implements Consumer<PlayerUseItemEvent> {
 
         if (tagValue == 0 && player.getTag(Tags.TEAM_ID) == Helper.SLENDER_ID && staminaBar != null && staminaBar.changeStatus()) {
             changeVisibilityStatus(player);
-            updateRuleFunction.accept(player);
         }
     }
 
