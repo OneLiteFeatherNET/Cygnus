@@ -57,8 +57,6 @@ dependencyResolutionManagement {
             version("mockito", "5.12.0")
             version("aves", "1.5.2")
             version("xerus", "1.2.0-SNAPSHOT+eb451d2f")
-            library("aves", "de.icevizion.lib", "aves").versionRef("aves")
-            library("xerus", "net.theevilreaper.xerus", "Xerus").versionRef("xerus")
 
             library("microtus.bom", "net.onelitefeather.microtus", "bom").versionRef("minestom")
             library("dungeon.bom", "net.theevilreaper.dungeon.bom", "base").version("1.0.4")
