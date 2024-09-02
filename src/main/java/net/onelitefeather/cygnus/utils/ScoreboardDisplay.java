@@ -2,6 +2,8 @@ package net.onelitefeather.cygnus.utils;
 
 import de.icevizion.xerus.api.team.Team;
 import java.util.List;
+
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
@@ -15,7 +17,8 @@ public final class ScoreboardDisplay {
 
         for (int i = 0; i < teams.size(); i++) {
             var team = teams.get(i);
-            serverTeamManager.createBuilder(team.getName())
+            final String teamName = PlainTextComponentSerializer.plainText().serialize(team.getName());
+            serverTeamManager.createBuilder(teamName)
                     .nameTagVisibility(TeamsPacket.NameTagVisibility.HIDE_FOR_OTHER_TEAMS)
                     .teamColor(team.getColorData().getChatColor())
                     .build();

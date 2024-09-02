@@ -56,7 +56,7 @@ dependencyResolutionManagement {
             version("junit", "5.10.3")
             version("mockito", "5.12.0")
             version("aves", "1.5.2")
-            version("xerus", "1.2.0-SNAPSHOT+eb451d2f")
+            version("xerus", "1.2.2+7b54a084")
 
             library("microtus.bom", "net.onelitefeather.microtus", "bom").versionRef("minestom")
             library("dungeon.bom", "net.theevilreaper.dungeon.bom", "base").version("1.0.4")
@@ -69,7 +69,7 @@ dependencyResolutionManagement {
             library("mockito.junit", "org.mockito", "mockito-junit-jupiter").withoutVersion()
 
             library("aves", "de.icevizion.lib", "aves").versionRef("aves")
-            library("xerus", "net.theevilreaper.xerus", "Xerus").versionRef("xerus")
+            library("xerus", "net.theevilreaper.xerus", "xerus").versionRef("xerus")
             library("canis", "com.github.theEvilReaper", "Canis").version("master-SNAPSHOT")
 
             val cloudnetBaseGroup = "eu.cloudnetservice.cloudnet"
