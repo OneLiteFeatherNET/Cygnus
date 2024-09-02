@@ -19,7 +19,7 @@ repositories {
         url = uri("https://gitlab.onelitefeather.dev/api/v4/groups/$groupdId/-/packages/maven")
         name = "GitLab"
         credentials(HttpHeaderCredentials::class.java) {
-            name =  "Private-Token"
+            name = "Private-Token"
             value = providers.gradleProperty("gitLabPrivateToken").getOrElse("")
         }
         authentication {
@@ -35,20 +35,20 @@ java {
 }
 
 dependencies {
-    implementation(libs.mini)
     implementation(platform(libs.microtus.bom))
-    compileOnly(libs.microtus.core)
+    implementation(platform(libs.dungeon.bom))
+    compileOnly(libs.minestom)
     compileOnly(libs.aves)
     compileOnly(libs.xerus)
-    //compileOnly(libs.canis)
+    compileOnly(libs.canis)
 
     compileOnly(libs.bundles.cloudnet)
 
-    testImplementation(libs.microtus.core)
-    testImplementation(libs.microtus.test)
+    testImplementation(libs.minestom)
+    testImplementation(libs.minestom.test)
     testImplementation(libs.xerus)
-    testImplementation(libs.junit.jupiter)
-    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.junit.api)
+    testRuntimeOnly(libs.junit.engine)
 }
 
 tasks {

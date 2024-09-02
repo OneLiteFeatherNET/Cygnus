@@ -51,28 +51,38 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("libs") {
-            version("microtus","1.4.2-SNAPSHOT")
-            version("junit", "5.10.2")
-            version("publishdata", "1.2.5-DEV")
+            version("publishdata", "1.4.0")
+            version("minestom", "1.4.2")
+            version("junit", "5.10.3")
+            version("mockito", "5.12.0")
+            version("aves", "1.5.2")
+            version("xerus", "1.2.0-SNAPSHOT+eb451d2f")
+            library("aves", "de.icevizion.lib", "aves").versionRef("aves")
+            library("xerus", "net.theevilreaper.xerus", "Xerus").versionRef("xerus")
 
-            plugin("publishdata", "de.chojo.publishdata").versionRef("publishdata")
+            library("microtus.bom", "net.onelitefeather.microtus", "bom").versionRef("minestom")
+            library("dungeon.bom", "net.theevilreaper.dungeon.bom", "base").version("1.0.4")
 
-            library("microtus-bom", "net.onelitefeather.microtus", "bom").versionRef("microtus")
-            library("microtus-core", "net.onelitefeather.microtus", "Microtus").withoutVersion()
-            library("microtus-test", "net.onelitefeather.microtus.testing", "testing").withoutVersion()
-            library("junit-jupiter", "org.junit.jupiter", "junit-jupiter").versionRef("junit")
-            library("junit-jupiter-engine", "org.junit.jupiter", "junit-jupiter-engine").versionRef("junit")
-            library("mockito-core", "org.mockito", "mockito-core").version("5.12.0")
-            library("mockito-junit", "org.mockito", "mockito-junit-jupiter").version("5.12.0")
-            library("aves", "de.icevizion.lib", "Aves").version("1.3.0+f7b17be8")
-            library("xerus", "net.theevilreaper.xerus", "Xerus").version("1.2.0-SNAPSHOT+0971da3a")
+            library("minestom", "net.onelitefeather.microtus", "Microtus").withoutVersion()
+            library("minestom-test", "net.onelitefeather.microtus.testing", "testing").withoutVersion()
+            library("junit.api", "org.junit.jupiter", "junit-jupiter-api").withoutVersion()
+            library("junit.engine", "org.junit.jupiter", "junit-jupiter-engine").withoutVersion()
+            library("mockito.core", "org.mockito", "mockito-core").withoutVersion()
+            library("mockito.junit", "org.mockito", "mockito-junit-jupiter").withoutVersion()
+
+            library("aves", "de.icevizion.lib", "aves").versionRef("aves")
+            library("xerus", "net.theevilreaper.xerus", "Xerus").versionRef("xerus")
             library("canis", "com.github.theEvilReaper", "Canis").version("master-SNAPSHOT")
-            library("mini", "net.kyori", "adventure-text-minimessage").version("4.17.0")
+
             val cloudnetBaseGroup = "eu.cloudnetservice.cloudnet"
+
             library("cloudnet-wrapper", cloudnetBaseGroup, "wrapper-jvm").version(cloudNetVersion)
             library("cloudnet-bridge", cloudnetBaseGroup, "bridge").version(cloudNetVersion)
             library("cloudnet-driver", cloudnetBaseGroup, "driver").version(cloudNetVersion)
+
             bundle("cloudnet", listOf("cloudnet-wrapper", "cloudnet-bridge", "cloudnet-driver"))
+
+            plugin("publishdata", "de.chojo.publishdata").versionRef("publishdata")
         }
     }
 }
