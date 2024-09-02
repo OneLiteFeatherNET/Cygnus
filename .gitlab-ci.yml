@@ -2,7 +2,7 @@ include:
   - template: Jobs/Dependency-Scanning.gitlab-ci.yml
   - template: Jobs/SAST.gitlab-ci.yml
   - template: Jobs/Secret-Detection.gitlab-ci.yml
-  - component: gitlab.themeinerlp.dev/onelitefeather/ci-components/paper-plugin@0.0.3
+  - component: gitlab.onelitefeather.dev/dungeon/ci-components/gradle-publish@0.0.4
 variables:
   SECURE_ANALYZERS_PREFIX: "${HTL_NEXUS_PROXY}/security-products"
-  GRADLE_IMAGE: "${HTL_NEXUS_PROXY}/gradle:8.7.0-jdk21"
+  GRADLE_IMAGE: "${HTL_NEXUS_PROXY}/gradle:8.10.0-jdk21"
