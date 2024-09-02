@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "net.onelitefeather"
-version = "1.0.1-SNAPSHOT" // Change
+version = "1.0.1" // Change
 
 repositories {
     maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
