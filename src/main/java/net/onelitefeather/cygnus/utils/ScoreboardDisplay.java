@@ -1,14 +1,14 @@
 package net.onelitefeather.cygnus.utils;
 
 import de.icevizion.xerus.api.team.Team;
-import java.util.List;
-
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.onelitefeather.cygnus.config.GameConfig;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 public final class ScoreboardDisplay {
 
@@ -25,15 +25,37 @@ public final class ScoreboardDisplay {
         }
     }
 
+    /**
+     * Add a player to a team
+     *
+     * @param player the player to add
+     * @param teamId the team id to add the player to
+     */
     public void addPlayer(@NotNull Player player, byte teamId) {
-        var teamName = teamId == (byte) 0 ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
+        var teamName = getTeamName(teamId);
         var team = MinecraftServer.getTeamManager().getTeam(teamName);
         team.addMember(player.getUsername());
     }
 
+    /**
+     * Remove a player from a team
+     *
+     * @param player the player to remove
+     * @param teamId the team id to remove the player from
+     */
     public void removePlayer(@NotNull Player player, byte teamId) {
-        var teamName = teamId == (byte) 0 ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
+        var teamName = getTeamName(teamId);
         var team = MinecraftServer.getTeamManager().getTeam(teamName);
         team.removeMember(player.getUsername());
+    }
+
+    /**
+     * Get the team name by the team id
+     *
+     * @param teamId the team id
+     * @return the team name
+     */
+    private String getTeamName(byte teamId) {
+        return teamId == (byte) 0 ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
     }
 }
