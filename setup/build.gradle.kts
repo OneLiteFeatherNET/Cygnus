@@ -1,14 +1,13 @@
+import org.gradle.kotlin.dsl.test
+
 plugins {
     java
+    `java-library`
     jacoco
-    id("com.gradleup.shadow") version "8.3.0"
-    alias(libs.plugins.publishdata)
-    `maven-publish`
-
 }
 
 group = "net.onelitefeather"
-version = "1.0.1" // Change
+version = "1.0.1"
 
 repositories {
     mavenLocal()
@@ -28,6 +27,7 @@ repositories {
         }
     }
 }
+
 
 java {
     toolchain {
@@ -73,39 +73,4 @@ tasks {
             events("passed", "skipped", "failed")
         }
     }
-
-    jar {
-        dependsOn("shadowJar")
-    }
 }
-publishData {
-    addBuildData()
-    useGitlabReposForProject("245", "https://gitlab.onelitefeather.dev/")
-    publishTask("shadowJar")
-}
-publishing {
-    publications.create<MavenPublication>("maven") {
-        // configure the publication as defined previously.
-        publishData.configurePublication(this)
-        version = publishData.getVersion(false)
-    }
-
-    repositories {
-        maven {
-            credentials(HttpHeaderCredentials::class) {
-                name = "Job-Token"
-                value = System.getenv("CI_JOB_TOKEN")
-            }
-            authentication {
-                create("header", HttpHeaderAuthentication::class)
-            }
-
-
-            name = "Gitlab"
-            // Get the detected repository from the publish data
-            url = uri(publishData.getRepository())
-        }
-    }
-}
-
-
