@@ -2,32 +2,14 @@ import org.gradle.kotlin.dsl.test
 
 plugins {
     java
-    `java-library`
     jacoco
+    `maven-publish`
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.publishdata)
 }
 
 group = "net.onelitefeather"
 version = "1.0.1"
-
-repositories {
-    mavenLocal()
-    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-    mavenCentral()
-    maven("https://jitpack.io")
-    maven {
-        val groupdId = 28 // Gitlab Group
-        url = uri("https://gitlab.onelitefeather.dev/api/v4/groups/$groupdId/-/packages/maven")
-        name = "GitLab"
-        credentials(HttpHeaderCredentials::class.java) {
-            name = "Private-Token"
-            value = providers.gradleProperty("gitLabPrivateToken").getOrElse("")
-        }
-        authentication {
-            create<HttpHeaderAuthentication>("header")
-        }
-    }
-}
-
 
 java {
     toolchain {
@@ -67,10 +49,41 @@ tasks {
     }
 
     test {
-        finalizedBy(rootProject.tasks.jacocoTestReport)
+        finalizedBy(project.tasks.jacocoTestReport)
         useJUnitPlatform()
         testLogging {
             events("passed", "skipped", "failed")
+        }
+    }
+}
+
+publishData {
+    addBuildData()
+    useGitlabReposForProject("245", "https://gitlab.onelitefeather.dev/")
+    publishTask("shadowJar")
+}
+
+publishing {
+    publications.create<MavenPublication>("maven") {
+        // configure the publication as defined previously.
+        publishData.configurePublication(this)
+        version = publishData.getVersion(false)
+    }
+
+    repositories {
+        maven {
+            credentials(HttpHeaderCredentials::class) {
+                name = "Job-Token"
+                value = System.getenv("CI_JOB_TOKEN")
+            }
+            authentication {
+                create("header", HttpHeaderAuthentication::class)
+            }
+
+
+            name = "Gitlab"
+            // Get the detected repository from the publish data
+            url = uri(publishData.getRepository())
         }
     }
 }

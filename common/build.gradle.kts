@@ -4,28 +4,8 @@ plugins {
     jacoco
 }
 
-group = "net.onelitefeather"
+group = "net.onelitefeather.cygnus"
 version = "1.0.1"
-
-repositories {
-    mavenLocal()
-    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-    mavenCentral()
-    maven("https://jitpack.io")
-    maven {
-        val groupdId = 28 // Gitlab Group
-        url = uri("https://gitlab.onelitefeather.dev/api/v4/groups/$groupdId/-/packages/maven")
-        name = "GitLab"
-        credentials(HttpHeaderCredentials::class.java) {
-            name = "Private-Token"
-            value = providers.gradleProperty("gitLabPrivateToken").getOrElse("")
-        }
-        authentication {
-            create<HttpHeaderAuthentication>("header")
-        }
-    }
-}
-
 
 java {
     toolchain {
@@ -64,7 +44,7 @@ tasks {
     }
 
     test {
-        finalizedBy(rootProject.tasks.jacocoTestReport)
+        finalizedBy(project.tasks.jacocoTestReport)
         useJUnitPlatform()
         testLogging {
             events("passed", "skipped", "failed")
