@@ -17,7 +17,8 @@ public final class ScoreboardDisplay {
 
         for (int i = 0; i < teams.size(); i++) {
             var team = teams.get(i);
-            serverTeamManager.createBuilder(PlainTextComponentSerializer.plainText().serialize(team.getName()))
+            final String teamName = PlainTextComponentSerializer.plainText().serialize(team.getName());
+            serverTeamManager.createBuilder(teamName)
                     .nameTagVisibility(TeamsPacket.NameTagVisibility.HIDE_FOR_OTHER_TEAMS)
                     .teamColor(team.getColorData().getChatColor())
                     .build();

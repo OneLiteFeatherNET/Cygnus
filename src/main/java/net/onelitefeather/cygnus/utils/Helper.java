@@ -82,7 +82,7 @@ public final class Helper {
     }
 
     public static int getRandomInt(int maximumValue) {
-        return ThreadLocalRandom.current().nextInt(maximumValue);
+        return ThreadLocalRandom.current().nextInt(1, maximumValue);
     }
 
     public static @NotNull Direction parseDirection(@NotNull String face) {
