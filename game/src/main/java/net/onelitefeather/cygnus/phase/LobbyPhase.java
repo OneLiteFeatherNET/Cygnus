@@ -8,9 +8,9 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.timer.Task;
 import net.onelitefeather.cygnus.common.Messages;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.map.MapProvider;
 import net.onelitefeather.cygnus.common.util.Helper;
-import net.onelitefeather.cygnus.config.GameConfig;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,8 +18,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static net.onelitefeather.cygnus.config.GameConfig.FORCE_START_TIME;
-import static net.onelitefeather.cygnus.config.GameConfig.LOBBY_PHASE_TIME;
+import static net.onelitefeather.cygnus.common.config.GameConfig.LOBBY_PHASE_TIME;
+import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIME;
 
 /**
  * @author theEvilReaper

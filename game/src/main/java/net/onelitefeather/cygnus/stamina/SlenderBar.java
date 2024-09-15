@@ -10,6 +10,7 @@ import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
+import net.onelitefeather.cygnus.common.Tags;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;

@@ -2,6 +2,8 @@ package net.onelitefeather.cygnus.listener;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerUseItemEvent;
+import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.stamina.SlenderBar;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import org.jetbrains.annotations.NotNull;

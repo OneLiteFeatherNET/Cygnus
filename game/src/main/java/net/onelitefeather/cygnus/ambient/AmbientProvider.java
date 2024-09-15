@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
 
-import static net.onelitefeather.cygnus.utils.Helper.getRandomPitchValue;
+import static net.onelitefeather.cygnus.common.util.Helper.getRandomPitchValue;
 
 /**
  * @author theEvilReaper

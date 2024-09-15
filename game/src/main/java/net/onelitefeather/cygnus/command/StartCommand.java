@@ -4,7 +4,7 @@ import de.icevizion.xerus.api.phase.LinearPhaseSeries;
 import de.icevizion.xerus.api.phase.TimedPhase;
 import net.minestom.server.command.builder.Command;
 import net.onelitefeather.cygnus.common.Messages;
-import net.onelitefeather.cygnus.config.GameConfig;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import org.jetbrains.annotations.NotNull;
 

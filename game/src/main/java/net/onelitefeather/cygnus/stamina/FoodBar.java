@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.stamina;
 
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
+import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
 import org.jetbrains.annotations.NotNull;
 

@@ -10,6 +10,8 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.onelitefeather.cygnus.common.Messages;
+import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
@@ -19,7 +21,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
-import static net.onelitefeather.cygnus.config.GameConfig.*;
+import static net.onelitefeather.cygnus.common.config.GameConfig.MAX_REVIVE_COUNT_SLENDER;
+import static net.onelitefeather.cygnus.common.config.GameConfig.MINIMUM_SLENDER_RE_CHECK;
+import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_PLAYERS;
+import static net.onelitefeather.cygnus.common.config.GameConfig.SLENDER_TEAM_NAME;
 
 public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent> {
 

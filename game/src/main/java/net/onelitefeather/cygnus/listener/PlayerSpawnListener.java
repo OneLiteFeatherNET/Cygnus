@@ -6,8 +6,9 @@ import de.icevizion.xerus.api.phase.TimedPhase;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.onelitefeather.cygnus.common.Messages;
+import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.map.MapProvider;
-import net.onelitefeather.cygnus.config.GameConfig;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import org.jetbrains.annotations.NotNull;
 

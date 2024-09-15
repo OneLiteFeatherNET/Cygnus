@@ -4,7 +4,7 @@ import de.icevizion.xerus.api.phase.TickDirection;
 import de.icevizion.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
 import net.onelitefeather.cygnus.cloudnet.CloudGameAPI;
-import net.onelitefeather.cygnus.config.GameConfig;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.view.GameView;
 import org.jetbrains.annotations.NotNull;

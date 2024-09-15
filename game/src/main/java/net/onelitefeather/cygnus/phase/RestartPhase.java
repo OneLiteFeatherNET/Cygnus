@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
 
-import static net.onelitefeather.cygnus.utils.Helper.MINI_MESSAGE;
+import static net.onelitefeather.cygnus.common.util.Helper.MINI_MESSAGE;
 
 /**
  * @author theEvilReaper
