@@ -25,12 +25,12 @@ public final class SetupItems {
      */
     public SetupItems() {
         this.mapSelection = ItemStack.builder(Material.CHEST)
-                .displayName(Component.text("Map selection", NamedTextColor.GREEN))
-                .meta(builder -> builder.setTag(Tags.ITEM_TAG, (byte) 0))
+                .customName(Component.text("Map selection", NamedTextColor.GREEN))
+                .set(Tags.ITEM_TAG, (byte) 0)
                 .build();
         this.saveData = ItemStack.builder(Material.BELL)
-                .displayName(Component.text("Save data", NamedTextColor.RED))
-                .meta(builder -> builder.setTag(Tags.ITEM_TAG, (byte) 1))
+                .customName(Component.text("Save data", NamedTextColor.RED))
+                .set(Tags.ITEM_TAG, (byte) 1)
                 .build();
     }
 

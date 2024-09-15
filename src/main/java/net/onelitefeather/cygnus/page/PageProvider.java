@@ -179,7 +179,7 @@ public final class PageProvider {
     }
 
     private void setPageItem(@NotNull PageEntity pageEntity) {
-        var stack = ItemStack.builder(Material.PAPER).displayName(Component.text("Page: " + currentPageCount + 1)).build();
+        var stack = ItemStack.builder(Material.PAPER).customName(Component.text("Page: " + currentPageCount + 1)).build();
         pageEntity.enableInteraction(stack);
     }
 

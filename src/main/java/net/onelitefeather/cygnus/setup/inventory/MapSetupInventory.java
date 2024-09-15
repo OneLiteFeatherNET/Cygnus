@@ -34,10 +34,10 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
     public MapSetupInventory(@NotNull List<MapEntry> maps) {
         super(Component.text("Select map"), InventoryType.CHEST_4_ROW);
 
-        var layout = new InventoryLayout(getType());
-        var decoration = ItemStack.builder(Material.GRAY_STAINED_GLASS_PANE).displayName(Component.text("")).build();
-        layout.setNonClickItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), decoration);
-        layout.setNonClickItems(LayoutCalculator.fillRow(InventoryType.CHEST_4_ROW), decoration);
+        var layout = InventoryLayout.fromType(getType());
+        var decoration = ItemStack.builder(Material.GRAY_STAINED_GLASS_PANE).customName(Component.text("")).build();
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), decoration);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_4_ROW), decoration);
 
         this.setLayout(layout);
 
@@ -45,13 +45,13 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
             return;
         }
         setDataLayoutFunction(dataLayoutFunction -> {
-            var dataLayout = dataLayoutFunction == null ? new InventoryLayout(getType()) : dataLayoutFunction;
+            var dataLayout = dataLayoutFunction == null ? InventoryLayout.fromType(getType()) : dataLayoutFunction;
 
             dataLayout.blank(MAP_SLOTS);
 
             for (int i = 0; i < maps.size(); i++) {
                 var currentMap = maps.get(i);
-                dataLayout.setItem(MAP_SLOTS[i], getMapItem(currentMap.path()), (player, clickType, i1, inventoryConditionResult) -> {
+                dataLayout.setItem(MAP_SLOTS[i], getMapItem(currentMap.path()), (player, slot, clickType, inventoryConditionResult) -> {
                     inventoryConditionResult.setCancel(true);
                     if (clickType != ClickType.LEFT_CLICK && clickType != ClickType.RIGHT_CLICK) return;
                     var mode = clickType == ClickType.LEFT_CLICK ? SetupMode.LOBBY : SetupMode.GAME;
@@ -68,7 +68,7 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
     private @NotNull ItemStack getMapItem(@NotNull Path path) {
         return ItemStack.builder(Material.PAPER)
                 .lore(LORE_COMPONENTS)
-                .displayName(Component.text(path.getFileName().toString()))
+                .customName(Component.text(path.getFileName().toString()))
                 .build();
     }
 

@@ -19,8 +19,8 @@ public final class Items {
 
     public Items() {
         this.slenderEye = ItemStack.builder(Material.ENDER_EYE)
-                .displayName(Messages.withMini("<!i><color:#ff00d4>SlenderEye</color>"))
-                .meta(builder -> builder.setTag(Tags.ITEM_TAG, (byte) 0))
+                .customName(Messages.withMini("<!i><color:#ff00d4>SlenderEye</color>"))
+                .set(Tags.ITEM_TAG, (byte) 0)
                 .build();
     }
 

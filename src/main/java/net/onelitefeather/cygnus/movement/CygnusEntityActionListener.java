@@ -1,21 +1,16 @@
 package net.onelitefeather.cygnus.movement;
 
-import net.minestom.server.attribute.AttributeInstance;
-import net.minestom.server.attribute.AttributeModifier;
-import net.minestom.server.attribute.AttributeOperation;
-import net.minestom.server.attribute.VanillaAttribute;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.attribute.Attribute;
+import net.minestom.server.entity.attribute.AttributeInstance;
+import net.minestom.server.entity.attribute.AttributeModifier;
+import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerStartFlyingWithElytraEvent;
 import net.minestom.server.event.player.PlayerStartSneakingEvent;
 import net.minestom.server.event.player.PlayerStopSneakingEvent;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
-import net.minestom.server.network.packet.server.play.EntityPropertiesPacket;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.UUID;
 
 /**
  * @author theEvilReaper
@@ -25,9 +20,11 @@ import java.util.UUID;
 
 public final class CygnusEntityActionListener {
 
-    private static final AttributeModifier SPEED_MODIFIER_SPRINTING = new AttributeModifier(UUID.fromString("662A6B8D-DA3E-4C1C-8813-96EA6097278D"), "Sprinting speed boost", 0.30000001192092896D, AttributeOperation.MULTIPLY_TOTAL);
+    private static final AttributeModifier SPEED_MODIFIER_SPRINTING =
+            new AttributeModifier("Sprinting speed boost", 0.30000001192092896D, AttributeOperation.MULTIPLY_TOTAL);
 
-    private CygnusEntityActionListener() { }
+    private CygnusEntityActionListener() {
+    }
 
     public static void listener(ClientEntityActionPacket packet, Player player) {
         switch (packet.action()) {
@@ -54,14 +51,15 @@ public final class CygnusEntityActionListener {
 
     private static void setSprinting(@NotNull Player player, boolean sprinting) {
         player.setSprinting(sprinting);
-        AttributeInstance attribute = player.getAttribute(VanillaAttribute.GENERIC_MOVEMENT_SPEED);
+        AttributeInstance attribute = player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
         attribute.removeModifier(SPEED_MODIFIER_SPRINTING);
         if (sprinting) {
             attribute.addModifier(SPEED_MODIFIER_SPRINTING);
             return;
         }
-        var propertiesPacket = new EntityPropertiesPacket(player.getEntityId(), new ArrayList<>(Collections.singletonList(attribute)));
-        player.sendPacketToViewersAndSelf(propertiesPacket);
+        //TODO: Fix this
+        // var propertiesPacket = new EntityAttributesPacket(player.getEntityId(), new ArrayList<>(Collections.singletonList(attribute)));
+//        player.sendPacketToViewersAndSelf(propertiesPacket);
     }
 
     private static void setSneaking(Player player, boolean sneaking) {

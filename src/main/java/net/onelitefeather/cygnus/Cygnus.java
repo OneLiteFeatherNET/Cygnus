@@ -29,7 +29,6 @@ import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.minestom.server.utils.PacketUtils;
-import net.minestom.server.utils.PropertyUtils;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.PageEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
@@ -88,7 +87,7 @@ import java.util.function.Consumer;
 @SuppressWarnings("java:S3252")
 public final class Cygnus extends Extension implements TeamCreator, ListenerHandling {
 
-    private static final boolean SETUP_MODE = PropertyUtils.getBoolean("cygnus.setup", false);
+    private static final boolean SETUP_MODE = Boolean.parseBoolean(System.getProperty("cygnus.setup", "false"));
     private static final GameConfig GAME_CONFIG = new GameConfig(1, 12);
     private final TeamService<Team> teamService;
     private final LinearPhaseSeries<TimedPhase> linearPhaseSeries;

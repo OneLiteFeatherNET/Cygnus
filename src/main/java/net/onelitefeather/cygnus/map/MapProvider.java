@@ -8,9 +8,9 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
-import net.minestom.server.instance.AnvilLoader;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.instance.anvil.AnvilLoader;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.game.adapter.PageResourceAdapter;
@@ -110,7 +110,7 @@ public final class MapProvider {
 
     public void prepareInstanceData(@NotNull InstanceContainer instance) {
         instance.setTimeRate(0);
-        instance.setTimeUpdate(null);
+        instance.setTimeSynchronizationTicks(0);
         instance.setTime(Helper.MIDNIGHT_TIME);
         instance.enableAutoChunkLoad(true);
     }

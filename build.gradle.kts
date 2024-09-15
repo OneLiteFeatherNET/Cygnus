@@ -11,12 +11,13 @@ group = "net.onelitefeather"
 version = "1.0.1-SNAPSHOT" // Change
 
 repositories {
+    mavenLocal()
     maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
     mavenCentral()
     maven("https://jitpack.io")
     maven {
         val groupdId = 28 // Gitlab Group
-        url = uri("https://gitlab.themeinerlp.dev/api/v4/groups/$groupdId/-/packages/maven")
+        url = uri("https://gitlab.onelitefeather.dev/api/v4/groups/$groupdId/-/packages/maven")
         name = "GitLab"
         credentials(HttpHeaderCredentials::class.java) {
             name =  "Private-Token"

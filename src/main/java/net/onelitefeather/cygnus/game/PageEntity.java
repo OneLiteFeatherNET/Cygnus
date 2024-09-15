@@ -45,7 +45,7 @@ public final class PageEntity extends Entity {
         super(EntityType.ITEM_DISPLAY);
         this.setInstance(instance, spawnPos);
         this.hitBox = new Entity(EntityType.INTERACTION);
-        this.pageItem = ItemStack.builder(Material.PAPER).displayName(Component.text("Page: " + pageCount)).build();
+        this.pageItem = ItemStack.builder(Material.PAPER).customName(Component.text("Page: " + pageCount)).build();
         this.ttlTime = Helper.calculateOffsetTime(GameConfig.PAGE_TTL_TIME);
 
         ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) this.getEntityMeta();

@@ -3,9 +3,9 @@ package net.onelitefeather.cygnus.stamina;
 import de.icevizion.aves.util.Components;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.minestom.server.attribute.VanillaAttribute;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
@@ -102,7 +102,7 @@ public non-sealed class SlenderBar extends StaminaBar {
                 player.setTag(Tags.HIDDEN, (byte)1);
                 player.removeEffect(NIGHT_VISION.potion().effect());
                 player.addEffect(BLINDNESS.potion());
-                player.getAttribute(VanillaAttribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.1f);
+                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.1f);
                 this.accept.apply(player, Status.DRAINING);
             }
             case REGENERATING -> {
