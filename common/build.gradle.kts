@@ -25,6 +25,7 @@ dependencies {
 
     testImplementation(libs.minestom)
     testImplementation(libs.minestom.test)
+    testImplementation(libs.aves)
     testImplementation(libs.xerus)
     testImplementation(libs.junit.api)
     testRuntimeOnly(libs.junit.engine)
