@@ -41,16 +41,14 @@ public final class MapProvider {
     private final Gson gson;
     private InstanceContainer instance;
     private BaseMap activeMap;
-    private final boolean debug;
 
     private GameMap gameMap;
     private InstanceContainer gameInstance;
 
     private final PageProvider pageProvider;
 
-    public MapProvider(@NotNull Path path, @NotNull InstanceContainer instance, @NotNull PageProvider pageProvider, boolean debug) {
-        this.mapPool = new MapPool(path.resolve(MAP_PATH), debug);
-        this.debug = debug;
+    public MapProvider(@NotNull Path path, @NotNull InstanceContainer instance, @NotNull PageProvider pageProvider) {
+        this.mapPool = new MapPool(path.resolve(MAP_PATH));
         this.instance = instance;
         this.pageProvider = pageProvider;
         var typeAdapter = new PositionGsonAdapter();
@@ -85,12 +83,10 @@ public final class MapProvider {
 
         this.gameMap = gameData.get();
         this.gameInstance = gameInstance;
-
-        //this.pageProvider.collectStartPages(gameInstance);
+        this.pageProvider.collectStartPages(gameInstance);
     }
 
     public void saveMap(@NotNull Path path, @NotNull BaseMap baseMap) {
-        Check.argCondition(!debug, "The method can only be used in the setup mode!");
         this.fileHandler.save(path, baseMap instanceof GameMap gameMap ? gameMap : baseMap);
     }
 

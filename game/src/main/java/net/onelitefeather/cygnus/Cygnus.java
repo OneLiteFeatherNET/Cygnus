@@ -96,7 +96,7 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
         InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         MinecraftServer.getInstanceManager().registerInstance(instance);
         this.pageProvider = new PageProvider(this.linearPhaseSeries);
-        this.mapProvider = new MapProvider(getDataDirectory(), instance, this.pageProvider, false);
+        this.mapProvider = new MapProvider(getDataDirectory(), instance, this.pageProvider);
         this.mapProvider.prepareInstanceData(instance);
         this.view = new GameViewImpl(this::getViewComponent);
         this.createTeams(GAME_CONFIG, this.teamService, this.ambientProvider);
@@ -167,10 +167,6 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
                 Strings.getTimeString(TimeFormat.MM_SS, gamePhase.getCurrentTicks()),
                 this.pageProvider.getPageStatus()
         );
-    }
-
-    private void setMainInstance(@NotNull Player player, @NotNull Instance instance) {
-        player.setInstance(instance, Vec.ZERO);
     }
 
     private void triggerGameStart() {
