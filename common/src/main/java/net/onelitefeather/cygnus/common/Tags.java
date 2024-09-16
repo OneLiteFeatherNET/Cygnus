@@ -5,11 +5,11 @@ import net.minestom.server.tag.Tag;
 import java.util.UUID;
 
 /**
+ * The {@link Tags} class contains all tags used in the project. It is a utility class and should not be instantiated.
  * @author theEvilReaper
  * @version 1.0.0
- * @since
+ * @since 1.0.0
  **/
-
 public final class Tags {
 
     public static final Tag<Byte> ITEM_TAG = Tag.Byte("itemTag");
@@ -20,5 +20,6 @@ public final class Tags {
 
     public static final Tag<Byte> HIDDEN = Tag.Byte("hidden");
 
-    private Tags() {}
+    private Tags() {
+    }
 }
