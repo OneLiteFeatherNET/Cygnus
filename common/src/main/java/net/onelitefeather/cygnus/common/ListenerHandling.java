@@ -11,8 +11,20 @@ import org.jetbrains.annotations.NotNull;
 
 import static de.icevizion.aves.inventory.util.InventoryConstants.CANCELLABLE_EVENT;
 
+/**
+ * The interface provides a default method to register some listeners to cancel specific events.
+ *
+ * @author theEvilReaper
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public interface ListenerHandling {
 
+    /**
+     * Registers some {@link Event} listener to cancel specific default events.
+     *
+     * @param eventNode the event node to register the listeners
+     */
     default void registerCancelListener(@NotNull EventNode<Event> eventNode) {
         eventNode.addListener(PlayerBlockBreakEvent.class, CANCELLABLE_EVENT::accept);
         eventNode.addListener(PlayerBlockPlaceEvent.class, CANCELLABLE_EVENT::accept);
