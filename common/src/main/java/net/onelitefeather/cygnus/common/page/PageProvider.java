@@ -140,7 +140,9 @@ public final class PageProvider {
         ++this.currentPageCount;
         this.updatePageDisplay();
 
-        updatePageData(pageEntity);/*
+        updatePageData(pageEntity);
+        //TODO: Create event or functional interface for that
+        /*
         if (this.currentPageCount >= maxPageAmount) {
             var gamePhase = (GamePhase) this.phaseSeries.getCurrentPhase();
             gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_PAGES_FOUND));
