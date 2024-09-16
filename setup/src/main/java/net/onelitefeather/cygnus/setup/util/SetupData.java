@@ -14,6 +14,8 @@ import org.jetbrains.annotations.UnknownNullability;
 
 public final class SetupData {
 
+    private static final Pos SPAWN_POINT = new Pos(0, 100, 0);
+
     private MapEntry selectedMap;
     private SetupMode setupMode;
     private BaseMap baseMap;
@@ -23,7 +25,7 @@ public final class SetupData {
     private boolean pageMode;
 
     public void setSetupMode(@NotNull SetupMode setupMode) {
-        if (setupMode != null && this.setupMode != null) return;
+        if (this.setupMode != null) return;
         this.setupMode = setupMode;
         this.baseMap = setupMode == SetupMode.LOBBY ? new BaseMap() : new GameMap();
     }
@@ -67,7 +69,7 @@ public final class SetupData {
      * @param player the player to teleport
      */
     public void teleport(@NotNull Player player) {
-        player.setInstance(this.instance, new Pos(0, 100, 0));
+        player.setInstance(this.instance, SPAWN_POINT);
     }
 
     /**

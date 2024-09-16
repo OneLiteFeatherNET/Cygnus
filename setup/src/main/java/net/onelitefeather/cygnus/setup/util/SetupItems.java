@@ -17,6 +17,9 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("java:S3252")
 public final class SetupItems {
 
+    public static final byte ZERO_INDEX = (byte) 0x00;
+    public static final byte FOURTH_INDEX = (byte) 0x04;
+
     private final ItemStack mapSelection;
     private final ItemStack saveData;
 
@@ -26,11 +29,11 @@ public final class SetupItems {
     public SetupItems() {
         this.mapSelection = ItemStack.builder(Material.CHEST)
                 .customName(Component.text("Map selection", NamedTextColor.GREEN))
-                .set(Tags.ITEM_TAG, (byte) 0)
+                .set(Tags.ITEM_TAG, ZERO_INDEX)
                 .build();
         this.saveData = ItemStack.builder(Material.BELL)
                 .customName(Component.text("Save data", NamedTextColor.RED))
-                .set(Tags.ITEM_TAG, (byte) 1)
+                .set(Tags.ITEM_TAG, (byte) 0x01)
                 .build();
     }
 
@@ -39,8 +42,8 @@ public final class SetupItems {
      * @param player the player who should receive the item
      */
     public void setMapSelection(@NotNull Player player) {
-        player.getInventory().setItemStack(4, this.mapSelection);
-        player.setHeldItemSlot((byte)4);
+        player.getInventory().setItemStack(FOURTH_INDEX, this.mapSelection);
+        player.setHeldItemSlot(FOURTH_INDEX);
     }
 
     /**
@@ -48,7 +51,7 @@ public final class SetupItems {
      * @param player the player who should receive the item
      */
     public void setSaveData(@NotNull Player player) {
-        player.getInventory().setItemStack(4, this.saveData);
-        player.setHeldItemSlot((byte)0);
+        player.getInventory().setItemStack(FOURTH_INDEX, this.saveData);
+        player.setHeldItemSlot(ZERO_INDEX);
     }
 }

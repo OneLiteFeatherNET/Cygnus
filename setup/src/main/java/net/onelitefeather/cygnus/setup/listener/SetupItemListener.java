@@ -6,6 +6,7 @@ import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
 import net.onelitefeather.cygnus.setup.util.SetupData;
+import net.onelitefeather.cygnus.setup.util.SetupItems;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiPredicate;
@@ -46,7 +47,7 @@ public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
         }
 
         // Check if the given tag value is 0 which represents the item for the map selection
-        if (0 == tagValue && setupData.hasMap()) {
+        if (SetupItems.ZERO_INDEX == tagValue && setupData.hasMap()) {
             setupData.teleport(player);
             setupData.reset();
             return;
