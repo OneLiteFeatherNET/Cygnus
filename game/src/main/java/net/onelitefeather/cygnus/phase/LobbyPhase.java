@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.IntFunction;
 
 import static net.onelitefeather.cygnus.common.config.GameConfig.LOBBY_PHASE_TIME;
 import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIME;
@@ -29,7 +29,7 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIM
 public final class LobbyPhase extends TimedPhase {
 
     private boolean forceStarted;
-    private final Function<Integer, @NotNull Team> teamGetter;
+    private final IntFunction<Team> teamGetter;
     private final StaminaService staminaService;
     private final Consumer<Void> worldUpdater;
     private final MapProvider mapProvider;
@@ -37,7 +37,7 @@ public final class LobbyPhase extends TimedPhase {
     private Component displayComponent;
 
     public LobbyPhase(
-            @NotNull Function<Integer, @NotNull Team> teamGetter,
+            @NotNull IntFunction<Team> teamGetter,
             @NotNull StaminaService staminaService,
             @NotNull Consumer<Void> worldUpdater,
             @NotNull MapProvider mapProvider

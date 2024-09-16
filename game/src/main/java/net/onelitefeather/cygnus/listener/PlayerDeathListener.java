@@ -13,13 +13,13 @@ import net.onelitefeather.cygnus.phase.GamePhase;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.IntFunction;
 
 public class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
 
     private final LinearPhaseSeries<TimedPhase> linearPhaseSeries;
     private final Team survivorTeam;
-    private final Function<Void, Team> slenderGetter;
+    private final IntFunction<Team> slenderGetter;
 
     public PlayerDeathListener(@NotNull LinearPhaseSeries<TimedPhase> linearPhaseSeries, @NotNull TeamService<Team> teamService) {
         this.linearPhaseSeries = linearPhaseSeries;
@@ -36,7 +36,7 @@ public class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
         if (survivorTeam.getPlayers().isEmpty() && linearPhaseSeries.getCurrentPhase() instanceof GamePhase) {
             event.setChatMessage(null);
             GamePhase gamePhase = (GamePhase) linearPhaseSeries.getCurrentPhase();
-            var slenderPlayer = this.slenderGetter.apply(null).getPlayers().iterator().next();
+            var slenderPlayer = this.slenderGetter.apply(0).getPlayers().iterator().next();
             gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_SURVIVOR_DEAD, slenderPlayer));
             gamePhase.finish();
             return;

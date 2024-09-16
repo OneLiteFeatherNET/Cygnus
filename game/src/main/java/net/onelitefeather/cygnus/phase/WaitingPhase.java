@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 /**
  * @author theEvilReaper
@@ -18,9 +19,9 @@ public final class WaitingPhase extends TimedPhase {
 
     private final GameView gameView;
     private final MapProvider mapProvider;
-    private final Function<Integer, @NotNull Team> teamGetter;
+    private final IntFunction<Team> teamGetter;
 
-    public WaitingPhase(@NotNull GameView gameView, @NotNull MapProvider mapProvider, @NotNull Function<Integer, @NotNull Team> teamGetter) {
+    public WaitingPhase(@NotNull GameView gameView, @NotNull MapProvider mapProvider, @NotNull IntFunction<Team> teamGetter) {
         super("Waiting", ChronoUnit.SECONDS, 1);
         this.setPaused(false);
         this.setCurrentTicks(3);
