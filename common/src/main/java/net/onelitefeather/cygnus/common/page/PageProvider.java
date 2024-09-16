@@ -12,6 +12,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Messages;
+import net.onelitefeather.cygnus.common.util.DirectionFaceHelper;
 import net.onelitefeather.cygnus.common.util.Helper;
 import org.jetbrains.annotations.NotNull;
 
@@ -76,7 +77,7 @@ public final class PageProvider {
             var page = this.globalCache.remove(randomIndex);
 
             if (candidateHashes.add(page.hashCode())) {
-                var direction = Helper.parseDirection(page.face());
+                var direction = DirectionFaceHelper.parseDirection(page.face());
                 var position = Helper.updatePosition(Pos.fromPoint(page.position()), direction);
                 PageEntity entity = PageFactory.createPage(instance, position, direction, counter + 1);
                 this.activePages.put(entity.getHitBoxUUID(), entity);
@@ -121,7 +122,7 @@ public final class PageProvider {
         try {
             CACHE_LOCK.lock();
             var newPos = this.globalCache.remove(Helper.getRandomInt(this.globalCache.size()));
-            pageEntity.teleport(Helper.updatePosition(Pos.fromPoint(newPos.position()), Helper.parseDirection(newPos.face())));
+            pageEntity.teleport(Helper.updatePosition(Pos.fromPoint(newPos.position()), DirectionFaceHelper.parseDirection(newPos.face())));
             setPageItem(pageEntity);
             activePages.put(pageEntity.getHitBoxUUID(), pageEntity);
             var resource = this.usedResources.remove(pageEntity.getHitBoxUUID());
@@ -156,7 +157,7 @@ public final class PageProvider {
         } finally {
             CACHE_LOCK.unlock();
         }
-        entity.teleport(Helper.updatePosition(Pos.fromPoint(resource.position()), Helper.parseDirection(resource.face())));
+        entity.teleport(Helper.updatePosition(Pos.fromPoint(resource.position()), DirectionFaceHelper.parseDirection(resource.face())));
         setPageItem(entity);
         try {
             PAGE_LOCK.lock();
