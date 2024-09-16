@@ -38,7 +38,7 @@ public final class PageProvider {
 
     private static final Lock CACHE_LOCK = new ReentrantLock();
     private static final Lock PAGE_LOCK = new ReentrantLock();
-    private final LinearPhaseSeries<TimedPhase> phaseSeries;
+    private final PageFinishFunction pageFinishFunction;
     private final List<PageResource> globalCache;
     private final Map<UUID, PageEntity> activePages;
     private final Map<UUID, PageResource> usedResources;
@@ -47,8 +47,8 @@ public final class PageProvider {
 
     private Component pageStatus = Component.empty();
 
-    public PageProvider(@NotNull LinearPhaseSeries<TimedPhase> phaseSeries) {
-        this.phaseSeries = phaseSeries;
+    public PageProvider(@NotNull PageFinishFunction pageFinishFunction) {
+        this.pageFinishFunction = pageFinishFunction;
         this.globalCache = new ArrayList<>();
         this.usedResources = new HashMap<>();
         this.activePages = new HashMap<>();
@@ -141,6 +141,10 @@ public final class PageProvider {
         this.updatePageDisplay();
 
         updatePageData(pageEntity);
+
+        if (this.currentPageCount >= maxPageAmount) {
+            this.pageFinishFunction.finish();
+        }
         //TODO: Create event or functional interface for that
         /*
         if (this.currentPageCount >= maxPageAmount) {
