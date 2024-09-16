@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * The class contains each {@link ItemStack} reference which is required for the game.
+ *
  * @author theEvilReaper
  * @version 1.0.0
  * @since 1.0.0
@@ -26,6 +27,11 @@ public final class Items {
                 .build();
     }
 
+    /**
+     * Sets the {@link ItemStack} for the SlenderEye to the player inventory.
+     *
+     * @param player the player who should receive the item
+     */
     public void setSlenderEye(@NotNull Player player) {
         player.getInventory().clear();
         player.getInventory().addItemStack(this.slenderEye);
