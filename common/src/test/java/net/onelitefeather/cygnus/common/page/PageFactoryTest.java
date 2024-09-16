@@ -9,6 +9,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.zip.ZipEntry;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MicrotusExtension.class)
@@ -38,6 +40,20 @@ class PageFactoryTest {
                 () -> PageFactory.createPage(instance, Pos.ZERO, Direction.SOUTH, -1),
                 "The page count can't be zero or negative"
         );
+        env.destroyInstance(instance);
+    }
+
+    @Test
+    void testPageCreationViaFactory(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+
+        PageEntity pageEntity = PageFactory.createPage(instance, Pos.ZERO, Direction.SOUTH, 1);
+
+        assertNotNull(pageEntity);
+        assertEquals(Pos.ZERO, pageEntity.getPosition());
+        assertEquals(instance.getUniqueId(), pageEntity.getInstance().getUniqueId());
+        pageEntity.remove();
+
         env.destroyInstance(instance);
     }
 }

@@ -22,12 +22,19 @@ class DirectionFaceHelperTest {
     @Test
     void testInvalidDirectionParsing() {
         assertEquals(Direction.NORTH, DirectionFaceHelper.parseDirection("INVALID"));
+        assertEquals(Direction.NORTH, DirectionFaceHelper.parseDirection(""));
     }
 
     @ParameterizedTest
     @ValueSource(doubles = { -51, 51 })
-    void testValidFace(double pitch) {
+    void testValidFaceByPitch(double pitch) {
         assertFalse(DirectionFaceHelper.isValidFace(pitch));
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = { -50, 0, 50 })
+    void testValidFace(double pitch) {
+        assertTrue(DirectionFaceHelper.isValidFace(pitch));
     }
 
     @ParameterizedTest
