@@ -42,7 +42,7 @@ tasks {
     }
 
     jacocoTestReport {
-        dependsOn(rootProject.tasks.test)
+        dependsOn(test)
         reports {
             xml.required.set(true)
         }
@@ -82,7 +82,7 @@ publishing {
 
 
             name = "Gitlab"
-            // Get the detected repository from the publish data
+            // Get the detected repository from the publishing data
             url = uri(publishData.getRepository())
         }
     }

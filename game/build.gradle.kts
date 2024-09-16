@@ -40,7 +40,7 @@ tasks {
     }
 
     jacocoTestReport {
-        dependsOn(rootProject.tasks.test)
+        dependsOn(test)
         reports {
             xml.required.set(true)
         }
