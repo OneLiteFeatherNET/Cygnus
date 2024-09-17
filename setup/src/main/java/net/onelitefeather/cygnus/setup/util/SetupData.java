@@ -32,6 +32,10 @@ public final class SetupData {
     private InstanceContainer instance;
     private boolean pageMode;
 
+    /**
+     * Updates the mode for the selection process.
+     * @param setupMode the mode to set
+     */
     public void setSetupMode(@NotNull SetupMode setupMode) {
         if (this.setupMode != null) return;
         this.setupMode = setupMode;
