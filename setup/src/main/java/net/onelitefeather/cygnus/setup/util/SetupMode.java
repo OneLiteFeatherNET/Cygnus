@@ -18,6 +18,10 @@ public enum SetupMode {
     private static final SetupMode[] VALUES = values();
     private final String name;
 
+    /**
+     * Create a new entry for the setup enumeration.
+     * @param name the name for the entry
+     */
     SetupMode(@NotNull String name) {
         this.name = name;
     }
