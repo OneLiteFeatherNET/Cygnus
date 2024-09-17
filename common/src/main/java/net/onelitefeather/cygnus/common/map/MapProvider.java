@@ -17,6 +17,7 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.page.adapter.PageResourceAdapter;
+import net.onelitefeather.cygnus.common.util.Helper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 import org.slf4j.Logger;
@@ -105,7 +106,7 @@ public final class MapProvider {
     public void prepareInstanceData(@NotNull InstanceContainer instance) {
         instance.setTimeRate(0);
         instance.setTimeSynchronizationTicks(0);
-        //  instance.setTime(Helper.MIDNIGHT_TIME);
+        instance.setTime(Helper.MIDNIGHT_TIME);
         instance.enableAutoChunkLoad(true);
     }
 
@@ -115,9 +116,8 @@ public final class MapProvider {
 
     public void setMidnight() {
         if (this.instance == null) return;
-        //this.instance.setTime(Helper.MIDNIGHT_TIME);
+        this.instance.setTime(Helper.MIDNIGHT_TIME);
     }
-
 
     public @NotNull Instance getInstance() {
         return this.instance != null ? instance : gameInstance;
