@@ -31,6 +31,7 @@ dependencyResolutionManagement {
         }
     } else {
         repositories {
+            mavenLocal()
             maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
             mavenCentral()
             maven("https://jitpack.io")
@@ -52,14 +53,15 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             version("publishdata", "1.4.0")
-            version("minestom", "1.4.2")
+            version("minestom", "1.5.0-SNAPSHOT")
             version("junit", "5.10.3")
             version("mockito", "5.12.0")
-            version("aves", "1.5.2")
-            version("xerus", "1.2.2+7b54a084")
+            version("aves", "1.6.0-SNAPSHOT")
+            version("xerus", "1.3.0-SNAPSHOT")
+            version("shadow", "8.3.0")
 
             library("microtus.bom", "net.onelitefeather.microtus", "bom").versionRef("minestom")
-            library("dungeon.bom", "net.theevilreaper.dungeon.bom", "base").version("1.0.4")
+            library("dungeon.bom", "net.theevilreaper.dungeon.bom", "base").version("1.0.6")
 
             library("minestom", "net.onelitefeather.microtus", "Microtus").withoutVersion()
             library("minestom-test", "net.onelitefeather.microtus.testing", "testing").withoutVersion()
@@ -80,7 +82,12 @@ dependencyResolutionManagement {
 
             bundle("cloudnet", listOf("cloudnet-wrapper", "cloudnet-bridge", "cloudnet-driver"))
 
+            plugin("shadow", "com.gradleup.shadow").versionRef("shadow")
             plugin("publishdata", "de.chojo.publishdata").versionRef("publishdata")
         }
     }
 }
+
+include("common")
+include("setup")
+include("game")
