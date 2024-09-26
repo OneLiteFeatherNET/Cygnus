@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
  * @version 1.0.0
  * @since 1.0.0
  **/
+@SuppressWarnings("java:S6206")
 public final class SlenderReviveEvent implements PlayerEvent {
 
     private final Player player;

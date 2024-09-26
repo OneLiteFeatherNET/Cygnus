@@ -48,18 +48,16 @@ public final class StaminaService {
         ((SlenderBar)this.slenderBar).setAccept((player, status) -> {
             if (status == StaminaBar.Status.DRAINING) {
                 PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
-                MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(p -> {
-                    player.updateNewViewer(p);
-                });
+                MinecraftServer.getConnectionManager().getOnlinePlayers()
+                        .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateNewViewer);
                 PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
                 return null;
             }
 
             if (status == StaminaBar.Status.REGENERATING) {
                 PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
-                MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(p -> {
-                    player.updateOldViewer(p);
-                });
+                MinecraftServer.getConnectionManager().getOnlinePlayers()
+                        .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateOldViewer);
                 PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
                 return null;
             }
