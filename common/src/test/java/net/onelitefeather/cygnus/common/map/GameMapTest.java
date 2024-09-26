@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.common.map;
 
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import org.junit.jupiter.api.Test;
@@ -71,5 +72,21 @@ class GameMapTest {
         assertEquals(Pos.ZERO, gameMap.getSlenderSpawn());
         gameMap.removeSlenderSpawn();
         assertNull(gameMap.getSlenderSpawn());
+    }
+
+    @Test
+    void testPageFaceHandling() {
+        GameMap gameMap = new GameMap();
+        assertNotNull(gameMap);
+        assertTrue(gameMap.getPageFaces().isEmpty());
+
+        gameMap.addPage(Vec.ZERO, "NORTH");
+
+        assertFalse(gameMap.getPageFaces().isEmpty());
+
+        PageResource pageResource = gameMap.getPageFaces().iterator().next();
+
+        assertEquals(Vec.ZERO, pageResource.position());
+        assertEquals("NORTH", pageResource.face());
     }
 }
