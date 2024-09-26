@@ -1,8 +1,6 @@
 package net.onelitefeather.cygnus.common.page;
 
 import de.icevizion.aves.util.Broadcaster;
-import de.icevizion.xerus.api.phase.LinearPhaseSeries;
-import de.icevizion.xerus.api.phase.TimedPhase;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
