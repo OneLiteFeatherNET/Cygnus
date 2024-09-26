@@ -111,7 +111,6 @@ public final class LobbyPhase extends TimedPhase {
         if (getCurrentTicks() == 0) {
             var survivorTeam = teamGetter.apply(1);
             var player = Helper.prepareTeamAllocation(teamGetter.apply(0), survivorTeam);
-            System.out.println("Slender is " + player.getUsername());
             this.staminaService.setSlenderBar(player);
             this.staminaService.createStaminaBars(survivorTeam);
         }
