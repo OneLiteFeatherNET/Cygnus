@@ -36,7 +36,7 @@ public class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
         event.getPlayer().kick(Messages.withMini("<red>Thanks for playing it. <3"));
         Phase currentPhase = linearPhaseSeries.getCurrentPhase();
         //TODO: Should be tested
-        if ((!(currentPhase instanceof GamePhase gamePhase)) || !survivorTeam.getPlayers().isEmpty()) return;
+        if ((!(currentPhase instanceof GamePhase gamePhase && !survivorTeam.getPlayers().isEmpty()))) return;
         event.setChatMessage(null);
         var slenderPlayer = this.slenderGetter.apply(0).getPlayers().iterator().next();
         gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_SURVIVOR_DEAD, slenderPlayer));
