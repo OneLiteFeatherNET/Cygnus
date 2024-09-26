@@ -1,0 +1,9 @@
+{
+  "entrypoint": "net.onelitefeather.cygnus.setup.SetupExtension",
+  "name": "SetupExtension",
+  "version": "1.0.0",
+  "dependencies": [
+    "Aves",
+    "Xerus"
+  ]
+}
