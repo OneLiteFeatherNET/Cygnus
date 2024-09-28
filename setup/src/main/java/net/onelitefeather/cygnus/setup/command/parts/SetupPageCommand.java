@@ -29,7 +29,7 @@ public final class SetupPageCommand extends Command {
             }
 
             if (!SetupMode.isMode(SetupMode.GAME, ordinalId)) {
-                sender.sendMessage(SetupMessages.NOT_ALLOWED_IN_LOBBY);
+                sender.sendMessage(SetupMessages.getInvalidModeDuringLobby("page"));
                 return;
             }
 

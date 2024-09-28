@@ -13,6 +13,7 @@ import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.util.DirectionFaceHelper;
 import net.onelitefeather.cygnus.setup.util.SetupData;
+import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
@@ -40,13 +41,7 @@ public final class PageCreationListener implements Consumer<PlayerBlockBreakEven
 
         if (!DirectionFaceHelper.isValidFace(directionPitch)) {
             String indirectDirection = DirectionFaceHelper.getInvalidDirection(directionPitch).name();
-            Component invalidFace = Component.text(indirectDirection, NamedTextColor.RED);
-            Component invalidComponent = Messages.withPrefix(
-                    Component.text("You are looking in an invalid direction! (")
-                            .append(invalidFace)
-                            .append(Component.text(")"))
-            );
-            player.sendMessage(invalidComponent);
+            player.sendMessage(SetupMessages.getInvalidFace(indirectDirection));
             return;
         }
 

@@ -27,12 +27,12 @@ public class SetupSlenderSpawnCommand extends Command {
             int ordinalId = sender.getTag(SetupTags.SETUP_ID_TAG);
 
             if (ordinalId == -1) {
-                sender.sendMessage(SetupMessages.NOT_ALLOWED_IN_LOBBY);
+                sender.sendMessage(SetupMessages.MISSING_MAP_SELECTION);
                 return;
             }
 
             if (!SetupMode.isMode(SetupMode.GAME, ordinalId)) {
-                sender.sendMessage(SetupMessages.NOT_ALLOWED_IN_LOBBY);
+                sender.sendMessage(SetupMessages.getInvalidModeDuringLobby("slender"));
                 return;
             }
 
