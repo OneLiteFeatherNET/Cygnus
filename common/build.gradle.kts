@@ -47,6 +47,7 @@ tasks {
     test {
         finalizedBy(project.tasks.jacocoTestReport)
         useJUnitPlatform()
+        jvmArgs("-Dminestom.inside-test=true")
         testLogging {
             events("passed", "skipped", "failed")
         }

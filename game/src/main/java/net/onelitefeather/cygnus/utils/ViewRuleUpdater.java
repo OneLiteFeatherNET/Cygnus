@@ -40,4 +40,7 @@ public final class ViewRuleUpdater {
             player.setTag(Tags.HIDDEN, (byte) 0);
         }
     }
+
+    private ViewRuleUpdater() {
+    }
 }

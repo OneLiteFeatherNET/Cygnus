@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.listener;
 
 import de.icevizion.xerus.api.phase.LinearPhaseSeries;
+import de.icevizion.xerus.api.phase.Phase;
 import de.icevizion.xerus.api.phase.TimedPhase;
 import de.icevizion.xerus.api.team.Team;
 import de.icevizion.xerus.api.team.TeamService;
@@ -33,14 +34,12 @@ public class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
         survivorTeam.removePlayer(event.getPlayer());
         event.getPlayer().removeTag(Tags.TEAM_ID);
         event.getPlayer().kick(Messages.withMini("<red>Thanks for playing it. <3"));
-        if (survivorTeam.getPlayers().isEmpty() && linearPhaseSeries.getCurrentPhase() instanceof GamePhase) {
-            event.setChatMessage(null);
-            GamePhase gamePhase = (GamePhase) linearPhaseSeries.getCurrentPhase();
-            var slenderPlayer = this.slenderGetter.apply(0).getPlayers().iterator().next();
-            gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_SURVIVOR_DEAD, slenderPlayer));
-            gamePhase.finish();
-            return;
-        }
-
+        Phase currentPhase = linearPhaseSeries.getCurrentPhase();
+        //TODO: Should be tested
+        if ((!(currentPhase instanceof GamePhase gamePhase && !survivorTeam.getPlayers().isEmpty()))) return;
+        event.setChatMessage(null);
+        var slenderPlayer = this.slenderGetter.apply(0).getPlayers().iterator().next();
+        gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_SURVIVOR_DEAD, slenderPlayer));
+        gamePhase.finish();
     }
 }

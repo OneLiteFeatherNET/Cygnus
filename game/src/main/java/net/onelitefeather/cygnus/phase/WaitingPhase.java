@@ -7,7 +7,6 @@ import net.onelitefeather.cygnus.view.GameView;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
-import java.util.function.Function;
 import java.util.function.IntFunction;
 
 /**

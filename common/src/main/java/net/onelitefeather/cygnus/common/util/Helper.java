@@ -38,8 +38,16 @@ public final class Helper {
     private static final float MAX_SOUND_VALUE = 1.0f;
     private static final float DEFAULT_SPEED = 0.1f;
 
-    private Helper() {}
+    private Helper() {
+    }
 
+    /**
+     * Prepares which player should be the slender and which players should be the survivors.
+     *
+     * @param slenderTeam  the team for the slender
+     * @param survivorTeam the team for the survivors
+     * @return the player who is the slender
+     */
     public static @NotNull Player prepareTeamAllocation(@NotNull Team slenderTeam, @NotNull Team survivorTeam) {
         Check.argCondition(slenderTeam.getCapacity() != 1, "The slender team must have a capacity from one");
         var slenderPlayer = getRandomPlayer();
@@ -58,7 +66,7 @@ public final class Helper {
 
     public static void updateTabList(@NotNull TeamService<Team> teamService) {
         var survivors = teamService.getTeams().get(SURVIVOR_ID);
-        var slender = teamService.getTeams().get(SLENDER_ID);
+        var slender = teamService.getTeams().getFirst();
 
         for (Player player : slender.getPlayers()) {
             player.setDisplayName(Messages.withMini("<red>⛧ <gray>" + player.getUsername()));

@@ -10,6 +10,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+/**
+ * This is a utility class to manage the {@link net.minestom.server.scoreboard.Team} which are visible for the players.
+ * The class is used to create the teams and add them to a team or remove them.
+ *
+ * @author theEvilReaper
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public final class ScoreboardDisplay {
 
     public ScoreboardDisplay(@NotNull List<Team> teams) {

@@ -57,41 +57,43 @@ public non-sealed class SlenderBar extends StaminaBar {
 
     @Override
     public void consume() {
-        switch (status) {
-            case DRAINING -> {
-                if (currentTime >= 0) {
-                    currentTime -= TIME_STEP;
-                    var nearbyEntities = player.getInstance().getNearbyEntities(player.getPosition(), 3);
-
-                    if (nearbyEntities.isEmpty()) return;
-
-                    for (Entity nearbyEntity : nearbyEntities) {
-                        if (nearbyEntity instanceof Player target && !player.getUuid().equals(target.getUuid()) && (target.getHealth() > 0)) {
-                            target.setHealth(target.getHealth() - TIME_STEP);
-                        }
-                    }
-                } else {
-                    status = Status.REGENERATING;
-                    this.accept.apply(player, status);
-                    player.setTag(Tags.HIDDEN, (byte) 0);
-                    player.removeEffect(BLINDNESS.potion().effect());
-                    player.addEffect(NIGHT_VISION.potion());
-                }
-                this.sendProgressBar();
-            }
-            case REGENERATING -> {
-                if (currentTime < time + TIME_STEP) {
-                    currentTime += TIME_STEP;
-                } else {
-                    status = Status.READY;
-                    player.playSound(LEVEL, player.getPosition());
-                }
-                player.sendActionBar(Components.getProgressBar((int) currentTime, 17, 17, tileChar, NamedTextColor.GOLD, NamedTextColor.GRAY));
-            }
-            default -> {
-
-            }
+        if (status == Status.READY) return;
+        if (status == Status.DRAINING) {
+            this.handleDraining();
+            return;
         }
+        this.handleRegneration();
+    }
+
+    private void handleDraining() {
+        if (currentTime >= 0) {
+            currentTime -= TIME_STEP;
+            var nearbyEntities = player.getInstance().getNearbyEntities(player.getPosition(), 3);
+
+            if (nearbyEntities.isEmpty()) return;
+
+            for (Entity nearbyEntity : nearbyEntities) {
+                if (nearbyEntity instanceof Player target && !player.getUuid().equals(target.getUuid()) && (target.getHealth() > 0)) {
+                    target.setHealth(target.getHealth() - TIME_STEP);
+                }
+            }
+            return;
+        }
+        status = Status.REGENERATING;
+        this.accept.apply(player, status);
+        player.setTag(Tags.HIDDEN, (byte) 0);
+        player.removeEffect(BLINDNESS.potion().effect());
+        player.addEffect(NIGHT_VISION.potion());
+    }
+
+    private void handleRegneration() {
+        if (currentTime < time + TIME_STEP) {
+            currentTime += TIME_STEP;
+        } else {
+            status = Status.READY;
+            player.playSound(LEVEL, player.getPosition());
+        }
+        player.sendActionBar(Components.getProgressBar((int) currentTime, 17, 17, tileChar, NamedTextColor.GOLD, NamedTextColor.GRAY));
     }
 
     public boolean changeStatus() {
@@ -99,7 +101,7 @@ public non-sealed class SlenderBar extends StaminaBar {
         switch (status) {
             case READY -> {
                 status = Status.DRAINING;
-                player.setTag(Tags.HIDDEN, (byte)1);
+                player.setTag(Tags.HIDDEN, (byte) 1);
                 player.removeEffect(NIGHT_VISION.potion().effect());
                 player.addEffect(BLINDNESS.potion());
                 player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.1f);
@@ -107,13 +109,13 @@ public non-sealed class SlenderBar extends StaminaBar {
             }
             case REGENERATING -> {
                 status = Status.DRAINING;
-                player.setTag(Tags.HIDDEN, (byte)1);
+                player.setTag(Tags.HIDDEN, (byte) 1);
                 playSoundToTarget(false);
                 this.accept.apply(player, Status.DRAINING);
             }
             case DRAINING -> {
                 status = Status.REGENERATING;
-                player.setTag(Tags.HIDDEN, (byte)0);
+                player.setTag(Tags.HIDDEN, (byte) 0);
                 playSoundToTarget(true);
                 player.removeEffect(BLINDNESS.potion().effect());
                 player.addEffect(NIGHT_VISION.potion());

@@ -28,30 +28,44 @@ public non-sealed class FoodBar extends StaminaBar {
 
     @Override
     public void consume() {
-        switch (status) {
-            case DRAINING -> {
-                this.currentSpeedCount = this.currentSpeedCount - FOOD_TAKE;
-                player.setExp(normalize(this.currentSpeedCount));
+        if (status == Status.READY) return;
 
-                if (this.currentSpeedCount <= 0.0D) {
-                    player.setSprinting(false);
-                    player.sendPacket(player.getMetadataPacket());
-                    MinecraftServer.getGlobalEventHandler().call(new PlayerStopSprintingEvent(player));
-                    status = Status.REGENERATING;
-                }
-            }
-            case REGENERATING -> {
-                if (this.currentSpeedCount == MAX_FOOD) {
-                    status = Status.READY;
-                    Helper.changeSpeedValue(player, true);
-                    return;
-                }
+        if (status == Status.DRAINING) {
+            this.handleFoodDraining();
+            return;
+        }
 
-                if (this.currentSpeedCount < MAX_FOOD) {
-                    ++this.currentSpeedCount;
-                    player.setExp(normalize(this.currentSpeedCount));
-                }
-            }
+        this.handleFoodRegeneration();
+    }
+
+    /**
+     * Handles the food draining for the player.
+     */
+    private void handleFoodDraining() {
+        this.currentSpeedCount = this.currentSpeedCount - FOOD_TAKE;
+        player.setExp(normalize(this.currentSpeedCount));
+
+        if (this.currentSpeedCount <= 0.0D) {
+            player.setSprinting(false);
+            player.sendPacket(player.getMetadataPacket());
+            MinecraftServer.getGlobalEventHandler().call(new PlayerStopSprintingEvent(player));
+            status = Status.REGENERATING;
+        }
+    }
+
+    /**
+     * Handles the food regeneration for the player.
+     */
+    private void handleFoodRegeneration() {
+        if (this.currentSpeedCount == MAX_FOOD) {
+            status = Status.READY;
+            Helper.changeSpeedValue(player, true);
+            return;
+        }
+
+        if (this.currentSpeedCount < MAX_FOOD) {
+            ++this.currentSpeedCount;
+            player.setExp(normalize(this.currentSpeedCount));
         }
     }
 
@@ -77,6 +91,10 @@ public non-sealed class FoodBar extends StaminaBar {
         return false;
     }
 
+    /**
+     * Switches the status from {@link Status#REGENERATING} to {@link Status#DRAINING}.
+     * That means the player can't consume food anymore during the regeneration.
+     */
     public void switchToRegenerating() {
         if (status == Status.REGENERATING) return;
         status = Status.REGENERATING;

@@ -14,6 +14,7 @@ import java.util.UUID;
 
 /**
  * The class has some abilities to manage all {@link StaminaBar} references which are required in the game.
+ *
  * @author theEvilReaper
  * @version 1.0.0
  * @since 1.0.0
@@ -32,34 +33,50 @@ public final class StaminaService {
 
     /**
      * Creates a new instance of an {@link SlenderBar} for a given {@link Player}.
+     *
      * @param player the player which owns the {@link StaminaBar}
      */
     public void setSlenderBar(@NotNull Player player) {
+        this.setSlenderBar(player, false);
+    }
+
+    /**
+     * Creates a new instance of an {@link SlenderBar} for a given {@link Player}.
+     *
+     * @param player the player which owns the {@link StaminaBar}
+     * @param forceStart if the bar should be started by default
+     */
+    public void setSlenderBar(@NotNull Player player, boolean forceStart) {
+        if (this.slenderBar != null) {
+            this.slenderBar.stop();
+        }
+
         this.slenderBar = StaminaFactory.createSlenderStamina(player);
+        if (!forceStart) return;
+        this.slenderBar.start();
     }
 
     /**
      * Creates for each player in a team a new instance from an {@link FoodBar}.
+     *
      * @param team the team to get the player from it
      */
     public void createStaminaBars(@NotNull Team team) {
         Check.argCondition(!staminaBars.isEmpty(), "Unable to load stamina bars twice");
         Check.argCondition(team.getPlayers().isEmpty(), "Can't add players from a team without teams");
-        ((SlenderBar)this.slenderBar).setAccept((player, status) -> {
+        ((SlenderBar) this.slenderBar).setAccept((player, status) -> {
             if (status == StaminaBar.Status.DRAINING) {
                 PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
-                MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(p -> {
-                    player.updateNewViewer(p);
-                });
+                MinecraftServer.getConnectionManager().getOnlinePlayers()
+                        .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateNewViewer);
                 PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
                 return null;
             }
 
             if (status == StaminaBar.Status.REGENERATING) {
                 PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
-                MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(p -> {
-                    player.updateOldViewer(p);
-                });
+                MinecraftServer.getConnectionManager().getOnlinePlayers()
+                        .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateOldViewer);
                 PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
                 return null;
             }
@@ -97,7 +114,13 @@ public final class StaminaService {
         staminaBars.clear();
     }
 
+    @Deprecated(since = "Please use setSlenderBar instead", forRemoval = true)
     public void switchToSlenderBar(@NotNull Player player) {
+        // If the old slender has a bar, we need to stop it.
+        if (this.slenderBar != null) {
+            this.slenderBar.stop();
+        }
+        //TODO: Stop old at switch
         this.slenderBar = StaminaFactory.createSlenderStamina(player);
         this.slenderBar.start();
     }

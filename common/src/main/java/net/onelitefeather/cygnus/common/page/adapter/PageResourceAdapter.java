@@ -44,7 +44,7 @@ public final class PageResourceAdapter implements JsonSerializer<PageResource>, 
         }
 
         if (!object.has(POSITION_KEY)) {
-            throw new IllegalStateException("The position is null");
+            throw new IllegalStateException("The position can't be null");
         }
 
         position = context.deserialize(object.get(POSITION_KEY), Vec.class);
