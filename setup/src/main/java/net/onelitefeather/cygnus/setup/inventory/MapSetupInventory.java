@@ -4,6 +4,7 @@ import de.icevizion.aves.inventory.GlobalInventoryBuilder;
 import de.icevizion.aves.inventory.InventoryLayout;
 import de.icevizion.aves.inventory.util.LayoutCalculator;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.inventory.InventoryType;
@@ -32,13 +33,14 @@ import java.util.List;
 public class MapSetupInventory extends GlobalInventoryBuilder {
 
     private static final List<Component> LORE_COMPONENTS = List.of(
-            Component.text("Setup as"),
-            Component.newline(),
-            Component.text("Lobby (LeftClick)"),
-            Component.newline(),
-            Component.text("Game (RightClick)")
+            Component.empty(),
+            MiniMessage.miniMessage().deserialize("<gray>Left-click: <white>Lobby setup"),
+            Component.empty(),
+            MiniMessage.miniMessage().deserialize("<gray>Right-click: <white>Game setup")
     );
-    private static final int[] MAP_SLOTS = LayoutCalculator.repeat(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_3_ROW.getSize());
+
+    private static final int[] MAP_SLOTS = LayoutCalculator
+            .repeat(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_3_ROW.getSize());
 
     public MapSetupInventory(@NotNull List<MapEntry> maps) {
         super(Component.text("Select map"), InventoryType.CHEST_4_ROW);
