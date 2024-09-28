@@ -37,11 +37,13 @@ public final class MapSetupSelectListener implements Consumer<MapSetupSelectEven
 
         setupData.setSetupMode(event.getSetupMode());
         setupData.setSelectedMap(event.getMapEntry());
+        player.setTag(SetupTags.SETUP_ID_TAG, event.getSetupMode().ordinal());
         Component message = Messages.withPrefix(Component.text("You selected the map: ", NamedTextColor.GRAY))
                 .append(Component.text(event.getMapEntry().path().getFileName().toString(), NamedTextColor.AQUA));
         player.sendMessage(message);
         player.sendMessage(this.loadingMessage);
         setupData.loadMap();
+        player.getInventory().clear();
         MinecraftServer.getSchedulerManager().buildTask(() -> handleTeleport(event.getPlayer()))
                 .delay(Duration.of(3, ChronoUnit.SECONDS))
                 .schedule();
@@ -49,6 +51,5 @@ public final class MapSetupSelectListener implements Consumer<MapSetupSelectEven
 
     private void handleTeleport(@NotNull Player player) {
         setupData.teleport(player);
-        player.setTag(SetupTags.OCCUPIED_TAG, (byte) 1);
     }
 }
