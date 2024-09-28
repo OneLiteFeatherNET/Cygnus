@@ -18,9 +18,6 @@ public class InstanceRemoveListener implements Consumer<RemoveEntityFromInstance
     @Override
     public void accept(@NotNull RemoveEntityFromInstanceEvent event) {
         if (!event.getInstance().getUniqueId().equals(mainInstanceID)) return;
-        if (!event.getEntity().hasTag(SetupTags.OCCUPIED_TAG)) {
-            event.getEntity().removeTag(SetupTags.OCCUPIED_TAG);
-        }
 
         if (!event.getEntity().hasTag(SetupTags.SETUP_ID_TAG)) {
             event.getEntity().removeTag(SetupTags.SETUP_ID_TAG);
