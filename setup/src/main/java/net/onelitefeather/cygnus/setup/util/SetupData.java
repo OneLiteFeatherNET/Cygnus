@@ -1,6 +1,10 @@
 package net.onelitefeather.cygnus.setup.util;
 
 import de.icevizion.aves.map.BaseMap;
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
@@ -32,8 +36,15 @@ public final class SetupData {
     private InstanceContainer instance;
     private boolean pageMode;
 
+    private BossBar bossBar;
+
+    public SetupData() {
+        this.bossBar = BossBar.bossBar(Component.empty(), 1, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
+    }
+
     /**
      * Updates the mode for the selection process.
+     *
      * @param setupMode the mode to set
      */
     public void setSetupMode(@NotNull SetupMode setupMode) {
@@ -60,6 +71,11 @@ public final class SetupData {
     public void setSelectedMap(@NotNull MapEntry selectedMap) {
         if (this.selectedMap != null) return;
         this.selectedMap = selectedMap;
+        TextComponent title = Component.text("Setup mode: ")
+                .append(Component.text(setupMode.name(), NamedTextColor.LIGHT_PURPLE))
+                .append(Component.text(", Map: "))
+                .append(Component.text(selectedMap.path().getFileName().toString(), NamedTextColor.LIGHT_PURPLE));
+        this.bossBar.name(title);
     }
 
     /**
@@ -71,6 +87,16 @@ public final class SetupData {
         this.selectedMap = null;
         this.setupMode = null;
         MinecraftServer.getInstanceManager().unregisterInstance(this.instance);
+        this.bossBar = null;
+    }
+
+    /**
+     * Removes the boss bar from the given player.
+     *
+     * @param player the player to remove the boss bar
+     */
+    public void removeBossBar(@NotNull Player player) {
+        player.hideBossBar(this.bossBar);
     }
 
     /**
@@ -108,6 +134,7 @@ public final class SetupData {
      */
     public void teleport(@NotNull Player player) {
         player.setInstance(this.instance, SPAWN_POINT);
+        player.showBossBar(this.bossBar);
     }
 
     /**
