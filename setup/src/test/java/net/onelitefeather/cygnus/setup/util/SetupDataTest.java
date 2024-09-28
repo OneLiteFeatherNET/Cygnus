@@ -36,7 +36,7 @@ class SetupDataTest {
         assertNotNull(setupData);
         assertFalse(setupData.hasPageMode());
 
-        setupData.setPageMode(true);
+        setupData.swapPageMode();
 
         assertTrue(setupData.hasPageMode());
     }
