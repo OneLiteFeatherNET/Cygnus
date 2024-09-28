@@ -10,7 +10,6 @@ import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import net.onelitefeather.cygnus.setup.util.SetupValidations;
 import org.jetbrains.annotations.NotNull;
 
 public final class SetupSurvivorSpawnCommand extends Command {
@@ -19,29 +18,24 @@ public final class SetupSurvivorSpawnCommand extends Command {
         super("survivor");
         setCondition(Conditions::playerOnly);
         addSyntax((sender, context) -> {
-            if (!sender.hasTag(SetupTags.OCCUPIED_TAG)) {
-                sender.sendMessage(SetupMessages.MISSING_MAP_SELECTION);
+            int ordinalId = sender.getTag(SetupTags.SETUP_ID_TAG);
+
+            if (ordinalId == -1) {
+                sender.sendMessage(SetupMessages.NOT_ALLOWED_IN_LOBBY);
                 return;
             }
-            if (SetupValidations.mapCondition(setupData.getBaseMap(), sender)) return;
 
-            if (setupData.getSetupMode() == null || setupData.getSetupMode() != SetupMode.GAME) {
-                sender.sendMessage(Component.text("The command is only allowed for game maps"));
+            if (!SetupMode.isMode(SetupMode.GAME, ordinalId)) {
+                sender.sendMessage(SetupMessages.NOT_ALLOWED_IN_LOBBY);
                 return;
             }
 
             if (setupData.hasPageMode()) {
-                sender.sendMessage(Component.text("Please disable page mode to use this command"));
+                sender.sendMessage(SetupMessages.DISABLED_PAGE_MODE);
                 return;
             }
 
             GameMap gameMap = (GameMap) setupData.getBaseMap();
-
-          /*  if (gameMap.hasEnoughSurvivorSpawns()) {
-                sender.sendMessage(Component.text("The map reached the maximum value of survivor spawns! Please delete some spawns"));
-                return;
-            }*/
-
             gameMap.addSurvivorSpawn(Pos.fromPoint(((Player) sender).getPosition()));
             sender.sendMessage(Component.text("The survivor spawn was added to the map"));
         });

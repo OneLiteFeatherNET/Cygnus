@@ -5,8 +5,8 @@ import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.condition.Conditions;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
+import net.onelitefeather.cygnus.setup.util.SetupMode;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import net.onelitefeather.cygnus.setup.util.SetupValidations;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -14,20 +14,25 @@ import org.jetbrains.annotations.NotNull;
  * @version 1.0.0
  * @since
  **/
-
 public final class SetupPageCommand extends Command {
-
 
     public SetupPageCommand(@NotNull SetupData setupData) {
         super("page");
         setCondition(Conditions::playerOnly);
 
         addSyntax((sender, context) -> {
-            if (!sender.hasTag(SetupTags.OCCUPIED_TAG)) {
+            int ordinalId = sender.getTag(SetupTags.SETUP_ID_TAG);
+
+            if (ordinalId == -1) {
                 sender.sendMessage(SetupMessages.MISSING_MAP_SELECTION);
                 return;
             }
-            if (SetupValidations.mapCondition(setupData.getBaseMap(), sender)) return;
+
+            if (!SetupMode.isMode(SetupMode.GAME, ordinalId)) {
+                sender.sendMessage(SetupMessages.NOT_ALLOWED_IN_LOBBY);
+                return;
+            }
+
             setupData.setPageMode(!setupData.hasPageMode());
 
             sender.sendMessage(Component.text("Page setup is now ..."));
