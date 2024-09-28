@@ -12,6 +12,10 @@ public final class SetupMessages {
 
     public static final Component DISABLED_PAGE_MODE;
 
+    public static final Component PAGE_MODE_ENABLED;
+    public static final Component PAGE_MODE_DISABLED;
+    public static final Component PAGE_MODE_INFORM;
+
     static {
         EMPTY_NAME = Messages.withPrefix(Component.text("An empty name is not allowed", NamedTextColor.RED));
         MISSING_MAP_SELECTION = Messages.withPrefix(
@@ -20,9 +24,20 @@ public final class SetupMessages {
         NOT_ALLOWED_IN_LOBBY = Messages.withPrefix(
                 Component.text("The page mode is not available in the lobby setup mode!", NamedTextColor.RED)
         );
-        DISABLED_PAGE_MODE =  Messages.withPrefix(
+        DISABLED_PAGE_MODE = Messages.withPrefix(
                 Component.text("The page mode is now disabled", NamedTextColor.RED)
         );
+        PAGE_MODE_ENABLED = Messages.withPrefix(
+                Component.text("The page mode has been", NamedTextColor.GRAY)
+                        .append(Component.space())
+                        .append(Component.text("enabled", NamedTextColor.GREEN))
+        );
+        PAGE_MODE_DISABLED = Messages.withPrefix(
+                Component.text("The page mode has been", NamedTextColor.GRAY)
+                        .append(Component.space())
+                        .append(Component.text("disabled", NamedTextColor.RED))
+        );
+        PAGE_MODE_INFORM = Messages.withPrefix(Component.text("Don't forget to disable this mode", NamedTextColor.GRAY));
     }
 
     private SetupMessages() {

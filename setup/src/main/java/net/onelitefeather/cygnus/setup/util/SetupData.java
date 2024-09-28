@@ -55,12 +55,10 @@ public final class SetupData {
 
     /**
      * Updates the current sub mode to the page setup
-     *
-     * @param pageMode the new state for this mode
      */
-    public void setPageMode(boolean pageMode) {
+    public void swapPageMode() {
         if (this.setupMode == SetupMode.LOBBY) return;
-        this.pageMode = pageMode;
+        this.pageMode = !this.pageMode;
     }
 
     /**

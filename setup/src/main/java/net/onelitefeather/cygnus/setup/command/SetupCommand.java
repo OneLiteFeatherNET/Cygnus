@@ -1,7 +1,10 @@
 package net.onelitefeather.cygnus.setup.command;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.condition.Conditions;
+import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.setup.command.parts.SetupBuildersCommand;
 import net.onelitefeather.cygnus.setup.command.parts.SetupNameCommand;
 import net.onelitefeather.cygnus.setup.command.parts.SetupPageCommand;
@@ -24,6 +27,7 @@ public final class SetupCommand extends Command {
 
     /**
      * Creates a new instance from the command class and contains also the logic to execute the command.
+     *
      * @param setupData the involved {@link SetupData} class to get some information from it
      */
     public SetupCommand(@NotNull SetupData setupData) {
@@ -35,5 +39,28 @@ public final class SetupCommand extends Command {
         this.addSubcommand(new SetupSurvivorSpawnCommand(setupData));
         this.addSubcommand(new SetupSlenderSpawnCommand(setupData));
         this.addSubcommand(new SetupPageCommand(setupData));
+        Component helpMessage = getHelpComponent();
+        this.setDefaultExecutor((sender, context) -> sender.sendMessage(helpMessage));
+    }
+
+    /**
+     * Returns the help component for the setup command.
+     *
+     * @return the help component
+     */
+    private @NotNull Component getHelpComponent() {
+        Component helpComponent = Messages.withPrefix(Component.text("Help for the setup commands:", NamedTextColor.GRAY))
+                .append(Component.newline());
+
+        for (int i = 0; i < getSubcommands().size(); i++) {
+            Command subCommand = getSubcommands().get(i);
+            Component component = Messages.withPrefix(Component.text("- ", NamedTextColor.GRAY))
+                    .append(Component.text("/setup", NamedTextColor.YELLOW))
+                    .append(Component.space())
+                    .append(Component.text(subCommand.getName(), NamedTextColor.GREEN));
+
+            helpComponent = helpComponent.append(component).append(Component.newline());
+        }
+        return helpComponent;
     }
 }

@@ -21,5 +21,9 @@ public class InstanceRemoveListener implements Consumer<RemoveEntityFromInstance
         if (!event.getEntity().hasTag(SetupTags.OCCUPIED_TAG)) {
             event.getEntity().removeTag(SetupTags.OCCUPIED_TAG);
         }
+
+        if (!event.getEntity().hasTag(SetupTags.SETUP_ID_TAG)) {
+            event.getEntity().removeTag(SetupTags.SETUP_ID_TAG);
+        }
     }
 }

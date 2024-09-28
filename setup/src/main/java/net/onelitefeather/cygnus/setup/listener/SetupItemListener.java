@@ -39,7 +39,7 @@ public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
         var player = event.getPlayer();
         byte tagValue = event.getItemStack().getTag(Tags.ITEM_TAG);
 
-        if (1 == tagValue && player.hasTag(SetupTags.OCCUPIED_TAG)) {
+        if (1 == tagValue && player.hasTag(SetupTags.SETUP_ID_TAG)) {
             if (!this.saveLogic.test(setupData, setupData.getBaseMap())) {
                 player.sendMessage("An error occurred while saving a map");
             }

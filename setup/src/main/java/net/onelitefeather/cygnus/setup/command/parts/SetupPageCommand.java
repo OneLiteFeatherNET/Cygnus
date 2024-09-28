@@ -33,13 +33,15 @@ public final class SetupPageCommand extends Command {
                 return;
             }
 
-            setupData.setPageMode(!setupData.hasPageMode());
-
-            sender.sendMessage(Component.text("Page setup is now ..."));
+            setupData.swapPageMode();
 
             if (setupData.hasPageMode()) {
-                sender.sendMessage(Component.text("Don't forget to disable this mode"));
+                sender.sendMessage(SetupMessages.PAGE_MODE_ENABLED);
+                sender.sendMessage(SetupMessages.PAGE_MODE_INFORM);
+                return;
             }
+
+            sender.sendMessage(SetupMessages.PAGE_MODE_DISABLED);
         });
     }
 }
