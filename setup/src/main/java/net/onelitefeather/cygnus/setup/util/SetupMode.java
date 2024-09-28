@@ -20,6 +20,7 @@ public enum SetupMode {
 
     /**
      * Create a new entry for the setup enumeration.
+     *
      * @param name the name for the entry
      */
     SetupMode(@NotNull String name) {
@@ -49,6 +50,18 @@ public enum SetupMode {
             }
         }
         return setupMode;
+    }
+
+    /**
+     * Returns a boolean indicator if the given mode is the same as the requested mode.
+     *
+     * @param requestedMode the mode to check
+     * @param ordinalId     the id to check
+     * @return true when the mode is the same otherwise false
+     */
+    public static boolean isMode(@NotNull SetupMode requestedMode, int ordinalId) {
+        if (ordinalId < 0 || ordinalId > getValues().length) return false;
+        return requestedMode.ordinal() == ordinalId;
     }
 
     /**
