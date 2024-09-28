@@ -8,6 +8,8 @@ import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.command.builder.condition.Conditions;
 import net.onelitefeather.cygnus.setup.util.SetupData;
+import net.onelitefeather.cygnus.setup.util.SetupMessages;
+import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.onelitefeather.cygnus.setup.util.SetupValidations;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,6 +35,10 @@ public final class SetupBuildersCommand extends Command {
         var buildersArray = ArgumentType.StringArray("builders");
 
         addSyntax((sender, context) -> {
+            if (!sender.hasTag(SetupTags.OCCUPIED_TAG)) {
+                sender.sendMessage(SetupMessages.MISSING_MAP_SELECTION);
+                return;
+            }
             if (SetupValidations.mapCondition(setupData.getBaseMap(), sender)) return;
             String[] builders = context.get(buildersArray);
 

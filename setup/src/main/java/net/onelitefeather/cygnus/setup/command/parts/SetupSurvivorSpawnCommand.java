@@ -7,7 +7,9 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.setup.util.SetupData;
+import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
+import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.onelitefeather.cygnus.setup.util.SetupValidations;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,6 +19,10 @@ public final class SetupSurvivorSpawnCommand extends Command {
         super("survivor");
         setCondition(Conditions::playerOnly);
         addSyntax((sender, context) -> {
+            if (!sender.hasTag(SetupTags.OCCUPIED_TAG)) {
+                sender.sendMessage(SetupMessages.MISSING_MAP_SELECTION);
+                return;
+            }
             if (SetupValidations.mapCondition(setupData.getBaseMap(), sender)) return;
 
             if (setupData.getSetupMode() == null || setupData.getSetupMode() != SetupMode.GAME) {
