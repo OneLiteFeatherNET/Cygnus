@@ -10,9 +10,10 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * The class holds the {@link ItemStack} references which have some functionality during a setup process from an map.
+ *
  * @author theEvilReaper
- * @since 1.0.0
  * @version 1.0.0
+ * @since 1.0.0
  */
 @SuppressWarnings("java:S3252")
 public final class SetupItems {
@@ -39,6 +40,7 @@ public final class SetupItems {
 
     /**
      * Set's the {@link ItemStack} which represents the map selection into an inventory.
+     *
      * @param player the player who should receive the item
      */
     public void setMapSelection(@NotNull Player player) {
@@ -48,6 +50,7 @@ public final class SetupItems {
 
     /**
      * Set's the {@link ItemStack} which represents the save function into an inventory.
+     *
      * @param player the player who should receive the item
      */
     public void setSaveData(@NotNull Player player) {

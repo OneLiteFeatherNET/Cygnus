@@ -4,7 +4,9 @@ import net.kyori.adventure.text.Component;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.condition.Conditions;
 import net.onelitefeather.cygnus.setup.util.SetupData;
-import net.onelitefeather.cygnus.setup.util.SetupValidations;
+import net.onelitefeather.cygnus.setup.util.SetupMessages;
+import net.onelitefeather.cygnus.setup.util.SetupMode;
+import net.onelitefeather.cygnus.setup.util.SetupTags;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -12,23 +14,34 @@ import org.jetbrains.annotations.NotNull;
  * @version 1.0.0
  * @since
  **/
-
 public final class SetupPageCommand extends Command {
-
 
     public SetupPageCommand(@NotNull SetupData setupData) {
         super("page");
         setCondition(Conditions::playerOnly);
 
         addSyntax((sender, context) -> {
-            if (SetupValidations.mapCondition(setupData.getBaseMap(), sender)) return;
-            setupData.setPageMode(!setupData.hasPageMode());
+            int ordinalId = sender.getTag(SetupTags.SETUP_ID_TAG);
 
-            sender.sendMessage(Component.text("Page setup is now ..."));
+            if (ordinalId == -1) {
+                sender.sendMessage(SetupMessages.MISSING_MAP_SELECTION);
+                return;
+            }
+
+            if (!SetupMode.isMode(SetupMode.GAME, ordinalId)) {
+                sender.sendMessage(SetupMessages.getInvalidModeDuringLobby("page"));
+                return;
+            }
+
+            setupData.swapPageMode();
 
             if (setupData.hasPageMode()) {
-                sender.sendMessage(Component.text("Don't forget to disable this mode"));
+                sender.sendMessage(SetupMessages.PAGE_MODE_ENABLED);
+                sender.sendMessage(SetupMessages.PAGE_MODE_INFORM);
+                return;
             }
+
+            sender.sendMessage(SetupMessages.PAGE_MODE_DISABLED);
         });
     }
 }
