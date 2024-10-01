@@ -28,6 +28,7 @@ class MapSetupSelectEventTest {
         assertEquals(player.getUuid(), event.getPlayer().getUuid());
         assertFalse(event.isCancelled());
         assertEquals(mapEntry, event.getMapEntry());
+        assertNotEquals(SetupMode.GAME, event.getSetupMode());
 
         event.setCancelled(true);
 

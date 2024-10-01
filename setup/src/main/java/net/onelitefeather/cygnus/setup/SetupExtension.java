@@ -48,7 +48,8 @@ public class SetupExtension extends Extension implements ListenerHandling {
     @Override
     public void initialize() {
         MinecraftServer.getInstanceManager().registerInstance(instanceContainer);
-        this.pageProvider = new PageProvider(() -> {});
+        this.pageProvider = new PageProvider(() -> {
+        });
         this.mapProvider = new MapProvider(getDataDirectory(), this.instanceContainer, this.pageProvider);
         this.mapSaveFunction = new SaveMapFunction(mapProvider);
         this.mapSetupInventory = new MapSetupInventory(mapProvider.getAvailableMaps());
@@ -70,7 +71,7 @@ public class SetupExtension extends Extension implements ListenerHandling {
         manager.addListener(PlayerUseItemEvent.class, new SetupItemListener(setupData, mapSetupInventory, mapSaveFunction::saveMap, this::setMainInstance));
 
         manager.addListener(AsyncPlayerConfigurationEvent.class, event -> event.setSpawningInstance(instanceContainer));
-        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(spawnPos, setupItems));
+        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(spawnPos, setupItems, instance -> this.instanceContainer.getUniqueId().equals(instance.getUniqueId())));
 
         manager.addListener(PlayerBlockBreakEvent.class, new PageCreationListener(setupData));
         manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceContainer.getUniqueId(), setupItems));
