@@ -18,6 +18,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.function.BiFunction;
+
 /**
  * The {@link SetupData} is a class which stores different data about a setup process.
  * Compared to other setup modes in other games it allows to have multiple maps in the setup.
@@ -31,6 +35,8 @@ public final class SetupData {
 
     private static final Pos SPAWN_POINT = new Pos(0, 100, 0);
 
+    private final BiFunction<Path, SetupMode, BaseMap> mapDataLoader;
+
     private MapEntry selectedMap;
     private SetupMode setupMode;
     private BaseMap baseMap;
@@ -41,7 +47,8 @@ public final class SetupData {
 
     private BossBar bossBar;
 
-    public SetupData() {
+    public SetupData(@NotNull BiFunction<Path, SetupMode, BaseMap> mapDataLoader) {
+        this.mapDataLoader = mapDataLoader;
         this.bossBar = BossBar.bossBar(Component.empty(), 1, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
     }
 
@@ -53,8 +60,6 @@ public final class SetupData {
     public void setSetupMode(@NotNull SetupMode setupMode) {
         if (this.setupMode != null) return;
         this.setupMode = setupMode;
-        this.baseMap = setupMode == SetupMode.LOBBY ? new BaseMap() : new GameMap();
-        this.inventoryBuilder = new LobbyViewInventory(this.baseMap);
     }
 
     /**
@@ -78,6 +83,13 @@ public final class SetupData {
                 .append(Component.text(", Map: "))
                 .append(Component.text(selectedMap.path().getFileName().toString(), NamedTextColor.LIGHT_PURPLE));
         this.bossBar.name(title);
+        Path mapFilePath = selectedMap.getMapFile();
+        if (Files.exists(mapFilePath)) {
+            this.baseMap = this.mapDataLoader.apply(selectedMap.getMapFile(), setupMode);
+        } else {
+            this.baseMap = setupMode == SetupMode.LOBBY ? new BaseMap() : new GameMap();
+        }
+        this.inventoryBuilder = new LobbyViewInventory(this.baseMap);
     }
 
     /**
@@ -89,7 +101,6 @@ public final class SetupData {
         this.selectedMap = null;
         this.setupMode = null;
         MinecraftServer.getInstanceManager().unregisterInstance(this.instance);
-        this.bossBar = null;
     }
 
     /**
@@ -133,13 +144,19 @@ public final class SetupData {
         return pageMode;
     }
 
+    public void triggerInventoryUpdate() {
+        if (this.inventoryBuilder == null) return;
+        this.inventoryBuilder.invalidateDataLayout();
+    }
+
     /**
      * Teleports a {@link Player} to the {@link net.minestom.server.instance.Instance} which is used for the setup.
      *
      * @param player the player to teleport
      */
     public void teleport(@NotNull Player player) {
-        player.setInstance(this.instance, SPAWN_POINT);
+        Pos spawnPoint = baseMap.hasSpawn() ? baseMap.getSpawn() : SPAWN_POINT;
+        player.setInstance(this.instance, spawnPoint);
         player.showBossBar(this.bossBar);
     }
 

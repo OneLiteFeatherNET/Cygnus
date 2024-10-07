@@ -14,8 +14,7 @@ import net.minestom.server.instance.anvil.AnvilLoader;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageProvider;
-import net.onelitefeather.cygnus.common.page.PageResource;
-import net.onelitefeather.cygnus.common.page.adapter.PageResourceAdapter;
+import net.onelitefeather.cygnus.common.util.GsonUtil;
 import net.onelitefeather.cygnus.common.util.Helper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
@@ -38,7 +37,6 @@ public final class MapProvider {
     private static final String MAP_PATH = "maps";
     private final GsonFileHandler fileHandler;
     private final MapPool mapPool;
-    private final Gson gson;
     private InstanceContainer instance;
     private BaseMap activeMap;
 
@@ -51,13 +49,7 @@ public final class MapProvider {
         this.mapPool = new MapPool(path.resolve(MAP_PATH));
         this.instance = instance;
         this.pageProvider = pageProvider;
-        var typeAdapter = new PositionGsonAdapter();
-        this.gson = new Gson().newBuilder()
-                .registerTypeAdapter(Pos.class, typeAdapter)
-                .registerTypeAdapter(Vec.class, typeAdapter)
-                .registerTypeAdapter(PageResource.class, new PageResourceAdapter())
-                .create();
-        this.fileHandler = new GsonFileHandler(this.gson);
+        this.fileHandler = new GsonFileHandler(GsonUtil.GSON);
         this.loadLobbyMap();
     }
 

@@ -1,5 +1,8 @@
 package net.onelitefeather.cygnus.setup;
 
+import de.icevizion.aves.file.FileHandler;
+import de.icevizion.aves.file.GsonFileHandler;
+import de.icevizion.aves.map.BaseMap;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
@@ -13,8 +16,10 @@ import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.extensions.Extension;
 import net.minestom.server.instance.InstanceContainer;
 import net.onelitefeather.cygnus.common.ListenerHandling;
+import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.MapProvider;
 import net.onelitefeather.cygnus.common.page.PageProvider;
+import net.onelitefeather.cygnus.common.util.GsonUtil;
 import net.onelitefeather.cygnus.setup.command.SetupCommand;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
 import net.onelitefeather.cygnus.setup.functional.SaveMapFunction;
@@ -40,8 +45,12 @@ public class SetupExtension extends Extension implements ListenerHandling {
     private MapProvider mapProvider;
 
     public SetupExtension() {
+        FileHandler fileHandler = new GsonFileHandler(GsonUtil.GSON);
         this.setupItems = new SetupItems();
-        this.setupData = new SetupData();
+        this.setupData = new SetupData((path, setupMode) -> switch (setupMode) {
+            case LOBBY -> fileHandler.load(path, BaseMap.class).get();
+            case GAME -> fileHandler.load(path, GameMap.class).get();
+        });
         this.instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer();
     }
 

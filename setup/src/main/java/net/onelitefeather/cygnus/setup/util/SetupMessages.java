@@ -2,12 +2,16 @@ package net.onelitefeather.cygnus.setup.util;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.tag.PreProcess;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.onelitefeather.cygnus.common.Messages;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 public final class SetupMessages {
 
@@ -19,6 +23,11 @@ public final class SetupMessages {
     public static final Component PAGE_MODE_ENABLED;
     public static final Component PAGE_MODE_DISABLED;
     public static final Component PAGE_MODE_INFORM;
+
+    public static final Component LEFT_CLICK;
+    public static final Component RIGHT_CLICK;
+
+    public static final List<Component> ACTION_LORE;
 
     static {
         EMPTY_NAME = Messages.withPrefix(Component.text("An empty name is not allowed", NamedTextColor.RED));
@@ -39,6 +48,13 @@ public final class SetupMessages {
                         .append(Component.text("disabled", NamedTextColor.RED))
         );
         PAGE_MODE_INFORM = Messages.withPrefix(Component.text("Don't forget to disable this mode", NamedTextColor.GRAY));
+
+        LEFT_CLICK = Component.text("Leftclick:", NamedTextColor.GRAY).append(Component.space())
+                .append(Component.text("Teleport").style(Style.style(NamedTextColor.GREEN, TextDecoration.BOLD)));
+        RIGHT_CLICK = Component.text("Rightclick:", NamedTextColor.GRAY).append(Component.space())
+                .append(Component.text("Delete").style(Style.style(NamedTextColor.RED, TextDecoration.BOLD)));
+
+        ACTION_LORE = List.of(LEFT_CLICK, Component.empty(), RIGHT_CLICK);
     }
 
     private SetupMessages() {
@@ -57,6 +73,5 @@ public final class SetupMessages {
         PreProcess facePreProcess = Tag.preProcessParsed(face);
         TagResolver faceTag = TagResolver.builder().tag("face", (argumentQueue, context) -> facePreProcess).build();
         return Messages.withMini("<red>You are looking in an invalid direction! <gray>(<gold><face><gray>)", faceTag);
-
     }
 }

@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("java:S3252")
 public final class SetupItems {
 
-    public static final ItemStack DECORATION = ItemStack.builder(Material.LIGHT_GRAY_STAINED_GLASS_PANE)
+    public static final ItemStack DECORATION = ItemStack.builder(Material.GRAY_STAINED_GLASS_PANE)
             .customName(Component.empty())
             .build();
 
@@ -61,6 +61,7 @@ public final class SetupItems {
      * @param player the player who should receive the item
      */
     public void setMapSelection(@NotNull Player player) {
+        player.getInventory().clear();
         player.getInventory().setItemStack(FOURTH_INDEX, this.mapSelection);
         player.setHeldItemSlot(FOURTH_INDEX);
     }
@@ -71,8 +72,8 @@ public final class SetupItems {
      * @param player the player who should receive the item
      */
     public void setSaveData(@NotNull Player player) {
-        player.getInventory().setItemStack(SECOND_INDEX, this.saveData);
-        player.getInventory().setItemStack(SIX_INDEX, this.viewItem);
+        player.getInventory().setItemStack(SIX_INDEX, this.saveData);
+        player.getInventory().setItemStack(SECOND_INDEX, this.viewItem);
         player.setHeldItemSlot(ZERO_INDEX);
     }
 }

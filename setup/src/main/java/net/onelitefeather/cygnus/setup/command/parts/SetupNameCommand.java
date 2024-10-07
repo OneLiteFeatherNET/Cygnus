@@ -1,8 +1,11 @@
 package net.onelitefeather.cygnus.setup.command.parts;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.command.builder.condition.Conditions;
+import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
@@ -31,7 +34,10 @@ public final class SetupNameCommand extends Command {
                 return;
             }
             setupData.getBaseMap().setName(name);
-            sender.sendMessage("The name of the map now is: " + name);
+            Component message = Messages.withPrefix(Component.text("The name of the map now is: ", NamedTextColor.GRAY))
+                    .append(Component.text(name, NamedTextColor.AQUA));
+            sender.sendMessage(message);
+            setupData.triggerInventoryUpdate();
         }, mapName);
     }
 }

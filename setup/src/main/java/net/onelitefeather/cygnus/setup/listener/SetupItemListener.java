@@ -4,6 +4,7 @@ import de.icevizion.aves.map.BaseMap;
 import de.icevizion.aves.util.functional.PlayerConsumer;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.PlayerUseItemEvent;
+import net.minestom.server.timer.TaskSchedule;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
 import net.onelitefeather.cygnus.setup.util.SetupData;
@@ -11,6 +12,7 @@ import net.onelitefeather.cygnus.setup.util.SetupItems;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.temporal.ChronoUnit;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
@@ -40,12 +42,13 @@ public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
         var player = event.getPlayer();
         byte tagValue = event.getItemStack().getTag(Tags.ITEM_TAG);
 
-        if (1 == tagValue && player.hasTag(SetupTags.SETUP_ID_TAG)) {
+        if (0x01 == tagValue && player.hasTag(SetupTags.SETUP_ID_TAG)) {
             if (!this.saveLogic.test(setupData, setupData.getBaseMap())) {
                 player.sendMessage("An error occurred while saving a map");
             }
             this.teleportBackLogic.accept(player);
-            MinecraftServer.getSchedulerManager().scheduleNextTick(setupData::reset);
+            MinecraftServer.getSchedulerManager().buildTask(setupData::reset)
+                    .delay(TaskSchedule.tick(3));
             return;
         }
 

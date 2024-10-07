@@ -2,9 +2,11 @@ package net.onelitefeather.cygnus.setup.command.parts;
 
 import de.icevizion.aves.util.Components;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
+import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
@@ -30,8 +32,12 @@ public final class SetupSpawnCommand extends Command {
 
             Pos position = Pos.fromPoint(((Player) sender).getPosition());
             setupData.getBaseMap().setSpawn(position);
-            var posAsComponent = Components.convertPoint(position);
-            sender.sendMessage(Component.text("The spawn position of the map is now located at: ").append(posAsComponent));
+            Component posAsComponent = Components.convertPoint(position);
+            Component message = Messages.withPrefix(Component.text("The spawn position of the map is now located at: ", NamedTextColor.GRAY)
+                    .append(posAsComponent)
+            );
+            sender.sendMessage(message);
+            setupData.triggerInventoryUpdate();
         });
     }
 }
