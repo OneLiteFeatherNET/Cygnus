@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.setup.util;
 
+import de.icevizion.aves.item.Item;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;
@@ -18,11 +19,23 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("java:S3252")
 public final class SetupItems {
 
+    public static final ItemStack DECORATION = ItemStack.builder(Material.LIGHT_GRAY_STAINED_GLASS_PANE)
+            .customName(Component.empty())
+            .build();
+
+    public static final ItemStack NO_DATA = ItemStack.builder(Material.BARRIER)
+            .customName(Component.text("No data available", NamedTextColor.RED))
+            .lore(Component.empty(), Component.text("Please add data to the map", NamedTextColor.GRAY), Component.empty())
+            .build();
+
     public static final byte ZERO_INDEX = (byte) 0x00;
+    public static final byte SECOND_INDEX = (byte) 0x02;
     public static final byte FOURTH_INDEX = (byte) 0x04;
+    public static final byte SIX_INDEX = (byte) 0x06;
 
     private final ItemStack mapSelection;
     private final ItemStack saveData;
+    private final ItemStack viewItem;
 
     /**
      * Creates a new reference from the class and instantiates the {@link ItemStack} references.
@@ -35,6 +48,10 @@ public final class SetupItems {
         this.saveData = ItemStack.builder(Material.BELL)
                 .customName(Component.text("Save data", NamedTextColor.RED))
                 .set(Tags.ITEM_TAG, (byte) 0x01)
+                .build();
+        this.viewItem = ItemStack.builder(Material.COMPASS)
+                .customName(Component.text("View data", NamedTextColor.AQUA))
+                .set(Tags.ITEM_TAG, (byte) 0x02)
                 .build();
     }
 
@@ -54,7 +71,8 @@ public final class SetupItems {
      * @param player the player who should receive the item
      */
     public void setSaveData(@NotNull Player player) {
-        player.getInventory().setItemStack(FOURTH_INDEX, this.saveData);
+        player.getInventory().setItemStack(SECOND_INDEX, this.saveData);
+        player.getInventory().setItemStack(SIX_INDEX, this.viewItem);
         player.setHeldItemSlot(ZERO_INDEX);
     }
 }

@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.setup.util;
 
+import de.icevizion.aves.inventory.InventoryBuilder;
 import de.icevizion.aves.map.BaseMap;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -12,6 +13,7 @@ import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.anvil.AnvilLoader;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.MapEntry;
+import net.onelitefeather.cygnus.setup.inventory.LobbyViewInventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
@@ -34,6 +36,7 @@ public final class SetupData {
     private BaseMap baseMap;
 
     private InstanceContainer instance;
+    private InventoryBuilder inventoryBuilder;
     private boolean pageMode;
 
     private BossBar bossBar;
@@ -51,6 +54,7 @@ public final class SetupData {
         if (this.setupMode != null) return;
         this.setupMode = setupMode;
         this.baseMap = setupMode == SetupMode.LOBBY ? new BaseMap() : new GameMap();
+        this.inventoryBuilder = new LobbyViewInventory(this.baseMap);
     }
 
     /**
@@ -105,6 +109,10 @@ public final class SetupData {
         this.instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         this.instance.setChunkLoader(anvilLoader);
         MinecraftServer.getInstanceManager().registerInstance(this.instance);
+    }
+
+    public void openInventory(@NotNull Player player) {
+        player.openInventory(this.inventoryBuilder.getInventory());
     }
 
     /**

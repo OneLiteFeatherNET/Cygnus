@@ -53,5 +53,9 @@ public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
         if (SetupItems.ZERO_INDEX == tagValue && !setupData.hasMap()) {
             mapSetupInventory.open(player);
         }
+
+        if (SetupItems.SECOND_INDEX == tagValue) {
+            setupData.openInventory(player);
+        }
     }
 }
