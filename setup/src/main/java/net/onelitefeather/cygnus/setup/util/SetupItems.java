@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.setup.util;
 
-import de.icevizion.aves.item.Item;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;
@@ -21,11 +20,6 @@ public final class SetupItems {
 
     public static final ItemStack DECORATION = ItemStack.builder(Material.GRAY_STAINED_GLASS_PANE)
             .customName(Component.empty())
-            .build();
-
-    public static final ItemStack NO_DATA = ItemStack.builder(Material.BARRIER)
-            .customName(Component.text("No data available", NamedTextColor.RED))
-            .lore(Component.empty(), Component.text("Please add data to the map", NamedTextColor.GRAY), Component.empty())
             .build();
 
     public static final byte ZERO_INDEX = (byte) 0x00;
