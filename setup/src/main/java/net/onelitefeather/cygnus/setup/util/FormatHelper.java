@@ -27,5 +27,4 @@ public final class FormatHelper {
     private FormatHelper() {
         throw new UnsupportedOperationException("This class cannot be instantiated");
     }
-
 }
