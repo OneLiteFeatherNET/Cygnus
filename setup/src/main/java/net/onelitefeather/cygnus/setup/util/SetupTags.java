@@ -11,7 +11,7 @@ import net.minestom.server.tag.Tag;
  */
 public final class SetupTags {
 
-    public static final Tag<Integer> SETUP_ID_TAG = Tag.Integer("setup_id").defaultValue(-1);
+    public static final Tag<Integer> SETUP_ID_TAG = Tag.Integer("setup_id");
     public static final Tag<Boolean> DELETE_TAG = Tag.Boolean("delete").defaultValue(false);
 
     private SetupTags() {
