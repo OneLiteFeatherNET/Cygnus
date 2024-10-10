@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.setup.inventory;
 
 import de.icevizion.aves.inventory.GlobalInventoryBuilder;
 import de.icevizion.aves.inventory.InventoryLayout;
-import de.icevizion.aves.inventory.InventorySlot;
 import de.icevizion.aves.inventory.util.LayoutCalculator;
 import de.icevizion.aves.util.functional.VoidConsumer;
 import net.kyori.adventure.text.Component;
@@ -49,25 +48,22 @@ public class ConfirmInventory extends GlobalInventoryBuilder {
         InventoryLayout layout = InventoryLayout.fromType(getType());
         layout.setItems(DECO_SLOTS, SetupItems.DECORATION, CANCEL_CLICK);
 
-        layout.setItems(CONFIRM_SLOTS, CONFIRM_STACK, (player, i, clickType, inventoryConditionResult) -> {
+        layout.setItems(CONFIRM_SLOTS, CONFIRM_STACK, (player, i, clickType, result) -> {
             player.setTag(SetupTags.DELETE_TAG, true);
             EventDispatcher.call(new InventoryCloseEvent(player.getOpenInventory(), player));
             player.closeInventory();
         });
 
-        layout.setItems(CANCEL_SLOTS, CANCEL_STACK, (player, i, clickType, inventoryConditionResult) -> {
-            player.closeInventory();
-        });
+        layout.setItems(CANCEL_SLOTS, CANCEL_STACK, (player, i, clickType, result) -> player.closeInventory());
 
         setLayout(layout);
 
         setCloseFunction(closeEvent -> {
             Player player = closeEvent.getPlayer();
-            if (player.hasTag(SetupTags.DELETE_TAG)) {
-                callback.apply();
-                player.removeTag(SetupTags.DELETE_TAG);
-                this.unregister();
-            }
+            if (!player.hasTag(SetupTags.DELETE_TAG)) return;
+            callback.apply();
+            player.removeTag(SetupTags.DELETE_TAG);
+            this.unregister();
         });
 
         this.register();

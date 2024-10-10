@@ -15,7 +15,7 @@ public final class PageItemSlot extends PositionBaseSlot {
 
     public PageItemSlot(@NotNull PageResource pageResource) {
         super(pageResource.position());
-        this.stack = ItemStack.builder(Material.GREEN_BED)
+        this.stack = ItemStack.builder(Material.PAPER)
                 .customName(PAGE_NAME)
                 .lore(getPosLore(this.point))
                 .build();

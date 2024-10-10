@@ -2,32 +2,24 @@ package net.onelitefeather.cygnus.setup.inventory;
 
 import de.icevizion.aves.inventory.GlobalInventoryBuilder;
 import de.icevizion.aves.inventory.InventoryLayout;
-import de.icevizion.aves.inventory.InventorySlot;
+import de.icevizion.aves.inventory.slot.ISlot;
 import de.icevizion.aves.inventory.util.LayoutCalculator;
 import de.icevizion.aves.map.BaseMap;
-import de.icevizion.aves.util.Components;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.entity.Player;
 import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.inventory.click.ClickType;
 import net.minestom.server.inventory.condition.InventoryConditionResult;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.onelitefeather.cygnus.setup.inventory.slot.MultipleStringItemSlot;
+import net.onelitefeather.cygnus.setup.inventory.slot.SpawnItemSlot;
+import net.onelitefeather.cygnus.setup.inventory.slot.StringItemSlot;
 import net.onelitefeather.cygnus.setup.util.SetupItems;
-import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import org.jetbrains.annotations.NotNull;
 
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 import static de.icevizion.aves.inventory.util.InventoryConstants.CANCEL_CLICK;
-import static net.onelitefeather.cygnus.setup.util.FormatHelper.DECIMAL_FORMAT;
 
 /**
  * The {@link LobbyViewInventory} is used to display the data from a lobby map.
@@ -42,15 +34,8 @@ import static net.onelitefeather.cygnus.setup.util.FormatHelper.DECIMAL_FORMAT;
 @SuppressWarnings("java:S3252")
 public class LobbyViewInventory extends GlobalInventoryBuilder {
 
-    private static final ItemStack NO_MAP_NAME = ItemStack.builder(Material.OAK_SIGN)
-            .customName(Component.text("No map name", NamedTextColor.RED))
-            .build();
     private static final ItemStack NO_SPAWN = ItemStack.builder(Material.BARRIER)
             .customName(Component.text("No spawn set", NamedTextColor.RED))
-            .build();
-
-    private static final ItemStack NO_BUILDERS = ItemStack.builder(Material.DARK_OAK_SIGN)
-            .customName(Component.text("No builders set", NamedTextColor.RED))
             .build();
 
     private static final int[] DATA_SLOTS = LayoutCalculator.from(11, 13, 15);
@@ -74,63 +59,22 @@ public class LobbyViewInventory extends GlobalInventoryBuilder {
             dataLayout.blank(DATA_SLOTS);
             if (hasNoData()) {
                 dataLayout.setItem(DATA_SLOTS[0], SetupItems.DECORATION, CANCEL_CLICK);
-                dataLayout.setItem(DATA_SLOTS[1], SetupItems.NO_DATA, CANCEL_CLICK);
+                dataLayout.setItem(DATA_SLOTS[1], NO_SPAWN, CANCEL_CLICK);
                 dataLayout.setItem(DATA_SLOTS[2], SetupItems.DECORATION, CANCEL_CLICK);
                 return dataLayout;
             }
-
-            dataLayout.setItem(DATA_SLOTS[0], getMapNameSlot(this.lobbyMap), CANCEL_CLICK);
-            dataLayout.setItem(DATA_SLOTS[1], getSpawnSlot(this.lobbyMap));
-            dataLayout.setItem(DATA_SLOTS[2], getBuilderSlot(this.lobbyMap), CANCEL_CLICK);
+            ISlot mapNameSlot = new StringItemSlot(Component.text("Map-Name", NamedTextColor.GOLD), lobbyMap.getName());
+            ISlot builderSlot = new MultipleStringItemSlot(Component.text("Builders", NamedTextColor.GOLD), lobbyMap.getBuilders());
+            ISlot spawnSlot = new SpawnItemSlot(lobbyMap.getSpawn());
+            dataLayout.setItem(DATA_SLOTS[0], mapNameSlot, CANCEL_CLICK);
+            dataLayout.setItem(DATA_SLOTS[1], spawnSlot);
+            dataLayout.setItem(DATA_SLOTS[2], builderSlot, CANCEL_CLICK);
             return dataLayout;
         });
 
         this.invalidateLayout();
         this.invalidateDataLayout();
         this.register();
-    }
-
-    /**
-     * Returns the map name slot for the map.
-     *
-     * @param baseMap the map to get the name from
-     * @return the map name slot
-     */
-    private @NotNull InventorySlot getMapNameSlot(@NotNull BaseMap baseMap) {
-        if (baseMap.getName() == null || baseMap.getName().isEmpty()) {
-            return new InventorySlot(NO_MAP_NAME);
-        }
-
-        Component mapName = Component.text("Name:", NamedTextColor.GRAY)
-                .append(Component.space())
-                .append(Component.text(baseMap.getName(), NamedTextColor.GOLD));
-
-        return new InventorySlot(ItemStack.builder(Material.OAK_SIGN)
-                .customName(mapName)
-                .build()
-        );
-    }
-
-    /**
-     * Returns the spawn slot for the map.
-     *
-     * @param baseMap the map to get the spawn from
-     * @return the spawn slot
-     */
-    private @NotNull InventorySlot getSpawnSlot(@NotNull BaseMap baseMap) {
-        if (!baseMap.hasSpawn()) return new InventorySlot(NO_SPAWN);
-        List<Component> components = Components.pointToLore(MiniMessage.miniMessage(), baseMap.getSpawn(), DECIMAL_FORMAT);
-        List<Component> loreList = new ArrayList<>();
-        loreList.add(Component.empty());
-        loreList.addAll(components);
-        loreList.add(Component.empty());
-        loreList.addAll(SetupMessages.ACTION_LORE);
-        return new InventorySlot(ItemStack.builder(Material.ENDER_EYE)
-                .customName(Component.text("Spawn", NamedTextColor.GOLD))
-                .lore(loreList)
-                .build(),
-                this::handleSpawnClick
-        );
     }
 
     /**
@@ -158,32 +102,6 @@ public class LobbyViewInventory extends GlobalInventoryBuilder {
             this.invalidateDataLayout();
         });
         player.openInventory(confirmInventory.getInventory());
-    }
-
-    /**
-     * Returns the builder slot for the map.
-     *
-     * @param baseMap the map to get the builders from
-     * @return the builder slot
-     */
-    private @NotNull InventorySlot getBuilderSlot(@NotNull BaseMap baseMap) {
-        if (baseMap.getBuilders() == null || baseMap.getBuilders().length == 0) return new InventorySlot(NO_BUILDERS);
-        List<Component> builders = new ArrayList<>();
-        builders.add(Component.empty());
-        for (int i = 0; i < baseMap.getBuilders().length; i++) {
-            String builder = baseMap.getBuilders()[i];
-            if (builder == null) continue;
-            Component component = Component.text("-", NamedTextColor.GRAY)
-                    .append(Component.space())
-                    .append(Component.text(builder, NamedTextColor.GOLD));
-            builders.add(component);
-        }
-        builders.add(Component.empty());
-        return new InventorySlot(ItemStack.builder(Material.DARK_OAK_SIGN)
-                .customName(Component.text("Builders", NamedTextColor.GOLD))
-                .lore(builders)
-                .build()
-        );
     }
 
     /**
