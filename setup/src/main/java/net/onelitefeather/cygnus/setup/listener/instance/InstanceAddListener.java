@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.setup.listener;
+package net.onelitefeather.cygnus.setup.listener.instance;
 
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
