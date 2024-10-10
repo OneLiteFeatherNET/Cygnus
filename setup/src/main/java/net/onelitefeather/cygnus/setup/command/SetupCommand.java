@@ -11,7 +11,7 @@ import net.onelitefeather.cygnus.setup.command.parts.SetupPageCommand;
 import net.onelitefeather.cygnus.setup.command.parts.SetupSlenderSpawnCommand;
 import net.onelitefeather.cygnus.setup.command.parts.SetupSpawnCommand;
 import net.onelitefeather.cygnus.setup.command.parts.SetupSurvivorSpawnCommand;
-import net.onelitefeather.cygnus.setup.util.SetupData;
+import net.onelitefeather.cygnus.setup.data.SetupDataProvider;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -28,17 +28,17 @@ public final class SetupCommand extends Command {
     /**
      * Creates a new instance from the command class and contains also the logic to execute the command.
      *
-     * @param setupData the involved {@link SetupData} class to get some information from it
+     * @param dataProvider the involved {@link SetupDataProvider} class to get some information from it
      */
-    public SetupCommand(@NotNull SetupData setupData) {
+    public SetupCommand(@NotNull SetupDataProvider dataProvider) {
         super("setup");
         this.setCondition(Conditions::playerOnly);
-        this.addSubcommand(new SetupNameCommand(setupData));
-        this.addSubcommand(new SetupBuildersCommand(setupData));
-        this.addSubcommand(new SetupSpawnCommand(setupData));
-        this.addSubcommand(new SetupSurvivorSpawnCommand(setupData));
-        this.addSubcommand(new SetupSlenderSpawnCommand(setupData));
-        this.addSubcommand(new SetupPageCommand(setupData));
+        this.addSubcommand(new SetupNameCommand(dataProvider));
+        this.addSubcommand(new SetupBuildersCommand(dataProvider));
+        this.addSubcommand(new SetupSpawnCommand(dataProvider));
+        this.addSubcommand(new SetupSurvivorSpawnCommand(dataProvider));
+        this.addSubcommand(new SetupSlenderSpawnCommand(dataProvider));
+        this.addSubcommand(new SetupPageCommand(dataProvider));
         Component helpMessage = getHelpComponent();
         this.setDefaultExecutor((sender, context) -> sender.sendMessage(helpMessage));
     }

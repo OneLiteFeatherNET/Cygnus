@@ -7,14 +7,15 @@ import net.minestom.server.command.builder.Command;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Messages;
-import net.onelitefeather.cygnus.setup.util.SetupData;
+import net.onelitefeather.cygnus.setup.data.SetupData;
+import net.onelitefeather.cygnus.setup.data.SetupDataProvider;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
 import org.jetbrains.annotations.NotNull;
 
 public final class SetupSpawnCommand extends Command {
 
-    public SetupSpawnCommand(@NotNull SetupData setupData) {
+    public SetupSpawnCommand(@NotNull SetupDataProvider dataProvider) {
         super("spawn");
 
         addSyntax((sender, context) -> {
@@ -24,6 +25,8 @@ public final class SetupSpawnCommand extends Command {
                 sender.sendMessage(SetupMessages.MISSING_MAP_SELECTION);
                 return;
             }
+
+            SetupData setupData = dataProvider.getSetupData(((Player) sender));
 
             if (setupData.hasPageMode()) {
                 sender.sendMessage(SetupMessages.DISABLED_PAGE_MODE);

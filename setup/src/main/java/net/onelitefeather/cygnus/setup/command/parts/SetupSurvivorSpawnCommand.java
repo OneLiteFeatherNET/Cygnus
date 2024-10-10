@@ -6,7 +6,8 @@ import net.minestom.server.command.builder.condition.Conditions;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.map.GameMap;
-import net.onelitefeather.cygnus.setup.util.SetupData;
+import net.onelitefeather.cygnus.setup.data.SetupData;
+import net.onelitefeather.cygnus.setup.data.SetupDataProvider;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
@@ -14,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class SetupSurvivorSpawnCommand extends Command {
 
-    public SetupSurvivorSpawnCommand(@NotNull SetupData setupData) {
+    public SetupSurvivorSpawnCommand(@NotNull SetupDataProvider dataProvider) {
         super("survivor");
         setCondition(Conditions::playerOnly);
         addSyntax((sender, context) -> {
@@ -29,7 +30,7 @@ public final class SetupSurvivorSpawnCommand extends Command {
                 sender.sendMessage(SetupMessages.getInvalidModeDuringLobby("survivor"));
                 return;
             }
-
+            SetupData setupData = dataProvider.getSetupData(((Player) sender));
             if (setupData.hasPageMode()) {
                 sender.sendMessage(SetupMessages.DISABLED_PAGE_MODE);
                 return;

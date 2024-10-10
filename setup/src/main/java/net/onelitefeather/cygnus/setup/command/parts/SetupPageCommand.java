@@ -1,9 +1,10 @@
 package net.onelitefeather.cygnus.setup.command.parts;
 
-import net.kyori.adventure.text.Component;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.condition.Conditions;
-import net.onelitefeather.cygnus.setup.util.SetupData;
+import net.minestom.server.entity.Player;
+import net.onelitefeather.cygnus.setup.data.SetupData;
+import net.onelitefeather.cygnus.setup.data.SetupDataProvider;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
  **/
 public final class SetupPageCommand extends Command {
 
-    public SetupPageCommand(@NotNull SetupData setupData) {
+    public SetupPageCommand(@NotNull SetupDataProvider dataProvider) {
         super("page");
         setCondition(Conditions::playerOnly);
 
@@ -33,6 +34,7 @@ public final class SetupPageCommand extends Command {
                 return;
             }
 
+            SetupData setupData = dataProvider.getSetupData(((Player) sender));
             setupData.swapPageMode();
 
             if (setupData.hasPageMode()) {
