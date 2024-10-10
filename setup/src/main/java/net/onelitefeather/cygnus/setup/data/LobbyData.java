@@ -12,20 +12,19 @@ public final class LobbyData extends SetupDataImpl {
 
     private final LobbyViewInventory inventory;
 
-    LobbyData(
-            @NotNull MapDataLoader loader,
-            @NotNull Player player,
-            @NotNull MapEntry mapEntry,
-            @NotNull SetupMode mode,
-            @NotNull BaseMap baseMap
-    ) {
-        super(loader, player, mapEntry, mode, baseMap);
+    LobbyData(@NotNull Player player, @NotNull MapEntry mapEntry, @NotNull SetupMode mode, @NotNull BaseMap baseMap) {
+        super(player, mapEntry, mode, baseMap);
         this.inventory = new LobbyViewInventory(baseMap);
     }
 
     @Override
     public void openInventory() {
         player.openInventory(inventory.getInventory());
+    }
+
+    @Override
+    public void triggerInventoryUpdate() {
+        inventory.invalidateDataLayout();
     }
 
     @Override

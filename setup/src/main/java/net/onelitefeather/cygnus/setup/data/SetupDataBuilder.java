@@ -20,14 +20,24 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class SetupDataBuilder implements SetupData.Builder {
 
-    private final MapDataLoader loader;
     private MapEntry mapEntry;
     private SetupMode mode;
     private Player player;
     private BaseMap baseMap;
 
-    public SetupDataBuilder(@NotNull MapDataLoader loader) {
-        this.loader = loader;
+    /**
+     * Constructs a new {@link SetupDataBuilder} instance.
+     */
+    public SetupDataBuilder() {
+        
+    }
+
+    /**
+     * Constructs a new {@link SetupDataBuilder} instance.
+     * @param setupData the setup data to create a new instance
+     */
+    public SetupDataBuilder(@NotNull SetupData setupData) {
+        this.player = setupData.getPlayer();
     }
 
     @Override
@@ -57,8 +67,8 @@ public final class SetupDataBuilder implements SetupData.Builder {
     @Override
     public @NotNull SetupData build() {
         return switch (mode) {
-            case LOBBY -> new LobbyData(this.loader, this.player, this.mapEntry, this.mode, this.baseMap);
-            case GAME -> new GameData(this.loader, this.player, this.mapEntry, this.mode, this.baseMap);
+            case LOBBY -> new LobbyData(this.player, this.mapEntry, this.mode, this.baseMap);
+            case GAME -> new GameData(this.player, this.mapEntry, this.mode, this.baseMap);
         };
     }
 }

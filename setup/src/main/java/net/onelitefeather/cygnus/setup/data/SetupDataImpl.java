@@ -8,10 +8,12 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
-import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.instance.anvil.AnvilLoader;
 import net.onelitefeather.cygnus.common.map.MapEntry;
 
 import net.onelitefeather.cygnus.setup.functional.MapDataLoader;
+import net.onelitefeather.cygnus.setup.inventory.ConfirmInventory;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,30 +23,36 @@ public abstract sealed class SetupDataImpl implements SetupData permits LobbyDat
 
     private static final Pos SPAWN_POINT = new Pos(0, 100, 0);
 
-    private final MapDataLoader mapDataLoader;
-
-    protected final MapEntry mapEntry;
-    protected final SetupMode mode;
     protected final Player player;
 
+    protected MapEntry mapEntry;
+    protected SetupMode mode;
     protected BaseMap baseMap;
-    protected Instance instance;
+    protected InstanceContainer instance;
     protected boolean pageMode;
     protected BossBar bossBar;
 
+    protected ConfirmInventory confirmInventory;
+
     SetupDataImpl(
-            @NotNull MapDataLoader mapDataLoader,
             @NotNull Player player,
             @NotNull MapEntry mapEntry,
             @NotNull SetupMode mode,
             @NotNull BaseMap baseMap
     ) {
-        this.mapDataLoader = mapDataLoader;
         this.mapEntry = mapEntry;
         this.mode = mode;
         this.player = player;
         this.bossBar = BossBar.bossBar(Component.empty(), 1, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
         this.baseMap = baseMap;
+    }
+
+    @Override
+    public void openConfirmInventory() {
+        if (this.confirmInventory == null) {
+            this.confirmInventory = new ConfirmInventory(() -> {});
+        }
+        this.player.openInventory(this.confirmInventory.getInventory());
     }
 
     @Override
@@ -57,8 +65,27 @@ public abstract sealed class SetupDataImpl implements SetupData permits LobbyDat
     }
 
     @Override
+    public boolean loadMap() {
+        if (this.instance != null && this.instance.isRegistered()) {
+            return false;
+        }
+        if (this.instance == null) {
+            this.instance = MinecraftServer.getInstanceManager().createInstanceContainer();
+        }
+        AnvilLoader anvilLoader = new AnvilLoader(this.mapEntry.path());
+        this.instance.setChunkLoader(anvilLoader);
+        this.updateTitle();
+        MinecraftServer.getInstanceManager().registerInstance(this.instance);
+        return true;
+    }
+
+    @Override
     public void reset() {
         if (instance == null) return;
+        this.mode = null;
+        this.mapEntry = null;
+        this.baseMap = null;
+        player.hideBossBar(this.bossBar);
         MinecraftServer.getInstanceManager().unregisterInstance(instance);
     }
 
@@ -67,6 +94,11 @@ public abstract sealed class SetupDataImpl implements SetupData permits LobbyDat
         Pos spawnPoint = baseMap.hasSpawn() ? baseMap.getSpawn() : SPAWN_POINT;
         player.setInstance(this.instance, spawnPoint);
         player.showBossBar(this.bossBar);
+    }
+
+    @Override
+    public boolean hasMap() {
+        return this.mapEntry != null;
     }
 
     @Override
@@ -106,5 +138,10 @@ public abstract sealed class SetupDataImpl implements SetupData permits LobbyDat
     @Override
     public @NotNull Player getPlayer() {
         return this.player;
+    }
+
+    @Override
+    public @NotNull BaseMap getBaseMap() {
+        return this.baseMap;
     }
 }

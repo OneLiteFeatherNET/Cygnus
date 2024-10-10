@@ -13,14 +13,19 @@ public final class GameData extends SetupDataImpl {
 
     private final DataViewInventory inventory;
 
-    GameData(@NotNull MapDataLoader loader, @NotNull Player player, @NotNull MapEntry mapEntry, @NotNull SetupMode mode, @NotNull BaseMap baseMap) {
-        super(loader, player, mapEntry, mode, baseMap);
+    GameData(@NotNull Player player, @NotNull MapEntry mapEntry, @NotNull SetupMode mode, @NotNull BaseMap baseMap) {
+        super(player, mapEntry, mode, baseMap);
         this.inventory = new DataViewInventory(((GameMap) baseMap), player);
     }
 
     @Override
     public void openInventory() {
         this.inventory.openInventory();
+    }
+
+    @Override
+    public void triggerInventoryUpdate() {
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override

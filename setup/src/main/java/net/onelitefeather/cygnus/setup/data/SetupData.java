@@ -22,18 +22,35 @@ public sealed interface SetupData permits SetupDataImpl {
     /**
      * Creates a new instance of the {@link SetupData} interface.
      *
-     * @param loader the loader to load the map data
      * @return a new instance of the {@link SetupData} interface
      */
-    @Contract(pure = true, value = "_ -> new")
-    static @NotNull Builder builder(@NotNull MapDataLoader loader) {
-        return new SetupDataBuilder(loader);
+    @Contract(pure = true)
+    static @NotNull Builder builder() {
+        return new SetupDataBuilder();
     }
+
+    /**
+     * Creates a new instance of the {@link SetupData} interface.
+     *
+     * @param setupData the setup data to create a new instance
+     * @return a new instance of the {@link SetupData} interface
+     */
+    @Contract(pure = true)
+    static @NotNull Builder builder(@NotNull SetupData setupData) {
+        return new SetupDataBuilder(setupData);
+    }
+
+    void triggerInventoryUpdate();
 
     /**
      * Opens the inventory of the setup data.
      */
     void openInventory();
+
+    /**
+     * Opens the confirmation inventory of the setup data.
+     */
+    void openConfirmInventory();
 
     /**
      * Updates the title of the {@link net.kyori.adventure.bossbar.BossBar}.
@@ -64,6 +81,20 @@ public sealed interface SetupData permits SetupDataImpl {
     boolean hasPageMode();
 
     /**
+     * Returns if the setup data has a map.
+     *
+     * @return {@code true} if the setup data has a map
+     */
+    boolean hasMap();
+
+    /**
+     * Loads the map data into the setup data.
+     *
+     * @return {@code true} if the map was loaded successfully
+     */
+    boolean loadMap();
+
+    /**
      * Returns the map entry of the setup data.
      *
      * @return the given map entry
@@ -83,6 +114,13 @@ public sealed interface SetupData permits SetupDataImpl {
      * @return the given player
      */
     @NotNull Player getPlayer();
+
+    /**
+     * Returns the base map of the setup data.
+     *
+     * @return the given base map
+     */
+    @NotNull BaseMap getBaseMap();
 
     /**
      * The builder interface for the {@link SetupData} interface.
