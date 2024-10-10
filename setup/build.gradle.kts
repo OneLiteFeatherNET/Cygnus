@@ -56,6 +56,10 @@ tasks {
             events("passed", "skipped", "failed")
         }
     }
+
+    jar {
+        dependsOn("shadowJar")
+    }
 }
 
 publishData {
