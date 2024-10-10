@@ -16,7 +16,11 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MicrotusExtension.class)
 class SetupDataTest {
@@ -31,7 +35,7 @@ class SetupDataTest {
         assertNotNull(instance);
         assertNotNull(testPlayer);
 
-        SetupData.Builder builder = SetupData.builder(this::mapLoader);
+        SetupData.Builder builder = SetupData.builder();
 
         assertNotNull(builder);
 
@@ -61,7 +65,22 @@ class SetupDataTest {
         env.destroyInstance(instance, true);
     }
 
-    private @NotNull BaseMap mapLoader(@NotNull Path path, @NotNull SetupMode mode) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    @Test
+    void testPageModeSwap(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player testPlayer = env.createPlayer(instance);
+
+        SetupData data = SetupData.builder()
+                .player(testPlayer)
+                .mode(SetupMode.GAME)
+                .baseMap(new GameMap())
+                .build();
+
+        assertNotNull(data);
+        assertFalse(data.hasPageMode());
+        data.swapPageMode();
+        assertTrue(data.hasPageMode());
+
+        env.destroyInstance(instance, true);
     }
 }
