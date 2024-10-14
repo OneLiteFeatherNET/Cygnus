@@ -48,11 +48,6 @@ public sealed interface SetupData permits SetupDataImpl {
     void openInventory();
 
     /**
-     * Opens the confirmation inventory of the setup data.
-     */
-    void openConfirmInventory();
-
-    /**
      * Updates the title of the {@link net.kyori.adventure.bossbar.BossBar}.
      */
     void updateTitle();

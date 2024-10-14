@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.setup.data;
 import de.icevizion.aves.map.BaseMap;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.map.MapEntry;
-import net.onelitefeather.cygnus.setup.functional.MapDataLoader;
 import net.onelitefeather.cygnus.setup.inventory.LobbyViewInventory;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
 import org.jetbrains.annotations.NotNull;

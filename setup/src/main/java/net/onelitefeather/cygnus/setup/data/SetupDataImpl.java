@@ -12,8 +12,6 @@ import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.anvil.AnvilLoader;
 import net.onelitefeather.cygnus.common.map.MapEntry;
 
-import net.onelitefeather.cygnus.setup.functional.MapDataLoader;
-import net.onelitefeather.cygnus.setup.inventory.ConfirmInventory;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,8 +30,6 @@ public abstract sealed class SetupDataImpl implements SetupData permits LobbyDat
     protected boolean pageMode;
     protected BossBar bossBar;
 
-    protected ConfirmInventory confirmInventory;
-
     SetupDataImpl(
             @NotNull Player player,
             @NotNull MapEntry mapEntry,
@@ -45,14 +41,6 @@ public abstract sealed class SetupDataImpl implements SetupData permits LobbyDat
         this.player = player;
         this.bossBar = BossBar.bossBar(Component.empty(), 1, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
         this.baseMap = baseMap;
-    }
-
-    @Override
-    public void openConfirmInventory() {
-        if (this.confirmInventory == null) {
-            this.confirmInventory = new ConfirmInventory(() -> {});
-        }
-        this.player.openInventory(this.confirmInventory.getInventory());
     }
 
     @Override

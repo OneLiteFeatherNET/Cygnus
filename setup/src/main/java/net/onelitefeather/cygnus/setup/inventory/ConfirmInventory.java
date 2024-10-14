@@ -3,9 +3,11 @@ package net.onelitefeather.cygnus.setup.inventory;
 import de.icevizion.aves.inventory.GlobalInventoryBuilder;
 import de.icevizion.aves.inventory.InventoryLayout;
 import de.icevizion.aves.inventory.util.LayoutCalculator;
+import de.icevizion.aves.util.functional.PlayerConsumer;
 import de.icevizion.aves.util.functional.VoidConsumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.inventory.InventoryCloseEvent;
@@ -42,7 +44,7 @@ public class ConfirmInventory extends GlobalInventoryBuilder {
                 .build();
     }
 
-    public ConfirmInventory(@NotNull VoidConsumer callback) {
+    public ConfirmInventory(@NotNull PlayerConsumer consumer) {
         super(Component.text("Confirm"), InventoryType.CHEST_4_ROW);
 
         InventoryLayout layout = InventoryLayout.fromType(getType());
@@ -61,12 +63,10 @@ public class ConfirmInventory extends GlobalInventoryBuilder {
         setCloseFunction(closeEvent -> {
             Player player = closeEvent.getPlayer();
             if (!player.hasTag(SetupTags.DELETE_TAG)) return;
-            callback.apply();
+            consumer.accept(player);
             player.removeTag(SetupTags.DELETE_TAG);
-            this.unregister();
         });
 
-        this.register();
         this.invalidateDataLayout();
     }
 }
