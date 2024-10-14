@@ -26,7 +26,7 @@ class SpawnItemSlotTest {
 
     @Test
     void testSpawnItemSlot() {
-        ISlot spawnItemSlot = SpawnItemSlot.asSpawn(Pos.ZERO);
+        ISlot spawnItemSlot = SpawnItemSlot.asSpawn(Pos.ZERO, player -> {});
         assertNotNull(spawnItemSlot);
         ItemStack slotItem = spawnItemSlot.getItem();
         assertNotNull(slotItem);
@@ -43,7 +43,7 @@ class SpawnItemSlotTest {
         player.setInstance(instance).join();
         assertEquals(Pos.ZERO, player.getPosition());
         Pos spawnPos = new Pos(10, 10, 10);
-        ISlot spawnItemSlot = SpawnItemSlot.asSpawn(spawnPos);
+        ISlot spawnItemSlot = SpawnItemSlot.asSpawn(spawnPos, player1 -> {});
         assertNotNull(spawnItemSlot);
 
         assertNotNull(spawnItemSlot.getClick());

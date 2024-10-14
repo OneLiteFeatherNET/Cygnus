@@ -17,7 +17,7 @@ class PageItemSlotTest {
         assertNotNull(pageResource);
         assertEquals(Pos.ZERO, pageResource.position());
         assertEquals("NORTH", pageResource.face());
-        PageItemSlot pageItemSlot = new PageItemSlot(pageResource);
+        PageItemSlot pageItemSlot = new PageItemSlot(pageResource, player -> {});
 
         assertNotNull(pageItemSlot);
         ItemStack slotItem = pageItemSlot.getItem();
