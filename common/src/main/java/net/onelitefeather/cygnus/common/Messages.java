@@ -5,7 +5,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.minestom.server.entity.Player;
-import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.configv2.GameConfig;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

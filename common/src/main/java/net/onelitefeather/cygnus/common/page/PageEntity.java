@@ -14,7 +14,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import net.onelitefeather.cygnus.common.Tags;
-import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.configv2.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
 import org.jetbrains.annotations.NotNull;

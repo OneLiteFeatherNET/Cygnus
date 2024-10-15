@@ -4,7 +4,7 @@ import de.icevizion.xerus.api.ColorData;
 import de.icevizion.xerus.api.team.Team;
 import de.icevizion.xerus.api.team.TeamService;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
-import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.configv2.GameConfig;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -24,7 +24,7 @@ public interface TeamCreator {
      * @param ambientProvider the provider to set the ambient team
      */
     default void createTeams(
-            @NotNull GameConfig gameConfig,
+            @NotNull net.onelitefeather.cygnus.common.config.GameConfig gameConfig,
             @NotNull TeamService<Team> teamService,
             @NotNull AmbientProvider ambientProvider
     ) {

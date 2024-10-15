@@ -1,6 +1,6 @@
 package net.onelitefeather.cygnus.common.map;
 
-import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.configv2.GameConfig;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
