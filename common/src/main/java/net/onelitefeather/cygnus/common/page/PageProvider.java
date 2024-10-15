@@ -24,7 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_PAGE_COUNT;
+import static net.onelitefeather.cygnus.common.configv2.GameConfig.MIN_PAGE_COUNT;
 
 /**
  * @author theEvilReaper

@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 import static net.onelitefeather.cygnus.common.config.GameConfig.MAX_REVIVE_COUNT_SLENDER;
 import static net.onelitefeather.cygnus.common.config.GameConfig.MINIMUM_SLENDER_RE_CHECK;
 import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_PLAYERS;
-import static net.onelitefeather.cygnus.common.config.GameConfig.SLENDER_TEAM_NAME;
+import static net.onelitefeather.cygnus.common.configv2.GameConfig.SLENDER_TEAM_NAME;
 
 public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent> {
 
