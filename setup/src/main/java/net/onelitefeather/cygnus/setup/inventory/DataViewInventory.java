@@ -6,6 +6,7 @@ import de.icevizion.aves.inventory.slot.ISlot;
 import de.icevizion.aves.inventory.util.LayoutCalculator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.inventory.InventoryType;
@@ -28,6 +29,7 @@ public class DataViewInventory {
     private static final int[] BLOCKED_SLOTS = LayoutCalculator.fillRow(InventoryType.CHEST_5_ROW);
     private static final int[] DATA_SLOTS = LayoutCalculator.quad(0, InventoryType.CHEST_4_ROW.getSize() - 1);
     private final PageableInventory pageableInventory;
+    private final ConfirmInventory confirmInventory;
 
     public DataViewInventory(@NotNull GameMap gameMap, @NotNull Player player) {
         InventoryLayout layout = InventoryLayout.fromType(InventoryType.CHEST_6_ROW);
@@ -41,6 +43,28 @@ public class DataViewInventory {
                 .slotRange(DATA_SLOTS)
                 .values(new ArrayList<>(getSlots(gameMap)))
                 .build();
+        this.confirmInventory = new ConfirmInventory(this::handleConfirmClick);
+    }
+
+    /**
+     * Opens the confirmation inventory.
+     *
+     * @param player the player to open the inventory
+     */
+    private void openConfirmInventory(@NotNull Player player) {
+        player.closeInventory();
+        confirmInventory.register();
+        player.openInventory(confirmInventory.getInventory());
+    }
+
+    /**
+     * Handles the confirmation logic.
+     *
+     * @param player the player who clicked
+     */
+    private void handleConfirmClick(@NotNull Player player) {
+        player.closeInventory();
+        MinecraftServer.getSchedulerManager().scheduleNextTick(this.pageableInventory::open);
     }
 
     public void openInventory() {
@@ -65,22 +89,22 @@ public class DataViewInventory {
         }
 
         if (gameMap.hasSpawn()) {
-            slotMap.add(SpawnItemSlot.asSpawn(gameMap.getSpawn(), player -> {}));
+            slotMap.add(SpawnItemSlot.asSpawn(gameMap.getSpawn(), this::openConfirmInventory));
         }
 
         if (gameMap.getSlenderSpawn() != null) {
-            slotMap.add(SpawnItemSlot.asSlender(gameMap.getSlenderSpawn(), player -> {}));
+            slotMap.add(SpawnItemSlot.asSlender(gameMap.getSlenderSpawn(), this::openConfirmInventory));
         }
 
         if (!gameMap.getSurvivorSpawns().isEmpty()) {
             for (Pos survivorSpawn : gameMap.getSurvivorSpawns()) {
-                slotMap.add(SpawnItemSlot.asSurvivor(survivorSpawn, player -> {}));
+                slotMap.add(SpawnItemSlot.asSurvivor(survivorSpawn, this::openConfirmInventory));
             }
         }
 
         if (!gameMap.getPageFaces().isEmpty()) {
             for (PageResource pageFace : gameMap.getPageFaces()) {
-                slotMap.add(new PageItemSlot(pageFace, player -> {}));
+                slotMap.add(new PageItemSlot(pageFace, this::openConfirmInventory));
             }
         }
 
