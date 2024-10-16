@@ -103,9 +103,7 @@ public class LobbyViewInventory extends GlobalInventoryBuilder {
     private void handleConfirmClick(@NotNull Player player) {
         player.closeInventory();
         lobbyMap.setSpawn(null);
-        System.out.println("MEEPO");
         invalidateDataLayout();
-        System.out.println("MEEPO2");
         MinecraftServer.getSchedulerManager().scheduleNextTick(() -> player.openInventory(this.getInventory()));
     }
 
