@@ -1,6 +1,8 @@
 package net.onelitefeather.cygnus.common.page;
 
 import net.minestom.server.coordinate.Point;
+import net.minestom.server.utils.Direction;
+import net.onelitefeather.cygnus.common.util.DirectionFaceHelper;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -11,4 +13,23 @@ import org.jetbrains.annotations.NotNull;
  * @param position The position at which to spawn a page.
  * @param face The face used in the resource setup process.
  */
-public record PageResource(@NotNull Point position, @NotNull String face) { }
+public record PageResource(@NotNull Point position, @NotNull String face) {
+
+    /**
+     * Returns the opposite position of the provided face from the given position.
+     *
+     * @return the opposite position
+     */
+    public @NotNull Point opposite() {
+        Direction direction = DirectionFaceHelper.parseDirection(face);
+
+        return switch (direction) {
+            case NORTH -> position.add(0.5, 0.5, 1);
+            case SOUTH -> position.add(0.5, 0.5, -1);
+            case EAST -> position.add(-1, 0.5, 0.5);
+            case WEST -> position.add(1, 0.5, 0.5);
+            default -> position;
+        };
+    }
+
+}
