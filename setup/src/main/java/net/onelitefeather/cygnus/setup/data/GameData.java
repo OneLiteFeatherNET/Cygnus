@@ -25,7 +25,7 @@ public final class GameData extends SetupDataImpl {
 
     @Override
     public void triggerInventoryUpdate() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        this.inventory.update();
     }
 
     @Override

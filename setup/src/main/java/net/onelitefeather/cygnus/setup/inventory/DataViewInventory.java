@@ -12,6 +12,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.inventory.InventoryType;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.setup.data.GameData;
 import net.onelitefeather.cygnus.setup.inventory.slot.MultipleStringItemSlot;
 import net.onelitefeather.cygnus.setup.inventory.slot.PageItemSlot;
 import net.onelitefeather.cygnus.setup.inventory.slot.SpawnItemSlot;
@@ -30,10 +31,13 @@ public class DataViewInventory {
     private static final int[] DATA_SLOTS = LayoutCalculator.quad(0, InventoryType.CHEST_4_ROW.getSize() - 1);
     private final PageableInventory pageableInventory;
     private final ConfirmInventory confirmInventory;
+    private final GameMap gameMap;
+    private List<ISlot> slots;
 
     public DataViewInventory(@NotNull GameMap gameMap, @NotNull Player player) {
         InventoryLayout layout = InventoryLayout.fromType(InventoryType.CHEST_6_ROW);
         layout.setItems(BLOCKED_SLOTS, SetupItems.DECORATION, CANCEL_CLICK);
+        this.slots = getSlots(gameMap);
         this.pageableInventory = PageableInventory
                 .builder()
                 .title(Component.text("Data view"))
@@ -41,9 +45,10 @@ public class DataViewInventory {
                 .layout(layout)
                 .player(player)
                 .slotRange(DATA_SLOTS)
-                .values(new ArrayList<>(getSlots(gameMap)))
+                .values(slots)
                 .build();
         this.confirmInventory = new ConfirmInventory(this::handleConfirmClick);
+        this.gameMap = gameMap;
     }
 
     /**
@@ -109,5 +114,11 @@ public class DataViewInventory {
         }
 
         return slotMap;
+    }
+
+    public void update() {
+        this.pageableInventory.remove(this.slots);
+        this.slots = getSlots(gameMap);
+        this.pageableInventory.add(this.slots);
     }
 }
