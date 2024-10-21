@@ -11,6 +11,7 @@ import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
@@ -38,7 +39,7 @@ public non-sealed class SlenderBar extends StaminaBar {
     private BiFunction<Player, Status, Void> accept;
     private double currentTime;
 
-    SlenderBar(@NotNull Player player) {
+    SlenderBar(@NotNull CygnusPlayer player) {
         super(player, ChronoUnit.MILLIS, 500);
         this.tileChar = "▋";
         this.time = MAX_TIME;
@@ -62,7 +63,7 @@ public non-sealed class SlenderBar extends StaminaBar {
             this.handleDraining();
             return;
         }
-        this.handleRegneration();
+        this.handleRegeneration();
     }
 
     private void handleDraining() {
@@ -86,13 +87,14 @@ public non-sealed class SlenderBar extends StaminaBar {
         player.addEffect(NIGHT_VISION.potion());
     }
 
-    private void handleRegneration() {
+    private void handleRegeneration() {
         if (currentTime < time + TIME_STEP) {
             currentTime += TIME_STEP;
         } else {
             status = Status.READY;
             player.playSound(LEVEL, player.getPosition());
         }
+
         player.sendActionBar(Components.getProgressBar((int) currentTime, 17, 17, tileChar, NamedTextColor.GOLD, NamedTextColor.GRAY));
     }
 

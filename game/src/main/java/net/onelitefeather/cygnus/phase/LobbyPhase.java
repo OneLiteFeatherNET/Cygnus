@@ -1,24 +1,18 @@
 package net.onelitefeather.cygnus.phase;
 
+import de.icevizion.aves.util.functional.VoidConsumer;
 import de.icevizion.xerus.api.phase.TickDirection;
 import de.icevizion.xerus.api.phase.TimedPhase;
-import de.icevizion.xerus.api.team.Team;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
+import net.minestom.server.network.ConnectionManager;
 import net.minestom.server.timer.Task;
-import net.onelitefeather.cygnus.common.Messages;
-import net.onelitefeather.cygnus.common.config.GameConfig;
-import net.onelitefeather.cygnus.common.map.MapProvider;
-import net.onelitefeather.cygnus.common.util.Helper;
-import net.onelitefeather.cygnus.stamina.StaminaService;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
-import java.util.function.Consumer;
-import java.util.function.IntFunction;
 
-import static net.onelitefeather.cygnus.common.config.GameConfig.LOBBY_PHASE_TIME;
 import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIME;
 
 /**
@@ -28,32 +22,37 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIM
  **/
 public final class LobbyPhase extends TimedPhase {
 
+    private static final ConnectionManager CONNECTION_MANAGER = MinecraftServer.getConnectionManager();
     private boolean forceStarted;
-    private final IntFunction<Team> teamGetter;
-    private final StaminaService staminaService;
-    private final Consumer<Void> worldUpdater;
-    private final MapProvider mapProvider;
     private final Task waitingTask;
+    private final VoidConsumer gameMapLoading;
+    private final VoidConsumer staminaInstantiation;
+    private final VoidConsumer worldUpdater;
+    private final int lobbyTime;
+    private final int minPlayers;
     private Component displayComponent;
 
     public LobbyPhase(
-            @NotNull IntFunction<Team> teamGetter,
-            @NotNull StaminaService staminaService,
-            @NotNull Consumer<Void> worldUpdater,
-            @NotNull MapProvider mapProvider
+            @NotNull VoidConsumer gameMapLoading,
+            @NotNull VoidConsumer staminaInstantiation,
+            @NotNull VoidConsumer worldUpdater,
+            int lobbyTime,
+            int minPlayers
     ) {
         super("Lobby", ChronoUnit.SECONDS, 1);
+        this.gameMapLoading = gameMapLoading;
+        this.staminaInstantiation = staminaInstantiation;
         this.worldUpdater = worldUpdater;
-        this.mapProvider = mapProvider;
+        this.lobbyTime = lobbyTime;
+        this.minPlayers = minPlayers;
         this.setPaused(true);
-        this.setCurrentTicks(LOBBY_PHASE_TIME);
+        this.setCurrentTicks(lobbyTime);
         this.setTickDirection(TickDirection.DOWN);
-        this.teamGetter = teamGetter;
-        this.staminaService = staminaService;
         this.setEndTicks(-5);
         this.updateComponent();
         this.waitingTask = MinecraftServer.getSchedulerManager().buildTask(() -> {
-            if (isPaused() || isFinished() || MinecraftServer.getConnectionManager().getOnlinePlayers().isEmpty()) return;
+            if (isPaused() || isFinished() || MinecraftServer.getConnectionManager().getOnlinePlayers().isEmpty())
+                return;
             MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(
                     player -> player.sendActionBar(this.displayComponent)
             );
@@ -61,21 +60,26 @@ public final class LobbyPhase extends TimedPhase {
     }
 
     private void updateComponent() {
-        this.displayComponent = Messages.withMini("<gray>Need <red>" + (GameConfig.MIN_PLAYERS - MinecraftServer.getConnectionManager().getOnlinePlayers().size() + " <gray>players to start"));
+        int playerDifference = Math.max(0, this.minPlayers - CONNECTION_MANAGER.getOnlinePlayers().size());
+        this.displayComponent = Component.text("Need", NamedTextColor.GRAY)
+                .append(Component.space())
+                .append(Component.text(playerDifference, NamedTextColor.RED))
+                .append(Component.space())
+                .append(Component.text("players to start", NamedTextColor.GRAY));
     }
 
     public void checkStartCondition() {
         this.updateComponent();
-        if (isPaused() && MinecraftServer.getConnectionManager().getOnlinePlayers().size() >= GameConfig.MIN_PLAYERS) {
+        if (isPaused() && CONNECTION_MANAGER.getOnlinePlayers().size() >= this.minPlayers) {
             this.setPaused(false);
         }
     }
 
     public void checkStopCondition() {
-        if (waitingTask.isAlive() && MinecraftServer.getConnectionManager().getOnlinePlayers().size() - 1<= GameConfig.MIN_PLAYERS) {
+        if (waitingTask.isAlive() && MinecraftServer.getConnectionManager().getOnlinePlayers().size() - 1 <= this.minPlayers) {
             this.setPaused(true);
             this.updateComponent();
-            this.setCurrentTicks(LOBBY_PHASE_TIME);
+            this.setCurrentTicks(this.lobbyTime);
             this.forceStarted = false;
             setLevel();
         }
@@ -102,26 +106,27 @@ public final class LobbyPhase extends TimedPhase {
     @Override
     public void onUpdate() {
         setLevel();
-        this.worldUpdater.accept(null);
+        this.worldUpdater.apply();
 
         if (getCurrentTicks() == FORCE_START_TIME - 1) {
-            this.mapProvider.loadGameMap();
+            this.gameMapLoading.apply();
         }
 
         if (getCurrentTicks() == 0) {
-            var survivorTeam = teamGetter.apply(1);
-            var player = Helper.prepareTeamAllocation(teamGetter.apply(0), survivorTeam);
-            this.staminaService.setSlenderBar(player);
-            this.staminaService.createStaminaBars(survivorTeam);
+            this.staminaInstantiation.apply();
         }
     }
 
+    /**
+     * Checks if the player requirements are met.
+     * If the player requirements are not met the phase will be paused.
+     */
     public void checkPlayerRequirements() {
-        if (MinecraftServer.getConnectionManager().getOnlinePlayers().size() - 1 < GameConfig.MIN_PLAYERS) {
+        if (MinecraftServer.getConnectionManager().getOnlinePlayers().size() - 1 < this.minPlayers) {
             this.setPaused(true);
             this.setForceStarted(false);
-            this.setCurrentTicks(LOBBY_PHASE_TIME);
-            this.setLevel(LOBBY_PHASE_TIME);
+            this.setCurrentTicks(this.lobbyTime);
+            this.setLevel(this.lobbyTime);
         }
     }
 
@@ -129,16 +134,38 @@ public final class LobbyPhase extends TimedPhase {
         this.setLevel(getCurrentTicks());
     }
 
+    /**
+     * Sets the level for all online players.
+     * The level is calculated by the current ticks.
+     * The experience is calculated by the current ticks divided by the lobby phase time.
+     *
+     * @param amount the amount of the level
+     */
     private void setLevel(int amount) {
         if (amount < 0) return;
-        float currentExpCount = (float) this.getCurrentTicks() / (isForceStarted() ? FORCE_START_TIME : LOBBY_PHASE_TIME);
+        int time = isForceStarted() ? FORCE_START_TIME : this.lobbyTime;
+        float currentExpCount = (float) this.getCurrentTicks() / time;
         for (Player onlinePlayer : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
             onlinePlayer.setLevel(amount);
             onlinePlayer.setExp(currentExpCount);
         }
     }
 
+    /**
+     * Sets the level for the given player.
+     *
+     * @param player the player to set the level
+     */
+    public void setLevel(@NotNull Player player) {
+        player.setLevel(getCurrentTicks());
+        player.setExp(getCurrentTicks() / (float) this.lobbyTime);
+    }
 
+    /**
+     * Returns if the phase was force started.
+     *
+     * @return True if the phase was force started otherwise false
+     */
     public boolean isForceStarted() {
         return forceStarted;
     }

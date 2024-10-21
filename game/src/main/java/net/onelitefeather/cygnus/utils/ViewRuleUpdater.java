@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.utils;
 
 import de.icevizion.xerus.api.team.Team;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Tags;
 import org.jetbrains.annotations.NotNull;
@@ -10,15 +11,11 @@ public final class ViewRuleUpdater {
     public static boolean isViewAble(@NotNull Player player) {
         return player.hasTag(Tags.HIDDEN) && player.getTag(Tags.HIDDEN) == (byte) 1;
     }
-
-    // TODO: RENAME THIS SHIT
     public static void updateViewer(@NotNull Player target, @NotNull Team survivor) {
-
-        /*for (Player onlinePlayer : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
+        for (Player onlinePlayer : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
             if (onlinePlayer.getUuid().equals(target.getUuid())) continue;
-            System.out.println("Update view rule for " + onlinePlayer.getUsername());
             onlinePlayer.updateViewableRule();
-        }*/
+        }
         survivor.getPlayers().forEach(ViewRuleUpdater::showSlender);
         showSurvivor(target);
         target.updateViewableRule();

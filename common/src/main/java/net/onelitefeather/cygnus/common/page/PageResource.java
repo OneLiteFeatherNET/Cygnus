@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.common.page;
 
 import net.minestom.server.coordinate.Point;
+import net.minestom.server.utils.Direction;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -11,4 +12,4 @@ import org.jetbrains.annotations.NotNull;
  * @param position The position at which to spawn a page.
  * @param face The face used in the resource setup process.
  */
-public record PageResource(@NotNull Point position, @NotNull String face) { }
+public record PageResource(@NotNull Point position, @NotNull Direction face) { }

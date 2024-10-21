@@ -2,7 +2,107 @@ include:
   - template: Jobs/Dependency-Scanning.gitlab-ci.yml
   - template: Jobs/SAST.gitlab-ci.yml
   - template: Jobs/Secret-Detection.gitlab-ci.yml
-  - component: gitlab.onelitefeather.dev/dungeon/ci-components/gradle-publish@0.0.4
+  - component: gitlab.onelitefeather.dev/dungeon/ci-components/gradle-publish@0.1.0
 variables:
   SECURE_ANALYZERS_PREFIX: "${HTL_NEXUS_PROXY}/security-products"
-  GRADLE_IMAGE: "${HTL_NEXUS_PROXY}/gradle:8.10.0-jdk21"
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  #GRADLE_IMAGE: "${HTL_NEXUS_PROXY}/gradle:8.10.2-jdk21"
+
+# Stages
+stages:
+  - build
+  - test
+  - publish
+  - deploy
+
+# Container for the game module
+pre-container-game:
+  image: "${HTL_NEXUS_PROXY}/gradle:8.10.2-jdk21"
+  stage: build
+  tags:
+    - saas-linux-medium-amd64
+  script:
+    - gradle game:build -x test
+  artifacts:
+    paths:
+      - game/build/libs/cygnus.jar
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    - if: ($CI_COMMIT_BRANCH == 'main' ||  $CI_COMMIT_BRANCH == 'master')
+    - if: $CI_COMMIT_TAG != ""
+      when: manual
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && '$CI_MERGE_REQUEST_LABELS =~ /pipeline:deploy/'
+    - if: '$CI_MERGE_REQUEST_LABELS =~ /pipeline:jdk21/'
+      variables:
+        GRADLE_IMAGE: "${HTL_NEXUS_PROXY}/gradle:8.10.2-jdk21"
+container-game:
+  image: "${HTL_NEXUS_PROXY}/buildah/stable:latest"
+  stage: publish
+  tags:
+    - saas-linux-medium-amd64
+  dependencies:
+    - "pre-container-game"
+  needs:
+    - "pre-container-game"
+  cache: {}
+  script:
+    - buildah login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - buildah build -t $IMAGE_TAG -t $CI_REGISTRY_IMAGE:latest -f game/Dockerfile --build-arg JAR_FILE=game/build/libs/cygnus.jar --build-arg MAPS=worlds/ .
+    - buildah push $IMAGE_TAG
+    - buildah push $CI_REGISTRY_IMAGE:latest
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    - if: ($CI_COMMIT_BRANCH == 'main' ||  $CI_COMMIT_BRANCH == 'master')
+    - if: $CI_COMMIT_TAG != ""
+      when: manual
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && '$CI_MERGE_REQUEST_LABELS =~ /pipeline:deploy/'
+    - if: '$CI_MERGE_REQUEST_LABELS =~ /pipeline:jdk21/'
+      variables:
+        GRADLE_IMAGE: "${HTL_NEXUS_PROXY}/gradle:8.10.2-jdk21"
+
+# Container for the game setup module
+pre-container-setup:
+  image: "${HTL_NEXUS_PROXY}/gradle:8.10.2-jdk21"
+  stage: build
+  tags:
+    - saas-linux-medium-amd64
+  script:
+    - gradle setup:build -x test
+  artifacts:
+    paths:
+      - setup/build/libs/setup.jar
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    - if: ($CI_COMMIT_BRANCH == 'main' ||  $CI_COMMIT_BRANCH == 'master')
+    - if: $CI_COMMIT_TAG != ""
+      when: manual
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && '$CI_MERGE_REQUEST_LABELS =~ /pipeline:deploy/'
+    - if: '$CI_MERGE_REQUEST_LABELS =~ /pipeline:jdk21/'
+      variables:
+        GRADLE_IMAGE: "${HTL_NEXUS_PROXY}/gradle:8.10.2-jdk21"
+container-setup:
+  image: "${HTL_NEXUS_PROXY}/buildah/stable:latest"
+  tags:
+    - saas-linux-medium-amd64
+  dependencies:
+    - "pre-container-setup"
+  needs:
+    - "pre-container-setup"
+  stage: publish
+  cache: {}
+  script:
+    - buildah login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - buildah build --build-arg JAR_FILE=setup/build/libs/setup.jar -t $IMAGE_TAG -t $CI_REGISTRY_IMAGE:latest setup/
+    - buildah push $IMAGE_TAG
+    - buildah push $CI_REGISTRY_IMAGE:latest
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    - if: ($CI_COMMIT_BRANCH == 'main' ||  $CI_COMMIT_BRANCH == 'master')
+    - if: $CI_COMMIT_TAG != ""
+      when: manual
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && '$CI_MERGE_REQUEST_LABELS =~ /pipeline:deploy/'
+    - if: '$CI_MERGE_REQUEST_LABELS =~ /pipeline:jdk21/'
+      variables:
+        GRADLE_IMAGE: "${HTL_NEXUS_PROXY}/gradle:8.10.2-jdk21"

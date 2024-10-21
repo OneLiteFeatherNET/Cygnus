@@ -46,7 +46,7 @@ public final class PageCreationListener implements Consumer<PlayerBlockBreakEven
         }
 
         Vec position = Vec.fromPoint(event.getBlockPosition());
-        ((GameMap) setupData.getBaseMap()).addPage(position, direction.name());
+        ((GameMap) setupData.getBaseMap()).addPage(position, direction);
 
         Component component = Component.text("Created page at: ", NamedTextColor.GRAY)
                 .append(Components.convertPoint(position).style(Style.style(NamedTextColor.GOLD)))

@@ -1,10 +1,11 @@
 package net.onelitefeather.cygnus.listener;
 
-import de.icevizion.xerus.api.phase.LinearPhaseSeries;
 import de.icevizion.xerus.api.phase.Phase;
-import de.icevizion.xerus.api.phase.TimedPhase;
 import de.icevizion.xerus.api.team.Team;
 import de.icevizion.xerus.api.team.TeamService;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
@@ -15,26 +16,29 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
+import java.util.function.Supplier;
 
-public class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
+public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
 
-    private final LinearPhaseSeries<TimedPhase> linearPhaseSeries;
+    private final Component kickMessage = Component.text("Thanks for playing it. <3", NamedTextColor.RED);
+    private final Supplier<Phase> phaseSupplier;
     private final Team survivorTeam;
     private final IntFunction<Team> slenderGetter;
 
-    public PlayerDeathListener(@NotNull LinearPhaseSeries<TimedPhase> linearPhaseSeries, @NotNull TeamService<Team> teamService) {
-        this.linearPhaseSeries = linearPhaseSeries;
+    public PlayerDeathListener(@NotNull Supplier<Phase> phaseSupplier, @NotNull TeamService<Team> teamService) {
+        this.phaseSupplier = phaseSupplier;
         this.survivorTeam = teamService.getTeams().get(Helper.SURVIVOR_ID);
-        this.slenderGetter = ignore -> teamService.getTeams().get(Helper.SLENDER_ID);
+        this.slenderGetter = ignore -> teamService.getTeams().getFirst();
     }
 
     @Override
-    public void accept(PlayerDeathEvent event) {
-        event.setChatMessage(Messages.getDeathComponent(event.getPlayer()));
-        survivorTeam.removePlayer(event.getPlayer());
-        event.getPlayer().removeTag(Tags.TEAM_ID);
-        event.getPlayer().kick(Messages.withMini("<red>Thanks for playing it. <3"));
-        Phase currentPhase = linearPhaseSeries.getCurrentPhase();
+    public void accept(@NotNull PlayerDeathEvent event) {
+        Player player = event.getPlayer();
+        event.setChatMessage(Messages.getDeathComponent(player));
+        survivorTeam.removePlayer(player);
+        player.removeTag(Tags.TEAM_ID);
+        player.kick(kickMessage);
+        Phase currentPhase = this.phaseSupplier.get();
         //TODO: Should be tested
         if ((!(currentPhase instanceof GamePhase gamePhase && !survivorTeam.getPlayers().isEmpty()))) return;
         event.setChatMessage(null);

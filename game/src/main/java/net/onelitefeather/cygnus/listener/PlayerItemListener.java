@@ -1,11 +1,13 @@
 package net.onelitefeather.cygnus.listener;
 
+import de.icevizion.aves.util.functional.PlayerConsumer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerUseItemEvent;
+import net.minestom.server.item.ItemStack;
 import net.onelitefeather.cygnus.common.Tags;
-import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.stamina.SlenderBar;
 import net.onelitefeather.cygnus.stamina.StaminaService;
+import net.onelitefeather.cygnus.utils.TeamHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,24 +16,25 @@ import java.util.function.Consumer;
 public final class PlayerItemListener implements Consumer<PlayerUseItemEvent> {
 
     private final StaminaService staminaService;
-    private final Consumer<Player> updateRuleFunction;
+    private final PlayerConsumer updateRuleFunction;
 
-    public PlayerItemListener(@Nullable StaminaService staminaService, @NotNull Consumer<Player> updateRuleFunction) {
+    public PlayerItemListener(@Nullable StaminaService staminaService, @NotNull PlayerConsumer updateRuleFunction) {
         this.staminaService = staminaService;
         this.updateRuleFunction = updateRuleFunction;
     }
 
     @Override
     public void accept(@NotNull PlayerUseItemEvent event) {
-        if (!event.getItemStack().hasTag(Tags.ITEM_TAG)) return;
+        ItemStack stack = event.getItemStack();
+        if (!stack.hasTag(Tags.ITEM_TAG)) return;
 
-        var player = event.getPlayer();
+        Player player = event.getPlayer();
+        byte tagValue = stack.getTag(Tags.ITEM_TAG);
+        SlenderBar staminaBar = (SlenderBar) staminaService.getSlenderBar();
 
-        var tagValue = event.getItemStack().getTag(Tags.ITEM_TAG);
+        if (tagValue != 0 || staminaBar == null) return;
 
-        var staminaBar = (SlenderBar) staminaService.getSlenderBar();
-
-        if (tagValue == 0 && player.getTag(Tags.TEAM_ID) == Helper.SLENDER_ID && staminaBar != null && staminaBar.changeStatus()) {
+        if (TeamHelper.isSlenderTeam(player) && staminaBar.changeStatus()) {
             changeVisibilityStatus(player);
             updateRuleFunction.accept(player);
         }

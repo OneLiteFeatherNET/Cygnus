@@ -1,16 +1,16 @@
 package net.onelitefeather.cygnus.phase;
 
+import de.icevizion.aves.util.functional.VoidConsumer;
 import de.icevizion.xerus.api.phase.TickDirection;
 import de.icevizion.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
 import net.onelitefeather.cygnus.cloudnet.CloudGameAPI;
-import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.view.GameView;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
-import java.util.function.Consumer;
+import java.util.HashSet;
 
 /**
  * @author theEvilReaper
@@ -21,12 +21,26 @@ public final class GamePhase extends TimedPhase {
 
     private final GameView gameView;
     private final Runnable startRunnable;
-    private final Consumer<Void> updateWorldTime;
+    private final VoidConsumer updateWorldTime;
     private GameFinishEvent finishEvent;
 
-    public GamePhase(@NotNull GameView gameView, @NotNull Runnable startRunnable, @NotNull Runnable endRunnable, @NotNull Consumer<Void> updateWorldTime) {
+    /**
+     * Creates a new instance from the {@link GamePhase}.
+     *
+     * @param gameView        the view to update
+     * @param startRunnable   the runnable to execute on start
+     * @param endRunnable     the runnable to execute on end
+     * @param updateWorldTime the consumer to update the world time
+     */
+    public GamePhase(
+            @NotNull GameView gameView,
+            @NotNull Runnable startRunnable,
+            @NotNull Runnable endRunnable,
+            @NotNull VoidConsumer updateWorldTime,
+            int gameTime
+    ) {
         super("GamePhase", ChronoUnit.SECONDS, 1);
-        this.setCurrentTicks(GameConfig.MAX_GAME_TIME);
+        this.setCurrentTicks(gameTime);
         this.setTickDirection(TickDirection.DOWN);
         this.setEndTicks(0);
         this.gameView = gameView;
@@ -37,6 +51,7 @@ public final class GamePhase extends TimedPhase {
 
     /**
      * Set's the reason why a game has ended.
+     *
      * @param finishEvent the reason to set
      */
     public void setFinishEvent(@NotNull GameFinishEvent finishEvent) {
@@ -45,8 +60,8 @@ public final class GamePhase extends TimedPhase {
     }
 
     @Override
-    public void start() {
-        super.start();
+    public void onStart() {
+        super.onStart();
         CloudGameAPI.cloudGameAPI().switchInGame();
         this.startRunnable.run();
     }
@@ -55,6 +70,7 @@ public final class GamePhase extends TimedPhase {
     protected void onFinish() {
         finishEvent = finishEvent == null ? new GameFinishEvent(GameFinishEvent.Reason.TIME_OVER) : finishEvent;
         MinecraftServer.getGlobalEventHandler().call(finishEvent);
+        this.gameView.removePlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
     }
 
     /**
@@ -62,7 +78,7 @@ public final class GamePhase extends TimedPhase {
      */
     @Override
     public void onUpdate() {
-        this.updateWorldTime.accept(null);
+        this.updateWorldTime.apply();
         this.gameView.updateView();
     }
 }

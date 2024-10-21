@@ -55,7 +55,7 @@ public class MapPool {
     private @NotNull List<MapEntry> loadMapsEntries(@NotNull Path path) {
         List<MapEntry> mapEntries = new ArrayList<>();
         try (Stream<Path> stream = Files.list(path)) {
-            mapEntries = stream.filter(Files::isDirectory).map(MapEntry::new).collect(Collectors.toList());
+            mapEntries = stream.filter(Files::isDirectory).map(MapEntry::new).filter(MapEntry::hasMapFile).collect(Collectors.toList());
         } catch (IOException exception) {
             MinecraftServer.getExceptionManager().handleException(exception);
             LOGGER.error("Unable to load maps from path {}", path, exception);

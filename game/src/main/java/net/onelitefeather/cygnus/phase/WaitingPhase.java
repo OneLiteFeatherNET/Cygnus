@@ -1,56 +1,54 @@
 package net.onelitefeather.cygnus.phase;
 
+import de.icevizion.aves.util.functional.VoidConsumer;
 import de.icevizion.xerus.api.phase.TimedPhase;
-import de.icevizion.xerus.api.team.Team;
-import net.onelitefeather.cygnus.common.map.MapProvider;
+import net.minestom.server.MinecraftServer;
+import net.minestom.server.event.EventDispatcher;
+import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.view.GameView;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
-import java.util.function.IntFunction;
+import java.util.HashSet;
 
 /**
  * @author theEvilReaper
  * @version 1.0.0
  * @since 1.0.0
  **/
+@SuppressWarnings("java:S1185")
 public final class WaitingPhase extends TimedPhase {
 
     private final GameView gameView;
-    private final MapProvider mapProvider;
-    private final IntFunction<Team> teamGetter;
+    private final VoidConsumer instanceSwitch;
+    private final VoidConsumer teleportLogic;
 
-    public WaitingPhase(@NotNull GameView gameView, @NotNull MapProvider mapProvider, @NotNull IntFunction<Team> teamGetter) {
+    public WaitingPhase(@NotNull GameView gameView, @NotNull VoidConsumer instanceSwitch, @NotNull VoidConsumer teleportLogic) {
         super("Waiting", ChronoUnit.SECONDS, 1);
         this.setPaused(false);
         this.setCurrentTicks(3);
         this.setEndTicks(0);
         this.gameView = gameView;
-        this.mapProvider = mapProvider;
-        this.teamGetter = teamGetter;
+        this.instanceSwitch = instanceSwitch;
+        this.teleportLogic = teleportLogic;
     }
 
     @Override
-    public void start() {
-        super.start();
+    public void onStart() {
+        super.onStart();
+        EventDispatcher.call(new GamePreLaunchEvent());
     }
 
     @Override
     protected void onFinish() {
-        this.mapProvider.switchToGameMap();
-        this.gameView.updateViewers(true);
+        this.instanceSwitch.apply();
+        this.gameView.addPlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
     }
 
     @Override
     public void onUpdate() {
         if (getCurrentTicks() == 1) {
-            var gameMap = this.mapProvider.getGameMap();
-            var gameInstance = this.mapProvider.getGameInstance();
-            this.teamGetter.apply(0).getPlayers().iterator().next().setInstance(gameInstance, gameMap.getSlenderSpawn());
-            if (gameMap.getSurvivorSpawns().size() == 1) {
-                var pos = gameMap.getSurvivorSpawns().iterator().next();
-                this.teamGetter.apply(1).getPlayers().forEach(player -> player.setInstance(gameInstance, pos));
-            }
+            this.teleportLogic.apply();
         }
     }
 }
