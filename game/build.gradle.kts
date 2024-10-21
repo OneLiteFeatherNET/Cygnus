@@ -71,6 +71,7 @@ tasks {
     shadowJar {
         archiveClassifier.set("")
         archiveFileName.set("cygnus.jar")
+        mergeServiceFiles()
     }
 }
 
