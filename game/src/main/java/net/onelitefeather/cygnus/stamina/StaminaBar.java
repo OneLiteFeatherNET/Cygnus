@@ -21,7 +21,7 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
     protected final CygnusPlayer player;
     private final ChronoUnit chronoUnit;
     protected int period;
-    protected Status status;
+    protected State state;
     private Task task;
 
     /**
@@ -91,7 +91,7 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
      * @version 1.0.0
      * @since 1.0.0
      **/
-    public enum Status {
+    public enum State {
 
         READY, DRAINING, REGENERATING
     }

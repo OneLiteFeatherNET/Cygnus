@@ -65,8 +65,8 @@ public final class StaminaService {
     public void createStaminaBars(@NotNull Team team) {
         Check.argCondition(!staminaBars.isEmpty(), "Unable to load stamina bars twice");
         Check.argCondition(team.getPlayers().isEmpty(), "Can't add players from a team without teams");
-        ((SlenderBar) this.slenderBar).setAccept((player, status) -> {
-            if (status == StaminaBar.Status.DRAINING) {
+        ((SlenderBar) this.slenderBar).setAccept((player, state) -> {
+            if (state == StaminaBar.State.DRAINING) {
                 PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
                 MinecraftServer.getConnectionManager().getOnlinePlayers()
                         .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateNewViewer);
@@ -74,7 +74,7 @@ public final class StaminaService {
                 return null;
             }
 
-            if (status == StaminaBar.Status.REGENERATING) {
+            if (state == StaminaBar.State.REGENERATING) {
                 PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
                 MinecraftServer.getConnectionManager().getOnlinePlayers()
                         .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateOldViewer);
