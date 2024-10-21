@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.phase;
 import de.icevizion.aves.util.functional.VoidConsumer;
 import de.icevizion.xerus.api.phase.TickDirection;
 import de.icevizion.xerus.api.phase.TimedPhase;
+import net.infumia.agones4j.Agones;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
@@ -31,13 +32,15 @@ public final class LobbyPhase extends TimedPhase {
     private final int lobbyTime;
     private final int minPlayers;
     private Component displayComponent;
+    private final Agones agones;
 
     public LobbyPhase(
             @NotNull VoidConsumer gameMapLoading,
             @NotNull VoidConsumer staminaInstantiation,
             @NotNull VoidConsumer worldUpdater,
             int lobbyTime,
-            int minPlayers
+            int minPlayers,
+            Agones agones
     ) {
         super("Lobby", ChronoUnit.SECONDS, 1);
         this.gameMapLoading = gameMapLoading;
@@ -45,6 +48,7 @@ public final class LobbyPhase extends TimedPhase {
         this.worldUpdater = worldUpdater;
         this.lobbyTime = lobbyTime;
         this.minPlayers = minPlayers;
+        this.agones = agones;
         this.setPaused(true);
         this.setCurrentTicks(lobbyTime);
         this.setTickDirection(TickDirection.DOWN);
@@ -96,6 +100,7 @@ public final class LobbyPhase extends TimedPhase {
     public void start() {
         super.start();
         setLevel();
+        this.agones.ready();
     }
 
     @Override

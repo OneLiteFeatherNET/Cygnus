@@ -26,6 +26,10 @@ dependencies {
     implementation(libs.aves)
     implementation(libs.xerus)
     implementation(libs.canis)
+    implementation(libs.agones4j)
+    implementation(libs.grpc.stub)
+    implementation(libs.grpc.protobuf)
+    implementation(libs.tomcat.annotations.api)
 
     compileOnly(libs.bundles.cloudnet)
 

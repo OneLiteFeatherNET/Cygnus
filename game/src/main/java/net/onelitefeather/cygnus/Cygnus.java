@@ -9,6 +9,7 @@ import de.icevizion.xerus.api.phase.TimedPhase;
 import de.icevizion.xerus.api.team.Team;
 import de.icevizion.xerus.api.team.TeamService;
 import de.icevizion.xerus.api.team.TeamServiceImpl;
+import net.infumia.agones4j.Agones;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
@@ -90,8 +91,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private GameView view;
     private MapProvider mapProvider;
     private GameConfig gameConfig;
+    private final Agones agones;
 
-    public Cygnus() {
+    public Cygnus(Agones agones) {
+        this.agones = agones;
         this.path = Paths.get("");
         this.teamService = new TeamServiceImpl<>();
         this.linearPhaseSeries = new LinearPhaseSeries<>("game");
@@ -166,7 +169,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 this.mapProvider.getGameMap(),
                 this.mapProvider.getGameInstance()
         );
-        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, worldUpdater, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers());
+        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, worldUpdater, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers(), agones);
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::triggerGameStart, this::finishGame, worldUpdater, this.gameConfig.gameTime()));
@@ -213,5 +216,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
 
     private void triggerViewRuleUpdate(@NotNull Player player) {
         ViewRuleUpdater.updateViewer(player, this.teamService.getTeams().get(Helper.SURVIVOR_ID));
+    }
+
+    public Agones getAgones() {
+        return agones;
     }
 }
