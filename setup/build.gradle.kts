@@ -29,8 +29,6 @@ dependencies {
     implementation(libs.xerus)
     implementation(libs.canis)
 
-    compileOnly(libs.bundles.cloudnet)
-
     testImplementation(libs.minestom)
     testImplementation(libs.minestom.test)
     testImplementation(libs.xerus)

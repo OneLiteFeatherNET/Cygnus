@@ -31,8 +31,6 @@ dependencies {
     implementation(libs.grpc.protobuf)
     implementation(libs.tomcat.annotations.api)
 
-    compileOnly(libs.bundles.cloudnet)
-
     testImplementation(libs.minestom)
     testImplementation(libs.minestom.test)
     testImplementation(libs.aves)

@@ -19,8 +19,6 @@ dependencies {
     compileOnly(libs.xerus)
     compileOnly(libs.canis)
 
-    compileOnly(libs.bundles.cloudnet)
-
     testImplementation(libs.minestom)
     testImplementation(libs.minestom.test)
     testImplementation(libs.aves)
