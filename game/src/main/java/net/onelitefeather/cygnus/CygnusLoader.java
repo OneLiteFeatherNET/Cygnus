@@ -9,7 +9,7 @@ public final class CygnusLoader {
 
     public static void main(String[] args) {
         MinecraftServer server = MinecraftServer.init();
-        try(Agones agones = Agones.builder().withAddress().withChannel().build()) {
+        try(Agones agones = Agones.builder().withAddress().build()) {
             MinecraftServer.getSchedulerManager().buildShutdownTask(agones::shutdown);
             new Cygnus(agones);
             StreamObserver<Sdk.Empty> emptyStreamObserver = agones.healthCheckStream();
