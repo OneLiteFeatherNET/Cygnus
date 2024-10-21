@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.phase;
 import de.icevizion.aves.util.functional.VoidConsumer;
 import de.icevizion.xerus.api.phase.TickDirection;
 import de.icevizion.xerus.api.phase.TimedPhase;
+import net.infumia.agones4j.Agones;
 import net.minestom.server.MinecraftServer;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.view.GameView;
@@ -21,6 +22,7 @@ public final class GamePhase extends TimedPhase {
     private final GameView gameView;
     private final Runnable startRunnable;
     private final VoidConsumer updateWorldTime;
+    private final Agones agones;
     private GameFinishEvent finishEvent;
 
     /**
@@ -36,9 +38,10 @@ public final class GamePhase extends TimedPhase {
             @NotNull Runnable startRunnable,
             @NotNull Runnable endRunnable,
             @NotNull VoidConsumer updateWorldTime,
-            int gameTime
+            int gameTime, Agones agones
     ) {
         super("GamePhase", ChronoUnit.SECONDS, 1);
+        this.agones = agones;
         this.setCurrentTicks(gameTime);
         this.setTickDirection(TickDirection.DOWN);
         this.setEndTicks(0);
@@ -62,6 +65,7 @@ public final class GamePhase extends TimedPhase {
     public void onStart() {
         super.onStart();
         this.startRunnable.run();
+        this.agones.setLabel("status", "ingame");
     }
 
     @Override
