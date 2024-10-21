@@ -1,11 +1,12 @@
 package net.onelitefeather.cygnus.common;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.minestom.server.entity.Player;
-import net.onelitefeather.cygnus.common.configv2.GameConfig;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,15 +46,15 @@ public final class Messages {
         PAGE_FOUND_PART = withMini("<gray>found a page!");
 
         VIEW_TIME = withMini("<gradient:#ff5555:#fffffff:#ff5555:#ff0d00:#fffffff:0.6>Time:</gradient>");
-        VIEW_PAGES = withMini("<gradient:#ff5555:#fffffff:#ff5555:#ff0d00:#fffffff:0.6>Pages:</gradient>");
+        VIEW_PAGES = withMini("<gray>Pages:");
 
         SLENDER_WIN_MESSAGE =
                 withMini("<gray>has <green>won the game!")
-                .append(Component.newline());
+                        .append(Component.newline());
 
-        SURVIVOR_WIN_MESSAGE = withMini("<red>(<team>) <gray>has <green>won the game!",
-                        TagResolver.builder().tag("team", (argumentQueue, context) ->
-                                        Tag.preProcessParsed(GameConfig.SURVIVOR_TEAM_NAME)).build());
+        SURVIVOR_WIN_MESSAGE = withPrefix("<gray>The <green><team>s <gray>has <green>won <gray>the game!",
+                TagResolver.builder().tag("team", (argumentQueue, context) ->
+                        Tag.preProcessParsed(GameConfig.SURVIVOR_TEAM_NAME)).build());
 
         LEAVE_PART = withMini("<gray>left the game!");
         JOIN_PART = withMini("<gray>joined the game!");
@@ -73,11 +74,17 @@ public final class Messages {
                 .append(withMiniPrefix("<red>Right-click your <color:#ff00d4>SlenderEye</color> <red>to toggle invisibility!"));
     }
 
-    private Messages() { }
+    private Messages() {
+    }
 
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull Component withPrefix(@NotNull String component) {
         return PREFIX.append(MINI_MESSAGE.deserialize(component));
+    }
+
+    @Contract(value = "_, _ -> new", pure = true)
+    public static @NotNull Component withPrefix(@NotNull String component, @NotNull TagResolver... resolvers) {
+        return PREFIX.append(Component.space()).append(MINI_MESSAGE.deserialize(component, resolvers));
     }
 
     @Contract(value = "_ -> new", pure = true)
@@ -122,10 +129,9 @@ public final class Messages {
 
     @Contract(value = "_, _ -> new", pure = true)
     public static @NotNull Component getViewComponent(@NotNull String time, @NotNull Component pageStatus) {
-        var timeComponent = withMini("<red>" + time);
-        return VIEW_TIME
+        return Component.text("Time:", NamedTextColor.GRAY)
                 .append(Component.space())
-                .append(timeComponent)
+                .append(Component.text(time, NamedTextColor.RED))
                 .append(Component.space())
                 .append(VIEW_PAGES)
                 .append(Component.space())

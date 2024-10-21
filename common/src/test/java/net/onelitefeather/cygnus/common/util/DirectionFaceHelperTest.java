@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DirectionFaceHelperTest {
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Test direction parsing for {0}")
     @ValueSource(strings = { "NORTH", "SOUTH", "EAST", "WEST" })
     void testValidDirectionParsing(String face) {
         Direction parsedDirection = DirectionFaceHelper.parseDirection(face);

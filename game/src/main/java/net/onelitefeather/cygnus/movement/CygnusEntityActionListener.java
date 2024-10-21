@@ -1,10 +1,6 @@
 package net.onelitefeather.cygnus.movement;
 
 import net.minestom.server.entity.Player;
-import net.minestom.server.entity.attribute.Attribute;
-import net.minestom.server.entity.attribute.AttributeInstance;
-import net.minestom.server.entity.attribute.AttributeModifier;
-import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerStartFlyingWithElytraEvent;
 import net.minestom.server.event.player.PlayerStartSneakingEvent;
@@ -19,9 +15,6 @@ import org.jetbrains.annotations.NotNull;
  **/
 
 public final class CygnusEntityActionListener {
-
-    private static final AttributeModifier SPEED_MODIFIER_SPRINTING =
-            new AttributeModifier("Sprinting speed boost", 0.30000001192092896D, AttributeOperation.MULTIPLY_TOTAL);
 
     private CygnusEntityActionListener() {
     }
@@ -51,12 +44,12 @@ public final class CygnusEntityActionListener {
 
     private static void setSprinting(@NotNull Player player, boolean sprinting) {
         player.setSprinting(sprinting);
-        AttributeInstance attribute = player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+       /* AttributeInstance attribute = player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
         attribute.removeModifier(SPEED_MODIFIER_SPRINTING);
         if (sprinting) {
             attribute.addModifier(SPEED_MODIFIER_SPRINTING);
             return;
-        }
+        }*/
         //TODO: Fix this
         // var propertiesPacket = new EntityAttributesPacket(player.getEntityId(), new ArrayList<>(Collections.singletonList(attribute)));
 //        player.sendPacketToViewersAndSelf(propertiesPacket);

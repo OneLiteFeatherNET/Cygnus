@@ -5,6 +5,7 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.utils.PacketUtils;
 import net.minestom.server.utils.validate.Check;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -51,7 +52,7 @@ public final class StaminaService {
             this.slenderBar.stop();
         }
 
-        this.slenderBar = StaminaFactory.createSlenderStamina(player);
+        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player);
         if (!forceStart) return;
         this.slenderBar.start();
     }
@@ -83,7 +84,7 @@ public final class StaminaService {
             return null;
         });
         for (Player player : team.getPlayers()) {
-            this.staminaBars.put(player.getUuid(), StaminaFactory.createFoodStamina(player));
+            this.staminaBars.put(player.getUuid(), StaminaFactory.createFoodStamina((CygnusPlayer) player));
         }
     }
 
@@ -91,7 +92,7 @@ public final class StaminaService {
      * Starts all {@link net.minestom.server.timer.Task} reference from each {@link StaminaBar}.
      */
     public void start() {
-        this.slenderBar.start();
+        //this.slenderBar.start();
         for (StaminaBar value : this.staminaBars.values()) {
             value.start();
         }
@@ -121,7 +122,7 @@ public final class StaminaService {
             this.slenderBar.stop();
         }
         //TODO: Stop old at switch
-        this.slenderBar = StaminaFactory.createSlenderStamina(player);
+        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player);
         this.slenderBar.start();
     }
 

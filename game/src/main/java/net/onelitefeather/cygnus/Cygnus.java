@@ -2,7 +2,9 @@ package net.onelitefeather.cygnus;
 
 import de.icevizion.aves.util.Strings;
 import de.icevizion.aves.util.TimeFormat;
+import de.icevizion.aves.util.functional.VoidConsumer;
 import de.icevizion.xerus.api.phase.LinearPhaseSeries;
+import de.icevizion.xerus.api.phase.Phase;
 import de.icevizion.xerus.api.phase.TimedPhase;
 import de.icevizion.xerus.api.team.Team;
 import de.icevizion.xerus.api.team.TeamService;
@@ -17,7 +19,6 @@ import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
-import net.minestom.server.extensions.Extension;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
@@ -27,8 +28,9 @@ import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
-import net.onelitefeather.cygnus.common.config.ConfigHolder;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.config.GameConfigReader;
+import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.map.MapProvider;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageEvent;
@@ -43,6 +45,7 @@ import net.onelitefeather.cygnus.listener.PlayerQuitListener;
 import net.onelitefeather.cygnus.listener.PlayerSpawnListener;
 import net.onelitefeather.cygnus.listener.game.GameFinishListener;
 import net.onelitefeather.cygnus.listener.game.GamePageListener;
+import net.onelitefeather.cygnus.listener.game.GamePreLaunchListener;
 import net.onelitefeather.cygnus.listener.game.GameReviveListener;
 import net.onelitefeather.cygnus.listener.game.PlayerPageInteractListener;
 import net.onelitefeather.cygnus.listener.game.PlayerStartSprintingListener;
@@ -54,13 +57,21 @@ import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.phase.RestartPhase;
 import net.onelitefeather.cygnus.phase.WaitingPhase;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.utils.Items;
+import net.onelitefeather.cygnus.utils.StaminaHelper;
+import net.onelitefeather.cygnus.utils.TeamHelper;
+import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Consumer;
+import java.nio.file.Paths;
+import java.util.function.Supplier;
 
 /**
  * @author theEvilReaper
@@ -68,9 +79,8 @@ import java.util.function.Consumer;
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
-public final class Cygnus extends Extension implements TeamCreator, ListenerHandling {
-
-    private static final GameConfig GAME_CONFIG = new GameConfig(1, 12);
+public final class Cygnus implements TeamCreator, ListenerHandling {
+    private final Path path;
     private final TeamService<Team> teamService;
     private final LinearPhaseSeries<TimedPhase> linearPhaseSeries;
     private final AmbientProvider ambientProvider;
@@ -79,81 +89,87 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
     private PageProvider pageProvider;
     private GameView view;
     private MapProvider mapProvider;
+    private GameConfig gameConfig;
 
     public Cygnus() {
+        this.path = Paths.get("");
         this.teamService = new TeamServiceImpl<>();
         this.linearPhaseSeries = new LinearPhaseSeries<>("game");
         this.items = new Items();
         this.ambientProvider = new AmbientProvider();
         this.staminaService = new StaminaService();
-    }
-
-    @Override
-    public void initialize() {
-        new ConfigHolder(getDataDirectory());
+        this.gameConfig = new GameConfigReader(Paths.get("")).getConfig();
+        MinecraftServer.getConnectionManager().setPlayerProvider(CygnusPlayer::new);
         InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         MinecraftServer.getInstanceManager().registerInstance(instance);
         this.pageProvider = new PageProvider(this::handleAllPageFound);
-        this.mapProvider = new MapProvider(getDataDirectory(), instance, this.pageProvider);
+        this.mapProvider = new MapProvider(path, instance, this.pageProvider);
         this.mapProvider.prepareInstanceData(instance);
         this.view = new GameViewImpl(this::getViewComponent);
-        this.createTeams(GAME_CONFIG, this.teamService, this.ambientProvider);
+        this.createTeams(this.gameConfig, this.teamService, this.ambientProvider);
         this.initPhases();
         this.initCommands();
         this.initListener();
         this.linearPhaseSeries.start();
         this.registerGameListener();
     }
-
-    @Override
-    public void terminate() {
-        // Nothing to do here for the moment
-    }
-
     private void initCommands() {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
     }
 
-    private void handleAllPageFound(){
+    private void handleAllPageFound() {
         var gamePhase = (GamePhase) this.linearPhaseSeries.getCurrentPhase();
         gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_PAGES_FOUND));
         gamePhase.finish();
     }
 
     private void initListener() {
+        Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         var manager = MinecraftServer.getGlobalEventHandler();
-        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(this.mapProvider, this.linearPhaseSeries));
-        manager.addListener(PlayerDisconnectEvent.class, new PlayerQuitListener(linearPhaseSeries, teamService, this.staminaService::forceStopSlenderBar));
-        manager.addListener(AsyncPlayerConfigurationEvent.class, new PlayerLoginListener(mapProvider.getInstance(), GameConfig.MAX_PLAYERS));
-        manager.addListener(PlayerChatEvent.class, new PlayerChatListener(this.linearPhaseSeries.getCurrentPhase()));
+        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(this.mapProvider, phaseSupplier));
+        PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService::forceStopSlenderBar, this.gameConfig.minPlayers());
+        manager.addListener(PlayerDisconnectEvent.class, quitListener);
+        manager.addListener(AsyncPlayerConfigurationEvent.class,
+                new PlayerLoginListener(
+                        mapProvider.getInstance(),
+                        this.gameConfig.maxPlayers()
+                )
+        );
+        manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
         registerCancelListener(manager);
     }
 
     private void registerGameListener() {
+        Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         var manager = MinecraftServer.getGlobalEventHandler();
         manager.addListener(GameFinishEvent.class, new GameFinishListener());
         manager.addListener(PlayerUseItemEvent.class, new PlayerItemListener(this.staminaService, this::triggerViewRuleUpdate));
-        manager.addListener(PlayerDeathEvent.class, new PlayerDeathListener(this.linearPhaseSeries, this.teamService));
+        manager.addListener(PlayerDeathEvent.class, new PlayerDeathListener(phaseSupplier, this.teamService));
         manager.addListener(PlayerEntityInteractEvent.class, new PlayerPageInteractListener(this.pageProvider));
         manager.addListener(PageEvent.class, new GamePageListener(this.pageProvider));
         manager.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(
                 SlenderReviveEvent.class, new GameReviveListener(this.mapProvider.getGameMap(), this.items, this.staminaService));
+        manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         MinecraftServer.getPacketListenerManager().setListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 
     private void initPhases() {
-        Consumer<Void> worldUpdater = unused -> this.mapProvider.setMidnight();
-        this.linearPhaseSeries.add(new LobbyPhase(
-                this.teamService.getTeams()::get,
-                this.staminaService,
-                worldUpdater,
-                this.mapProvider
-        ));
-        this.linearPhaseSeries.add(new WaitingPhase(this.view, this.mapProvider, this.teamService.getTeams()::get));
-        this.linearPhaseSeries.add(new GamePhase(this.view, this::triggerGameStart, this::finishGame, worldUpdater));
+        VoidConsumer gameMapLoader = this.mapProvider::loadGameMap;
+        VoidConsumer staminaInitializer = () -> StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
+        VoidConsumer worldUpdater = this.mapProvider::setMidnight;
+        VoidConsumer instanceSwitch = this.mapProvider::switchToGameMap;
+        VoidConsumer teamInitializer = () -> TeamHelper.teleportTeams(
+                this.teamService,
+                this.mapProvider.getGameMap(),
+                this.mapProvider.getGameInstance()
+        );
+        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, worldUpdater, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers());
+        this.linearPhaseSeries.add(lobbyPhase);
+        this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
+        this.linearPhaseSeries.add(new GamePhase(this.view, this::triggerGameStart, this::finishGame, worldUpdater, this.gameConfig.gameTime()));
         this.linearPhaseSeries.add(new RestartPhase());
     }
 
@@ -186,7 +202,7 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
             player.sendMessage(message);
             player.setTag(Tags.HIDDEN, (byte) 0);
         });
-        Helper.updateTabList(this.teamService);
+        TeamHelper.updateTabList(this.teamService);
         PacketUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
         MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(slenderPlayer.getUuid())).forEach(p -> {
             slenderPlayer.updateOldViewer(p);
@@ -196,6 +212,6 @@ public final class Cygnus extends Extension implements TeamCreator, ListenerHand
     }
 
     private void triggerViewRuleUpdate(@NotNull Player player) {
-        //  ViewRuleUpdater.updateViewer(player, this.teamService.getTeams().get(Helper.SURVIVOR_ID));
+        ViewRuleUpdater.updateViewer(player, this.teamService.getTeams().get(Helper.SURVIVOR_ID));
     }
 }

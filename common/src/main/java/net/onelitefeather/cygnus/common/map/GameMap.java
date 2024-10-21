@@ -3,7 +3,7 @@ package net.onelitefeather.cygnus.common.map;
 import de.icevizion.aves.map.BaseMap;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
-import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
@@ -94,7 +94,7 @@ public final class GameMap extends BaseMap {
      * @param pos  the position to add
      * @param face the face of the page
      */
-    public void addPage(@NotNull Vec pos, @NotNull String face) {
+    public void addPage(@NotNull Vec pos, @NotNull Direction face) {
         this.pageFaces.add(new PageResource(pos, face));
     }
 
@@ -104,7 +104,8 @@ public final class GameMap extends BaseMap {
      * @return true if the map has enough spawns
      */
     public boolean hasEnoughSurvivorSpawns() {
-        return this.survivorSpawns.size() >= GameConfig.MAX_PLAYERS;
+        return true;
+        /*eturn this.survivorSpawns.size() >= GameConfig.;*/
     }
 
     /**

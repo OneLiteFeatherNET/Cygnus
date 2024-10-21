@@ -10,7 +10,6 @@ import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
-import net.minestom.server.extensions.Extension;
 import net.minestom.server.instance.InstanceContainer;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.map.MapProvider;
@@ -29,36 +28,29 @@ import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupItems;
 import org.jetbrains.annotations.NotNull;
 
-public class SetupExtension extends Extension implements ListenerHandling {
+import java.nio.file.Paths;
+
+public class SetupExtension implements ListenerHandling {
 
     private final SetupItems setupItems;
     private final SetupData setupData;
     private final InstanceContainer instanceContainer;
-    private SaveMapFunction mapSaveFunction;
-    private PageProvider pageProvider;
-    private MapSetupInventory mapSetupInventory;
-    private MapProvider mapProvider;
+    private final SaveMapFunction mapSaveFunction;
+    private final PageProvider pageProvider;
+    private final MapSetupInventory mapSetupInventory;
+    private final MapProvider mapProvider;
 
     public SetupExtension() {
         this.setupItems = new SetupItems();
         this.setupData = new SetupData();
         this.instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer();
-    }
-
-    @Override
-    public void initialize() {
         MinecraftServer.getInstanceManager().registerInstance(instanceContainer);
         this.pageProvider = new PageProvider(() -> {
         });
-        this.mapProvider = new MapProvider(getDataDirectory(), this.instanceContainer, this.pageProvider);
+        this.mapProvider = new MapProvider(Paths.get(""), this.instanceContainer, this.pageProvider);
         this.mapSaveFunction = new SaveMapFunction(mapProvider);
         this.mapSetupInventory = new MapSetupInventory(mapProvider.getAvailableMaps());
         registerSetupComponents();
-    }
-
-    @Override
-    public void terminate() {
-
     }
 
     private void registerSetupComponents() {

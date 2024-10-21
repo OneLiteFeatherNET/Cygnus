@@ -41,9 +41,9 @@ class PageResourceAdapterTest {
 
     @Test
     void testPageToJson() {
-        PageResource pageResource = new PageResource(Pos.ZERO, Direction.EAST.name());
+        PageResource pageResource = new PageResource(Pos.ZERO, Direction.EAST);
         assertEquals(Pos.ZERO, pageResource.position());
-        assertNotEquals(Direction.WEST, DirectionFaceHelper.parseDirection(pageResource.face()));
+        assertNotEquals(Direction.WEST, pageResource.face());
 
         String pageAsJson = gson.toJson(pageResource, PageResource.class);
 
@@ -58,6 +58,6 @@ class PageResourceAdapterTest {
 
         assertNotNull(pageResource);
         assertEquals(Pos.ZERO, pageResource.position());
-        assertEquals(Direction.EAST.name(), pageResource.face());
+        assertEquals(Direction.EAST, pageResource.face());
     }
 }

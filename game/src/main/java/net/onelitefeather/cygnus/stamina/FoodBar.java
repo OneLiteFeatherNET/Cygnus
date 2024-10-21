@@ -1,9 +1,8 @@
 package net.onelitefeather.cygnus.stamina;
 
-import net.minestom.server.MinecraftServer;
-import net.minestom.server.entity.Player;
-import net.onelitefeather.cygnus.common.util.Helper;
+import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
@@ -14,7 +13,7 @@ public non-sealed class FoodBar extends StaminaBar {
     private static final int FOOD_TAKE = 2;
     private float currentSpeedCount;
 
-    FoodBar(@NotNull Player player) {
+    FoodBar(@NotNull CygnusPlayer player) {
         super(player, ChronoUnit.MILLIS, 500);
         status = Status.READY;
         this.currentSpeedCount = MAX_FOOD;
@@ -47,8 +46,8 @@ public non-sealed class FoodBar extends StaminaBar {
 
         if (this.currentSpeedCount <= 0.0D) {
             player.setSprinting(false);
-            player.sendPacket(player.getMetadataPacket());
-            MinecraftServer.getGlobalEventHandler().call(new PlayerStopSprintingEvent(player));
+            player.setBlockedSprinting(true);
+            EventDispatcher.call(new PlayerStopSprintingEvent(player));
             status = Status.REGENERATING;
         }
     }
@@ -59,7 +58,7 @@ public non-sealed class FoodBar extends StaminaBar {
     private void handleFoodRegeneration() {
         if (this.currentSpeedCount == MAX_FOOD) {
             status = Status.READY;
-            Helper.changeSpeedValue(player, true);
+            player.setBlockedSprinting(false);
             return;
         }
 
@@ -87,7 +86,6 @@ public non-sealed class FoodBar extends StaminaBar {
             return true;
         }
 
-        System.out.println("Can't consume because the status is " + status + " and the currentSpeed is " + currentSpeedCount);
         return false;
     }
 

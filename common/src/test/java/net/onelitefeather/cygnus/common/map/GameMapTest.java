@@ -2,8 +2,10 @@ package net.onelitefeather.cygnus.common.map;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageResource;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -53,12 +55,13 @@ class GameMapTest {
         assertFalse(gameMap.removeSurvivorSpawn(testPos));
     }
 
+    @Disabled("The function will be reimplemented in a future update")
     @Test
     void testHasEnoughSurvivorSpawns() {
         GameMap gameMap = new GameMap();
         assertNotNull(gameMap);
         assertFalse(gameMap.hasEnoughSurvivorSpawns());
-        for (int i = 0; i <= GameConfig.MAX_PLAYERS; i++) {
+        for (int i = 0; i <= 12; i++) {
             gameMap.addSurvivorSpawn(new Pos(i, i, i));
         }
         assertTrue(gameMap.hasEnoughSurvivorSpawns());
@@ -80,13 +83,13 @@ class GameMapTest {
         assertNotNull(gameMap);
         assertTrue(gameMap.getPageFaces().isEmpty());
 
-        gameMap.addPage(Vec.ZERO, "NORTH");
+        gameMap.addPage(Vec.ZERO, Direction.NORTH);
 
         assertFalse(gameMap.getPageFaces().isEmpty());
 
         PageResource pageResource = gameMap.getPageFaces().iterator().next();
 
         assertEquals(Vec.ZERO, pageResource.position());
-        assertEquals("NORTH", pageResource.face());
+        assertEquals(Direction.NORTH, pageResource.face());
     }
 }

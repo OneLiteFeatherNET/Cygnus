@@ -1,7 +1,5 @@
 plugins {
-    java
     `java-library`
-    jacoco
 }
 
 group = "net.onelitefeather.cygnus"
@@ -29,27 +27,4 @@ dependencies {
     testImplementation(libs.xerus)
     testImplementation(libs.junit.api)
     testRuntimeOnly(libs.junit.engine)
-}
-
-tasks {
-    compileJava {
-        options.encoding = "UTF-8"
-        options.release.set(21)
-    }
-
-    jacocoTestReport {
-        dependsOn(test)
-        reports {
-            xml.required.set(true)
-        }
-    }
-
-    test {
-        finalizedBy(project.tasks.jacocoTestReport)
-        useJUnitPlatform()
-        jvmArgs("-Dminestom.inside-test=true")
-        testLogging {
-            events("passed", "skipped", "failed")
-        }
-    }
 }

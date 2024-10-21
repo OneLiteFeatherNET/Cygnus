@@ -5,7 +5,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
-import net.onelitefeather.cygnus.common.configv2.GameConfig;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

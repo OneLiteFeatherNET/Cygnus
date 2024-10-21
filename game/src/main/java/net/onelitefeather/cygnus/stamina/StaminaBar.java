@@ -1,8 +1,8 @@
 package net.onelitefeather.cygnus.stamina;
 
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.entity.Player;
 import net.minestom.server.timer.Task;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
@@ -18,7 +18,7 @@ import java.util.Objects;
  **/
 public abstract sealed class StaminaBar implements Runnable permits SlenderBar, FoodBar {
 
-    protected final Player player;
+    protected final CygnusPlayer player;
     private final ChronoUnit chronoUnit;
     protected int period;
     protected Status status;
@@ -30,7 +30,7 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
      * @param chronoUnit the tick interval for the bar
      * @param period the tick period for the par
      */
-    protected StaminaBar(@NotNull Player player, @NotNull ChronoUnit chronoUnit, int period) {
+    protected StaminaBar(@NotNull CygnusPlayer player, @NotNull ChronoUnit chronoUnit, int period) {
         this.player = player;
         this.chronoUnit = chronoUnit;
         this.period = period;
@@ -77,12 +77,12 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         StaminaBar that = (StaminaBar) o;
-        return Objects.equals(player, that.player);
+        return Objects.equals(player.getUuid(), that.player.getUuid());
     }
 
     @Override
     public int hashCode() {
-        return player.hashCode();
+        return player.getUuid().hashCode();
     }
 
     /**

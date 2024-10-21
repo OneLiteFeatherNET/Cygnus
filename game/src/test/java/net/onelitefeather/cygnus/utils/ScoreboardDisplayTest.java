@@ -10,7 +10,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.scoreboard.TeamManager;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
-import net.onelitefeather.cygnus.common.configv2.GameConfig;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;

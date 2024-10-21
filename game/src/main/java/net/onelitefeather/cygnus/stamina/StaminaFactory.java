@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.stamina;
 
 import net.minestom.server.entity.Player;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -20,7 +21,7 @@ public abstract class StaminaFactory {
      * @param player the player who owns the created object
      * @return the created instance from a {@link FoodBar}
      */
-    public static @NotNull StaminaBar createFoodStamina(@NotNull Player player) {
+    public static @NotNull StaminaBar createFoodStamina(@NotNull CygnusPlayer player) {
         return new FoodBar(player);
     }
 
@@ -29,7 +30,7 @@ public abstract class StaminaFactory {
      * @param player the player who owns the created object
      * @return the created instance from a {@link SlenderBar}
      */
-    public static @NotNull StaminaBar createSlenderStamina(@NotNull Player player) {
+    public static @NotNull StaminaBar createSlenderStamina(@NotNull CygnusPlayer player) {
         return new SlenderBar(player);
     }
 }

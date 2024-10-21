@@ -1,8 +1,8 @@
 package net.onelitefeather.cygnus.view;
 
-public interface GameView {
+import de.icevizion.xerus.api.Joinable;
 
-    void updateViewers(boolean add);
+public interface GameView extends Joinable {
 
     void updateView();
 }

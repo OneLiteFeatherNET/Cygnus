@@ -9,7 +9,9 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Vec;
+import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.common.util.DirectionFaceHelper;
 
 import java.lang.reflect.Type;
 
@@ -27,7 +29,7 @@ public final class PageResourceAdapter implements JsonSerializer<PageResource>, 
     public JsonElement serialize(PageResource src, Type typeOfSrc, JsonSerializationContext context) {
         if (src == null) return null;
         JsonObject object = new JsonObject();
-        object.addProperty(FACE_KEY, src.face());
+        object.addProperty(FACE_KEY, src.face().name());
         object.add(POSITION_KEY, context.serialize(src.position(), Vec.class));
         return object;
     }
@@ -35,7 +37,7 @@ public final class PageResourceAdapter implements JsonSerializer<PageResource>, 
     @Override
     public PageResource deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         String face = "north";
-        Point position = null;
+        Point position;
 
         JsonObject object = json.getAsJsonObject();
 
@@ -48,7 +50,6 @@ public final class PageResourceAdapter implements JsonSerializer<PageResource>, 
         }
 
         position = context.deserialize(object.get(POSITION_KEY), Vec.class);
-
-        return new PageResource(position, face);
+        return new PageResource(position, DirectionFaceHelper.parseDirection(face));
     }
 }

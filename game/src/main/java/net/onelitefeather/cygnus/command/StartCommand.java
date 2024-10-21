@@ -2,6 +2,8 @@ package net.onelitefeather.cygnus.command;
 
 import de.icevizion.xerus.api.phase.LinearPhaseSeries;
 import de.icevizion.xerus.api.phase.TimedPhase;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.command.builder.Command;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.config.GameConfig;
@@ -17,9 +19,12 @@ import org.jetbrains.annotations.NotNull;
  **/
 public class StartCommand extends Command {
 
+
     public StartCommand(@NotNull LinearPhaseSeries<TimedPhase> timedPhase) {
         super("start");
-
+        Component unableToStart = Messages.withPrefix(
+                Component.text("Unable to start the game because the timer is to low!", NamedTextColor.RED)
+        );
         addSyntax((sender, context) -> {
             if (!(timedPhase.getCurrentPhase() instanceof LobbyPhase lobbyPhase)) return;
             if (lobbyPhase.isPaused()) {
@@ -28,7 +33,7 @@ public class StartCommand extends Command {
             }
 
             if (lobbyPhase.getCurrentTicks() < GameConfig.FORCE_START_TIME + 1) {
-                sender.sendMessage(Messages.withMiniPrefix("<red>Unable to force start the game because the timer is to low!"));
+                sender.sendMessage(unableToStart);
                 return;
             }
 

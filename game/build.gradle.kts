@@ -1,13 +1,16 @@
 plugins {
-    java
-    jacoco
     `maven-publish`
     alias(libs.plugins.shadow)
     alias(libs.plugins.publishdata)
+    application
 }
 
 group = "net.onelitefeather.cygnus"
 version = "1.0.1"
+
+application {
+    mainClass.set("net.onelitefeather.cygnus.CygnusLoader")
+}
 
 java {
     toolchain {
@@ -19,15 +22,16 @@ dependencies {
     implementation(platform(libs.microtus.bom))
     implementation(platform(libs.dungeon.bom))
     implementation(project(":common"))
-    compileOnly(libs.minestom)
-    compileOnly(libs.aves)
-    compileOnly(libs.xerus)
-    compileOnly(libs.canis)
+    implementation(libs.minestom)
+    implementation(libs.aves)
+    implementation(libs.xerus)
+    implementation(libs.canis)
 
     compileOnly(libs.bundles.cloudnet)
 
     testImplementation(libs.minestom)
     testImplementation(libs.minestom.test)
+    testImplementation(libs.aves)
     testImplementation(libs.xerus)
     testImplementation(libs.junit.api)
     testRuntimeOnly(libs.junit.engine)
@@ -56,7 +60,13 @@ tasks {
     }
 
     jar {
+        archiveClassifier.set("unshaded")
         dependsOn("shadowJar")
+    }
+
+    shadowJar {
+        archiveClassifier.set("")
+        archiveFileName.set("cygnus.jar")
     }
 }
 
@@ -88,5 +98,11 @@ publishing {
             // Get the detected repository from the publish data
             url = uri(publishData.getRepository())
         }
+    }
+}
+
+tasks {
+    jar {
+        dependsOn("shadowJar")
     }
 }
