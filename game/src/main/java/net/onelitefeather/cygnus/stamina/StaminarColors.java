@@ -6,6 +6,14 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * The StaminaColors enum is designed to provide different colors for the stamina bar.
+ * The colors are used to display the current state of the stamina bar.
+ *
+ * @author theEvilReaper
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 enum StaminarColors {
 
     DRAINING(NamedTextColor.GREEN, NamedTextColor.GRAY),
@@ -25,6 +33,13 @@ enum StaminarColors {
         this.emptyColor = emptyColor;
     }
 
+    /**
+     * Sends a progress bar to the player
+     *
+     * @param player      the player to send the progress bar
+     * @param tileChar    the character to use for the progress bar
+     * @param currentTime the current time to display
+     */
     public void sendProgressBar(@NotNull Player player, @NotNull String tileChar, int currentTime) {
         Component progressBar = Components.getProgressBar(currentTime, 17, 17, tileChar, this.completeColor, this.emptyColor);
         player.sendMessage(progressBar);
