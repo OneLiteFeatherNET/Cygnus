@@ -1,3 +1,4 @@
 *.db filter=lfs diff=lfs merge=lfs -text
 *.dat_old filter=lfs diff=lfs merge=lfs -text
 *.jar filter=lfs diff=lfs merge=lfs -text
+*.mca filter=lfs diff=lfs merge=lfs -text
