@@ -15,21 +15,21 @@ public non-sealed class FoodBar extends StaminaBar {
 
     FoodBar(@NotNull CygnusPlayer player) {
         super(player, ChronoUnit.MILLIS, 500);
-        status = Status.READY;
+        state = State.READY;
         this.currentSpeedCount = MAX_FOOD;
     }
 
     @Override
     protected void onStart() {
-        this.status = Status.READY;
+        this.state = State.READY;
         this.player.setExp(normalize(this.currentSpeedCount));
     }
 
     @Override
     public void consume() {
-        if (status == Status.READY) return;
+        if (state == State.READY) return;
 
-        if (status == Status.DRAINING) {
+        if (state == State.DRAINING) {
             this.handleFoodDraining();
             return;
         }
@@ -48,7 +48,7 @@ public non-sealed class FoodBar extends StaminaBar {
             player.setSprinting(false);
             player.setBlockedSprinting(true);
             EventDispatcher.call(new PlayerStopSprintingEvent(player));
-            status = Status.REGENERATING;
+            state = State.REGENERATING;
         }
     }
 
@@ -57,7 +57,7 @@ public non-sealed class FoodBar extends StaminaBar {
      */
     private void handleFoodRegeneration() {
         if (this.currentSpeedCount == MAX_FOOD) {
-            status = Status.READY;
+            state = State.READY;
             player.setBlockedSprinting(false);
             return;
         }
@@ -77,12 +77,12 @@ public non-sealed class FoodBar extends StaminaBar {
     }
 
     public boolean canConsume() {
-        if (status == Status.READY) {
-            status = Status.DRAINING;
+        if (state == State.READY) {
+            state = State.DRAINING;
             return true;
         }
-        if (status == Status.REGENERATING && currentSpeedCount > 7D) {
-            status = Status.DRAINING;
+        if (state == State.REGENERATING && currentSpeedCount > 7D) {
+            state = State.DRAINING;
             return true;
         }
 
@@ -90,11 +90,11 @@ public non-sealed class FoodBar extends StaminaBar {
     }
 
     /**
-     * Switches the status from {@link Status#REGENERATING} to {@link Status#DRAINING}.
+     * Switches the status from {@link State#REGENERATING} to {@link State#DRAINING}.
      * That means the player can't consume food anymore during the regeneration.
      */
     public void switchToRegenerating() {
-        if (status == Status.REGENERATING) return;
-        status = Status.REGENERATING;
+        if (state == State.REGENERATING) return;
+        state = State.REGENERATING;
     }
 }
