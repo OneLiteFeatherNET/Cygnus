@@ -4,7 +4,6 @@ import de.icevizion.aves.util.functional.VoidConsumer;
 import de.icevizion.xerus.api.phase.TickDirection;
 import de.icevizion.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
-import net.onelitefeather.cygnus.cloudnet.CloudGameAPI;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.view.GameView;
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +61,6 @@ public final class GamePhase extends TimedPhase {
     @Override
     public void onStart() {
         super.onStart();
-        CloudGameAPI.cloudGameAPI().switchInGame();
         this.startRunnable.run();
     }
 
