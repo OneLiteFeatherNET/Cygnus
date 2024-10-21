@@ -29,6 +29,8 @@ dependencies {
     implementation(libs.agones4j)
     implementation(libs.grpc.stub)
     implementation(libs.grpc.protobuf)
+    implementation(libs.grpc.netty)
+    implementation(libs.grpc.okhttp)
     implementation(libs.tomcat.annotations.api)
 
     testImplementation(libs.minestom)

@@ -76,6 +76,8 @@ dependencyResolutionManagement {
             library("agones4j", "net.infumia", "agones4j").versionRef("agones4j")
             library("grpc.stub", "io.grpc", "grpc-stub").versionRef("grpc")
             library("grpc.protobuf", "io.grpc", "grpc-protobuf").versionRef("grpc")
+            library("grpc.netty", "io.grpc", "grpc-netty").versionRef("grpc")
+            library("grpc.okhttp", "io.grpc", "grpc-okhttp").versionRef("grpc")
             library("tomcat-annotations-api", "org.apache.tomcat", "annotations-api").versionRef("tomcat-annotations-api")
 
             plugin("shadow", "com.gradleup.shadow").versionRef("shadow")
