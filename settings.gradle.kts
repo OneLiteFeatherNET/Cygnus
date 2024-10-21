@@ -1,5 +1,4 @@
 rootProject.name = "Cygnus"
-val cloudNetVersion = "4.0.0-RC9"
 
 pluginManagement {
     repositories {
@@ -70,14 +69,6 @@ dependencyResolutionManagement {
             library("aves", "de.icevizion.lib", "aves").versionRef("aves")
             library("xerus", "net.theevilreaper.xerus", "xerus").versionRef("xerus")
             library("canis", "com.github.theEvilReaper", "Canis").version("master-SNAPSHOT")
-
-            val cloudnetBaseGroup = "eu.cloudnetservice.cloudnet"
-
-            library("cloudnet-wrapper", cloudnetBaseGroup, "wrapper-jvm").version(cloudNetVersion)
-            library("cloudnet-bridge", cloudnetBaseGroup, "bridge").version(cloudNetVersion)
-            library("cloudnet-driver", cloudnetBaseGroup, "driver").version(cloudNetVersion)
-
-            bundle("cloudnet", listOf("cloudnet-wrapper", "cloudnet-bridge", "cloudnet-driver"))
 
             plugin("shadow", "com.gradleup.shadow").versionRef("shadow")
             plugin("publishdata", "de.chojo.publishdata").versionRef("publishdata")
