@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus;
 
+import agones.dev.sdk.Sdk;
 import de.icevizion.aves.util.Strings;
 import de.icevizion.aves.util.TimeFormat;
 import de.icevizion.aves.util.functional.VoidConsumer;
@@ -9,6 +10,7 @@ import de.icevizion.xerus.api.phase.TimedPhase;
 import de.icevizion.xerus.api.team.Team;
 import de.icevizion.xerus.api.team.TeamService;
 import de.icevizion.xerus.api.team.TeamServiceImpl;
+import io.grpc.stub.StreamObserver;
 import net.infumia.agones4j.Agones;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
@@ -20,6 +22,7 @@ import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
+import net.minestom.server.event.server.ServerTickMonitorEvent;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
@@ -141,6 +144,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
         registerCancelListener(manager);
+        manager.addListener(ServerTickMonitorEvent.class, event -> {
+            StreamObserver<Sdk.Empty> emptyStreamObserver = agones.healthCheckStream();
+            emptyStreamObserver.onNext(Sdk.Empty.getDefaultInstance());
+        });
     }
 
     private void registerGameListener() {
