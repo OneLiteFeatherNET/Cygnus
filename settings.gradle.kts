@@ -56,7 +56,7 @@ dependencyResolutionManagement {
             version("xerus", "1.3.0-SNAPSHOT")
             version("shadow", "8.3.0")
             version("agones4j", "2.0.2")
-            version("grpc", "1.64.0")
+            version("grpc", "1.68.0")
             version("tomcat-annotations-api", "6.0.53")
 
             library("microtus.bom", "net.onelitefeather.microtus", "bom").versionRef("minestom")
