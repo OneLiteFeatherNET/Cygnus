@@ -144,8 +144,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
         registerCancelListener(manager);
+        StreamObserver<Sdk.Empty> emptyStreamObserver = agones.healthCheckStream();
         manager.addListener(ServerTickMonitorEvent.class, event -> {
-            StreamObserver<Sdk.Empty> emptyStreamObserver = agones.healthCheckStream();
             emptyStreamObserver.onNext(Sdk.Empty.getDefaultInstance());
         });
     }
