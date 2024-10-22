@@ -32,6 +32,7 @@ dependencies {
     implementation(libs.grpc.netty)
     implementation(libs.grpc.okhttp)
     implementation(libs.tomcat.annotations.api)
+    implementation("com.google.protobuf:protobuf-java:4.28.2")
 
     testImplementation(libs.minestom)
     testImplementation(libs.minestom.test)
