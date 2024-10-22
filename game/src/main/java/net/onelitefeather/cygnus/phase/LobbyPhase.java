@@ -107,6 +107,7 @@ public final class LobbyPhase extends TimedPhase {
     @Override
     protected void onFinish() {
         this.waitingTask.cancel();
+        this.agones.allocate();
     }
 
     @Override
