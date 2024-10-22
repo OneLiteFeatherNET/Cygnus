@@ -66,6 +66,7 @@ public final class GamePhase extends TimedPhase {
         super.onStart();
         this.startRunnable.run();
         this.agones.setLabel("status", "ingame");
+        this.agones.allocate();
     }
 
     @Override
