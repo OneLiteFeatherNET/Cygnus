@@ -95,7 +95,6 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
             player.playSound(LEVEL, player.getPosition());
         }
         this.colorState.sendProgressBar(player, tileChar, (int) currentTime);
-        player.sendActionBar(Components.getProgressBar((int) currentTime, 17, 17, tileChar, NamedTextColor.GOLD, NamedTextColor.GRAY));
     }
 
     public boolean changeStatus() {

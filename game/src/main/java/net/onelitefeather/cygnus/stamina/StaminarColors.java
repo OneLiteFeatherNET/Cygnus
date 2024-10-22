@@ -42,7 +42,7 @@ enum StaminarColors {
      */
     public void sendProgressBar(@NotNull Player player, @NotNull String tileChar, int currentTime) {
         Component progressBar = Components.getProgressBar(currentTime, 17, 17, tileChar, this.completeColor, this.emptyColor);
-        player.sendMessage(progressBar);
+        player.sendActionBar(progressBar);
     }
 
     /**
