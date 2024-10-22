@@ -12,6 +12,7 @@ import net.minestom.server.network.ConnectionManager;
 import net.minestom.server.timer.Task;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIME;
@@ -101,6 +102,7 @@ public final class LobbyPhase extends TimedPhase {
         super.start();
         setLevel();
         this.agones.ready();
+        this.agones.reserve(Duration.ofMinutes(5));
     }
 
     @Override
