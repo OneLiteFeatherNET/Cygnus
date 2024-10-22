@@ -101,7 +101,6 @@ public final class LobbyPhase extends TimedPhase {
     public void start() {
         super.start();
         setLevel();
-        this.agones.ready();
         this.agones.reserve(Duration.ofMinutes(5));
     }
 
