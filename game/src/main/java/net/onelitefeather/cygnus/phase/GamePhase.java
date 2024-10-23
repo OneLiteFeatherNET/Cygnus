@@ -1,16 +1,21 @@
 package net.onelitefeather.cygnus.phase;
 
+import agones.dev.sdk.Sdk;
 import de.icevizion.aves.util.functional.VoidConsumer;
 import de.icevizion.xerus.api.phase.TickDirection;
 import de.icevizion.xerus.api.phase.TimedPhase;
-import net.infumia.agones4j.Agones;
 import net.minestom.server.MinecraftServer;
+import net.onelitefeather.agones.AgonesAPI;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.view.GameView;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author theEvilReaper
@@ -19,10 +24,10 @@ import java.util.HashSet;
  **/
 public final class GamePhase extends TimedPhase {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GamePhase.class);
     private final GameView gameView;
     private final Runnable startRunnable;
     private final VoidConsumer updateWorldTime;
-    private final Agones agones;
     private GameFinishEvent finishEvent;
 
     /**
@@ -38,10 +43,9 @@ public final class GamePhase extends TimedPhase {
             @NotNull Runnable startRunnable,
             @NotNull Runnable endRunnable,
             @NotNull VoidConsumer updateWorldTime,
-            int gameTime, Agones agones
+            int gameTime
     ) {
         super("GamePhase", ChronoUnit.SECONDS, 1);
-        this.agones = agones;
         this.setCurrentTicks(gameTime);
         this.setTickDirection(TickDirection.DOWN);
         this.setEndTicks(0);
@@ -64,8 +68,17 @@ public final class GamePhase extends TimedPhase {
     @Override
     public void onStart() {
         super.onStart();
-        this.agones.allocate();
+        AgonesAPI.instance().allocateFuture()
+                .exceptionallyCompose(this::allocateFuture)
+                .exceptionallyCompose(this::allocateFuture)
+                .exceptionallyCompose(this::allocateFuture)
+                .thenRun(() -> LOGGER.info("GameServer allocated"));
         this.startRunnable.run();
+    }
+
+    private CompletableFuture<Sdk.Empty> allocateFuture(Throwable throwable) {
+        LOGGER.error("Failed to allocate the GameServer", throwable);
+        return AgonesAPI.instance().allocateFuture();
     }
 
     @Override

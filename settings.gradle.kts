@@ -89,3 +89,4 @@ dependencyResolutionManagement {
 include("common")
 include("setup")
 include("game")
+include("agones")

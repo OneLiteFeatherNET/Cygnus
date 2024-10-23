@@ -3,13 +3,13 @@ package net.onelitefeather.cygnus.phase;
 import de.icevizion.aves.util.functional.VoidConsumer;
 import de.icevizion.xerus.api.phase.TickDirection;
 import de.icevizion.xerus.api.phase.TimedPhase;
-import net.infumia.agones4j.Agones;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.ConnectionManager;
 import net.minestom.server.timer.Task;
+import net.onelitefeather.agones.AgonesAPI;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -25,23 +25,21 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIM
 public final class LobbyPhase extends TimedPhase {
 
     private static final ConnectionManager CONNECTION_MANAGER = MinecraftServer.getConnectionManager();
-    private boolean forceStarted;
     private final Task waitingTask;
     private final VoidConsumer gameMapLoading;
     private final VoidConsumer staminaInstantiation;
     private final VoidConsumer worldUpdater;
     private final int lobbyTime;
     private final int minPlayers;
+    private boolean forceStarted;
     private Component displayComponent;
-    private final Agones agones;
 
     public LobbyPhase(
             @NotNull VoidConsumer gameMapLoading,
             @NotNull VoidConsumer staminaInstantiation,
             @NotNull VoidConsumer worldUpdater,
             int lobbyTime,
-            int minPlayers,
-            Agones agones
+            int minPlayers
     ) {
         super("Lobby", ChronoUnit.SECONDS, 1);
         this.gameMapLoading = gameMapLoading;
@@ -49,7 +47,6 @@ public final class LobbyPhase extends TimedPhase {
         this.worldUpdater = worldUpdater;
         this.lobbyTime = lobbyTime;
         this.minPlayers = minPlayers;
-        this.agones = agones;
         this.setPaused(true);
         this.setCurrentTicks(lobbyTime);
         this.setTickDirection(TickDirection.DOWN);
@@ -90,24 +87,16 @@ public final class LobbyPhase extends TimedPhase {
         }
     }
 
-    public void setForceStarted(boolean forceStarted) {
-        if (forceStarted) {
-            this.setCurrentTicks(FORCE_START_TIME);
-        }
-        this.forceStarted = forceStarted;
-    }
-
     @Override
     public void start() {
         super.start();
         setLevel();
-        this.agones.reserve(Duration.ofMinutes(5));
+        AgonesAPI.instance().reserve(Duration.ofMinutes(5));
     }
 
     @Override
     protected void onFinish() {
         this.waitingTask.cancel();
-        this.agones.allocate();
     }
 
     @Override
@@ -175,5 +164,12 @@ public final class LobbyPhase extends TimedPhase {
      */
     public boolean isForceStarted() {
         return forceStarted;
+    }
+
+    public void setForceStarted(boolean forceStarted) {
+        if (forceStarted) {
+            this.setCurrentTicks(FORCE_START_TIME);
+        }
+        this.forceStarted = forceStarted;
     }
 }

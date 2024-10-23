@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus;
 
-import agones.dev.sdk.Sdk;
 import de.icevizion.aves.util.Strings;
 import de.icevizion.aves.util.TimeFormat;
 import de.icevizion.aves.util.functional.VoidConsumer;
@@ -10,8 +9,6 @@ import de.icevizion.xerus.api.phase.TimedPhase;
 import de.icevizion.xerus.api.team.Team;
 import de.icevizion.xerus.api.team.TeamService;
 import de.icevizion.xerus.api.team.TeamServiceImpl;
-import io.grpc.stub.StreamObserver;
-import net.infumia.agones4j.Agones;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
@@ -27,6 +24,7 @@ import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.minestom.server.utils.PacketUtils;
+import net.onelitefeather.agones.AgonesAPI;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -73,8 +71,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Consumer;
-import java.nio.file.Paths;
 import java.util.function.Supplier;
 
 /**
@@ -94,10 +90,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private GameView view;
     private MapProvider mapProvider;
     private GameConfig gameConfig;
-    private final Agones agones;
 
-    public Cygnus(Agones agones) {
-        this.agones = agones;
+    public Cygnus() {
         this.path = Paths.get("");
         this.teamService = new TeamServiceImpl<>();
         this.linearPhaseSeries = new LinearPhaseSeries<>("game");
@@ -119,6 +113,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.linearPhaseSeries.start();
         this.registerGameListener();
     }
+
     private void initCommands() {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
@@ -144,9 +139,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
         registerCancelListener(manager);
-        StreamObserver<Sdk.Empty> emptyStreamObserver = agones.healthCheckStream();
         manager.addListener(ServerTickMonitorEvent.class, event -> {
-            emptyStreamObserver.onNext(Sdk.Empty.getDefaultInstance());
+            AgonesAPI.instance().alive();
         });
     }
 
@@ -176,10 +170,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 this.mapProvider.getGameMap(),
                 this.mapProvider.getGameInstance()
         );
-        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, worldUpdater, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers(), agones);
+        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, worldUpdater, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers());
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
-        this.linearPhaseSeries.add(new GamePhase(this.view, this::triggerGameStart, this::finishGame, worldUpdater, this.gameConfig.gameTime(), agones));
+        this.linearPhaseSeries.add(new GamePhase(this.view, this::triggerGameStart, this::finishGame, worldUpdater, this.gameConfig.gameTime()));
         this.linearPhaseSeries.add(new RestartPhase());
     }
 
@@ -223,9 +217,5 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
 
     private void triggerViewRuleUpdate(@NotNull Player player) {
         ViewRuleUpdater.updateViewer(player, this.teamService.getTeams().get(Helper.SURVIVOR_ID));
-    }
-
-    public Agones getAgones() {
-        return agones;
     }
 }
