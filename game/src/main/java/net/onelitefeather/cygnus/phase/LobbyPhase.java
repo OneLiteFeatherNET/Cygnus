@@ -53,9 +53,9 @@ public final class LobbyPhase extends TimedPhase {
         this.setEndTicks(-5);
         this.updateComponent();
         this.waitingTask = MinecraftServer.getSchedulerManager().buildTask(() -> {
-            if (isPaused() || isFinished() || MinecraftServer.getConnectionManager().getOnlinePlayers().isEmpty())
+            if (isPaused() || isFinished() || CONNECTION_MANAGER.getOnlinePlayers().isEmpty())
                 return;
-            MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(
+            CONNECTION_MANAGER.getOnlinePlayers().forEach(
                     player -> player.sendActionBar(this.displayComponent)
             );
         }).repeat(30, ChronoUnit.SECONDS).schedule();
@@ -78,7 +78,7 @@ public final class LobbyPhase extends TimedPhase {
     }
 
     public void checkStopCondition() {
-        if (waitingTask.isAlive() && MinecraftServer.getConnectionManager().getOnlinePlayers().size() - 1 <= this.minPlayers) {
+        if (waitingTask.isAlive() && CONNECTION_MANAGER.getOnlinePlayers().size() - 1 <= this.minPlayers) {
             this.setPaused(true);
             this.updateComponent();
             this.setCurrentTicks(this.lobbyTime);
@@ -118,7 +118,7 @@ public final class LobbyPhase extends TimedPhase {
      * If the player requirements are not met the phase will be paused.
      */
     public void checkPlayerRequirements() {
-        if (MinecraftServer.getConnectionManager().getOnlinePlayers().size() - 1 < this.minPlayers) {
+        if (CONNECTION_MANAGER.getOnlinePlayers().size() - 1 < this.minPlayers) {
             this.setPaused(true);
             this.setForceStarted(false);
             this.setCurrentTicks(this.lobbyTime);
@@ -141,7 +141,7 @@ public final class LobbyPhase extends TimedPhase {
         if (amount < 0) return;
         int time = isForceStarted() ? FORCE_START_TIME : this.lobbyTime;
         float currentExpCount = (float) this.getCurrentTicks() / time;
-        for (Player onlinePlayer : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
+        for (Player onlinePlayer : CONNECTION_MANAGER.getOnlinePlayers()) {
             onlinePlayer.setLevel(amount);
             onlinePlayer.setExp(currentExpCount);
         }

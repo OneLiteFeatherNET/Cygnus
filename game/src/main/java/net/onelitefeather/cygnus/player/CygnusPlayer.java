@@ -26,10 +26,20 @@ public final class CygnusPlayer extends Player {
         this.blockedSprinting = false;
     }
 
+    /**
+     * Sets if the player is blocked from sprinting.
+     *
+     * @param blockedSprinting {@code true} if the player is blocked from sprinting, otherwise {@code false}.
+     */
     public void setBlockedSprinting(boolean blockedSprinting) {
         this.blockedSprinting = blockedSprinting;
     }
 
+    /**
+     * Sets if the entity is sprinting.
+     *
+     * @param sprinting true to make the entity sprint otherwise false for no sprinting
+     */
     @Override
     public void setSprinting(boolean sprinting) {
         if (blockedSprinting) {
@@ -49,6 +59,11 @@ public final class CygnusPlayer extends Player {
         sendPacket(getMetadataPacket());
     }
 
+    /**
+     * Checks if the player has blocked sprinting.
+     *
+     * @return {@code true} if the player has blocked sprinting, otherwise {@code false}.
+     */
     public boolean hasBlockedSprinting() {
         return blockedSprinting;
     }
