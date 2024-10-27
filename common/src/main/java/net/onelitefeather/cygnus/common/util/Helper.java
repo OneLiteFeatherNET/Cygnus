@@ -18,6 +18,7 @@ public final class Helper {
     public static final byte SLENDER_ID = 0;
     public static final byte SURVIVOR_ID = 1;
     public static final long MIDNIGHT_TIME = 18000L;
+    public static final long NEW_MOON_TIME = 114000L;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final double PAGE_VISIBLE_OFFSET = -0.030;
     private static final int MIN_OFFSET = 1;

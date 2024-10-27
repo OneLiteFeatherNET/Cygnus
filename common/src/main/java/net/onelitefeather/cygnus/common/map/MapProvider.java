@@ -78,6 +78,7 @@ public final class MapProvider {
         this.pageProvider.loadPageData(gameData.get().getPageFaces());
         InstanceContainer gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer();
         prepareInstanceData(gameInstance);
+        gameInstance.setTime(Helper.NEW_MOON_TIME);
         MinecraftServer.getInstanceManager().registerInstance(gameInstance);
         gameInstance.setChunkLoader(new AnvilLoader(mapEntry.path()));
 
