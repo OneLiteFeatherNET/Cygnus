@@ -45,6 +45,7 @@ public final class CygnusPlayer extends Player {
     public void setSprinting(boolean sprinting) {
         if (blockedSprinting) {
             this.entityMeta.setSprinting(false);
+            sendPacket(getPropertiesPacket());
             sendPacket(getMetadataPacket());
             return;
         }
@@ -57,6 +58,7 @@ public final class CygnusPlayer extends Player {
             this.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(DISABLED_SPRINT_MODIFIER);
         }
         this.entityMeta.setSprinting(sprinting);
+        sendPacket(getPropertiesPacket());
         sendPacket(getMetadataPacket());
     }
 
