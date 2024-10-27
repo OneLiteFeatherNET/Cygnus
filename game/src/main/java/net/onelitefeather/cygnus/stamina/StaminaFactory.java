@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.stamina;
 
-import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
 
