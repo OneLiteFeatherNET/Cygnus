@@ -5,8 +5,10 @@ import de.icevizion.aves.util.functional.VoidConsumer;
 import de.icevizion.xerus.api.phase.TickDirection;
 import de.icevizion.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.event.player.PlayerTickEvent;
 import net.onelitefeather.agones.AgonesAPI;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
+import net.onelitefeather.cygnus.listener.player.CygnusPlayerTickListener;
 import net.onelitefeather.cygnus.view.GameView;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -68,6 +70,7 @@ public final class GamePhase extends TimedPhase {
     @Override
     public void onStart() {
         super.onStart();
+        addListener(PlayerTickEvent.class, new CygnusPlayerTickListener());
         AgonesAPI.instance().allocateFuture()
                 .exceptionallyCompose(this::allocateFuture)
                 .exceptionallyCompose(this::allocateFuture)
