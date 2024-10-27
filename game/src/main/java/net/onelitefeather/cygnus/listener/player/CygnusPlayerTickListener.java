@@ -15,6 +15,6 @@ public final class CygnusPlayerTickListener implements Consumer<PlayerTickEvent>
 
         if (!(player instanceof CygnusPlayer cygnusPlayer)) return;
         if (!cygnusPlayer.hasBlockedSprinting()) return;
-        cygnusPlayer.sendPacket(cygnusPlayer.getMetadataPacket());
+        cygnusPlayer.sendPacket(cygnusPlayer.getPropertiesPacket());
     }
 }

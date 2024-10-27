@@ -4,6 +4,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
+import net.minestom.server.network.packet.server.play.EntityAttributesPacket;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.utils.NamespaceID;
 import org.jetbrains.annotations.NotNull;
@@ -66,5 +67,10 @@ public final class CygnusPlayer extends Player {
      */
     public boolean hasBlockedSprinting() {
         return blockedSprinting;
+    }
+
+    @Override
+    public @NotNull EntityAttributesPacket getPropertiesPacket() {
+        return super.getPropertiesPacket();
     }
 }
