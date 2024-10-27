@@ -21,7 +21,7 @@ public final class PlayerChatListener implements Consumer<PlayerChatEvent> {
                 .append(Component.space())
                 .append(MESSAGE_PREFIX)
                 .append(Component.space())
-                .append(Component.text(event.getMessage())
+                .append(Component.text(event.getMessage(), NamedTextColor.GRAY)
                 );
     }
 }
