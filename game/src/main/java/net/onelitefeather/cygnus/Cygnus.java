@@ -80,25 +80,25 @@ import java.util.function.Supplier;
  **/
 @SuppressWarnings("java:S3252")
 public final class Cygnus implements TeamCreator, ListenerHandling {
-    private final Path path;
+
     private final TeamService<Team> teamService;
     private final LinearPhaseSeries<TimedPhase> linearPhaseSeries;
     private final AmbientProvider ambientProvider;
     private final StaminaService staminaService;
     private final Items items;
-    private PageProvider pageProvider;
-    private GameView view;
-    private MapProvider mapProvider;
-    private GameConfig gameConfig;
+    private final PageProvider pageProvider;
+    private final GameView view;
+    private final MapProvider mapProvider;
+    private final GameConfig gameConfig;
 
     public Cygnus() {
-        this.path = Paths.get("");
+        Path path = Paths.get("");
         this.teamService = new TeamServiceImpl<>();
         this.linearPhaseSeries = new LinearPhaseSeries<>("game");
         this.items = new Items();
         this.ambientProvider = new AmbientProvider();
         this.staminaService = new StaminaService();
-        this.gameConfig = new GameConfigReader(Paths.get("")).getConfig();
+        this.gameConfig = new GameConfigReader(path).getConfig();
         MinecraftServer.getConnectionManager().setPlayerProvider(CygnusPlayer::new);
         InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         MinecraftServer.getInstanceManager().registerInstance(instance);
@@ -140,9 +140,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
         registerCancelListener(manager);
-        manager.addListener(ServerTickMonitorEvent.class, event -> {
-            AgonesAPI.instance().alive();
-        });
+        manager.addListener(ServerTickMonitorEvent.class, event -> AgonesAPI.instance().alive());
     }
 
     private void registerGameListener() {
