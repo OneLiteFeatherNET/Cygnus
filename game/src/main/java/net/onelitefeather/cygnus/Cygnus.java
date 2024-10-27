@@ -134,7 +134,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(AsyncPlayerConfigurationEvent.class,
                 new PlayerLoginListener(
                         mapProvider.getInstance(),
-                        this.gameConfig.maxPlayers()
+                        this.gameConfig.maxPlayers(),
+                        linearPhaseSeries::getCurrentPhase
                 )
         );
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
