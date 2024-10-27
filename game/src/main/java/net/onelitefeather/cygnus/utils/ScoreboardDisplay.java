@@ -5,7 +5,10 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
+import net.minestom.server.scoreboard.TeamBuilder;
+import net.minestom.server.scoreboard.TeamManager;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.util.Helper;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -20,16 +23,24 @@ import java.util.List;
  */
 public final class ScoreboardDisplay {
 
+    /**
+     * Creates a new instance of the {@link ScoreboardDisplay} and creates the teams for the given list.
+     *
+     * @param teams the list of teams to create
+     */
     public ScoreboardDisplay(@NotNull List<Team> teams) {
-        var serverTeamManager = MinecraftServer.getTeamManager();
+        TeamManager teamManager = MinecraftServer.getTeamManager();
 
-        for (int i = 0; i < teams.size(); i++) {
-            var team = teams.get(i);
-            final String teamName = PlainTextComponentSerializer.plainText().serialize(team.getName());
-            serverTeamManager.createBuilder(teamName)
-                    .nameTagVisibility(TeamsPacket.NameTagVisibility.HIDE_FOR_OTHER_TEAMS)
-                    .teamColor(team.getColorData().getChatColor())
-                    .build();
+        for (Team team : teams) {
+            String teamName = PlainTextComponentSerializer.plainText().serialize(team.getName());
+
+            TeamBuilder sbTeamBuilder = teamManager
+                    .createBuilder(teamName)
+                    .nameTagVisibility(TeamsPacket.NameTagVisibility.NEVER)
+                    .collisionRule(TeamsPacket.CollisionRule.NEVER)
+                    .teamColor(team.getColorData().getChatColor());
+
+            sbTeamBuilder.build();
         }
     }
 
@@ -64,6 +75,6 @@ public final class ScoreboardDisplay {
      * @return the team name
      */
     private String getTeamName(byte teamId) {
-        return teamId == (byte) 0 ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
+        return teamId == Helper.SLENDER_ID ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
     }
 }
