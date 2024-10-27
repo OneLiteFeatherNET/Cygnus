@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
  * @version 1.0.0
  * @since 1.0.0
  */
-enum StaminarColors {
+enum StaminaColors {
 
     DRAINING(NamedTextColor.GREEN, NamedTextColor.GRAY),
     REGENERATING(NamedTextColor.GOLD, NamedTextColor.GRAY);
@@ -28,7 +28,7 @@ enum StaminarColors {
      * @param completeColor the color for the complete bar
      * @param emptyColor    the color for the empty bar
      */
-    StaminarColors(@NotNull NamedTextColor completeColor, @NotNull NamedTextColor emptyColor) {
+    StaminaColors(@NotNull NamedTextColor completeColor, @NotNull NamedTextColor emptyColor) {
         this.completeColor = completeColor;
         this.emptyColor = emptyColor;
     }

@@ -1,8 +1,6 @@
 package net.onelitefeather.cygnus.stamina;
 
-import de.icevizion.aves.util.Components;
 import net.kyori.adventure.sound.Sound;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
@@ -40,14 +38,14 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
     private final int time;
     private BiFunction<Player, State, Void> accept;
     private double currentTime;
-    private StaminarColors colorState;
+    private StaminaColors colorState;
 
     SlenderBar(@NotNull CygnusPlayer player) {
         super(player, ChronoUnit.MILLIS, 500);
         this.tileChar = "▋";
         this.time = MAX_TIME;
         this.currentTime = time;
-        this.colorState = StaminarColors.DRAINING;
+        this.colorState = StaminaColors.DRAINING;
     }
 
     public void setAccept(@NotNull BiFunction<Player, State, Void> accept) {
@@ -78,7 +76,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
             return;
         }
         state = State.REGENERATING;
-        colorState = StaminarColors.REGENERATING;
+        colorState = StaminaColors.REGENERATING;
         this.accept.apply(player, state);
         player.setTag(Tags.HIDDEN, (byte) 0);
         player.removeEffect(BLINDNESS.potion().effect());
@@ -91,7 +89,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
             currentTime += TIME_STEP;
         } else {
             state = State.READY;
-            colorState = StaminarColors.DRAINING;
+            colorState = StaminaColors.DRAINING;
             player.playSound(LEVEL, player.getPosition());
         }
         this.colorState.sendProgressBar(player, tileChar, (int) currentTime);
@@ -102,7 +100,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
         switch (state) {
             case READY -> {
                 state = State.DRAINING;
-                colorState = StaminarColors.DRAINING;
+                colorState = StaminaColors.DRAINING;
                 player.setTag(Tags.HIDDEN, (byte) 1);
                 player.removeEffect(NIGHT_VISION.potion().effect());
                 player.addEffect(BLINDNESS.potion());
@@ -111,14 +109,14 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
             }
             case REGENERATING -> {
                 state = State.DRAINING;
-                colorState = StaminarColors.DRAINING;
+                colorState = StaminaColors.DRAINING;
                 player.setTag(Tags.HIDDEN, (byte) 1);
                 playSoundToTarget(false);
                 this.accept.apply(player, State.DRAINING);
             }
             case DRAINING -> {
                 state = State.REGENERATING;
-                colorState = StaminarColors.REGENERATING;
+                colorState = StaminaColors.REGENERATING;
                 player.setTag(Tags.HIDDEN, (byte) 0);
                 playSoundToTarget(true);
                 player.removeEffect(BLINDNESS.potion().effect());

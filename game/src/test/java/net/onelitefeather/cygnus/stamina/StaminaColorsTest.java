@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class StaminarColorsTest {
+class StaminaColorsTest {
 
     @Test
     void testDrainingColors() {
-        StaminarColors draining = StaminarColors.DRAINING;
+        StaminaColors draining = StaminaColors.DRAINING;
         assertEquals(NamedTextColor.GREEN, draining.getCompleteColor());
         assertNotEquals(NamedTextColor.RED, draining.getEmptyColor());
     }
