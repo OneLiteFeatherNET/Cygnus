@@ -46,6 +46,7 @@ public final class CygnusPlayer extends Player {
         if (blockedSprinting) {
             this.entityMeta.setSprinting(false);
             sendPacket(getPropertiesPacket());
+            sendPacket(getMetadataPacket());
             return;
         }
 
@@ -58,6 +59,7 @@ public final class CygnusPlayer extends Player {
         }
         this.entityMeta.setSprinting(sprinting);
         sendPacket(getPropertiesPacket());
+        sendPacket(getMetadataPacket());
     }
 
     /**
