@@ -1,7 +1,9 @@
 package net.onelitefeather.cygnus.stamina;
 
 import de.icevizion.aves.util.functional.PlayerConsumer;
+import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
+import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.utils.TeamHelper;
@@ -20,8 +22,13 @@ import java.util.function.Supplier;
  */
 public final class SlenderBarTrigger {
 
+    private static final long COOLDOWN_TIME = 1_000;
+    private static final Sound ABORT_SOUND = Sound.sound(SoundEvent.ENTITY_ITEM_BREAK, Sound.Source.MASTER, 1F, 0F);
+
     private final Supplier<@Nullable StaminaBar> slenderBarSupplier;
     private final PlayerConsumer updateRuneFunction;
+
+    private long lastSoundTimeStamp = 0;
 
     /**
      * Creates a new instance of this class.
@@ -48,6 +55,10 @@ public final class SlenderBarTrigger {
             this.changeVisibilityStatus(player);
             this.updateRuneFunction.accept(player);
         }
+
+        if (System.currentTimeMillis() < lastSoundTimeStamp) return;
+        player.playSound(ABORT_SOUND);
+        lastSoundTimeStamp = System.currentTimeMillis() + COOLDOWN_TIME;
     }
 
     /**
