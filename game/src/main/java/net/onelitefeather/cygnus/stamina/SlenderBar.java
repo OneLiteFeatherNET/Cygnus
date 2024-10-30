@@ -19,6 +19,7 @@ import java.util.function.BiFunction;
  * @version 1.0.0
  * @since 1.0.0
  **/
+@SuppressWarnings("java:S3252")
 public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelper {
 
     private static final Sound LEVEL = Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F);
