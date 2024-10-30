@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.stamina;
 import de.icevizion.aves.util.functional.PlayerConsumer;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.utils.TeamHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,10 +57,6 @@ public final class SlenderBarTrigger {
      */
     private void changeVisibilityStatus(@NotNull Player player) {
         var currentValue = player.getTag(Tags.HIDDEN);
-        if (currentValue == 0) {
-            player.setTag(Tags.HIDDEN, (byte) 1);
-        } else {
-            player.setTag(Tags.HIDDEN, (byte) 0);
-        }
+        player.setTag(Tags.HIDDEN, currentValue == Helper.ZERO_ID ? Helper.ONE_ID : Helper.ZERO_ID);
     }
 }
