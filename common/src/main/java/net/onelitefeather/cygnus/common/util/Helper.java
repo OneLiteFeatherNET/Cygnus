@@ -15,7 +15,11 @@ import java.util.concurrent.ThreadLocalRandom;
  **/
 public final class Helper {
 
+    public static final byte ZERO_ID = 0;
+    public static final byte ONE_ID = 1;
+    @Deprecated
     public static final byte SLENDER_ID = 0;
+    @Deprecated
     public static final byte SURVIVOR_ID = 1;
     public static final long MIDNIGHT_TIME = 18000L;
     public static final long NEW_MOON_TIME = 114000L;
