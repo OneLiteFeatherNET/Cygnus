@@ -50,7 +50,6 @@ public final class LobbyPhase extends TimedPhase {
         this.setPaused(true);
         this.setCurrentTicks(lobbyTime);
         this.setTickDirection(TickDirection.DOWN);
-        this.setEndTicks(-5);
         this.updateComponent();
         this.waitingTask = MinecraftServer.getSchedulerManager().buildTask(() -> {
             if (isPaused() || isFinished() || CONNECTION_MANAGER.getOnlinePlayers().isEmpty())
@@ -153,6 +152,7 @@ public final class LobbyPhase extends TimedPhase {
      * @param player the player to set the level
      */
     public void setLevel(@NotNull Player player) {
+        if (getCurrentTicks() < 0) return;
         player.setLevel(getCurrentTicks());
         player.setExp(getCurrentTicks() / (float) this.lobbyTime);
     }
