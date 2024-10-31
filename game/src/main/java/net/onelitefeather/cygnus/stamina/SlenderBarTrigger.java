@@ -52,14 +52,15 @@ public final class SlenderBarTrigger {
         SlenderBar slenderBar = (SlenderBar) slenderBarSupplier.get();
         if (slenderBar == null) return;
 
+        if (System.currentTimeMillis() < lastSoundTimeStamp) {
+            player.playSound(ABORT_SOUND);
+            return;
+        }
+        lastSoundTimeStamp = System.currentTimeMillis() + COOLDOWN_TIME;
         if (slenderBar.changeStatus()) {
             this.changeVisibilityStatus(player);
             this.updateRuneFunction.accept(player);
         }
-
-        if (System.currentTimeMillis() < lastSoundTimeStamp) return;
-        player.playSound(ABORT_SOUND);
-        lastSoundTimeStamp = System.currentTimeMillis() + COOLDOWN_TIME;
     }
 
     /**
