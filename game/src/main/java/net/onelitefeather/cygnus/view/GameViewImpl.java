@@ -18,7 +18,7 @@ public final class GameViewImpl implements GameView {
 
     public GameViewImpl(@NotNull ViewUpdater updateFunction) {
         this.updateFunction = updateFunction;
-        this.bossBar = BossBar.bossBar(Component.empty(), 1f, BossBar.Color.GREEN, BossBar.Overlay.PROGRESS);
+        this.bossBar = BossBar.bossBar(Component.empty(), 1f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
     }
 
     @Override
