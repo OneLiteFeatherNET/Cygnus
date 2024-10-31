@@ -1,0 +1,9 @@
+{
+  "entrypoint": "net.onelitefeather.cygnus.Cygnus",
+  "name": "Cygnus",
+  "version": "1.0.0",
+  "dependencies": [
+    "Aves",
+    "Xerus"
+  ]
+}

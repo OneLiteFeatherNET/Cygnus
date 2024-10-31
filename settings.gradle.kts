@@ -1,5 +1,4 @@
 rootProject.name = "Cygnus"
-val cloudNetVersion = "4.0.0-RC9"
 
 pluginManagement {
     repositories {
@@ -36,7 +35,7 @@ dependencyResolutionManagement {
             maven("https://jitpack.io")
             maven {
                 val groupdId = 28 // Gitlab Group
-                url = uri("https://gitlab.themeinerlp.dev/api/v4/groups/$groupdId/-/packages/maven")
+                url = uri("https://gitlab.onelitefeather.dev/api/v4/groups/$groupdId/-/packages/maven")
                 name = "GitLab"
                 credentials(HttpHeaderCredentials::class.java) {
                     name =  "Private-Token"
@@ -51,28 +50,43 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("libs") {
-            version("microtus","1.4.2-SNAPSHOT")
-            version("junit", "5.10.2")
-            version("publishdata", "1.2.5-DEV")
+            version("publishdata", "1.4.0")
+            version("minestom", "1.5.0-SNAPSHOT")
+            version("aves", "1.6.0-SNAPSHOT")
+            version("xerus", "1.3.0-SNAPSHOT")
+            version("shadow", "8.3.0")
+            version("agones4j", "2.0.2")
+            version("grpc", "1.68.0")
+            version("tomcat-annotations-api", "6.0.53")
 
-            plugin("publishdata", "de.chojo.publishdata").versionRef("publishdata")
+            library("microtus.bom", "net.onelitefeather.microtus", "bom").versionRef("minestom")
+            library("dungeon.bom", "net.theevilreaper.dungeon.bom", "base").version("1.0.6")
 
-            library("microtus-bom", "net.onelitefeather.microtus", "bom").versionRef("microtus")
-            library("microtus-core", "net.onelitefeather.microtus", "Microtus").withoutVersion()
-            library("microtus-test", "net.onelitefeather.microtus.testing", "testing").withoutVersion()
-            library("junit-jupiter", "org.junit.jupiter", "junit-jupiter").versionRef("junit")
-            library("junit-jupiter-engine", "org.junit.jupiter", "junit-jupiter-engine").versionRef("junit")
-            library("mockito-core", "org.mockito", "mockito-core").version("5.12.0")
-            library("mockito-junit", "org.mockito", "mockito-junit-jupiter").version("5.12.0")
-            library("aves", "de.icevizion.lib", "Aves").version("1.3.0+f7b17be8")
-            library("xerus", "net.theevilreaper.xerus", "Xerus").version("1.2.0-SNAPSHOT+0971da3a")
+            library("minestom", "net.onelitefeather.microtus", "Microtus").withoutVersion()
+            library("minestom-test", "net.onelitefeather.microtus.testing", "testing").withoutVersion()
+            library("junit.api", "org.junit.jupiter", "junit-jupiter-api").withoutVersion()
+            library("junit.engine", "org.junit.jupiter", "junit-jupiter-engine").withoutVersion()
+            library("mockito.core", "org.mockito", "mockito-core").withoutVersion()
+            library("mockito.junit", "org.mockito", "mockito-junit-jupiter").withoutVersion()
+
+            library("aves", "de.icevizion.lib", "aves").versionRef("aves")
+            library("xerus", "net.theevilreaper.xerus", "xerus").versionRef("xerus")
             library("canis", "com.github.theEvilReaper", "Canis").version("master-SNAPSHOT")
-            library("mini", "net.kyori", "adventure-text-minimessage").version("4.17.0")
-            val cloudnetBaseGroup = "eu.cloudnetservice.cloudnet"
-            library("cloudnet-wrapper", cloudnetBaseGroup, "wrapper-jvm").version(cloudNetVersion)
-            library("cloudnet-bridge", cloudnetBaseGroup, "bridge").version(cloudNetVersion)
-            library("cloudnet-driver", cloudnetBaseGroup, "driver").version(cloudNetVersion)
-            bundle("cloudnet", listOf("cloudnet-wrapper", "cloudnet-bridge", "cloudnet-driver"))
+
+            library("agones4j", "net.infumia", "agones4j").versionRef("agones4j")
+            library("grpc.stub", "io.grpc", "grpc-stub").versionRef("grpc")
+            library("grpc.protobuf", "io.grpc", "grpc-protobuf").versionRef("grpc")
+            library("grpc.netty", "io.grpc", "grpc-netty").versionRef("grpc")
+            library("grpc.okhttp", "io.grpc", "grpc-okhttp").versionRef("grpc")
+            library("tomcat-annotations-api", "org.apache.tomcat", "annotations-api").versionRef("tomcat-annotations-api")
+
+            plugin("shadow", "com.gradleup.shadow").versionRef("shadow")
+            plugin("publishdata", "de.chojo.publishdata").versionRef("publishdata")
         }
     }
 }
+
+include("common")
+include("setup")
+include("game")
+include("agones")

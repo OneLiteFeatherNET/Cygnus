@@ -1,109 +1,24 @@
-plugins {
-    java
-    jacoco
-    id("io.github.goooler.shadow") version "8.1.7"
-    alias(libs.plugins.publishdata)
-    `maven-publish`
+subprojects {
+    apply(plugin = "java")
+    apply(plugin = "jacoco")
 
-}
-
-group = "net.onelitefeather"
-version = "1.0.1-SNAPSHOT" // Change
-
-repositories {
-    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-    mavenCentral()
-    maven("https://jitpack.io")
-    maven {
-        val groupdId = 28 // Gitlab Group
-        url = uri("https://gitlab.themeinerlp.dev/api/v4/groups/$groupdId/-/packages/maven")
-        name = "GitLab"
-        credentials(HttpHeaderCredentials::class.java) {
-            name =  "Private-Token"
-            value = providers.gradleProperty("gitLabPrivateToken").getOrElse("")
+    tasks {
+        getByName<JavaCompile>("compileJava") {
+            options.release.set(21)
+            options.encoding = "UTF-8"
         }
-        authentication {
-            create<HttpHeaderAuthentication>("header")
-        }
-    }
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
-dependencies {
-    implementation(libs.mini)
-    implementation(platform(libs.microtus.bom))
-    compileOnly(libs.microtus.core)
-    compileOnly(libs.aves)
-    compileOnly(libs.xerus)
-    //compileOnly(libs.canis)
-
-    compileOnly(libs.bundles.cloudnet)
-
-    testImplementation(libs.microtus.core)
-    testImplementation(libs.microtus.test)
-    testImplementation(libs.xerus)
-    testImplementation(libs.junit.jupiter)
-    testRuntimeOnly(libs.junit.jupiter.engine)
-}
-
-tasks {
-    compileJava {
-        options.encoding = "UTF-8"
-        options.release.set(21)
-    }
-
-    jacocoTestReport {
-        dependsOn(rootProject.tasks.test)
-        reports {
-            xml.required.set(true)
-        }
-    }
-
-    test {
-        finalizedBy(rootProject.tasks.jacocoTestReport)
-        useJUnitPlatform()
-        testLogging {
-            events("passed", "skipped", "failed")
-        }
-    }
-
-    jar {
-        dependsOn("shadowJar")
-    }
-}
-publishData {
-    addBuildData()
-    useGitlabReposForProject("245", "https://gitlab.themeinerlp.dev/")
-    publishTask("shadowJar")
-}
-publishing {
-    publications.create<MavenPublication>("maven") {
-        // configure the publication as defined previously.
-        publishData.configurePublication(this)
-        version = publishData.getVersion(false)
-    }
-
-    repositories {
-        maven {
-            credentials(HttpHeaderCredentials::class) {
-                name = "Job-Token"
-                value = System.getenv("CI_JOB_TOKEN")
+        getByName<JacocoReport>("jacocoTestReport") {
+            dependsOn(project.tasks.findByPath("test"))
+            reports {
+                xml.required.set(true)
             }
-            authentication {
-                create("header", HttpHeaderAuthentication::class)
+        }
+        getByName<Test>("test") {
+            finalizedBy(project.tasks.findByPath("jacocoTestReport"))
+            useJUnitPlatform()
+            testLogging {
+                events("passed", "skipped", "failed")
             }
-
-
-            name = "Gitlab"
-            // Get the detected repository from the publish data
-            url = uri(publishData.getRepository())
         }
     }
 }
-
-
