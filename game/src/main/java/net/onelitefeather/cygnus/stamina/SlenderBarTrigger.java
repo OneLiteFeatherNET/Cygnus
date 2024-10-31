@@ -20,6 +20,7 @@ import java.util.function.Supplier;
  * @version 1.0.0
  * @since 1.0.0
  */
+@SuppressWarnings("java:S3252")
 public final class SlenderBarTrigger {
 
     private static final long COOLDOWN_TIME = 1_000;
@@ -67,7 +68,7 @@ public final class SlenderBarTrigger {
      * @param player the player to change the visibility status
      */
     private void changeVisibilityStatus(@NotNull Player player) {
-        var currentValue = player.getTag(Tags.HIDDEN);
+        byte currentValue = player.getTag(Tags.HIDDEN);
         player.setTag(Tags.HIDDEN, currentValue == Helper.ZERO_ID ? Helper.ONE_ID : Helper.ZERO_ID);
     }
 }
