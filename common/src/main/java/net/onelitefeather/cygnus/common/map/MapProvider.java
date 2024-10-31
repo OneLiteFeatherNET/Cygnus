@@ -93,7 +93,14 @@ public final class MapProvider {
 
     private <T extends Point> void loadChunk(@NotNull InstanceContainer instance, @NotNull T pos) {
         if (!ChunkUtils.isLoaded(instance, pos)) {
-            instance.loadChunk(pos);
+            instance.loadChunk(pos).whenComplete((chunk, throwable) -> {
+                if (throwable != null) {
+                    LOGGER.error("Failed to load chunk at {}", pos, throwable);
+                }
+                if (chunk != null) {
+                    LOGGER.info("Loaded chunk at {}", chunk.isLoaded());
+                }
+            });
         }
     }
 

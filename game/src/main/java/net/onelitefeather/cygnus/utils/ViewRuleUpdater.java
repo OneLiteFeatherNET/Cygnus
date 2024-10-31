@@ -38,6 +38,10 @@ public final class ViewRuleUpdater {
         }
     }
 
+    public static boolean viewableRuleForSlender(@NotNull Player player) {
+        return player.hasTag(Tags.HIDDEN) && player.getTag(Tags.HIDDEN) == (byte) 1;
+    }
+
     private ViewRuleUpdater() {
     }
 }

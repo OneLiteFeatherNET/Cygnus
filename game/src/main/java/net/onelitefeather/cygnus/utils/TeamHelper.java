@@ -48,6 +48,7 @@ public final class TeamHelper {
 
         Player slenderPlayer = randomPlayer.get();
         slenderPlayer.setTag(Tags.TEAM_ID, SLENDER_ID);
+        slenderPlayer.updateViewableRule(ViewRuleUpdater::viewableRuleForSlender);
 
         slenderTeam.addPlayer(slenderPlayer);
         Set<@NotNull Player> onlinePlayers = new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers());
