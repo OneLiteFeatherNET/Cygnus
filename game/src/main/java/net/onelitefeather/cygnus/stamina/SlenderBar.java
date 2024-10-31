@@ -71,7 +71,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
         }
         state = State.REGENERATING;
         colorState = StaminaColors.REGENERATING;
-        player.setTag(Tags.HIDDEN, Helper.ZERO_ID);
+        player.setTag(Tags.HIDDEN, Helper.ONE_ID);
         this.accept.apply(player, state);
         this.applyNightVision(player);
         player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.1f);
