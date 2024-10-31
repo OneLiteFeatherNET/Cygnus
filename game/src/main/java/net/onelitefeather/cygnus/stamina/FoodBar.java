@@ -14,7 +14,7 @@ public non-sealed class FoodBar extends StaminaBar {
     private float currentSpeedCount;
 
     FoodBar(@NotNull CygnusPlayer player) {
-        super(player, ChronoUnit.MILLIS, 500);
+        super(player, ChronoUnit.MILLIS, 1000);
         state = State.READY;
         this.currentSpeedCount = MAX_FOOD;
     }

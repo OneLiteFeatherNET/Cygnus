@@ -15,7 +15,7 @@ import java.util.UUID;
 public final class CygnusPlayer extends Player {
 
     private static final AttributeModifier SPEED_MODIFIER_SPRINTING =
-            new AttributeModifier(NamespaceID.from("minecraft:sprinting"), 0.3, AttributeOperation.MULTIPLY_TOTAL);
+            new AttributeModifier(NamespaceID.from("minecraft:sprinting"), 0.25, AttributeOperation.MULTIPLY_TOTAL);
 
     private static final AttributeModifier DISABLED_SPRINT_MODIFIER =
             new AttributeModifier(NamespaceID.from("minecraft:sprinting"), 0.0, AttributeOperation.MULTIPLY_TOTAL);

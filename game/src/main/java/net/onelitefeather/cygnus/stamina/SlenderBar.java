@@ -104,7 +104,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.setTag(Tags.HIDDEN, (byte) 1);
                 player.removeEffect(NIGHT_VISION.potion().effect());
                 player.addEffect(BLINDNESS.potion());
-                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.05f);
+                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.0669);
                 player.sendSpringPackets();
                 player.setSprinting(false);
                 player.setBlockedSprinting(true);
@@ -117,7 +117,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 playSoundToTarget(false);
                 player.removeEffect(NIGHT_VISION.potion().effect());
                 player.addEffect(BLINDNESS.potion());
-                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.05f);
+                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.0669);
                 player.sendSpringPackets();
                 player.setSprinting(false);
                 player.setBlockedSprinting(true);

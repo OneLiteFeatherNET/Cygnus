@@ -21,7 +21,7 @@ public final class AttributeHelper {
     private static final double GAME_STEP_HEIGHT = 1.0;
 
     private static final double DEFAULT_MOVE_SPEED = 0.1;
-    private static final double GAME_MOVE_SPEED = 0.050;
+    private static final double GAME_MOVE_SPEED = 0.065;
 
 
     /**
