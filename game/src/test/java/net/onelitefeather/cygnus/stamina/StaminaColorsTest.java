@@ -10,7 +10,7 @@ class StaminaColorsTest {
     @Test
     void testDrainingColors() {
         StaminaColors draining = StaminaColors.DRAINING;
-        assertEquals(NamedTextColor.GREEN, draining.getCompleteColor());
+        assertEquals(NamedTextColor.GOLD, draining.getCompleteColor());
         assertNotEquals(NamedTextColor.RED, draining.getEmptyColor());
     }
 }
