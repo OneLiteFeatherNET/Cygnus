@@ -19,7 +19,6 @@ public final class SlenderItemListener {
     public SlenderItemListener(@NotNull SlenderBarTrigger barTrigger, @NotNull EventNode<Event> eventNode) {
         this.barTrigger = barTrigger;
         eventNode.addListener(PlayerUseItemEvent.class, event -> trigger(event.getPlayer(), event));
-        eventNode.addListener(PlayerUseItemOnBlockEvent.class, event -> trigger(event.getPlayer(), event));
     }
 
     private void trigger(@NotNull Player player, @NotNull ItemEvent event) {
