@@ -16,8 +16,8 @@ import org.jetbrains.annotations.NotNull;
  */
 enum StaminaColors {
 
-    DRAINING(NamedTextColor.GREEN, NamedTextColor.GRAY),
-    REGENERATING(NamedTextColor.GOLD, NamedTextColor.GRAY);
+    DRAINING(NamedTextColor.GOLD, NamedTextColor.GRAY),
+    REGENERATING(NamedTextColor.GREEN, NamedTextColor.GRAY);
 
     private final NamedTextColor completeColor;
     private final NamedTextColor emptyColor;
