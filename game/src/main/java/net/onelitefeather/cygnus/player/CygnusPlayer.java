@@ -63,7 +63,7 @@ public final class CygnusPlayer extends Player {
     /**
      * Sends the packets to the player to update the sprinting state.
      */
-    private void sendSpringPackets() {
+    public void sendSpringPackets() {
         sendPacket(getPropertiesPacket());
         sendPacket(getMetadataPacket());
     }

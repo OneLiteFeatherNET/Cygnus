@@ -104,7 +104,10 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.setTag(Tags.HIDDEN, (byte) 1);
                 player.removeEffect(NIGHT_VISION.potion().effect());
                 player.addEffect(BLINDNESS.potion());
-                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.1f);
+                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.05f);
+                player.sendSpringPackets();
+                player.setSprinting(false);
+                player.setBlockedSprinting(true);
                 this.accept.apply(player, State.DRAINING);
             }
             case REGENERATING -> {
@@ -112,6 +115,12 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 colorState = StaminaColors.DRAINING;
                 player.setTag(Tags.HIDDEN, (byte) 1);
                 playSoundToTarget(false);
+                player.removeEffect(NIGHT_VISION.potion().effect());
+                player.addEffect(BLINDNESS.potion());
+                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.05f);
+                player.sendSpringPackets();
+                player.setSprinting(false);
+                player.setBlockedSprinting(true);
                 this.accept.apply(player, State.DRAINING);
             }
             case DRAINING -> {
@@ -121,6 +130,9 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 playSoundToTarget(true);
                 player.removeEffect(BLINDNESS.potion().effect());
                 player.addEffect(NIGHT_VISION.potion());
+                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.1f);
+                player.sendSpringPackets();
+                player.setBlockedSprinting(false);
                 this.accept.apply(player, State.REGENERATING);
             }
         }
