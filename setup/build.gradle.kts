@@ -7,9 +7,6 @@ plugins {
     application
 }
 
-group = "net.onelitefeather"
-version = "1.0.1"
-
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))

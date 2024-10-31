@@ -2,6 +2,9 @@ subprojects {
     apply(plugin = "java")
     apply(plugin = "jacoco")
 
+    group = "net.onelitefeather"
+    version = "1.0.0"
+
     tasks {
         getByName<JavaCompile>("compileJava") {
             options.release.set(21)
