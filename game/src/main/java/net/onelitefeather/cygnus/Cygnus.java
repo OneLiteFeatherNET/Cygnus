@@ -26,6 +26,7 @@ import net.minestom.server.utils.PacketUtils;
 import net.onelitefeather.agones.AgonesAPI;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.StartCommand;
+import net.onelitefeather.cygnus.common.CygnusFlag;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
@@ -140,7 +141,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
         registerCancelListener(manager);
-        manager.addListener(ServerTickMonitorEvent.class, event -> AgonesAPI.instance().alive());
+        if (CygnusFlag.AGONES_SUPPORT.isPresent()) {
+            manager.addListener(ServerTickMonitorEvent.class, event -> AgonesAPI.instance().alive());
+        }
     }
 
     private void registerGameListener() {

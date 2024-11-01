@@ -10,6 +10,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.network.ConnectionManager;
 import net.minestom.server.timer.Task;
 import net.onelitefeather.agones.AgonesAPI;
+import net.onelitefeather.cygnus.common.CygnusFlag;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -90,7 +91,7 @@ public final class LobbyPhase extends TimedPhase {
     public void start() {
         super.start();
         setLevel();
-        AgonesAPI.instance().reserve(Duration.ofMinutes(5));
+        CygnusFlag.AGONES_SUPPORT.ifPresent(ignored -> AgonesAPI.instance().reserve(Duration.ofMinutes(5)));
     }
 
     @Override

@@ -7,6 +7,7 @@ import de.icevizion.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.onelitefeather.agones.AgonesAPI;
+import net.onelitefeather.cygnus.common.CygnusFlag;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.listener.player.CygnusPlayerTickListener;
 import net.onelitefeather.cygnus.view.GameView;
@@ -71,11 +72,13 @@ public final class GamePhase extends TimedPhase {
     public void onStart() {
         super.onStart();
         addListener(PlayerTickEvent.class, new CygnusPlayerTickListener());
-        AgonesAPI.instance().allocateFuture()
-                .exceptionallyCompose(this::allocateFuture)
-                .exceptionallyCompose(this::allocateFuture)
-                .exceptionallyCompose(this::allocateFuture)
-                .thenRun(() -> LOGGER.info("GameServer allocated"));
+        if (CygnusFlag.AGONES_SUPPORT.isPresent()) {
+            AgonesAPI.instance().allocateFuture()
+                    .exceptionallyCompose(this::allocateFuture)
+                    .exceptionallyCompose(this::allocateFuture)
+                    .exceptionallyCompose(this::allocateFuture)
+                    .thenRun(() -> LOGGER.info("GameServer allocated"));
+        }
         this.startRunnable.run();
     }
 

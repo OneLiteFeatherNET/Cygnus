@@ -3,7 +3,7 @@ subprojects {
     apply(plugin = "jacoco")
 
     group = "net.onelitefeather"
-    version = "1.0.0"
+    version = "1.0.1"
 
     tasks {
         getByName<JavaCompile>("compileJava") {
