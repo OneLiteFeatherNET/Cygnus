@@ -1,8 +1,10 @@
 package net.onelitefeather.agones;
 
 import agones.dev.sdk.Sdk;
+import agones.dev.sdk.beta.Beta;
 import io.grpc.stub.StreamObserver;
 import net.infumia.agones4j.Agones;
+import net.infumia.agones4j.AgonesCounter;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -10,6 +12,8 @@ import java.util.concurrent.CompletableFuture;
 final class AgonesAPIImpl implements AgonesAPI {
 
     private static final AgonesAPIImpl INSTANCE = new AgonesAPIImpl();
+    private static final String CURRENT_PLAYERS_COUNTERS_KEY = "current_players";
+    private static final AgonesCounterStreamObserver COUNTER_STREAM_OBSERVER = new AgonesCounterStreamObserver();
 
     private final Agones agones;
     private StreamObserver<Sdk.Empty> healthCheckStream;
@@ -19,6 +23,16 @@ final class AgonesAPIImpl implements AgonesAPI {
         if (null != agones) {
             healthCheckStream = this.agones.healthCheckStream();
         }
+    }
+
+    @Override
+    public void increaseCurrentPlayerCount() {
+        this.agones.increaseCounter(CURRENT_PLAYERS_COUNTERS_KEY, 1, COUNTER_STREAM_OBSERVER);
+    }
+
+    @Override
+    public void decreaseCurrentPlayerCount() {
+        this.agones.decreaseCounter(CURRENT_PLAYERS_COUNTERS_KEY, 1, COUNTER_STREAM_OBSERVER);
     }
 
     @Override
@@ -53,6 +67,24 @@ final class AgonesAPIImpl implements AgonesAPI {
             return new AgonesAPIImpl();
         }
         return INSTANCE;
+    }
+
+    static class AgonesCounterStreamObserver implements StreamObserver<AgonesCounter> {
+
+        @Override
+        public void onNext(AgonesCounter agonesCounter) {
+
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+
+        }
+
+        @Override
+        public void onCompleted() {
+
+        }
     }
 
 }

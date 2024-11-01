@@ -10,6 +10,10 @@ import java.util.concurrent.CompletableFuture;
  */
 public sealed interface AgonesAPI permits AgonesAPIImpl {
 
+    void increaseCurrentPlayerCount();
+
+    void decreaseCurrentPlayerCount();
+
     /**
      * Sets the GameServer to ready.
      */
