@@ -9,6 +9,8 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
+import net.onelitefeather.agones.AgonesAPI;
+import net.onelitefeather.cygnus.common.CygnusFlag;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.util.Helper;
@@ -52,12 +54,18 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
     public void accept(@NotNull PlayerDisconnectEvent event) {
         Phase phase = phaseSupplier.get();
         if (phase instanceof LobbyPhase lobbyPhase) {
+            if (CygnusFlag.AGONES_SUPPORT.isPresent()) {
+                AgonesAPI.instance().decreaseCurrentPlayerCount();
+            }
             lobbyPhase.checkStopCondition();
             handleLobbyQuit(event.getPlayer(), lobbyPhase);
             return;
         }
 
         if (phase instanceof GamePhase gamePhase) {
+            if (CygnusFlag.AGONES_SUPPORT.isPresent()) {
+                AgonesAPI.instance().decreaseCurrentPlayerCount();
+            }
             handleInGameQuit(event.getPlayer(), gamePhase);
         }
     }

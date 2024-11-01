@@ -1,10 +1,13 @@
 package net.onelitefeather.cygnus.listener;
 
 import de.icevizion.xerus.api.phase.Phase;
+import net.infumia.agones4j.Agones;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.instance.Instance;
+import net.onelitefeather.agones.AgonesAPI;
+import net.onelitefeather.cygnus.common.CygnusFlag;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +42,9 @@ public final class PlayerLoginListener implements Consumer<AsyncPlayerConfigurat
         if (!(currentPhase.get() instanceof LobbyPhase)) {
             event.getPlayer().kick(KICK_COMPONENT);
             return;
+        }
+        if (CygnusFlag.AGONES_SUPPORT.isPresent()) {
+            AgonesAPI.instance().increaseCurrentPlayerCount();
         }
         event.setSpawningInstance(this.instance);
     }
