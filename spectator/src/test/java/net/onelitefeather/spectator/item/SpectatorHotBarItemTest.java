@@ -1,9 +1,8 @@
-package net.onelitefeather.spectator;
+package net.onelitefeather.spectator.item;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
-import net.onelitefeather.spectator.item.SpectatorHotBarItem;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
