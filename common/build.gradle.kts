@@ -17,7 +17,6 @@ dependencies {
     compileOnly(libs.minestom)
     compileOnly(libs.aves)
     compileOnly(libs.xerus)
-    compileOnly(libs.canis)
 
     testImplementation(libs.minestom)
     testImplementation(libs.minestom.test)
