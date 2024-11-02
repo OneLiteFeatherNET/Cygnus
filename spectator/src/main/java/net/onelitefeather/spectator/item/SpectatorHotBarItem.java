@@ -32,5 +32,17 @@ public record SpectatorHotBarItem(
         Check.argCondition(item.material() == Material.AIR, "Item cannot be air");
         Check.argCondition(itemIndex < 0, "Item index cannot be negative");
         Check.argCondition(!SLOT_RANGE.isInRange(slotIndex), "Item index must be between 0 and 8");
+        Check.argCondition(!item.hasTag(SPEC_ITEM_TAG), "Item must have the SpectatorItem tag");
+    }
+
+    /**
+     * Creates a new instance of the {@link SpectatorHotBarItem}.
+     * @param builder the builder to create the item
+     * @param itemIndex the index of the item
+     * @param slotIndex the index of the slot
+     * @param logic the logic to be executed when the item is clicked
+     */
+    public SpectatorHotBarItem(@NotNull ItemStack.Builder builder, int itemIndex, int slotIndex, @NotNull Consumer<Player> logic) {
+        this(builder.set(SpectatorItem.SPEC_ITEM_TAG, itemIndex).build(), itemIndex, slotIndex, logic);
     }
 }
