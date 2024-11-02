@@ -12,7 +12,6 @@ import net.minestom.server.listener.UseItemListener;
 import net.minestom.server.network.packet.client.play.ClientUseItemPacket;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
-import net.minestom.testing.FlexibleListener;
 import net.minestom.testing.TestConnection;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.spectator.SpectatorService;
@@ -35,18 +34,18 @@ class SpectatorHotBarIntegrationTest {
 
         SpectatorHotBarItem teleporterItem = new SpectatorHotBarItem(teleporterItemBuilder, 1, 0, teleporterConsumer);
         assertNotNull(teleporterItem);
-        SpectatorService service = SpectatorService.builder()
+        SpectatorService spectatorService = SpectatorService.builder()
                 .hotbarItem(teleporterItem)
                 .build();
-        assertNotNull(service);
+        assertNotNull(spectatorService);
 
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, Pos.ZERO).join();
         assertEquals(ItemStack.AIR, player.getInventory().getItemStack(0));
-        service.add(player);
+        spectatorService.add(player);
 
-        assertTrue(service.hasSpectators());
-        assertTrue(player.hasTag(SpectatorService.SPECTATOR_TAG));
+        assertTrue(spectatorService.hasSpectators());
+        assertTrue(spectatorService.isSpectator(player));
 
         ItemStack rawItem = teleporterItemBuilder.build();
 
