@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
 /**
- * The {@link SpectatorItemContainer} is the implementation of the {@link SpectatorItem} interface.
+ * The {@link SpectatorHotBarItem} is the implementation of the {@link SpectatorItem} interface.
  *
  * @param item      the item to be displayed
  * @param itemIndex the index of the item
@@ -18,7 +18,7 @@ import java.util.function.Consumer;
  * @param logic     the logic to be executed when the item is clicked
  */
 @SuppressWarnings("java:S3252")
-public record SpectatorItemContainer(
+public record SpectatorHotBarItem(
         @NotNull ItemStack item,
         int itemIndex,
         int slotIndex,
@@ -27,7 +27,7 @@ public record SpectatorItemContainer(
 
     private static final IntRange SLOT_RANGE = new IntRange(0, 8);
 
-    public SpectatorItemContainer {
+    public SpectatorHotBarItem {
         Check.argCondition(item == ItemStack.AIR, "The ItemStack can not be referenced to ItemStack.AIR");
         Check.argCondition(item.material() == Material.AIR, "Item cannot be air");
         Check.argCondition(itemIndex < 0, "Item index cannot be negative");

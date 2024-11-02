@@ -1,26 +1,32 @@
 package net.onelitefeather.spectator;
 
+import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
-import net.onelitefeather.spectator.item.SpectatorItemContainer;
+import net.onelitefeather.spectator.item.SpectatorHotBarItem;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.function.Consumer;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-class SpectatorItemContainerTest {
+class SpectatorHotBarItemTest {
+
+    private static final Consumer<Player> NO_OP = player -> {
+    };
 
     @Test
     void testInvalidItemStackUsage() {
         assertThrowsExactly(
                 IllegalArgumentException.class,
-                () -> new SpectatorItemContainer(ItemStack.AIR, 0, 0),
+                () -> new SpectatorHotBarItem(ItemStack.AIR, 0, 0, NO_OP),
                 "The ItemStack can not be referenced to ItemStack.AIR"
         );
         assertThrowsExactly(
                 IllegalArgumentException.class,
-                () -> new SpectatorItemContainer(ItemStack.builder(Material.AIR).build(), 0, 0),
+                () -> new SpectatorHotBarItem(ItemStack.builder(Material.AIR).build(), 0, 0, NO_OP),
                 "Item cannot be air"
         );
     }
@@ -29,7 +35,7 @@ class SpectatorItemContainerTest {
     void testInvalidItemIndex() {
         assertThrowsExactly(
                 IllegalArgumentException.class,
-                () -> new SpectatorItemContainer(ItemStack.builder(Material.DIAMOND).build(), -1, 0),
+                () -> new SpectatorHotBarItem(ItemStack.builder(Material.DIAMOND).build(), -1, 0, NO_OP),
                 "Item index cannot be negative"
         );
     }
@@ -39,7 +45,7 @@ class SpectatorItemContainerTest {
     void testInvalidSlotIndex(int slotIndex) {
         assertThrowsExactly(
                 IllegalArgumentException.class,
-                () -> new SpectatorItemContainer(ItemStack.builder(Material.DIAMOND).build(), 0, slotIndex),
+                () -> new SpectatorHotBarItem(ItemStack.builder(Material.DIAMOND).build(), 0, slotIndex, NO_OP),
                 "Item index must be between 0 and 8"
         );
     }
@@ -48,7 +54,7 @@ class SpectatorItemContainerTest {
     @ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7, 8})
     void testValidSlotIndex(int slotIndex) {
         assertDoesNotThrow(
-                () -> new SpectatorItemContainer(ItemStack.builder(Material.DIAMOND).build(), 0, slotIndex)
+                () -> new SpectatorHotBarItem(ItemStack.builder(Material.DIAMOND).build(), 0, slotIndex, NO_OP)
         );
     }
 }
