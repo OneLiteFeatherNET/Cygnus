@@ -53,7 +53,7 @@ class SpectatorHotBarItemTest {
     @ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7, 8})
     void testValidSlotIndex(int slotIndex) {
         assertDoesNotThrow(
-                () -> new SpectatorHotBarItem(ItemStack.builder(Material.DIAMOND).build(), 0, slotIndex, NO_OP)
+                () -> new SpectatorHotBarItem(ItemStack.builder(Material.DIAMOND), 0, slotIndex, NO_OP)
         );
     }
 }

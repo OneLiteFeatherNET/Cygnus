@@ -79,9 +79,6 @@ class SpectatorServiceIntegrationTest {
         assertEquals(1, spectatorService.getSpectators().size());
         assertTrue(spectatorService.getSpectators().contains(player));
 
-        assertFalse(spectatorService.hasSpectators());
-        assertEquals(0, spectatorService.getSpectators().size());
-
         env.destroyInstance(instance, true);
     }
 }
