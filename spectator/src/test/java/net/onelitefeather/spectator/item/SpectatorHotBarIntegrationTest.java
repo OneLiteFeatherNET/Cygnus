@@ -1,6 +1,7 @@
 package net.onelitefeather.spectator.item;
 
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventFilter;
 import net.minestom.server.event.player.PlayerUseItemEvent;
@@ -9,7 +10,9 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.listener.UseItemListener;
 import net.minestom.server.network.packet.client.play.ClientUseItemPacket;
+import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
+import net.minestom.testing.FlexibleListener;
 import net.minestom.testing.TestConnection;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.spectator.SpectatorService;
@@ -27,16 +30,16 @@ class SpectatorHotBarIntegrationTest {
     @Test
     void testHotBarItemSet(@NotNull Env env) {
         ItemStack.Builder teleporterItemBuilder = ItemStack.builder(Material.COMPASS);
-        Consumer<Player> teleporterConsumer = player -> {
-            throw new RuntimeException("Callback works");
-        };
+        Instance instance = env.createFlatInstance();
+        Consumer<Player> teleporterConsumer = player -> player.setGameMode(GameMode.SPECTATOR);
+
         SpectatorHotBarItem teleporterItem = new SpectatorHotBarItem(teleporterItemBuilder, 1, 0, teleporterConsumer);
+        assertNotNull(teleporterItem);
         SpectatorService service = SpectatorService.builder()
                 .hotbarItem(teleporterItem)
                 .build();
-
         assertNotNull(service);
-        Instance instance = env.createFlatInstance();
+
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, Pos.ZERO).join();
         assertEquals(ItemStack.AIR, player.getInventory().getItemStack(0));
@@ -52,7 +55,7 @@ class SpectatorHotBarIntegrationTest {
         assertEquals(rawItem, teleportStack);
         player.setHeldItemSlot((byte) 0);
 
-        var useItemCollector = env.trackEvent(PlayerUseItemEvent.class, EventFilter.PLAYER, player);
+        Collector<PlayerUseItemEvent> useItemCollector = env.trackEvent(PlayerUseItemEvent.class, EventFilter.PLAYER, player);
         UseItemListener.useItemListener(new ClientUseItemPacket(Player.Hand.MAIN, 42, 0f, 0f), player);
 
         useItemCollector.assertSingle(event -> {
@@ -64,7 +67,7 @@ class SpectatorHotBarIntegrationTest {
             int id = stack.getTag(SpectatorItem.SPEC_ITEM_TAG);
 
             assertEquals(1, id);
-            assertThrowsExactly(RuntimeException.class, () -> teleporterConsumer.accept(player), "Callback works");
+            assertEquals(GameMode.SPECTATOR, player.getGameMode());
         });
 
         env.destroyInstance(instance, true);
