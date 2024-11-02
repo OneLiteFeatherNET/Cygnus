@@ -1,12 +1,14 @@
 package net.onelitefeather.spectator;
 
 import net.kyori.adventure.text.Component;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
-import net.minestom.server.tag.Tag;
+import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.spectator.event.SpectatorAddEvent;
 import net.onelitefeather.spectator.event.SpectatorRemoveEvent;
 import net.onelitefeather.spectator.item.SpectatorItem;
+import net.onelitefeather.spectator.listener.SpectatorItemListener;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,6 +63,11 @@ final class DefaultSpectatorService implements SpectatorService {
         this.spectatorSeparator = spectatorSeparator;
         this.hotBarItems = hotBarItems;
         this.spectators = new HashSet<>();
+
+        if (this.hotBarItems != null && !this.hotBarItems.isEmpty()) {
+            SpectatorItemListener spectatorItemListener = new SpectatorItemListener(this::isSpectator, itemId -> this.hotBarItems.get(itemId).logic());
+            MinecraftServer.getGlobalEventHandler().addListener(PlayerUseItemEvent.class, spectatorItemListener);
+        }
     }
 
     @Override
@@ -119,6 +126,7 @@ final class DefaultSpectatorService implements SpectatorService {
 
     /**
      * Set each {@link SpectatorItem} which is registered to the player.
+     *
      * @param player the player to set the items to
      */
     private void setItemsToPlayer(@NotNull Player player) {
