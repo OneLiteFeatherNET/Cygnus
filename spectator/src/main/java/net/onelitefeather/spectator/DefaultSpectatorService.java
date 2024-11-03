@@ -80,11 +80,11 @@ final class DefaultSpectatorService implements SpectatorService {
 
         EventNode<Event> eventNode = MinecraftServer.getGlobalEventHandler();
 
-        if (listenerData.detektSpectatorQuit()) {
+        if (listenerData.detectSpectatorQuit()) {
             eventNode.addListener(PlayerDisconnectEvent.class, new SpectatorRemoveListener(this::isSpectator, this::remove));
         }
 
-        if (listenerData.detektSpectatorChat()) {
+        if (listenerData.detectSpectatorChat()) {
             eventNode.addListener(PlayerChatEvent.class, new SpectatorChatListener(chatData, this::isSpectator, this::getSpectators));
         }
 
