@@ -9,8 +9,8 @@ class ListenerDataTest {
     @Test
     void testListenerDataCreation() {
         ListenerData listenerData = ListenerData.of(true, true);
-        assertTrue(listenerData.detektSpectatorQuit());
-        assertFalse(listenerData.detektSpectatorJoin());
-        assertTrue(listenerData.detektSpectatorChat());
+        assertTrue(listenerData.detectSpectatorQuit());
+        assertFalse(listenerData.detectSpectatorJoin());
+        assertTrue(listenerData.detectSpectatorChat());
     }
 }
