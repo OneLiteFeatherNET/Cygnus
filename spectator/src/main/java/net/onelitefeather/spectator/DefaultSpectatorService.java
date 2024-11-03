@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 final class DefaultSpectatorService implements SpectatorService {
 
@@ -106,7 +108,8 @@ final class DefaultSpectatorService implements SpectatorService {
         }
 
         if (this.hotBarItems != null && !this.hotBarItems.isEmpty()) {
-            SpectatorItemListener spectatorItemListener = new SpectatorItemListener(this::isSpectator, itemId -> this.hotBarItems.get(itemId).logic());
+            Function<Integer, @NotNull Consumer<Player>> logicCallback = itemId -> this.hotBarItems.get(itemId).logic();
+            SpectatorItemListener spectatorItemListener = new SpectatorItemListener(this::isSpectator, logicCallback);
             eventNode.addListener(PlayerUseItemEvent.class, spectatorItemListener);
         }
         this.autoRegisterListener = false;
