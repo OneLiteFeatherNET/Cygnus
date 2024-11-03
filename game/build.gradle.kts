@@ -22,6 +22,7 @@ dependencies {
     implementation(platform(libs.microtus.bom))
     implementation(platform(libs.dungeon.bom))
     implementation(project(":common"))
+    implementation(project(":spectator"))
     implementation(project(":agones"))
     implementation(libs.minestom)
     implementation(libs.aves)
