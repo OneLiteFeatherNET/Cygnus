@@ -1,6 +1,7 @@
 package net.onelitefeather.spectator.util;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -10,5 +11,5 @@ import org.jetbrains.annotations.NotNull;
  * @param separator the separator for the chat message
  * @since 1.0.0
  */
-public record ChatData(@NotNull Component prefix, @NotNull Component separator) {
+public record ChatData(@NotNull Component prefix, @NotNull Component separator, @NotNull TextColor messageColor) {
 }

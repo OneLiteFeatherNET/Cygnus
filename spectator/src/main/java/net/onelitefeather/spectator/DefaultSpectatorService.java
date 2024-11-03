@@ -28,15 +28,14 @@ import java.util.Set;
 
 final class DefaultSpectatorService implements SpectatorService {
 
-    private final ChatData chatData;
     private final Set<Player> spectators;
     private final Map<Integer, SpectatorItem> hotBarItems;
 
     /**
      * Creates a new instance of the {@link SpectatorService}.
      *
-     * @param listenerData       the listener option for the spectator
-     * @param chatData           the chat option for the spectator
+     * @param listenerData the listener option for the spectator
+     * @param chatData     the chat option for the spectator
      * @return a new instance of the {@link SpectatorService}
      */
     @Contract(pure = true, value = " _, _ -> new")
@@ -44,15 +43,15 @@ final class DefaultSpectatorService implements SpectatorService {
             @NotNull ListenerData listenerData,
             @NotNull ChatData chatData
     ) {
-        return new DefaultSpectatorService( listenerData, chatData, null);
+        return new DefaultSpectatorService(listenerData, chatData, null);
     }
 
     /**
      * Creates a new instance of the {@link SpectatorService}.
      *
-     * @param hotBarItems        the hotbar items for the spectator
-     * @param listenerData       the listener option for the spectator
-     * @param chatData           the chat option for the spectator
+     * @param hotBarItems  the hotbar items for the spectator
+     * @param listenerData the listener option for the spectator
+     * @param chatData     the chat option for the spectator
      * @return a new instance of the {@link SpectatorService}
      */
     @Contract(pure = true, value = "_, _, _ -> new")
@@ -76,7 +75,6 @@ final class DefaultSpectatorService implements SpectatorService {
             @NotNull ChatData chatData,
             @Nullable Map<Integer, SpectatorItem> hotBarItems
     ) {
-        this.chatData = chatData;
         this.hotBarItems = hotBarItems;
         this.spectators = new HashSet<>();
 
@@ -87,7 +85,7 @@ final class DefaultSpectatorService implements SpectatorService {
         }
 
         if (listenerData.detektSpectatorChat()) {
-            eventNode.addListener(PlayerChatEvent.class, new SpectatorChatListener(this.chatData, this::isSpectator, this::getSpectators));
+            eventNode.addListener(PlayerChatEvent.class, new SpectatorChatListener(chatData, this::isSpectator, this::getSpectators));
         }
 
         if (this.hotBarItems != null && !this.hotBarItems.isEmpty()) {
@@ -162,6 +160,11 @@ final class DefaultSpectatorService implements SpectatorService {
         }
     }
 
+    /**
+     * Returns an unmodifiable view of all spectators.
+     *
+     * @return the given spectators as an unmodifiable view
+     */
     @Override
     public @NotNull @UnmodifiableView Set<@NotNull Player> getSpectators() {
         return Collections.unmodifiableSet(this.spectators);

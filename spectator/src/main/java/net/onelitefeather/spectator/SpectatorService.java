@@ -1,6 +1,7 @@
 package net.onelitefeather.spectator;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import net.minestom.server.entity.Player;
 import net.minestom.server.tag.Tag;
 import net.onelitefeather.spectator.event.SpectatorRemoveEvent;
@@ -11,6 +12,19 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Set;
 
+/**
+ * The SpectatorService interface defines the fundamental properties of a spectator service that manages
+ * the spectator mode for players.
+ * <p>
+ * A SpectatorService represents a service that allows players to enter spectator mode, view the game world
+ * from a different perspective, and interact with other spectators.
+ * <p>
+ * The SpectatorService interface is sealed and only permits extensions from the {@link SpectatorServiceBuilder} class.
+ *
+ * @author theEvilReaper
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public interface SpectatorService {
 
     Tag<Byte> SPECTATOR_TAG = Tag.Byte("spectator");
@@ -86,6 +100,15 @@ public interface SpectatorService {
          * @return this builder
          */
         @NotNull Builder separator(@NotNull Component separator);
+
+        /**
+         * Sets the color for the spectator messages.
+         * This effects only the message from the player itself and not the displayed display name from the player.
+         *
+         * @param messageColor the color to set
+         * @return this builder
+         */
+        @NotNull Builder messageColor(@NotNull TextColor messageColor);
 
         /**
          * Adds a spectator item to the service.

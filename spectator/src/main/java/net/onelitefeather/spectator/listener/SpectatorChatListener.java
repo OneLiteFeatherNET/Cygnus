@@ -1,7 +1,6 @@
 package net.onelitefeather.spectator.listener;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerChatEvent;
 import net.minestom.server.utils.validate.Check;
@@ -63,7 +62,7 @@ public final class SpectatorChatListener implements Consumer<PlayerChatEvent> {
      */
     private @NotNull Component formatMessage(@NotNull Player player, @NotNull String message) {
         Check.argCondition(player.getDisplayName() == null, "Player display name cannot be null");
-        Component messageComponent = Component.text(message, NamedTextColor.GRAY);
+        Component messageComponent = Component.text(message, chatData.messageColor());
         Component prefix = chatData.prefix();
         Component separator = chatData.separator();
         return prefix.append(Component.space()).append(player.getDisplayName()).append(Component.space()).append(separator).append(Component.space()).append(messageComponent);
