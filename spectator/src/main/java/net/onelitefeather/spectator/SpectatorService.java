@@ -29,10 +29,20 @@ public interface SpectatorService {
 
     Tag<Byte> SPECTATOR_TAG = Tag.Byte("spectator");
 
+    /**
+     * Creates a new builder ready to create a new {@link SpectatorService} instance.
+     *
+     * @return the created builder
+     */
     @Contract(pure = true)
     static @NotNull Builder builder() {
         return new SpectatorServiceBuilder();
     }
+
+    /**
+     * Registers the listener for the spectator service.
+     */
+    void registerListener();
 
     /**
      * Removes all spectators from the service.
@@ -133,11 +143,22 @@ public interface SpectatorService {
         @NotNull Builder spectatorChat();
 
         /**
-         * Creates a new {@link SpectatorService} instance.
+         * Builds the {@link SpectatorService} instance.
+         * The listener is not registered automatically.
          *
          * @return the created instance
          */
         @Contract(pure = true)
-        @NotNull SpectatorService build();
+        default @NotNull SpectatorService build() {
+            return build(false);
+        }
+
+        /**
+         * Creates a new {@link SpectatorService} instance.
+         *
+         * @return the created instance
+         */
+        @Contract(pure = true, value = "_ -> new")
+        @NotNull SpectatorService build(boolean autoRegisterListener);
     }
 }

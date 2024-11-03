@@ -28,8 +28,11 @@ import java.util.Set;
 
 final class DefaultSpectatorService implements SpectatorService {
 
+    private final ListenerData listenerData;
+    private final ChatData chatData;
     private final Set<Player> spectators;
     private final Map<Integer, SpectatorItem> hotBarItems;
+    private boolean autoRegisterListener;
 
     /**
      * Creates a new instance of the {@link SpectatorService}.
@@ -38,12 +41,13 @@ final class DefaultSpectatorService implements SpectatorService {
      * @param chatData     the chat option for the spectator
      * @return a new instance of the {@link SpectatorService}
      */
-    @Contract(pure = true, value = " _, _ -> new")
+    @Contract(pure = true, value = " _, _, _ -> new")
     static @NotNull SpectatorService of(
             @NotNull ListenerData listenerData,
-            @NotNull ChatData chatData
+            @NotNull ChatData chatData,
+            boolean autoRegisterListener
     ) {
-        return new DefaultSpectatorService(listenerData, chatData, null);
+        return new DefaultSpectatorService(listenerData, chatData, null, autoRegisterListener);
     }
 
     /**
@@ -54,13 +58,14 @@ final class DefaultSpectatorService implements SpectatorService {
      * @param chatData     the chat option for the spectator
      * @return a new instance of the {@link SpectatorService}
      */
-    @Contract(pure = true, value = "_, _, _ -> new")
+    @Contract(pure = true, value = "_, _, _, _ -> new")
     static @NotNull SpectatorService of(
             @NotNull ListenerData listenerData,
             @NotNull ChatData chatData,
-            @NotNull Map<Integer, SpectatorItem> hotBarItems
+            @NotNull Map<Integer, SpectatorItem> hotBarItems,
+            boolean autoRegisterListener
     ) {
-        return new DefaultSpectatorService(listenerData, chatData, hotBarItems);
+        return new DefaultSpectatorService(listenerData, chatData, hotBarItems, autoRegisterListener);
     }
 
     /**
@@ -73,11 +78,23 @@ final class DefaultSpectatorService implements SpectatorService {
     DefaultSpectatorService(
             @NotNull ListenerData listenerData,
             @NotNull ChatData chatData,
-            @Nullable Map<Integer, SpectatorItem> hotBarItems
+            @Nullable Map<Integer, SpectatorItem> hotBarItems,
+            boolean autoRegisterListener
     ) {
+        this.autoRegisterListener = autoRegisterListener;
         this.hotBarItems = hotBarItems;
         this.spectators = new HashSet<>();
+        this.listenerData = listenerData;
+        this.chatData = chatData;
 
+        if (autoRegisterListener) {
+            this.registerListener();
+        }
+    }
+
+    @Override
+    public void registerListener() {
+        if (!autoRegisterListener) return;
         EventNode<Event> eventNode = MinecraftServer.getGlobalEventHandler();
 
         if (listenerData.detectSpectatorQuit()) {
@@ -92,6 +109,7 @@ final class DefaultSpectatorService implements SpectatorService {
             SpectatorItemListener spectatorItemListener = new SpectatorItemListener(this::isSpectator, itemId -> this.hotBarItems.get(itemId).logic());
             eventNode.addListener(PlayerUseItemEvent.class, spectatorItemListener);
         }
+        this.autoRegisterListener = false;
     }
 
     @Override

@@ -70,7 +70,7 @@ public final class SpectatorServiceBuilder implements SpectatorService.Builder {
 
 
     @Override
-    public @NotNull SpectatorService build() {
+    public @NotNull SpectatorService build(boolean autoRegisterListener) {
         Map<Integer, SpectatorItem> hotBarItems = null;
 
         if (this.items != null && !this.items.isEmpty()) {
@@ -82,8 +82,8 @@ public final class SpectatorServiceBuilder implements SpectatorService.Builder {
         ChatData chatData = new ChatData(this.prefix, this.separator, this.messageColor);
 
         if (hotBarItems == null || hotBarItems.isEmpty()) {
-            return DefaultSpectatorService.of(listenerData, chatData);
+            return DefaultSpectatorService.of(listenerData, chatData, autoRegisterListener);
         }
-        return DefaultSpectatorService.of(listenerData, chatData, hotBarItems);
+        return DefaultSpectatorService.of(listenerData, chatData, hotBarItems, autoRegisterListener);
     }
 }
