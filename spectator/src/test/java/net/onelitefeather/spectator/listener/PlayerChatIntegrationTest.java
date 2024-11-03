@@ -1,5 +1,6 @@
 package net.onelitefeather.spectator.listener;
 
+import net.kyori.adventure.text.Component;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventFilter;
@@ -32,6 +33,8 @@ class PlayerChatIntegrationTest {
         TestConnection connection = env.createConnection();
 
         Player player = connection.connect(instance, Pos.ZERO).join();
+        player.setUsernameField("Bob");
+        player.setDisplayName(Component.text(player.getUsername()));
 
         SpectatorService spectatorService = SpectatorService.builder()
                 .spectatorChat()
