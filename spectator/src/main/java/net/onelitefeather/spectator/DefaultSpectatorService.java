@@ -1,6 +1,5 @@
 package net.onelitefeather.spectator;
 
-import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
@@ -15,6 +14,8 @@ import net.onelitefeather.spectator.item.SpectatorItem;
 import net.onelitefeather.spectator.listener.SpectatorChatListener;
 import net.onelitefeather.spectator.listener.SpectatorItemListener;
 import net.onelitefeather.spectator.listener.SpectatorRemoveListener;
+import net.onelitefeather.spectator.util.ChatData;
+import net.onelitefeather.spectator.util.ListenerData;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,69 +28,66 @@ import java.util.Set;
 
 final class DefaultSpectatorService implements SpectatorService {
 
+    private final ChatData chatData;
     private final Set<Player> spectators;
     private final Map<Integer, SpectatorItem> hotBarItems;
-    private Component spectatorPrefix;
-    private Component spectatorSeparator;
 
     /**
      * Creates a new instance of the {@link SpectatorService}.
      *
-     * @param spectatorPrefix    the prefix for the spectator message
-     * @param spectatorSeparator the separator for the spectator message
-     * @param detectAutoQuit     whether to detect when a spectator quits
-     * @param autoSpectatorChat  whether to allow spectators to chat
+     * @param listenerData       the listener option for the spectator
+     * @param chatData           the chat option for the spectator
      * @return a new instance of the {@link SpectatorService}
      */
-    @Contract(pure = true, value = "_, _, _, _ -> new")
-    static @NotNull SpectatorService of(@NotNull Component spectatorPrefix, @NotNull Component spectatorSeparator, boolean detectAutoQuit, boolean autoSpectatorChat) {
-        return new DefaultSpectatorService(spectatorPrefix, spectatorSeparator, detectAutoQuit, autoSpectatorChat, null);
+    @Contract(pure = true, value = " _, _ -> new")
+    static @NotNull SpectatorService of(
+            @NotNull ListenerData listenerData,
+            @NotNull ChatData chatData
+    ) {
+        return new DefaultSpectatorService( listenerData, chatData, null);
     }
 
     /**
      * Creates a new instance of the {@link SpectatorService}.
      *
-     * @param spectatorPrefix    the prefix for the spectator message
-     * @param spectatorSeparator the separator for the spectator message
-     * @param detectAutoQuit     whether to detect when a spectator quits
-     * @param autoSpectatorChat  whether to allow spectators to chat
      * @param hotBarItems        the hotbar items for the spectator
+     * @param listenerData       the listener option for the spectator
+     * @param chatData           the chat option for the spectator
      * @return a new instance of the {@link SpectatorService}
      */
-    @Contract(pure = true, value = "_, _, _, _, _ -> new")
+    @Contract(pure = true, value = "_, _, _ -> new")
     static @NotNull SpectatorService of(
-            @NotNull Component spectatorPrefix,
-            @NotNull Component spectatorSeparator,
-            boolean detectAutoQuit,
-            boolean autoSpectatorChat,
+            @NotNull ListenerData listenerData,
+            @NotNull ChatData chatData,
             @NotNull Map<Integer, SpectatorItem> hotBarItems
     ) {
-        return new DefaultSpectatorService(spectatorPrefix, spectatorSeparator, detectAutoQuit, autoSpectatorChat, hotBarItems);
+        return new DefaultSpectatorService(listenerData, chatData, hotBarItems);
     }
 
     /**
      * Creates a new instance of the {@link SpectatorService}.
      *
-     * @param spectatorPrefix    the prefix for the spectator message
-     * @param spectatorSeparator the separator for the spectator message
-     * @param detectAutoQuit     whether to detect when a spectator quits
-     * @param autoSpectatorChat  whether to allow spectators to chat
-     * @param hotBarItems        the hotbar items for the spectator
+     * @param listenerData the listener option for the spectator
+     * @param chatData     the chat option for the spectator
+     * @param hotBarItems  the hotbar items for the spectator
      */
-    DefaultSpectatorService(@Nullable Component spectatorPrefix, @NotNull Component spectatorSeparator, boolean detectAutoQuit, boolean autoSpectatorChat, @Nullable Map<Integer, SpectatorItem> hotBarItems) {
-        this.spectatorPrefix = spectatorPrefix;
-        this.spectatorSeparator = spectatorSeparator;
+    DefaultSpectatorService(
+            @NotNull ListenerData listenerData,
+            @NotNull ChatData chatData,
+            @Nullable Map<Integer, SpectatorItem> hotBarItems
+    ) {
+        this.chatData = chatData;
         this.hotBarItems = hotBarItems;
         this.spectators = new HashSet<>();
 
         EventNode<Event> eventNode = MinecraftServer.getGlobalEventHandler();
 
-        if (detectAutoQuit) {
+        if (listenerData.detektSpectatorQuit()) {
             eventNode.addListener(PlayerDisconnectEvent.class, new SpectatorRemoveListener(this::isSpectator, this::remove));
         }
 
-        if (autoSpectatorChat) {
-            eventNode.addListener(PlayerChatEvent.class, new SpectatorChatListener(this.spectatorPrefix, this.spectatorSeparator, this::isSpectator, this::getSpectators));
+        if (listenerData.detektSpectatorChat()) {
+            eventNode.addListener(PlayerChatEvent.class, new SpectatorChatListener(this.chatData, this::isSpectator, this::getSpectators));
         }
 
         if (this.hotBarItems != null && !this.hotBarItems.isEmpty()) {

@@ -3,6 +3,8 @@ package net.onelitefeather.spectator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.onelitefeather.spectator.item.SpectatorItem;
+import net.onelitefeather.spectator.util.ChatData;
+import net.onelitefeather.spectator.util.ListenerData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
@@ -68,9 +70,12 @@ public final class SpectatorServiceBuilder implements SpectatorService.Builder {
                     .collect(Collectors.toMap(SpectatorItem::itemIndex, Function.identity()));
         }
 
+        ListenerData listenerData = ListenerData.of(this.detectSpectatorQuit, this.spectatorChat);
+        ChatData chatData = new ChatData(this.prefix, this.separator);
+
         if (hotBarItems == null || hotBarItems.isEmpty()) {
-            return DefaultSpectatorService.of(this.prefix, this.separator, detectSpectatorQuit, spectatorChat);
+            return DefaultSpectatorService.of(listenerData, chatData);
         }
-        return DefaultSpectatorService.of(this.prefix, this.separator, detectSpectatorQuit, spectatorChat, hotBarItems);
+        return DefaultSpectatorService.of(listenerData, chatData, hotBarItems);
     }
 }
