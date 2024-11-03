@@ -67,6 +67,9 @@ import net.onelitefeather.cygnus.utils.TeamHelper;
 import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
+import net.onelitefeather.spectator.SpectatorService;
+import org.checkerframework.checker.units.qual.N;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -90,6 +93,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final GameView view;
     private final MapProvider mapProvider;
     private final GameConfig gameConfig;
+    private final SpectatorService spectatorService;
 
     public Cygnus() {
         Path path = Paths.get("");
@@ -106,6 +110,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.mapProvider = new MapProvider(path, instance, this.pageProvider);
         this.mapProvider.prepareInstanceData(instance);
         this.view = new GameViewImpl(this::getViewComponent);
+        this.spectatorService = createSpectatorService();
         this.createTeams(this.gameConfig, this.teamService, this.ambientProvider);
         this.initPhases();
         this.initCommands();
@@ -192,6 +197,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 Strings.getTimeString(TimeFormat.MM_SS, gamePhase.getCurrentTicks()),
                 this.pageProvider.getPageStatus()
         );
+    }
+
+    @Contract(pure = true)
+    private @NotNull SpectatorService createSpectatorService() {
+        return SpectatorService.builder().detectSpectatorQuit().build();
     }
 
     private void triggerGameStart() {
