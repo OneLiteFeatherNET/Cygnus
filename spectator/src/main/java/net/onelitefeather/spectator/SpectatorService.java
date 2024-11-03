@@ -96,6 +96,20 @@ public interface SpectatorService {
         @NotNull Builder hotbarItem(@NotNull SpectatorItem item);
 
         /**
+         * Detects when a spectator quits the server.
+         *
+         * @return this builder
+         */
+        @NotNull Builder detectSpectatorQuit();
+
+        /**
+         * Enables the spectator chat.
+         *
+         * @return this builder
+         */
+        @NotNull Builder spectatorChat();
+
+        /**
          * Creates a new {@link SpectatorService} instance.
          *
          * @return the created instance

@@ -18,7 +18,7 @@ import java.util.function.Consumer;
  * @param logic     the logic to be executed when the item is clicked
  */
 @SuppressWarnings("java:S3252")
-public record SpectatorHotBarItem(
+record SpectatorHotBarItem(
         @NotNull ItemStack item,
         int itemIndex,
         int slotIndex,
