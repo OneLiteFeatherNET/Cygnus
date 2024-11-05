@@ -60,7 +60,7 @@ dependencyResolutionManagement {
             version("tomcat-annotations-api", "6.0.53")
 
             library("microtus.bom", "net.onelitefeather.microtus", "bom").versionRef("minestom")
-            library("dungeon.bom", "net.theevilreaper.dungeon.bom", "base").version("1.0.6")
+            library("dungeon.bom", "net.theevilreaper.dungeon.bom", "base").version("1.1.1")
 
             library("minestom", "net.onelitefeather.microtus", "Microtus").withoutVersion()
             library("minestom-test", "net.onelitefeather.microtus.testing", "testing").withoutVersion()
