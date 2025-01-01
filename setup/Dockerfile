@@ -1,4 +1,4 @@
-FROM docker.io/eclipse-temurin:21-jdk-alpine
+FROM docker.io/eclipse-temurin:23-jdk-alpine
 LABEL maintainer="theEvilReaper"
 LABEL description="Docker container for the Cygnus setup"
 LABEL type="Microtus"
