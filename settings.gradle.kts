@@ -51,7 +51,7 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             version("publishdata", "1.4.0")
-            version("minestom", "1.5.0-SNAPSHOT")
+            version("minestom", "1.5.1")
             version("aves", "1.6.0-SNAPSHOT")
             version("xerus", "1.3.0-SNAPSHOT")
             version("shadow", "8.3.0")
