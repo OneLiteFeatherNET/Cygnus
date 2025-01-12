@@ -14,5 +14,5 @@ dependencies {
     api(libs.grpc.netty)
     api(libs.grpc.okhttp)
     api(libs.tomcat.annotations.api)
-    api("com.google.protobuf:protobuf-java:4.28.2")
+    api("com.google.protobuf:protobuf-java:4.29.3")
 }
