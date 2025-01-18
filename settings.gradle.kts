@@ -54,7 +54,7 @@ dependencyResolutionManagement {
             version("minestom", "1.5.0-SNAPSHOT")
             version("aves", "1.6.0-SNAPSHOT")
             version("xerus", "1.3.0-SNAPSHOT")
-            version("shadow", "8.3.0")
+            version("shadow", "8.3.5")
             version("agones4j", "2.0.2")
             version("grpc", "1.68.0")
             version("tomcat-annotations-api", "6.0.53")
