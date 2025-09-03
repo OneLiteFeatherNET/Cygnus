@@ -1,0 +1,18 @@
+plugins {
+    id("java")
+    `java-library`
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    api(libs.agones4j)
+    api(libs.grpc.stub)
+    api(libs.grpc.protobuf)
+    api(libs.grpc.netty)
+    api(libs.grpc.okhttp)
+    api(libs.tomcat.annotations.api)
+    api("com.google.protobuf:protobuf-java:4.28.2")
+}

@@ -1,0 +1,141 @@
+package net.onelitefeather.cygnus.stamina;
+
+import de.icevizion.xerus.api.team.Team;
+import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.Player;
+import net.minestom.server.utils.PacketUtils;
+import net.minestom.server.utils.validate.Check;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * The class has some abilities to manage all {@link StaminaBar} references which are required in the game.
+ *
+ * @author theEvilReaper
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+public final class StaminaService {
+
+    private final Map<UUID, StaminaBar> staminaBars;
+    private StaminaBar slenderBar;
+
+    /**
+     * Creates a new instance from this class.
+     */
+    public StaminaService() {
+        this.staminaBars = new HashMap<>();
+    }
+
+    /**
+     * Creates a new instance of an {@link SlenderBar} for a given {@link Player}.
+     *
+     * @param player the player which owns the {@link StaminaBar}
+     */
+    public void setSlenderBar(@NotNull Player player) {
+        this.setSlenderBar(player, false);
+    }
+
+    /**
+     * Creates a new instance of an {@link SlenderBar} for a given {@link Player}.
+     *
+     * @param player the player which owns the {@link StaminaBar}
+     * @param forceStart if the bar should be started by default
+     */
+    public void setSlenderBar(@NotNull Player player, boolean forceStart) {
+        if (this.slenderBar != null) {
+            this.slenderBar.stop();
+        }
+
+        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player);
+        if (!forceStart) return;
+        this.slenderBar.start();
+    }
+
+    /**
+     * Creates for each player in a team a new instance from an {@link FoodBar}.
+     *
+     * @param team the team to get the player from it
+     */
+    public void createStaminaBars(@NotNull Team team) {
+        Check.argCondition(!staminaBars.isEmpty(), "Unable to load stamina bars twice");
+        Check.argCondition(team.getPlayers().isEmpty(), "Can't add players from a team without teams");
+        ((SlenderBar) this.slenderBar).setAccept((player, state) -> {
+            if (state == StaminaBar.State.DRAINING) {
+                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
+                MinecraftServer.getConnectionManager().getOnlinePlayers()
+                        .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateNewViewer);
+                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
+                return null;
+            }
+
+            if (state == StaminaBar.State.REGENERATING) {
+                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
+                MinecraftServer.getConnectionManager().getOnlinePlayers()
+                        .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateOldViewer);
+                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
+                return null;
+            }
+            return null;
+        });
+        for (Player player : team.getPlayers()) {
+            this.staminaBars.put(player.getUuid(), StaminaFactory.createFoodStamina((CygnusPlayer) player));
+        }
+    }
+
+    /**
+     * Starts all {@link net.minestom.server.timer.Task} reference from each {@link StaminaBar}.
+     */
+    public void start() {
+        //this.slenderBar.start();
+        for (StaminaBar value : this.staminaBars.values()) {
+            value.start();
+        }
+    }
+
+    /**
+     * Stops all running {@link StaminaBar} instances.
+     */
+    public void cleanUp() {
+        if (this.slenderBar == null && staminaBars.isEmpty()) return;
+
+        if (slenderBar != null) {
+            this.slenderBar.stop();
+            this.slenderBar = null;
+        }
+
+        for (StaminaBar value : staminaBars.values()) {
+            value.stop();
+        }
+        staminaBars.clear();
+    }
+
+    @Deprecated(since = "Please use setSlenderBar instead", forRemoval = true)
+    public void switchToSlenderBar(@NotNull Player player) {
+        // If the old slender has a bar, we need to stop it.
+        if (this.slenderBar != null) {
+            this.slenderBar.stop();
+        }
+        //TODO: Stop old at switch
+        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player);
+        this.slenderBar.start();
+    }
+
+    public void forceStopSlenderBar() {
+        this.slenderBar.stop();
+        this.slenderBar = null;
+    }
+
+    public @NotNull FoodBar getFoodBar(@NotNull Player player) {
+        return (FoodBar) this.staminaBars.get(player.getUuid());
+    }
+
+    public @Nullable StaminaBar getSlenderBar() {
+        return slenderBar;
+    }
+}
