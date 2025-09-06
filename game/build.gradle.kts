@@ -19,17 +19,17 @@ java {
 }
 
 dependencies {
-    implementation(platform(libs.microtus.bom))
-    implementation(platform(libs.dungeon.bom))
+    implementation(platform(libs.mycelium.bom))
+    implementation(platform(libs.aonyx.bom))
     implementation(project(":common"))
     implementation(project(":agones"))
     implementation(libs.minestom)
     implementation(libs.aves)
     implementation(libs.xerus)
-    implementation(libs.canis)
+  //  implementation(libs.canis)
 
     testImplementation(libs.minestom)
-    testImplementation(libs.minestom.test)
+    testImplementation(libs.cyano)
     testImplementation(libs.aves)
     testImplementation(libs.xerus)
     testImplementation(libs.junit.api)

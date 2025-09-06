@@ -12,14 +12,14 @@ java {
 }
 
 dependencies {
-    implementation(platform(libs.microtus.bom))
-    implementation(platform(libs.dungeon.bom))
+    implementation(platform(libs.mycelium.bom))
+    implementation(platform(libs.aonyx.bom))
     compileOnly(libs.minestom)
     compileOnly(libs.aves)
     compileOnly(libs.xerus)
 
     testImplementation(libs.minestom)
-    testImplementation(libs.minestom.test)
+    testImplementation(libs.cyano)
     testImplementation(libs.aves)
     testImplementation(libs.xerus)
     testImplementation(libs.junit.api)

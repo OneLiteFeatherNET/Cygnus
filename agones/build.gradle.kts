@@ -1,10 +1,6 @@
 plugins {
-    id("java")
+    java
     `java-library`
-}
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {
