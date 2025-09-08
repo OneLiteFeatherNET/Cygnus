@@ -1,6 +1,6 @@
 package net.onelitefeather.cygnus.setup.command.parts;
 
-import de.icevizion.aves.util.Components;
+import net.theevilreaper.aves.util.Components;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.coordinate.Pos;

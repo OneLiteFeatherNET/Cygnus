@@ -1,7 +1,7 @@
 package net.onelitefeather.cygnus.setup.listener;
 
-import de.icevizion.aves.map.BaseMap;
-import de.icevizion.aves.util.functional.PlayerConsumer;
+import net.theevilreaper.aves.map.BaseMap;
+import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.Tags;

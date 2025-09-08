@@ -24,7 +24,7 @@ public final class InstanceAddListener implements Consumer<AddEntityToInstanceEv
     @Override
     public void accept(@NotNull AddEntityToInstanceEvent event) {
         if (!(event.getEntity() instanceof Player)) return;
-        if (event.getInstance().getUniqueId().equals(mainInstanceID)) return;
+        if (event.getInstance().getUuid().equals(mainInstanceID)) return;
         MinecraftServer.getSchedulerManager().buildTask(() -> this.setupItems.setSaveData((Player) event.getEntity()))
                 .delay(Duration.of(3, ChronoUnit.SECONDS))
                 .schedule();

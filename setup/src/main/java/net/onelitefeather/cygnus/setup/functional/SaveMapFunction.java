@@ -1,6 +1,6 @@
 package net.onelitefeather.cygnus.setup.functional;
 
-import de.icevizion.aves.map.BaseMap;
+import net.theevilreaper.aves.map.BaseMap;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.MapProvider;
 import net.onelitefeather.cygnus.setup.util.SetupData;

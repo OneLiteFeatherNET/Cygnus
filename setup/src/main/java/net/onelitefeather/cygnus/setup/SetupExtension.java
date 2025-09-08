@@ -63,11 +63,11 @@ public class SetupExtension implements ListenerHandling {
         manager.addListener(PlayerUseItemEvent.class, new SetupItemListener(setupData, mapSetupInventory, mapSaveFunction::saveMap, this::setMainInstance));
 
         manager.addListener(AsyncPlayerConfigurationEvent.class, event -> event.setSpawningInstance(instanceContainer));
-        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(spawnPos, setupItems, instance -> this.instanceContainer.getUniqueId().equals(instance.getUniqueId())));
+        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(spawnPos, setupItems, instance -> this.instanceContainer.getUuid().equals(instance.getUuid())));
 
         manager.addListener(PlayerBlockBreakEvent.class, new PageCreationListener(setupData));
-        manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceContainer.getUniqueId(), setupItems));
-        manager.addListener(RemoveEntityFromInstanceEvent.class, new InstanceRemoveListener(instanceContainer.getUniqueId()));
+        manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceContainer.getUuid(), setupItems));
+        manager.addListener(RemoveEntityFromInstanceEvent.class, new InstanceRemoveListener(instanceContainer.getUuid()));
         registerCancelListener(manager);
     }
 

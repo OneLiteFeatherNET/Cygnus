@@ -1,15 +1,15 @@
 package net.onelitefeather.cygnus.setup.inventory;
 
-import de.icevizion.aves.inventory.GlobalInventoryBuilder;
-import de.icevizion.aves.inventory.InventoryLayout;
-import de.icevizion.aves.inventory.util.LayoutCalculator;
+import net.minestom.server.inventory.click.Click;
+import net.theevilreaper.aves.inventory.GlobalInventoryBuilder;
+import net.theevilreaper.aves.inventory.InventoryLayout;
+import net.theevilreaper.aves.inventory.click.ClickHolder;
+import net.theevilreaper.aves.inventory.util.LayoutCalculator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.inventory.InventoryType;
-import net.minestom.server.inventory.click.ClickType;
-import net.minestom.server.inventory.condition.InventoryConditionResult;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.onelitefeather.cygnus.common.map.MapEntry;
@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * The {@link MapSetupInventory} is only used during the setup of the maps for the game.
@@ -63,8 +64,8 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
 
             for (int i = 0; i < maps.size(); i++) {
                 var currentMap = maps.get(i);
-                dataLayout.setItem(MAP_SLOTS[i], getMapItem(currentMap.path()), (player, slot, clickType, result) ->
-                        this.handleClick(currentMap, player, slot, clickType, result));
+                dataLayout.setItem(MAP_SLOTS[i], getMapItem(currentMap.path()), (player, slot, clickType, stack, result) ->
+                        this.handleClick(currentMap, player, slot, clickType, stack, result));
             }
             return dataLayout;
         });
@@ -81,11 +82,14 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
      * @param clickType  the type of click
      * @param result     the result of the inventory condition
      */
-    private void handleClick(@NotNull MapEntry currentMap, @NotNull Player player, int slot, @NotNull ClickType clickType, @NotNull InventoryConditionResult result) {
-        result.setCancel(true);
-        if (clickType != ClickType.LEFT_CLICK && clickType != ClickType.RIGHT_CLICK) return;
-        var mode = clickType == ClickType.LEFT_CLICK ? SetupMode.LOBBY : SetupMode.GAME;
-        EventDispatcher.callCancellable(new MapSetupSelectEvent(player, currentMap, mode), player::closeInventory);
+    private void handleClick(@NotNull MapEntry currentMap, @NotNull Player player, int slot, @NotNull Click clickType, @NotNull ItemStack stack, @NotNull Consumer<@NotNull ClickHolder> result) {
+        result.accept(ClickHolder.cancelClick());
+
+        if (clickType instanceof Click.Left || clickType instanceof Click.Right) {
+            var mode = clickType instanceof Click.Left ? SetupMode.LOBBY : SetupMode.GAME;
+            EventDispatcher.callCancellable(new MapSetupSelectEvent(player, currentMap, mode), player::closeInventory);
+
+        }
     }
 
     /**

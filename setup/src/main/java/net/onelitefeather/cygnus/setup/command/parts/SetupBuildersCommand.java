@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * The command allows the set the creators of a map to a {@link de.icevizion.aves.map.BaseMap} reference.
+ * The command allows the set the creators of a map to a {@link net.theevilreaper.aves.map.BaseMap} reference.
  *
  * @author theEvilReaper
  * @version 1.0.0
