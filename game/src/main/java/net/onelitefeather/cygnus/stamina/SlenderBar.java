@@ -74,7 +74,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
         player.setTag(Tags.HIDDEN, Helper.ONE_ID);
         this.accept.apply(player, state);
         this.applyNightVision(player);
-        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.1f);
+        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1f);
         player.sendSpringPackets();
         player.setBlockedSprinting(false);
         this.colorState.sendProgressBar(player, tileChar, (int) currentTime);
@@ -100,7 +100,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 colorState = StaminaColors.DRAINING;
                 player.setTag(Tags.HIDDEN, Helper.ONE_ID);
                 this.applyBlindness(player);
-                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.0669);
+                player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.0669);
                 player.sendSpringPackets();
                 player.setSprinting(false);
                 player.setBlockedSprinting(true);
@@ -112,7 +112,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.setTag(Tags.HIDDEN, Helper.ONE_ID);
                 this.playSpawnSound(player.getInstance(), Pos.fromPoint(player.getPosition()), player.getUuid());
                 this.applyBlindness(player);
-                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.0669);
+                player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.0669);
                 player.sendSpringPackets();
                 player.setSprinting(false);
                 player.setBlockedSprinting(true);
@@ -124,7 +124,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.setTag(Tags.HIDDEN, Helper.ZERO_ID);
                 this.playTeleportSound(player.getInstance(), Pos.fromPoint(player.getPosition()), player.getUuid());
                 this.applyNightVision(player);
-                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.1f);
+                player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1f);
                 player.sendSpringPackets();
                 player.setBlockedSprinting(false);
                 this.accept.apply(player, State.REGENERATING);
