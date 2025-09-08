@@ -31,8 +31,8 @@ public final class AttributeHelper {
      * @param player the player to adjust
      */
     public static void adjustStepHeightAndJump(@NotNull Player player) {
-        player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).setBaseValue(GAME_JUMP_STRENGTH);
-        player.getAttribute(Attribute.GENERIC_STEP_HEIGHT).setBaseValue(GAME_STEP_HEIGHT);
+        player.getAttribute(Attribute.JUMP_STRENGTH).setBaseValue(GAME_JUMP_STRENGTH);
+        player.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(GAME_STEP_HEIGHT);
     }
 
     /**
@@ -42,8 +42,8 @@ public final class AttributeHelper {
      * @param player the player to reset
      */
     public static void resetAttributeAdjustments(@NotNull Player player) {
-        player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).setBaseValue(DEFAULT_JUMP_STRENGTH);
-        player.getAttribute(Attribute.GENERIC_STEP_HEIGHT).setBaseValue(DEFAULT_STEP_HEIGHT);
+        player.getAttribute(Attribute.JUMP_STRENGTH).setBaseValue(DEFAULT_JUMP_STRENGTH);
+        player.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(DEFAULT_STEP_HEIGHT);
     }
 
     /**
@@ -52,7 +52,7 @@ public final class AttributeHelper {
      * @param player the player to increase the speed
      */
     public static void decreaseSpeed(@NotNull Player player) {
-        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(GAME_MOVE_SPEED);
+        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(GAME_MOVE_SPEED);
     }
 
     /**
@@ -61,7 +61,7 @@ public final class AttributeHelper {
      * @param player the player to reset
      */
     public static void resetSpeed(@NotNull Player player) {
-        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(DEFAULT_MOVE_SPEED);
+        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(DEFAULT_MOVE_SPEED);
     }
 
     /**
@@ -71,8 +71,8 @@ public final class AttributeHelper {
      * @param scale  the scale to set
      */
     public static void updateHealthScale(@NotNull Player player, float scale) {
-        float healthScale = (float) (player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() + scale);
-        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(healthScale);
+        float healthScale = (float) (player.getAttribute(Attribute.MAX_HEALTH).getBaseValue() + scale);
+        player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(healthScale);
         player.setHealth(healthScale);
     }
 
