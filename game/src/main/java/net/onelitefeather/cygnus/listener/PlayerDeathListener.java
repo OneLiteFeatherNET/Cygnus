@@ -25,7 +25,7 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
     private final Team survivorTeam;
     private final IntFunction<Team> slenderGetter;
 
-    public PlayerDeathListener(@NotNull Supplier<Phase> phaseSupplier, @NotNull TeamService<Team> teamService) {
+    public PlayerDeathListener(@NotNull Supplier<Phase> phaseSupplier, @NotNull TeamService teamService) {
         this.phaseSupplier = phaseSupplier;
         this.survivorTeam = teamService.getTeams().get(Helper.SURVIVOR_ID);
         this.slenderGetter = ignore -> teamService.getTeams().getFirst();

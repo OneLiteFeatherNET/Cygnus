@@ -21,7 +21,7 @@ public final class StaminaHelper {
      * @param teamService    The service which contains the teams
      * @param staminaService The service which contains the stamina bars
      */
-    public static void initStaminaObjects(@NotNull TeamService<Team> teamService, @NotNull StaminaService staminaService) {
+    public static void initStaminaObjects(@NotNull TeamService teamService, @NotNull StaminaService staminaService) {
         Team slenderTeam = teamService.getTeams().getFirst();
         Team survivorTeam = teamService.getTeams().getLast();
 

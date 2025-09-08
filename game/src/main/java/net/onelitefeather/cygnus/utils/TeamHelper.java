@@ -14,11 +14,9 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import static net.onelitefeather.cygnus.common.util.Helper.SLENDER_ID;
 import static net.onelitefeather.cygnus.common.util.Helper.SURVIVOR_ID;
@@ -67,7 +65,7 @@ public final class TeamHelper {
      * @param gameMap      the map to get the spawn points
      * @param gameInstance the instance to teleport the players
      */
-    public static void teleportTeams(@NotNull TeamService<Team> teamService, @NotNull GameMap gameMap, @NotNull Instance gameInstance) {
+    public static void teleportTeams(@NotNull TeamService teamService, @NotNull GameMap gameMap, @NotNull Instance gameInstance) {
         Team slenderTeam = teamService.getTeams().getFirst();
 
         slenderTeam.getPlayers().forEach(player -> updateInstance(player, gameInstance, gameMap.getSlenderSpawn()));
@@ -87,7 +85,7 @@ public final class TeamHelper {
      *
      * @param teamService the service to get the teams
      */
-    public static void updateTabList(@NotNull TeamService<Team> teamService) {
+    public static void updateTabList(@NotNull TeamService teamService) {
         if (!teamService.hasTeams()) return;
 
         Team slenderTeam = teamService.getTeams().getFirst();
