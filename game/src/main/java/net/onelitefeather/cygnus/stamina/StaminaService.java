@@ -1,9 +1,9 @@
 package net.onelitefeather.cygnus.stamina;
 
+import net.minestom.server.utils.PacketSendingUtils;
 import net.theevilreaper.xerus.api.team.Team;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
-import net.minestom.server.utils.PacketUtils;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
@@ -67,18 +67,18 @@ public final class StaminaService {
         Check.argCondition(team.getPlayers().isEmpty(), "Can't add players from a team without teams");
         ((SlenderBar) this.slenderBar).setAccept((player, state) -> {
             if (state == StaminaBar.State.DRAINING) {
-                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
+                PacketSendingUtils.broadcastPlayPacket(player.getMetadataPacket());
                 MinecraftServer.getConnectionManager().getOnlinePlayers()
                         .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateNewViewer);
-                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
+                PacketSendingUtils.broadcastPlayPacket(player.getMetadataPacket());
                 return null;
             }
 
             if (state == StaminaBar.State.REGENERATING) {
-                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
+                PacketSendingUtils.broadcastPlayPacket(player.getMetadataPacket());
                 MinecraftServer.getConnectionManager().getOnlinePlayers()
                         .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateOldViewer);
-                PacketUtils.broadcastPlayPacket(player.getMetadataPacket());
+                PacketSendingUtils.broadcastPlayPacket(player.getMetadataPacket());
                 return null;
             }
             return null;

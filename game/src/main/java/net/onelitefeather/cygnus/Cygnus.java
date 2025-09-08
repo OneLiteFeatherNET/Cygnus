@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus;
 
+import net.minestom.server.utils.PacketSendingUtils;
 import net.theevilreaper.aves.util.Strings;
 import net.theevilreaper.aves.util.TimeFormat;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
@@ -205,12 +206,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             player.setTag(Tags.HIDDEN, (byte) 0);
         });
         TeamHelper.updateTabList(this.teamService);
-        PacketUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
+        PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
         MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(slenderPlayer.getUuid())).forEach(p -> {
             slenderPlayer.updateOldViewer(p);
         });
         MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(player -> player.setRespawnPoint(mapProvider.getGameMap().getSpawn()));
-        PacketUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
+        PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
     }
 
     private void triggerViewRuleUpdate(@NotNull Player player) {
