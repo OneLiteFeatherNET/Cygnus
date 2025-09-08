@@ -21,8 +21,6 @@ public final class CygnusEntityActionListener {
 
     public static void listener(ClientEntityActionPacket packet, Player player) {
         switch (packet.action()) {
-            case START_SNEAKING -> setSneaking(player, true);
-            case STOP_SNEAKING -> setSneaking(player, false);
             case START_SPRINTING -> {
                 var sprintEvent = new PlayerStartSprintingEvent(player);
                 EventDispatcher.call(sprintEvent);
@@ -36,7 +34,6 @@ public final class CygnusEntityActionListener {
                 EventDispatcher.call(new PlayerStopSprintingEvent(player));
                 setSprinting(player, false);
             }
-            case START_FLYING_ELYTRA -> startFlyingElytra(player);
 
             // TODO do remaining actions
         }
@@ -53,20 +50,6 @@ public final class CygnusEntityActionListener {
         //TODO: Fix this
         // var propertiesPacket = new EntityAttributesPacket(player.getEntityId(), new ArrayList<>(Collections.singletonList(attribute)));
 //        player.sendPacketToViewersAndSelf(propertiesPacket);
-    }
-
-    private static void setSneaking(Player player, boolean sneaking) {
-        boolean oldState = player.isSneaking();
-
-        player.setSneaking(sneaking);
-
-        if (oldState != sneaking) {
-            if (sneaking) {
-                EventDispatcher.call(new PlayerStartSneakingEvent(player));
-            } else {
-                EventDispatcher.call(new PlayerStopSneakingEvent(player));
-            }
-        }
     }
 
     private static void startFlyingElytra(Player player) {
