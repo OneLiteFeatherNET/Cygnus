@@ -9,7 +9,7 @@ import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.event.player.PlayerSwapItemEvent;
 import org.jetbrains.annotations.NotNull;
 
-import static de.icevizion.aves.inventory.util.InventoryConstants.CANCELLABLE_EVENT;
+import static net.theevilreaper.aves.inventory.util.InventoryConstants.CANCELLABLE_EVENT;
 
 /**
  * The interface provides a default method to register some listeners to cancel specific events.

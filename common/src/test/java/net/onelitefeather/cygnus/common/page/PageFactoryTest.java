@@ -49,7 +49,7 @@ class PageFactoryTest {
 
         assertNotNull(pageEntity);
         assertEquals(Pos.ZERO, pageEntity.getPosition());
-        assertEquals(instance.getUniqueId(), pageEntity.getInstance().getUniqueId());
+        assertEquals(instance.getUuid(), pageEntity.getInstance().getUuid());
         pageEntity.remove();
 
         env.destroyInstance(instance);

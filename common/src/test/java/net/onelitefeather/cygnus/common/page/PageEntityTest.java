@@ -2,9 +2,9 @@ package net.onelitefeather.cygnus.common.page;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.item.ItemComponent;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ class PageEntityTest {
         assertNotNull(pageEntity.getPageItem());
         assertEquals(Pos.ZERO, pageEntity.getPosition());
         assertNotEquals(pageEntity.getUuid(), pageEntity.getHitBoxUUID());
-        Component displayName = pageEntity.getPageItem().get(ItemComponent.CUSTOM_NAME);
+        Component displayName = pageEntity.getPageItem().get(DataComponents.CUSTOM_NAME);
 
         assertNotNull(displayName);
 

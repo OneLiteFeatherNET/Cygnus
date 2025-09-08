@@ -1,7 +1,5 @@
 package net.onelitefeather.cygnus.common.page;
 
-import de.icevizion.aves.util.Broadcaster;
-import de.icevizion.aves.util.functional.VoidConsumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.coordinate.Pos;
@@ -11,6 +9,8 @@ import net.minestom.server.utils.Direction;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.util.Helper;
+import net.theevilreaper.aves.util.Broadcaster;
+import net.theevilreaper.aves.util.functional.VoidConsumer;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

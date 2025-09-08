@@ -1,6 +1,6 @@
 package net.onelitefeather.cygnus.common.map;
 
-import de.icevizion.aves.map.BaseMap;
+import net.theevilreaper.aves.map.BaseMap;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * The class contains all data which are required for the game to run.
+ * The class contains all data that are required for the game to run.
  * It inherits from the {@link BaseMap} to use the properties from it
  *
  * @author theEvilReaper

@@ -1,9 +1,9 @@
 package net.onelitefeather.cygnus.common.map;
 
 import com.google.gson.Gson;
-import de.icevizion.aves.file.GsonFileHandler;
-import de.icevizion.aves.file.gson.PositionGsonAdapter;
-import de.icevizion.aves.map.BaseMap;
+import net.theevilreaper.aves.file.GsonFileHandler;
+import net.theevilreaper.aves.file.gson.PositionGsonAdapter;
+import net.theevilreaper.aves.map.BaseMap;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
