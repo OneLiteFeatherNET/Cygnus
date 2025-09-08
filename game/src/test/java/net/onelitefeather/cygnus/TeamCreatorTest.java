@@ -1,8 +1,8 @@
 package net.onelitefeather.cygnus;
 
-import de.icevizion.xerus.api.team.Team;
-import de.icevizion.xerus.api.team.TeamService;
-import de.icevizion.xerus.api.team.TeamServiceImpl;
+import net.theevilreaper.xerus.api.team.Team;
+import net.theevilreaper.xerus.api.team.TeamService;
+import net.theevilreaper.xerus.api.team.TeamServiceImpl;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;

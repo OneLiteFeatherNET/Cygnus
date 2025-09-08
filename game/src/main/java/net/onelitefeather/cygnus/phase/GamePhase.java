@@ -1,9 +1,9 @@
 package net.onelitefeather.cygnus.phase;
 
 import agones.dev.sdk.Sdk;
-import de.icevizion.aves.util.functional.VoidConsumer;
-import de.icevizion.xerus.api.phase.TickDirection;
-import de.icevizion.xerus.api.phase.TimedPhase;
+import net.theevilreaper.aves.util.functional.VoidConsumer;
+import net.theevilreaper.xerus.api.phase.TickDirection;
+import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.onelitefeather.agones.AgonesAPI;

@@ -1,6 +1,6 @@
 package net.onelitefeather.cygnus.listener.game;
 
-import de.icevizion.aves.util.Broadcaster;
+import net.theevilreaper.aves.util.Broadcaster;
 import net.kyori.adventure.text.Component;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.event.GameFinishEvent;

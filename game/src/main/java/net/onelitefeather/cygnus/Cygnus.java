@@ -1,14 +1,12 @@
 package net.onelitefeather.cygnus;
 
-import de.icevizion.aves.util.Strings;
-import de.icevizion.aves.util.TimeFormat;
-import de.icevizion.aves.util.functional.VoidConsumer;
-import de.icevizion.xerus.api.phase.LinearPhaseSeries;
-import de.icevizion.xerus.api.phase.Phase;
-import de.icevizion.xerus.api.phase.TimedPhase;
-import de.icevizion.xerus.api.team.Team;
-import de.icevizion.xerus.api.team.TeamService;
-import de.icevizion.xerus.api.team.TeamServiceImpl;
+import net.theevilreaper.aves.util.Strings;
+import net.theevilreaper.aves.util.TimeFormat;
+import net.theevilreaper.aves.util.functional.VoidConsumer;
+import net.theevilreaper.xerus.api.phase.LinearPhaseSeries;
+import net.theevilreaper.xerus.api.phase.Phase;
+import net.theevilreaper.xerus.api.phase.TimedPhase;
+import net.theevilreaper.xerus.api.team.TeamService;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
@@ -22,7 +20,6 @@ import net.minestom.server.event.server.ServerTickMonitorEvent;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
-import net.minestom.server.utils.PacketUtils;
 import net.onelitefeather.agones.AgonesAPI;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.StartCommand;
@@ -81,7 +78,7 @@ import java.util.function.Supplier;
 @SuppressWarnings("java:S3252")
 public final class Cygnus implements TeamCreator, ListenerHandling {
 
-    private final TeamService<Team> teamService;
+    private final TeamService teamService;
     private final LinearPhaseSeries<TimedPhase> linearPhaseSeries;
     private final AmbientProvider ambientProvider;
     private final StaminaService staminaService;
@@ -93,7 +90,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
 
     public Cygnus() {
         Path path = Paths.get("");
-        this.teamService = new TeamServiceImpl<>();
+        this.teamService = TeamService.of();
         this.linearPhaseSeries = new LinearPhaseSeries<>("game");
         this.items = new Items();
         this.ambientProvider = new AmbientProvider();

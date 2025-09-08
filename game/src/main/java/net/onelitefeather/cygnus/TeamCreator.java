@@ -1,8 +1,9 @@
 package net.onelitefeather.cygnus;
 
-import de.icevizion.xerus.api.ColorData;
-import de.icevizion.xerus.api.team.Team;
-import de.icevizion.xerus.api.team.TeamService;
+import net.kyori.adventure.key.Key;
+import net.theevilreaper.xerus.api.ColorData;
+import net.theevilreaper.xerus.api.team.Team;
+import net.theevilreaper.xerus.api.team.TeamService;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.jetbrains.annotations.NotNull;
@@ -25,11 +26,10 @@ public interface TeamCreator {
      */
     default void createTeams(
             @NotNull GameConfig gameConfig,
-            @NotNull TeamService<Team> teamService,
+            @NotNull TeamService teamService,
             @NotNull AmbientProvider ambientProvider
     ) {
-        teamService.add(Team.builder()
-                .name(GameConfig.SLENDER_TEAM_NAME)
+        teamService.add(Team.of(Key.key("cygnus", GameConfig.SLENDER_TEAM_NAME))
                 .capacity(gameConfig.slenderTeamSize())
                 .colorData(ColorData.BLACK)
                 .build());

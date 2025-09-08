@@ -1,6 +1,6 @@
 package net.onelitefeather.cygnus.utils;
 
-import de.icevizion.xerus.api.team.Team;
+import net.theevilreaper.xerus.api.team.Team;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Tags;

@@ -1,10 +1,10 @@
 package net.onelitefeather.cygnus.listener;
 
-import de.icevizion.aves.util.Broadcaster;
-import de.icevizion.aves.util.Players;
-import de.icevizion.xerus.api.phase.Phase;
-import de.icevizion.xerus.api.team.Team;
-import de.icevizion.xerus.api.team.TeamService;
+import net.theevilreaper.aves.util.Broadcaster;
+import net.theevilreaper.aves.util.Players;
+import net.theevilreaper.xerus.api.phase.Phase;
+import net.theevilreaper.xerus.api.team.Team;
+import net.theevilreaper.xerus.api.team.TeamService;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;

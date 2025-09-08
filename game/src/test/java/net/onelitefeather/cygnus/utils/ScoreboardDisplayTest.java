@@ -1,9 +1,9 @@
 package net.onelitefeather.cygnus.utils;
 
-import de.icevizion.xerus.api.ColorData;
-import de.icevizion.xerus.api.team.Team;
-import de.icevizion.xerus.api.team.TeamService;
-import de.icevizion.xerus.api.team.TeamServiceImpl;
+import net.theevilreaper.xerus.api.ColorData;
+import net.theevilreaper.xerus.api.team.Team;
+import net.theevilreaper.xerus.api.team.TeamService;
+import net.theevilreaper.xerus.api.team.TeamServiceImpl;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;

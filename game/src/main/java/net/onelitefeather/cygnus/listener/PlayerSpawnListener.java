@@ -1,7 +1,7 @@
 package net.onelitefeather.cygnus.listener;
 
-import de.icevizion.aves.util.Broadcaster;
-import de.icevizion.xerus.api.phase.Phase;
+import net.theevilreaper.aves.util.Broadcaster;
+import net.theevilreaper.xerus.api.phase.Phase;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerSpawnEvent;

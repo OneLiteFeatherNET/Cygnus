@@ -1,8 +1,8 @@
 package net.onelitefeather.cygnus.listener;
 
-import de.icevizion.xerus.api.phase.Phase;
-import de.icevizion.xerus.api.team.Team;
-import de.icevizion.xerus.api.team.TeamService;
+import net.theevilreaper.xerus.api.phase.Phase;
+import net.theevilreaper.xerus.api.team.Team;
+import net.theevilreaper.xerus.api.team.TeamService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;

@@ -1,7 +1,7 @@
 package net.onelitefeather.cygnus.command;
 
-import de.icevizion.xerus.api.phase.LinearPhaseSeries;
-import de.icevizion.xerus.api.phase.TimedPhase;
+import net.theevilreaper.xerus.api.phase.LinearPhaseSeries;
+import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.command.builder.Command;

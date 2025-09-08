@@ -1,6 +1,6 @@
 package net.onelitefeather.cygnus.stamina;
 
-import de.icevizion.aves.util.functional.PlayerConsumer;
+import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
 import net.minestom.server.sound.SoundEvent;

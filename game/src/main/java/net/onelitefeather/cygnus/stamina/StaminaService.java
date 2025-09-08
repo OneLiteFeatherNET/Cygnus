@@ -1,6 +1,6 @@
 package net.onelitefeather.cygnus.stamina;
 
-import de.icevizion.xerus.api.team.Team;
+import net.theevilreaper.xerus.api.team.Team;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.utils.PacketUtils;
