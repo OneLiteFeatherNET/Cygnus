@@ -13,7 +13,7 @@ public final class PlayerChatListener implements Consumer<PlayerChatEvent> {
 
     @Override
     public void accept(@NotNull PlayerChatEvent event) {
-        event.setChatFormat(this::setLobbyLayout);
+        event.setFormattedMessage(this.setLobbyLayout(event));
     }
 
     private @NotNull Component setLobbyLayout(@NotNull PlayerChatEvent event) {
@@ -21,7 +21,7 @@ public final class PlayerChatListener implements Consumer<PlayerChatEvent> {
                 .append(Component.space())
                 .append(MESSAGE_PREFIX)
                 .append(Component.space())
-                .append(Component.text(event.getMessage(), NamedTextColor.GRAY)
+                .append(Component.text(event.getRawMessage(), NamedTextColor.GRAY)
                 );
     }
 }
