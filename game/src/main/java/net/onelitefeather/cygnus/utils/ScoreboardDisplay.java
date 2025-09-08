@@ -1,7 +1,9 @@
 package net.onelitefeather.cygnus.utils;
 
+import net.onelitefeather.cygnus.component.TeamNameComponent;
+import net.theevilreaper.xerus.api.ColorData;
+import net.theevilreaper.xerus.api.component.team.ColorComponent;
 import net.theevilreaper.xerus.api.team.Team;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
@@ -32,13 +34,14 @@ public final class ScoreboardDisplay {
         TeamManager teamManager = MinecraftServer.getTeamManager();
 
         for (Team team : teams) {
-            String teamName = PlainTextComponentSerializer.plainText().serialize(team.getName());
+            String teamName = team.get(TeamNameComponent.class).teamName();
+            ColorData colorData = team.get(ColorComponent.class).colorData();
 
             TeamBuilder sbTeamBuilder = teamManager
                     .createBuilder(teamName)
                     .nameTagVisibility(TeamsPacket.NameTagVisibility.NEVER)
                     .collisionRule(TeamsPacket.CollisionRule.NEVER)
-                    .teamColor(team.getColorData().getChatColor());
+                    .teamColor(colorData.getChatColor());
 
             sbTeamBuilder.build();
         }

@@ -1,7 +1,9 @@
 package net.onelitefeather.cygnus;
 
 import net.kyori.adventure.key.Key;
+import net.onelitefeather.cygnus.component.TeamNameComponent;
 import net.theevilreaper.xerus.api.ColorData;
+import net.theevilreaper.xerus.api.component.team.ColorComponent;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
@@ -29,15 +31,22 @@ public interface TeamCreator {
             @NotNull TeamService teamService,
             @NotNull AmbientProvider ambientProvider
     ) {
-        teamService.add(Team.of(Key.key("cygnus", GameConfig.SLENDER_TEAM_NAME))
-                .capacity(gameConfig.slenderTeamSize())
-                .colorData(ColorData.BLACK)
-                .build());
-        var survivorTeam = Team.builder()
-                .name(GameConfig.SURVIVOR_TEAM_NAME)
-                .capacity(gameConfig.survivorTeamSize())
-                .colorData(ColorData.LIGHT_GREEN)
-                .build();
+        Team slenderTeam = Team.of(
+                Key.key("cygnus", GameConfig.SLENDER_TEAM_NAME),
+                gameConfig.slenderTeamSize()
+        );
+        slenderTeam.add(ColorComponent.class, new ColorComponent(ColorData.BLACK));
+        slenderTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
+
+        teamService.add(slenderTeam);
+
+        Team survivorTeam = Team.of(
+                Key.key("cygnus", GameConfig.SURVIVOR_TEAM_NAME),
+                gameConfig.survivorTeamSize()
+        );
+        survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.LIGHT_GREEN));
+        survivorTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
+        teamService.add(survivorTeam);
         ambientProvider.setTeam(survivorTeam);
         teamService.add(survivorTeam);
     }

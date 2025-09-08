@@ -1,11 +1,11 @@
 package net.onelitefeather.cygnus.listener;
 
+import net.onelitefeather.cygnus.component.TeamNameComponent;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.xerus.api.phase.Phase;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
@@ -28,7 +28,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
 
     private static final int MINIMUM_SLENDER_RE_CHECK = 120;
     private final Supplier<Phase> phaseSupplier;
-    private final TeamService<Team> teamService;
+    private final TeamService teamService;
     private final Runnable stopSlenderBar;
     private final int maxReviveCount;
     private final int minPlayers;
@@ -37,7 +37,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
 
     public PlayerQuitListener(
             @NotNull Supplier<Phase> phaseSupplier,
-            @NotNull TeamService<Team> teamService,
+            @NotNull TeamService teamService,
             @NotNull Runnable stopSlenderBar,
             int minPlayers
     ) {
@@ -75,7 +75,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
         if (team == null) return;
 
         team.removePlayer(player);
-        String teamName = PlainTextComponentSerializer.plainText().serialize(team.getName());
+        String teamName = team.get(TeamNameComponent.class).teamName();
         if (SLENDER_TEAM_NAME.equals(teamName)) {
             stopSlenderBar.run();
             var survivorSize = teamService.getTeams().get(Helper.SURVIVOR_ID).getCurrentSize();
