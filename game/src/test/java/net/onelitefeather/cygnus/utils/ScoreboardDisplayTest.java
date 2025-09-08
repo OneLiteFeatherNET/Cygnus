@@ -1,10 +1,11 @@
 package net.onelitefeather.cygnus.utils;
 
+import net.kyori.adventure.key.Key;
+import net.onelitefeather.cygnus.component.TeamNameComponent;
 import net.theevilreaper.xerus.api.ColorData;
+import net.theevilreaper.xerus.api.component.team.ColorComponent;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
-import net.theevilreaper.xerus.api.team.TeamServiceImpl;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.scoreboard.TeamManager;
@@ -17,16 +18,18 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.Locale;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MicrotusExtension.class)
 class ScoreboardDisplayTest {
 
-    static TeamService<Team> teamService;
+    static TeamService teamService;
 
     @BeforeAll
     static void init() {
-       teamService = new TeamServiceImpl<>();
+        teamService = TeamService.of();
     }
 
     @AfterEach
@@ -36,7 +39,9 @@ class ScoreboardDisplayTest {
 
     @Test
     void testScoreboardDisplay(@NotNull Env env) {
-        Team team = Team.builder().name("Test").capacity(10).colorData(ColorData.AQUA).build();
+        Team team = Team.of(Key.key("test", "test"), 10);
+        team.add(ColorComponent.class, new ColorComponent(ColorData.AQUA));
+        team.add(TeamNameComponent.class, new TeamNameComponent("Test"));
         teamService.add(team);
         ScoreboardDisplay scoreboardDisplay = new ScoreboardDisplay(teamService.getTeams());
         assertNotNull(scoreboardDisplay);
@@ -49,8 +54,13 @@ class ScoreboardDisplayTest {
 
     @Test
     void testScoreboardDisplayFlow(@NotNull Env env) {
-        Team slenderTeam = Team.builder().name(GameConfig.SLENDER_TEAM_NAME).capacity(1).colorData(ColorData.AQUA).build();
-        Team survivorTeam = Team.builder().name(GameConfig.SURVIVOR_TEAM_NAME).capacity(10).colorData(ColorData.AQUA).build();
+        Team slenderTeam = Team.of(Key.key("cygnus", GameConfig.SLENDER_TEAM_NAME.toLowerCase(Locale.ROOT)), 1);
+        slenderTeam.add(ColorComponent.class, new ColorComponent(ColorData.AQUA));
+        slenderTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SLENDER_TEAM_NAME));
+
+        Team survivorTeam = Team.of(Key.key("cygnus", GameConfig.SURVIVOR_TEAM_NAME.toLowerCase(Locale.ROOT)), 10);
+        survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.AQUA));
+        survivorTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
 
         teamService.add(slenderTeam);
         teamService.add(survivorTeam);
@@ -63,14 +73,14 @@ class ScoreboardDisplayTest {
 
         TeamManager teamManager = env.process().team();
         scoreboardDisplay.addPlayer(testPlayer, (byte) 0x00);
-        String rawTeamName = PlainTextComponentSerializer.plainText().serialize(slenderTeam.getName());
+        String rawTeamName = slenderTeam.get(TeamNameComponent.class).teamName();
         assertTrue(teamManager.getTeam(rawTeamName).getMembers().contains(testPlayer.getUsername()));
         scoreboardDisplay.removePlayer(testPlayer, (byte) 0x00);
         assertFalse(teamManager.getTeam(rawTeamName).getMembers().contains(testPlayer.getUsername()));
 
 
         scoreboardDisplay.addPlayer(testPlayer, (byte) 0x01);
-        rawTeamName = PlainTextComponentSerializer.plainText().serialize(survivorTeam.getName());
+        rawTeamName = survivorTeam.get(TeamNameComponent.class).teamName();
         assertTrue(teamManager.getTeam(rawTeamName).getMembers().contains(testPlayer.getUsername()));
         scoreboardDisplay.removePlayer(testPlayer, (byte) 0x01);
         assertFalse(teamManager.getTeam(rawTeamName).getMembers().contains(testPlayer.getUsername()));

@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.utils;
 
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
-import net.theevilreaper.xerus.api.team.TeamServiceImpl;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
@@ -29,7 +28,7 @@ class StaminaHelperTest {
         Instance testInstance = env.createFlatInstance();
         GameConfig gameConfig = new GameConfigReader(Paths.get("")).getConfig();
         AmbientProvider ambientProvider = new AmbientProvider();
-        TeamService<Team> teamService = new TeamServiceImpl<>();
+        TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {};
         teamCreator.createTeams(gameConfig, teamService, ambientProvider);
         StaminaService staminaService = new StaminaService();

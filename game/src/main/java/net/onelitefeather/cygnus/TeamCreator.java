@@ -10,6 +10,8 @@ import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Locale;
+
 /**
  * The interface contains a method to create the teams objects which are required for the game.
  *
@@ -32,7 +34,7 @@ public interface TeamCreator {
             @NotNull AmbientProvider ambientProvider
     ) {
         Team slenderTeam = Team.of(
-                Key.key("cygnus", GameConfig.SLENDER_TEAM_NAME),
+                Key.key("cygnus", GameConfig.SLENDER_TEAM_NAME.toLowerCase(Locale.ROOT)),
                 gameConfig.slenderTeamSize()
         );
         slenderTeam.add(ColorComponent.class, new ColorComponent(ColorData.BLACK));
@@ -41,7 +43,7 @@ public interface TeamCreator {
         teamService.add(slenderTeam);
 
         Team survivorTeam = Team.of(
-                Key.key("cygnus", GameConfig.SURVIVOR_TEAM_NAME),
+                Key.key("cygnus", GameConfig.SURVIVOR_TEAM_NAME.toLowerCase(Locale.ROOT)),
                 gameConfig.survivorTeamSize()
         );
         survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.LIGHT_GREEN));

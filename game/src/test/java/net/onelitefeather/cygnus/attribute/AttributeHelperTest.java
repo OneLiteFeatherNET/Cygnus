@@ -19,8 +19,8 @@ class AttributeHelperTest {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         AttributeHelper.adjustStepHeightAndJump(player);
-        assertEquals(0.0, player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).getBaseValue());
-        assertEquals(1.0, player.getAttribute(Attribute.GENERIC_STEP_HEIGHT).getBaseValue());
+        assertEquals(0.0, player.getAttribute(Attribute.JUMP_STRENGTH).getBaseValue());
+        assertEquals(1.0, player.getAttribute(Attribute.STEP_HEIGHT).getBaseValue());
         env.destroyInstance(instance, true);
     }
 
@@ -30,12 +30,12 @@ class AttributeHelperTest {
         Player player = env.createPlayer(instance);
 
         AttributeHelper.adjustStepHeightAndJump(player);
-        assertEquals(0.0, player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).getBaseValue());
-        assertEquals(1.0, player.getAttribute(Attribute.GENERIC_STEP_HEIGHT).getBaseValue());
+        assertEquals(0.0, player.getAttribute(Attribute.JUMP_STRENGTH).getBaseValue());
+        assertEquals(1.0, player.getAttribute(Attribute. STEP_HEIGHT).getBaseValue());
 
         AttributeHelper.resetAttributeAdjustments(player);
-        assertEquals(0.42, player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).getBaseValue());
-        assertEquals(0.6, player.getAttribute(Attribute.GENERIC_STEP_HEIGHT).getBaseValue());
+        assertEquals(0.42, player.getAttribute(Attribute.JUMP_STRENGTH).getBaseValue());
+        assertEquals(0.6, player.getAttribute(Attribute. STEP_HEIGHT).getBaseValue());
         env.destroyInstance(instance, true);
     }
 
@@ -44,14 +44,12 @@ class AttributeHelperTest {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
-        assertEquals(20.0, player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
+        assertEquals(20.0, player.getAttribute(Attribute.MAX_HEALTH).getBaseValue());
 
         float healthOnTop = 20.0f;
-
         AttributeHelper.updateHealthScale(player, healthOnTop);
 
-        assertEquals(40.0, player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
-
+        assertEquals(40.0, player.getAttribute(Attribute.MAX_HEALTH).getBaseValue());
         env.destroyInstance(instance, true);
     }
 }

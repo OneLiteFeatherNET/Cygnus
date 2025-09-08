@@ -1,8 +1,6 @@
 package net.onelitefeather.cygnus;
 
-import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
-import net.theevilreaper.xerus.api.team.TeamServiceImpl;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
@@ -17,7 +15,7 @@ class TeamCreatorTest {
     @Test
     void testTeamCreation() {
         GameConfig gameConfig = new GameConfigReader(Paths.get("")).getConfig();
-        TeamService<Team> teamService = new TeamServiceImpl<>();
+        TeamService teamService = TeamService.of();
         AmbientProvider ambientProvider = new AmbientProvider();
 
 

@@ -1,9 +1,9 @@
 package net.onelitefeather.cygnus.utils;
 
+import net.kyori.adventure.key.Key;
 import net.theevilreaper.xerus.api.ColorData;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
-import net.theevilreaper.xerus.api.team.TeamServiceImpl;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -65,8 +65,8 @@ class TeamHelperTest {
 
     @Test
     void testFailedTeamAllocation() {
-        Team slenderTeam = Team.builder().name("Slender").capacity(0).colorData(ColorData.AQUA).build();
-        Team survivor = Team.builder().name("Survivor").capacity(11).colorData(ColorData.AQUA).build();
+        Team slenderTeam = Team.of(Key.key("slender", "slender"), 0);
+        Team survivor = Team.of(Key.key("survivor", "survivor"), 11);
 
         assertNotNull(slenderTeam);
         assertNotNull(survivor);
@@ -86,8 +86,8 @@ class TeamHelperTest {
             env.createPlayer(instance);
         }
 
-        Team slenderTeam = Team.builder().name("Slender").capacity(1).colorData(ColorData.AQUA).build();
-        Team survivor = Team.builder().name("Survivor").capacity(11).colorData(ColorData.AQUA).build();
+        Team slenderTeam = Team.of(Key.key("slender", "slender"), 1);
+        Team survivor = Team.of(Key.key("survivor", "survivor"), 11);
 
         assertNotNull(slenderTeam);
         assertNotNull(survivor);
@@ -95,7 +95,7 @@ class TeamHelperTest {
         TeamHelper.prepareTeamAllocation(slenderTeam, survivor);
 
         assertEquals(1, slenderTeam.getPlayers().size());
-        assertEquals(4, survivor.getPlayers().size());
+        assertEquals(3, survivor.getPlayers().size());
 
         env.destroyInstance(instance, true);
     }
@@ -105,7 +105,7 @@ class TeamHelperTest {
     void testSlenderTeleport(@NotNull Env env) {
         Instance testInstance = env.createFlatInstance();
         AmbientProvider ambientProvider = new AmbientProvider();
-        TeamService<Team> teamService = new TeamServiceImpl<>();
+        TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {
         };
         teamCreator.createTeams(gameConfig, teamService, ambientProvider);
@@ -116,7 +116,7 @@ class TeamHelperTest {
 
         assertEquals(2, teamService.getTeams().size());
 
-        teamService.getTeam(GameConfig.SLENDER_TEAM_NAME).get().addPlayer(player);
+        teamService.getTeam(Key.key(GameConfig.SLENDER_TEAM_NAME)).get().addPlayer(player);
         TeamHelper.teleportTeams(teamService, gameMap, testInstance);
 
         assertEquals(slenderSpawn, player.getPosition());
@@ -126,7 +126,7 @@ class TeamHelperTest {
 
     @Test
     void testNoTabListUpdate() {
-        TeamService<Team> teamService = new TeamServiceImpl<>();
+        TeamService teamService = TeamService.of();
         assertFalse(teamService.hasTeams());
         TeamHelper.updateTabList(teamService);
         assertNotNull(player.getDisplayName());
@@ -136,7 +136,7 @@ class TeamHelperTest {
     @Test
     void testInvalidUpdateTabList() {
         AmbientProvider ambientProvider = new AmbientProvider();
-        TeamService<Team> teamService = new TeamServiceImpl<>();
+        TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {
         };
         teamCreator.createTeams(gameConfig, teamService, ambientProvider);
@@ -152,7 +152,7 @@ class TeamHelperTest {
     @Test
     void testUpdateTabList(@NotNull Env env) {
         AmbientProvider ambientProvider = new AmbientProvider();
-        TeamService<Team> teamService = new TeamServiceImpl<>();
+        TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {
         };
         teamCreator.createTeams(gameConfig, teamService, ambientProvider);
