@@ -14,6 +14,7 @@ subprojects {
             }
         }
         getByName<Test>("test") {
+            jvmArgs("-Dminestom.inside-test=true")
             finalizedBy(project.tasks.findByPath("jacocoTestReport"))
             useJUnitPlatform()
             testLogging {
