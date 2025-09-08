@@ -30,7 +30,7 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             version("publishdata", "1.4.0")
-            version("shadow", "8.3.5")
+            version("shadow", "9.1.0")
             version("agones4j", "2.0.2")
             version("grpc", "1.68.0")
             version("tomcat-annotations-api", "6.0.53")
