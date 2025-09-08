@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.minestom)
     implementation(libs.aves)
     implementation(libs.xerus)
+    implementation(libs.adventure)
    // implementation(libs.canis)
 
     testImplementation(libs.minestom)
