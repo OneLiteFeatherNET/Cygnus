@@ -4,7 +4,6 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerUseItemEvent;
-import net.minestom.server.event.player.PlayerUseItemOnBlockEvent;
 import net.minestom.server.event.trait.ItemEvent;
 import net.minestom.server.item.ItemStack;
 import net.onelitefeather.cygnus.common.Tags;

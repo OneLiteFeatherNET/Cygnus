@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.common.map;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
-import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

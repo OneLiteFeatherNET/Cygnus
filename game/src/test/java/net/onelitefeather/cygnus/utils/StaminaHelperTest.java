@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.utils;
 
-import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;

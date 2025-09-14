@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.setup.command.parts;
 
-import net.kyori.adventure.text.Component;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.condition.Conditions;
 import net.onelitefeather.cygnus.setup.util.SetupData;
