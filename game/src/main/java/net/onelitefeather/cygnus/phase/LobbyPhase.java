@@ -9,10 +9,8 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.ConnectionManager;
 import net.minestom.server.timer.Task;
-import net.onelitefeather.agones.AgonesAPI;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIME;
@@ -90,7 +88,6 @@ public final class LobbyPhase extends TimedPhase {
     public void start() {
         super.start();
         setLevel();
-        AgonesAPI.instance().reserve(Duration.ofMinutes(5));
     }
 
     @Override

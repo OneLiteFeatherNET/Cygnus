@@ -17,11 +17,9 @@ import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
-import net.minestom.server.event.server.ServerTickMonitorEvent;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
-import net.onelitefeather.agones.AgonesAPI;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -138,7 +136,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
         registerCancelListener(manager);
-        manager.addListener(ServerTickMonitorEvent.class, event -> AgonesAPI.instance().alive());
     }
 
     private void registerGameListener() {

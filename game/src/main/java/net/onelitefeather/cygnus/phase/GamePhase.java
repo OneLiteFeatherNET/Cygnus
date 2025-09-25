@@ -1,22 +1,17 @@
 package net.onelitefeather.cygnus.phase;
 
-import agones.dev.sdk.Sdk;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.TickDirection;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.PlayerTickEvent;
-import net.onelitefeather.agones.AgonesAPI;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.listener.player.CygnusPlayerTickListener;
 import net.onelitefeather.cygnus.view.GameView;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author theEvilReaper
@@ -25,7 +20,6 @@ import java.util.concurrent.CompletableFuture;
  **/
 public final class GamePhase extends TimedPhase {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GamePhase.class);
     private final GameView gameView;
     private final Runnable startRunnable;
     private final VoidConsumer updateWorldTime;
@@ -70,17 +64,7 @@ public final class GamePhase extends TimedPhase {
     public void onStart() {
         super.onStart();
         addListener(PlayerTickEvent.class, new CygnusPlayerTickListener());
-        AgonesAPI.instance().allocateFuture()
-                .exceptionallyCompose(this::allocateFuture)
-                .exceptionallyCompose(this::allocateFuture)
-                .exceptionallyCompose(this::allocateFuture)
-                .thenRun(() -> LOGGER.info("GameServer allocated"));
         this.startRunnable.run();
-    }
-
-    private CompletableFuture<Sdk.Empty> allocateFuture(Throwable throwable) {
-        LOGGER.error("Failed to allocate the GameServer", throwable);
-        return AgonesAPI.instance().allocateFuture();
     }
 
     @Override
