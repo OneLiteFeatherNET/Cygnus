@@ -27,6 +27,10 @@ dependencies {
     implementation(libs.xerus)
   //  implementation(libs.canis)
 
+    //CloudNet
+    implementation(platform(libs.cloudnet.bom))
+    implementation(libs.bundles.cloudnet)
+
     testImplementation(libs.minestom)
     testImplementation(libs.adventure)
     testImplementation(libs.cyano)
