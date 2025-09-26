@@ -11,6 +11,8 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         maven("https://reposilite.atlasengine.ca/public")
+        maven("https://central.sonatype.com/repository/maven-snapshots/")
+        maven("https://repository.derklaro.dev/snapshots/")
         maven {
             name = "OneLiteFeatherRepository"
             url = uri("https://repo.onelitefeather.dev/onelitefeather")
@@ -34,6 +36,7 @@ dependencyResolutionManagement {
             version("agones4j", "2.0.2")
             version("grpc", "1.68.0")
             version("tomcat-annotations-api", "6.0.53")
+            version("cloudnet", "4.0.0-RC15-SNAPSHOT")
 
             version("bom", "1.4.4")
             version("aonyx", "0.5.2")
@@ -61,10 +64,32 @@ dependencyResolutionManagement {
             library("grpc.protobuf", "io.grpc", "grpc-protobuf").versionRef("grpc")
             library("grpc.netty", "io.grpc", "grpc-netty").versionRef("grpc")
             library("grpc.okhttp", "io.grpc", "grpc-okhttp").versionRef("grpc")
-            library("tomcat-annotations-api", "org.apache.tomcat", "annotations-api").versionRef("tomcat-annotations-api")
+            library(
+                "tomcat-annotations-api",
+                "org.apache.tomcat",
+                "annotations-api"
+            ).versionRef("tomcat-annotations-api")
+
+            library("cloudnet-bom", "eu.cloudnetservice.cloudnet", "bom").versionRef("cloudnet")
+            library("cloudnet-bridge", "eu.cloudnetservice.cloudnet", "bridge-api").withoutVersion()
+            library("cloudnet-bridge-impl", "eu.cloudnetservice.cloudnet", "bridge-impl").withoutVersion()
+            library("cloudnet-driver-impl", "eu.cloudnetservice.cloudnet", "driver-impl").withoutVersion()
+            library("cloudnet-platform-inject", "eu.cloudnetservice.cloudnet", "platform-inject-api").withoutVersion()
+            library("cloudnet-jvm-wrapper", "eu.cloudnetservice.cloudnet", "wrapper-jvm-api").withoutVersion()
 
             plugin("shadow", "com.gradleup.shadow").versionRef("shadow")
             plugin("publishdata", "de.chojo.publishdata").versionRef("publishdata")
+
+            bundle(
+                "cloudnet",
+                listOf(
+                    "cloudnet-bridge",
+                    "cloudnet-bridge-impl",
+                    "cloudnet-driver-impl",
+                    "cloudnet-platform-inject",
+                    "cloudnet-jvm-wrapper"
+                )
+            )
         }
     }
 }

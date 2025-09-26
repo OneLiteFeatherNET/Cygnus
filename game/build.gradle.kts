@@ -12,12 +12,6 @@ application {
     mainClass.set("net.onelitefeather.cygnus.CygnusLoader")
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 dependencies {
     implementation(platform(libs.mycelium.bom))
     implementation(platform(libs.aonyx.bom))
@@ -26,6 +20,10 @@ dependencies {
     implementation(libs.aves)
     implementation(libs.xerus)
   //  implementation(libs.canis)
+
+    //CloudNet
+    implementation(platform(libs.cloudnet.bom))
+    implementation(libs.bundles.cloudnet)
 
     testImplementation(libs.minestom)
     testImplementation(libs.adventure)
@@ -39,11 +37,6 @@ dependencies {
 }
 
 tasks {
-    compileJava {
-        options.encoding = "UTF-8"
-        options.release.set(21)
-    }
-
     jacocoTestReport {
         dependsOn(test)
         reports {

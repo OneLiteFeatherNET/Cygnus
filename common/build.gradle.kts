@@ -5,12 +5,6 @@ plugins {
 group = "net.onelitefeather.cygnus"
 version = "1.0.1"
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 dependencies {
     implementation(platform(libs.mycelium.bom))
     implementation(platform(libs.aonyx.bom))

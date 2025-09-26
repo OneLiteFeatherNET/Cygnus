@@ -4,7 +4,7 @@ subprojects {
 
     tasks {
         getByName<JavaCompile>("compileJava") {
-            options.release.set(21)
+            options.release.set(24)
             options.encoding = "UTF-8"
         }
         getByName<JacocoReport>("jacocoTestReport") {
@@ -19,6 +19,12 @@ subprojects {
             useJUnitPlatform()
             testLogging {
                 events("passed", "skipped", "failed")
+            }
+        }
+
+        configure<JavaPluginExtension> {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(24))
             }
         }
     }
