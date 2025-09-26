@@ -11,6 +11,7 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         maven("https://reposilite.atlasengine.ca/public")
+        maven("https://central.sonatype.com/repository/maven-snapshots/")
         maven {
             name = "OneLiteFeatherRepository"
             url = uri("https://repo.onelitefeather.dev/onelitefeather")
