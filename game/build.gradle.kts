@@ -37,11 +37,6 @@ dependencies {
 }
 
 tasks {
-    compileJava {
-        options.encoding = "UTF-8"
-        options.release.set(21)
-    }
-
     jacocoTestReport {
         dependsOn(test)
         reports {
