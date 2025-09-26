@@ -22,7 +22,6 @@ dependencies {
     implementation(platform(libs.mycelium.bom))
     implementation(platform(libs.aonyx.bom))
     implementation(project(":common"))
-    implementation(project(":agones"))
     implementation(libs.minestom)
     implementation(libs.aves)
     implementation(libs.xerus)
