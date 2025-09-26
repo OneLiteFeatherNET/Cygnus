@@ -12,12 +12,6 @@ application {
     mainClass.set("net.onelitefeather.cygnus.CygnusLoader")
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 dependencies {
     implementation(platform(libs.mycelium.bom))
     implementation(platform(libs.aonyx.bom))

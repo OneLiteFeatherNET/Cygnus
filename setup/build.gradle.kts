@@ -10,12 +10,6 @@ plugins {
 group = "net.onelitefeather"
 version = "1.0.1"
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 application {
     mainClass.set("net.onelitefeather.cygnus.setup.SetupLoader")
 }

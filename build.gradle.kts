@@ -21,5 +21,11 @@ subprojects {
                 events("passed", "skipped", "failed")
             }
         }
+
+        configure<JavaPluginExtension> {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(24))
+            }
+        }
     }
 }
