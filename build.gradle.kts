@@ -1,3 +1,6 @@
+plugins {
+    alias(libs.plugins.cyclonedx)
+}
 subprojects {
     apply(plugin = "java")
     apply(plugin = "jacoco")
