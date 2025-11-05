@@ -5,9 +5,6 @@ plugins {
     application
 }
 
-group = "net.onelitefeather.cygnus"
-version = "1.0.1"
-
 application {
     mainClass.set("net.onelitefeather.cygnus.CygnusLoader")
 }
