@@ -41,6 +41,8 @@ dependencyResolutionManagement {
             version("bom", "1.5.2")
             version("aonyx", "0.6.1")
 
+            version("cyclonedx", "3.0.1")
+
             library("mycelium.bom", "net.onelitefeather", "mycelium-bom").versionRef("bom")
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("minestom", "net.minestom", "minestom").withoutVersion()
@@ -90,6 +92,8 @@ dependencyResolutionManagement {
                     "cloudnet-jvm-wrapper"
                 )
             )
+
+            plugin("cyclonedx", "org.cyclonedx.bom").versionRef("cyclonedx")
         }
     }
 }

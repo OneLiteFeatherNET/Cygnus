@@ -1,31 +1,67 @@
-name: Main Branch Build
-
-on:
+name: Release
+"on":
   push:
     branches:
-      - develop
-      - master
+      - main
+      - next
+      - beta
+      - alpha
+      - "*.x"
+
+permissions:
+  contents: read # for checkout
 
 jobs:
-  build_and_test:
-    if: github.repository_owner == 'OneLiteFeatherNET'
-    name: Build and Test
-    runs-on: ${{ matrix.os }}
-    env:
-      ONELITEFEATHER_MAVEN_USERNAME: ${{ secrets.ONELITEFEATHER_MAVEN_USERNAME }}
-      ONELITEFEATHER_MAVEN_PASSWORD: ${{ secrets.ONELITEFEATHER_MAVEN_PASSWORD }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to be able to publish a GitHub release
+      issues: write # to be able to comment on released issues
+      pull-requests: write # to be able to comment on released pull requests
+      id-token: write # to enable use of OIDC for npm provenance
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v5
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 25
-      - name: Build on ${{ matrix.os }}
-        run: ./gradlew test
+          java-version: 24
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+      - name: Install dependencies
+        run: npm clean-install
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        run: npm audit signatures
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          ONELITEFEATHER_MAVEN_USERNAME: ${{ secrets.ONELITEFEATHER_MAVEN_USERNAME }}
+          ONELITEFEATHER_MAVEN_PASSWORD: ${{ secrets.ONELITEFEATHER_MAVEN_PASSWORD }}
+          # Token with permissions to push to the client repository
+          CLIENT_REPO_TOKEN: ${{ secrets.CLIENT_REPO_TOKEN }}
+        run: npx semantic-release
+      - name: Get Version
+        id: get_version
+        run: echo "VERSION=$(cat VERSION.txt)" >> $GITHUB_ENV
+      - name: Upload BOM to Dependency-Track
+        uses: DependencyTrack/gh-upload-sbom@v3
+        with:
+          serverhostname: ${{ secrets.DEPENDENCYTRACK_HOSTNAME }}
+          apikey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
+          projectname: "Cygnus"
+          projectversion: ${{ env.VERSION }}
+          projecttags: 'minestom'
+          bomfilename: "build/reports/cyclonedx/bom.xml"
+          autocreate: true
+          parent: '735737f3-8c00-4123-aa2a-ea6cb62b0b6f'
