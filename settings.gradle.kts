@@ -1,12 +1,5 @@
 rootProject.name = "Cygnus"
 
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        maven("https://eldonexus.de/repository/maven-public/")
-    }
-}
-
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
