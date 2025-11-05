@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class PageResourceAdapterTest {
 
     private static final String RESOURCE_AS_JSON = """
-            {"face":"EAST","position":{"x":0.0,"y":0.0,"z":0.0,"yaw":0.0,"pitch":0.0}}
+            {"face":"EAST","position":{"x":0.0,"y":0.0,"z":0.0}}
             """.trim();
 
     private static Gson gson;
@@ -40,8 +40,8 @@ class PageResourceAdapterTest {
 
     @Test
     void testPageToJson() {
-        PageResource pageResource = new PageResource(Pos.ZERO, Direction.EAST);
-        assertEquals(Pos.ZERO, pageResource.position());
+        PageResource pageResource = new PageResource(Vec.ZERO, Direction.EAST);
+        assertEquals(Vec.ZERO, pageResource.position());
         assertNotEquals(Direction.WEST, pageResource.face());
 
         String pageAsJson = gson.toJson(pageResource, PageResource.class);
@@ -56,7 +56,7 @@ class PageResourceAdapterTest {
         PageResource pageResource = gson.fromJson(RESOURCE_AS_JSON, PageResource.class);
 
         assertNotNull(pageResource);
-        assertEquals(Pos.ZERO, pageResource.position());
+        assertEquals(Vec.ZERO, pageResource.position());
         assertEquals(Direction.EAST, pageResource.face());
     }
 }
