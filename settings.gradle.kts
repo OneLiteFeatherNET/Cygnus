@@ -38,7 +38,7 @@ dependencyResolutionManagement {
             version("tomcat-annotations-api", "6.0.53")
             version("cloudnet", "4.0.0-RC15-SNAPSHOT")
 
-            version("bom", "1.4.4")
+            version("bom", "1.5.2")
             version("aonyx", "0.5.2")
 
             library("mycelium.bom", "net.onelitefeather", "mycelium-bom").versionRef("bom")
