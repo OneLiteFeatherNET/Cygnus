@@ -50,7 +50,7 @@ public final class TeamHelper {
 
         slenderTeam.addPlayer(slenderPlayer);
         Set<@NotNull Player> onlinePlayers = new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers());
-        onlinePlayers.remove(slenderPlayer);
+        onlinePlayers.removeIf(player -> player.getUuid().equals(slenderPlayer.getUuid()));
         survivorTeam.addPlayers(onlinePlayers);
 
         onlinePlayers.forEach(player -> player.setTag(Tags.TEAM_ID, SURVIVOR_ID));
