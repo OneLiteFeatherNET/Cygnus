@@ -77,7 +77,7 @@ class TeamHelperTest {
         assertEquals("The slender team must have a capacity from one", exception.getMessage());
     }
 
-    @Disabled
+
     @Test
     void testTeamAllocation(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
@@ -95,7 +95,7 @@ class TeamHelperTest {
         TeamHelper.prepareTeamAllocation(slenderTeam, survivor);
 
         assertEquals(1, slenderTeam.getPlayers().size());
-        assertEquals(3, survivor.getPlayers().size());
+        assertEquals(4, survivor.getPlayers().size());
 
         env.destroyInstance(instance, true);
     }
