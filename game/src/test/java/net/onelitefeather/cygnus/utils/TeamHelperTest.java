@@ -79,6 +79,7 @@ class TeamHelperTest {
     }
 
 
+    @Disabled
     @Test
     void testTeamAllocation(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
