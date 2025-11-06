@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.0...v1.0.1) (2025-11-06)
+
+
+### Bug Fixes
+
+* improve player removal logic in TeamHelper ([f5cb8d6](https://github.com/OneLiteFeatherNET/Cygnus/commit/f5cb8d6456adb1f7bf278880e0c16aae79b3d6c6))
+
 # 1.0.0 (2025-11-05)
 
 
