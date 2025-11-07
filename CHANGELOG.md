@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.1...v1.0.2) (2025-11-07)
+
+
+### Bug Fixes
+
+* **deps:** update grpc-java monorepo to v1.68.3 ([#25](https://github.com/OneLiteFeatherNET/Cygnus/issues/25)) ([37cc573](https://github.com/OneLiteFeatherNET/Cygnus/commit/37cc573dd39d3b973d50da865d3b29f4685ae2d7))
+
 ## [1.0.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.0...v1.0.1) (2025-11-06)
 
 
