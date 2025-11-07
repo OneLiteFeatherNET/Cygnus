@@ -27,7 +27,7 @@ dependencyResolutionManagement {
             version("publishdata", "1.4.0")
             version("shadow", "9.2.2")
             version("agones4j", "2.0.2")
-            version("grpc", "1.68.0")
+            version("grpc", "1.68.3")
             version("tomcat-annotations-api", "6.0.53")
             version("cloudnet", "4.0.0-RC15-SNAPSHOT")
 
