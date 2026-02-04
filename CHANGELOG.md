@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.4...v1.0.5) (2026-02-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency eu.cloudnetservice.cloudnet:bom to v4.0.0-rc17-snapshot ([#37](https://github.com/OneLiteFeatherNET/Cygnus/issues/37)) ([1d0a7e6](https://github.com/OneLiteFeatherNET/Cygnus/commit/1d0a7e658b1717e214e00ecfec3aeff6287b2020))
+
 ## [1.0.4](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.3...v1.0.4) (2025-12-16)
 
 
