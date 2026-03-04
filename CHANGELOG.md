@@ -1,3 +1,11 @@
+## [1.0.9](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.8...v1.0.9) (2026-03-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency net.theevilreaper:aves to v1.13.0 ([7b41551](https://github.com/OneLiteFeatherNET/Cygnus/commit/7b41551c5ea55023fe13d609e0e2d2847f497501))
+* **deps:** update dependency net.theevilreaper:aves to v1.13.0 ([#49](https://github.com/OneLiteFeatherNET/Cygnus/issues/49)) ([dddf946](https://github.com/OneLiteFeatherNET/Cygnus/commit/dddf946696f012ff65cdd0578df2ab0d43c34faa))
+
 ## [1.0.8](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.7...v1.0.8) (2026-03-03)
 
 
