@@ -1,3 +1,10 @@
+## [1.0.10](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.9...v1.0.10) (2026-03-05)
+
+
+### Bug Fixes
+
+* **deps:** update dependency net.onelitefeather:mycelium-bom to v1.6.2 ([#47](https://github.com/OneLiteFeatherNET/Cygnus/issues/47)) ([ad19315](https://github.com/OneLiteFeatherNET/Cygnus/commit/ad19315ab8c399b50902934efa4e34183327d314))
+
 ## [1.0.9](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.8...v1.0.9) (2026-03-04)
 
 
