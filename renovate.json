@@ -3,5 +3,13 @@
   "extends": [
     "github>OneLiteFeatherNET/renovate:default(OneLiteFeatherNET/cygnus-maintainers)",
     "github>OneLiteFeatherNET/renovate:minestom"
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "eu.cloudnetservice.cloudnet:bom"
+      ],
+      "allowedVersions": "<=4.0.0-RC16"
+    }
   ]
 }
