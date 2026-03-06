@@ -31,7 +31,7 @@ dependencyResolutionManagement {
             version("tomcat-annotations-api", "6.0.53")
             version("cloudnet", "4.0.0-RC16")
 
-            version("bom", "1.6.2")
+            version("bom", "1.6.3")
             version("aonyx", "0.7.0")
 
             version("cyclonedx", "3.2.0")
