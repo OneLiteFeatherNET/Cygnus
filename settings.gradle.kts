@@ -32,7 +32,7 @@ dependencyResolutionManagement {
             version("cloudnet", "4.0.0-RC16")
 
             version("bom", "1.6.4")
-            version("aonyx", "0.7.0")
+            version("aonyx", "0.7.1")
 
             version("cyclonedx", "3.2.3")
 
