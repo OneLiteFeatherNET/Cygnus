@@ -1,3 +1,10 @@
+## [1.0.13](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.12...v1.0.13) (2026-04-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency net.onelitefeather:aonyx-bom to v0.7.1 ([#64](https://github.com/OneLiteFeatherNET/Cygnus/issues/64)) ([6752c6f](https://github.com/OneLiteFeatherNET/Cygnus/commit/6752c6fdf6dc4629f96d46c2a47bc68144120a34))
+
 ## [1.0.12](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.11...v1.0.12) (2026-04-02)
 
 
