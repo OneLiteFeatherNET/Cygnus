@@ -46,7 +46,7 @@ dependencyResolutionManagement {
             library("junit.engine", "org.junit.jupiter", "junit-jupiter-engine").withoutVersion()
             library("junit.platform.launcher", "org.junit.platform", "junit-platform-launcher").withoutVersion()
             library("junit.params", "org.junit.jupiter", "junit-jupiter-params").withoutVersion()
-            library("aves", "net.theevilreaper", "aves").version("1.13.0")
+            library("aves", "net.theevilreaper", "aves").version("1.13.1")
             library("xerus", "net.theevilreaper", "xerus").withoutVersion()
 
             library("mockito.core", "org.mockito", "mockito-core").withoutVersion()
