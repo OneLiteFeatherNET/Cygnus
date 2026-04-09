@@ -34,7 +34,7 @@ dependencyResolutionManagement {
             version("bom", "1.6.4")
             version("aonyx", "0.7.1")
 
-            version("cyclonedx", "3.2.3")
+            version("cyclonedx", "3.2.4")
 
             library("mycelium.bom", "net.onelitefeather", "mycelium-bom").versionRef("bom")
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
