@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.common.util;
 
 import net.minestom.server.utils.Direction;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * The {@link DirectionFaceHelper} class provides utility methods to handle the direction of a face.
@@ -18,7 +17,7 @@ public final class DirectionFaceHelper {
      * @param face the face to parse
      * @return the parsed face
      */
-    public static @NotNull Direction parseDirection(@NotNull String face) {
+    public static Direction parseDirection(String face) {
         if (face.trim().isEmpty()) return Direction.NORTH;
 
         Direction direction = null;
@@ -48,7 +47,7 @@ public final class DirectionFaceHelper {
      * @param pitch the pitch to check
      * @return the invalid direction
      */
-    public static @NotNull Direction getInvalidDirection(double pitch) {
+    public static Direction getInvalidDirection(double pitch) {
         return pitch > 50 ? Direction.DOWN : Direction.UP;
     }
 

@@ -8,7 +8,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -78,49 +77,49 @@ public final class Messages {
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component withPrefix(@NotNull String component) {
+    public static Component withPrefix(String component) {
         return PREFIX.append(MINI_MESSAGE.deserialize(component));
     }
 
     @Contract(value = "_, _ -> new", pure = true)
-    public static @NotNull Component withPrefix(@NotNull String component, @NotNull TagResolver... resolvers) {
+    public static Component withPrefix(String component, TagResolver... resolvers) {
         return PREFIX.append(Component.space()).append(MINI_MESSAGE.deserialize(component, resolvers));
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component withPrefix(@NotNull Component component) {
+    public static Component withPrefix(Component component) {
         return PREFIX.append(Component.space()).append(component);
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component withMini(@NotNull String text) {
+    public static Component withMini(String text) {
         return MiniMessage.miniMessage().deserialize(text);
     }
 
     @Contract(value = "_, _ -> new", pure = true)
-    public static @NotNull Component withMini(@NotNull String text, @NotNull TagResolver... resolvers) {
+    public static Component withMini(String text, TagResolver... resolvers) {
         return MINI_MESSAGE.deserialize(text, resolvers);
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component withMiniPrefix(@NotNull String text) {
+    public static Component withMiniPrefix(String text) {
         return PREFIX.append(Component.space()).append(MINI_MESSAGE.deserialize(text));
     }
 
     @Contract(value = "_, _ -> new", pure = true)
-    public static @NotNull Component withMiniPrefix(@NotNull String text, @NotNull TagResolver... resolvers) {
+    public static Component withMiniPrefix(String text, TagResolver... resolvers) {
         return PREFIX.append(Component.space()).append(MINI_MESSAGE.deserialize(text, resolvers));
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component getPageFoundComponent(@NotNull Player player) {
+    public static Component getPageFoundComponent(Player player) {
         var playerName = Tag.preProcessParsed(player.getUsername());
         var playerTag = TagResolver.builder().tag("player", (argumentQueue, context) -> playerName).build();
         return PREFIX.append(Component.space()).append(withMini("<" + SECONDARY_COLOR + "><player>", playerTag)).append(Component.space()).append(PAGE_FOUND_PART);
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component getDeathComponent(@NotNull Player player) {
+    public static Component getDeathComponent(Player player) {
         var playerName = Tag.preProcessParsed(player.getUsername());
         var playerTag = TagResolver.builder().tag("player", (argumentQueue, context) -> playerName).build();
         return PREFIX.append(Component.space()).append(withMini("<red><player> <color:#249D9F>was</color> <color:#ff0000>TAKEN!</color>", playerTag));
@@ -128,7 +127,7 @@ public final class Messages {
 
 
     @Contract(value = "_, _ -> new", pure = true)
-    public static @NotNull Component getViewComponent(@NotNull String time, @NotNull Component pageStatus) {
+    public static Component getViewComponent(String time, Component pageStatus) {
         return Component.text("Time:", NamedTextColor.GRAY)
                 .append(Component.space())
                 .append(Component.text(time, NamedTextColor.RED))
@@ -139,7 +138,7 @@ public final class Messages {
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component getSlenderWinMessage(@Nullable Player player) {
+    public static Component getSlenderWinMessage(@Nullable Player player) {
         if (player == null || player.getDisplayName() == null) {
             return Component.newline()
                     .append(SLENDER_WIN_MESSAGE)
@@ -155,19 +154,19 @@ public final class Messages {
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component getJoinMessage(@NotNull Player player) {
+    public static Component getJoinMessage(Player player) {
         return PREFIX.append(Component.space()).append(withMini("<color:#249D9F>" + player.getUsername() + "</color>"))
                 .append(Component.space()).append(JOIN_PART);
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component getLeaveMessage(@NotNull Player player) {
+    public static Component getLeaveMessage(Player player) {
         return PREFIX.append(Component.space()).append(withMini("<color:#249D9F>" + player.getUsername() + "</color>"))
                 .append(Component.space()).append(LEAVE_PART);
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component getSurvivorJoinMessage(@NotNull String pageCount) {
+    public static Component getSurvivorJoinMessage(String pageCount) {
         return SURVIVOR_JOIN_PART_UPPER.append(withMini("<red>(" + pageCount + " TO WIN)"))
                 .append(Component.newline())
                 .append(SURVIVOR_JOIN_LOWER_PART);
