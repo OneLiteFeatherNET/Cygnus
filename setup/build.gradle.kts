@@ -11,14 +11,12 @@ application {
 }
 
 dependencies {
-    implementation(platform(libs.mycelium.bom))
     implementation(platform(libs.aonyx.bom))
     implementation(project(":common"))
     implementation(libs.minestom)
     implementation(libs.aves)
     implementation(libs.xerus)
     implementation(libs.adventure)
-   // implementation(libs.canis)
 
     testImplementation(libs.minestom)
     testImplementation(libs.cyano)

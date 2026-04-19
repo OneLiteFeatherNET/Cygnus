@@ -9,13 +9,11 @@ application {
 }
 
 dependencies {
-    implementation(platform(libs.mycelium.bom))
     implementation(platform(libs.aonyx.bom))
     implementation(project(":common"))
     implementation(libs.minestom)
     implementation(libs.aves)
     implementation(libs.xerus)
-  //  implementation(libs.canis)
 
     //CloudNet
     implementation(platform(libs.cloudnet.bom))
