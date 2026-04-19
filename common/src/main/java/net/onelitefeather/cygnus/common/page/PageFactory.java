@@ -5,7 +5,6 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.Direction;
 import net.minestom.server.utils.validate.Check;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * The factory should be used to create references from a {@link PageEntity}.
@@ -28,10 +27,10 @@ public abstract class PageFactory {
      * @return the created entity reference
      */
     @Contract(value = "_, _, _, _ -> new" , pure = true)
-    public static @NotNull PageEntity createPage(
-            @NotNull Instance instance,
-            @NotNull Pos spawnPos,
-            @NotNull Direction direction,
+    public static PageEntity createPage(
+            Instance instance,
+            Pos spawnPos,
+            Direction direction,
             int pageCount
     ) {
         Check.argCondition(direction == Direction.UP || direction == Direction.DOWN, "The direction " + direction + " is not supported");

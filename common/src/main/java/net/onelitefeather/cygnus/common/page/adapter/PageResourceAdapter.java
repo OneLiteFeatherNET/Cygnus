@@ -9,9 +9,9 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Vec;
-import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.util.DirectionFaceHelper;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 
@@ -26,7 +26,7 @@ public final class PageResourceAdapter implements JsonSerializer<PageResource>, 
     private static final String FACE_KEY = "face";
 
     @Override
-    public JsonElement serialize(PageResource src, Type typeOfSrc, JsonSerializationContext context) {
+    public @Nullable JsonElement serialize(@Nullable PageResource src, Type typeOfSrc, JsonSerializationContext context) {
         if (src == null) return null;
         JsonObject object = new JsonObject();
         object.addProperty(FACE_KEY, src.face().name());

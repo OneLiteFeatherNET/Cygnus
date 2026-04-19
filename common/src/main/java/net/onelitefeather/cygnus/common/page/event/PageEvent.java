@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.common.page.event;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.onelitefeather.cygnus.common.page.PageEntity;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -13,14 +12,14 @@ import org.jetbrains.annotations.Nullable;
  * @param reason the reason why the event was called
  * @param player the player who performed the action or null
  */
-public record PageEvent(@NotNull PageEntity entity, @NotNull Reason reason, @Nullable Player player) implements Event {
+public record PageEvent(PageEntity entity, Reason reason, @Nullable Player player) implements Event {
 
     /**
      * Creates a new instance from the event without a player reference.
      * @param entity the page entity
      * @param reason the reason why the event was called
      */
-    public PageEvent(@NotNull PageEntity entity, @NotNull Reason reason) {
+    public PageEvent(PageEntity entity, Reason reason) {
         this(entity, reason, null);
     }
 
