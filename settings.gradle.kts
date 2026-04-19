@@ -25,13 +25,9 @@ dependencyResolutionManagement {
         create("libs") {
             version("shadow", "9.4.1")
             version("cloudnet", "4.0.0-RC16")
-
-            version("bom", "1.6.4")
             version("aonyx", "0.7.1")
-
             version("cyclonedx", "3.2.4")
 
-            library("mycelium.bom", "net.onelitefeather", "mycelium-bom").versionRef("bom")
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("minestom", "net.minestom", "minestom").withoutVersion()
             library("adventure", "net.kyori", "adventure-text-minimessage").withoutVersion()
