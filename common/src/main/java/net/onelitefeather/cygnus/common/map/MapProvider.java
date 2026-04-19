@@ -17,7 +17,6 @@ import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.page.adapter.PageResourceAdapter;
 import net.onelitefeather.cygnus.common.util.Helper;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +46,7 @@ public final class MapProvider {
 
     private final PageProvider pageProvider;
 
-    public MapProvider(@NotNull Path path, @NotNull InstanceContainer instance, @NotNull PageProvider pageProvider) {
+    public MapProvider(Path path, InstanceContainer instance, PageProvider pageProvider) {
         this.mapPool = new MapPool(path.resolve(MAP_PATH));
         this.instance = instance;
         this.pageProvider = pageProvider;
@@ -87,11 +86,11 @@ public final class MapProvider {
         this.pageProvider.collectStartPages(gameInstance);
     }
 
-    public void saveMap(@NotNull Path path, @NotNull BaseMap baseMap) {
+    public void saveMap(Path path, BaseMap baseMap) {
         this.fileHandler.save(path, baseMap instanceof GameMap gameMap ? gameMap : baseMap);
     }
 
-    private <T extends Point> void loadChunk(@NotNull InstanceContainer instance, @NotNull T pos) {
+    private <T extends Point> void loadChunk(InstanceContainer instance, T pos) {
         if (!ChunkUtils.isLoaded(instance, pos)) {
             instance.loadChunk(pos).whenComplete((chunk, throwable) -> {
                 if (throwable != null) {
@@ -110,14 +109,14 @@ public final class MapProvider {
         this.instance = null;
     }
 
-    public void prepareInstanceData(@NotNull InstanceContainer instance) {
+    public void prepareInstanceData(InstanceContainer instance) {
         instance.setTimeRate(0);
         instance.setTimeSynchronizationTicks(0);
         instance.setTime(Helper.MIDNIGHT_TIME);
         instance.enableAutoChunkLoad(true);
     }
 
-    public void setInstance(@NotNull InstanceContainer instance) {
+    public void setInstance(InstanceContainer instance) {
         this.instance = instance;
     }
 
@@ -126,11 +125,11 @@ public final class MapProvider {
         this.instance.setTime(Helper.MIDNIGHT_TIME);
     }
 
-    public @NotNull Instance getInstance() {
+    public Instance getInstance() {
         return this.instance != null ? instance : gameInstance;
     }
 
-    public @NotNull @UnmodifiableView List<MapEntry> getAvailableMaps() {
+    public @UnmodifiableView List<MapEntry> getAvailableMaps() {
         return Collections.unmodifiableList(this.mapPool.getAvailableMaps());
     }
 
@@ -138,7 +137,7 @@ public final class MapProvider {
         return gameInstance;
     }
 
-    public @NotNull BaseMap getActiveMap() {
+    public BaseMap getActiveMap() {
         return this.activeMap;
     }
 

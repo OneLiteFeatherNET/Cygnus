@@ -17,7 +17,6 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -50,7 +49,7 @@ public final class PageEntity extends Entity {
      * @param spawnPos  the position where the entity should spawn
      * @param pageCount the current page count
      */
-    PageEntity(@NotNull Instance instance, @NotNull Pos spawnPos, int pageCount) {
+    PageEntity(Instance instance, Pos spawnPos, int pageCount) {
         super(EntityType.ITEM_DISPLAY);
         this.setInstance(instance, spawnPos);
         this.hitBox = new Entity(EntityType.INTERACTION);
@@ -130,7 +129,7 @@ public final class PageEntity extends Entity {
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> teleport(@NotNull Pos position) {
+    public CompletableFuture<Void> teleport(Pos position) {
         this.hitBox.teleport(position.sub(HALF_BLOCK));
         return super.teleport(position);
     }
@@ -182,7 +181,7 @@ public final class PageEntity extends Entity {
      *
      * @return the page item
      */
-    public @NotNull ItemStack getPageItem() {
+    public ItemStack getPageItem() {
         return pageItem;
     }
 
@@ -191,7 +190,7 @@ public final class PageEntity extends Entity {
      *
      * @return the hitbox id
      */
-    public @NotNull UUID getHitBoxUUID() {
+    public UUID getHitBoxUUID() {
         return this.hitBox.getUuid();
     }
 }

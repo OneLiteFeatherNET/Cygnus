@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.common.map;
 
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.utils.validate.Check;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 import org.slf4j.Logger;
@@ -41,7 +40,7 @@ public class MapPool {
      *
      * @param path the path where the maps are stored
      */
-    public MapPool(@NotNull Path path) {
+    public MapPool(Path path) {
         referenceList = loadMapsEntries(path);
         this.peekMap();
     }
@@ -52,7 +51,7 @@ public class MapPool {
      * @param path the path where the maps are stored
      * @return a list with all available maps
      */
-    private @NotNull List<MapEntry> loadMapsEntries(@NotNull Path path) {
+    private List<MapEntry> loadMapsEntries(Path path) {
         List<MapEntry> mapEntries = new ArrayList<>();
         try (Stream<Path> stream = Files.list(path)) {
             mapEntries = stream.filter(Files::isDirectory).map(MapEntry::new).filter(MapEntry::hasMapFile).collect(Collectors.toList());
@@ -106,7 +105,7 @@ public class MapPool {
      *
      * @return the lobby map entry
      */
-    public @NotNull MapEntry getLobbyEntry() {
+    public MapEntry getLobbyEntry() {
         return this.lobbyMap;
     }
 
@@ -115,7 +114,7 @@ public class MapPool {
      *
      * @return an unmodifiable list with all available maps
      */
-    public @NotNull @UnmodifiableView List<MapEntry> getAvailableMaps() {
+    public @UnmodifiableView List<MapEntry> getAvailableMaps() {
         return Collections.unmodifiableList(this.referenceList);
     }
 }

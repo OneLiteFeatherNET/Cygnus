@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.common.page;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.Direction;
@@ -11,7 +10,6 @@ import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +47,7 @@ public final class PageProvider {
 
     private Component pageStatus = Component.empty();
 
-    public PageProvider(@NotNull VoidConsumer pageFinishFunction) {
+    public PageProvider(VoidConsumer pageFinishFunction) {
         this.pageFinishFunction = pageFinishFunction;
         this.globalCache = new ArrayList<>();
         this.usedResources = new HashMap<>();
@@ -59,7 +57,7 @@ public final class PageProvider {
         this.currentPageCount = 1;
     }
 
-    public void loadPageData(@NotNull Set<PageResource> positions) {
+    public void loadPageData(Set<PageResource> positions) {
         Check.argCondition(!globalCache.isEmpty(), "Can't load pages twice");
 
         if (positions.isEmpty()) {
@@ -69,7 +67,7 @@ public final class PageProvider {
     }
 
     // Find start pages
-    public void collectStartPages(@NotNull Instance instance) {
+    public void collectStartPages(Instance instance) {
         Check.argCondition(this.globalCache.size() < MIN_ACTIVE_PAGE_COUNT, "Not enough pages to start the game");
         var counter = 0;
 
@@ -81,7 +79,7 @@ public final class PageProvider {
 
             if (candidateHashes.add(page.hashCode())) {
                 Direction direction = page.face();
-                var position = Helper.updatePosition(Pos.fromPoint(page.position()), direction);
+                var position = Helper.updatePosition(page.position().asPos(), direction);
                 PageEntity entity = PageFactory.createPage(instance, position, direction, this.currentPageCount++);
                 this.activePages.put(entity.getHitBoxUUID(), entity);
                 this.usedResources.put(entity.getHitBoxUUID(), page);
@@ -121,7 +119,7 @@ public final class PageProvider {
         this.activePages.clear();
     }
 
-    public void triggerTTLHandling(@NotNull UUID uuid) {
+    public void triggerTTLHandling(UUID uuid) {
         if (this.globalCache.isEmpty()) {
             this.activePages.get(uuid).enableInteraction();
             return;
@@ -130,7 +128,7 @@ public final class PageProvider {
         try {
             CACHE_LOCK.lock();
             var newPos = this.globalCache.remove(Helper.getRandomInt(this.globalCache.size()));
-            pageEntity.teleport(Helper.updatePosition(Pos.fromPoint(newPos.position()), newPos.face()));
+            pageEntity.teleport(Helper.updatePosition(newPos.position().asPos(), newPos.face()));
             activePages.put(pageEntity.getHitBoxUUID(), pageEntity);
             var resource = this.usedResources.remove(pageEntity.getHitBoxUUID());
             this.globalCache.add(resource);
@@ -141,7 +139,7 @@ public final class PageProvider {
         pageEntity.enableInteraction();
     }
 
-    public void triggerPageFound(@NotNull Player player, @NotNull UUID uuid) {
+    public void triggerPageFound(Player player, UUID uuid) {
         var pageEntity = removeEntity(uuid);
         player.getInventory().addItemStack(pageEntity.getPageItem());
         Broadcaster.broadcast(Messages.getPageFoundComponent(player));
@@ -155,7 +153,7 @@ public final class PageProvider {
         }
     }
 
-    private void updatePageData(@NotNull PageEntity entity) {
+    private void updatePageData(PageEntity entity) {
         PageResource resource;
         try {
             CACHE_LOCK.lock();
@@ -163,7 +161,7 @@ public final class PageProvider {
         } finally {
             CACHE_LOCK.unlock();
         }
-        entity.teleport(Helper.updatePosition(Pos.fromPoint(resource.position()), resource.face()));
+        entity.teleport(Helper.updatePosition(resource.position().asPos(), resource.face()));
         entity.updateItemStack(++this.currentPageCount);
         try {
             PAGE_LOCK.lock();
@@ -182,7 +180,7 @@ public final class PageProvider {
                 );
     }
 
-    private @NotNull PageEntity removeEntity(@NotNull UUID uuid) {
+    private PageEntity removeEntity(UUID uuid) {
         try {
             PAGE_LOCK.lock();
             return this.activePages.remove(uuid);
@@ -196,7 +194,7 @@ public final class PageProvider {
      *
      * @return the current page status
      */
-    public @NotNull Component getPageStatus() {
+    public Component getPageStatus() {
         return pageStatus;
     }
 

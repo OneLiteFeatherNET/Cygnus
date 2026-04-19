@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.common.config;
 
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +42,7 @@ public final class GameConfigReader {
      *
      * @param path the root directory of the game
      */
-    public GameConfigReader(@NotNull Path path) {
+    public GameConfigReader(Path path) {
         this.path = path.resolve("config.properties");
     }
 
@@ -53,7 +52,7 @@ public final class GameConfigReader {
      *
      * @return the new game configuration
      */
-    public @NotNull GameConfig getConfig() {
+    public GameConfig getConfig() {
         if (!Files.exists(path)) {
             CONFIG_LOGGER.warn("No config file found. Using default values");
             return InternalGameConfig.defaultConfig();

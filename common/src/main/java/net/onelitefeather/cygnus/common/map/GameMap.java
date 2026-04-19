@@ -5,7 +5,6 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.page.PageResource;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.HashSet;
@@ -45,7 +44,7 @@ public final class GameMap extends BaseMap {
      * @param survivorSpawns the spawn positions for the survivors
      * @param builders       the builders for the map
      */
-    public GameMap(@NotNull String name, Pos spawn, Pos slenderSpawn, @NotNull Set<PageResource> pageFaces, @NotNull Set<Pos> survivorSpawns, String... builders) {
+    public GameMap(String name, Pos spawn, Pos slenderSpawn, Set<PageResource> pageFaces, Set<Pos> survivorSpawns, String... builders) {
         super(name, spawn, builders);
         this.slenderSpawn = slenderSpawn;
         this.pageFaces = pageFaces;
@@ -58,7 +57,7 @@ public final class GameMap extends BaseMap {
      * @param pos the position to add
      * @return true if the position was added
      */
-    public boolean addSurvivorSpawn(@NotNull Pos pos) {
+    public boolean addSurvivorSpawn(Pos pos) {
         return this.survivorSpawns.add(pos);
     }
 
@@ -68,7 +67,7 @@ public final class GameMap extends BaseMap {
      * @param pos the position to remove
      * @return true if the position was removed
      */
-    public boolean removeSurvivorSpawn(@NotNull Pos pos) {
+    public boolean removeSurvivorSpawn(Pos pos) {
         return this.survivorSpawns.remove(pos);
     }
 
@@ -77,7 +76,7 @@ public final class GameMap extends BaseMap {
      *
      * @param slenderSpawn the position to set
      */
-    public void setSlenderSpawn(@NotNull Pos slenderSpawn) {
+    public void setSlenderSpawn(Pos slenderSpawn) {
         this.slenderSpawn = slenderSpawn;
     }
 
@@ -94,7 +93,7 @@ public final class GameMap extends BaseMap {
      * @param pos  the position to add
      * @param face the face of the page
      */
-    public void addPage(@NotNull Vec pos, @NotNull Direction face) {
+    public void addPage(Vec pos, Direction face) {
         this.pageFaces.add(new PageResource(pos, face));
     }
 
@@ -113,7 +112,7 @@ public final class GameMap extends BaseMap {
      *
      * @return the underlying set
      */
-    public @NotNull Set<PageResource> getPageFaces() {
+    public Set<PageResource> getPageFaces() {
         return pageFaces;
     }
 
@@ -131,7 +130,7 @@ public final class GameMap extends BaseMap {
      *
      * @return the underlying set
      */
-    public @NotNull Set<Pos> getSurvivorSpawns() {
+    public Set<Pos> getSurvivorSpawns() {
         return survivorSpawns;
     }
 }

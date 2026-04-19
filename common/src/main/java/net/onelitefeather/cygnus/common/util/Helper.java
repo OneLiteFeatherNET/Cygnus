@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.common.util;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.utils.Direction;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.security.SecureRandom;
 import java.util.concurrent.ThreadLocalRandom;
@@ -46,7 +45,7 @@ public final class Helper {
     }
 
     @Contract(pure = true)
-    public static @NotNull Pos updatePosition(@NotNull Pos pos, @NotNull Direction direction) {
+    public static Pos updatePosition(Pos pos, Direction direction) {
         return switch (direction) {
             case NORTH -> pos.add(0.5, .5, 1); // ?
             case SOUTH -> pos.add(0.5, .5, PAGE_VISIBLE_OFFSET); //Yes //z = 1

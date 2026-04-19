@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.common.config;
 
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * The {@link GameConfig} interface represents the structure for a configuration which is used by the game.
@@ -39,7 +38,7 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
      * @return the builder instance
      */
     @Contract(pure = true)
-    static @NotNull Builder builder() {
+    static Builder builder() {
         return new GameConfigBuilder();
     }
 
@@ -101,7 +100,7 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @param minPlayers the minimum number of players
          * @return the builder instance
          */
-        @NotNull Builder minPlayers(int minPlayers);
+        Builder minPlayers(int minPlayers);
 
         /**
          * Sets the maximum number of players allowed in the game.
@@ -109,7 +108,7 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @param maxPlayers the maximum number of players
          * @return the builder instance
          */
-        @NotNull Builder maxPlayers(int maxPlayers);
+        Builder maxPlayers(int maxPlayers);
 
         /**
          * Sets the lobby time in seconds.
@@ -118,7 +117,7 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @return the builder instance
          * @throws IllegalArgumentException if the lobby time is than the {@link GameConfig#FORCE_START_TIME}
          */
-        @NotNull Builder lobbyTime(int lobbyTime);
+        Builder lobbyTime(int lobbyTime);
 
         /**
          * Sets the maximum game time in seconds.
@@ -126,7 +125,7 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @param gameTime the maximum game time
          * @return the builder instance
          */
-        @NotNull Builder gameTime(int gameTime);
+        Builder gameTime(int gameTime);
 
         /**
          * Sets the size of the slender team.
@@ -135,7 +134,7 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @return the builder instance
          * @throws IllegalArgumentException if the slender team size is smaller than 1
          */
-        @NotNull Builder slenderTeamSize(int slenderTeamSize);
+        Builder slenderTeamSize(int slenderTeamSize);
 
         /**
          * Sets the size of the survivor team.
@@ -144,14 +143,14 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @return the builder instance
          * @throws IllegalArgumentException if the survivor team size is smaller than 1
          */
-        @NotNull Builder survivorTeamSize(int survivorTeamSize);
+        Builder survivorTeamSize(int survivorTeamSize);
 
         /**
          * Builds the game configuration.
          *
          * @return the created configuration
          */
-        @NotNull GameConfig build();
+        GameConfig build();
     }
 
 }
