@@ -8,8 +8,6 @@ import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.Tags;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -20,24 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ExtendWith(MicrotusExtension.class)
 class SetupItemsTest {
 
-    private static SetupItems setupItems;
-
-    @BeforeAll
-    static void setUp() {
-        setupItems = new SetupItems();
-    }
-
-    @AfterAll
-    static void tearDown() {
-        setupItems = null;
-    }
-
     @Test
     void testMapSelectionItemSet(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
-        setupItems.setMapSelection(player);
+        SetupItems.setMapSelection(player);
 
         assertItem(player, SetupItems.FOURTH_INDEX, (byte) 0x00);
 
@@ -49,7 +35,7 @@ class SetupItemsTest {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
-        setupItems.setSaveData(player);
+        SetupItems.setSaveData(player);
         assertItem(player, SetupItems.FOURTH_INDEX, (byte) 0x01);
 
         env.destroyInstance(instance, true);

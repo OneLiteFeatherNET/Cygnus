@@ -25,14 +25,12 @@ import net.onelitefeather.cygnus.setup.listener.PageCreationListener;
 import net.onelitefeather.cygnus.setup.listener.PlayerSpawnListener;
 import net.onelitefeather.cygnus.setup.listener.SetupItemListener;
 import net.onelitefeather.cygnus.setup.util.SetupData;
-import net.onelitefeather.cygnus.setup.util.SetupItems;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Paths;
 
 public class SetupExtension implements ListenerHandling {
 
-    private final SetupItems setupItems;
     private final SetupData setupData;
     private final InstanceContainer instanceContainer;
     private final SaveMapFunction mapSaveFunction;
@@ -41,7 +39,6 @@ public class SetupExtension implements ListenerHandling {
     private final MapProvider mapProvider;
 
     public SetupExtension() {
-        this.setupItems = new SetupItems();
         this.setupData = new SetupData();
         this.instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer();
         MinecraftServer.getInstanceManager().registerInstance(instanceContainer);
@@ -63,10 +60,10 @@ public class SetupExtension implements ListenerHandling {
         manager.addListener(PlayerUseItemEvent.class, new SetupItemListener(setupData, mapSetupInventory, mapSaveFunction::saveMap, this::setMainInstance));
 
         manager.addListener(AsyncPlayerConfigurationEvent.class, event -> event.setSpawningInstance(instanceContainer));
-        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(spawnPos, setupItems, instance -> this.instanceContainer.getUuid().equals(instance.getUuid())));
+        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(spawnPos, instance -> this.instanceContainer.getUuid().equals(instance.getUuid())));
 
         manager.addListener(PlayerBlockBreakEvent.class, new PageCreationListener(setupData));
-        manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceContainer.getUuid(), setupItems));
+        manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceContainer.getUuid()));
         manager.addListener(RemoveEntityFromInstanceEvent.class, new InstanceRemoveListener(instanceContainer.getUuid()));
         registerCancelListener(manager);
     }

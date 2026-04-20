@@ -14,18 +14,16 @@ import java.util.function.Consumer;
 public final class InstanceAddListener implements Consumer<AddEntityToInstanceEvent> {
 
     private final UUID mainInstanceID;
-    private final SetupItems setupItems;
 
-    public InstanceAddListener(@NotNull UUID mainInstanceID, @NotNull SetupItems setupItems) {
+    public InstanceAddListener(@NotNull UUID mainInstanceID) {
         this.mainInstanceID = mainInstanceID;
-        this.setupItems = setupItems;
     }
 
     @Override
     public void accept(@NotNull AddEntityToInstanceEvent event) {
         if (!(event.getEntity() instanceof Player)) return;
         if (event.getInstance().getUuid().equals(mainInstanceID)) return;
-        MinecraftServer.getSchedulerManager().buildTask(() -> this.setupItems.setSaveData((Player) event.getEntity()))
+        MinecraftServer.getSchedulerManager().buildTask(() -> SetupItems.setSaveData((Player) event.getEntity()))
                 .delay(Duration.of(3, ChronoUnit.SECONDS))
                 .schedule();
     }

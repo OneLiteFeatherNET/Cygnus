@@ -14,16 +14,13 @@ import java.util.function.Predicate;
 public class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
 
     private final Pos spawnPos;
-    private final SetupItems setupItems;
     private final Predicate<Instance> mainInstance;
 
     public PlayerSpawnListener(
             @NotNull Pos spawnPos,
-            @NotNull SetupItems setupItems,
             @NotNull Predicate<Instance> mainInstance
     ) {
         this.spawnPos = spawnPos;
-        this.setupItems = setupItems;
         this.mainInstance = mainInstance;
     }
 
@@ -35,6 +32,6 @@ public class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
 
         player.teleport(this.spawnPos);
         player.setGameMode(GameMode.CREATIVE);
-        this.setupItems.setMapSelection(player);
+        SetupItems.setMapSelection(player);
     }
 }
