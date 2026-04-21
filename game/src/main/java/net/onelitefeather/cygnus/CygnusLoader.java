@@ -7,7 +7,7 @@ import net.minestom.server.MinecraftServer;
 
 public final class CygnusLoader {
 
-    public static void main(String[] args) {
+    static void main() {
         MinecraftServer server = MinecraftServer.init();
         new Cygnus();
         try (InjectionLayer<Injector> layer = InjectionLayer.ext()) {

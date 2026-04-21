@@ -4,7 +4,7 @@ import net.minestom.server.MinecraftServer;
 
 public class SetupLoader {
 
-    public static void main(String[] args) {
+    static void main() {
         MinecraftServer minecraftServer = MinecraftServer.init();
         new SetupExtension();
         minecraftServer.start("localhost", 25565);
