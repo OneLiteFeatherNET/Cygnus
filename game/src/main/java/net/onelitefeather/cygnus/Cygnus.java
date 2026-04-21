@@ -1,7 +1,9 @@
 package net.onelitefeather.cygnus;
 
 import net.minestom.server.utils.PacketSendingUtils;
-import net.onelitefeather.cygnus.utils.Items;
+import net.onelitefeather.cygnus.map.GameMapProvider;
+import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
+import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import net.theevilreaper.aves.util.Strings;
 import net.theevilreaper.aves.util.TimeFormat;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
@@ -83,7 +85,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final StaminaService staminaService;
     private final PageProvider pageProvider;
     private final GameView view;
-    private final MapProvider mapProvider;
+    private final AbstractMapProvider mapProvider;
     private final GameConfig gameConfig;
 
     public Cygnus() {
@@ -97,8 +99,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         MinecraftServer.getInstanceManager().registerInstance(instance);
         this.pageProvider = new PageProvider(this::handleAllPageFound);
-        this.mapProvider = new MapProvider(path, instance, this.pageProvider);
-        this.mapProvider.prepareInstanceData(instance);
+        this.mapProvider = new GameMapProvider(path);
         this.view = new GameViewImpl(this::getViewComponent);
         this.createTeams(this.gameConfig, this.teamService, this.ambientProvider);
         this.initPhases();
@@ -122,12 +123,15 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initListener() {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         var manager = MinecraftServer.getGlobalEventHandler();
-        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(this.mapProvider, phaseSupplier));
+        manager.addListener(GameMapLoadedEvent.class, event -> {
+            this.pageProvider.loadPageData(event.gameMap().getPageFaces());
+        });
+        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier));
         PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService::forceStopSlenderBar, this.gameConfig.minPlayers());
         manager.addListener(PlayerDisconnectEvent.class, quitListener);
         manager.addListener(AsyncPlayerConfigurationEvent.class,
                 new PlayerLoginListener(
-                        mapProvider.getInstance(),
+                        this.mapProvider.getActiveInstance(),
                         this.gameConfig.maxPlayers(),
                         linearPhaseSeries::getCurrentPhase
                 )
@@ -149,25 +153,24 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(
-                SlenderReviveEvent.class, new GameReviveListener(this.mapProvider.getGameMap(), this.staminaService));
+                SlenderReviveEvent.class, new GameReviveListener(((GameMapProvider) this.mapProvider).getGameMap(), this.staminaService));
         manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 
     private void initPhases() {
-        VoidConsumer gameMapLoader = this.mapProvider::loadGameMap;
+        VoidConsumer gameMapLoader = () -> ((GameMapProvider)this.mapProvider).loadGameMap();
         VoidConsumer staminaInitializer = () -> StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
-        VoidConsumer worldUpdater = this.mapProvider::setMidnight;
         VoidConsumer instanceSwitch = this.mapProvider::switchToGameMap;
         VoidConsumer teamInitializer = () -> TeamHelper.teleportTeams(
                 this.teamService,
                 this.mapProvider.getGameMap(),
                 this.mapProvider.getGameInstance()
         );
-        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, worldUpdater, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers());
+        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers());
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
-        this.linearPhaseSeries.add(new GamePhase(this.view, this::triggerGameStart, this::finishGame, worldUpdater, this.gameConfig.gameTime()));
+        this.linearPhaseSeries.add(new GamePhase(this.view, this::triggerGameStart, this::finishGame, this.gameConfig.gameTime()));
         this.linearPhaseSeries.add(new RestartPhase());
     }
 

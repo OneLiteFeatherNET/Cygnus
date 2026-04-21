@@ -1,21 +1,15 @@
 package net.onelitefeather.cygnus.common.map;
 
-import com.google.gson.Gson;
 import net.theevilreaper.aves.file.GsonFileHandler;
-import net.theevilreaper.aves.file.gson.PositionGsonAdapter;
 import net.theevilreaper.aves.map.BaseMap;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
-import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.anvil.AnvilLoader;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageProvider;
-import net.onelitefeather.cygnus.common.page.PageResource;
-import net.onelitefeather.cygnus.common.page.adapter.PageResourceAdapter;
 import net.onelitefeather.cygnus.common.util.Helper;
 import org.jetbrains.annotations.UnmodifiableView;
 import org.slf4j.Logger;
@@ -37,7 +31,6 @@ public final class MapProvider {
     private static final String MAP_PATH = "maps";
     private final GsonFileHandler fileHandler;
     private final MapPool mapPool;
-    private final Gson gson;
     private InstanceContainer instance;
     private BaseMap activeMap;
 
@@ -50,13 +43,7 @@ public final class MapProvider {
         this.mapPool = new MapPool(path.resolve(MAP_PATH));
         this.instance = instance;
         this.pageProvider = pageProvider;
-        var typeAdapter = new PositionGsonAdapter();
-        this.gson = new Gson().newBuilder()
-                .registerTypeAdapter(Pos.class, typeAdapter)
-                .registerTypeAdapter(Vec.class, typeAdapter)
-                .registerTypeAdapter(PageResource.class, new PageResourceAdapter())
-                .create();
-        this.fileHandler = new GsonFileHandler(this.gson);
+        this.fileHandler = new GsonFileHandler(Helper.GSON);
         this.loadLobbyMap();
     }
 
