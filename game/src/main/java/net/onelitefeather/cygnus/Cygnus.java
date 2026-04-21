@@ -153,7 +153,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(
                 SlenderReviveEvent.class, new GameReviveListener(this.mapProvider.getGameMap(), this.items, this.staminaService));
         manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
-        MinecraftServer.getPacketListenerManager().setListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
+        MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 
     private void initPhases() {
@@ -178,7 +178,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.staminaService.cleanUp();
         this.ambientProvider.stopTask();
         this.staminaService.cleanUp();
-        MinecraftServer.getPacketListenerManager().setListener(ClientEntityActionPacket.class, EntityActionListener::listener);
+        MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, EntityActionListener::listener);
     }
 
     private @NotNull Component getViewComponent() {
