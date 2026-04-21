@@ -77,6 +77,10 @@ public final class GameMapProvider extends AbstractMapProvider {
         throw new UnsupportedOperationException();
     }
 
+    public BaseMap getActiveMap() {
+        return this.activeMap;
+    }
+
     public GameMap getGameMap() {
         return gameMap;
     }

@@ -204,7 +204,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(slenderPlayer.getUuid())).forEach(p -> {
             slenderPlayer.updateOldViewer(p);
         });
-        MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(player -> player.setRespawnPoint(mapProvider.getGameMap().getSpawn()));
+        GameMapProvider gameMapProvider = (GameMapProvider) this.mapProvider;
+        MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(player -> player.setRespawnPoint(gameMapProvider.getActiveMap().getSpawn()));
         PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
     }
 
