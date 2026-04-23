@@ -6,7 +6,6 @@ import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.utils.Items;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
@@ -15,13 +14,12 @@ import java.util.function.Consumer;
  * @version 1.0.0
  * @since
  **/
-
 public class GameReviveListener implements Consumer<SlenderReviveEvent> {
 
     private final GameMap gameMap;
     private final StaminaService staminaService;
 
-    public GameReviveListener(@NotNull GameMap gameMap, @NotNull StaminaService staminaService) {
+    public GameReviveListener(GameMap gameMap, StaminaService staminaService) {
         this.gameMap = gameMap;
         this.staminaService = staminaService;
     }

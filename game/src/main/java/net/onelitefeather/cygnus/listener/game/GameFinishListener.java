@@ -4,14 +4,13 @@ import net.theevilreaper.aves.util.Broadcaster;
 import net.kyori.adventure.text.Component;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
 public final class GameFinishListener implements Consumer<GameFinishEvent> {
 
     @Override
-    public void accept(@NotNull GameFinishEvent event) {
+    public void accept(GameFinishEvent event) {
         var reason = event.reason();
         var player = event.player();
 

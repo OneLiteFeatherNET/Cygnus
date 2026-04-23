@@ -12,7 +12,6 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
@@ -25,14 +24,14 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
     private final Team survivorTeam;
     private final IntFunction<Team> slenderGetter;
 
-    public PlayerDeathListener(@NotNull Supplier<Phase> phaseSupplier, @NotNull TeamService teamService) {
+    public PlayerDeathListener(Supplier<Phase> phaseSupplier, TeamService teamService) {
         this.phaseSupplier = phaseSupplier;
         this.survivorTeam = teamService.getTeams().get(Helper.SURVIVOR_ID);
         this.slenderGetter = ignore -> teamService.getTeams().getFirst();
     }
 
     @Override
-    public void accept(@NotNull PlayerDeathEvent event) {
+    public void accept(PlayerDeathEvent event) {
         Player player = event.getPlayer();
         event.setChatMessage(Messages.getDeathComponent(player));
         survivorTeam.removePlayer(player);

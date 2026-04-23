@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.listener;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.event.player.PlayerChatEvent;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
@@ -12,11 +11,11 @@ public final class PlayerChatListener implements Consumer<PlayerChatEvent> {
     private static final Component MESSAGE_PREFIX = Component.text("≫", NamedTextColor.YELLOW);
 
     @Override
-    public void accept(@NotNull PlayerChatEvent event) {
+    public void accept(PlayerChatEvent event) {
         event.setFormattedMessage(this.setLobbyLayout(event));
     }
 
-    private @NotNull Component setLobbyLayout(@NotNull PlayerChatEvent event) {
+    private Component setLobbyLayout(PlayerChatEvent event) {
         return event.getPlayer().getDisplayName()
                 .append(Component.space())
                 .append(MESSAGE_PREFIX)

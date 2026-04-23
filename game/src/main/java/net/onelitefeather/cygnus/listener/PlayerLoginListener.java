@@ -7,7 +7,6 @@ import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -24,14 +23,14 @@ public final class PlayerLoginListener implements Consumer<AsyncPlayerConfigurat
     private final int maxPlayers;
     private final Supplier<Phase> currentPhase;
 
-    public PlayerLoginListener(@NotNull Instance instance, int maxPlayers, Supplier<Phase> currentPhase) {
+    public PlayerLoginListener(Instance instance, int maxPlayers, Supplier<Phase> currentPhase) {
         this.instance = instance;
         this.maxPlayers = maxPlayers;
         this.currentPhase = currentPhase;
     }
 
     @Override
-    public void accept(@NotNull AsyncPlayerConfigurationEvent event) {
+    public void accept(AsyncPlayerConfigurationEvent event) {
         if (MinecraftServer.getConnectionManager().getOnlinePlayers().size() + 1 > maxPlayers) {
             event.getPlayer().kick(KICK_COMPONENT);
             return;

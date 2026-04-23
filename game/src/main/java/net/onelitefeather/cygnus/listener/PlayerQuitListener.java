@@ -36,9 +36,9 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
 
 
     public PlayerQuitListener(
-            @NotNull Supplier<Phase> phaseSupplier,
-            @NotNull TeamService teamService,
-            @NotNull Runnable stopSlenderBar,
+            Supplier<Phase> phaseSupplier,
+            TeamService teamService,
+            Runnable stopSlenderBar,
             int minPlayers
     ) {
         this.phaseSupplier = phaseSupplier;
@@ -49,7 +49,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
     }
 
     @Override
-    public void accept(@NotNull PlayerDisconnectEvent event) {
+    public void accept(PlayerDisconnectEvent event) {
         Phase phase = phaseSupplier.get();
         if (phase instanceof LobbyPhase lobbyPhase) {
             lobbyPhase.checkStopCondition();
@@ -62,12 +62,12 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
         }
     }
 
-    private void handleLobbyQuit(@NotNull Player player, @NotNull LobbyPhase lobbyPhase) {
+    private void handleLobbyQuit(Player player, LobbyPhase lobbyPhase) {
         lobbyPhase.checkPlayerRequirements();
         Broadcaster.broadcast(Messages.getLeaveMessage(player));
     }
 
-    private void handleInGameQuit(@NotNull Player player, @NotNull GamePhase gamePhase) {
+    private void handleInGameQuit(Player player, GamePhase gamePhase) {
         if (!player.hasTag(Tags.TEAM_ID)) return;
         byte teamID = player.getTag(Tags.TEAM_ID);
         Team team = teamService.getTeams().get(teamID);

@@ -9,7 +9,6 @@ import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -39,7 +38,7 @@ interface SlenderBarHelper {
      *
      * @param player the player to apply the effect
      */
-    default void applyNightVision(@NotNull Player player) {
+    default void applyNightVision(Player player) {
         updateEffect(player, true);
     }
 
@@ -48,7 +47,7 @@ interface SlenderBarHelper {
      *
      * @param player the player to apply the effect
      */
-    default void applyBlindness(@NotNull Player player) {
+    default void applyBlindness(Player player) {
         updateEffect(player, false);
     }
 
@@ -58,7 +57,7 @@ interface SlenderBarHelper {
      * @param player      the player to update the effect
      * @param nightVision if the night vision should be applied
      */
-    private void updateEffect(@NotNull Player player, boolean nightVision) {
+    private void updateEffect(Player player, boolean nightVision) {
         if (nightVision) {
             player.removeEffect(BLINDNESS.potion().effect());
             player.addEffect(NIGHT_VISION.potion());
@@ -77,7 +76,7 @@ interface SlenderBarHelper {
      * @param range    the range where the damage should be applied
      * @param damage   the damage that should be applied
      */
-    default void applyDamage(@NotNull Instance instance, @NotNull UUID uuid, @NotNull Pos center, int range, float damage) {
+    default void applyDamage(Instance instance, UUID uuid, Pos center, int range, float damage) {
         Collection<Entity> nearbyEntities = instance.getNearbyEntities(center, range);
         if (nearbyEntities.isEmpty()) return;
         for (Entity nearbyEntity : nearbyEntities) {
@@ -95,7 +94,7 @@ interface SlenderBarHelper {
      * @param center   the center position where the sound should be played
      * @param uuid     the uuid of the player who caused the sound
      */
-    default void playSpawnSound(@NotNull Instance instance, @NotNull Pos center, @NotNull UUID uuid) {
+    default void playSpawnSound(Instance instance, Pos center, UUID uuid) {
         playToSound(instance, center, uuid, true);
     }
 
@@ -106,7 +105,7 @@ interface SlenderBarHelper {
      * @param center   the center position where the sound should be played
      * @param uuid     the uuid of the player who caused the sound
      */
-    default void playTeleportSound(@NotNull Instance instance, @NotNull Pos center, @NotNull UUID uuid) {
+    default void playTeleportSound(Instance instance, Pos center, UUID uuid) {
         playToSound(instance, center, uuid, false);
     }
 
@@ -118,7 +117,7 @@ interface SlenderBarHelper {
      * @param uuid     the uuid of the player who caused the sound
      * @param spawn    if the sound should be a spawn sound
      */
-    private void playToSound(@NotNull Instance instance, @NotNull Pos center, @NotNull UUID uuid, boolean spawn) {
+    private void playToSound(Instance instance, Pos center, UUID uuid, boolean spawn) {
         Collection<Entity> nearbyEntities = instance.getNearbyEntities(center, 2);
         if (nearbyEntities.isEmpty()) return;
 

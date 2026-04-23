@@ -4,6 +4,7 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.timer.Task;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
@@ -12,6 +13,7 @@ import java.util.Objects;
  * The StaminaBar class is designed to manage and display stamina-related information for a player in a game.
  * It offers a customizable mechanism to update and render stamina data periodically.
  * The core functionality of the class revolves around a timer that ticks at regular intervals defined by the provided period parameter.
+ *
  * @author theEvilReaper
  * @version 1.0.0
  * @since 1.0.0
@@ -22,15 +24,16 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
     private final ChronoUnit chronoUnit;
     protected int period;
     protected State state;
-    private Task task;
+    private @Nullable Task task;
 
     /**
      * Creates a new reference from an {@link StaminaBar}.
-     * @param player the player who owns the bar
+     *
+     * @param player     the player who owns the bar
      * @param chronoUnit the tick interval for the bar
-     * @param period the tick period for the par
+     * @param period     the tick period for the par
      */
-    protected StaminaBar(@NotNull CygnusPlayer player, @NotNull ChronoUnit chronoUnit, int period) {
+    protected StaminaBar(CygnusPlayer player, ChronoUnit chronoUnit, int period) {
         this.player = player;
         this.chronoUnit = chronoUnit;
         this.period = period;
@@ -73,7 +76,7 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         StaminaBar that = (StaminaBar) o;
@@ -87,6 +90,7 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
 
     /**
      * The enum contains all statuses which an {@link StaminaBar} can have.
+     *
      * @author theEvilReaper
      * @version 1.0.0
      * @since 1.0.0

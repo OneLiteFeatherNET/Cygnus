@@ -6,7 +6,6 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -23,7 +22,7 @@ import java.util.UUID;
 public final class StaminaService {
 
     private final Map<UUID, StaminaBar> staminaBars;
-    private StaminaBar slenderBar;
+    private @Nullable StaminaBar slenderBar;
 
     /**
      * Creates a new instance from this class.
@@ -35,19 +34,19 @@ public final class StaminaService {
     /**
      * Creates a new instance of an {@link SlenderBar} for a given {@link Player}.
      *
-     * @param player the player which owns the {@link StaminaBar}
+     * @param player the player that owns the {@link StaminaBar}
      */
-    public void setSlenderBar(@NotNull Player player) {
+    public void setSlenderBar(Player player) {
         this.setSlenderBar(player, false);
     }
 
     /**
      * Creates a new instance of an {@link SlenderBar} for a given {@link Player}.
      *
-     * @param player the player which owns the {@link StaminaBar}
+     * @param player the player that owns the {@link StaminaBar}
      * @param forceStart if the bar should be started by default
      */
-    public void setSlenderBar(@NotNull Player player, boolean forceStart) {
+    public void setSlenderBar(Player player, boolean forceStart) {
         if (this.slenderBar != null) {
             this.slenderBar.stop();
         }
@@ -58,11 +57,11 @@ public final class StaminaService {
     }
 
     /**
-     * Creates for each player in a team a new instance from an {@link FoodBar}.
+     * Creates for each player on a team a new instance from an {@link FoodBar}.
      *
      * @param team the team to get the player from it
      */
-    public void createStaminaBars(@NotNull Team team) {
+    public void createStaminaBars(Team team) {
         Check.argCondition(!staminaBars.isEmpty(), "Unable to load stamina bars twice");
         Check.argCondition(team.getPlayers().isEmpty(), "Can't add players from a team without teams");
         ((SlenderBar) this.slenderBar).setAccept((player, state) -> {
@@ -71,7 +70,7 @@ public final class StaminaService {
                 MinecraftServer.getConnectionManager().getOnlinePlayers()
                         .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateNewViewer);
                 PacketSendingUtils.broadcastPlayPacket(player.getMetadataPacket());
-                return null;
+                return;
             }
 
             if (state == StaminaBar.State.REGENERATING) {
@@ -79,9 +78,7 @@ public final class StaminaService {
                 MinecraftServer.getConnectionManager().getOnlinePlayers()
                         .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateOldViewer);
                 PacketSendingUtils.broadcastPlayPacket(player.getMetadataPacket());
-                return null;
             }
-            return null;
         });
         for (Player player : team.getPlayers()) {
             this.staminaBars.put(player.getUuid(), StaminaFactory.createFoodStamina((CygnusPlayer) player));
@@ -116,7 +113,7 @@ public final class StaminaService {
     }
 
     @Deprecated(since = "Please use setSlenderBar instead", forRemoval = true)
-    public void switchToSlenderBar(@NotNull Player player) {
+    public void switchToSlenderBar(Player player) {
         // If the old slender has a bar, we need to stop it.
         if (this.slenderBar != null) {
             this.slenderBar.stop();
@@ -127,11 +124,12 @@ public final class StaminaService {
     }
 
     public void forceStopSlenderBar() {
+        if (this.slenderBar == null) return;
         this.slenderBar.stop();
         this.slenderBar = null;
     }
 
-    public @NotNull FoodBar getFoodBar(@NotNull Player player) {
+    public FoodBar getFoodBar(Player player) {
         return (FoodBar) this.staminaBars.get(player.getUuid());
     }
 

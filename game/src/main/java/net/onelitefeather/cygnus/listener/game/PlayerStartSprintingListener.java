@@ -6,21 +6,20 @@ import net.onelitefeather.cygnus.movement.PlayerStartSprintingEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.stamina.FoodBar;
 import net.onelitefeather.cygnus.utils.TeamHelper;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public final class PlayerStartSprintingListener implements Consumer<PlayerStartSprintingEvent> {
 
-    private final Function<@NotNull Player, @NotNull FoodBar> staminaFunction;
+    private final Function<Player, FoodBar> staminaFunction;
 
-    public PlayerStartSprintingListener(@NotNull Function<@NotNull Player, @NotNull FoodBar> staminaFunction) {
+    public PlayerStartSprintingListener(Function<Player, FoodBar> staminaFunction) {
         this.staminaFunction = staminaFunction;
     }
 
     @Override
-    public void accept(@NotNull PlayerStartSprintingEvent event) {
+    public void accept(PlayerStartSprintingEvent event) {
         var player = event.getPlayer();
         if (!player.hasTag(Tags.TEAM_ID)) return;
         if (TeamHelper.isSlenderTeam(player)) return;

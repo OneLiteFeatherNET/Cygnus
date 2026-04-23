@@ -7,7 +7,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Messages;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
 
@@ -73,7 +72,7 @@ public final class RestartPhase extends TimedPhase {
      *
      * @return the component with the second text
      */
-    private @NotNull Component getSecondComponent() {
+    private Component getSecondComponent() {
         String secondPart = getCurrentTicks() > 1 ? "seconds" : "second";
         return Component.text(secondPart, NamedTextColor.GRAY);
     }
