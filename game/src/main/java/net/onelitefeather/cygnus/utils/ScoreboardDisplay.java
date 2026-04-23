@@ -11,7 +11,6 @@ import net.minestom.server.scoreboard.TeamBuilder;
 import net.minestom.server.scoreboard.TeamManager;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.util.Helper;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -30,7 +29,7 @@ public final class ScoreboardDisplay {
      *
      * @param teams the list of teams to create
      */
-    public ScoreboardDisplay(@NotNull List<Team> teams) {
+    public ScoreboardDisplay(List<Team> teams) {
         TeamManager teamManager = MinecraftServer.getTeamManager();
 
         for (Team team : teams) {
@@ -53,7 +52,7 @@ public final class ScoreboardDisplay {
      * @param player the player to add
      * @param teamId the team id to add the player to
      */
-    public void addPlayer(@NotNull Player player, byte teamId) {
+    public void addPlayer(Player player, byte teamId) {
         var teamName = getTeamName(teamId);
         var team = MinecraftServer.getTeamManager().getTeam(teamName);
         team.addMember(player.getUsername());
@@ -65,7 +64,7 @@ public final class ScoreboardDisplay {
      * @param player the player to remove
      * @param teamId the team id to remove the player from
      */
-    public void removePlayer(@NotNull Player player, byte teamId) {
+    public void removePlayer(Player player, byte teamId) {
         var teamName = getTeamName(teamId);
         var team = MinecraftServer.getTeamManager().getTeam(teamName);
         team.removeMember(player.getUsername());
