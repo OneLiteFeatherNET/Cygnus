@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.stamina;
 import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
 
@@ -13,7 +12,7 @@ public non-sealed class FoodBar extends StaminaBar {
     private static final int FOOD_TAKE = 2;
     private float currentSpeedCount;
 
-    FoodBar(@NotNull CygnusPlayer player) {
+    FoodBar(CygnusPlayer player) {
         super(player, ChronoUnit.MILLIS, 1000);
         state = State.READY;
         this.currentSpeedCount = MAX_FOOD;

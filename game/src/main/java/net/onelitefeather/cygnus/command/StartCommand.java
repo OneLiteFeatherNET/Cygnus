@@ -8,7 +8,6 @@ import net.minestom.server.command.builder.Command;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * The command allows to force start the game.
@@ -19,8 +18,7 @@ import org.jetbrains.annotations.NotNull;
  **/
 public class StartCommand extends Command {
 
-
-    public StartCommand(@NotNull LinearPhaseSeries<TimedPhase> timedPhase) {
+    public StartCommand(LinearPhaseSeries<TimedPhase> timedPhase) {
         super("start");
         Component unableToStart = Messages.withPrefix(
                 Component.text("Unable to start the game because the timer is to low!", NamedTextColor.RED)

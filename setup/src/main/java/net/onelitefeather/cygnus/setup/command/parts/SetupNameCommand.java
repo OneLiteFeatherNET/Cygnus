@@ -6,11 +6,10 @@ import net.minestom.server.command.builder.condition.Conditions;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import org.jetbrains.annotations.NotNull;
 
 public final class SetupNameCommand extends Command {
 
-    public SetupNameCommand(@NotNull SetupData setupData) {
+    public SetupNameCommand(SetupData setupData) {
         super("name");
         setCondition(Conditions::playerOnly);
 

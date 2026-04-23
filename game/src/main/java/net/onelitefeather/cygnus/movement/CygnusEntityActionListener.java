@@ -4,14 +4,12 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerStartFlyingWithElytraEvent;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * @author theEvilReaper
  * @version 1.0.0
  * @since
  **/
-
 public final class CygnusEntityActionListener {
 
     private CygnusEntityActionListener() {
@@ -37,7 +35,7 @@ public final class CygnusEntityActionListener {
         }
     }
 
-    private static void setSprinting(@NotNull Player player, boolean sprinting) {
+    private static void setSprinting(Player player, boolean sprinting) {
         player.setSprinting(sprinting);
        /* AttributeInstance attribute = player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
         attribute.removeModifier(SPEED_MODIFIER_SPRINTING);

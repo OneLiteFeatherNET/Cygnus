@@ -6,5 +6,5 @@ import org.jetbrains.annotations.NotNull;
 @FunctionalInterface
 public interface ViewUpdater {
 
-    @NotNull Component updateView();
+    Component updateView();
 }

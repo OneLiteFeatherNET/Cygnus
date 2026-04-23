@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.setup.listener;
 
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -11,12 +10,12 @@ public class InstanceRemoveListener implements Consumer<RemoveEntityFromInstance
 
     private final UUID mainInstanceID;
 
-    public InstanceRemoveListener(@NotNull UUID mainInstanceID) {
+    public InstanceRemoveListener(UUID mainInstanceID) {
         this.mainInstanceID = mainInstanceID;
     }
 
     @Override
-    public void accept(@NotNull RemoveEntityFromInstanceEvent event) {
+    public void accept(RemoveEntityFromInstanceEvent event) {
         if (!event.getInstance().getUuid().equals(mainInstanceID)) return;
 
         if (!event.getEntity().hasTag(SetupTags.SETUP_ID_TAG)) {

@@ -23,7 +23,7 @@ public final class WaitingPhase extends TimedPhase {
     private final VoidConsumer instanceSwitch;
     private final VoidConsumer teleportLogic;
 
-    public WaitingPhase(@NotNull GameView gameView, @NotNull VoidConsumer instanceSwitch, @NotNull VoidConsumer teleportLogic) {
+    public WaitingPhase(GameView gameView, VoidConsumer instanceSwitch, VoidConsumer teleportLogic) {
         super("Waiting", ChronoUnit.SECONDS, 1);
         this.setPaused(false);
         this.setCurrentTicks(3);

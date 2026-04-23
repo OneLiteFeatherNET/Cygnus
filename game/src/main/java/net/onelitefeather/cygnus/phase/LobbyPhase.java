@@ -9,7 +9,6 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.ConnectionManager;
 import net.minestom.server.timer.Task;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.ChronoUnit;
 
@@ -33,9 +32,9 @@ public final class LobbyPhase extends TimedPhase {
     private Component displayComponent;
 
     public LobbyPhase(
-            @NotNull VoidConsumer gameMapLoading,
-            @NotNull VoidConsumer staminaInstantiation,
-            @NotNull VoidConsumer worldUpdater,
+            VoidConsumer gameMapLoading,
+            VoidConsumer staminaInstantiation,
+            VoidConsumer worldUpdater,
             int lobbyTime,
             int minPlayers
     ) {
@@ -148,7 +147,7 @@ public final class LobbyPhase extends TimedPhase {
      *
      * @param player the player to set the level
      */
-    public void setLevel(@NotNull Player player) {
+    public void setLevel(Player player) {
         if (getCurrentTicks() < 0) return;
         player.setLevel(getCurrentTicks());
         player.setExp(getCurrentTicks() / (float) this.lobbyTime);

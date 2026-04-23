@@ -16,7 +16,6 @@ import net.onelitefeather.cygnus.common.map.MapEntry;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -43,7 +42,7 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
     private static final int[] MAP_SLOTS = LayoutCalculator
             .repeat(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_3_ROW.getSize());
 
-    public MapSetupInventory(@NotNull List<MapEntry> maps) {
+    public MapSetupInventory(List<MapEntry> maps) {
         super(Component.text("Select map"), InventoryType.CHEST_4_ROW);
 
         var layout = InventoryLayout.fromType(getType());
@@ -82,7 +81,7 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
      * @param clickType  the type of click
      * @param result     the result of the inventory condition
      */
-    private void handleClick(@NotNull MapEntry currentMap, @NotNull Player player, int slot, @NotNull Click clickType, @NotNull ItemStack stack, @NotNull Consumer<@NotNull ClickHolder> result) {
+    private void handleClick(MapEntry currentMap, Player player, int slot, Click clickType, ItemStack stack, Consumer<ClickHolder> result) {
         result.accept(ClickHolder.cancelClick());
 
         if (clickType instanceof Click.Left || clickType instanceof Click.Right) {
@@ -99,7 +98,7 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
      * @return the ItemStack representing the map item
      */
     @Contract(value = "_ -> new", pure = true)
-    private @NotNull ItemStack getMapItem(@NotNull Path path) {
+    private ItemStack getMapItem(Path path) {
         return ItemStack.builder(Material.PAPER)
                 .lore(LORE_COMPONENTS)
                 .customName(Component.text(path.getFileName().toString()))
@@ -111,7 +110,7 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
      *
      * @param player the player to open the inventory for
      */
-    public void open(@NotNull Player player) {
+    public void open(Player player) {
         player.openInventory(this.getInventory());
     }
 }

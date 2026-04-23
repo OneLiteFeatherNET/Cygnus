@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.listener.game;
 import net.minestom.server.MinecraftServer;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageEvent;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
@@ -11,12 +10,12 @@ public final class GamePageListener implements Consumer<PageEvent> {
 
     private final PageProvider pageProvider;
 
-    public GamePageListener(@NotNull PageProvider pageProvider) {
+    public GamePageListener(PageProvider pageProvider) {
         this.pageProvider = pageProvider;
     }
 
     @Override
-    public void accept(@NotNull PageEvent event) {
+    public void accept(PageEvent event) {
         var pageEntity = event.entity();
         if (event.reason() == PageEvent.Reason.TTL) {
             this.pageProvider.triggerTTLHandling(pageEntity.getHitBoxUUID());

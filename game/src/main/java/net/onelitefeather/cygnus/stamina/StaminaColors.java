@@ -4,7 +4,6 @@ import net.theevilreaper.aves.util.Components;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * The StaminaColors enum is designed to provide different colors for the stamina bar.
@@ -28,7 +27,7 @@ enum StaminaColors {
      * @param completeColor the color for the complete bar
      * @param emptyColor    the color for the empty bar
      */
-    StaminaColors(@NotNull NamedTextColor completeColor, @NotNull NamedTextColor emptyColor) {
+    StaminaColors(NamedTextColor completeColor, NamedTextColor emptyColor) {
         this.completeColor = completeColor;
         this.emptyColor = emptyColor;
     }
@@ -40,7 +39,7 @@ enum StaminaColors {
      * @param tileChar    the character to use for the progress bar
      * @param currentTime the current time to display
      */
-    public void sendProgressBar(@NotNull Player player, @NotNull String tileChar, int currentTime) {
+    public void sendProgressBar(Player player, String tileChar, int currentTime) {
         Component progressBar = Components.getProgressBar(currentTime, 17, 17, tileChar, this.completeColor, this.emptyColor);
         player.sendActionBar(progressBar);
     }
@@ -50,7 +49,7 @@ enum StaminaColors {
      *
      * @return the color complete bar color
      */
-    public @NotNull NamedTextColor getCompleteColor() {
+    public NamedTextColor getCompleteColor() {
         return this.completeColor;
     }
 
@@ -59,7 +58,7 @@ enum StaminaColors {
      *
      * @return the color empty bar color
      */
-    public @NotNull NamedTextColor getEmptyColor() {
+    public NamedTextColor getEmptyColor() {
         return this.emptyColor;
     }
 }

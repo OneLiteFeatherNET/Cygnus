@@ -7,7 +7,6 @@ import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.utils.TeamHelper;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -37,7 +36,7 @@ public final class SlenderBarTrigger {
      * @param slenderBarSupplier the supplier to get the {@link SlenderBar}
      * @param updateRuneFunction the function to update the rune status
      */
-    public SlenderBarTrigger(@NotNull Supplier<@Nullable StaminaBar> slenderBarSupplier, @NotNull PlayerConsumer updateRuneFunction) {
+    public SlenderBarTrigger(Supplier<@Nullable StaminaBar> slenderBarSupplier, PlayerConsumer updateRuneFunction) {
         this.slenderBarSupplier = slenderBarSupplier;
         this.updateRuneFunction = updateRuneFunction;
     }
@@ -47,7 +46,7 @@ public final class SlenderBarTrigger {
      *
      * @param player the player to trigger the activation
      */
-    public void trigger(@NotNull Player player) {
+    public void trigger(Player player) {
         if (!TeamHelper.isSlenderTeam(player)) return;
         SlenderBar slenderBar = (SlenderBar) slenderBarSupplier.get();
         if (slenderBar == null) return;
@@ -68,7 +67,7 @@ public final class SlenderBarTrigger {
      *
      * @param player the player to change the visibility status
      */
-    private void changeVisibilityStatus(@NotNull Player player) {
+    private void changeVisibilityStatus(Player player) {
         byte currentValue = player.getTag(Tags.HIDDEN);
         player.setTag(Tags.HIDDEN, currentValue == Helper.ZERO_ID ? Helper.ONE_ID : Helper.ZERO_ID);
     }

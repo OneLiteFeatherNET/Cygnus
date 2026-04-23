@@ -8,7 +8,6 @@ import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -20,14 +19,14 @@ public final class MapSetupSelectListener implements Consumer<MapSetupSelectEven
     private final Component loadingMessage;
     private final SetupData setupData;
 
-    public MapSetupSelectListener(@NotNull SetupData setupData) {
+    public MapSetupSelectListener(SetupData setupData) {
         this.alreadySelected = Messages.withPrefix(Component.text("You already selected a map", NamedTextColor.RED));
         this.loadingMessage = Messages.withPrefix(Component.text("Loading world please wait...", NamedTextColor.GRAY));
         this.setupData = setupData;
     }
 
     @Override
-    public void accept(@NotNull MapSetupSelectEvent event) {
+    public void accept(MapSetupSelectEvent event) {
         Player player = event.getPlayer();
         if (setupData.hasMap()) {
             player.sendMessage(this.alreadySelected);
@@ -49,7 +48,7 @@ public final class MapSetupSelectListener implements Consumer<MapSetupSelectEven
                 .schedule();
     }
 
-    private void handleTeleport(@NotNull Player player) {
+    private void handleTeleport(Player player) {
         setupData.teleport(player);
     }
 }

@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.attribute;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * The {@link AttributeHelper} class provides utility methods to adjust the player's attributes.
@@ -30,7 +29,7 @@ public final class AttributeHelper {
      *
      * @param player the player to adjust
      */
-    public static void adjustStepHeightAndJump(@NotNull Player player) {
+    public static void adjustStepHeightAndJump(Player player) {
         player.getAttribute(Attribute.JUMP_STRENGTH).setBaseValue(GAME_JUMP_STRENGTH);
         player.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(GAME_STEP_HEIGHT);
     }
@@ -41,7 +40,7 @@ public final class AttributeHelper {
      *
      * @param player the player to reset
      */
-    public static void resetAttributeAdjustments(@NotNull Player player) {
+    public static void resetAttributeAdjustments(Player player) {
         player.getAttribute(Attribute.JUMP_STRENGTH).setBaseValue(DEFAULT_JUMP_STRENGTH);
         player.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(DEFAULT_STEP_HEIGHT);
     }
@@ -51,7 +50,7 @@ public final class AttributeHelper {
      *
      * @param player the player to increase the speed
      */
-    public static void decreaseSpeed(@NotNull Player player) {
+    public static void decreaseSpeed(Player player) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(GAME_MOVE_SPEED);
     }
 
@@ -60,7 +59,7 @@ public final class AttributeHelper {
      *
      * @param player the player to reset
      */
-    public static void resetSpeed(@NotNull Player player) {
+    public static void resetSpeed(Player player) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(DEFAULT_MOVE_SPEED);
     }
 
@@ -70,7 +69,7 @@ public final class AttributeHelper {
      * @param player the player to update the health scale
      * @param scale  the scale to set
      */
-    public static void updateHealthScale(@NotNull Player player, float scale) {
+    public static void updateHealthScale(Player player, float scale) {
         float healthScale = (float) (player.getAttribute(Attribute.MAX_HEALTH).getBaseValue() + scale);
         player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(healthScale);
         player.setHealth(healthScale);

@@ -9,7 +9,6 @@ import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageCalculation;
 import net.onelitefeather.cygnus.common.util.HealthScalingCalculation;
 import net.onelitefeather.cygnus.utils.TeamHelper;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
@@ -20,13 +19,13 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
     private final ConnectionManager connectionManager;
     private final IntConsumer pageCounter;
 
-    public GamePreLaunchListener(@NotNull IntConsumer pageCounter) {
+    public GamePreLaunchListener(IntConsumer pageCounter) {
         this.pageCounter = pageCounter;
         this.connectionManager = MinecraftServer.getConnectionManager();
     }
 
     @Override
-    public void accept(@NotNull GamePreLaunchEvent event) {
+    public void accept(GamePreLaunchEvent event) {
         int pageCount = PageCalculation.calculatePageAmount();
         if (pageCount == 0) throw new UnsupportedOperationException("No pages found");
         pageCounter.accept(pageCount);

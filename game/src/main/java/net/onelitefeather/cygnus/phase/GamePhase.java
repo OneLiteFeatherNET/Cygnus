@@ -8,7 +8,7 @@ import net.minestom.server.event.player.PlayerTickEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.listener.player.CygnusPlayerTickListener;
 import net.onelitefeather.cygnus.view.GameView;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
@@ -23,7 +23,7 @@ public final class GamePhase extends TimedPhase {
     private final GameView gameView;
     private final Runnable startRunnable;
     private final VoidConsumer updateWorldTime;
-    private GameFinishEvent finishEvent;
+    private @Nullable GameFinishEvent finishEvent;
 
     /**
      * Creates a new instance from the {@link GamePhase}.
@@ -34,10 +34,10 @@ public final class GamePhase extends TimedPhase {
      * @param updateWorldTime the consumer to update the world time
      */
     public GamePhase(
-            @NotNull GameView gameView,
-            @NotNull Runnable startRunnable,
-            @NotNull Runnable endRunnable,
-            @NotNull VoidConsumer updateWorldTime,
+            GameView gameView,
+            Runnable startRunnable,
+            Runnable endRunnable,
+            VoidConsumer updateWorldTime,
             int gameTime
     ) {
         super("GamePhase", ChronoUnit.SECONDS, 1);
@@ -55,7 +55,7 @@ public final class GamePhase extends TimedPhase {
      *
      * @param finishEvent the reason to set
      */
-    public void setFinishEvent(@NotNull GameFinishEvent finishEvent) {
+    public void setFinishEvent(GameFinishEvent finishEvent) {
         if (this.finishEvent != null) return;
         this.finishEvent = finishEvent;
     }

@@ -8,11 +8,10 @@ import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import org.jetbrains.annotations.NotNull;
 
 public final class SetupSpawnCommand extends Command {
 
-    public SetupSpawnCommand(@NotNull SetupData setupData) {
+    public SetupSpawnCommand(SetupData setupData) {
         super("spawn");
 
         addSyntax((sender, context) -> {

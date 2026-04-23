@@ -12,7 +12,6 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.map.GameMap;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -37,7 +36,7 @@ public final class TeamHelper {
      * @param survivorTeam the team for the survivors
      * @return the player who is the slender
      */
-    public static @NotNull Player prepareTeamAllocation(@NotNull Team slenderTeam, @NotNull Team survivorTeam) {
+    public static Player prepareTeamAllocation(Team slenderTeam, Team survivorTeam) {
         Check.argCondition(slenderTeam.getCapacity() != 1, "The slender team must have a capacity from one");
         Optional<Player> randomPlayer = Players.getRandomPlayer();
         if (randomPlayer.isEmpty()) {
@@ -49,7 +48,7 @@ public final class TeamHelper {
         slenderPlayer.updateViewableRule(ViewRuleUpdater::viewableRuleForSlender);
 
         slenderTeam.addPlayer(slenderPlayer);
-        Set<@NotNull Player> onlinePlayers = new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers());
+        Set<Player> onlinePlayers = new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers());
         onlinePlayers.removeIf(player -> player.getUuid().equals(slenderPlayer.getUuid()));
         survivorTeam.addPlayers(onlinePlayers);
 
@@ -65,7 +64,7 @@ public final class TeamHelper {
      * @param gameMap      the map to get the spawn points
      * @param gameInstance the instance to teleport the players
      */
-    public static void teleportTeams(@NotNull TeamService teamService, @NotNull GameMap gameMap, @NotNull Instance gameInstance) {
+    public static void teleportTeams(TeamService teamService, GameMap gameMap, Instance gameInstance) {
         Team slenderTeam = teamService.getTeams().getFirst();
 
         slenderTeam.getPlayers().forEach(player -> updateInstance(player, gameInstance, gameMap.getSlenderSpawn()));
@@ -85,7 +84,7 @@ public final class TeamHelper {
      *
      * @param teamService the service to get the teams
      */
-    public static void updateTabList(@NotNull TeamService teamService) {
+    public static void updateTabList(TeamService teamService) {
         if (!teamService.hasTeams()) return;
 
         Team slenderTeam = teamService.getTeams().getFirst();
@@ -113,7 +112,7 @@ public final class TeamHelper {
      * @param player the player to check
      * @return true if the player is in the slender team
      */
-    public static boolean isSlenderTeam(@NotNull Player player) {
+    public static boolean isSlenderTeam(Player player) {
         return player.getTag(Tags.TEAM_ID) == SLENDER_ID;
     }
 
@@ -123,7 +122,7 @@ public final class TeamHelper {
      * @param player the player to check
      * @return true if the player is in the survivor team
      */
-    public static boolean isSurvivorTeam(@NotNull Player player) {
+    public static boolean isSurvivorTeam(Player player) {
         return player.getTag(Tags.TEAM_ID) == SURVIVOR_ID;
     }
 
@@ -134,7 +133,7 @@ public final class TeamHelper {
      * @param instance the new instance
      * @param position the new position
      */
-    private static void updateInstance(@NotNull Player player, @NotNull Instance instance, @NotNull Pos position) {
+    private static void updateInstance(Player player, Instance instance, Pos position) {
         player.setInstance(instance, position);
     }
 

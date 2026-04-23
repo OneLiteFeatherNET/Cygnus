@@ -8,7 +8,6 @@ import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.network.packet.server.play.EntityAttributesPacket;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
-import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("java:S3252")
 public final class CygnusPlayer extends Player {
@@ -21,7 +20,7 @@ public final class CygnusPlayer extends Player {
 
     private boolean blockedSprinting;
 
-    public CygnusPlayer(@NotNull PlayerConnection playerConnection, @NotNull GameProfile gameProfile) {
+    public CygnusPlayer(PlayerConnection playerConnection, GameProfile gameProfile) {
         super(playerConnection, gameProfile);
         this.blockedSprinting = false;
     }
@@ -77,7 +76,7 @@ public final class CygnusPlayer extends Player {
     }
 
     @Override
-    public @NotNull EntityAttributesPacket getPropertiesPacket() {
+    public EntityAttributesPacket getPropertiesPacket() {
         return super.getPropertiesPacket();
     }
 }

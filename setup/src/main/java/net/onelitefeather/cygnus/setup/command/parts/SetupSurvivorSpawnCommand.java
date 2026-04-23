@@ -10,11 +10,10 @@ import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import org.jetbrains.annotations.NotNull;
 
 public final class SetupSurvivorSpawnCommand extends Command {
 
-    public SetupSurvivorSpawnCommand(@NotNull SetupData setupData) {
+    public SetupSurvivorSpawnCommand(SetupData setupData) {
         super("survivor");
         setCondition(Conditions::playerOnly);
         addSyntax((sender, context) -> {

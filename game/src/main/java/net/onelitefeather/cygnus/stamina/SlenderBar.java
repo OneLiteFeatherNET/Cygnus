@@ -9,9 +9,10 @@ import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 /**
@@ -29,11 +30,11 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
     private static final float TIME_STEP = 0.5f;
     private final String tileChar;
     private final int time;
-    private BiFunction<Player, State, Void> accept;
+    private @Nullable BiConsumer<Player, State> accept;
     private double currentTime;
     private StaminaColors colorState;
 
-    SlenderBar(@NotNull CygnusPlayer player) {
+    SlenderBar(CygnusPlayer player) {
         super(player, ChronoUnit.MILLIS, 500);
         this.tileChar = "▋";
         this.time = MAX_TIME;
@@ -41,7 +42,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
         this.colorState = StaminaColors.DRAINING;
     }
 
-    public void setAccept(@NotNull BiFunction<Player, State, Void> accept) {
+    public void setAccept(BiConsumer<Player, State> accept) {
         this.accept = accept;
     }
 
@@ -72,7 +73,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
         state = State.REGENERATING;
         colorState = StaminaColors.REGENERATING;
         player.setTag(Tags.HIDDEN, Helper.ONE_ID);
-        this.accept.apply(player, state);
+        this.accept.accept(player, state);
         this.applyNightVision(player);
         player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1f);
         player.sendSpringPackets();
@@ -104,7 +105,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.sendSpringPackets();
                 player.setSprinting(false);
                 player.setBlockedSprinting(true);
-                this.accept.apply(player, State.DRAINING);
+                this.accept.accept(player, State.DRAINING);
             }
             case REGENERATING -> {
                 state = State.DRAINING;
@@ -116,7 +117,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.sendSpringPackets();
                 player.setSprinting(false);
                 player.setBlockedSprinting(true);
-                this.accept.apply(player, State.DRAINING);
+                this.accept.accept(player, State.DRAINING);
             }
             case DRAINING -> {
                 state = State.REGENERATING;
@@ -127,7 +128,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1f);
                 player.sendSpringPackets();
                 player.setBlockedSprinting(false);
-                this.accept.apply(player, State.REGENERATING);
+                this.accept.accept(player, State.REGENERATING);
             }
         }
         return true;

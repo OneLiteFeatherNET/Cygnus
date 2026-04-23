@@ -10,7 +10,6 @@ import net.minestom.server.command.builder.condition.Conditions;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,11 +24,11 @@ import java.util.List;
 public final class SetupBuildersCommand extends Command {
 
     /**
-     * Creates a new instance from command class and contains also the logic to execute the command.
+     * Creates a new instance from the command class and contains also the logic to execute the command.
      *
      * @param setupData the involved {@link SetupData} class to get some information from it
      */
-    public SetupBuildersCommand(@NotNull SetupData setupData) {
+    public SetupBuildersCommand(SetupData setupData) {
         super("builders");
         setCondition(Conditions::playerOnly);
 
@@ -60,7 +59,7 @@ public final class SetupBuildersCommand extends Command {
      * @param builders the builders to transform
      * @return a list with the transformed builders
      */
-    private @NotNull List<TextComponent> transformBuilders(@NotNull String... builders) {
+    private List<TextComponent> transformBuilders(String... builders) {
         return Arrays.stream(builders).map(Component::text).toList();
     }
 }

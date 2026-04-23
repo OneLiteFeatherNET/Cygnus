@@ -14,7 +14,6 @@ import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.util.DirectionFaceHelper;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
@@ -22,12 +21,12 @@ public final class PageCreationListener implements Consumer<PlayerBlockBreakEven
 
     private final SetupData setupData;
 
-    public PageCreationListener(@NotNull SetupData setupData) {
+    public PageCreationListener(SetupData setupData) {
         this.setupData = setupData;
     }
 
     @Override
-    public void accept(@NotNull PlayerBlockBreakEvent event) {
+    public void accept(PlayerBlockBreakEvent event) {
         event.setCancelled(true);
 
         if (setupData.getBaseMap() == null || !setupData.hasPageMode()) return;
