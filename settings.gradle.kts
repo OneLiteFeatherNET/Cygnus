@@ -27,6 +27,7 @@ dependencyResolutionManagement {
             version("cloudnet", "4.0.0-RC16")
             version("aonyx", "0.7.1")
             version("cyclonedx", "3.2.4")
+            version("pica", "0.0.1")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("minestom", "net.minestom", "minestom").withoutVersion()
@@ -39,7 +40,7 @@ dependencyResolutionManagement {
             library("junit.params", "org.junit.jupiter", "junit-jupiter-params").withoutVersion()
             library("aves", "net.theevilreaper", "aves").version("1.13.1")
             library("xerus", "net.theevilreaper", "xerus").withoutVersion()
-
+            library("pica", "net.onelitefeather", "pica").versionRef("pica")
             library("canis", "com.github.theEvilReaper", "Canis").version("master-SNAPSHOT")
 
             library("cloudnet-bom", "eu.cloudnetservice.cloudnet", "bom").versionRef("cloudnet")
