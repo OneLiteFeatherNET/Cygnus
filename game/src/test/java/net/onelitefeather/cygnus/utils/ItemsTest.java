@@ -24,9 +24,7 @@ class ItemsTest {
         Player player = env.createPlayer(instance);
         assertNotNull(player);
 
-        Items items = new Items();
-
-        items.setSlenderEye(player);
+        Items.setSlenderEye(player);
         ItemStack eye = player.getInventory().getItemStack(0x00);
         assertNotNull(eye);
         assertNotEquals(Material.AIR, eye.material());

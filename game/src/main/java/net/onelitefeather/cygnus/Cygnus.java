@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus;
 
 import net.minestom.server.utils.PacketSendingUtils;
+import net.onelitefeather.cygnus.utils.Items;
 import net.theevilreaper.aves.util.Strings;
 import net.theevilreaper.aves.util.TimeFormat;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
@@ -57,7 +58,6 @@ import net.onelitefeather.cygnus.phase.WaitingPhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
-import net.onelitefeather.cygnus.utils.Items;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.utils.TeamHelper;
 import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
@@ -81,7 +81,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final LinearPhaseSeries<TimedPhase> linearPhaseSeries;
     private final AmbientProvider ambientProvider;
     private final StaminaService staminaService;
-    private final Items items;
     private final PageProvider pageProvider;
     private final GameView view;
     private final MapProvider mapProvider;
@@ -91,7 +90,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Path path = Paths.get("");
         this.teamService = TeamService.of();
         this.linearPhaseSeries = new LinearPhaseSeries<>("game");
-        this.items = new Items();
         this.ambientProvider = new AmbientProvider();
         this.staminaService = new StaminaService();
         this.gameConfig = new GameConfigReader(path).getConfig();
@@ -151,7 +149,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(
-                SlenderReviveEvent.class, new GameReviveListener(this.mapProvider.getGameMap(), this.items, this.staminaService));
+                SlenderReviveEvent.class, new GameReviveListener(this.mapProvider.getGameMap(), this.staminaService));
         manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
@@ -193,7 +191,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         var slenderPlayer = this.teamService.getTeams().get(Helper.SLENDER_ID).getPlayers().stream().findFirst().get();
         slenderPlayer.setTag(Tags.HIDDEN, (byte) 1);
         slenderPlayer.sendMessage(Messages.SLENDER_JOIN_PART);
-        this.items.setSlenderEye(slenderPlayer);
+        Items.setSlenderEye(slenderPlayer);
         this.staminaService.start();
         this.pageProvider.spawn();
         this.ambientProvider.startTask();

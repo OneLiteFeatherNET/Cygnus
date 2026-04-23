@@ -19,12 +19,10 @@ import java.util.function.Consumer;
 public class GameReviveListener implements Consumer<SlenderReviveEvent> {
 
     private final GameMap gameMap;
-    private final Items items;
     private final StaminaService staminaService;
 
-    public GameReviveListener(@NotNull GameMap gameMap, @NotNull Items items, @NotNull StaminaService staminaService) {
+    public GameReviveListener(@NotNull GameMap gameMap, @NotNull StaminaService staminaService) {
         this.gameMap = gameMap;
-        this.items = items;
         this.staminaService = staminaService;
     }
 
@@ -34,6 +32,6 @@ public class GameReviveListener implements Consumer<SlenderReviveEvent> {
         staminaService.switchToSlenderBar(player);
         player.setTag(Tags.GAME_TAG, Helper.SLENDER_ID);
         player.teleport(gameMap.getSlenderSpawn());
-        items.setSlenderEye(player);
+        Items.setSlenderEye(player);
     }
 }

@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.utils;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
@@ -18,23 +20,21 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings({"java:S3252"})
 public final class Items {
 
-    private final ItemStack slenderEye;
-
-    public Items() {
-        this.slenderEye = ItemStack.builder(Material.ENDER_EYE)
-                .customName(Messages.withMini("<!i><color:#ff00d4>SlenderEye</color>"))
-                .set(Tags.ITEM_TAG, (byte) 0)
-                .build();
-    }
+    private static final ItemStack slenderEye = ItemStack.builder(Material.ENDER_EYE)
+            .customName(Component.text("SlenderEye").color(TextColor.fromHexString("#ff00d4")))
+            .set(Tags.ITEM_TAG, (byte) 0)
+            .build();
 
     /**
      * Sets the {@link ItemStack} for the SlenderEye to the player inventory.
      *
      * @param player the player who should receive the item
      */
-    public void setSlenderEye(@NotNull Player player) {
+    public static void setSlenderEye(Player player) {
         player.getInventory().clear();
-        player.getInventory().addItemStack(this.slenderEye);
+        player.getInventory().addItemStack(slenderEye);
         player.switchEntityType(EntityType.ENDERMAN);
     }
+
+    private Items() {}
 }
