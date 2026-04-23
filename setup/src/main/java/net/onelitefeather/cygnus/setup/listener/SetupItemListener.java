@@ -9,7 +9,6 @@ import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupItems;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -22,10 +21,10 @@ public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
     private final PlayerConsumer teleportBackLogic;
 
     public SetupItemListener(
-            @NotNull SetupData setupData,
-            @NotNull MapSetupInventory mapSetupInventory,
-            @NotNull BiPredicate<SetupData, BaseMap> saveLogic,
-            @NotNull PlayerConsumer teleportBackLogic
+            SetupData setupData,
+            MapSetupInventory mapSetupInventory,
+            BiPredicate<SetupData, BaseMap> saveLogic,
+            PlayerConsumer teleportBackLogic
     ) {
         this.setupData = setupData;
         this.mapSetupInventory = mapSetupInventory;
@@ -34,7 +33,7 @@ public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
     }
 
     @Override
-    public void accept(@NotNull PlayerUseItemEvent event) {
+    public void accept(PlayerUseItemEvent event) {
         if (!event.getItemStack().hasTag(Tags.ITEM_TAG)) return;
 
         var player = event.getPlayer();

@@ -5,7 +5,6 @@ import net.minestom.server.event.trait.CancellableEvent;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.onelitefeather.cygnus.common.map.MapEntry;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * The {@link MapSetupSelectEvent} is called when a player selects a map for the setup process.
@@ -28,7 +27,7 @@ public final class MapSetupSelectEvent implements PlayerEvent, CancellableEvent 
      * @param mapEntry  the selected map
      * @param setupMode the current setup mode
      */
-    public MapSetupSelectEvent(@NotNull Player player, @NotNull MapEntry mapEntry, @NotNull SetupMode setupMode) {
+    public MapSetupSelectEvent(Player player, MapEntry mapEntry, SetupMode setupMode) {
         this.player = player;
         this.mapEntry = mapEntry;
         this.setupMode = setupMode;
@@ -59,7 +58,7 @@ public final class MapSetupSelectEvent implements PlayerEvent, CancellableEvent 
      *
      * @return the map entry
      */
-    public @NotNull MapEntry getMapEntry() {
+    public MapEntry getMapEntry() {
         return mapEntry;
     }
 
@@ -68,7 +67,7 @@ public final class MapSetupSelectEvent implements PlayerEvent, CancellableEvent 
      *
      * @return the current mode
      */
-    public @NotNull SetupMode getSetupMode() {
+    public SetupMode getSetupMode() {
         return setupMode;
     }
 
@@ -78,7 +77,7 @@ public final class MapSetupSelectEvent implements PlayerEvent, CancellableEvent 
      * @return the player
      */
     @Override
-    public @NotNull Player getPlayer() {
+    public Player getPlayer() {
         return this.player;
     }
 }

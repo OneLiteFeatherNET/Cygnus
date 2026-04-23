@@ -6,7 +6,6 @@ import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * @author theEvilReaper
@@ -15,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
  **/
 public final class SetupPageCommand extends Command {
 
-    public SetupPageCommand(@NotNull SetupData setupData) {
+    public SetupPageCommand(SetupData setupData) {
         super("page");
         setCondition(Conditions::playerOnly);
 

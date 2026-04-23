@@ -12,7 +12,6 @@ import net.onelitefeather.cygnus.setup.command.parts.SetupSlenderSpawnCommand;
 import net.onelitefeather.cygnus.setup.command.parts.SetupSpawnCommand;
 import net.onelitefeather.cygnus.setup.command.parts.SetupSurvivorSpawnCommand;
 import net.onelitefeather.cygnus.setup.util.SetupData;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * The setup command class is the root node for all setup commands.
@@ -30,7 +29,7 @@ public final class SetupCommand extends Command {
      *
      * @param setupData the involved {@link SetupData} class to get some information from it
      */
-    public SetupCommand(@NotNull SetupData setupData) {
+    public SetupCommand(SetupData setupData) {
         super("setup");
         this.setCondition(Conditions::playerOnly);
         this.addSubcommand(new SetupNameCommand(setupData));
@@ -48,7 +47,7 @@ public final class SetupCommand extends Command {
      *
      * @return the help component
      */
-    private @NotNull Component getHelpComponent() {
+    private Component getHelpComponent() {
         Component helpComponent = Messages.withPrefix(Component.text("Help for the setup commands:", NamedTextColor.GRAY))
                 .append(Component.newline());
 
