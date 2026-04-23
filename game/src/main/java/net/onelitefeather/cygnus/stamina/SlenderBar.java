@@ -105,7 +105,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.sendSpringPackets();
                 player.setSprinting(false);
                 player.setBlockedSprinting(true);
-                this.accept.apply(player, State.DRAINING);
+                this.accept.accept(player, State.DRAINING);
             }
             case REGENERATING -> {
                 state = State.DRAINING;
