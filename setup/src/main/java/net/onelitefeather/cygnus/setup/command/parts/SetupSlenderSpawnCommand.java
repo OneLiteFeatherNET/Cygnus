@@ -14,10 +14,10 @@ import net.onelitefeather.cygnus.setup.util.SetupTags;
 /**
  * @author theEvilReaper
  * @version 1.0.0
- * @since
+ * @since 0.1.0
  **/
-
 public class SetupSlenderSpawnCommand extends Command {
+
     public SetupSlenderSpawnCommand(SetupData setupData) {
         super("slender");
 
@@ -42,7 +42,8 @@ public class SetupSlenderSpawnCommand extends Command {
 
             GameMap gameMap = (GameMap) setupData.getBaseMap();
 
-            gameMap.setSlenderSpawn(Pos.fromPoint(((Player) sender).getPosition()));
+            Pos position = ((Player) sender).getPosition().asPos();
+            gameMap.setSlenderSpawn(position);
             sender.sendMessage(Component.text("The slender spawn was added to the map"));
         });
     }

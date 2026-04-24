@@ -13,7 +13,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 /**
  * @author theEvilReaper
@@ -66,7 +65,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
         if (currentTime >= 0) {
             currentTime -= TIME_STEP;
             Instance instance = player.getInstance();
-            applyDamage(instance, player.getUuid(), Pos.fromPoint(player.getPosition()), 3, TIME_STEP);
+            applyDamage(instance, player.getUuid(), player.getPosition().asPos(), 3, TIME_STEP);
             this.colorState.sendProgressBar(player, tileChar, (int) currentTime);
             return;
         }
@@ -111,7 +110,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 state = State.DRAINING;
                 colorState = StaminaColors.DRAINING;
                 player.setTag(Tags.HIDDEN, Helper.ONE_ID);
-                this.playSpawnSound(player.getInstance(), Pos.fromPoint(player.getPosition()), player.getUuid());
+                this.playSpawnSound(player.getInstance(), player.getPosition().asPos(), player.getUuid());
                 this.applyBlindness(player);
                 player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.0669);
                 player.sendSpringPackets();
@@ -123,7 +122,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 state = State.REGENERATING;
                 colorState = StaminaColors.REGENERATING;
                 player.setTag(Tags.HIDDEN, Helper.ZERO_ID);
-                this.playTeleportSound(player.getInstance(), Pos.fromPoint(player.getPosition()), player.getUuid());
+                this.playTeleportSound(player.getInstance(), player.getPosition().asPos(), player.getUuid());
                 this.applyNightVision(player);
                 player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1f);
                 player.sendSpringPackets();
