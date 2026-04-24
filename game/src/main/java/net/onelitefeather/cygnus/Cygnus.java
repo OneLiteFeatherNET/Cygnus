@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus;
 import net.minestom.server.utils.PacketSendingUtils;
 import net.onelitefeather.cygnus.map.GameMapProvider;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
+import net.onelitefeather.cygnus.utils.Items;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import net.theevilreaper.aves.util.Strings;
 import net.theevilreaper.aves.util.TimeFormat;
@@ -155,13 +156,14 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     }
 
     private void initPhases() {
-        VoidConsumer gameMapLoader = () -> ((GameMapProvider)this.mapProvider).loadGameMap();
+        GameMapProvider gameMapProvider = ((GameMapProvider) this.mapProvider);
+        VoidConsumer gameMapLoader = gameMapProvider::loadGameMap;
         VoidConsumer staminaInitializer = () -> StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
-        VoidConsumer instanceSwitch = this.mapProvider::switchToGameMap;
+        VoidConsumer instanceSwitch = gameMapProvider::switchToGameMap;
         VoidConsumer teamInitializer = () -> TeamHelper.teleportTeams(
                 this.teamService,
-                this.mapProvider.getGameMap(),
-                this.mapProvider.getGameInstance()
+                gameMapProvider.getGameMap(),
+                gameMapProvider.getActiveInstance().get()
         );
         LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers());
         this.linearPhaseSeries.add(lobbyPhase);
