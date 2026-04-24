@@ -38,55 +38,55 @@ class GameMapTest {
 
     @Test
     void testSurvivorSpawnHandling() {
-        GameMap gameMap = new GameMap();
-        assertNotNull(gameMap);
+        GameMapBuilder mapBuilder = new GameMapBuilder();
+        assertNotNull(mapBuilder);
 
         Pos testPos = new Pos(1, 1, 1);
 
-        assertTrue(gameMap.getSurvivorSpawns().isEmpty());
-        assertTrue(gameMap.addSurvivorSpawn(testPos));
-        assertFalse(gameMap.getSurvivorSpawns().isEmpty());
-        assertEquals(1, gameMap.getSurvivorSpawns().size());
-        assertEquals(testPos, gameMap.getSurvivorSpawns().iterator().next());
+        assertTrue(mapBuilder.getSurvivorSpawns().isEmpty());
+        assertTrue(mapBuilder.addSurvivorSpawn(testPos));
+        assertFalse(mapBuilder.getSurvivorSpawns().isEmpty());
+        assertEquals(1, mapBuilder.getSurvivorSpawns().size());
+        assertEquals(testPos, mapBuilder.getSurvivorSpawns().iterator().next());
 
-        assertTrue(gameMap.removeSurvivorSpawn(testPos));
-        assertTrue(gameMap.getSurvivorSpawns().isEmpty());
-        assertFalse(gameMap.removeSurvivorSpawn(testPos));
+        assertTrue(mapBuilder.removeSurvivorSpawn(testPos));
+        assertTrue(mapBuilder.getSurvivorSpawns().isEmpty());
+        assertFalse(mapBuilder.removeSurvivorSpawn(testPos));
     }
 
     @Disabled("The function will be reimplemented in a future update")
     @Test
     void testHasEnoughSurvivorSpawns() {
-        GameMap gameMap = new GameMap();
-        assertNotNull(gameMap);
-        assertFalse(gameMap.hasEnoughSurvivorSpawns());
+        GameMapBuilder mapBuilder = new GameMapBuilder();
+        assertNotNull(mapBuilder);
+        assertFalse(mapBuilder.hasEnoughSurvivorSpawns());
         for (int i = 0; i <= 12; i++) {
-            gameMap.addSurvivorSpawn(new Pos(i, i, i));
+            mapBuilder.addSurvivorSpawn(new Pos(i, i, i));
         }
-        assertTrue(gameMap.hasEnoughSurvivorSpawns());
+        assertTrue(mapBuilder.hasEnoughSurvivorSpawns());
     }
 
     @Test
     void testSlenderSpawnHandling() {
-        GameMap gameMap = new GameMap();
-        assertNotNull(gameMap);
-        gameMap.setSlenderSpawn(Pos.ZERO);
-        assertEquals(Pos.ZERO, gameMap.getSlenderSpawn());
-        gameMap.removeSlenderSpawn();
-        assertNull(gameMap.getSlenderSpawn());
+        GameMapBuilder mapBuilder = new GameMapBuilder();
+        assertNotNull(mapBuilder);
+        mapBuilder.setSlenderSpawn(Pos.ZERO);
+        assertEquals(Pos.ZERO, mapBuilder.getSlenderSpawn());
+        mapBuilder.setSlenderSpawn(null);
+        assertNull(mapBuilder.getSlenderSpawn());
     }
 
     @Test
     void testPageFaceHandling() {
-        GameMap gameMap = new GameMap();
-        assertNotNull(gameMap);
-        assertTrue(gameMap.getPageFaces().isEmpty());
+        GameMapBuilder mapBuilder = new GameMapBuilder();
+        assertNotNull(mapBuilder);
+        assertTrue(mapBuilder.getPageFaces().isEmpty());
 
-        gameMap.addPage(Vec.ZERO, Direction.NORTH);
+        mapBuilder.addPage(Vec.ZERO, Direction.NORTH);
 
-        assertFalse(gameMap.getPageFaces().isEmpty());
+        assertFalse(mapBuilder.getPageFaces().isEmpty());
 
-        PageResource pageResource = gameMap.getPageFaces().iterator().next();
+        PageResource pageResource = mapBuilder.getPageFaces().iterator().next();
 
         assertEquals(Vec.ZERO, pageResource.position());
         assertEquals(Direction.NORTH, pageResource.face());
