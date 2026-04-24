@@ -6,6 +6,7 @@ import net.minestom.server.command.builder.condition.Conditions;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
@@ -34,7 +35,7 @@ public final class SetupSurvivorSpawnCommand extends Command {
                 return;
             }
 
-            GameMap gameMap = (GameMap) setupData.getBaseMap();
+            GameMapBuilder gameMap = (GameMapBuilder) setupData.getBaseMapBuilder();
             gameMap.addSurvivorSpawn(Pos.fromPoint(((Player) sender).getPosition()));
             sender.sendMessage(Component.text("The survivor spawn was added to the map"));
         });

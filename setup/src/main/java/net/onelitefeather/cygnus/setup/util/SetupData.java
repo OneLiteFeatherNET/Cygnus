@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.setup.util;
 
+import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.theevilreaper.aves.map.BaseMap;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -12,6 +13,7 @@ import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.anvil.AnvilLoader;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.MapEntry;
+import net.theevilreaper.aves.map.BaseMapBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
@@ -31,7 +33,7 @@ public final class SetupData {
 
     private MapEntry selectedMap;
     private SetupMode setupMode;
-    private BaseMap baseMap;
+    private BaseMapBuilder baseMapBuilder;
 
     private InstanceContainer instance;
     private boolean pageMode;
@@ -50,7 +52,7 @@ public final class SetupData {
     public void setSetupMode(@NotNull SetupMode setupMode) {
         if (this.setupMode != null) return;
         this.setupMode = setupMode;
-        this.baseMap = setupMode == SetupMode.LOBBY ? new BaseMap() : new GameMap();
+        this.baseMapBuilder = setupMode == SetupMode.LOBBY ? BaseMap.builder() : new GameMapBuilder();
     }
 
     /**
@@ -149,8 +151,8 @@ public final class SetupData {
      *
      * @return the underlying reference or null
      */
-    public @Nullable BaseMap getBaseMap() {
-        return baseMap;
+    public @Nullable BaseMapBuilder getBaseMapBuilder() {
+        return baseMapBuilder;
     }
 
     /**

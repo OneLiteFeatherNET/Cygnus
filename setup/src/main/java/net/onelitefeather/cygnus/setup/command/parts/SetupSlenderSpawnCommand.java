@@ -6,6 +6,7 @@ import net.minestom.server.command.builder.condition.Conditions;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
@@ -40,7 +41,7 @@ public class SetupSlenderSpawnCommand extends Command {
                 return;
             }
 
-            GameMap gameMap = (GameMap) setupData.getBaseMap();
+            GameMapBuilder gameMap = (GameMapBuilder) setupData.getBaseMapBuilder();
 
             Pos position = ((Player) sender).getPosition().asPos();
             gameMap.setSlenderSpawn(position);

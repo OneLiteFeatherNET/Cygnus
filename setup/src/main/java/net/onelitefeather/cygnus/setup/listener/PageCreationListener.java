@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.setup.listener;
 
+import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.theevilreaper.aves.util.Components;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -29,7 +30,7 @@ public final class PageCreationListener implements Consumer<PlayerBlockBreakEven
     public void accept(PlayerBlockBreakEvent event) {
         event.setCancelled(true);
 
-        if (setupData.getBaseMap() == null || !setupData.hasPageMode()) return;
+        if (setupData.getBaseMapBuilder() == null || !setupData.hasPageMode()) return;
 
         Player player = event.getPlayer();
         Direction direction = MathUtils.getHorizontalDirection(player.getPosition().yaw());
@@ -45,7 +46,7 @@ public final class PageCreationListener implements Consumer<PlayerBlockBreakEven
         }
 
         Vec position = event.getBlockPosition().asVec();
-        ((GameMap) setupData.getBaseMap()).addPage(position, direction);
+        ((GameMapBuilder) setupData.getBaseMapBuilder()).addPage(position, direction);
 
         Component component = Component.text("Created page at: ", NamedTextColor.GRAY)
                 .append(Components.convertPoint(position).style(Style.style(NamedTextColor.GOLD)))
