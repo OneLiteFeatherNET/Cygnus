@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.0.0...v2.1.0) (2026-04-24)
+
+
+### Features
+
+* add dialog base for the setup input ([#69](https://github.com/OneLiteFeatherNET/Cygnus/issues/69)) ([c8b2bfb](https://github.com/OneLiteFeatherNET/Cygnus/commit/c8b2bfbe8445f2bdd186acfa9d30b1bae0a596ba))
+
 # [2.0.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.14...v2.0.0) (2026-04-20)
 
 ## [1.0.14](https://github.com/OneLiteFeatherNET/Cygnus/compare/v1.0.13...v1.0.14) (2026-04-09)
