@@ -2,12 +2,8 @@ package net.onelitefeather.cygnus.common.map;
 
 import net.theevilreaper.aves.map.BaseMap;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
-import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.page.PageResource;
-import org.jetbrains.annotations.UnknownNullability;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -15,24 +11,14 @@ import java.util.Set;
  * It inherits from the {@link BaseMap} to use the properties from it
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  **/
 public final class GameMap extends BaseMap {
 
-    private Pos slenderSpawn;
+    private final Pos slenderSpawn;
     private final Set<PageResource> pageFaces;
     private final Set<Pos> survivorSpawns;
-
-    /**
-     * Creates a new instance from the {@link GameMap}.
-     * This constructor is mostly used in the setup process of the game.
-     */
-    public GameMap() {
-        this.slenderSpawn = null;
-        this.pageFaces = new HashSet<>();
-        this.survivorSpawns = new HashSet<>();
-    }
 
     /**
      * Creates a new instance from the {@link GameMap} with the given values.
@@ -52,59 +38,12 @@ public final class GameMap extends BaseMap {
     }
 
     /**
-     * Adds a new survivor spawn to the map.
+     * Returns the {@link Pos} where the player spawn which is the Slender for a game.
      *
-     * @param pos the position to add
-     * @return true if the position was added
+     * @return the underlying position
      */
-    public boolean addSurvivorSpawn(Pos pos) {
-        return this.survivorSpawns.add(pos);
-    }
-
-    /**
-     * Removes a survivor spawn from the map.
-     *
-     * @param pos the position to remove
-     * @return true if the position was removed
-     */
-    public boolean removeSurvivorSpawn(Pos pos) {
-        return this.survivorSpawns.remove(pos);
-    }
-
-    /**
-     * Sets the spawn position for the slender.
-     *
-     * @param slenderSpawn the position to set
-     */
-    public void setSlenderSpawn(Pos slenderSpawn) {
-        this.slenderSpawn = slenderSpawn;
-    }
-
-    /**
-     * Removes the spawn position for the slender.
-     */
-    public void removeSlenderSpawn() {
-        this.slenderSpawn = null;
-    }
-
-    /**
-     * Adds a new page to the map.
-     *
-     * @param pos  the position to add
-     * @param face the face of the page
-     */
-    public void addPage(Vec pos, Direction face) {
-        this.pageFaces.add(new PageResource(pos, face));
-    }
-
-    /**
-     * Checks if the map has enough survivor spawns.
-     *
-     * @return true if the map has enough spawns
-     */
-    public boolean hasEnoughSurvivorSpawns() {
-        return true;
-        /*eturn this.survivorSpawns.size() >= GameConfig.;*/
+    public Pos getSlenderSpawn() {
+        return slenderSpawn;
     }
 
     /**
@@ -114,15 +53,6 @@ public final class GameMap extends BaseMap {
      */
     public Set<PageResource> getPageFaces() {
         return pageFaces;
-    }
-
-    /**
-     * Returns the {@link Pos} where the player spawn which is the Slender for a game.
-     *
-     * @return the underlying position
-     */
-    public @UnknownNullability Pos getSlenderSpawn() {
-        return slenderSpawn;
     }
 
     /**
