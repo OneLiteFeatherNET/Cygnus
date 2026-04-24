@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.phase;
 
-import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.TickDirection;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
@@ -22,7 +21,6 @@ public final class GamePhase extends TimedPhase {
 
     private final GameView gameView;
     private final Runnable startRunnable;
-    private final VoidConsumer updateWorldTime;
     private @Nullable GameFinishEvent finishEvent;
 
     /**
@@ -31,13 +29,11 @@ public final class GamePhase extends TimedPhase {
      * @param gameView        the view to update
      * @param startRunnable   the runnable to execute on start
      * @param endRunnable     the runnable to execute on end
-     * @param updateWorldTime the consumer to update the world time
      */
     public GamePhase(
             GameView gameView,
             Runnable startRunnable,
             Runnable endRunnable,
-            VoidConsumer updateWorldTime,
             int gameTime
     ) {
         super("GamePhase", ChronoUnit.SECONDS, 1);
@@ -46,7 +42,6 @@ public final class GamePhase extends TimedPhase {
         this.setEndTicks(0);
         this.gameView = gameView;
         this.startRunnable = startRunnable;
-        this.updateWorldTime = updateWorldTime;
         this.setFinishedCallback(endRunnable);
     }
 
@@ -79,7 +74,6 @@ public final class GamePhase extends TimedPhase {
      */
     @Override
     public void onUpdate() {
-        this.updateWorldTime.apply();
         this.gameView.updateView();
     }
 }

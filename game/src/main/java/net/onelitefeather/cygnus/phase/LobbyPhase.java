@@ -25,7 +25,6 @@ public final class LobbyPhase extends TimedPhase {
     private final Task waitingTask;
     private final VoidConsumer gameMapLoading;
     private final VoidConsumer staminaInstantiation;
-    private final VoidConsumer worldUpdater;
     private final int lobbyTime;
     private final int minPlayers;
     private boolean forceStarted;
@@ -34,14 +33,12 @@ public final class LobbyPhase extends TimedPhase {
     public LobbyPhase(
             VoidConsumer gameMapLoading,
             VoidConsumer staminaInstantiation,
-            VoidConsumer worldUpdater,
             int lobbyTime,
             int minPlayers
     ) {
         super("Lobby", ChronoUnit.SECONDS, 1);
         this.gameMapLoading = gameMapLoading;
         this.staminaInstantiation = staminaInstantiation;
-        this.worldUpdater = worldUpdater;
         this.lobbyTime = lobbyTime;
         this.minPlayers = minPlayers;
         this.setPaused(true);
@@ -97,7 +94,6 @@ public final class LobbyPhase extends TimedPhase {
     @Override
     public void onUpdate() {
         setLevel();
-        this.worldUpdater.apply();
 
         if (getCurrentTicks() == FORCE_START_TIME - 1) {
             this.gameMapLoading.apply();

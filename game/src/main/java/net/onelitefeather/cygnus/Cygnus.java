@@ -1,7 +1,10 @@
 package net.onelitefeather.cygnus;
 
 import net.minestom.server.utils.PacketSendingUtils;
+import net.onelitefeather.cygnus.map.GameMapProvider;
+import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import net.onelitefeather.cygnus.utils.Items;
+import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import net.theevilreaper.aves.util.Strings;
 import net.theevilreaper.aves.util.TimeFormat;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
@@ -18,7 +21,6 @@ import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
-import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
@@ -29,7 +31,6 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
-import net.onelitefeather.cygnus.common.map.MapProvider;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
@@ -83,7 +84,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final StaminaService staminaService;
     private final PageProvider pageProvider;
     private final GameView view;
-    private final MapProvider mapProvider;
+    private final AbstractMapProvider mapProvider;
     private final GameConfig gameConfig;
 
     public Cygnus() {
@@ -94,11 +95,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.staminaService = new StaminaService();
         this.gameConfig = new GameConfigReader(path).getConfig();
         MinecraftServer.getConnectionManager().setPlayerProvider(CygnusPlayer::new);
-        InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
-        MinecraftServer.getInstanceManager().registerInstance(instance);
         this.pageProvider = new PageProvider(this::handleAllPageFound);
-        this.mapProvider = new MapProvider(path, instance, this.pageProvider);
-        this.mapProvider.prepareInstanceData(instance);
+        this.mapProvider = new GameMapProvider(path);
         this.view = new GameViewImpl(this::getViewComponent);
         this.createTeams(this.gameConfig, this.teamService, this.ambientProvider);
         this.initPhases();
@@ -122,12 +120,15 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initListener() {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         var manager = MinecraftServer.getGlobalEventHandler();
-        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(this.mapProvider, phaseSupplier));
+        manager.addListener(GameMapLoadedEvent.class, event -> {
+            this.pageProvider.loadPageData(event.gameMap().getPageFaces());
+        });
+        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier));
         PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService::forceStopSlenderBar, this.gameConfig.minPlayers());
         manager.addListener(PlayerDisconnectEvent.class, quitListener);
         manager.addListener(AsyncPlayerConfigurationEvent.class,
                 new PlayerLoginListener(
-                        mapProvider.getInstance(),
+                        this.mapProvider.getActiveInstance(),
                         this.gameConfig.maxPlayers(),
                         linearPhaseSeries::getCurrentPhase
                 )
@@ -149,25 +150,25 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(
-                SlenderReviveEvent.class, new GameReviveListener(this.mapProvider.getGameMap(), this.staminaService));
+                SlenderReviveEvent.class, new GameReviveListener(((GameMapProvider) this.mapProvider).getGameMap(), this.staminaService));
         manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 
     private void initPhases() {
-        VoidConsumer gameMapLoader = this.mapProvider::loadGameMap;
+        GameMapProvider gameMapProvider = ((GameMapProvider) this.mapProvider);
+        VoidConsumer gameMapLoader = gameMapProvider::loadGameMap;
         VoidConsumer staminaInitializer = () -> StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
-        VoidConsumer worldUpdater = this.mapProvider::setMidnight;
-        VoidConsumer instanceSwitch = this.mapProvider::switchToGameMap;
+        VoidConsumer instanceSwitch = gameMapProvider::switchToGameMap;
         VoidConsumer teamInitializer = () -> TeamHelper.teleportTeams(
                 this.teamService,
-                this.mapProvider.getGameMap(),
-                this.mapProvider.getGameInstance()
+                gameMapProvider.getGameMap(),
+                gameMapProvider.getActiveInstance().get()
         );
-        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, worldUpdater, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers());
+        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers());
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
-        this.linearPhaseSeries.add(new GamePhase(this.view, this::triggerGameStart, this::finishGame, worldUpdater, this.gameConfig.gameTime()));
+        this.linearPhaseSeries.add(new GamePhase(this.view, this::triggerGameStart, this::finishGame, this.gameConfig.gameTime()));
         this.linearPhaseSeries.add(new RestartPhase());
     }
 
@@ -205,7 +206,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(slenderPlayer.getUuid())).forEach(p -> {
             slenderPlayer.updateOldViewer(p);
         });
-        MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(player -> player.setRespawnPoint(mapProvider.getGameMap().getSpawn()));
+        GameMapProvider gameMapProvider = (GameMapProvider) this.mapProvider;
+        MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(player -> player.setRespawnPoint(gameMapProvider.getActiveMap().getSpawn()));
         PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
     }
 

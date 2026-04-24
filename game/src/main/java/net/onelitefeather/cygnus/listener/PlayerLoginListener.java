@@ -19,11 +19,11 @@ import java.util.function.Supplier;
 public final class PlayerLoginListener implements Consumer<AsyncPlayerConfigurationEvent> {
 
     private static final Component KICK_COMPONENT = Messages.withMini("<red>The game has already started! Unable to join!");
-    private final Instance instance;
+    private final Supplier<Instance> instance;
     private final int maxPlayers;
     private final Supplier<Phase> currentPhase;
 
-    public PlayerLoginListener(Instance instance, int maxPlayers, Supplier<Phase> currentPhase) {
+    public PlayerLoginListener(Supplier<Instance> instance, int maxPlayers, Supplier<Phase> currentPhase) {
         this.instance = instance;
         this.maxPlayers = maxPlayers;
         this.currentPhase = currentPhase;
@@ -39,6 +39,6 @@ public final class PlayerLoginListener implements Consumer<AsyncPlayerConfigurat
             event.getPlayer().kick(KICK_COMPONENT);
             return;
         }
-        event.setSpawningInstance(this.instance);
+        event.setSpawningInstance(this.instance.get());
     }
 }
