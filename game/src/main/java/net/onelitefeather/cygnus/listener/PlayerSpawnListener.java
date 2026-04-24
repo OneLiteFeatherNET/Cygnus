@@ -23,7 +23,7 @@ public final class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
     private final PlayerConsumer spawnSupplier;
     private final Supplier<Phase> phaseSupplier;
 
-    public PlayerSpawnListener(PlayerConsumer spawnSupplier, @NotNull Supplier<Phase> phaseSupplier) {
+    public PlayerSpawnListener(PlayerConsumer spawnSupplier, Supplier<Phase> phaseSupplier) {
         this.spawnSupplier = spawnSupplier;
         this.phaseSupplier = phaseSupplier;
     }
