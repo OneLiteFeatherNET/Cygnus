@@ -6,9 +6,7 @@ import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
-import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * The class contains each {@link ItemStack} reference which is required for the game.

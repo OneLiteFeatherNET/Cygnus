@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.stamina;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.timer.Task;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
