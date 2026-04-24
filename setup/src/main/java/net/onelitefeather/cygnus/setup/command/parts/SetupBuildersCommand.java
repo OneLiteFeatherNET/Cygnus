@@ -47,7 +47,7 @@ public final class SetupBuildersCommand extends Command {
                 sender.sendMessage(Component.text("A map needs at least one builder", NamedTextColor.RED));
                 return;
             }
-            setupData.getBaseMap().setBuilders(builders);
+            setupData.getBaseMapBuilder().builders(builders);
             var buildersAsComponent = Component.join(JoinConfiguration.arrayLike(), transformBuilders(builders));
             sender.sendMessage(Component.text("The creators of the map are: ").append(buildersAsComponent));
         }, buildersArray);

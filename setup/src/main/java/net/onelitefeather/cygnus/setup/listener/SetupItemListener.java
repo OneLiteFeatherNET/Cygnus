@@ -40,9 +40,9 @@ public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
         byte tagValue = event.getItemStack().getTag(Tags.ITEM_TAG);
 
         if (1 == tagValue && player.hasTag(SetupTags.SETUP_ID_TAG)) {
-            if (!this.saveLogic.test(setupData, setupData.getBaseMap())) {
+            /*if (!this.saveLogic.test(setupData, setupData.getBaseMapBuilder())) {
                 player.sendMessage("An error occurred while saving a map");
-            }
+            }*/
             this.teleportBackLogic.accept(player);
             MinecraftServer.getSchedulerManager().scheduleNextTick(setupData::reset);
             return;

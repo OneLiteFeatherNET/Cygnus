@@ -28,7 +28,7 @@ public final class SetupNameCommand extends Command {
                 sender.sendMessage(SetupMessages.EMPTY_NAME);
                 return;
             }
-            setupData.getBaseMap().setName(name);
+            setupData.getBaseMapBuilder().name(name);
             sender.sendMessage("The name of the map now is: " + name);
         }, mapName);
     }

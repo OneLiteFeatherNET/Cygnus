@@ -16,7 +16,7 @@ class SetupDataTest {
         assertNotNull(setupData);
         assertFalse(setupData.hasPageMode());
         assertNull(setupData.getSelectedMap());
-        assertNull(setupData.getBaseMap());
+        assertNull(setupData.getBaseMapBuilder());
         assertNull(setupData.getSetupMode());
     }
 

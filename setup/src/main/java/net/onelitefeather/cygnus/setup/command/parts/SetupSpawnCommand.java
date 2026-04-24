@@ -28,7 +28,7 @@ public final class SetupSpawnCommand extends Command {
             }
 
             Pos position = Pos.fromPoint(((Player) sender).getPosition());
-            setupData.getBaseMap().setSpawn(position);
+            setupData.getBaseMapBuilder().spawn(position);
             var posAsComponent = Components.convertPoint(position);
             sender.sendMessage(Component.text("The spawn position of the map is now located at: ").append(posAsComponent));
         });
