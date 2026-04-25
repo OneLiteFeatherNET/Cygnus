@@ -3,14 +3,14 @@ package net.onelitefeather.cygnus.setup.event;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.trait.CancellableEvent;
 import net.minestom.server.event.trait.PlayerEvent;
-import net.onelitefeather.cygnus.common.map.MapEntry;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
+import net.theevilreaper.aves.map.MapEntry;
 
 /**
  * The {@link MapSetupSelectEvent} is called when a player selects a map for the setup process.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  */
 public final class MapSetupSelectEvent implements PlayerEvent, CancellableEvent {
