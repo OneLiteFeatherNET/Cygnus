@@ -4,8 +4,8 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
-import net.onelitefeather.cygnus.common.map.MapEntry;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
+import net.theevilreaper.aves.map.MapEntry;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +21,7 @@ class MapSetupSelectEventTest {
     void testMapSetupSelectEventCreation(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
-        MapEntry mapEntry = new MapEntry(Paths.get(""));
+        MapEntry mapEntry = MapEntry.of(Paths.get(""));
 
         MapSetupSelectEvent event = new MapSetupSelectEvent(player, mapEntry, SetupMode.LOBBY);
 
