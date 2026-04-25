@@ -22,6 +22,8 @@ public final class SetupItems {
     public static final byte FOURTH_INDEX = (byte) 0x04;
 
     private static final ItemStack mapSelection;
+
+    private static final ItemStack dataItem;
     private static final ItemStack saveData;
 
     static  {
@@ -32,6 +34,10 @@ public final class SetupItems {
         saveData = ItemStack.builder(Material.BELL)
                 .customName(Component.text("Save data", NamedTextColor.RED))
                 .set(Tags.ITEM_TAG, (byte) 0x01)
+                .build();
+        dataItem = ItemStack.builder(Material.COMPASS)
+                .customName(Component.text("Data", NamedTextColor.AQUA))
+                .set(Tags.ITEM_TAG, (byte) 0x02)
                 .build();
     }
 
@@ -51,7 +57,8 @@ public final class SetupItems {
      * @param player the player who should receive the item
      */
     public static void setSaveData(@NotNull Player player) {
-        player.getInventory().setItemStack(FOURTH_INDEX, saveData);
+        player.getInventory().setItemStack(2, dataItem);
+        player.getInventory().setItemStack(6, saveData);
         player.setHeldItemSlot(ZERO_INDEX);
     }
 

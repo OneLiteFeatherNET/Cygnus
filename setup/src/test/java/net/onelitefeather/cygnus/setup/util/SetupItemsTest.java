@@ -36,7 +36,8 @@ class SetupItemsTest {
         Player player = env.createPlayer(instance);
 
         SetupItems.setSaveData(player);
-        assertItem(player, SetupItems.FOURTH_INDEX, (byte) 0x01);
+        assertItem(player, 2, (byte) 0x02);
+        assertItem(player, 6, (byte) 0x01);
 
         env.destroyInstance(instance, true);
     }
