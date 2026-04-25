@@ -12,9 +12,9 @@ import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
-import net.onelitefeather.cygnus.common.map.MapEntry;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
 import net.onelitefeather.cygnus.setup.util.SetupMode;
+import net.theevilreaper.aves.map.MapEntry;
 import org.jetbrains.annotations.Contract;
 
 import java.nio.file.Path;
@@ -52,18 +52,15 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
 
         this.setLayout(layout);
 
-        if (maps.isEmpty()) {
-            return;
-        }
+        if (maps.isEmpty()) return;
         setDataLayoutFunction(dataLayoutFunction -> {
-            if (maps.isEmpty()) return null;
             var dataLayout = dataLayoutFunction == null ? InventoryLayout.fromType(getType()) : dataLayoutFunction;
 
             dataLayout.blank(MAP_SLOTS);
 
             for (int i = 0; i < maps.size(); i++) {
                 var currentMap = maps.get(i);
-                dataLayout.setItem(MAP_SLOTS[i], getMapItem(currentMap.path()), (player, slot, clickType, stack, result) ->
+                dataLayout.setItem(MAP_SLOTS[i], getMapItem(currentMap.getDirectoryRoot()), (player, slot, clickType, stack, result) ->
                         this.handleClick(currentMap, player, slot, clickType, stack, result));
             }
             return dataLayout;

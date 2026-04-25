@@ -4,27 +4,23 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerSpawnEvent;
-import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.setup.util.SetupItems;
 
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 public class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
 
     private final Pos spawnPos;
-    private final Predicate<Instance> mainInstance;
 
-    public PlayerSpawnListener(Pos spawnPos, Predicate<Instance> mainInstance) {
+    public PlayerSpawnListener(Pos spawnPos) {
         this.spawnPos = spawnPos;
-        this.mainInstance = mainInstance;
     }
 
     @Override
     public void accept(PlayerSpawnEvent event) {
         Player player = event.getPlayer();
 
-        if (!this.mainInstance.test(player.getInstance())) return;
+        if (!event.isFirstSpawn()) return;
 
         player.teleport(this.spawnPos);
         player.setGameMode(GameMode.CREATIVE);

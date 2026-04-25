@@ -11,9 +11,8 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.anvil.AnvilLoader;
-import net.onelitefeather.cygnus.common.map.GameMap;
-import net.onelitefeather.cygnus.common.map.MapEntry;
 import net.theevilreaper.aves.map.BaseMapBuilder;
+import net.theevilreaper.aves.map.MapEntry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
@@ -75,7 +74,7 @@ public final class SetupData {
         TextComponent title = Component.text("Setup mode: ")
                 .append(Component.text(setupMode.name(), NamedTextColor.LIGHT_PURPLE))
                 .append(Component.text(", Map: "))
-                .append(Component.text(selectedMap.path().getFileName().toString(), NamedTextColor.LIGHT_PURPLE));
+                .append(Component.text(selectedMap.getDirectoryRoot().getFileName().toString(), NamedTextColor.LIGHT_PURPLE));
         this.bossBar.name(title);
     }
 
@@ -104,7 +103,7 @@ public final class SetupData {
      * Loads the given data from the map into the setup reference.
      */
     public void loadMap() {
-        AnvilLoader anvilLoader = new AnvilLoader(this.selectedMap.path());
+        AnvilLoader anvilLoader = new AnvilLoader(this.selectedMap.getDirectoryRoot());
         this.instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         this.instance.setChunkLoader(anvilLoader);
         MinecraftServer.getInstanceManager().registerInstance(this.instance);

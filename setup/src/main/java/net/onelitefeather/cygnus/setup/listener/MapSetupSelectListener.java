@@ -38,7 +38,7 @@ public final class MapSetupSelectListener implements Consumer<MapSetupSelectEven
         setupData.setSelectedMap(event.getMapEntry());
         player.setTag(SetupTags.SETUP_ID_TAG, event.getSetupMode().ordinal());
         Component message = Messages.withPrefix(Component.text("You selected the map: ", NamedTextColor.GRAY))
-                .append(Component.text(event.getMapEntry().path().getFileName().toString(), NamedTextColor.AQUA));
+                .append(Component.text(event.getMapEntry().getDirectoryRoot().getFileName().toString(), NamedTextColor.AQUA));
         player.sendMessage(message);
         player.sendMessage(this.loadingMessage);
         setupData.loadMap();
