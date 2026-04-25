@@ -27,6 +27,7 @@ import org.jetbrains.annotations.UnknownNullability;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Deprecated(forRemoval = true)
 public final class SetupData {
 
     private static final Pos SPAWN_POINT = new Pos(0, 100, 0);
