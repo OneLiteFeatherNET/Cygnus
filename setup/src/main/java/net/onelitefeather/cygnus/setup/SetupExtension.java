@@ -27,12 +27,14 @@ import net.onelitefeather.cygnus.setup.listener.PlayerSpawnListener;
 import net.onelitefeather.cygnus.setup.listener.SetupItemListener;
 import net.onelitefeather.cygnus.setup.listener.map.MapSetupSaveListener;
 import net.onelitefeather.cygnus.setup.util.SetupData;
+import net.onelitefeather.guira.SetupDataService;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Paths;
 
 public class SetupExtension implements ListenerHandling {
 
+    private final SetupDataService dataService;
     private final SetupData setupData;
     private final InstanceContainer instanceContainer;
     private final PageProvider pageProvider;
@@ -41,6 +43,7 @@ public class SetupExtension implements ListenerHandling {
 
     public SetupExtension() {
         this.setupData = new SetupData();
+        this.dataService = SetupDataService.create();
         this.instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer();
         MinecraftServer.getInstanceManager().registerInstance(instanceContainer);
         this.pageProvider = new PageProvider(() -> {
