@@ -1,3 +1,11 @@
+# [2.2.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.1.0...v2.2.0) (2026-04-25)
+
+
+### Features
+
+* **setup:** add setup player implementation ([#72](https://github.com/OneLiteFeatherNET/Cygnus/issues/72)) ([4f75571](https://github.com/OneLiteFeatherNET/Cygnus/commit/4f75571a61b6944fa4b532887998f48e97ad670a))
+* **setup:** add setup player implementation ([#72](https://github.com/OneLiteFeatherNET/Cygnus/issues/72)) ([947cb5b](https://github.com/OneLiteFeatherNET/Cygnus/commit/947cb5bafa48144cbbfeb39de26521a9de2d11f6))
+
 # [2.1.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.0.0...v2.1.0) (2026-04-24)
 
 
