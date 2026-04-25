@@ -60,7 +60,7 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
 
             for (int i = 0; i < maps.size(); i++) {
                 var currentMap = maps.get(i);
-                dataLayout.setItem(MAP_SLOTS[i], getMapItem(currentMap.path()), (player, slot, clickType, stack, result) ->
+                dataLayout.setItem(MAP_SLOTS[i], getMapItem(currentMap.getDirectoryRoot()), (player, slot, clickType, stack, result) ->
                         this.handleClick(currentMap, player, slot, clickType, stack, result));
             }
             return dataLayout;

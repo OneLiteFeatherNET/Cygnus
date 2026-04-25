@@ -28,7 +28,7 @@ public final class GsonHelper {
                 .registerTypeAdapter(Vec.class, typeAdapter)
                 .registerTypeAdapter(PageResource.class, new PageResourceAdapter())
                 .create();
-        FILE_HANDLER = new GsonFileHandler(this.gson);
+        FILE_HANDLER = new GsonFileHandler(GSON);
     }
 
     private GsonHelper() {
