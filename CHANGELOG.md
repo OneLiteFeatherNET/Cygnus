@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.2.0...v2.3.0) (2026-04-25)
+
+
+### Features
+
+* introduce new setup data implementations ([#73](https://github.com/OneLiteFeatherNET/Cygnus/issues/73)) ([a4d7b9f](https://github.com/OneLiteFeatherNET/Cygnus/commit/a4d7b9fbd9675554678f48033cb87f04995cce37))
+
 # [2.2.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.1.0...v2.2.0) (2026-04-25)
 
 
