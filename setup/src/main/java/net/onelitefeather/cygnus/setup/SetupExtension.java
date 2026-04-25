@@ -11,7 +11,6 @@ import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.minestom.server.instance.Instance;
-import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.setup.command.SetupCommand;
 import net.onelitefeather.cygnus.setup.event.MapSetupSaveEvent;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
@@ -37,15 +36,12 @@ public class SetupExtension implements ListenerHandling {
 
     private final SetupDataService dataService;
     private final SetupData setupData;
-    private final PageProvider pageProvider;
     private final MapSetupInventory mapSetupInventory;
     private final AbstractMapProvider mapProvider;
 
     public SetupExtension() {
         this.setupData = new SetupData();
         this.dataService = SetupDataService.create();
-        this.pageProvider = new PageProvider(() -> {
-        });
         this.mapProvider = new SetupMapProvider(Paths.get(""));
         this.mapSetupInventory = new MapSetupInventory(mapProvider.getEntries());
         registerSetupComponents();
