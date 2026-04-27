@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 /**
  * The class is a small utility class which overwrites the given {@link PlayerProvider} from the test environment to use the {@link CygnusPlayer} instead of the default {@link Player}.
  * This allows us to test the stamina system and other player related features without having to create a new player provider for each test class.
+ *
  * @author Joltra
  * @version 1.0.0
  * @since 2.3.0
