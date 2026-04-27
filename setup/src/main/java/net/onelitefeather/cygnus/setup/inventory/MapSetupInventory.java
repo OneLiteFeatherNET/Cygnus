@@ -21,6 +21,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static net.onelitefeather.cygnus.setup.util.SetupItems.DECORATION;
+
 /**
  * The {@link MapSetupInventory} is only used during the setup of the maps for the game.
  * It allows the user to select a map and trigger the process to set up the map.
@@ -46,9 +48,8 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
         super(Component.text("Select map"), InventoryType.CHEST_4_ROW);
 
         var layout = InventoryLayout.fromType(getType());
-        var decoration = ItemStack.builder(Material.GRAY_STAINED_GLASS_PANE).customName(Component.text("")).build();
-        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), decoration);
-        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_4_ROW), decoration);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), DECORATION);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_4_ROW), DECORATION);
 
         this.setLayout(layout);
 
