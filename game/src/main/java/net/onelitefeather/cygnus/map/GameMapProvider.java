@@ -1,18 +1,16 @@
 package net.onelitefeather.cygnus.map;
 
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.InstanceContainer;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.filter.MapFilters;
+import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
-import net.theevilreaper.aves.file.GsonFileHandler;
 import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.MapEntry;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 
@@ -22,7 +20,7 @@ public final class GameMapProvider extends AbstractMapProvider {
     private GameMap gameMap;
 
     public GameMapProvider(Path path) {
-        super(new GsonFileHandler(Helper.GSON), MapFilters::filterMapsForGame);
+        super(GsonHelper.FILE_HANDLER, MapFilters::filterMapsForGame);
         this.mapEntries = this.loadMapEntries(path.resolve("maps"));
 
         if (this.mapEntries.isEmpty()) {
