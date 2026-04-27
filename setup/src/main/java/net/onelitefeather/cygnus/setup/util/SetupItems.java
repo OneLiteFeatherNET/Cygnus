@@ -21,8 +21,9 @@ public final class SetupItems {
     public static final byte ZERO_INDEX = (byte) 0x00;
     public static final byte FOURTH_INDEX = (byte) 0x04;
 
-    private static final ItemStack mapSelection;
+    public static final ItemStack DECORATION;
 
+    private static final ItemStack mapSelection;
     private static final ItemStack dataItem;
     private static final ItemStack saveData;
 
@@ -39,6 +40,7 @@ public final class SetupItems {
                 .customName(Component.text("Data", NamedTextColor.AQUA))
                 .set(Tags.ITEM_TAG, (byte) 0x02)
                 .build();
+        DECORATION = ItemStack.builder(Material.GRAY_STAINED_GLASS_PANE).customName(Component.empty()).build();
     }
 
     /**
