@@ -3,29 +3,35 @@ package net.onelitefeather.cygnus.common.map;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
-import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class GameMapBuilder extends BaseMapBuilder {
+public final class GameMapBuilder extends BaseMapBuilder {
 
     private @Nullable Pos slenderSpawn;
     private final Set<PageResource> pageFaces;
     private final Set<Pos> survivorSpawns;
 
+    /**
+     * Creates a new instance of the builder class
+     */
     public GameMapBuilder() {
+        super();
         this.pageFaces = new HashSet<>();
         this.survivorSpawns = new HashSet<>();
     }
 
+    /**
+     * Creates a new instance of the builder with the provided {@link GameMap} instance to get the data from it.
+     *
+     * @param gameMap to get the existing data
+     */
     public GameMapBuilder(GameMap gameMap) {
-        this.name = gameMap.getName();
-        this.spawn = gameMap.getSpawn();
+        super(gameMap);
         this.slenderSpawn = gameMap.getSlenderSpawn();
         this.survivorSpawns = gameMap.getSurvivorSpawns();
         this.pageFaces = gameMap.getPageFaces();
@@ -62,6 +68,16 @@ public class GameMapBuilder extends BaseMapBuilder {
             return;
         }
         this.slenderSpawn = slenderSpawn;
+    }
+
+    /**
+     * Creates a new instance of the {@link GameMap} with the provided data.
+     *
+     * @return the created instance
+     */
+    @Override
+    public GameMap build() {
+        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders.toArray(new String[0]));
     }
 
     /**
