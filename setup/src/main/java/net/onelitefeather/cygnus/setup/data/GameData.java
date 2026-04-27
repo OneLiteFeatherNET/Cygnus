@@ -7,6 +7,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.instance.anvil.AnvilLoader;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
+import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.theevilreaper.aves.file.FileHandler;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
@@ -71,7 +72,7 @@ public class GameData extends InstanceSetupData {
         if (!Files.exists(mapEntry.getMapFile())) {
             this.mapEntry.createFile();
         }
-        //this.fileHandler.save(mapEntry.getMapFile(), BaseMap.class);
+        GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), this.gameMapBuilder.build());
     }
 
     @Override
