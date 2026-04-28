@@ -36,11 +36,13 @@ import net.onelitefeather.cygnus.common.page.event.PageEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
+import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.listener.PlayerChatListener;
 import net.onelitefeather.cygnus.listener.PlayerDeathListener;
 import net.onelitefeather.cygnus.listener.PlayerLoginListener;
 import net.onelitefeather.cygnus.listener.PlayerQuitListener;
 import net.onelitefeather.cygnus.listener.PlayerSpawnListener;
+import net.onelitefeather.cygnus.listener.StaminaStateChangeListener;
 import net.onelitefeather.cygnus.listener.game.GameFinishListener;
 import net.onelitefeather.cygnus.listener.game.GamePageListener;
 import net.onelitefeather.cygnus.listener.game.GamePreLaunchListener;
@@ -152,6 +154,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(
                 SlenderReviveEvent.class, new GameReviveListener(((GameMapProvider) this.mapProvider).getGameMap(), this.staminaService));
         manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
+        manager.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 

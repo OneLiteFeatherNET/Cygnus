@@ -1,8 +1,6 @@
 package net.onelitefeather.cygnus.stamina;
 
-import net.minestom.server.utils.PacketSendingUtils;
 import net.theevilreaper.xerus.api.team.Team;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
@@ -64,22 +62,6 @@ public final class StaminaService {
     public void createStaminaBars(Team team) {
         Check.argCondition(!staminaBars.isEmpty(), "Unable to load stamina bars twice");
         Check.argCondition(team.getPlayers().isEmpty(), "Can't add players from a team without teams");
-        ((SlenderBar) this.slenderBar).setAccept((player, state) -> {
-            if (state == StaminaBar.State.DRAINING) {
-                PacketSendingUtils.broadcastPlayPacket(player.getMetadataPacket());
-                MinecraftServer.getConnectionManager().getOnlinePlayers()
-                        .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateNewViewer);
-                PacketSendingUtils.broadcastPlayPacket(player.getMetadataPacket());
-                return;
-            }
-
-            if (state == StaminaBar.State.REGENERATING) {
-                PacketSendingUtils.broadcastPlayPacket(player.getMetadataPacket());
-                MinecraftServer.getConnectionManager().getOnlinePlayers()
-                        .stream().filter(p -> !p.getUuid().equals(player.getUuid())).forEach(player::updateOldViewer);
-                PacketSendingUtils.broadcastPlayPacket(player.getMetadataPacket());
-            }
-        });
         for (Player player : team.getPlayers()) {
             this.staminaBars.put(player.getUuid(), StaminaFactory.createFoodStamina((CygnusPlayer) player));
         }
