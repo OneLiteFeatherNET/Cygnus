@@ -3,20 +3,16 @@ package net.onelitefeather.cygnus.stamina;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
-import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Disabled("The Minestom framework doesn't support custom player implementations in tests")
-@ExtendWith(MicrotusExtension.class)
-class StaminaServiceTest {
+class StaminaServiceTest extends CygnusPlayerTestBase {
 
     private static StaminaService staminaService;
 
