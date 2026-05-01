@@ -42,6 +42,18 @@ class SetupItemsTest {
         env.destroyInstance(instance, true);
     }
 
+    @Test
+    void testPageItemSet(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        SetupItems.setPageItems(player);
+        assertItem(player, 2, (byte) 0x03);
+        assertItem(player, 6, (byte) 0x01);
+
+        env.destroyInstance(instance, true);
+    }
+
     /**
      * Asserts that the item in the specified slot of the player's inventory matches the expected item ID.
      *
