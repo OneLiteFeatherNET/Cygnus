@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.setup.util;
+package net.onelitefeather.cygnus.setup.item;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
@@ -37,6 +37,18 @@ class SetupItemsTest {
 
         SetupItems.setSaveData(player);
         assertItem(player, 2, (byte) 0x02);
+        assertItem(player, 6, (byte) 0x01);
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testPageItemSet(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        SetupItems.setPageItems(player);
+        assertItem(player, 2, (byte) 0x03);
         assertItem(player, 6, (byte) 0x01);
 
         env.destroyInstance(instance, true);
