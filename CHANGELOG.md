@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.0...v2.3.1) (2026-05-01)
+
+
+### Bug Fixes
+
+* stamina tests ([#76](https://github.com/OneLiteFeatherNET/Cygnus/issues/76)) ([1f13365](https://github.com/OneLiteFeatherNET/Cygnus/commit/1f13365df8bd31d0c78ab6acd56f09fb3a5fd03f))
+
 # [2.3.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.2.0...v2.3.0) (2026-04-25)
 
 
