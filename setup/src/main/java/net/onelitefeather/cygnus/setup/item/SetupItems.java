@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.setup.util;
+package net.onelitefeather.cygnus.setup.item;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

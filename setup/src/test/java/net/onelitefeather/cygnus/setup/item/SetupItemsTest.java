@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.setup.util;
+package net.onelitefeather.cygnus.setup.item;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
