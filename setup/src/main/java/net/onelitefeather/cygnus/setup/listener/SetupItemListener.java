@@ -6,7 +6,7 @@ import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
 import net.onelitefeather.cygnus.setup.util.SetupData;
-import net.onelitefeather.cygnus.setup.util.SetupItems;
+import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
 
 import java.util.function.Consumer;

@@ -3,7 +3,7 @@ package net.onelitefeather.cygnus.setup.listener;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.AddEntityToInstanceEvent;
-import net.onelitefeather.cygnus.setup.util.SetupItems;
+import net.onelitefeather.cygnus.setup.item.SetupItems;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;

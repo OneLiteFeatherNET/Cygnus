@@ -4,7 +4,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerSpawnEvent;
-import net.onelitefeather.cygnus.setup.util.SetupItems;
+import net.onelitefeather.cygnus.setup.item.SetupItems;
 
 import java.util.function.Consumer;
 
