@@ -1,9 +1,9 @@
 package net.onelitefeather.cygnus;
 
-import net.minestom.server.utils.PacketSendingUtils;
+import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.listener.game.GameStartListener;
 import net.onelitefeather.cygnus.map.GameMapProvider;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
-import net.onelitefeather.cygnus.utils.Items;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import net.theevilreaper.aves.util.Strings;
 import net.theevilreaper.aves.util.TimeFormat;
@@ -122,9 +122,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initListener() {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         var manager = MinecraftServer.getGlobalEventHandler();
-        manager.addListener(GameMapLoadedEvent.class, event -> {
-            this.pageProvider.loadPageData(event.gameMap().getPageFaces());
-        });
+        manager.addListener(GameMapLoadedEvent.class, event ->
+                this.pageProvider.loadPageData(event.gameMap().getPageFaces())
+        );
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier));
         PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService::forceStopSlenderBar, this.gameConfig.minPlayers());
         manager.addListener(PlayerDisconnectEvent.class, quitListener);
@@ -146,6 +146,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         SlenderBarTrigger trigger = new SlenderBarTrigger(this.staminaService::getSlenderBar, this::triggerViewRuleUpdate);
         new SlenderItemListener(trigger, manager);
         manager.addListener(GameFinishEvent.class, new GameFinishListener());
+        manager.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider));
         manager.addListener(PlayerDeathEvent.class, new PlayerDeathListener(phaseSupplier, this.teamService));
         manager.addListener(PlayerEntityInteractEvent.class, new PlayerPageInteractListener(this.pageProvider));
         manager.addListener(PageEvent.class, new GamePageListener(this.pageProvider));
@@ -171,7 +172,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers());
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
-        this.linearPhaseSeries.add(new GamePhase(this.view, this::triggerGameStart, this::finishGame, this.gameConfig.gameTime()));
+        this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime()));
         this.linearPhaseSeries.add(new RestartPhase());
     }
 
@@ -189,29 +190,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 Strings.getTimeString(TimeFormat.MM_SS, gamePhase.getCurrentTicks()),
                 this.pageProvider.getPageStatus()
         );
-    }
-
-    private void triggerGameStart() {
-        var slenderPlayer = this.teamService.getTeams().get(Helper.SLENDER_ID).getPlayers().stream().findFirst().get();
-        slenderPlayer.setTag(Tags.HIDDEN, (byte) 1);
-        slenderPlayer.sendMessage(Messages.SLENDER_JOIN_PART);
-        Items.setSlenderEye(slenderPlayer);
-        this.staminaService.start();
-        this.pageProvider.spawn();
-        this.ambientProvider.startTask();
-        var message = Messages.getSurvivorJoinMessage(String.valueOf(this.pageProvider.getMaxPageAmount()));
-        this.teamService.getTeams().get(Helper.SURVIVOR_ID).getPlayers().forEach(player -> {
-            player.sendMessage(message);
-            player.setTag(Tags.HIDDEN, (byte) 0);
-        });
-        TeamHelper.updateTabList(this.teamService);
-        PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
-        MinecraftServer.getConnectionManager().getOnlinePlayers().stream().filter(p -> !p.getUuid().equals(slenderPlayer.getUuid())).forEach(p -> {
-            slenderPlayer.updateOldViewer(p);
-        });
-        GameMapProvider gameMapProvider = (GameMapProvider) this.mapProvider;
-        MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(player -> player.setRespawnPoint(gameMapProvider.getActiveMap().getSpawn()));
-        PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
     }
 
     private void triggerViewRuleUpdate(@NotNull Player player) {
