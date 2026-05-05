@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.phase;
 
+import net.minestom.server.event.EventDispatcher;
+import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.theevilreaper.xerus.api.phase.TickDirection;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
@@ -20,19 +22,16 @@ import java.util.HashSet;
 public final class GamePhase extends TimedPhase {
 
     private final GameView gameView;
-    private final Runnable startRunnable;
     private @Nullable GameFinishEvent finishEvent;
 
     /**
      * Creates a new instance from the {@link GamePhase}.
      *
      * @param gameView        the view to update
-     * @param startRunnable   the runnable to execute on start
      * @param endRunnable     the runnable to execute on end
      */
     public GamePhase(
             GameView gameView,
-            Runnable startRunnable,
             Runnable endRunnable,
             int gameTime
     ) {
@@ -41,7 +40,6 @@ public final class GamePhase extends TimedPhase {
         this.setTickDirection(TickDirection.DOWN);
         this.setEndTicks(0);
         this.gameView = gameView;
-        this.startRunnable = startRunnable;
         this.setFinishedCallback(endRunnable);
     }
 
@@ -59,7 +57,7 @@ public final class GamePhase extends TimedPhase {
     public void onStart() {
         super.onStart();
         addListener(PlayerTickEvent.class, new CygnusPlayerTickListener());
-        this.startRunnable.run();
+        EventDispatcher.call(new GameStartEvent());
     }
 
     @Override
