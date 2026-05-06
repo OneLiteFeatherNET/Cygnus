@@ -27,7 +27,6 @@ import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.Messages;
-import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
@@ -46,7 +45,7 @@ import net.onelitefeather.cygnus.listener.StaminaStateChangeListener;
 import net.onelitefeather.cygnus.listener.game.GameFinishListener;
 import net.onelitefeather.cygnus.listener.game.GamePageListener;
 import net.onelitefeather.cygnus.listener.game.GamePreLaunchListener;
-import net.onelitefeather.cygnus.listener.game.GameReviveListener;
+import net.onelitefeather.cygnus.listener.game.SlenderReviveListener;
 import net.onelitefeather.cygnus.listener.game.PlayerPageInteractListener;
 import net.onelitefeather.cygnus.listener.game.PlayerStartSprintingListener;
 import net.onelitefeather.cygnus.listener.game.PlayerStopSprintingListener;
@@ -153,7 +152,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
         manager.addListener(
-                SlenderReviveEvent.class, new GameReviveListener(((GameMapProvider) this.mapProvider).getGameMap(), this.staminaService));
+                SlenderReviveEvent.class, new SlenderReviveListener(((GameMapProvider) this.mapProvider).getGameMap(), this.staminaService));
         manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         manager.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
