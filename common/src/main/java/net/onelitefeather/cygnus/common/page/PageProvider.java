@@ -61,12 +61,11 @@ public final class PageProvider {
         Check.argCondition(!globalCache.isEmpty(), "Can't load pages twice");
 
         if (positions.isEmpty()) {
-            throw new IllegalStateException(("Can't load a map without any pages"));
+            throw new IllegalStateException("Can't load a map without any pages");
         }
         this.globalCache.addAll(positions);
     }
 
-    // Find start pages
     public void collectStartPages(Instance instance) {
         Check.argCondition(this.globalCache.size() < MIN_ACTIVE_PAGE_COUNT, "Not enough pages to start the game");
         var counter = 0;
@@ -120,22 +119,35 @@ public final class PageProvider {
     }
 
     public void triggerTTLHandling(UUID uuid) {
+        // Fix #8: isEmpty-Check VOR removeEntity, damit activePages.get(uuid) noch gültig ist
         if (this.globalCache.isEmpty()) {
             this.activePages.get(uuid).enableInteraction();
             return;
         }
+
         PageEntity pageEntity = this.removeEntity(uuid);
+
+        PageResource newPos;
         try {
             CACHE_LOCK.lock();
-            var newPos = this.globalCache.remove(Helper.getRandomInt(this.globalCache.size()));
-            pageEntity.teleport(Helper.updatePosition(newPos.position().asPos(), newPos.face()));
-            activePages.put(pageEntity.getHitBoxUUID(), pageEntity);
+            newPos = this.globalCache.remove(Helper.getRandomInt(this.globalCache.size()));
             var resource = this.usedResources.remove(pageEntity.getHitBoxUUID());
-            this.globalCache.add(resource);
             this.usedResources.put(pageEntity.getHitBoxUUID(), newPos);
+            this.globalCache.add(resource);
         } finally {
             CACHE_LOCK.unlock();
         }
+
+        pageEntity.teleport(Helper.updatePosition(newPos.position().asPos(), newPos.face()));
+
+        // Fix #6: activePages.put unter PAGE_LOCK statt CACHE_LOCK
+        try {
+            PAGE_LOCK.lock();
+            this.activePages.put(pageEntity.getHitBoxUUID(), pageEntity);
+        } finally {
+            PAGE_LOCK.unlock();
+        }
+
         pageEntity.enableInteraction();
     }
 
@@ -176,8 +188,7 @@ public final class PageProvider {
                 .append(Component.space())
                 .append(Component.text("/", NamedTextColor.GRAY))
                 .append(Component.space())
-                .append(Component.text(this.maxPageAmount, NamedTextColor.RED)
-                );
+                .append(Component.text(this.maxPageAmount, NamedTextColor.RED));
     }
 
     private PageEntity removeEntity(UUID uuid) {
