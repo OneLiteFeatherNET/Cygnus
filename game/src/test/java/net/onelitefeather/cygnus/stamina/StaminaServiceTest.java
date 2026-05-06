@@ -70,7 +70,7 @@ class StaminaServiceTest extends CygnusPlayerTestBase {
 
         StaminaBar oldBar = staminaService.getSlenderBar();
 
-        staminaService.switchToSlenderBar(anotherPlayer);
+        staminaService.setSlenderBar(anotherPlayer, true);
 
         StaminaBar slenderBar = staminaService.getSlenderBar();
 
