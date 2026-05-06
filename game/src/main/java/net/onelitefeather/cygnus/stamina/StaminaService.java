@@ -14,7 +14,7 @@ import java.util.UUID;
  * The class has some abilities to manage all {@link StaminaBar} references which are required in the game.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  */
 public final class StaminaService {
@@ -41,7 +41,7 @@ public final class StaminaService {
     /**
      * Creates a new instance of an {@link SlenderBar} for a given {@link Player}.
      *
-     * @param player the player that owns the {@link StaminaBar}
+     * @param player     the player that owns the {@link StaminaBar}
      * @param forceStart if the bar should be started by default
      */
     public void setSlenderBar(Player player, boolean forceStart) {
@@ -71,7 +71,6 @@ public final class StaminaService {
      * Starts all {@link net.minestom.server.timer.Task} reference from each {@link StaminaBar}.
      */
     public void start() {
-        //this.slenderBar.start();
         for (StaminaBar value : this.staminaBars.values()) {
             value.start();
         }
@@ -94,27 +93,30 @@ public final class StaminaService {
         staminaBars.clear();
     }
 
-    @Deprecated(since = "Please use setSlenderBar instead", forRemoval = true)
-    public void switchToSlenderBar(Player player) {
-        // If the old slender has a bar, we need to stop it.
-        if (this.slenderBar != null) {
-            this.slenderBar.stop();
-        }
-        //TODO: Stop old at switch
-        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player);
-        this.slenderBar.start();
-    }
-
+    /**
+     * Force stops the internal dispatch logic of the bar.
+     */
     public void forceStopSlenderBar() {
         if (this.slenderBar == null) return;
         this.slenderBar.stop();
         this.slenderBar = null;
     }
 
+    /**
+     * Returns an instance of a {@link FoodBar} from a given player
+     *
+     * @param player to get the bar
+     * @return the corresponding {@link FoodBar} instance
+     */
     public FoodBar getFoodBar(Player player) {
         return (FoodBar) this.staminaBars.get(player.getUuid());
     }
 
+    /**
+     * Returns the current reference of a {@link SlenderBar} if it exists
+     *
+     * @return current reference
+     */
     public @Nullable StaminaBar getSlenderBar() {
         return slenderBar;
     }
