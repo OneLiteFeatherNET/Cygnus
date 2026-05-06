@@ -93,7 +93,7 @@ public final class PageProvider {
 
     public void setMaxPageAmount(int maxPageAmount) {
         if (this.maxPageAmount != 0) {
-            throw new IllegalCallerException("The max page amount can't be set twice");
+            throw new IllegalStateException("The max page amount can't be set twice");
         }
         this.maxPageAmount = maxPageAmount;
     }
