@@ -18,7 +18,7 @@ public final class PageDiscoveryCompleteListener implements Consumer<PageDiscove
 
     @Override
     public void accept(PageDiscoveryCompletedEvent event) {
-        GamePhase gamePhase = (GamePhase) this.phaseSeries.getCurrentPhase();
+        if (!(this.phaseSeries.getCurrentPhase() instanceof GamePhase gamePhase)) return;
         gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_PAGES_FOUND));
         gamePhase.finish();
     }
