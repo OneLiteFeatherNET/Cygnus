@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.phase;
 
 import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
 import net.theevilreaper.xerus.api.phase.TickDirection;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
@@ -72,6 +73,6 @@ public final class GamePhase extends TimedPhase {
      */
     @Override
     public void onUpdate() {
-        this.gameView.updateView();
+        EventDispatcher.call(new ViewUpdateEvent(getCurrentTicks()));
     }
 }

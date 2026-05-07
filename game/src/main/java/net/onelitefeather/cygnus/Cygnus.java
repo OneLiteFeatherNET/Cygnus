@@ -3,18 +3,17 @@ package net.onelitefeather.cygnus;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.listener.game.GameStartListener;
+import net.onelitefeather.cygnus.listener.view.ViewUpdateListener;
 import net.onelitefeather.cygnus.listener.page.PageDiscoveryCompleteListener;
 import net.onelitefeather.cygnus.map.GameMapProvider;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
+import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
-import net.theevilreaper.aves.util.Strings;
-import net.theevilreaper.aves.util.TimeFormat;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.LinearPhaseSeries;
 import net.theevilreaper.xerus.api.phase.Phase;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.theevilreaper.xerus.api.team.TeamService;
-import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
@@ -28,7 +27,6 @@ import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
-import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
@@ -100,7 +98,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getConnectionManager().setPlayerProvider(CygnusPlayer::new);
         this.pageProvider = new PageProvider();
         this.mapProvider = new GameMapProvider(path);
-        this.view = new GameViewImpl(this::getViewComponent);
+        this.view = new GameViewImpl();
         this.createTeams(this.gameConfig, this.teamService, this.ambientProvider);
         this.initPhases();
         this.initCommands();
@@ -152,6 +150,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         manager.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
         manager.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
+        manager.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));
+
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 
@@ -178,14 +178,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.ambientProvider.stopTask();
         this.staminaService.cleanUp();
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, EntityActionListener::listener);
-    }
-
-    private @NotNull Component getViewComponent() {
-        var gamePhase = (GamePhase) this.linearPhaseSeries.getCurrentPhase();
-        return Messages.getViewComponent(
-                Strings.getTimeString(TimeFormat.MM_SS, gamePhase.getCurrentTicks()),
-                this.pageProvider.getPageStatus()
-        );
     }
 
     private void triggerViewRuleUpdate(@NotNull Player player) {
