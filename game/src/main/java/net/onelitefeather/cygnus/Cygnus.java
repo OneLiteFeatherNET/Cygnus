@@ -41,7 +41,7 @@ import net.onelitefeather.cygnus.listener.PlayerDeathListener;
 import net.onelitefeather.cygnus.listener.PlayerLoginListener;
 import net.onelitefeather.cygnus.listener.PlayerQuitListener;
 import net.onelitefeather.cygnus.listener.PlayerSpawnListener;
-import net.onelitefeather.cygnus.listener.StaminaStateChangeListener;
+import net.onelitefeather.cygnus.listener.stamina.StaminaStateChangeListener;
 import net.onelitefeather.cygnus.listener.game.GameFinishListener;
 import net.onelitefeather.cygnus.listener.game.GamePageListener;
 import net.onelitefeather.cygnus.listener.game.GamePreLaunchListener;
