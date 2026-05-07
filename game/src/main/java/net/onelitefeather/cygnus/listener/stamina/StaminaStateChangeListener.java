@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.listener;
+package net.onelitefeather.cygnus.listener.stamina;
 
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
