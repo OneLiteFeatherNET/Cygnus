@@ -11,16 +11,14 @@ import java.util.function.Consumer;
 public final class GameViewImpl implements GameView {
 
     private final BossBar bossBar;
-    private final ViewUpdater updateFunction;
 
-    public GameViewImpl(ViewUpdater updateFunction) {
-        this.updateFunction = updateFunction;
+    public GameViewImpl() {
         this.bossBar = BossBar.bossBar(Component.empty(), 1f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
     }
 
     @Override
-    public void updateView() {
-        this.bossBar.name(this.updateFunction.updateView());
+    public void updateView(Component component) {
+        this.bossBar.name(component);
     }
 
     @Override
