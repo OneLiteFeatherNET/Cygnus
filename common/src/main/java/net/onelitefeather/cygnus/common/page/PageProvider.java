@@ -119,7 +119,6 @@ public final class PageProvider {
     }
 
     public void triggerTTLHandling(UUID uuid) {
-        // Fix #8: isEmpty-Check VOR removeEntity, damit activePages.get(uuid) noch gültig ist
         if (this.globalCache.isEmpty()) {
             this.activePages.get(uuid).enableInteraction();
             return;
@@ -140,7 +139,6 @@ public final class PageProvider {
 
         pageEntity.teleport(Helper.updatePosition(newPos.position().asPos(), newPos.face()));
 
-        // Fix #6: activePages.put unter PAGE_LOCK statt CACHE_LOCK
         try {
             PAGE_LOCK.lock();
             this.activePages.put(pageEntity.getHitBoxUUID(), pageEntity);
