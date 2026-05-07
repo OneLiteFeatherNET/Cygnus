@@ -3,13 +3,14 @@ package net.onelitefeather.cygnus.common.page;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.Direction;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Messages;
+import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.theevilreaper.aves.util.Broadcaster;
-import net.theevilreaper.aves.util.functional.VoidConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,7 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_ACTIVE_PAGE
 
 /**
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -37,7 +38,6 @@ public final class PageProvider {
 
     private static final Lock CACHE_LOCK = new ReentrantLock();
     private static final Lock PAGE_LOCK = new ReentrantLock();
-    private final VoidConsumer pageFinishFunction;
     private final List<PageResource> globalCache;
     private final Map<UUID, PageEntity> activePages;
     private final Map<UUID, PageResource> usedResources;
@@ -47,8 +47,7 @@ public final class PageProvider {
 
     private Component pageStatus = Component.empty();
 
-    public PageProvider(VoidConsumer pageFinishFunction) {
-        this.pageFinishFunction = pageFinishFunction;
+    public PageProvider() {
         this.globalCache = new ArrayList<>();
         this.usedResources = new HashMap<>();
         this.activePages = new HashMap<>();
@@ -159,7 +158,7 @@ public final class PageProvider {
         updatePageData(pageEntity);
 
         if (this.currentFoundedPageCount >= maxPageAmount) {
-            this.pageFinishFunction.apply();
+            EventDispatcher.call(new PageDiscoveryCompletedEvent());
         }
     }
 
