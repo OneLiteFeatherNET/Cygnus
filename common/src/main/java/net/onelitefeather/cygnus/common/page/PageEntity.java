@@ -22,14 +22,13 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * The {@link PageEntity} is a custom entity which represents a page that can be collected by the player.
- * The entity is used to display the page and to interact with it.
- * To improve the interaction the entity has a hitbox which is used to detect the interaction.
+ * Represents a collectible page entity that can be picked up by a player.
+ * The entity consists of a visual display and an interaction hitbox to improve pickup detection.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
- **/
+ */
 @SuppressWarnings("java:S3252")
 public final class PageEntity extends Entity {
 
