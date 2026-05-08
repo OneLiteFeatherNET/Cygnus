@@ -40,14 +40,13 @@ class GameViewIntegrationTest {
 
         ViewUpdateEvent updateEvent = new ViewUpdateEvent(100);
 
-        Collector<BossBarPacket> secondBarCollector = connection.trackIncoming(BossBarPacket.class);
-
         EventFilter<ViewUpdateEvent, ViewUpdateEvent> filter = EventFilter.from(
                 ViewUpdateEvent.class,
                 ViewUpdateEvent.class,
                 e -> e
         );
         Collector<ViewUpdateEvent> eventCollector = env.trackEvent(ViewUpdateEvent.class, filter, updateEvent);
+        Collector<BossBarPacket> secondBarCollector = connection.trackIncoming(BossBarPacket.class);
 
         env.process().eventHandler().call(updateEvent);
 
@@ -56,7 +55,6 @@ class GameViewIntegrationTest {
             assertEquals(updateEvent.ticks(), event.ticks());
         });
 
-        secondBarCollector.assertSingle();
         secondBarCollector.assertSingle(bossBarPacket -> {
             assertInstanceOf(BossBarPacket.UpdateTitleAction.class, bossBarPacket.action());
 
