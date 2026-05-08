@@ -50,6 +50,8 @@ class GameViewIntegrationTest {
 
         env.process().eventHandler().call(updateEvent);
 
+        env.tick();
+
         eventCollector.assertSingle();
         eventCollector.assertSingle(event -> {
             assertEquals(updateEvent.ticks(), event.ticks());
