@@ -3,13 +3,15 @@ package net.onelitefeather.cygnus.common.page;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.Direction;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Messages;
+import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.theevilreaper.aves.util.Broadcaster;
-import net.theevilreaper.aves.util.functional.VoidConsumer;
+import net.theevilreaper.xerus.api.phase.GamePhase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +28,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_ACTIVE_PAGE_COUNT;
 
 /**
+ * Handles the logic to manage and spawn pages during the {@link GamePhase}.
+ *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -37,7 +41,6 @@ public final class PageProvider {
 
     private static final Lock CACHE_LOCK = new ReentrantLock();
     private static final Lock PAGE_LOCK = new ReentrantLock();
-    private final VoidConsumer pageFinishFunction;
     private final List<PageResource> globalCache;
     private final Map<UUID, PageEntity> activePages;
     private final Map<UUID, PageResource> usedResources;
@@ -47,8 +50,7 @@ public final class PageProvider {
 
     private Component pageStatus = Component.empty();
 
-    public PageProvider(VoidConsumer pageFinishFunction) {
-        this.pageFinishFunction = pageFinishFunction;
+    public PageProvider() {
         this.globalCache = new ArrayList<>();
         this.usedResources = new HashMap<>();
         this.activePages = new HashMap<>();
@@ -57,13 +59,18 @@ public final class PageProvider {
         this.currentPageCount = 1;
     }
 
-    public void loadPageData(Set<PageResource> positions) {
+    /**
+     * Loads the required page data from the given set of {@link PageResource}s.
+     *
+     * @param resources given set of page resources
+     */
+    public void loadPageData(Set<PageResource> resources) {
         Check.argCondition(!globalCache.isEmpty(), "Can't load pages twice");
 
-        if (positions.isEmpty()) {
+        if (resources.isEmpty()) {
             throw new IllegalStateException("Can't load a map without any pages");
         }
-        this.globalCache.addAll(positions);
+        this.globalCache.addAll(resources);
     }
 
     public void collectStartPages(Instance instance) {
@@ -90,6 +97,11 @@ public final class PageProvider {
         LOGGER.info("This current page count is {}", currentPageCount);
     }
 
+    /**
+     * Sets the max page amount.
+     *
+     * @param maxPageAmount to set
+     */
     public void setMaxPageAmount(int maxPageAmount) {
         if (this.maxPageAmount != 0) {
             throw new IllegalStateException("The max page amount can't be set twice");
@@ -97,6 +109,9 @@ public final class PageProvider {
         this.maxPageAmount = maxPageAmount;
     }
 
+    /**
+     * Spawns all pages that are currently in the active page map.
+     */
     public void spawn() {
         this.updatePageDisplay();
         try {
@@ -119,7 +134,6 @@ public final class PageProvider {
     }
 
     public void triggerTTLHandling(UUID uuid) {
-        // Fix #8: isEmpty-Check VOR removeEntity, damit activePages.get(uuid) noch gültig ist
         if (this.globalCache.isEmpty()) {
             this.activePages.get(uuid).enableInteraction();
             return;
@@ -140,7 +154,6 @@ public final class PageProvider {
 
         pageEntity.teleport(Helper.updatePosition(newPos.position().asPos(), newPos.face()));
 
-        // Fix #6: activePages.put unter PAGE_LOCK statt CACHE_LOCK
         try {
             PAGE_LOCK.lock();
             this.activePages.put(pageEntity.getHitBoxUUID(), pageEntity);
@@ -161,7 +174,7 @@ public final class PageProvider {
         updatePageData(pageEntity);
 
         if (this.currentFoundedPageCount >= maxPageAmount) {
-            this.pageFinishFunction.apply();
+            EventDispatcher.call(new PageDiscoveryCompletedEvent());
         }
     }
 

@@ -8,7 +8,8 @@ import net.minestom.server.utils.Direction;
  * during the GamePhase. It includes a string variable that represents the face used in the setup process.
  * When spawning a page entity, it uses the opposite face from the provided face.
  *
- * @param position The position at which to spawn a page.
- * @param face The face used in the resource setup process.
+ * @param position at which to spawn a page
+ * @param face     used in the resource setup process
  */
-public record PageResource(Point position, Direction face) { }
+public record PageResource(Point position, Direction face) {
+}

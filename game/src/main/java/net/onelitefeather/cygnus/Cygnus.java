@@ -1,7 +1,9 @@
 package net.onelitefeather.cygnus;
 
+import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.listener.game.GameStartListener;
+import net.onelitefeather.cygnus.listener.page.PageDiscoveryCompleteListener;
 import net.onelitefeather.cygnus.map.GameMapProvider;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
@@ -96,7 +98,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.staminaService = new StaminaService();
         this.gameConfig = new GameConfigReader(path).getConfig();
         MinecraftServer.getConnectionManager().setPlayerProvider(CygnusPlayer::new);
-        this.pageProvider = new PageProvider(this::handleAllPageFound);
+        this.pageProvider = new PageProvider();
         this.mapProvider = new GameMapProvider(path);
         this.view = new GameViewImpl(this::getViewComponent);
         this.createTeams(this.gameConfig, this.teamService, this.ambientProvider);
@@ -110,12 +112,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initCommands() {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
-    }
-
-    private void handleAllPageFound() {
-        var gamePhase = (GamePhase) this.linearPhaseSeries.getCurrentPhase();
-        gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_PAGES_FOUND));
-        gamePhase.finish();
     }
 
     private void initListener() {
@@ -155,6 +151,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 SlenderReviveEvent.class, new SlenderReviveListener(((GameMapProvider) this.mapProvider).getGameMap(), this.staminaService));
         manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         manager.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
+        manager.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 

@@ -15,7 +15,7 @@ class PageProviderTest {
         Set<PageResource> pageResources = Set.of(
                 new PageResource(Pos.ZERO, Direction.NORTH)
         );
-        PageProvider pageProvider = new PageProvider(() -> {});
+        PageProvider pageProvider = new PageProvider();
         assertNotNull(pageProvider);
 
         pageProvider.loadPageData(pageResources);
@@ -31,7 +31,7 @@ class PageProviderTest {
 
     @Test
     void testEmptyPageResourceUsage() {
-        PageProvider pageProvider = new PageProvider(() -> {});
+        PageProvider pageProvider = new PageProvider();
         assertNotNull(pageProvider);
         Set<PageResource> pageResources = Set.of();
 
