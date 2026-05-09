@@ -29,8 +29,7 @@ class GameViewIntegrationTest {
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         GameView gameView = new GameViewImpl();
-        PageProvider pageProvider = new PageProvider(() -> {
-        });
+        PageProvider pageProvider = new PageProvider();
 
         env.process().eventHandler().addListener(ViewUpdateEvent.class, new ViewUpdateListener(gameView, pageProvider));
 
