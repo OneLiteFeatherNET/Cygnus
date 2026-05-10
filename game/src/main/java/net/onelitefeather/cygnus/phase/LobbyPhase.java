@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.phase;
 
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.TickDirection;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
@@ -15,10 +16,23 @@ import java.time.temporal.ChronoUnit;
 import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIME;
 
 /**
+ * Represents the lobby phase of the game.
+ *
+ * <p>During this phase the game waits until enough players joined to start the
+ * match countdown. The phase updates the player level and experience bar to
+ * visualize the remaining time until the game starts.</p>
+ *
+ * <p>The phase can be paused automatically if the required player count is not
+ * reached anymore. It also supports force starting the game with a reduced
+ * countdown duration.</p>
+ *
+ * <p>While the countdown is running, the game map loading and stamina
+ * initialization are triggered at specific countdown timestamps.</p>
+ *
  * @author theEvilReaper
  * @version 1.0.0
  * @since 1.0.0
- **/
+ */
 public final class LobbyPhase extends TimedPhase {
 
     private static final ConnectionManager CONNECTION_MANAGER = MinecraftServer.getConnectionManager();
@@ -33,14 +47,13 @@ public final class LobbyPhase extends TimedPhase {
     public LobbyPhase(
             VoidConsumer gameMapLoading,
             VoidConsumer staminaInstantiation,
-            int lobbyTime,
-            int minPlayers
+            GameConfig gameConfig
     ) {
         super("Lobby", ChronoUnit.SECONDS, 1);
         this.gameMapLoading = gameMapLoading;
         this.staminaInstantiation = staminaInstantiation;
-        this.lobbyTime = lobbyTime;
-        this.minPlayers = minPlayers;
+        this.lobbyTime = gameConfig.lobbyTime();
+        this.minPlayers = gameConfig.minPlayers();
         this.setPaused(true);
         this.setCurrentTicks(lobbyTime);
         this.setTickDirection(TickDirection.DOWN);

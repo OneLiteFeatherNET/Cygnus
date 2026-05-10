@@ -165,7 +165,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 gameMapProvider.getGameMap(),
                 gameMapProvider.getActiveInstance().get()
         );
-        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, this.gameConfig.lobbyTime(), this.gameConfig.minPlayers());
+        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, this.gameConfig);
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime()));
