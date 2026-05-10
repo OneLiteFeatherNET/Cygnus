@@ -40,8 +40,9 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
             AttributeHelper.adjustStepHeightAndJump(player);
             if (TeamHelper.isSlenderTeam(player)) continue;
             AttributeHelper.decreaseSpeed(player);
-            if (adjustedHealth == 0) continue;
-            AttributeHelper.updateHealthScale(player, adjustedHealth);
+            if (adjustedHealth != 0) {
+                AttributeHelper.updateHealthScale(player, adjustedHealth);
+            }
         }
     }
 }
