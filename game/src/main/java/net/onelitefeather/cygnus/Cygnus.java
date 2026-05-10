@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus;
 
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.game.GameMapLoadEvent;
 import net.onelitefeather.cygnus.listener.game.GameStartListener;
 import net.onelitefeather.cygnus.listener.view.ViewUpdateListener;
 import net.onelitefeather.cygnus.listener.page.PageDiscoveryCompleteListener;
@@ -148,25 +149,30 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(
                 SlenderReviveEvent.class, new SlenderReviveListener(((GameMapProvider) this.mapProvider).getGameMap(), this.staminaService));
         manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
+
         manager.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
+        manager.addListener(StaminaStateChangeEvent.class, _ ->
+                StaminaHelper.initStaminaObjects(this.teamService, this.staminaService)
+        );
+
         manager.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
         manager.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));
-
+        manager.addListener(GameMapLoadEvent.class, _ ->
+            ((GameMapProvider)this.mapProvider).loadGameMap()
+        );
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 
     private void initPhases() {
         GameMapProvider gameMapProvider = ((GameMapProvider) this.mapProvider);
         VoidConsumer gameMapLoader = gameMapProvider::loadGameMap;
-        VoidConsumer staminaInitializer = () -> StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
         VoidConsumer instanceSwitch = gameMapProvider::switchToGameMap;
         VoidConsumer teamInitializer = () -> TeamHelper.teleportTeams(
                 this.teamService,
                 gameMapProvider.getGameMap(),
                 gameMapProvider.getActiveInstance().get()
         );
-        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, this.gameConfig);
-        this.linearPhaseSeries.add(lobbyPhase);
+        this.linearPhaseSeries.add(new LobbyPhase(this.gameConfig));
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime()));
         this.linearPhaseSeries.add(new RestartPhase());
