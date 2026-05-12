@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.1...v2.3.2) (2026-05-12)
+
+
+### Bug Fixes
+
+* **deps:** update dependency net.onelitefeather:pica to v0.0.2 ([#85](https://github.com/OneLiteFeatherNET/Cygnus/issues/85)) ([beacf6f](https://github.com/OneLiteFeatherNET/Cygnus/commit/beacf6fbee3cb4e05a07f7e0e8ce5bb7082583eb))
+
 ## [2.3.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.0...v2.3.1) (2026-05-01)
 
 
