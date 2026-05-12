@@ -27,7 +27,7 @@ dependencyResolutionManagement {
             version("cloudnet", "4.0.0-RC16")
             version("aonyx", "0.7.1")
             version("cyclonedx", "3.2.4")
-            version("pica", "0.0.1")
+            version("pica", "0.0.2")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("minestom", "net.minestom", "minestom").withoutVersion()
