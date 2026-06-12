@@ -1,3 +1,10 @@
+## [2.3.5](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.4...v2.3.5) (2026-06-12)
+
+
+### Bug Fixes
+
+* **deps:** update pica to v0.0.4 ([#92](https://github.com/OneLiteFeatherNET/Cygnus/issues/92)) ([b741b76](https://github.com/OneLiteFeatherNET/Cygnus/commit/b741b7690874bb2bacc3d072662df3b53bdb5d0d))
+
 ## [2.3.4](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.3...v2.3.4) (2026-06-12)
 
 
