@@ -1,4 +1,5 @@
 plugins {
+    id("cygnus.java-conventions")
     `java-library`
 }
 
