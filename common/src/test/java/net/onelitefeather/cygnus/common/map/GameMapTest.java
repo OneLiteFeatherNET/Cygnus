@@ -7,6 +7,7 @@ import net.onelitefeather.cygnus.common.page.PageResource;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -25,15 +26,15 @@ class GameMapTest {
         Pos slenderPos = new Pos(1, 1, 1);
         Set<PageResource> pages = Set.of();
         Set<Pos> survivorPos = Set.of(new Pos(2, 2, 2), new Pos(3, 3, 3));
-        GameMap gameMap = new GameMap(name, spawnPos, slenderPos, pages, survivorPos, "Test");
+        GameMap gameMap = new GameMap(name, spawnPos, slenderPos, pages, survivorPos, List.of("Test"));
 
         assertNotNull(gameMap);
-        assertEquals(name, gameMap.getName());
-        assertEquals(spawnPos, gameMap.getSpawn());
+        assertEquals(name, gameMap.name());
+        assertEquals(spawnPos, gameMap.spawn());
         assertEquals(slenderPos, gameMap.getSlenderSpawn());
         assertTrue(gameMap.getPageFaces().isEmpty());
         assertEquals(survivorPos, gameMap.getSurvivorSpawns());
-        assertArrayEquals(new String[]{"Test"}, gameMap.getBuilders());
+        assertEquals(List.of("Test"), gameMap.builders());
     }
 
     @Test
