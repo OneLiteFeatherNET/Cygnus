@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     implementation(platform(libs.aonyx.bom))
+    implementation(libs.slf4j.api)
     compileOnly(libs.adventure)
     compileOnly(libs.minestom)
     compileOnly(libs.aves)
