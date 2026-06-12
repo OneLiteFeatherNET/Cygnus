@@ -1,3 +1,10 @@
+## [2.3.4](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.3...v2.3.4) (2026-06-12)
+
+
+### Bug Fixes
+
+* **deps:** update aonyx to v0.7.3 ([#90](https://github.com/OneLiteFeatherNET/Cygnus/issues/90)) ([adf61af](https://github.com/OneLiteFeatherNET/Cygnus/commit/adf61af3539d48f2f180aaf2d39203e9b0d87949))
+
 ## [2.3.3](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.2...v2.3.3) (2026-05-13)
 
 
