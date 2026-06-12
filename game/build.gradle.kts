@@ -1,4 +1,5 @@
 plugins {
+    id("cygnus.java-conventions")
     `maven-publish`
     alias(libs.plugins.shadow)
     application
@@ -31,22 +32,6 @@ dependencies {
 }
 
 tasks {
-    jacocoTestReport {
-        dependsOn(test)
-        reports {
-            xml.required.set(true)
-        }
-    }
-
-    test {
-        finalizedBy(project.tasks.jacocoTestReport)
-        useJUnitPlatform()
-        jvmArgs("-Dminestom.inside-test=true")
-        testLogging {
-            events("passed", "skipped", "failed")
-        }
-    }
-
     jar {
         archiveClassifier.set("unshaded")
         dependsOn("shadowJar")
@@ -56,12 +41,6 @@ tasks {
         archiveClassifier.set("")
         archiveFileName.set("cygnus.jar")
         mergeServiceFiles()
-    }
-}
-
-tasks {
-    jar {
-        dependsOn("shadowJar")
     }
 }
 

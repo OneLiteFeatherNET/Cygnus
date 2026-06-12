@@ -1,6 +1,5 @@
-import org.gradle.kotlin.dsl.test
-
 plugins {
+    id("cygnus.java-conventions")
     `maven-publish`
     alias(libs.plugins.shadow)
     application
@@ -30,21 +29,6 @@ dependencies {
     testRuntimeOnly(libs.junit.engine)
 }
 tasks {
-    jacocoTestReport {
-        dependsOn(test)
-        reports {
-            xml.required.set(true)
-        }
-    }
-
-    test {
-        finalizedBy(project.tasks.jacocoTestReport)
-        useJUnitPlatform()
-        testLogging {
-            events("passed", "skipped", "failed")
-        }
-    }
-
     jar {
         archiveClassifier.set("unshaded")
         dependsOn("shadowJar")
