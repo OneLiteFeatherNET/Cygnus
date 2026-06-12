@@ -15,7 +15,7 @@ public final class SetupMapProvider extends AbstractMapProvider {
 
     public SetupMapProvider(Path path) {
         super(GsonHelper.FILE_HANDLER, MapFilters::filterMapsForSetup);
-        this.mapEntries = loadMapEntries(path.resolve("maps"));
+        this.loadMapEntries(path.resolve("maps"));
 
         Optional<MapEntry> lobbyOptional = this.mapEntries.stream().filter(MapEntry::hasMapFile)
                 .filter(mapEntry -> mapEntry.getDirectoryRoot().equals("lobby"))

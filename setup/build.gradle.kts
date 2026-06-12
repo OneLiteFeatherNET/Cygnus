@@ -12,6 +12,7 @@ application {
 dependencies {
     implementation(platform(libs.aonyx.bom))
     implementation(project(":common"))
+    implementation(libs.slf4j.api)
     implementation(libs.minestom)
     implementation(libs.aves)
     implementation(libs.xerus)

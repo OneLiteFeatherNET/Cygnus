@@ -77,7 +77,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
      */
     @Override
     public GameMap build() {
-        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders.toArray(new String[0]));
+        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders);
     }
 
     /**

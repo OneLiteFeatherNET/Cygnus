@@ -29,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -112,7 +113,7 @@ class TeamHelperTest {
         };
         teamCreator.createTeams(gameConfig, teamService, ambientProvider);
         Pos slenderSpawn = new Pos(10, 10, 10);
-        GameMap gameMap = new GameMap("Test", Pos.ZERO, slenderSpawn, Set.of(), Set.of(), "");
+        GameMap gameMap = new GameMap("Test", Pos.ZERO, slenderSpawn, Set.of(), Set.of(), List.of());
         assertNotNull(gameMap);
         assertEquals(slenderSpawn, gameMap.getSlenderSpawn());
 

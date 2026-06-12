@@ -4,6 +4,7 @@ import net.theevilreaper.aves.map.BaseMap;
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.page.PageResource;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -30,7 +31,7 @@ public final class GameMap extends BaseMap {
      * @param survivorSpawns the spawn positions for the survivors
      * @param builders       the builders for the map
      */
-    public GameMap(String name, Pos spawn, Pos slenderSpawn, Set<PageResource> pageFaces, Set<Pos> survivorSpawns, String... builders) {
+    public GameMap(String name, Pos spawn, Pos slenderSpawn, Set<PageResource> pageFaces, Set<Pos> survivorSpawns, List<String> builders) {
         super(name, spawn, builders);
         this.slenderSpawn = slenderSpawn;
         this.pageFaces = pageFaces;
