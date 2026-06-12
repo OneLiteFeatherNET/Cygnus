@@ -1,3 +1,10 @@
+## [2.3.6](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.5...v2.3.6) (2026-06-12)
+
+
+### Bug Fixes
+
+* **release:** correct publish command in .releaserc.json ([b9cc2b5](https://github.com/OneLiteFeatherNET/Cygnus/commit/b9cc2b5031eabf83785b4b64a87cee3afb511eee))
+
 ## [2.3.5](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.4...v2.3.5) (2026-06-12)
 
 
