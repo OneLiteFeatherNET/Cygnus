@@ -21,7 +21,7 @@ public final class GameMapProvider extends AbstractMapProvider {
 
     public GameMapProvider(Path path) {
         super(GsonHelper.FILE_HANDLER, MapFilters::filterMapsForGame);
-        this.mapEntries = this.loadMapEntries(path.resolve("maps"));
+        this.loadMapEntries(path.resolve("maps"));
 
         if (this.mapEntries.isEmpty()) {
             throw new IllegalStateException("No maps found in the given path");
