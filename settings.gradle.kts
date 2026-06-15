@@ -25,7 +25,7 @@ dependencyResolutionManagement {
         create("libs") {
             version("shadow", "9.4.2")
             version("cloudnet", "4.0.0-RC16")
-            version("aonyx", "0.7.3")
+            version("aonyx", "0.8.0")
             version("cyclonedx", "3.2.4")
             version("pica", "0.0.4")
             version("slf4j", "2.0.18")
