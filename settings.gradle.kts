@@ -27,7 +27,7 @@ dependencyResolutionManagement {
             version("cloudnet", "4.0.0-RC16")
             version("aonyx", "0.7.3")
             version("cyclonedx", "3.2.4")
-            version("pica", "0.0.4")
+            version("pica", "0.1.0")
             version("slf4j", "2.0.18")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
