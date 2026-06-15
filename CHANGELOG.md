@@ -1,3 +1,11 @@
+## [2.3.7](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.6...v2.3.7) (2026-06-15)
+
+
+### Bug Fixes
+
+* **deps:** update aonyx to v0.8.0 ([#93](https://github.com/OneLiteFeatherNET/Cygnus/issues/93)) ([af2d6da](https://github.com/OneLiteFeatherNET/Cygnus/commit/af2d6da36a9da2c9e664eb05d245899f00849112))
+* **deps:** update pica to v0.1.0 ([#94](https://github.com/OneLiteFeatherNET/Cygnus/issues/94)) ([0ede5a7](https://github.com/OneLiteFeatherNET/Cygnus/commit/0ede5a7b622f830c547bc6d8aac73e821c81556e))
+
 ## [2.3.6](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.5...v2.3.6) (2026-06-12)
 
 
