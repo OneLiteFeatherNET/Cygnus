@@ -7,6 +7,7 @@ import net.minestom.server.event.instance.AddEntityToInstanceEvent;
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
+import net.minestom.server.event.player.PlayerCustomClickEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -14,6 +15,7 @@ import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.setup.command.SetupCommand;
 import net.onelitefeather.cygnus.setup.event.MapSetupSaveEvent;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
+import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
 import net.onelitefeather.cygnus.setup.listener.InstanceAddListener;
 import net.onelitefeather.cygnus.setup.listener.InstanceRemoveListener;
@@ -21,6 +23,8 @@ import net.onelitefeather.cygnus.setup.listener.MapSetupSelectListener;
 import net.onelitefeather.cygnus.setup.listener.PageCreationListener;
 import net.onelitefeather.cygnus.setup.listener.PlayerSpawnListener;
 import net.onelitefeather.cygnus.setup.listener.SetupItemListener;
+import net.onelitefeather.cygnus.setup.listener.dialog.DialogPayloadListener;
+import net.onelitefeather.cygnus.setup.listener.dialog.DialogRequestListener;
 import net.onelitefeather.cygnus.setup.listener.map.MapSetupSaveListener;
 import net.onelitefeather.cygnus.setup.map.SetupMapProvider;
 import net.onelitefeather.cygnus.setup.util.SetupData;
@@ -68,6 +72,10 @@ public class SetupExtension implements ListenerHandling {
         manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceUUID));
         manager.addListener(RemoveEntityFromInstanceEvent.class, new InstanceRemoveListener(instanceUUID));
         registerCancelListener(manager);
+
+        //Dialog listener
+        manager.addListener(DialogRequestEvent.class, new DialogRequestListener());
+        manager.addListener(PlayerCustomClickEvent.class, new DialogPayloadListener(setupData));
     }
 
     /**
