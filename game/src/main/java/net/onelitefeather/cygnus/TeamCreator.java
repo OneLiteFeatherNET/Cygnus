@@ -6,7 +6,6 @@ import net.theevilreaper.xerus.api.ColorData;
 import net.theevilreaper.xerus.api.component.team.ColorComponent;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
-import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,12 +25,10 @@ public interface TeamCreator {
      *
      * @param gameConfig      the configuration to get some values from it
      * @param teamService     the service to add the teams
-     * @param ambientProvider the provider to set the ambient team
      */
     default void createTeams(
             @NotNull GameConfig gameConfig,
-            @NotNull TeamService teamService,
-            @NotNull AmbientProvider ambientProvider
+            @NotNull TeamService teamService
     ) {
         Team slenderTeam = Team.of(
                 Key.key("cygnus", GameConfig.SLENDER_TEAM_NAME.toLowerCase(Locale.ROOT)),
@@ -49,7 +46,6 @@ public interface TeamCreator {
         survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.LIGHT_GREEN));
         survivorTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
         teamService.add(survivorTeam);
-        ambientProvider.setTeam(survivorTeam);
         teamService.add(survivorTeam);
     }
 }
