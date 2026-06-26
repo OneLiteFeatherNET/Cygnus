@@ -1,3 +1,10 @@
+## [2.3.8](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.7...v2.3.8) (2026-06-26)
+
+
+### Bug Fixes
+
+* **ambient:** improve service creation call ([147817e](https://github.com/OneLiteFeatherNET/Cygnus/commit/147817efd5cb8742c82da7d33ced1644414d90a8))
+
 ## [2.3.7](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.6...v2.3.7) (2026-06-15)
 
 
