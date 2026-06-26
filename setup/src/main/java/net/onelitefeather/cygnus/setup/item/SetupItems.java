@@ -6,6 +6,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.onelitefeather.cygnus.common.Tags;
+import net.theevilreaper.aves.hotbar.HotBarLayout;
 
 /**
  * The class holds the {@link ItemStack} references which have some functionality during a setup process from an map.
