@@ -26,10 +26,9 @@ class StaminaHelperTest {
     void testStaminaObjectCreation(@NotNull Env env) {
         Instance testInstance = env.createFlatInstance();
         GameConfig gameConfig = new GameConfigReader(Paths.get("")).getConfig();
-        AmbientProvider ambientProvider = new AmbientProvider();
         TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {};
-        teamCreator.createTeams(gameConfig, teamService, ambientProvider);
+        teamCreator.createTeams(gameConfig, teamService);
         StaminaService staminaService = new StaminaService();
 
         assertNotNull(staminaService);

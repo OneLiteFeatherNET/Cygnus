@@ -13,7 +13,6 @@ import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.TeamCreator;
-import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
@@ -107,11 +106,10 @@ class TeamHelperTest {
     @Test
     void testSlenderTeleport(@NotNull Env env) {
         Instance testInstance = env.createFlatInstance();
-        AmbientProvider ambientProvider = new AmbientProvider();
         TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {
         };
-        teamCreator.createTeams(gameConfig, teamService, ambientProvider);
+        teamCreator.createTeams(gameConfig, teamService);
         Pos slenderSpawn = new Pos(10, 10, 10);
         GameMap gameMap = new GameMap("Test", Pos.ZERO, slenderSpawn, Set.of(), Set.of(), List.of());
         assertNotNull(gameMap);
@@ -138,11 +136,10 @@ class TeamHelperTest {
 
     @Test
     void testInvalidUpdateTabList() {
-        AmbientProvider ambientProvider = new AmbientProvider();
         TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {
         };
-        teamCreator.createTeams(gameConfig, teamService, ambientProvider);
+        teamCreator.createTeams(gameConfig, teamService);
 
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
@@ -154,11 +151,10 @@ class TeamHelperTest {
 
     @Test
     void testUpdateTabList(@NotNull Env env) {
-        AmbientProvider ambientProvider = new AmbientProvider();
         TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {
         };
-        teamCreator.createTeams(gameConfig, teamService, ambientProvider);
+        teamCreator.createTeams(gameConfig, teamService);
 
         Set<Player> survivors = new HashSet<>();
 

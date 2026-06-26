@@ -16,11 +16,9 @@ class TeamCreatorTest {
     void testTeamCreation() {
         GameConfig gameConfig = new GameConfigReader(Paths.get("")).getConfig();
         TeamService teamService = TeamService.of();
-        AmbientProvider ambientProvider = new AmbientProvider();
-
 
         TeamCreator teamCreator = new TeamCreator() {};
-        teamCreator.createTeams(gameConfig, teamService, ambientProvider);
+        teamCreator.createTeams(gameConfig, teamService);
 
         for (int i = 0; i < teamService.getTeams().size(); i++) {
             assertNotNull(teamService.getTeams().get(i));

@@ -92,14 +92,14 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Path path = Paths.get("");
         this.teamService = TeamService.of();
         this.linearPhaseSeries = new LinearPhaseSeries<>("game");
-        this.ambientProvider = new AmbientProvider();
+        this.ambientProvider = new AmbientProvider(this.teamService.getTeams().get(Helper.SLENDER_ID));
         this.staminaService = new StaminaService();
         this.gameConfig = new GameConfigReader(path).getConfig();
         MinecraftServer.getConnectionManager().setPlayerProvider(CygnusPlayer::new);
         this.pageProvider = new PageProvider();
         this.mapProvider = new GameMapProvider(path);
         this.view = new GameViewImpl();
-        this.createTeams(this.gameConfig, this.teamService, this.ambientProvider);
+        this.createTeams(this.gameConfig, this.teamService);
         this.initPhases();
         this.initCommands();
         this.initListener();
