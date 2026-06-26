@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.8...v2.4.0) (2026-06-26)
+
+
+### Features
+
+* **setup:** add dialog related code ([#101](https://github.com/OneLiteFeatherNET/Cygnus/issues/101)) ([98b58bd](https://github.com/OneLiteFeatherNET/Cygnus/commit/98b58bdb79045c7792b4f6f2c39dafc4a09bb861))
+
 ## [2.3.8](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.7...v2.3.8) (2026-06-26)
 
 
