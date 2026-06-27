@@ -5,16 +5,14 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.anvil.AnvilLoader;
-import net.onelitefeather.cygnus.setup.inventory.view.LobbyOverviewInventory;
+import net.onelitefeather.cygnus.setup.inventory.view.GeneralMapOverviewInventory;
 import net.theevilreaper.aves.file.FileHandler;
-import net.theevilreaper.aves.inventory.InventoryBuilder;
 import net.theevilreaper.aves.inventory.PersonalInventoryBuilder;
 import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 
 import java.nio.file.Files;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,7 +32,7 @@ public final class LobbyData extends InstanceSetupData {
             throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
         }
 
-        this.viewInventory = new LobbyOverviewInventory(player, this.mapBuilder);
+        this.viewInventory = new GeneralMapOverviewInventory(player, this.mapBuilder);
     }
 
     @Override

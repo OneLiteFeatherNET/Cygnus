@@ -14,14 +14,12 @@ import net.theevilreaper.aves.inventory.slot.ISlot;
 import net.theevilreaper.aves.inventory.util.LayoutCalculator;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 
-import java.util.function.Consumer;
-
-public class LobbyOverviewInventory extends PersonalInventoryBuilder {
+public class GeneralMapOverviewInventory extends PersonalInventoryBuilder {
 
     private static final int[] DATA_SLOT = LayoutCalculator.from(10, 12, 14);
     private final BaseMapBuilder mapBuilder;
 
-    public LobbyOverviewInventory(Player player, BaseMapBuilder builder) {
+    public GeneralMapOverviewInventory(Player player, BaseMapBuilder builder) {
         super(Component.text("Lobby data"), InventoryType.CHEST_3_ROW, player);
         this.mapBuilder = builder;
 
