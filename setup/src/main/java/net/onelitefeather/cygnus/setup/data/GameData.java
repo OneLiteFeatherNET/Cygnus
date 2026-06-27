@@ -52,7 +52,7 @@ public class GameData extends InstanceSetupData {
      * {@inheritDoc}
      */
     @Override
-    public void openInventory(Player player) {
+    public void openInventory() {
         //player.openInventory(this.inventory.getInventory());
     }
 

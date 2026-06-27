@@ -72,9 +72,8 @@ public abstract class InstanceSetupData implements SetupData {
     /**
      * Opens the setup inventory for the given player.
      *
-     * @param player target player
      */
-    public abstract void openInventory(Player player);
+    public abstract void openInventory();
 
     /**
      * Triggers an update of the setup state and related visual feedback.

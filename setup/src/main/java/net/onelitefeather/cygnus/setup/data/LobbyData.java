@@ -5,7 +5,10 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.anvil.AnvilLoader;
+import net.onelitefeather.cygnus.setup.inventory.view.LobbyOverviewInventory;
 import net.theevilreaper.aves.file.FileHandler;
+import net.theevilreaper.aves.inventory.InventoryBuilder;
+import net.theevilreaper.aves.inventory.PersonalInventoryBuilder;
 import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
@@ -18,7 +21,7 @@ import java.util.UUID;
 public final class LobbyData extends InstanceSetupData {
 
     private final FileHandler fileHandler;
-    private Objects viewInventory;
+    private PersonalInventoryBuilder viewInventory;
     private BaseMapBuilder mapBuilder;
 
     public LobbyData(UUID uuid, MapEntry mapEntry, FileHandler fileHandler) {
@@ -30,16 +33,18 @@ public final class LobbyData extends InstanceSetupData {
         if (player == null) {
             throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
         }
+
+        this.viewInventory = new LobbyOverviewInventory(player, this.mapBuilder);
     }
 
     @Override
-    public void openInventory(Player player) {
-        //player.openInventory(this.viewInventory.getInventory());
+    public void openInventory() {
+        this.viewInventory.open();
     }
 
     @Override
     public void triggerUpdate() {
-      //  this.viewInventory.invalidateDataLayout();
+        this.viewInventory.invalidateDataLayout();
     }
 
     @Override
