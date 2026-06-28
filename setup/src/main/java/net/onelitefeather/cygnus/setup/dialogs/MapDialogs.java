@@ -14,12 +14,16 @@ import net.onelitefeather.pica.dialog.type.DialogType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
+
 /**
  *
  */
 public final class MapDialogs extends DialogBase {
 
     public static final Key MAP_KEY = create("map_name");
+    public static final Key AUTHOR_AMOUNT_KEY = create("author_amount_dialog");
+    public static final Key AUTHOR_INPUT_ENTRY_KEY = create("author_input_dialog");
+
 
     /**
      * Opens the dialog to allow the input of a name.
