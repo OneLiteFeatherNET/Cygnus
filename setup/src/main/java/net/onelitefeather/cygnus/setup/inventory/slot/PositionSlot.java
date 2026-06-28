@@ -7,10 +7,8 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.inventory.click.Click;
 import net.minestom.server.item.ItemStack;
+import net.onelitefeather.cygnus.setup.event.PlayerRemoveDataEvent;
 import net.onelitefeather.cygnus.setup.event.PositionSetEvent;
-import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
-import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
-import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.theevilreaper.aves.inventory.click.ClickHolder;
 import net.theevilreaper.aves.util.Components;
@@ -78,8 +76,7 @@ public class PositionSlot extends AbstractDataSlot {
         }
 
         if (click instanceof Click.Right) {
-            EventDispatcher.call(new DialogRequestEvent(player, DialogTarget.DELETE_SPAWN, new DialogContext.PositionContent(position)));
-
+            EventDispatcher.call(new PlayerRemoveDataEvent(player, type));
         }
     }
 }
