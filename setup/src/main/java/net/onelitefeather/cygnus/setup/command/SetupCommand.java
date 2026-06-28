@@ -6,10 +6,8 @@ import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.condition.Conditions;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.setup.command.parts.SetupBuildersCommand;
-import net.onelitefeather.cygnus.setup.command.parts.SetupNameCommand;
 import net.onelitefeather.cygnus.setup.command.parts.SetupPageCommand;
 import net.onelitefeather.cygnus.setup.command.parts.SetupSlenderSpawnCommand;
-import net.onelitefeather.cygnus.setup.command.parts.SetupSpawnCommand;
 import net.onelitefeather.cygnus.setup.command.parts.SetupSurvivorSpawnCommand;
 import net.onelitefeather.cygnus.setup.util.SetupData;
 
