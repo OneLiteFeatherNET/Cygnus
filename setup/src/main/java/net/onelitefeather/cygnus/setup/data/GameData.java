@@ -8,9 +8,10 @@ import net.minestom.server.instance.anvil.AnvilLoader;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
-import net.onelitefeather.cygnus.setup.inventory.view.GeneralMapOverviewInventory;
+import net.onelitefeather.cygnus.setup.inventory.view.MapDataOveriewInventory;
 import net.onelitefeather.cygnus.setup.inventory.view.SurvivorViewInventory;
-import net.theevilreaper.aves.file.FileHandler;
+import net.onelitefeather.cygnus.setup.item.SetupItems;
+import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 
@@ -20,37 +21,35 @@ import java.util.UUID;
 
 public class GameData extends InstanceSetupData {
 
-    private final FileHandler fileHandler;
-    private final GeneralMapOverviewInventory inventory;
+    private final MapDataOveriewInventory inventory;
     private final SurvivorViewInventory survivorInventory;
     private GameMapBuilder gameMapBuilder;
-    private boolean areaMode;
+    private boolean pageMode;
 
     /**
      * Constructs a new GameData instance.
      *
      * @param uuid       the UUID of the player
      * @param mapEntry   the map entry associated with this game data
-     * @param fileHandler the file handler for saving and loading game data
      */
-    public GameData(UUID uuid, MapEntry mapEntry, FileHandler fileHandler) {
+    public GameData(UUID uuid, MapEntry mapEntry) {
         super(uuid, mapEntry, BossBar.Color.RED);
-        this.fileHandler = fileHandler;
         Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid);
         this.loadData();
         if (player == null) {
             throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
         }
 
-        this.inventory = new GeneralMapOverviewInventory(player, this.gameMapBuilder);
+        System.out.println("After loadData: " + System.identityHashCode(this.gameMapBuilder));
+        this.inventory = new MapDataOveriewInventory(player, this.gameMapBuilder);
         this.survivorInventory = new SurvivorViewInventory(player, this.gameMapBuilder);
     }
 
     /**
      * Swaps between area mode and normal mode.
      */
-    public void swapAreaMode() {
-        this.areaMode = !this.areaMode;
+    public void swapPageMode() {
+        this.pageMode = !this.pageMode;
     }
 
     /**
@@ -81,6 +80,26 @@ public class GameData extends InstanceSetupData {
         }
     }
 
+    @Override
+    public void handleItemInteraction(Player player, byte tagValue) {
+        if (3 == tagValue) {
+            swapPageMode();
+            if (hasPageMode()) {
+                player.sendMessage(SetupMessages.PAGE_MODE_ENABLED);
+                player.sendMessage(SetupMessages.PAGE_MODE_INFORM);
+            }
+            SetupItems.setPageItems(player);
+            return;
+        }
+        if (4 == tagValue) {
+            swapPageMode();
+            player.sendMessage(SetupMessages.PAGE_MODE_DISABLED);
+            SetupItems.setGameLayout(player);
+            return;
+        }
+        super.handleItemInteraction(player, tagValue);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -109,7 +128,6 @@ public class GameData extends InstanceSetupData {
         super.reset();
         this.survivorInventory.unregister();
         this.inventory.unregister();
-       // this.inventory.unregister();
     }
 
     /**
@@ -120,7 +138,7 @@ public class GameData extends InstanceSetupData {
         if (!this.mapEntry.hasMapFile()) {
             this.gameMapBuilder = new GameMapBuilder();
         } else {
-            Optional<GameMap> mapData = fileHandler.load(mapEntry.getMapFile(), GameMap.class);
+            Optional<GameMap> mapData = GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), GameMap.class);
             mapData.ifPresentOrElse(gameMap ->
                             this.gameMapBuilder = new GameMapBuilder(gameMap),
                     () -> this.gameMapBuilder = new GameMapBuilder()
@@ -135,12 +153,12 @@ public class GameData extends InstanceSetupData {
     }
 
     /**
-     * Returns an indication if the area mode is active or not.
+     * Returns an indication if the page mode is active or not.
      *
-     * @return true if area mode is active, false otherwise
+     * @return true if page mode is active, false otherwise
      */
-    public boolean hasAreaMode() {
-        return areaMode;
+    public boolean hasPageMode() {
+        return pageMode;
     }
 
     /**

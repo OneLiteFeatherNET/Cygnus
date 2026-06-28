@@ -80,6 +80,10 @@ public abstract class InstanceSetupData implements SetupData {
      */
     public abstract void triggerUpdate(InventoryTarget target);
 
+    public void handleItemInteraction(Player player, byte tagValue) {
+        openInventory(InventoryTarget.GENERAL);
+    }
+
     /**
      * Checks whether a map file is available for this setup.
      *

@@ -5,8 +5,8 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.anvil.AnvilLoader;
-import net.onelitefeather.cygnus.setup.inventory.view.GeneralMapOverviewInventory;
-import net.theevilreaper.aves.file.FileHandler;
+import net.onelitefeather.cygnus.common.util.GsonHelper;
+import net.onelitefeather.cygnus.setup.inventory.view.MapDataOveriewInventory;
 import net.theevilreaper.aves.inventory.PersonalInventoryBuilder;
 import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.BaseMapBuilder;
@@ -18,13 +18,11 @@ import java.util.UUID;
 
 public final class LobbyData extends InstanceSetupData {
 
-    private final FileHandler fileHandler;
     private final PersonalInventoryBuilder viewInventory;
     private BaseMapBuilder mapBuilder;
 
-    public LobbyData(UUID uuid, MapEntry mapEntry, FileHandler fileHandler) {
+    public LobbyData(UUID uuid, MapEntry mapEntry) {
         super(uuid, mapEntry, BossBar.Color.GREEN);
-        this.fileHandler = fileHandler;
         this.loadData();
         Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid);
 
@@ -32,7 +30,7 @@ public final class LobbyData extends InstanceSetupData {
             throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
         }
 
-        this.viewInventory = new GeneralMapOverviewInventory(player, this.mapBuilder);
+        this.viewInventory = new MapDataOveriewInventory(player, this.mapBuilder);
     }
 
     @Override
@@ -50,7 +48,7 @@ public final class LobbyData extends InstanceSetupData {
         if (!Files.exists(mapEntry.getMapFile())) {
             this.mapEntry.createFile();
         }
-        this.fileHandler.save(mapEntry.getMapFile(), BaseMap.class);
+        GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), BaseMap.class);
     }
 
     @Override
@@ -73,7 +71,7 @@ public final class LobbyData extends InstanceSetupData {
         if (this.mapEntry == null) {
             this.mapBuilder = BaseMap.builder();
         } else {
-            Optional<BaseMap> mapData = fileHandler.load(mapEntry.getMapFile(), BaseMap.class);
+            Optional<BaseMap> mapData = GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), BaseMap.class);
 
             mapData.ifPresentOrElse(baseMap -> {
                 this.mapBuilder = BaseMap.builder(baseMap);
