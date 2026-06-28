@@ -6,7 +6,8 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.anvil.AnvilLoader;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
-import net.onelitefeather.cygnus.setup.inventory.view.MapDataOveriewInventory;
+import net.onelitefeather.cygnus.setup.inventory.view.InventoryMode;
+import net.onelitefeather.cygnus.setup.inventory.view.MapDataOverviewInventory;
 import net.theevilreaper.aves.inventory.PersonalInventoryBuilder;
 import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.BaseMapBuilder;
@@ -30,7 +31,7 @@ public final class LobbyData extends InstanceSetupData {
             throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
         }
 
-        this.viewInventory = new MapDataOveriewInventory(player, this.mapBuilder);
+        this.viewInventory = new MapDataOverviewInventory(player, this.mapBuilder, InventoryMode.LOBBY);
     }
 
     @Override

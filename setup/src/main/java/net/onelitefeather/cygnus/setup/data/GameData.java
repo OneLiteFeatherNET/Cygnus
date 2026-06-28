@@ -8,7 +8,8 @@ import net.minestom.server.instance.anvil.AnvilLoader;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
-import net.onelitefeather.cygnus.setup.inventory.view.MapDataOveriewInventory;
+import net.onelitefeather.cygnus.setup.inventory.view.InventoryMode;
+import net.onelitefeather.cygnus.setup.inventory.view.MapDataOverviewInventory;
 import net.onelitefeather.cygnus.setup.inventory.view.SurvivorViewInventory;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
@@ -21,7 +22,7 @@ import java.util.UUID;
 
 public class GameData extends InstanceSetupData {
 
-    private final MapDataOveriewInventory inventory;
+    private final MapDataOverviewInventory inventory;
     private final SurvivorViewInventory survivorInventory;
     private GameMapBuilder gameMapBuilder;
     private boolean pageMode;
@@ -41,7 +42,7 @@ public class GameData extends InstanceSetupData {
         }
 
         System.out.println("After loadData: " + System.identityHashCode(this.gameMapBuilder));
-        this.inventory = new MapDataOveriewInventory(player, this.gameMapBuilder);
+        this.inventory = new MapDataOverviewInventory(player, this.gameMapBuilder, InventoryMode.GAME);
         this.survivorInventory = new SurvivorViewInventory(player, this.gameMapBuilder);
     }
 
