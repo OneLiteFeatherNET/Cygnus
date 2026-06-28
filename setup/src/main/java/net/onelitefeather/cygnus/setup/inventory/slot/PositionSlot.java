@@ -7,6 +7,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.inventory.click.Click;
 import net.minestom.server.item.ItemStack;
+import net.onelitefeather.cygnus.setup.event.PositionSetEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
@@ -64,12 +65,21 @@ public class PositionSlot extends AbstractDataSlot {
     @Override
     protected void click(Player player, int slot, Click click, ItemStack stack, Consumer<ClickHolder> result) {
         result.accept(ClickHolder.cancelClick());
-        if ((!(click instanceof Click.Left || click instanceof Click.Right)) || position == null) return;
+
+        if (position == null && click instanceof Click.Left) {
+            EventDispatcher.call(new PositionSetEvent(player, player.getPosition(), type));
+            return;
+        }
+
         if (click instanceof Click.Left) {
             player.closeInventory();
             player.teleport(position);
             return;
         }
-        EventDispatcher.call(new DialogRequestEvent(player, DialogTarget.DELETE_SPAWN, new DialogContext.PositionContent(position)));
+
+        if (click instanceof Click.Right) {
+            EventDispatcher.call(new DialogRequestEvent(player, DialogTarget.DELETE_SPAWN, new DialogContext.PositionContent(position)));
+
+        }
     }
 }
