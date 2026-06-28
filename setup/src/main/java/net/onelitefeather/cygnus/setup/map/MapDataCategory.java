@@ -60,4 +60,11 @@ public enum MapDataCategory {
                         .set(SetupTags.MAP_DATA_CATEGORY_TAG, category)
                         .build());
     }
+
+    public static MapDataCategory byId(int id) {
+        if  (id < 0 || id >= VALUES.length) {
+            throw new IllegalArgumentException("Invalid map data category ID: " + id);
+        }
+        return VALUES[id];
+    }
 }
