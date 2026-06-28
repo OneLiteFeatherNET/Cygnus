@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.setup.listener.dialog;
 
 import net.minestom.server.entity.Player;
+import net.onelitefeather.cygnus.setup.dialogs.AuthorDialogs;
 import net.onelitefeather.cygnus.setup.dialogs.MapDialogs;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
@@ -34,6 +35,11 @@ public class DialogRequestListener implements Consumer<DialogRequestEvent> {
             case DELETE_PAGE_FACE -> {
                 if (context == null) return;
                 MapDialogs.openDeleteDialog(player, MapDataCategory.PAGE, context);
+            }
+            case CREATE_AUTHORS -> AuthorDialogs.openAuthorRequestDialog(player);
+            case AUTHOR_INPUT -> {
+                if (context == null) return;
+                AuthorDialogs.openAuthorInput(player, ((DialogContext.AuthorAmount)context).amount());
             }
             default -> {
                 MapDataCategory category = DELETE_TARGETS.get(target);

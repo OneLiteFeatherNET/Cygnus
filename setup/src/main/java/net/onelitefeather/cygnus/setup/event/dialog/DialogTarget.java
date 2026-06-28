@@ -11,6 +11,7 @@ public enum DialogTarget {
 
     CREATE_NAME,
     CREATE_AUTHORS,
+    AUTHOR_INPUT,
     UPDATE_NAME,
     DELETE_NAME,
     DELETE_SPAWN,
