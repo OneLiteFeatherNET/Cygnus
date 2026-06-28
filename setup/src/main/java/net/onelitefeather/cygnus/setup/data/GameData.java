@@ -159,6 +159,21 @@ public class GameData extends InstanceSetupData {
      * {@inheritDoc}
      */
     @Override
+    public void handleDataDelete(MapDataCategory category) {
+        switch (category) {
+            case SPAWN -> gameMapBuilder.spawn(null);
+            case NAME -> gameMapBuilder.name(null);
+            case AUTHOR -> gameMapBuilder.builders("");
+            case SLENDER -> gameMapBuilder.setSlenderSpawn(null);
+            default -> throw new IllegalArgumentException("Unknown inventory category: " + category);
+        }
+        this.triggerUpdate(InventoryTarget.GENERAL);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void save() {
         if (!Files.exists(mapEntry.getMapFile())) {
             this.mapEntry.createFile();

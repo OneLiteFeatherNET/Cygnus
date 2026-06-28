@@ -15,6 +15,7 @@ import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -60,6 +61,21 @@ public final class LobbyData extends InstanceSetupData {
     @Override
     public void triggerUpdate(InventoryTarget target) {
         this.viewInventory.invalidateDataLayout();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void handleDataDelete(MapDataCategory category) {
+        switch (category) {
+            case SPAWN -> mapBuilder.spawn(null);
+            case NAME -> mapBuilder.name(null);
+            case AUTHOR -> mapBuilder.builders("");
+            default -> throw new IllegalArgumentException("Unknown inventory category: " + category);
+        }
+        this.triggerUpdate(InventoryTarget.GENERAL);
     }
 
     /**

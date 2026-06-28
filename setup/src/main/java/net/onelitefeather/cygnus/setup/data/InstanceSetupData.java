@@ -102,6 +102,8 @@ public abstract class InstanceSetupData implements SetupData {
         openInventory(InventoryTarget.GENERAL);
     }
 
+    public abstract void handleDataDelete(MapDataCategory category);
+
     /**
      * Checks whether a map file is available for this setup.
      *
