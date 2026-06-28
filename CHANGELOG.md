@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.5.0...v2.5.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **setup:** add missing instance set ([95a3544](https://github.com/OneLiteFeatherNET/Cygnus/commit/95a354421aa703e63f969d3cacc3726a12f2e3f0))
+
 # [2.5.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.4.0...v2.5.0) (2026-06-28)
 
 
