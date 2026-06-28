@@ -48,8 +48,7 @@ class SetupItemsTest {
         Player player = env.createPlayer(instance);
 
         SetupItems.setPageItems(player);
-        assertItem(player, 2, (byte) 0x03);
-        assertItem(player, 6, (byte) 0x01);
+        assertItem(player, 4, (byte) 0x04);
 
         env.destroyInstance(instance, true);
     }

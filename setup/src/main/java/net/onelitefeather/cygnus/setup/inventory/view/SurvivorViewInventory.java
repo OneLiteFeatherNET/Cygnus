@@ -16,7 +16,7 @@ import java.util.Iterator;
 
 public class SurvivorViewInventory extends PersonalInventoryBuilder {
 
-    private static final int[] SLOTS = LayoutCalculator.quad(InventoryType.CHEST_1_ROW.getSize() + 1, InventoryType.CHEST_5_ROW.getSize());
+    private static final int[] SLOTS = LayoutCalculator.quad(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_5_ROW.getSize() - 1);
     private final GameMapBuilder mapBuilder;
 
     /**
@@ -35,19 +35,19 @@ public class SurvivorViewInventory extends PersonalInventoryBuilder {
         setLayout(layout);
 
         this.setDataLayoutFunction(dataLayout -> {
-             dataLayout = dataLayout != null ? dataLayout : InventoryLayout.fromType(getType());
-
-             if (this.mapBuilder.getSurvivorSpawns().isEmpty()) return dataLayout;
-
+            InventoryLayout internalLayout = dataLayout != null ? dataLayout : InventoryLayout.fromType(getType());
+             if (this.mapBuilder.getSurvivorSpawns().isEmpty()) {
+                 return internalLayout;
+            }
             Iterator<Pos> iterator = mapBuilder.getSurvivorSpawns().iterator();
 
             for (int i = 0; i < SLOTS.length && iterator.hasNext(); i++) {
                 Pos pos = iterator.next();
-                dataLayout.setItem(SLOTS[i], new PositionSlot(MapDataCategory.SPAWN, pos));
+                internalLayout.setItem(SLOTS[i], new PositionSlot(MapDataCategory.SURVIVOR, pos));
             }
-            return dataLayout;
+            return internalLayout;
         });
-
+        this.invalidateLayout();
         register();
     }
 }

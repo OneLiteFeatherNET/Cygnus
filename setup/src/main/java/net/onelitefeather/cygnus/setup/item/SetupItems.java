@@ -26,6 +26,7 @@ public final class SetupItems {
     private static final HotBarLayout lobbySetupLayout;
     private static final HotBarLayout gameSetupLayout;
     private static final HotBarLayout pageLayout;
+    private static final HotBarLayout survivorSpawnLayout;
 
     static {
         DECORATION_PANE = ItemStack.builder(Material.BLACK_STAINED_GLASS_PANE).customName(Component.empty()).build();
@@ -48,22 +49,40 @@ public final class SetupItems {
         lobbySetupLayout.set(6, saveItem);
 
         gameSetupLayout = new HotBarLayout();
-        gameSetupLayout.set(2, ItemStack.builder(Material.COMPASS)
+        gameSetupLayout.set(1, ItemStack.builder(Material.COMPASS)
                 .customName(Component.text("Data", NamedTextColor.AQUA))
                 .set(Tags.ITEM_TAG, (byte) 0x02)
                 .build()
         );
-        gameSetupLayout.set(4, ItemStack.builder(Material.PAPER)
+        gameSetupLayout.set(3, ItemStack.builder(Material.PAPER)
                 .customName(Component.text("Page", NamedTextColor.AQUA))
                 .set(Tags.ITEM_TAG, (byte) 0x03)
                 .build()
         );
-        gameSetupLayout.set(6, saveItem);
+        gameSetupLayout.set(5, ItemStack.builder(Material.MINECART)
+                .customName(Component.text("Survivor", NamedTextColor.YELLOW))
+                .set(Tags.ITEM_TAG, (byte) 0x05)
+                .build()
+        );
+        gameSetupLayout.set(7, saveItem);
 
         pageLayout = new HotBarLayout();
-        pageLayout.set(2, ItemStack.builder(Material.BARRIER)
+        pageLayout.set(4, ItemStack.builder(Material.BARRIER)
                 .customName(Component.text("Leave page mode", NamedTextColor.RED))
                 .set(Tags.ITEM_TAG, (byte) 0x04)
+                .build()
+        );
+
+        survivorSpawnLayout = new HotBarLayout();
+        survivorSpawnLayout.set(2, ItemStack.builder(Material.CHEST)
+                .customName(Component.text("Spawns", NamedTextColor.AQUA))
+                .set(Tags.ITEM_TAG, (byte) 0x06)
+                .build()
+        );
+        survivorSpawnLayout.set(6
+                , ItemStack.builder(Material.BARRIER)
+                .customName(Component.text("Leave mode", NamedTextColor.RED))
+                .set(Tags.ITEM_TAG, (byte) 0x07)
                 .build()
         );
     }
@@ -96,6 +115,16 @@ public final class SetupItems {
     public static void setGameLayout(Player player) {
         gameSetupLayout.apply(player);
         player.setHeldItemSlot(FOURTH_INDEX);
+    }
+
+    /**
+     * Set's the {@link ItemStack} which are required for the survivor setup.
+     *
+     * @param player who should receive the items
+     */
+    public static void setSurvivorSpawn(Player player) {
+        survivorSpawnLayout.apply(player);
+        player.setHeldItemSlot(ZERO_INDEX);
     }
 
     /**
