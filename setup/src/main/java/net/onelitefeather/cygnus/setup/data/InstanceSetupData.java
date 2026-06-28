@@ -73,12 +73,12 @@ public abstract class InstanceSetupData implements SetupData {
      * Opens the setup inventory for the given player.
      *
      */
-    public abstract void openInventory();
+    public abstract void openInventory(InventoryTarget target);
 
     /**
      * Triggers an update of the setup state and related visual feedback.
      */
-    public abstract void triggerUpdate();
+    public abstract void triggerUpdate(InventoryTarget target);
 
     /**
      * Checks whether a map file is available for this setup.
@@ -114,4 +114,12 @@ public abstract class InstanceSetupData implements SetupData {
      * @return associated map builder
      */
     public abstract BaseMapBuilder getMapBuilder();
+
+    public enum InventoryTarget {
+
+        GENERAL,
+        SURVIVOR,
+        PAGE
+
+    }
 }

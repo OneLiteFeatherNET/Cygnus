@@ -8,6 +8,8 @@ import net.minestom.server.instance.anvil.AnvilLoader;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
+import net.onelitefeather.cygnus.setup.inventory.view.GeneralMapOverviewInventory;
+import net.onelitefeather.cygnus.setup.inventory.view.SurvivorViewInventory;
 import net.theevilreaper.aves.file.FileHandler;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
@@ -19,8 +21,8 @@ import java.util.UUID;
 public class GameData extends InstanceSetupData {
 
     private final FileHandler fileHandler;
-    //TODO: Implement inventory
-    private Object inventory;
+    private final GeneralMapOverviewInventory inventory;
+    private final SurvivorViewInventory survivorInventory;
     private GameMapBuilder gameMapBuilder;
     private boolean areaMode;
 
@@ -39,6 +41,9 @@ public class GameData extends InstanceSetupData {
         if (player == null) {
             throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
         }
+
+        this.inventory = new GeneralMapOverviewInventory(player, this.gameMapBuilder);
+        this.survivorInventory = new SurvivorViewInventory(player, this.gameMapBuilder);
     }
 
     /**
@@ -52,16 +57,28 @@ public class GameData extends InstanceSetupData {
      * {@inheritDoc}
      */
     @Override
-    public void openInventory() {
-        //player.openInventory(this.inventory.getInventory());
+    public void openInventory(InventoryTarget target) {
+        switch (target) {
+            case GENERAL -> this.inventory.open();
+            case SURVIVOR -> this.survivorInventory.open();
+            case PAGE -> {
+
+            }
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void triggerUpdate() {
-     //  this.inventory.invalidateDataLayout();
+    public void triggerUpdate(InventoryTarget target) {
+        switch (target) {
+            case GENERAL -> this.inventory.invalidateDataLayout();
+            case SURVIVOR -> this.survivorInventory.invalidateDataLayout();
+            case PAGE -> {
+                // Nothing to do here
+            }
+        }
     }
 
     /**
@@ -90,6 +107,8 @@ public class GameData extends InstanceSetupData {
     @Override
     public void reset() {
         super.reset();
+        this.survivorInventory.unregister();
+        this.inventory.unregister();
        // this.inventory.unregister();
     }
 

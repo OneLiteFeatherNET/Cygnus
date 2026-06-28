@@ -19,7 +19,7 @@ import java.util.UUID;
 public final class LobbyData extends InstanceSetupData {
 
     private final FileHandler fileHandler;
-    private PersonalInventoryBuilder viewInventory;
+    private final PersonalInventoryBuilder viewInventory;
     private BaseMapBuilder mapBuilder;
 
     public LobbyData(UUID uuid, MapEntry mapEntry, FileHandler fileHandler) {
@@ -36,12 +36,12 @@ public final class LobbyData extends InstanceSetupData {
     }
 
     @Override
-    public void openInventory() {
+    public void openInventory(InventoryTarget target) {
         this.viewInventory.open();
     }
 
     @Override
-    public void triggerUpdate() {
+    public void triggerUpdate(InventoryTarget target) {
         this.viewInventory.invalidateDataLayout();
     }
 
@@ -65,7 +65,7 @@ public final class LobbyData extends InstanceSetupData {
     @Override
     public void reset() {
         super.reset();
-        //this.viewInventory.unregister();
+        this.viewInventory.unregister();
     }
 
     @Override
@@ -79,8 +79,6 @@ public final class LobbyData extends InstanceSetupData {
                 this.mapBuilder = BaseMap.builder(baseMap);
             }, () -> this.mapBuilder = BaseMap.builder());
         }
-
-        //this.viewInventory = new LobbyViewInventory(this.mapBuilder);
 
         this.instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         AnvilLoader anvilLoader = new AnvilLoader(this.mapEntry.getDirectoryRoot());
