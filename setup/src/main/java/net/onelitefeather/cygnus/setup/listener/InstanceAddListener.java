@@ -4,6 +4,7 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.AddEntityToInstanceEvent;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
+import net.onelitefeather.cygnus.setup.util.SetupTags;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -20,10 +21,16 @@ public final class InstanceAddListener implements Consumer<AddEntityToInstanceEv
 
     @Override
     public void accept(AddEntityToInstanceEvent event) {
-        if (!(event.getEntity() instanceof Player)) return;
+        if (!(event.getEntity() instanceof Player player)) return;
         if (event.getInstance().getUuid().equals(mainInstanceID)) return;
-        MinecraftServer.getSchedulerManager().buildTask(() -> SetupItems.setSaveData((Player) event.getEntity()))
-                .delay(Duration.of(3, ChronoUnit.SECONDS))
-                .schedule();
+
+        MinecraftServer.getSchedulerManager().scheduleNextTick(() -> {
+            int modeId = player.getTag(SetupTags.SETUP_ID_TAG).byteValue();
+            if (modeId == 0) {
+                SetupItems.setLobbyLayout(player);
+                return;
+            }
+            SetupItems.setGameLayout(player);
+        });
     }
 }
