@@ -8,6 +8,7 @@ import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
+import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -15,6 +16,7 @@ import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.setup.command.SetupCommand;
 import net.onelitefeather.cygnus.setup.event.MapSetupSaveEvent;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
+import net.onelitefeather.cygnus.setup.event.PositionSetEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
 import net.onelitefeather.cygnus.setup.listener.InstanceAddListener;
@@ -26,8 +28,8 @@ import net.onelitefeather.cygnus.setup.listener.SetupItemListener;
 import net.onelitefeather.cygnus.setup.listener.dialog.DialogPayloadListener;
 import net.onelitefeather.cygnus.setup.listener.dialog.DialogRequestListener;
 import net.onelitefeather.cygnus.setup.listener.map.MapSetupSaveListener;
+import net.onelitefeather.cygnus.setup.listener.position.PositionSetListener;
 import net.onelitefeather.cygnus.setup.map.SetupMapProvider;
-import net.onelitefeather.cygnus.setup.util.SetupData;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.onelitefeather.guira.SetupDataService;
@@ -39,14 +41,12 @@ import java.util.function.Supplier;
 public class SetupExtension implements ListenerHandling {
 
     private final SetupDataService dataService;
-    private final SetupData setupData;
     private final MapSetupInventory mapSetupInventory;
     private final AbstractMapProvider mapProvider;
 
     public SetupExtension() {
-        this.setupData = new SetupData();
         this.dataService = SetupDataService.create();
-        this.mapProvider = new SetupMapProvider(Paths.get(""));
+        this.mapProvider = new SetupMapProvider(Paths.get("").resolve("setup"));
         this.mapSetupInventory = new MapSetupInventory(mapProvider.getEntries());
         registerSetupComponents();
         this.registerMapListeners();
@@ -61,13 +61,16 @@ public class SetupExtension implements ListenerHandling {
         Supplier<Instance> instanceSupplier = this.mapProvider.getActiveInstance();
         UUID instanceUUID = instanceSupplier.get().getUuid();
 
-        manager.addListener(MapSetupSelectEvent.class, new MapSetupSelectListener(setupData));
-        manager.addListener(PlayerUseItemEvent.class, new SetupItemListener(setupData, mapSetupInventory));
+        manager.addListener(MapSetupSelectEvent.class, new MapSetupSelectListener(this.dataService));
+        manager.addListener(PlayerUseItemEvent.class, new SetupItemListener(this.dataService, mapSetupInventory));
 
         manager.addListener(AsyncPlayerConfigurationEvent.class, event -> event.setSpawningInstance(instanceSupplier.get()));
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(spawnPos));
 
-        manager.addListener(PlayerBlockBreakEvent.class, new PageCreationListener(setupData));
+        manager.addListener(PlayerDisconnectEvent.class, event -> {
+            this.dataService.remove(event.getPlayer().getUuid());
+        });
+        manager.addListener(PlayerBlockBreakEvent.class, new PageCreationListener(this.dataService));
 
         manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceUUID));
         manager.addListener(RemoveEntityFromInstanceEvent.class, new InstanceRemoveListener(instanceUUID));
@@ -75,7 +78,9 @@ public class SetupExtension implements ListenerHandling {
 
         //Dialog listener
         manager.addListener(DialogRequestEvent.class, new DialogRequestListener());
-        manager.addListener(PlayerCustomClickEvent.class, new DialogPayloadListener(setupData));
+        manager.addListener(PlayerCustomClickEvent.class, new DialogPayloadListener(this.dataService));
+
+        manager.addListener(PositionSetEvent.class, new PositionSetListener(this.dataService));
     }
 
     /**
@@ -84,6 +89,6 @@ public class SetupExtension implements ListenerHandling {
     private void registerMapListeners() {
         GlobalEventHandler node = MinecraftServer.getGlobalEventHandler();
         PlayerConsumer teleport = player ->  this.mapProvider.teleportToSpawn(player, true);
-        node.addListener(MapSetupSaveEvent.class, new MapSetupSaveListener(teleport));
+        node.addListener(MapSetupSaveEvent.class, new MapSetupSaveListener(this.dataService, teleport));
     }
 }
