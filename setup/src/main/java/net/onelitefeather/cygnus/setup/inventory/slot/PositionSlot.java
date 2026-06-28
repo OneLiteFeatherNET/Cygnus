@@ -36,7 +36,7 @@ public class PositionSlot extends AbstractDataSlot {
         DECIMAL_FORMAT.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.ROOT));
     }
 
-    private final Pos position;
+    private final @Nullable Pos position;
 
     public PositionSlot(MapDataCategory category, @Nullable Pos position) {
         super(category);
