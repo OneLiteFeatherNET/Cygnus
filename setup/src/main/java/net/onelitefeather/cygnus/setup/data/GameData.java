@@ -12,6 +12,7 @@ import net.onelitefeather.cygnus.setup.inventory.view.InventoryMode;
 import net.onelitefeather.cygnus.setup.inventory.view.MapDataOverviewInventory;
 import net.onelitefeather.cygnus.setup.inventory.view.SurvivorViewInventory;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
+import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
@@ -81,6 +82,28 @@ public class GameData extends InstanceSetupData {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPosition(MapDataCategory category, Player player) {
+        Pos pos = player.getPosition();
+        switch (category) {
+            case SPAWN -> {
+                getMapBuilder().spawn(pos);
+                triggerUpdate(InventoryTarget.GENERAL);
+            }
+            case SLENDER -> {
+                ((GameMapBuilder) getMapBuilder()).setSlenderSpawn(pos);
+                triggerUpdate(InventoryTarget.GENERAL);
+            }
+            default -> {}
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void handleItemInteraction(Player player, byte tagValue) {
         if (3 == tagValue) {
