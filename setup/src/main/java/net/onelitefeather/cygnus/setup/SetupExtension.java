@@ -16,6 +16,7 @@ import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.setup.event.MapSetupSaveEvent;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
+import net.onelitefeather.cygnus.setup.event.PlayerRemoveDataEvent;
 import net.onelitefeather.cygnus.setup.event.PositionSetEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
@@ -26,6 +27,7 @@ import net.onelitefeather.cygnus.setup.listener.PageCreationListener;
 import net.onelitefeather.cygnus.setup.listener.PlayerSpawnListener;
 import net.onelitefeather.cygnus.setup.listener.SetupItemListener;
 import net.onelitefeather.cygnus.setup.listener.SpawnCreationListener;
+import net.onelitefeather.cygnus.setup.listener.data.PlayerRemoveDataListener;
 import net.onelitefeather.cygnus.setup.listener.dialog.DialogPayloadListener;
 import net.onelitefeather.cygnus.setup.listener.dialog.DialogRequestListener;
 import net.onelitefeather.cygnus.setup.listener.map.MapSetupSaveListener;
@@ -55,7 +57,6 @@ public class SetupExtension implements ListenerHandling {
 
     private void registerSetupComponents() {
         var manager = MinecraftServer.getGlobalEventHandler();
-        var commandManager = MinecraftServer.getCommandManager();
         var spawnPos = new Pos(0, 150, 0);
 
         Supplier<Instance> instanceSupplier = this.mapProvider.getActiveInstance();
@@ -84,6 +85,7 @@ public class SetupExtension implements ListenerHandling {
         manager.addListener(PlayerCustomClickEvent.class, new DialogPayloadListener(this.dataService));
 
         manager.addListener(PositionSetEvent.class, new PositionSetListener(this.dataService));
+        manager.addListener(PlayerRemoveDataEvent.class, new PlayerRemoveDataListener());
     }
 
     /**
