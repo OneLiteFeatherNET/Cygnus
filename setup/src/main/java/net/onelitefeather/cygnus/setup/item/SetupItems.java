@@ -79,7 +79,7 @@ public final class SetupItems {
                 .set(Tags.ITEM_TAG, (byte) 0x06)
                 .build()
         );
-        survivorSpawnLayout.set(7
+        survivorSpawnLayout.set(6
                 , ItemStack.builder(Material.BARRIER)
                 .customName(Component.text("Leave mode", NamedTextColor.RED))
                 .set(Tags.ITEM_TAG, (byte) 0x07)
