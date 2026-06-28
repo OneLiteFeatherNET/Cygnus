@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.setup;
 
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.event.EventListener;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.instance.AddEntityToInstanceEvent;
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
@@ -13,7 +14,6 @@ import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.minestom.server.instance.Instance;
-import net.onelitefeather.cygnus.setup.command.SetupCommand;
 import net.onelitefeather.cygnus.setup.event.MapSetupSaveEvent;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
 import net.onelitefeather.cygnus.setup.event.PositionSetEvent;
@@ -25,6 +25,7 @@ import net.onelitefeather.cygnus.setup.listener.MapSetupSelectListener;
 import net.onelitefeather.cygnus.setup.listener.PageCreationListener;
 import net.onelitefeather.cygnus.setup.listener.PlayerSpawnListener;
 import net.onelitefeather.cygnus.setup.listener.SetupItemListener;
+import net.onelitefeather.cygnus.setup.listener.SpawnCreationListener;
 import net.onelitefeather.cygnus.setup.listener.dialog.DialogPayloadListener;
 import net.onelitefeather.cygnus.setup.listener.dialog.DialogRequestListener;
 import net.onelitefeather.cygnus.setup.listener.map.MapSetupSaveListener;
@@ -56,7 +57,6 @@ public class SetupExtension implements ListenerHandling {
         var manager = MinecraftServer.getGlobalEventHandler();
         var commandManager = MinecraftServer.getCommandManager();
         var spawnPos = new Pos(0, 150, 0);
-        commandManager.register(new SetupCommand(setupData));
 
         Supplier<Instance> instanceSupplier = this.mapProvider.getActiveInstance();
         UUID instanceUUID = instanceSupplier.get().getUuid();
@@ -71,7 +71,10 @@ public class SetupExtension implements ListenerHandling {
             this.dataService.remove(event.getPlayer().getUuid());
         });
         manager.addListener(PlayerBlockBreakEvent.class, new PageCreationListener(this.dataService));
-
+        manager.addListener(EventListener.builder(PlayerBlockBreakEvent.class)
+                .ignoreCancelled(false)
+                .handler(new SpawnCreationListener(this.dataService))
+                .build());
         manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceUUID));
         manager.addListener(RemoveEntityFromInstanceEvent.class, new InstanceRemoveListener(instanceUUID));
         registerCancelListener(manager);
