@@ -9,10 +9,6 @@ import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.theevilreaper.aves.inventory.click.ClickHolder;
-import net.theevilreaper.bounce.setup.dialog.event.PlayerDialogRequestEvent;
-import net.theevilreaper.bounce.setup.event.map.PlayerDeletePromptEvent;
-import net.theevilreaper.bounce.setup.inventory.overview.OverviewType;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -20,16 +16,19 @@ import java.util.function.Consumer;
 
 import static net.onelitefeather.cygnus.setup.util.SetupMessages.DELETE_CLICK;
 import static net.onelitefeather.cygnus.setup.util.SetupMessages.NO_SPACE_SEPARATOR;
-import static net.theevilreaper.bounce.setup.util.SetupMessages.DELETE_CLICK;
-import static net.theevilreaper.bounce.setup.util.SetupMessages.NO_SPACE_SEPARATOR;
 
 public class MultiStringSlot extends AbstractDataSlot {
 
     private final List<String> data;
 
-    public MultiStringSlot(MapDataCategory category, @Nullable List<String> data) {
+    public MultiStringSlot(MapDataCategory category, List<String> data) {
         super(category);
         this.data = data;
+    }
+
+    public MultiStringSlot(MapDataCategory category) {
+        super(category);
+        this.data = List.of();
     }
 
     @Override
@@ -53,8 +52,8 @@ public class MultiStringSlot extends AbstractDataSlot {
     protected void click(Player player, int slot, Click click, ItemStack stack, Consumer<ClickHolder> result) {
         result.accept(ClickHolder.cancelClick());
 
-        if (data == null || data.isEmpty()) {
-//            EventDispatcher.call(new PlayerDialogRequestEvent(player, PlayerDialogRequestEvent.Target.SETUP_REQUEST_AUTHOR));
+        if (data.isEmpty()) {
+            EventDispatcher.call(new DialogRequestEvent(player, DialogTarget.CREATE_AUTHORS));
             return;
         }
 

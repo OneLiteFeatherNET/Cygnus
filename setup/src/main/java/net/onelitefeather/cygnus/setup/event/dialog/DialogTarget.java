@@ -10,9 +10,9 @@ package net.onelitefeather.cygnus.setup.event.dialog;
 public enum DialogTarget {
 
     CREATE_NAME,
+    CREATE_AUTHORS,
     UPDATE_NAME,
     DELETE_NAME,
-    CREATE_SPAWN,
     DELETE_SPAWN,
     DELETE_SLENDER,
     DELETE_PAGE_FACE,
