@@ -1,3 +1,10 @@
+# [2.6.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.5.1...v2.6.0) (2026-06-28)
+
+
+### Features
+
+* **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
+
 ## [2.5.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.5.0...v2.5.1) (2026-06-28)
 
 
