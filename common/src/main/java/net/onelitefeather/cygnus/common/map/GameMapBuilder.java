@@ -7,8 +7,10 @@ import net.onelitefeather.cygnus.common.page.PageResource;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 public final class GameMapBuilder extends BaseMapBuilder {
 
@@ -22,7 +24,11 @@ public final class GameMapBuilder extends BaseMapBuilder {
     public GameMapBuilder() {
         super();
         this.pageFaces = new HashSet<>();
-        this.survivorSpawns = new HashSet<>();
+        this.survivorSpawns = new TreeSet<>(
+                Comparator.comparingInt(Pos::blockX)
+                        .thenComparingInt(Pos::blockY)
+                        .thenComparingInt(Pos::blockZ)
+        );
     }
 
     /**
@@ -33,7 +39,11 @@ public final class GameMapBuilder extends BaseMapBuilder {
     public GameMapBuilder(GameMap gameMap) {
         super(gameMap);
         this.slenderSpawn = gameMap.getSlenderSpawn();
-        this.survivorSpawns = gameMap.getSurvivorSpawns();
+        this.survivorSpawns = new TreeSet<>(
+                Comparator.comparingInt(Pos::blockX)
+                        .thenComparingInt(Pos::blockY)
+                        .thenComparingInt(Pos::blockZ)
+        );
         this.pageFaces = gameMap.getPageFaces();
     }
 
