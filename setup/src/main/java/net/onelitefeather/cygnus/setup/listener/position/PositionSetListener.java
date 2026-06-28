@@ -42,6 +42,7 @@ public class PositionSetListener implements Consumer<PositionSetEvent> {
                     }
                     case SLENDER -> {
                         ((GameMapBuilder) gameData.getMapBuilder()).setSlenderSpawn(event.getPos());
+                        gameData.triggerUpdate(InstanceSetupData.InventoryTarget.GENERAL);
                     }
                     default -> {
                         // Nothing to do here
