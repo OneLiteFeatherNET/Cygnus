@@ -1,13 +1,9 @@
 package net.onelitefeather.cygnus.setup.inventory.view;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.inventory.InventoryType;
-import net.minestom.server.item.ItemStack;
-import net.minestom.server.item.Material;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.setup.inventory.slot.PositionSlot;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
