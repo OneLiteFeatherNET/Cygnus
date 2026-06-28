@@ -23,6 +23,7 @@ public final class MapDialogs extends DialogBase {
     public static final Key MAP_KEY = create("map_name");
     public static final Key AUTHOR_AMOUNT_KEY = create("author_amount_dialog");
     public static final Key AUTHOR_INPUT_ENTRY_KEY = create("author_input_dialog");
+    public static final Key NON_DYNAMIC_DELETE_KEY = create("non_dynamic_delete_dialog");
 
 
     /**
@@ -73,7 +74,7 @@ public final class MapDialogs extends DialogBase {
     }
 
     public static void openDeleteDialog(Player player, MapDataCategory mapDataCategory) {
-        DialogTemplate dialogTemplate = DialogType.confirm(MAP_KEY)
+        DialogTemplate dialogTemplate = DialogType.confirm(NON_DYNAMIC_DELETE_KEY)
                 .meta(dialogMeta -> {
                     dialogMeta.closeWithEscape(false);
                     dialogMeta.pause(false);
@@ -86,7 +87,7 @@ public final class MapDialogs extends DialogBase {
                     dialogMeta.messageBody(template -> template.contents(Component.text(mapDataCategory.name())));
                 })
                 .yesButton(button -> button.width(101).label(Component.text("Save"))
-                        .action(new DialogAction.DynamicCustom(MAP_KEY, getCategoryPayload(mapDataCategory.ordinal())))
+                        .action(new DialogAction.DynamicCustom(NON_DYNAMIC_DELETE_KEY, getCategoryPayload(mapDataCategory.ordinal())))
                 )
                 .noButton(button -> button.width(101).label(NO_COMPONENT))
                 .build();

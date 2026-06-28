@@ -13,6 +13,7 @@ import net.onelitefeather.cygnus.setup.dialogs.MapDialogs;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
+import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.guira.SetupDataService;
 
 import java.util.ArrayList;
@@ -74,6 +75,17 @@ public class DialogPayloadListener implements Consumer<PlayerCustomClickEvent> {
                 InstanceSetupData instanceSetupData = (InstanceSetupData) data;
                 instanceSetupData.getMapBuilder().builders(authors);
                 instanceSetupData.triggerUpdate(InstanceSetupData.InventoryTarget.GENERAL);
+            });
+        }
+
+        if (key.equals(MapDialogs.NON_DYNAMIC_DELETE_KEY)) {
+            IntBinaryTag idTag = (IntBinaryTag) castedPayload.get("category_id");
+            if (idTag == null) return;
+            int categoryId = idTag.value();
+            MapDataCategory category = MapDataCategory.byId(categoryId);
+
+            dataService.get(event.getPlayer().getUuid()).ifPresent(data -> {
+                ((InstanceSetupData)data).handleDataDelete(category);
             });
         }
     }

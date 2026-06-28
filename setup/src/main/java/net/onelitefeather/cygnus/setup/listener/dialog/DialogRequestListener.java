@@ -6,19 +6,10 @@ import net.onelitefeather.cygnus.setup.dialogs.MapDialogs;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
-import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class DialogRequestListener implements Consumer<DialogRequestEvent> {
-
-    private static final Map<DialogTarget, MapDataCategory> DELETE_TARGETS = Map.of(
-            DialogTarget.DELETE_SPAWN, MapDataCategory.SPAWN,
-            DialogTarget.DELETE_SURVIVOR_SPAWN, MapDataCategory.SURVIVOR,
-            DialogTarget.DELETE_SLENDER, MapDataCategory.SLENDER,
-            DialogTarget.DELETE_NAME, MapDataCategory.NAME
-    );
 
     @Override
     public void accept(DialogRequestEvent event) {
@@ -32,19 +23,13 @@ public class DialogRequestListener implements Consumer<DialogRequestEvent> {
                 if (context == null) return;
                 MapDialogs.openNameUpdateDialog(player, ((DialogContext.NameContext) context).name());
             }
-            case DELETE_PAGE_FACE -> {
-                if (context == null) return;
-                MapDialogs.openDeleteDialog(player, MapDataCategory.PAGE, context);
-            }
             case CREATE_AUTHORS -> AuthorDialogs.openAuthorRequestDialog(player);
             case AUTHOR_INPUT -> {
                 if (context == null) return;
                 AuthorDialogs.openAuthorInput(player, ((DialogContext.AuthorAmount)context).amount());
             }
             default -> {
-                MapDataCategory category = DELETE_TARGETS.get(target);
-                if (category == null || context == null) return;
-                MapDialogs.openDeleteDialog(player, category);
+                // Nothing to do here
             }
         }
     }
