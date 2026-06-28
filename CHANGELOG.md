@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.4.0...v2.5.0) (2026-06-28)
+
+
+### Features
+
+* **setup:** add data overview inventory for the setup ([#102](https://github.com/OneLiteFeatherNET/Cygnus/issues/102)) ([c9b0e6a](https://github.com/OneLiteFeatherNET/Cygnus/commit/c9b0e6acec841ffd8c2a84a703bed12efca9826f))
+
 # [2.4.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.3.8...v2.4.0) (2026-06-26)
 
 
