@@ -35,7 +35,7 @@ class SetupItemsTest {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
-        SetupItems.setSaveData(player);
+        SetupItems.setLobbyLayout(player);
         assertItem(player, 2, (byte) 0x02);
         assertItem(player, 6, (byte) 0x01);
 
