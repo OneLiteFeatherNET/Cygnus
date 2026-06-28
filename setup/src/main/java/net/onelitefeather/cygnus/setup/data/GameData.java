@@ -27,6 +27,7 @@ public class GameData extends InstanceSetupData {
     private final SurvivorViewInventory survivorInventory;
     private GameMapBuilder gameMapBuilder;
     private boolean pageMode;
+    private boolean survivorMode;
 
     /**
      * Constructs a new GameData instance.
@@ -42,7 +43,6 @@ public class GameData extends InstanceSetupData {
             throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
         }
 
-        System.out.println("After loadData: " + System.identityHashCode(this.gameMapBuilder));
         this.inventory = new MapDataOverviewInventory(player, this.gameMapBuilder, InventoryMode.GAME);
         this.survivorInventory = new SurvivorViewInventory(player, this.gameMapBuilder);
     }
@@ -53,6 +53,8 @@ public class GameData extends InstanceSetupData {
     public void swapPageMode() {
         this.pageMode = !this.pageMode;
     }
+
+    public void swapSurvivorMode() { this.survivorMode = !this.survivorMode; }
 
     /**
      * {@inheritDoc}
@@ -97,6 +99,17 @@ public class GameData extends InstanceSetupData {
                 ((GameMapBuilder) getMapBuilder()).setSlenderSpawn(pos);
                 triggerUpdate(InventoryTarget.GENERAL);
             }
+            case SURVIVOR -> {
+                Pos spawnPos = new Pos(
+                        pos.blockX(),
+                        pos.blockY() + 1,
+                        pos.blockZ(),
+                        player.getPosition().yaw(),
+                        0f
+                );
+                this.gameMapBuilder.addSurvivorSpawn(spawnPos);
+                triggerUpdate(InventoryTarget.SURVIVOR);
+            }
             default -> {}
         }
     }
@@ -121,6 +134,24 @@ public class GameData extends InstanceSetupData {
             SetupItems.setGameLayout(player);
             return;
         }
+
+        if (5 == tagValue) {
+            this.swapSurvivorMode();
+            SetupItems.setSurvivorSpawn(player);
+            return;
+        }
+
+        if (6 == tagValue) {
+            this.openInventory(InventoryTarget.SURVIVOR);
+            return;
+        }
+
+        if (7 == tagValue) {
+            this.swapSurvivorMode();
+            SetupItems.setGameLayout(player);
+            return;
+        }
+
         super.handleItemInteraction(player, tagValue);
     }
 
@@ -183,6 +214,10 @@ public class GameData extends InstanceSetupData {
      */
     public boolean hasPageMode() {
         return pageMode;
+    }
+
+    public boolean hasSurvivorMode() {
+        return this.survivorMode;
     }
 
     /**
