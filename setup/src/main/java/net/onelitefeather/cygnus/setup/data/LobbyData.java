@@ -5,20 +5,21 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.anvil.AnvilLoader;
+import net.onelitefeather.cygnus.setup.inventory.view.GeneralMapOverviewInventory;
 import net.theevilreaper.aves.file.FileHandler;
+import net.theevilreaper.aves.inventory.PersonalInventoryBuilder;
 import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 
 import java.nio.file.Files;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 public final class LobbyData extends InstanceSetupData {
 
     private final FileHandler fileHandler;
-    private Objects viewInventory;
+    private final PersonalInventoryBuilder viewInventory;
     private BaseMapBuilder mapBuilder;
 
     public LobbyData(UUID uuid, MapEntry mapEntry, FileHandler fileHandler) {
@@ -30,16 +31,18 @@ public final class LobbyData extends InstanceSetupData {
         if (player == null) {
             throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
         }
+
+        this.viewInventory = new GeneralMapOverviewInventory(player, this.mapBuilder);
     }
 
     @Override
-    public void openInventory(Player player) {
-        //player.openInventory(this.viewInventory.getInventory());
+    public void openInventory(InventoryTarget target) {
+        this.viewInventory.open();
     }
 
     @Override
-    public void triggerUpdate() {
-      //  this.viewInventory.invalidateDataLayout();
+    public void triggerUpdate(InventoryTarget target) {
+        this.viewInventory.invalidateDataLayout();
     }
 
     @Override
@@ -62,7 +65,7 @@ public final class LobbyData extends InstanceSetupData {
     @Override
     public void reset() {
         super.reset();
-        //this.viewInventory.unregister();
+        this.viewInventory.unregister();
     }
 
     @Override
@@ -76,8 +79,6 @@ public final class LobbyData extends InstanceSetupData {
                 this.mapBuilder = BaseMap.builder(baseMap);
             }, () -> this.mapBuilder = BaseMap.builder());
         }
-
-        //this.viewInventory = new LobbyViewInventory(this.mapBuilder);
 
         this.instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         AnvilLoader anvilLoader = new AnvilLoader(this.mapEntry.getDirectoryRoot());

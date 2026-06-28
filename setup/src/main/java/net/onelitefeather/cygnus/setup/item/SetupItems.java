@@ -18,6 +18,7 @@ import net.theevilreaper.aves.hotbar.HotBarLayout;
 @SuppressWarnings("java:S3252")
 public final class SetupItems {
 
+    public static final ItemStack DECORATION_PANE;
     public static final byte ZERO_INDEX = (byte) 0x00;
     public static final byte FOURTH_INDEX = (byte) 0x04;
 
@@ -26,6 +27,7 @@ public final class SetupItems {
     private static final HotBarLayout pageLayout;
 
     static {
+        DECORATION_PANE = ItemStack.builder(Material.BLACK_STAINED_GLASS_PANE).customName(Component.empty()).build();
         selectionLayout = new HotBarLayout();
         selectionLayout.set(FOURTH_INDEX, ItemStack.builder(Material.CHEST)
                 .customName(Component.text("Map selection", NamedTextColor.GREEN))

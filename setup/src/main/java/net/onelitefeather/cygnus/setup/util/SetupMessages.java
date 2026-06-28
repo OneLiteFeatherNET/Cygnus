@@ -15,12 +15,35 @@ public final class SetupMessages {
     public static final Component MISSING_MAP_SELECTION;
 
     public static final Component DISABLED_PAGE_MODE;
-
+    public static final Component NO_SPACE_SEPARATOR;
+    public static final Component TELEPORT_CLICK;
+    public static final Component DELETE_CLICK;
     public static final Component PAGE_MODE_ENABLED;
     public static final Component PAGE_MODE_DISABLED;
     public static final Component PAGE_MODE_INFORM;
 
     static {
+        NO_SPACE_SEPARATOR = Component.text("»", NamedTextColor.GRAY);
+
+        TELEPORT_CLICK = NO_SPACE_SEPARATOR
+                .append(Component.space())
+                .append(Component.text("Left", NamedTextColor.GREEN))
+                .append(Component.space())
+                .append(Component.text("click", NamedTextColor.GRAY))
+                .append(Component.space())
+                .append(Component.text("->", NamedTextColor.GRAY))
+                .append(Component.space())
+                .append(Component.text("teleport", NamedTextColor.GREEN));
+
+        DELETE_CLICK = NO_SPACE_SEPARATOR
+                .append(Component.space())
+                .append(Component.text("Right", NamedTextColor.RED))
+                .append(Component.space())
+                .append(Component.text("click", NamedTextColor.GRAY))
+                .append(Component.space())
+                .append(Component.text("->", NamedTextColor.GRAY))
+                .append(Component.space())
+                .append(Component.text("delete", NamedTextColor.RED));
         EMPTY_NAME = Messages.withPrefix(Component.text("An empty name is not allowed", NamedTextColor.RED));
         MISSING_MAP_SELECTION = Messages.withPrefix(
                 Component.text("Please select a map to setup and try the command again", NamedTextColor.RED)
