@@ -37,6 +37,7 @@ public final class SetupMapProvider extends AbstractMapProvider {
         this.activeMap = loadedMap.get();
         InstanceContainer instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer();
         this.registerInstance(instanceContainer, lobbyEntry);
+        this.activeInstance = instanceContainer;
     }
 
     /**
