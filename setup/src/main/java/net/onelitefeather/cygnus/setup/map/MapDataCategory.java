@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.setup.map;
 
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
@@ -53,8 +54,9 @@ public enum MapDataCategory {
      * @return the cached item
      */
     public static ItemStack getDefaultItem(MapDataCategory category) {
-        return DEFAULT_CACHE.computeIfPresent(category, (mapDataCategory, _) ->
+        return DEFAULT_CACHE.computeIfAbsent(category, mapDataCategory ->
                 ItemStack.builder(mapDataCategory.getMaterial())
+                        .customName(Component.text(mapDataCategory.name, mapDataCategory.color))
                         .set(SetupTags.MAP_DATA_CATEGORY_TAG, category)
                         .build());
     }

@@ -5,8 +5,10 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.anvil.AnvilLoader;
-import net.onelitefeather.cygnus.setup.inventory.view.GeneralMapOverviewInventory;
-import net.theevilreaper.aves.file.FileHandler;
+import net.onelitefeather.cygnus.common.util.GsonHelper;
+import net.onelitefeather.cygnus.setup.inventory.view.InventoryMode;
+import net.onelitefeather.cygnus.setup.inventory.view.MapDataOverviewInventory;
+import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.theevilreaper.aves.inventory.PersonalInventoryBuilder;
 import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.BaseMapBuilder;
@@ -18,13 +20,11 @@ import java.util.UUID;
 
 public final class LobbyData extends InstanceSetupData {
 
-    private final FileHandler fileHandler;
     private final PersonalInventoryBuilder viewInventory;
     private BaseMapBuilder mapBuilder;
 
-    public LobbyData(UUID uuid, MapEntry mapEntry, FileHandler fileHandler) {
+    public LobbyData(UUID uuid, MapEntry mapEntry) {
         super(uuid, mapEntry, BossBar.Color.GREEN);
-        this.fileHandler = fileHandler;
         this.loadData();
         Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid);
 
@@ -32,27 +32,50 @@ public final class LobbyData extends InstanceSetupData {
             throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
         }
 
-        this.viewInventory = new GeneralMapOverviewInventory(player, this.mapBuilder);
+        this.viewInventory = new MapDataOverviewInventory(player, this.mapBuilder, InventoryMode.LOBBY);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPosition(MapDataCategory category, Player player) {
+        if (category == MapDataCategory.SPAWN) {
+            getMapBuilder().spawn(player.getPosition());
+            triggerUpdate(InventoryTarget.GENERAL);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void openInventory(InventoryTarget target) {
         this.viewInventory.open();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void triggerUpdate(InventoryTarget target) {
         this.viewInventory.invalidateDataLayout();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void save() {
         if (!Files.exists(mapEntry.getMapFile())) {
             this.mapEntry.createFile();
         }
-        this.fileHandler.save(mapEntry.getMapFile(), BaseMap.class);
+        GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), BaseMap.class);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void teleport(Player player) {
         super.teleport(player);
@@ -62,18 +85,24 @@ public final class LobbyData extends InstanceSetupData {
         player.setInstance(this.instance, spawnPoint);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void reset() {
         super.reset();
         this.viewInventory.unregister();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void loadData() {
         if (this.mapEntry == null) {
             this.mapBuilder = BaseMap.builder();
         } else {
-            Optional<BaseMap> mapData = fileHandler.load(mapEntry.getMapFile(), BaseMap.class);
+            Optional<BaseMap> mapData = GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), BaseMap.class);
 
             mapData.ifPresentOrElse(baseMap -> {
                 this.mapBuilder = BaseMap.builder(baseMap);

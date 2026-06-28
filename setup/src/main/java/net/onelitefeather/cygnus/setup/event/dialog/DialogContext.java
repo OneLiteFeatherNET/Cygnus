@@ -13,7 +13,8 @@ import net.minestom.server.coordinate.Point;
  */
 public sealed interface DialogContext permits
         DialogContext.NameContext,
-        DialogContext.PositionContent {
+        DialogContext.PositionContent,
+        DialogContext.AuthorAmount {
 
     /**
      * Specific context for the update or deletion of a name.
@@ -32,4 +33,6 @@ public sealed interface DialogContext permits
     record PositionContent(Point point) implements DialogContext {
 
     }
+
+    record AuthorAmount(float amount) implements DialogContext {}
 }

@@ -23,7 +23,8 @@ public final class SetupItems {
     public static final byte FOURTH_INDEX = (byte) 0x04;
 
     private static final HotBarLayout selectionLayout;
-    private static final HotBarLayout mapLayout;
+    private static final HotBarLayout lobbySetupLayout;
+    private static final HotBarLayout gameSetupLayout;
     private static final HotBarLayout pageLayout;
 
     static {
@@ -38,21 +39,33 @@ public final class SetupItems {
                 .customName(Component.text("Save data", NamedTextColor.RED))
                 .set(Tags.ITEM_TAG, (byte) 0x01)
                 .build();
-        mapLayout = new HotBarLayout();
-        mapLayout.set(2, ItemStack.builder(Material.COMPASS)
+        lobbySetupLayout = new HotBarLayout();
+        lobbySetupLayout.set(2, ItemStack.builder(Material.COMPASS)
                 .customName(Component.text("Data", NamedTextColor.AQUA))
                 .set(Tags.ITEM_TAG, (byte) 0x02)
                 .build()
         );
-        mapLayout.set(6, saveItem);
+        lobbySetupLayout.set(6, saveItem);
 
-        pageLayout = new HotBarLayout();
-        pageLayout.set(2, ItemStack.builder(Material.BARRIER)
-                .customName(Component.text("Cancel", NamedTextColor.RED))
+        gameSetupLayout = new HotBarLayout();
+        gameSetupLayout.set(2, ItemStack.builder(Material.COMPASS)
+                .customName(Component.text("Data", NamedTextColor.AQUA))
+                .set(Tags.ITEM_TAG, (byte) 0x02)
+                .build()
+        );
+        gameSetupLayout.set(4, ItemStack.builder(Material.PAPER)
+                .customName(Component.text("Page", NamedTextColor.AQUA))
                 .set(Tags.ITEM_TAG, (byte) 0x03)
                 .build()
         );
-        pageLayout.set(6, saveItem);
+        gameSetupLayout.set(6, saveItem);
+
+        pageLayout = new HotBarLayout();
+        pageLayout.set(2, ItemStack.builder(Material.BARRIER)
+                .customName(Component.text("Leave page mode", NamedTextColor.RED))
+                .set(Tags.ITEM_TAG, (byte) 0x04)
+                .build()
+        );
     }
 
     /**
@@ -70,9 +83,19 @@ public final class SetupItems {
      *
      * @param player the player who should receive the item
      */
-    public static void setSaveData(Player player) {
-        mapLayout.apply(player);
+    public static void setLobbyLayout(Player player) {
+        lobbySetupLayout.apply(player);
         player.setHeldItemSlot(ZERO_INDEX);
+    }
+
+    /**
+     * Set's the {@link ItemStack} which are required for the game setup.
+     *
+     * @param player who should receive the items
+     */
+    public static void setGameLayout(Player player) {
+        gameSetupLayout.apply(player);
+        player.setHeldItemSlot(FOURTH_INDEX);
     }
 
     /**

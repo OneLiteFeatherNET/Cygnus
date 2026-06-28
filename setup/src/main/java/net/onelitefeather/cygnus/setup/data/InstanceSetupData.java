@@ -7,6 +7,7 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.InstanceContainer;
+import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.guira.data.SetupData;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
@@ -22,7 +23,7 @@ import java.util.UUID;
  * setup-specific interaction and update logic.</p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2.1.0
  */
 public abstract class InstanceSetupData implements SetupData {
@@ -79,6 +80,27 @@ public abstract class InstanceSetupData implements SetupData {
      * Triggers an update of the setup state and related visual feedback.
      */
     public abstract void triggerUpdate(InventoryTarget target);
+
+    /**
+     * Handles the position change of a player during the setup.
+     *
+     * @param category the category of the map data being modified
+     * @param player   who is involved in the position change
+     */
+    public abstract void setPosition(MapDataCategory category, Player player);
+
+    /**
+     * Handles an item interaction by the given player during the setup process.
+     * The default implementation opens the general inventory.
+     * Subclasses may override this to handle additional tag values.
+     *
+     * @param player   the player who interacted with the item
+     * @param tagValue the tag value of the used item
+     * @see GameData#handleItemInteraction(Player, byte)
+     */
+    public void handleItemInteraction(Player player, byte tagValue) {
+        openInventory(InventoryTarget.GENERAL);
+    }
 
     /**
      * Checks whether a map file is available for this setup.

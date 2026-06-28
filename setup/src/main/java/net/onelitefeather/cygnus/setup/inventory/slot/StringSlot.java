@@ -9,7 +9,6 @@ import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.theevilreaper.aves.inventory.click.ClickHolder;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -20,7 +19,7 @@ public class StringSlot extends AbstractDataSlot {
 
     private final String data;
 
-    public StringSlot(MapDataCategory category, @Nullable String data) {
+    public StringSlot(MapDataCategory category, String data) {
         super(category);
         this.data = data;
     }
@@ -29,9 +28,7 @@ public class StringSlot extends AbstractDataSlot {
     public ItemStack getItem() {
         ItemStack overviewItem = MapDataCategory.getDefaultItem(type);
 
-        if (data == null) {
-            return overviewItem;
-        }
+        if (data.equals("Map")) return overviewItem;
         return asBuilder(overviewItem).lore(
                         Component.empty(),
                         NO_SPACE_SEPARATOR.append(Component.space()).append(Component.text(data, type.getColor())),
@@ -46,7 +43,7 @@ public class StringSlot extends AbstractDataSlot {
     protected void click(Player player, int slot, Click click, ItemStack stack, Consumer<ClickHolder> result) {
         result.accept(ClickHolder.cancelClick());
 
-        if (data == null || data.isEmpty()) {
+        if (data.equals("Map")) {
             EventDispatcher.call(new DialogRequestEvent(player, DialogTarget.CREATE_NAME));
             return;
         }
