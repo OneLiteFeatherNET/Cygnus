@@ -178,10 +178,7 @@ public class GameData extends InstanceSetupData {
     @Override
     public void handleDataContextDelete(MapDataCategory category, Point point) {
         if (point instanceof Pos pos) {
-            System.out.println("Size before delete " + this.gameMapBuilder.getSurvivorSpawns().size());
             this.gameMapBuilder.removeSurvivorSpawn(pos);
-            System.out.println("REMOVED");
-            System.out.println("Size after remove is " + this.gameMapBuilder.getSurvivorSpawns().size());
             this.triggerUpdate(InventoryTarget.SURVIVOR);
         }
     }

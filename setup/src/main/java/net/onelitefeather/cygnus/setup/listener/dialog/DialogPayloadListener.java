@@ -7,7 +7,6 @@ import net.kyori.adventure.nbt.FloatBinaryTag;
 import net.kyori.adventure.nbt.IntBinaryTag;
 import net.kyori.adventure.nbt.StringBinaryTag;
 import net.minestom.server.coordinate.Point;
-import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
 import net.onelitefeather.cygnus.setup.data.InstanceSetupData;
@@ -19,8 +18,6 @@ import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.cygnus.setup.player.SetupPlayer;
 import net.onelitefeather.guira.SetupDataService;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 
 public class DialogPayloadListener implements Consumer<PlayerCustomClickEvent> {
@@ -107,7 +104,6 @@ public class DialogPayloadListener implements Consumer<PlayerCustomClickEvent> {
                 if (category == MapDataCategory.PAGE) {
                     point = player.getPageToDelete();
                 }
-                System.out.println("Point to delete is " + point);
                 ((InstanceSetupData)data).handleDataContextDelete(category, point);
                 if (category == MapDataCategory.SURVIVOR) {
                     player.setSurvivorToDelete(null);

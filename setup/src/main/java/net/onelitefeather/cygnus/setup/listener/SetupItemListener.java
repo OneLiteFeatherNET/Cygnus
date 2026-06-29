@@ -37,8 +37,6 @@ public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
 
         if (!player.hasTag(SetupTags.SETUP_ID_TAG)) return;
 
-        System.out.println("MEE");
-
         if (1 == tagValue) {
             EventDispatcher.call(new MapSetupSaveEvent(player));
             return;
