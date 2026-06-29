@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.6.3](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.2...v2.6.3) (2026-06-29)
+
+
+### Bug Fixes
+
+* **ci:** trigger build ([edb6f1f](https://github.com/OneLiteFeatherNET/Cygnus/commit/edb6f1f460b2f3197735c0db872a472d94995bb7))
+
 ## [2.6.2](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.1...v2.6.2) (2026-06-29)
 
 
