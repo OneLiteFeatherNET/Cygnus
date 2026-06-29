@@ -15,7 +15,6 @@ import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 
 import java.nio.file.Files;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -115,7 +114,7 @@ public final class LobbyData extends InstanceSetupData {
      */
     @Override
     public void loadData() {
-        if (this.mapEntry == null) {
+        if (!this.mapEntry.hasMapFile()) {
             this.mapBuilder = BaseMap.builder();
         } else {
             Optional<BaseMap> mapData = GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), BaseMap.class);
