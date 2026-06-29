@@ -6,6 +6,8 @@ import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.FloatBinaryTag;
 import net.kyori.adventure.nbt.IntBinaryTag;
 import net.kyori.adventure.nbt.StringBinaryTag;
+import net.minestom.server.coordinate.Point;
+import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
 import net.onelitefeather.cygnus.setup.data.InstanceSetupData;
@@ -14,6 +16,7 @@ import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
+import net.onelitefeather.cygnus.setup.player.SetupPlayer;
 import net.onelitefeather.guira.SetupDataService;
 
 import java.util.ArrayList;
@@ -87,6 +90,33 @@ public class DialogPayloadListener implements Consumer<PlayerCustomClickEvent> {
             dataService.get(event.getPlayer().getUuid()).ifPresent(data -> {
                 ((InstanceSetupData)data).handleDataDelete(category);
             });
+        }
+
+        if (key.equals(MapDialogs.DYNAMIC_DELETE_KEY)) {
+            IntBinaryTag idTag = (IntBinaryTag) castedPayload.get("category_id");
+            if (idTag == null) return;
+            int categoryId = idTag.value();
+            MapDataCategory category = MapDataCategory.byId(categoryId);
+
+            dataService.get(event.getPlayer().getUuid()).ifPresent(data -> {
+                SetupPlayer player = (SetupPlayer) event.getPlayer();
+                Point point = null;
+                if (category == MapDataCategory.SURVIVOR) {
+                    point = player.getSurvivorToDelete();
+                }
+                if (category == MapDataCategory.PAGE) {
+                    point = player.getPageToDelete();
+                }
+                System.out.println("Point to delete is " + point);
+                ((InstanceSetupData)data).handleDataContextDelete(category, point);
+                if (category == MapDataCategory.SURVIVOR) {
+                    player.setSurvivorToDelete(null);
+                }
+                if (category == MapDataCategory.PAGE) {
+                    player.setPageToDelete(null);
+                }
+            });
+
         }
     }
 }

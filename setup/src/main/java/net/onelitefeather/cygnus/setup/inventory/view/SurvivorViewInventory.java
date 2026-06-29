@@ -22,7 +22,7 @@ public class SurvivorViewInventory extends PersonalInventoryBuilder {
     /**
      * Creates a new instance from the {@link PersonalInventoryBuilder} with the given values.
      *
-     * @param player    The player who owns the inventory
+     * @param player The player who owns the inventory
      */
     public SurvivorViewInventory(Player player, GameMapBuilder mapBuilder) {
         super(Component.text("Survivor positions"), InventoryType.CHEST_6_ROW, player);
@@ -36,9 +36,12 @@ public class SurvivorViewInventory extends PersonalInventoryBuilder {
 
         this.setDataLayoutFunction(dataLayout -> {
             InventoryLayout internalLayout = dataLayout != null ? dataLayout : InventoryLayout.fromType(getType());
-             if (this.mapBuilder.getSurvivorSpawns().isEmpty()) {
-                 return internalLayout;
+
+            if (this.mapBuilder.getSurvivorSpawns().isEmpty()) {
+                internalLayout.blank(SLOTS);
+                return internalLayout;
             }
+
             Iterator<Pos> iterator = mapBuilder.getSurvivorSpawns().iterator();
 
             for (int i = 0; i < SLOTS.length && iterator.hasNext(); i++) {
