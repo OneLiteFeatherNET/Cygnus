@@ -4,7 +4,7 @@
   "include-component-in-tag": false,
   "include-v-in-tag": true,
   "pull-request-header": "",
-  "bootstrap-sha": "645294ff6bb80f280cdaf74f7e0d396ceb1ca2b6",
+  "bootstrap-sha": "47c8f4e5f6f4d97c8ec03558ed1432d9cc89f32b",
   "packages": {
     ".": {
       "package-name": "cygnus",
