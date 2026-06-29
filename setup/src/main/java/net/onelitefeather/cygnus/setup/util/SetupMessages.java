@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * The class contains method and static constant values to handle specific messages during the setup
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.2.1
  * @since 1.0.0
  */
 public final class SetupMessages {
@@ -74,13 +74,6 @@ public final class SetupMessages {
 
     private SetupMessages() {
         throw new UnsupportedOperationException("This class cannot be instantiated");
-    }
-
-    @Contract(value = "_ -> new", pure = true)
-    public static @NotNull Component getInvalidModeDuringLobby(@NotNull String mode) {
-        PreProcess modePreProcess = Tag.preProcessParsed(mode);
-        TagResolver modeTag = TagResolver.builder().tag("mode", (_, _) -> modePreProcess).build();
-        return Messages.withMini("<red>The mode <gold><mode><red> is not allowed in the lobby setup!", modeTag);
     }
 
     /**
