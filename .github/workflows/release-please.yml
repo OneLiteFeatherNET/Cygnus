@@ -27,7 +27,7 @@ jobs:
     name: Publish to OneLiteFeatherRepo
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
-    uses: OneLiteFeatherNET/workflows/.github/workflows/gradle-plugin-publish.yml@v2.1.0
+    uses: OneLiteFeatherNET/workflows/.github/workflows/gradle-publish.yml@v2.3.0
     with:
       java-version: "25"
     secrets: inherit
