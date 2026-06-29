@@ -14,7 +14,6 @@ import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 
-import java.nio.file.Files;
 import java.util.Optional;
 import java.util.UUID;
 
