@@ -176,7 +176,7 @@ public class GameData extends InstanceSetupData {
      */
     @Override
     public void save() {
-        if (!Files.exists(mapEntry.getMapFile())) {
+        if (!this.mapEntry.hasMapFile()) {
             this.mapEntry.createFile();
         }
         GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), this.gameMapBuilder.build());
