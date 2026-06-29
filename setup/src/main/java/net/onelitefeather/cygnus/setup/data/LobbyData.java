@@ -82,10 +82,10 @@ public final class LobbyData extends InstanceSetupData {
      */
     @Override
     public void save() {
-        if (!Files.exists(mapEntry.getMapFile())) {
+        if (!mapEntry.hasMapFile()) {
             this.mapEntry.createFile();
         }
-        GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), BaseMap.class);
+        GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), this.mapBuilder.build());
     }
 
     /**
