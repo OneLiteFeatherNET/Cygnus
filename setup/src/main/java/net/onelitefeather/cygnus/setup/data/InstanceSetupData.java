@@ -4,6 +4,7 @@ import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.InstanceContainer;
@@ -103,6 +104,10 @@ public abstract class InstanceSetupData implements SetupData {
     }
 
     public abstract void handleDataDelete(MapDataCategory category);
+
+    public void handleDataContextDelete(MapDataCategory category, Point point) {
+        // Nothing to do in the default implementation
+    }
 
     /**
      * Checks whether a map file is available for this setup.

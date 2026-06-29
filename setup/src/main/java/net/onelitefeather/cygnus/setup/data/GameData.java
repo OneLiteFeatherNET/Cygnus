@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.setup.data;
 
 import net.kyori.adventure.bossbar.BossBar;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.anvil.AnvilLoader;
@@ -169,6 +170,20 @@ public class GameData extends InstanceSetupData {
             default -> throw new IllegalArgumentException("Unknown inventory category: " + category);
         }
         this.triggerUpdate(InventoryTarget.GENERAL);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void handleDataContextDelete(MapDataCategory category, Point point) {
+        if (point instanceof Pos pos) {
+            System.out.println("Size before delete " + this.gameMapBuilder.getSurvivorSpawns().size());
+            this.gameMapBuilder.removeSurvivorSpawn(pos);
+            System.out.println("REMOVED");
+            System.out.println("Size after remove is " + this.gameMapBuilder.getSurvivorSpawns().size());
+            this.triggerUpdate(InventoryTarget.SURVIVOR);
+        }
     }
 
     /**
