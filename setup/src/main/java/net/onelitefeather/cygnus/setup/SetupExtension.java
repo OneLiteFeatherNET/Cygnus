@@ -35,6 +35,7 @@ import net.onelitefeather.cygnus.setup.listener.dialog.DialogRequestListener;
 import net.onelitefeather.cygnus.setup.listener.map.MapSetupSaveListener;
 import net.onelitefeather.cygnus.setup.listener.position.PositionSetListener;
 import net.onelitefeather.cygnus.setup.map.SetupMapProvider;
+import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.onelitefeather.guira.SetupDataService;
@@ -99,6 +100,7 @@ public class SetupExtension implements ListenerHandling {
             this.mapProvider.teleportToSpawn(player, true);
             SetupItems.setMapSelection(player);
             player.setGameMode(GameMode.SURVIVAL);
+            player.removeTag(SetupTags.SETUP_ID_TAG);
         };
         node.addListener(MapSetupSaveEvent.class, new MapSetupSaveListener(this.dataService, teleport));
     }
