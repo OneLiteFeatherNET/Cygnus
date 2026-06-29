@@ -3,6 +3,5 @@ plugins {
 }
 
 allprojects {
-    group = "net.onelitefeather"
-    version = providers.gradleProperty("version").get().substringBefore("#").trim()
+    version = (version as String).substringBefore('#').trim()
 }
