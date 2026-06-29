@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
 
 import java.util.EnumMap;
@@ -81,9 +82,12 @@ public enum MapDataCategory {
     public static ItemStack getDefaultItem(MapDataCategory category) {
         return DEFAULT_CACHE.computeIfAbsent(category, mapDataCategory ->
                 ItemStack.builder(mapDataCategory.getMaterial())
-                        .customName(Component.text(mapDataCategory.name, mapDataCategory.color))
-                        .set(SetupTags.MAP_DATA_CATEGORY_TAG, category)
-                        .build());
+                        .lore(SetupMessages.getLoreWith(SetupMessages.SPACE_SEPARATOR
+                                        .append(Component.text("Click to add new data", NamedTextColor.WHITE))
+                                ))
+                                .customName(Component.text(mapDataCategory.name, mapDataCategory.color))
+                                .set(SetupTags.MAP_DATA_CATEGORY_TAG, category)
+                                .build());
     }
 
     /**
