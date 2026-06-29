@@ -82,7 +82,7 @@ public enum MapDataCategory {
     public static ItemStack getDefaultItem(MapDataCategory category) {
         return DEFAULT_CACHE.computeIfAbsent(category, mapDataCategory ->
                 ItemStack.builder(mapDataCategory.getMaterial())
-                        .lore(SetupMessages.getLoreWith(SetupMessages.SPACE_SEPARATOR
+                        .lore(SetupMessages.getLore(SetupMessages.SPACE_SEPARATOR
                                         .append(Component.text("Click to add new data", NamedTextColor.WHITE))
                                 ))
                                 .customName(Component.text(mapDataCategory.name, mapDataCategory.color))
