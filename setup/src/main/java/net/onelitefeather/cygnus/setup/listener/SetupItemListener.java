@@ -37,8 +37,8 @@ public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
             return;
         }
 
-        // Check if the given tag value is 0 which represents the item for the map selection
-        if (SetupItems.ZERO_INDEX == tagValue) {
+        // Check if the given tag value is 0 that represents the item for the map selection
+        if (SetupItems.DEFAULT == tagValue) {
             mapSetupInventory.open(player);
         }
 

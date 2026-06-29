@@ -19,9 +19,8 @@ import net.theevilreaper.aves.hotbar.HotBarLayout;
 public final class SetupItems {
 
     public static final ItemStack DECORATION_PANE;
-    public static final byte ZERO_INDEX = (byte) 0x00;
-    public static final byte FOURTH_INDEX = (byte) 0x04;
-
+    public static final byte DEFAULT    = (byte) 0x00;
+    public static final byte SELECTION  = (byte) 0x04;
     private static final HotBarLayout selectionLayout;
     private static final HotBarLayout lobbySetupLayout;
     private static final HotBarLayout gameSetupLayout;
@@ -29,21 +28,26 @@ public final class SetupItems {
     private static final HotBarLayout survivorSpawnLayout;
 
     static {
-        DECORATION_PANE = ItemStack.builder(Material.BLACK_STAINED_GLASS_PANE).customName(Component.empty()).build();
-        selectionLayout = new HotBarLayout();
-        selectionLayout.set(FOURTH_INDEX, ItemStack.builder(Material.CHEST)
-                .customName(Component.text("Map selection", NamedTextColor.GREEN))
-                .set(Tags.ITEM_TAG, ZERO_INDEX)
-                .build()
-        );
+        DECORATION_PANE = ItemStack.builder(Material.BLACK_STAINED_GLASS_PANE)
+                .customName(Component.empty())
+                .build();
+
         ItemStack saveItem = ItemStack.builder(Material.BELL)
                 .customName(Component.text("Save data", NamedTextColor.RED))
-                .set(Tags.ITEM_TAG, (byte) 0x01)
+                .set(Tags.ITEM_TAG, SetupItemId.SAVE_DATA)
                 .build();
+
+        selectionLayout = new HotBarLayout();
+        selectionLayout.set(SELECTION, ItemStack.builder(Material.CHEST)
+                .customName(Component.text("Map selection", NamedTextColor.GREEN))
+                .set(Tags.ITEM_TAG, SetupItemId.MAP_SELECTION)
+                .build()
+        );
+
         lobbySetupLayout = new HotBarLayout();
         lobbySetupLayout.set(2, ItemStack.builder(Material.COMPASS)
                 .customName(Component.text("Data", NamedTextColor.AQUA))
-                .set(Tags.ITEM_TAG, (byte) 0x02)
+                .set(Tags.ITEM_TAG, SetupItemId.DATA)
                 .build()
         );
         lobbySetupLayout.set(6, saveItem);
@@ -51,17 +55,17 @@ public final class SetupItems {
         gameSetupLayout = new HotBarLayout();
         gameSetupLayout.set(1, ItemStack.builder(Material.COMPASS)
                 .customName(Component.text("Data", NamedTextColor.AQUA))
-                .set(Tags.ITEM_TAG, (byte) 0x02)
+                .set(Tags.ITEM_TAG, SetupItemId.DATA)
                 .build()
         );
         gameSetupLayout.set(3, ItemStack.builder(Material.PAPER)
                 .customName(Component.text("Page", NamedTextColor.AQUA))
-                .set(Tags.ITEM_TAG, (byte) 0x03)
+                .set(Tags.ITEM_TAG, SetupItemId.PAGE)
                 .build()
         );
         gameSetupLayout.set(5, ItemStack.builder(Material.MINECART)
                 .customName(Component.text("Survivor", NamedTextColor.YELLOW))
-                .set(Tags.ITEM_TAG, (byte) 0x05)
+                .set(Tags.ITEM_TAG, SetupItemId.SURVIVOR)
                 .build()
         );
         gameSetupLayout.set(7, saveItem);
@@ -69,20 +73,19 @@ public final class SetupItems {
         pageLayout = new HotBarLayout();
         pageLayout.set(4, ItemStack.builder(Material.BARRIER)
                 .customName(Component.text("Leave page mode", NamedTextColor.RED))
-                .set(Tags.ITEM_TAG, (byte) 0x04)
+                .set(Tags.ITEM_TAG, SetupItemId.LEAVE_PAGE)
                 .build()
         );
 
         survivorSpawnLayout = new HotBarLayout();
         survivorSpawnLayout.set(2, ItemStack.builder(Material.CHEST)
                 .customName(Component.text("Spawns", NamedTextColor.AQUA))
-                .set(Tags.ITEM_TAG, (byte) 0x06)
+                .set(Tags.ITEM_TAG, SetupItemId.SPAWNS)
                 .build()
         );
-        survivorSpawnLayout.set(6
-                , ItemStack.builder(Material.BARRIER)
+        survivorSpawnLayout.set(6, ItemStack.builder(Material.BARRIER)
                 .customName(Component.text("Leave mode", NamedTextColor.RED))
-                .set(Tags.ITEM_TAG, (byte) 0x07)
+                .set(Tags.ITEM_TAG, SetupItemId.LEAVE_MODE)
                 .build()
         );
     }
@@ -94,7 +97,7 @@ public final class SetupItems {
      */
     public static void setMapSelection(Player player) {
         selectionLayout.apply(player);
-        player.setHeldItemSlot(FOURTH_INDEX);
+        player.setHeldItemSlot(SELECTION);
     }
 
     /**
@@ -104,7 +107,7 @@ public final class SetupItems {
      */
     public static void setLobbyLayout(Player player) {
         lobbySetupLayout.apply(player);
-        player.setHeldItemSlot(ZERO_INDEX);
+        player.setHeldItemSlot(DEFAULT);
     }
 
     /**
@@ -114,7 +117,7 @@ public final class SetupItems {
      */
     public static void setGameLayout(Player player) {
         gameSetupLayout.apply(player);
-        player.setHeldItemSlot(FOURTH_INDEX);
+        player.setHeldItemSlot(SELECTION);
     }
 
     /**
@@ -124,7 +127,7 @@ public final class SetupItems {
      */
     public static void setSurvivorSpawn(Player player) {
         survivorSpawnLayout.apply(player);
-        player.setHeldItemSlot(ZERO_INDEX);
+        player.setHeldItemSlot(DEFAULT);
     }
 
     /**
@@ -134,10 +137,8 @@ public final class SetupItems {
      */
     public static void setPageItems(Player player) {
         pageLayout.apply(player);
-        player.setHeldItemSlot(ZERO_INDEX);
+        player.setHeldItemSlot(DEFAULT);
     }
 
-    private SetupItems() {
-        // Nothing to do here
-    }
+    private SetupItems() {}
 }

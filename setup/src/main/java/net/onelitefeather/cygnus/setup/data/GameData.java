@@ -11,6 +11,7 @@ import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.cygnus.setup.inventory.view.InventoryMode;
 import net.onelitefeather.cygnus.setup.inventory.view.MapDataOverviewInventory;
 import net.onelitefeather.cygnus.setup.inventory.view.SurvivorViewInventory;
+import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
@@ -119,7 +120,7 @@ public class GameData extends InstanceSetupData {
      */
     @Override
     public void handleItemInteraction(Player player, byte tagValue) {
-        if (3 == tagValue) {
+        if (SetupItemId.PAGE == tagValue) {
             swapPageMode();
             if (hasPageMode()) {
                 player.sendMessage(SetupMessages.PAGE_MODE_ENABLED);
@@ -128,25 +129,25 @@ public class GameData extends InstanceSetupData {
             SetupItems.setPageItems(player);
             return;
         }
-        if (4 == tagValue) {
+        if (SetupItemId.LEAVE_PAGE == tagValue) {
             swapPageMode();
             player.sendMessage(SetupMessages.PAGE_MODE_DISABLED);
             SetupItems.setGameLayout(player);
             return;
         }
 
-        if (5 == tagValue) {
+        if (SetupItemId.SURVIVOR == tagValue) {
             this.swapSurvivorMode();
             SetupItems.setSurvivorSpawn(player);
             return;
         }
 
-        if (6 == tagValue) {
+        if (SetupItemId.SPAWNS == tagValue) {
             this.openInventory(InventoryTarget.SURVIVOR);
             return;
         }
 
-        if (7 == tagValue) {
+        if (SetupItemId.LEAVE_MODE == tagValue) {
             this.swapSurvivorMode();
             SetupItems.setGameLayout(player);
             return;

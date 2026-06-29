@@ -25,7 +25,7 @@ class SetupItemsTest {
 
         SetupItems.setMapSelection(player);
 
-        assertItem(player, SetupItems.FOURTH_INDEX, (byte) 0x00);
+        assertItem(player, SetupItems.SELECTION, (byte) 0x00);
 
         env.destroyInstance(instance, true);
     }
