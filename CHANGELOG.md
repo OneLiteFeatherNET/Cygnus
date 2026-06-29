@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.6.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.0...v2.6.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* **release:** Replace semtaic releases ([#107](https://github.com/OneLiteFeatherNET/Cygnus/issues/107)) ([0f76ed7](https://github.com/OneLiteFeatherNET/Cygnus/commit/0f76ed7fbc43fb2d2d28ca3ea3f4d124d6a18126))
+
 ## [2.5.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.5.0...v2.5.1) (2026-06-28)
 
 
