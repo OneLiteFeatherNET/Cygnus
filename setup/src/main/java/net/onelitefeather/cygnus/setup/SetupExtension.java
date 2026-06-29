@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.setup;
 
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.event.EventListener;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.instance.AddEntityToInstanceEvent;
@@ -20,6 +21,7 @@ import net.onelitefeather.cygnus.setup.event.PlayerRemoveDataEvent;
 import net.onelitefeather.cygnus.setup.event.PositionSetEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
+import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.listener.InstanceAddListener;
 import net.onelitefeather.cygnus.setup.listener.InstanceRemoveListener;
 import net.onelitefeather.cygnus.setup.listener.MapSetupSelectListener;
@@ -93,7 +95,11 @@ public class SetupExtension implements ListenerHandling {
      */
     private void registerMapListeners() {
         GlobalEventHandler node = MinecraftServer.getGlobalEventHandler();
-        PlayerConsumer teleport = player ->  this.mapProvider.teleportToSpawn(player, true);
+        PlayerConsumer teleport = player -> {
+            this.mapProvider.teleportToSpawn(player, true);
+            SetupItems.setMapSelection(player);
+            player.setGameMode(GameMode.SURVIVAL);
+        };
         node.addListener(MapSetupSaveEvent.class, new MapSetupSaveListener(this.dataService, teleport));
     }
 }
