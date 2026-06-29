@@ -1,10 +1,13 @@
 package net.onelitefeather.cygnus.setup.listener.map;
 
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.setup.event.MapSetupSaveEvent;
 import net.onelitefeather.guira.SetupDataService;
+import net.onelitefeather.guira.data.SetupData;
 import net.theevilreaper.aves.util.functional.PlayerConsumer;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class MapSetupSaveListener implements Consumer<MapSetupSaveEvent> {
@@ -19,8 +22,15 @@ public class MapSetupSaveListener implements Consumer<MapSetupSaveEvent> {
 
     @Override
     public void accept(MapSetupSaveEvent event) {
-        //TODO: add save back
+        Player player = event.getPlayer();
+        Optional<SetupData> setupData = this.dataService.get(player.getUuid());
+
+        if (setupData.isEmpty()) return;
+
+        SetupData data = setupData.get();
+
+        data.save();
         this.teleportBackLogic.accept(event.getPlayer());
-        MinecraftServer.getSchedulerManager().scheduleNextTick(dataService.get(event.getPlayer().getUuid()).get()::reset);
+        MinecraftServer.getSchedulerManager().scheduleNextTick(data::reset);
     }
 }
