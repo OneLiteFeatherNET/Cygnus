@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus;
 
 import net.theevilreaper.xerus.api.team.TeamService;
-import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
 import org.junit.jupiter.api.Test;
