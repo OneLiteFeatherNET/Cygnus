@@ -1,18 +1,15 @@
 package net.onelitefeather.cygnus.setup.listener;
 
 import net.minestom.server.event.EventDispatcher;
-import net.onelitefeather.cygnus.setup.data.GameData;
 import net.onelitefeather.cygnus.setup.data.InstanceSetupData;
 import net.onelitefeather.cygnus.setup.event.MapSetupSaveEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
-import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.onelitefeather.guira.SetupDataService;
 
-import java.util.Set;
 import java.util.function.Consumer;
 
 public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
