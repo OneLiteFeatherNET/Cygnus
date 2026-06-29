@@ -72,13 +72,10 @@ public class PositionSlot extends AbstractDataSlot {
                 player.closeInventory();
                 player.teleport(position);
             }
-            case Click.Right _ -> {
-                DialogContext additional = null;
-                if (position != null) {
-                    additional = new DialogContext.PositionContent(position);
-                }
-                EventDispatcher.call(new PlayerRemoveDataEvent(player, type, additional));
-            }
+            case Click.Right _ when position != null ->
+                    EventDispatcher.call(new PlayerRemoveDataEvent(player, type, new DialogContext.PositionContent(position)));
+            case Click.Right _ ->
+                    EventDispatcher.call(new PlayerRemoveDataEvent(player, type));
             default -> {
             }
         }
