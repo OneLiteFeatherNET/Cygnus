@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.6.6](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.5...v2.6.6) (2026-06-29)
+
+
+### Bug Fixes
+
+* **workflow:** ensure SBOM upload runs only when version is available ([3f6f2b7](https://github.com/OneLiteFeatherNET/Cygnus/commit/3f6f2b7aeb3173ec5b31ca2d1f8166a14a492a48))
+
 ## [2.6.5](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.4...v2.6.5) (2026-06-29)
 
 
