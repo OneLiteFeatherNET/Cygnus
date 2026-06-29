@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.setup.player;
 
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
@@ -16,8 +17,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class SetupPlayer extends Player {
 
-    private @Nullable Pos survivorToDelete;
-    private @Nullable Vec pageToDelete;
+    private @Nullable Point survivorToDelete;
+    private @Nullable Point pageToDelete;
 
     /**
      * {@inheritDoc}
@@ -31,7 +32,7 @@ public final class SetupPlayer extends Player {
      *
      * @param survivor position to delete
      */
-    public void setSurvivorToDelete(@Nullable Pos survivor) {
+    public void setSurvivorToDelete(@Nullable Point survivor) {
         this.survivorToDelete = survivor;
     }
 
@@ -40,7 +41,7 @@ public final class SetupPlayer extends Player {
      *
      * @param page position to delete
      */
-    public void setPageToDelete(@Nullable Vec page) {
+    public void setPageToDelete(@Nullable Point page) {
         this.pageToDelete = page;
     }
 
@@ -49,7 +50,7 @@ public final class SetupPlayer extends Player {
      *
      * @return selected survivor position or {@code null}
      */
-    public @Nullable Pos getSurvivorToDelete() {
+    public @Nullable Point getSurvivorToDelete() {
         return survivorToDelete;
     }
 
@@ -58,7 +59,7 @@ public final class SetupPlayer extends Player {
      *
      * @return selected page position or {@code null}
      */
-    public @Nullable Vec getPageToDelete() {
+    public @Nullable Point getPageToDelete() {
         return pageToDelete;
     }
 }
