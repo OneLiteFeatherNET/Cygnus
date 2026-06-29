@@ -206,19 +206,20 @@ public class GameData extends InstanceSetupData {
      */
     @Override
     public void loadData() {
-        if (!this.mapEntry.hasMapFile()) {
-            this.gameMapBuilder = new GameMapBuilder();
-        } else {
-            Optional<GameMap> mapData = GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), GameMap.class);
-            mapData.ifPresentOrElse(gameMap ->
-                            this.gameMapBuilder = new GameMapBuilder(gameMap),
-                    () -> this.gameMapBuilder = new GameMapBuilder()
-            );
-        }
-       // this.inventory = new LobbyViewInventory(this.gameMapBuilder);
+        Optional<GameMap> mapData =
+                this.mapEntry.hasMapFile()
+                        ? GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), GameMap.class)
+                        : Optional.empty();
+
+        this.gameMapBuilder = mapData
+                .map(GameMapBuilder::new)
+                .orElseGet(GameMapBuilder::new);
+
         this.instance = MinecraftServer.getInstanceManager().createInstanceContainer();
+
         AnvilLoader anvilLoader = new AnvilLoader(this.mapEntry.getDirectoryRoot());
         this.instance.setChunkLoader(anvilLoader);
+
         this.updateTitle();
         MinecraftServer.getInstanceManager().registerInstance(this.instance);
     }

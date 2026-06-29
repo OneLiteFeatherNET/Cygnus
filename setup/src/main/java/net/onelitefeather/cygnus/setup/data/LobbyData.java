@@ -113,19 +113,20 @@ public final class LobbyData extends InstanceSetupData {
      */
     @Override
     public void loadData() {
-        if (!this.mapEntry.hasMapFile()) {
-            this.mapBuilder = BaseMap.builder();
-        } else {
-            Optional<BaseMap> mapData = GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), BaseMap.class);
+        Optional<BaseMap> mapData =
+                this.mapEntry.hasMapFile()
+                        ? GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), BaseMap.class)
+                        : Optional.empty();
 
-            mapData.ifPresentOrElse(baseMap -> {
-                this.mapBuilder = BaseMap.builder(baseMap);
-            }, () -> this.mapBuilder = BaseMap.builder());
-        }
+        this.mapBuilder = mapData
+                .map(BaseMap::builder)
+                .orElseGet(BaseMap::builder);
 
         this.instance = MinecraftServer.getInstanceManager().createInstanceContainer();
+
         AnvilLoader anvilLoader = new AnvilLoader(this.mapEntry.getDirectoryRoot());
         this.instance.setChunkLoader(anvilLoader);
+
         this.updateTitle();
         MinecraftServer.getInstanceManager().registerInstance(this.instance);
     }
