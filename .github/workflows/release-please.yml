@@ -30,6 +30,7 @@ jobs:
     uses: OneLiteFeatherNET/workflows/.github/workflows/gradle-publish.yml@v2.3.0
     with:
       java-version: "25"
+      publish-task: "publish cyclonedxBom"
     secrets: inherit
   bom:
     name: Upload SBOM to DependencyTrack
