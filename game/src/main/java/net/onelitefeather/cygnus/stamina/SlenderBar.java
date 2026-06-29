@@ -58,7 +58,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
         if (currentTime >= 0) {
             currentTime -= TIME_STEP;
             Instance instance = player.getInstance();
-            applyDamage(instance, player.getUuid(), player.getPosition().asPos(), 3, TIME_STEP);
+            applyDamage(instance, player.getUuid(), player.getPosition(), 3, TIME_STEP);
             this.colorState.sendProgressBar(player, tileChar, (int) currentTime);
             return;
         }
@@ -103,7 +103,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 state = State.DRAINING;
                 colorState = StaminaColors.DRAINING;
                 player.setTag(Tags.HIDDEN, Helper.ONE_ID);
-                this.playSpawnSound(player.getInstance(), player.getPosition().asPos(), player.getUuid());
+                this.playSpawnSound(player.getInstance(), player.getPosition(), player.getUuid());
                 this.applyBlindness(player);
                 player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.0669);
                 player.sendSpringPackets();
@@ -115,7 +115,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 state = State.REGENERATING;
                 colorState = StaminaColors.REGENERATING;
                 player.setTag(Tags.HIDDEN, Helper.ZERO_ID);
-                this.playTeleportSound(player.getInstance(), player.getPosition().asPos(), player.getUuid());
+                this.playTeleportSound(player.getInstance(), player.getPosition(), player.getUuid());
                 this.applyNightVision(player);
                 player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1f);
                 player.sendSpringPackets();
