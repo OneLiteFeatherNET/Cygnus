@@ -9,12 +9,19 @@ import net.onelitefeather.cygnus.common.Messages;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * The class contains method and static constant values to handle specific messages during the setup
+ * @author theEvilReaper
+ * @version 1.2.0
+ * @since 1.0.0
+ */
 public final class SetupMessages {
 
     public static final Component EMPTY_NAME;
     public static final Component MISSING_MAP_SELECTION;
 
     public static final Component DISABLED_PAGE_MODE;
+    public static final Component SPACE_SEPARATOR;
     public static final Component NO_SPACE_SEPARATOR;
     public static final Component TELEPORT_CLICK;
     public static final Component DELETE_CLICK;
@@ -23,6 +30,7 @@ public final class SetupMessages {
     public static final Component PAGE_MODE_INFORM;
 
     static {
+        SPACE_SEPARATOR = Component.text("» ", NamedTextColor.GRAY);
         NO_SPACE_SEPARATOR = Component.text("»", NamedTextColor.GRAY);
 
         TELEPORT_CLICK = NO_SPACE_SEPARATOR
@@ -71,14 +79,20 @@ public final class SetupMessages {
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull Component getInvalidModeDuringLobby(@NotNull String mode) {
         PreProcess modePreProcess = Tag.preProcessParsed(mode);
-        TagResolver modeTag = TagResolver.builder().tag("mode", (argumentQueue, context) -> modePreProcess).build();
+        TagResolver modeTag = TagResolver.builder().tag("mode", (_, _) -> modePreProcess).build();
         return Messages.withMini("<red>The mode <gold><mode><red> is not allowed in the lobby setup!", modeTag);
     }
 
+    /**
+     * Creates a new {@link Component} instance with the content of an invalid face.
+     *
+     * @param face which should be displayed
+     * @return the created component
+     */
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull Component getInvalidFace(@NotNull String face) {
         PreProcess facePreProcess = Tag.preProcessParsed(face);
-        TagResolver faceTag = TagResolver.builder().tag("face", (argumentQueue, context) -> facePreProcess).build();
+        TagResolver faceTag = TagResolver.builder().tag("face", (_, _) -> facePreProcess).build();
         return Messages.withMini("<red>You are looking in an invalid direction! <gray>(<gold><face><gray>)", faceTag);
 
     }
