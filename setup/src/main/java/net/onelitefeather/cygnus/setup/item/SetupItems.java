@@ -6,13 +6,10 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.onelitefeather.cygnus.common.Tags;
-import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.theevilreaper.aves.hotbar.HotBarLayout;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static net.onelitefeather.cygnus.setup.util.SetupMessages.SPACE_SEPARATOR;
+import static net.onelitefeather.cygnus.setup.util.SetupMessages.getLore;
 
 /**
  * The class holds the {@link ItemStack} references which have some functionality during a setup process from an map.
@@ -189,13 +186,5 @@ public final class SetupItems {
     }
 
     private SetupItems() {
-    }
-
-    private static List<Component> getLore(Component... components) {
-        List<Component> lore = new ArrayList<>();
-        lore.add(Component.empty());
-        lore.addAll(List.of(components));
-        lore.add(Component.empty());
-        return lore;
     }
 }

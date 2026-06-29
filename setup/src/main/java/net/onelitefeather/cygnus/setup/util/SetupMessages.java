@@ -9,10 +9,15 @@ import net.onelitefeather.cygnus.common.Messages;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * The class contains method and static constant values to handle specific messages during the setup
+ *
  * @author theEvilReaper
- * @version 1.2.1
+ * @version 1.3.0
  * @since 1.0.0
  */
 public final class SetupMessages {
@@ -87,6 +92,20 @@ public final class SetupMessages {
         PreProcess facePreProcess = Tag.preProcessParsed(face);
         TagResolver faceTag = TagResolver.builder().tag("face", (_, _) -> facePreProcess).build();
         return Messages.withMini("<red>You are looking in an invalid direction! <gray>(<gold><face><gray>)", faceTag);
+    }
 
+    /**
+     * Returns a list that contains the given components which some additional empty components
+     *
+     * @param components to add
+     * @return the list with the {@link Component}s
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static List<Component> getLore(@NotNull Component... components) {
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.empty());
+        lore.addAll(Arrays.asList(components));
+        lore.add(Component.empty());
+        return lore;
     }
 }
