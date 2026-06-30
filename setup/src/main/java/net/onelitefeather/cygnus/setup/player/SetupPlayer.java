@@ -1,8 +1,6 @@
 package net.onelitefeather.cygnus.setup.player;
 
 import net.minestom.server.coordinate.Point;
-import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
@@ -13,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
  * Custom {@link Player} implementation to add additional context related to the setup flow.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.2.0
  * @since 2.0.0
  */
 public final class SetupPlayer extends Player {
