@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
  * Custom {@link Player} implementation to add additional context related to the setup flow.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.2.0
  * @since 2.0.0
  */
 public final class SetupPlayer extends InstanceSwitchChunkPlayer {
