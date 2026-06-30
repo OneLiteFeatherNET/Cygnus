@@ -97,6 +97,7 @@ public class DialogPayloadListener implements Consumer<PlayerCustomClickEvent> {
 
             dataService.get(event.getPlayer().getUuid()).ifPresent(data -> {
                 SetupPlayer player = (SetupPlayer) event.getPlayer();
+
                 Point point = null;
                 if (category == MapDataCategory.SURVIVOR) {
                     point = player.getSurvivorToDelete();
