@@ -1,14 +1,19 @@
 package net.onelitefeather.cygnus.setup.data;
 
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.anvil.AnvilLoader;
+import net.minestom.server.inventory.InventoryType;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
+import net.onelitefeather.cygnus.setup.inventory.page.PageHeaderFormatter;
+import net.onelitefeather.cygnus.setup.inventory.slot.PositionSlot;
 import net.onelitefeather.cygnus.setup.inventory.view.InventoryMode;
 import net.onelitefeather.cygnus.setup.inventory.view.MapDataOverviewInventory;
 import net.onelitefeather.cygnus.setup.inventory.view.SurvivorViewInventory;
@@ -16,9 +21,16 @@ import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
+import net.theevilreaper.aves.inventory.InventoryLayout;
+import net.theevilreaper.aves.inventory.pageable.PageableInventory;
+import net.theevilreaper.aves.inventory.pageable.TitleData;
+import net.theevilreaper.aves.inventory.slot.ISlot;
+import net.theevilreaper.aves.inventory.util.LayoutCalculator;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +38,7 @@ public class GameData extends InstanceSetupData {
 
     private final MapDataOverviewInventory inventory;
     private final SurvivorViewInventory survivorInventory;
+    private final PageableInventory pageInventory;
     private GameMapBuilder gameMapBuilder;
     private boolean pageMode;
     private boolean survivorMode;
@@ -33,8 +46,8 @@ public class GameData extends InstanceSetupData {
     /**
      * Constructs a new GameData instance.
      *
-     * @param uuid       the UUID of the player
-     * @param mapEntry   the map entry associated with this game data
+     * @param uuid     the UUID of the player
+     * @param mapEntry the map entry associated with this game data
      */
     public GameData(UUID uuid, MapEntry mapEntry) {
         super(uuid, mapEntry, BossBar.Color.RED);
@@ -46,6 +59,30 @@ public class GameData extends InstanceSetupData {
 
         this.inventory = new MapDataOverviewInventory(player, this.gameMapBuilder, InventoryMode.GAME);
         this.survivorInventory = new SurvivorViewInventory(player, this.gameMapBuilder);
+        this.pageInventory = PageableInventory
+                .builder()
+                .titleData(
+                        TitleData
+                                .builder()
+                                .pageMapper(PageHeaderFormatter::format)
+                                .showPageNumbers(true)
+                                .build()
+                )
+                .player(player)
+                .type(InventoryType.CHEST_6_ROW)
+                .slotRange(LayoutCalculator.quad(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_5_ROW.getSize() - 1))
+                .layout(InventoryLayout.fromType(InventoryType.CHEST_6_ROW))
+                .values(getPageSlots())
+                .build();
+    }
+
+    private List<ISlot> getPageSlots() {
+        if (this.gameMapBuilder.getPageFaces().isEmpty()) return List.of();
+        List<ISlot> pageSlots = new ArrayList<>(this.gameMapBuilder.getPageFaces().size());
+        this.gameMapBuilder.getPageFaces().forEach(pageFace -> {
+           pageSlots.add(new PositionSlot(MapDataCategory.PAGE, ((Pos) pageFace.position())));
+        });
+        return pageSlots;
     }
 
     /**
@@ -55,7 +92,9 @@ public class GameData extends InstanceSetupData {
         this.pageMode = !this.pageMode;
     }
 
-    public void swapSurvivorMode() { this.survivorMode = !this.survivorMode; }
+    public void swapSurvivorMode() {
+        this.survivorMode = !this.survivorMode;
+    }
 
     /**
      * {@inheritDoc}
@@ -65,9 +104,7 @@ public class GameData extends InstanceSetupData {
         switch (target) {
             case GENERAL -> this.inventory.open();
             case SURVIVOR -> this.survivorInventory.open();
-            case PAGE -> {
-
-            }
+            case PAGE -> this.pageInventory.open();
         }
     }
 
@@ -79,9 +116,7 @@ public class GameData extends InstanceSetupData {
         switch (target) {
             case GENERAL -> this.inventory.invalidateDataLayout();
             case SURVIVOR -> this.survivorInventory.invalidateDataLayout();
-            case PAGE -> {
-                // Nothing to do here
-            }
+            case PAGE -> this.pageInventory.open();
         }
     }
 
@@ -111,7 +146,8 @@ public class GameData extends InstanceSetupData {
                 this.gameMapBuilder.addSurvivorSpawn(spawnPos);
                 triggerUpdate(InventoryTarget.SURVIVOR);
             }
-            default -> {}
+            default -> {
+            }
         }
     }
 
@@ -210,6 +246,7 @@ public class GameData extends InstanceSetupData {
         super.reset();
         this.survivorInventory.unregister();
         this.inventory.unregister();
+        this.pageInventory.unregister();
     }
 
     /**
