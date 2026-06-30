@@ -10,6 +10,7 @@ import net.onelitefeather.cygnus.setup.player.SetupPlayer;
 import java.util.function.Consumer;
 
 public final class PlayerRemoveDataListener implements Consumer<PlayerRemoveDataEvent> {
+
     @Override
     public void accept(PlayerRemoveDataEvent event) {
         final Player player = event.getPlayer();
@@ -22,21 +23,14 @@ public final class PlayerRemoveDataListener implements Consumer<PlayerRemoveData
 
 
         DialogContext context = event.getContext();
-
-        if (!(context instanceof DialogContext.PositionContent positionContent)) {
-            player.sendMessage("");
-            return;
-        }
-
         SetupPlayer setupPlayer = (SetupPlayer) player;
 
+        if (context instanceof DialogContext.PositionContent positionContent) {
+           setupPlayer.setSurvivorToDelete(positionContent.point());
+        }
 
-        switch (category) {
-            case SURVIVOR -> setupPlayer.setSurvivorToDelete(positionContent.point());
-            case PAGE -> setupPlayer.setPageToDelete(positionContent.point());
-            default -> {
-
-            }
+        if (context instanceof DialogContext.PageContent pageContent) {
+            setupPlayer.setPageResource(pageContent.resource());
         }
 
         MapDialogs.openDeleteDialog(player, category, context);
