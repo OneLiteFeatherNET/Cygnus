@@ -5,6 +5,22 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.7.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.6...v2.7.0) (2026-07-01)
+
+
+### Features
+
+* **setup:** add ability to delete locations in map setup ([#126](https://github.com/OneLiteFeatherNET/Cygnus/issues/126)) ([ea30cce](https://github.com/OneLiteFeatherNET/Cygnus/commit/ea30cced193ba1547d6d27e813b26bd1aa1ff0ac))
+* **setup:** add default lore for fallback items ([#125](https://github.com/OneLiteFeatherNET/Cygnus/issues/125)) ([c2e324a](https://github.com/OneLiteFeatherNET/Cygnus/commit/c2e324a5d11e86e6eac5857e1a9af667d80321cd))
+* **setup:** improve setup item display ([#124](https://github.com/OneLiteFeatherNET/Cygnus/issues/124)) ([dd475df](https://github.com/OneLiteFeatherNET/Cygnus/commit/dd475df97e70afe79cf152c182fdc83bcc0374b9))
+
+
+### Bug Fixes
+
+* **category:** avoid typo in one enum entry declaration ([b79d4e6](https://github.com/OneLiteFeatherNET/Cygnus/commit/b79d4e69b4e051732632eb9d85162494207eb67e))
+* **data:** improve save logic ([d2b94ec](https://github.com/OneLiteFeatherNET/Cygnus/commit/d2b94ecb5f6a1d44223ca15eb1050521ef74a08a))
+* **lobby:** improve file check to avoid exception throw during the setup ([9a80218](https://github.com/OneLiteFeatherNET/Cygnus/commit/9a802181c5924dec86881ec1c9895b0ae70b8edf))
+
 ## [2.6.6](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.5...v2.6.6) (2026-06-29)
 
 
