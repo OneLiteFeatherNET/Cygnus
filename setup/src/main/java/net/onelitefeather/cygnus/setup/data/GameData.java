@@ -91,7 +91,9 @@ public class GameData extends InstanceSetupData {
      */
     @Override
     public void updateTitle() {
+        System.out.println("TItle is " + (title == null));
         if (getMapBuilder().getName().equalsIgnoreCase("Map")) {
+            this.title = null;
             super.updateTitle();
             return;
         }
@@ -177,7 +179,10 @@ public class GameData extends InstanceSetupData {
     public void handleDataDelete(MapDataCategory category) {
         switch (category) {
             case SPAWN -> gameMapBuilder.spawn(null);
-            case NAME -> gameMapBuilder.name(null);
+            case NAME -> {
+                gameMapBuilder.name("Map");
+                this.updateTitle();
+            }
             case AUTHOR -> gameMapBuilder.builders("");
             case SLENDER -> gameMapBuilder.setSlenderSpawn(null);
             default -> throw new IllegalArgumentException("Unknown inventory category: " + category);

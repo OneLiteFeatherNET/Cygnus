@@ -68,6 +68,7 @@ public final class LobbyData extends InstanceSetupData {
     @Override
     public void updateTitle() {
         if (getMapBuilder().getName().equalsIgnoreCase("Map")) {
+            this.title = null;
             super.updateTitle();
             return;
         }
@@ -82,7 +83,10 @@ public final class LobbyData extends InstanceSetupData {
     public void handleDataDelete(MapDataCategory category) {
         switch (category) {
             case SPAWN -> mapBuilder.spawn(null);
-            case NAME -> mapBuilder.name(null);
+            case NAME -> {
+                mapBuilder.name("Map");
+                this.updateTitle();
+            }
             case AUTHOR -> mapBuilder.builders("");
             default -> throw new IllegalArgumentException("Unknown inventory category: " + category);
         }
