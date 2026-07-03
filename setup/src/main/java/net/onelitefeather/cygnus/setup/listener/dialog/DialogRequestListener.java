@@ -1,8 +1,8 @@
 package net.onelitefeather.cygnus.setup.listener.dialog;
 
 import net.minestom.server.entity.Player;
-import net.onelitefeather.cygnus.setup.dialogs.AuthorDialogs;
-import net.onelitefeather.cygnus.setup.dialogs.MapDialogs;
+import net.onelitefeather.cygnus.setup.dialog.AuthorDialogs;
+import net.onelitefeather.cygnus.setup.dialog.MapDialogs;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;

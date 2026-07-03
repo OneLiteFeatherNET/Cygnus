@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.setup.dialogs;
+package net.onelitefeather.cygnus.setup.dialog;
 
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
