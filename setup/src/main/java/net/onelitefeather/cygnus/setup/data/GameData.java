@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.setup.data;
 
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
@@ -89,6 +90,21 @@ public class GameData extends InstanceSetupData {
      * {@inheritDoc}
      */
     @Override
+    public void updateTitle() {
+        System.out.println("TItle is " + (title == null));
+        if (getMapBuilder().getName().equalsIgnoreCase("Map")) {
+            this.title = null;
+            super.updateTitle();
+            return;
+        }
+        this.title = Component.text("Map: ").append(Component.text(getMapBuilder().getName(), MapDataCategory.NAME.getColor()));
+        super.updateTitle();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void setPosition(MapDataCategory category, Player player) {
         Pos pos = player.getPosition();
         switch (category) {
@@ -163,7 +179,10 @@ public class GameData extends InstanceSetupData {
     public void handleDataDelete(MapDataCategory category) {
         switch (category) {
             case SPAWN -> gameMapBuilder.spawn(null);
-            case NAME -> gameMapBuilder.name(null);
+            case NAME -> {
+                gameMapBuilder.name("Map");
+                this.updateTitle();
+            }
             case AUTHOR -> gameMapBuilder.builders("");
             case SLENDER -> gameMapBuilder.setSlenderSpawn(null);
             default -> throw new IllegalArgumentException("Unknown inventory category: " + category);
