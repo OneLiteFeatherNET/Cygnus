@@ -1,6 +1,8 @@
 package net.onelitefeather.cygnus.phase;
 
+import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.TickDirection;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
@@ -37,7 +39,6 @@ public final class LobbyPhase extends TimedPhase {
 
     private static final ConnectionManager CONNECTION_MANAGER = MinecraftServer.getConnectionManager();
     private final Task waitingTask;
-    private final VoidConsumer gameMapLoading;
     private final VoidConsumer staminaInstantiation;
     private final int lobbyTime;
     private final int minPlayers;
@@ -45,12 +46,10 @@ public final class LobbyPhase extends TimedPhase {
     private Component displayComponent;
 
     public LobbyPhase(
-            VoidConsumer gameMapLoading,
             VoidConsumer staminaInstantiation,
             GameConfig gameConfig
     ) {
         super("Lobby", ChronoUnit.SECONDS, 1);
-        this.gameMapLoading = gameMapLoading;
         this.staminaInstantiation = staminaInstantiation;
         this.lobbyTime = gameConfig.lobbyTime();
         this.minPlayers = gameConfig.minPlayers();
@@ -109,7 +108,7 @@ public final class LobbyPhase extends TimedPhase {
         setLevel();
 
         if (getCurrentTicks() == FORCE_START_TIME - 1) {
-            this.gameMapLoading.apply();
+            EventDispatcher.call(new GameMapLoadEvent());
         }
 
         if (getCurrentTicks() == 0) {

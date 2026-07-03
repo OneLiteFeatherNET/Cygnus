@@ -6,6 +6,7 @@ import net.onelitefeather.cygnus.listener.game.GameStartListener;
 import net.onelitefeather.cygnus.listener.view.ViewUpdateListener;
 import net.onelitefeather.cygnus.listener.page.PageDiscoveryCompleteListener;
 import net.onelitefeather.cygnus.map.GameMapProvider;
+import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
@@ -129,6 +130,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 )
         );
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
+        manager.addListener(GameMapLoadEvent.class, _ -> ((GameMapProvider) this.mapProvider).loadGameMap());
         registerCancelListener(manager);
     }
 
@@ -157,7 +159,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
 
     private void initPhases() {
         GameMapProvider gameMapProvider = ((GameMapProvider) this.mapProvider);
-        VoidConsumer gameMapLoader = gameMapProvider::loadGameMap;
         VoidConsumer staminaInitializer = () -> StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
         VoidConsumer instanceSwitch = gameMapProvider::switchToGameMap;
         VoidConsumer teamInitializer = () -> TeamHelper.teleportTeams(
@@ -165,7 +166,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 gameMapProvider.getGameMap(),
                 gameMapProvider.getActiveInstance().get()
         );
-        LobbyPhase lobbyPhase = new LobbyPhase(gameMapLoader, staminaInitializer, this.gameConfig);
+        LobbyPhase lobbyPhase = new LobbyPhase(staminaInitializer, this.gameConfig);
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime()));
