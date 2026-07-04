@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.setup.data;
 
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
@@ -122,7 +123,6 @@ public class GameData extends InstanceSetupData {
      */
     @Override
     public void updateTitle() {
-        System.out.println("TItle is " + (title == null));
         if (getMapBuilder().getName().equalsIgnoreCase("Map")) {
             this.title = null;
             super.updateTitle();
@@ -198,6 +198,11 @@ public class GameData extends InstanceSetupData {
         if (SetupItemId.LEAVE_MODE == tagValue) {
             this.swapSurvivorMode();
             SetupItems.setGameLayout(player);
+            return;
+        }
+
+        if (SetupItemId.PAGES == tagValue) {
+            this.openInventory(InventoryTarget.PAGE);
             return;
         }
 
