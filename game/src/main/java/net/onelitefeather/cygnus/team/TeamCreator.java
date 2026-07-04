@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus;
+package net.onelitefeather.cygnus.team;
 
 import net.kyori.adventure.key.Key;
 import net.onelitefeather.cygnus.component.TeamNameComponent;
@@ -7,12 +7,11 @@ import net.theevilreaper.xerus.api.component.team.ColorComponent;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.onelitefeather.cygnus.common.config.GameConfig;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
 
 /**
- * The interface contains a method to create the teams objects which are required for the game.
+ * The interface contains a method to create the team objects which are required for the game.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -26,10 +25,7 @@ public interface TeamCreator {
      * @param gameConfig      the configuration to get some values from it
      * @param teamService     the service to add the teams
      */
-    default void createTeams(
-            @NotNull GameConfig gameConfig,
-            @NotNull TeamService teamService
-    ) {
+    default void createTeams(GameConfig gameConfig, TeamService teamService) {
         Team slenderTeam = Team.of(
                 Key.key("cygnus", GameConfig.SLENDER_TEAM_NAME.toLowerCase(Locale.ROOT)),
                 gameConfig.slenderTeamSize()
