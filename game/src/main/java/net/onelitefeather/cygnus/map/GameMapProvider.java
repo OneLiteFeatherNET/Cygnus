@@ -21,7 +21,7 @@ public final class GameMapProvider extends AbstractMapProvider {
 
     public GameMapProvider(Path path) {
         super(GsonHelper.FILE_HANDLER, MapFilters::filterMapsForGame);
-        this.loadMapEntries(path.resolve("maps"));
+        this.loadMapEntries(path.resolve("game").resolve("maps"));
 
         if (this.mapEntries.isEmpty()) {
             throw new IllegalStateException("No maps found in the given path");
@@ -42,7 +42,6 @@ public final class GameMapProvider extends AbstractMapProvider {
         this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer();
         this.gameInstance.setTime(Helper.NEW_MOON_TIME);
         this.registerInstance(this.gameInstance, gameEntry);
-
         EventDispatcher.call(new GameMapLoadedEvent(this.gameMap, this.gameInstance));
     }
 
@@ -57,16 +56,19 @@ public final class GameMapProvider extends AbstractMapProvider {
     }
 
     private BaseMap loadLobbyMap() {
-        MapEntry lobbyEntry = this.mapEntries.stream().filter(mapEntry -> mapEntry.getDirectoryRoot().toString().equalsIgnoreCase("lobby")).findAny()
+        MapEntry lobbyEntry = this.mapEntries.stream().filter(mapEntry -> mapEntry.getDirectoryRoot().toString().contains("lobby")).findAny()
                 .orElseThrow(() -> new IllegalStateException("No lobby map found in the given path"));
 
         if (!lobbyEntry.hasMapFile()) {
             throw new IllegalStateException("Lobby map doesn't contains a map file");
         }
 
+        this.mapEntries.remove(lobbyEntry);
+
         this.activeMap = this.fileHandler.load(lobbyEntry.getMapFile(), BaseMap.class).get();
         InstanceContainer instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer();
         this.registerInstance(instanceContainer, lobbyEntry);
+        this.activeInstance = instanceContainer;
         return this.activeMap;
     }
 
@@ -82,5 +84,4 @@ public final class GameMapProvider extends AbstractMapProvider {
     public GameMap getGameMap() {
         return gameMap;
     }
-
 }
