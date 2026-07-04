@@ -8,7 +8,7 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageCalculation;
 import net.onelitefeather.cygnus.common.util.HealthScalingCalculation;
-import net.onelitefeather.cygnus.utils.TeamHelper;
+import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;

@@ -5,7 +5,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.page.PageProvider;
-import net.onelitefeather.cygnus.utils.TeamHelper;
+import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.UUID;
 import java.util.function.Consumer;

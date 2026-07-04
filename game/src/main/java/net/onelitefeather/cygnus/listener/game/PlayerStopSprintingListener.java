@@ -4,7 +4,7 @@ import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
 import net.onelitefeather.cygnus.stamina.FoodBar;
-import net.onelitefeather.cygnus.utils.TeamHelper;
+import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.function.Consumer;
 import java.util.function.Function;

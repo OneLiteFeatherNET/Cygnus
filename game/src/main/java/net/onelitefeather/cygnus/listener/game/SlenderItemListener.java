@@ -8,7 +8,7 @@ import net.minestom.server.event.trait.ItemEvent;
 import net.minestom.server.item.ItemStack;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
-import net.onelitefeather.cygnus.utils.TeamHelper;
+import net.onelitefeather.cygnus.team.TeamHelper;
 
 public final class SlenderItemListener {
 

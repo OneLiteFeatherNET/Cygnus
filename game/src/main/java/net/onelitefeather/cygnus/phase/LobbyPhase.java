@@ -3,7 +3,7 @@ package net.onelitefeather.cygnus.phase;
 import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
-import net.theevilreaper.aves.util.functional.VoidConsumer;
+import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
 import net.theevilreaper.xerus.api.phase.TickDirection;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.kyori.adventure.text.Component;
@@ -39,18 +39,13 @@ public final class LobbyPhase extends TimedPhase {
 
     private static final ConnectionManager CONNECTION_MANAGER = MinecraftServer.getConnectionManager();
     private final Task waitingTask;
-    private final VoidConsumer staminaInstantiation;
     private final int lobbyTime;
     private final int minPlayers;
     private boolean forceStarted;
     private Component displayComponent;
 
-    public LobbyPhase(
-            VoidConsumer staminaInstantiation,
-            GameConfig gameConfig
-    ) {
+    public LobbyPhase(GameConfig gameConfig) {
         super("Lobby", ChronoUnit.SECONDS, 1);
-        this.staminaInstantiation = staminaInstantiation;
         this.lobbyTime = gameConfig.lobbyTime();
         this.minPlayers = gameConfig.minPlayers();
         this.setPaused(true);
@@ -112,13 +107,13 @@ public final class LobbyPhase extends TimedPhase {
         }
 
         if (getCurrentTicks() == 0) {
-            this.staminaInstantiation.apply();
+            EventDispatcher.call(new GamePrepareEvent());
         }
     }
 
     /**
      * Checks if the player requirements are met.
-     * If the player requirements are not met the phase will be paused.
+     * If the player requirements are not met, the phase will be paused.
      */
     public void checkPlayerRequirements() {
         if (CONNECTION_MANAGER.getOnlinePlayers().size() - 1 < this.minPlayers) {

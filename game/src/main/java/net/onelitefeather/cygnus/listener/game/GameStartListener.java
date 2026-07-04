@@ -9,8 +9,8 @@ import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.stamina.StaminaService;
+import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
-import net.onelitefeather.cygnus.utils.TeamHelper;
 import net.theevilreaper.xerus.api.team.TeamService;
 
 import java.util.function.Consumer;

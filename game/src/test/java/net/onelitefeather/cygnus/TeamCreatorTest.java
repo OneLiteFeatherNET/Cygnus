@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus;
 
+import net.onelitefeather.cygnus.team.TeamCreator;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;

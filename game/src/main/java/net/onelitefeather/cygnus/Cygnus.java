@@ -8,6 +8,9 @@ import net.onelitefeather.cygnus.listener.page.PageDiscoveryCompleteListener;
 import net.onelitefeather.cygnus.map.GameMapProvider;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
+import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
+import net.onelitefeather.cygnus.team.TeamCreator;
+import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
@@ -62,7 +65,6 @@ import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
-import net.onelitefeather.cygnus.utils.TeamHelper;
 import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
@@ -131,6 +133,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
         manager.addListener(GameMapLoadEvent.class, _ -> ((GameMapProvider) this.mapProvider).loadGameMap());
+        manager.addListener(GamePrepareEvent.class, _ -> {
+            StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
+        });
         registerCancelListener(manager);
     }
 
@@ -153,20 +158,18 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
         manager.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
         manager.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));
-
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 
     private void initPhases() {
         GameMapProvider gameMapProvider = ((GameMapProvider) this.mapProvider);
-        VoidConsumer staminaInitializer = () -> StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
         VoidConsumer instanceSwitch = gameMapProvider::switchToGameMap;
         VoidConsumer teamInitializer = () -> TeamHelper.teleportTeams(
                 this.teamService,
                 gameMapProvider.getGameMap(),
                 gameMapProvider.getActiveInstance().get()
         );
-        LobbyPhase lobbyPhase = new LobbyPhase(staminaInitializer, this.gameConfig);
+        LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig);
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime()));
