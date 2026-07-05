@@ -1,12 +1,12 @@
 package net.onelitefeather.cygnus.stamina;
 
+import net.onelitefeather.cygnus.team.TeamHelper;
 import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
 import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.util.Helper;
-import net.onelitefeather.cygnus.utils.TeamHelper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;

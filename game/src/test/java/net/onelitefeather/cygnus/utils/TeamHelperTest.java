@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.utils;
 
 import net.kyori.adventure.key.Key;
+import net.onelitefeather.cygnus.team.TeamHelper;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.kyori.adventure.text.Component;
@@ -12,7 +13,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
-import net.onelitefeather.cygnus.TeamCreator;
+import net.onelitefeather.cygnus.team.TeamCreator;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;

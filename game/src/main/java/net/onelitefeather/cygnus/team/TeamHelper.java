@@ -1,5 +1,6 @@
-package net.onelitefeather.cygnus.utils;
+package net.onelitefeather.cygnus.team;
 
+import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
 import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
@@ -14,7 +15,6 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.map.GameMap;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 import static net.onelitefeather.cygnus.common.util.Helper.SLENDER_ID;
@@ -30,31 +30,80 @@ import static net.onelitefeather.cygnus.common.util.Helper.SURVIVOR_ID;
 public final class TeamHelper {
 
     /**
+     * Result of a team allocation, containing the chosen slender player and the resulting survivors.
+     *
+     * @param slender   the player who is the slender
+     * @param survivors the players who are survivors
+     */
+    public record TeamAllocation(Player slender, Set<Player> survivors) {
+    }
+
+    /**
      * Prepares which player should be the slender and which players should be the survivors.
      *
      * @param slenderTeam  the team for the slender
      * @param survivorTeam the team for the survivors
-     * @return the player who is the slender
+     * @return the resulting allocation, containing the slender player and the survivors
      */
-    public static Player prepareTeamAllocation(Team slenderTeam, Team survivorTeam) {
+    public static TeamAllocation prepareTeamAllocation(Team slenderTeam, Team survivorTeam) {
         Check.argCondition(slenderTeam.getCapacity() != 1, "The slender team must have a capacity from one");
-        Optional<Player> randomPlayer = Players.getRandomPlayer();
-        if (randomPlayer.isEmpty()) {
-            throw new IllegalStateException("No player found to be the slender");
+
+        Player slenderPlayer = selectSlenderPlayer();
+        assignSlender(slenderPlayer, slenderTeam);
+
+        Set<Player> survivors = collectSurvivors(slenderPlayer);
+        assignSurvivors(survivors, survivorTeam);
+
+        return new TeamAllocation(slenderPlayer, survivors);
+    }
+
+    /**
+     * Picks a random online player to become the slender.
+     *
+     * @return the chosen player
+     */
+    private static Player selectSlenderPlayer() {
+        return Players.getRandomPlayer()
+                .orElseThrow(() -> new IllegalStateException("No player found to be the slender"));
+    }
+
+    /**
+     * Tags and assigns the given player as the slender and updates their view rule.
+     *
+     * @param player      the player to become the slender
+     * @param slenderTeam the team to add the player to
+     */
+    private static void assignSlender(Player player, Team slenderTeam) {
+        player.setTag(Tags.TEAM_ID, SLENDER_ID);
+        player.updateViewableRule(ViewRuleUpdater::viewableRuleForSlender);
+        slenderTeam.addPlayer(player);
+    }
+
+    /**
+     * Collects all online players except the slender in a single pass.
+     *
+     * @param slenderPlayer the player to exclude
+     * @return the set of survivor candidates
+     */
+    private static Set<Player> collectSurvivors(Player slenderPlayer) {
+        Set<Player> survivors = new HashSet<>();
+        for (Player player : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
+            if (!player.getUuid().equals(slenderPlayer.getUuid())) {
+                survivors.add(player);
+            }
         }
+        return survivors;
+    }
 
-        Player slenderPlayer = randomPlayer.get();
-        slenderPlayer.setTag(Tags.TEAM_ID, SLENDER_ID);
-        slenderPlayer.updateViewableRule(ViewRuleUpdater::viewableRuleForSlender);
-
-        slenderTeam.addPlayer(slenderPlayer);
-        Set<Player> onlinePlayers = new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers());
-        onlinePlayers.removeIf(player -> player.getUuid().equals(slenderPlayer.getUuid()));
-        survivorTeam.addPlayers(onlinePlayers);
-
-        onlinePlayers.forEach(player -> player.setTag(Tags.TEAM_ID, SURVIVOR_ID));
-
-        return slenderPlayer;
+    /**
+     * Tags the given players as survivors and adds them to the survivor team.
+     *
+     * @param survivors    the players to assign
+     * @param survivorTeam the team to add them to
+     */
+    private static void assignSurvivors(Set<Player> survivors, Team survivorTeam) {
+        survivors.forEach(player -> player.setTag(Tags.TEAM_ID, SURVIVOR_ID));
+        survivorTeam.addPlayers(survivors);
     }
 
     /**
@@ -66,11 +115,9 @@ public final class TeamHelper {
      */
     public static void teleportTeams(TeamService teamService, GameMap gameMap, Instance gameInstance) {
         Team slenderTeam = teamService.getTeams().getFirst();
-
         slenderTeam.getPlayers().forEach(player -> updateInstance(player, gameInstance, gameMap.getSlenderSpawn()));
 
         Team survivorTeam = teamService.getTeams().getLast();
-
         if (gameMap.getSurvivorSpawns().size() == 1) {
             Pos position = gameMap.getSurvivorSpawns().iterator().next();
             survivorTeam.getPlayers().forEach(player -> updateInstance(player, gameInstance, position));

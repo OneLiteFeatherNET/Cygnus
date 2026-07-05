@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.stamina;
 
-import net.theevilreaper.xerus.api.team.Team;
 import net.minestom.server.entity.Player;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
@@ -8,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -59,10 +59,10 @@ public final class StaminaService {
      *
      * @param team the team to get the player from it
      */
-    public void createStaminaBars(Team team) {
+    public void createStaminaBars(Set<Player> team) {
         Check.argCondition(!staminaBars.isEmpty(), "Unable to load stamina bars twice");
-        Check.argCondition(team.getPlayers().isEmpty(), "Can't add players from a team without teams");
-        for (Player player : team.getPlayers()) {
+        Check.argCondition(team.isEmpty(), "Can't add players from a team without teams");
+        for (Player player : team) {
             this.staminaBars.put(player.getUuid(), StaminaFactory.createFoodStamina((CygnusPlayer) player));
         }
     }
