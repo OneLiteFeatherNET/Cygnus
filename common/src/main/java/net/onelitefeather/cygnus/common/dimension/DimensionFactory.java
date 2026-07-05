@@ -2,20 +2,16 @@ package net.onelitefeather.cygnus.common.dimension;
 
 import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.instance.Clock;
-import net.minestom.server.instance.Instance;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.world.DimensionType;
 import net.minestom.server.world.attribute.AmbientParticle;
 import net.minestom.server.world.attribute.EnvironmentAttribute;
-import net.minestom.server.world.clock.WorldClock;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Random;
 
 /**
  * Small factory class to create custom {@link RegistryKey<DimensionType>} instances from custom dimension presets.
@@ -33,7 +29,7 @@ public final class DimensionFactory {
     }
 
     public static void registerAll() {
-        for (DimensionPreset value : DimensionPreset.getValues()) {
+        for (StaticDimensionPreset value : StaticDimensionPreset.getValues()) {
             RegistryKey<DimensionType> dimensionType = create(value);
             LOGGER.info("Registered dimension preset: {}", dimensionType.key());
         }
