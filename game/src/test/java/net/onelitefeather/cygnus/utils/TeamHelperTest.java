@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.utils;
 
 import net.kyori.adventure.key.Key;
+import net.onelitefeather.cygnus.team.TeamHelper;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.kyori.adventure.text.Component;
