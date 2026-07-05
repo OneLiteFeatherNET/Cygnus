@@ -36,6 +36,7 @@ public enum DimensionPreset {
     );*/
 
     DEEP_GREEN(
+            "deep_green",
             new Color(20, 127, 64),
             new Color(20, 127, 64),
             Color.BLACK,
@@ -46,6 +47,7 @@ public enum DimensionPreset {
     ),
 
     DENSE_FOG(
+            "dense_fog",
             new Color(15, 96, 52),
             new Color(18, 105, 60),
             Color.BLACK,
@@ -56,6 +58,7 @@ public enum DimensionPreset {
     ),
 
     COLD_BLUE(
+            "cold_blue",
             new Color(35, 90, 180),
             new Color(70, 140, 255),
             new Color(8, 12, 32),
@@ -66,6 +69,7 @@ public enum DimensionPreset {
     ),
 
     VERY_DARK(
+            "very_dark",
             new Color(6, 24, 18),
             new Color(10, 32, 24),
             Color.BLACK,
@@ -76,6 +80,7 @@ public enum DimensionPreset {
     ),
 
     BRIGHT(
+            "bright",
             new Color(55, 175, 170),
             new Color(100, 220, 220),
             new Color(10, 35, 45),
@@ -86,6 +91,7 @@ public enum DimensionPreset {
     ),
 
     MYSTIC_PURPLE(
+            "mystic_purple",
             new Color(95, 45, 170),
             new Color(150, 90, 255),
             new Color(25, 10, 45),
@@ -96,6 +102,7 @@ public enum DimensionPreset {
     ),
 
     TOXIC_GREEN(
+            "toxic_green",
             new Color(130, 155, 20),
             new Color(180, 210, 40),
             new Color(35, 40, 5),
@@ -106,6 +113,7 @@ public enum DimensionPreset {
     ),
 
     LAVA(
+            "lava",
             new Color(180, 90, 25),
             new Color(255, 170, 80),
             new Color(45, 20, 8),
@@ -116,6 +124,7 @@ public enum DimensionPreset {
     ),
 
     CLEAR_SKY(
+            "clear_sky",
             new Color(30, 70, 120),
             new Color(120, 180, 255),
             new Color(15, 25, 50),
@@ -126,6 +135,7 @@ public enum DimensionPreset {
     ),
 
     DEEP_SEA(
+            "deep_sea",
             new Color(5, 45, 80),
             new Color(20, 80, 140),
             new Color(0, 10, 25),
@@ -136,6 +146,7 @@ public enum DimensionPreset {
     ),
 
     SWAMP(
+            "swamp",
             new Color(45, 85, 40),
             new Color(65, 120, 55),
             new Color(10, 20, 10),
@@ -146,6 +157,7 @@ public enum DimensionPreset {
     ),
 
     MOONLIGHT(
+            "moonlight",
             new Color(60, 90, 170),
             new Color(170, 190, 255),
             new Color(5, 5, 25),
@@ -155,6 +167,9 @@ public enum DimensionPreset {
             128f
     );
 
+    private static final DimensionPreset[] VALUES = values();
+
+    private final String key;
     private final RGBLike fogColor;
     private final RGBLike skyLightColor;
     private final RGBLike skyColor;
@@ -166,6 +181,7 @@ public enum DimensionPreset {
     private final float skyFogEndDistance;
 
     DimensionPreset(
+            String key,
             RGBLike fogColor,
             RGBLike skyLightColor,
             RGBLike skyColor,
@@ -174,6 +190,7 @@ public enum DimensionPreset {
             float fogEndDistance,
             float skyFogEndDistance
     ) {
+        this.key = key;
         this.fogColor = fogColor;
         this.skyLightColor = skyLightColor;
         this.skyColor = skyColor;
@@ -181,6 +198,10 @@ public enum DimensionPreset {
         this.fogStartDistance = fogStartDistance;
         this.fogEndDistance = fogEndDistance;
         this.skyFogEndDistance = skyFogEndDistance;
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public RGBLike fogColor() {
@@ -209,5 +230,14 @@ public enum DimensionPreset {
 
     public float skyFogEndDistance() {
         return skyFogEndDistance;
+    }
+
+    /**
+     * Returns all values from the enumeration from a cached array.
+     *
+     * @return the given values
+     */
+    public static DimensionPreset[] getValues() {
+        return VALUES;
     }
 }

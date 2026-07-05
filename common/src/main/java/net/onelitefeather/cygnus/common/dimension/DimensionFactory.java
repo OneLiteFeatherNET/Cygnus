@@ -10,18 +10,42 @@ import net.minestom.server.world.DimensionType;
 import net.minestom.server.world.attribute.AmbientParticle;
 import net.minestom.server.world.attribute.EnvironmentAttribute;
 import net.minestom.server.world.clock.WorldClock;
+import org.jetbrains.annotations.Contract;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Small factory class to create custom {@link RegistryKey<DimensionType>} instances from custom dimension presets.
+ *
+ * @author Joltra
+ * @version 1.0.0
+ * @since 2.6.6
+ */
 public final class DimensionFactory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DimensionFactory.class);
 
     private DimensionFactory() {
         throw new UnsupportedOperationException();
     }
 
-    private static String s;
+    public static void registerAll() {
+        for (DimensionPreset value : DimensionPreset.getValues()) {
+            RegistryKey<DimensionType> dimensionType = create(value);
+            LOGGER.info("Registered dimension preset: {}", dimensionType.key());
+        }
+    }
 
+    /**
+     * Creates a new dimension type based on the given preset.
+     *
+     * @param preset which should be created
+     * @return the created dimension type
+     */
+    @Contract(value = "_ -> new", pure = true)
     public static RegistryKey<DimensionType> create(DimensionPreset preset) {
         DimensionType type = DimensionType.builder()
                 .setAttribute(EnvironmentAttribute.FOG_START_DISTANCE, preset.fogStartDistance())
@@ -37,9 +61,8 @@ public final class DimensionFactory {
                 ))
                 .setAttribute(EnvironmentAttribute.SUN_ANGLE, 180f)
                 .setAttribute(EnvironmentAttribute.MOON_ANGLE, 180f)
-                .defaultClock(WorldClock.OVERWORLD)
+                .defaultClock(DimensionType.OVERWORLD.asValue().defaultClock())
                 .build();
-        s += "s";
-        return MinecraftServer.getDimensionTypeRegistry().register(Key.key("test", s), type);
+        return MinecraftServer.getDimensionTypeRegistry().register(Key.key("cygnus", preset.getKey()), type);
     }
 }
