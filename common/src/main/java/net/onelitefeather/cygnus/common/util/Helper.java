@@ -1,12 +1,7 @@
 package net.onelitefeather.cygnus.common.util;
 
-import com.google.gson.Gson;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
-import net.onelitefeather.cygnus.common.page.PageResource;
-import net.onelitefeather.cygnus.common.page.adapter.PageResourceAdapter;
-import net.theevilreaper.aves.file.gson.PositionGsonAdapter;
 import org.jetbrains.annotations.Contract;
 
 import java.security.SecureRandom;
@@ -14,7 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.0.1
  * @since 1.0.0
  **/
 public final class Helper {
@@ -33,17 +28,6 @@ public final class Helper {
     private static final int MAX_OFFSET = 30;
     private static final float MIN_SOUND_VALUE = .1f;
     private static final float MAX_SOUND_VALUE = 1.0f;
-
-    public static final Gson GSON;
-
-    static {
-        var typeAdapter = new PositionGsonAdapter();
-        GSON = new Gson().newBuilder()
-                .registerTypeAdapter(Pos.class, typeAdapter)
-                .registerTypeAdapter(Vec.class, typeAdapter)
-                .registerTypeAdapter(PageResource.class, new PageResourceAdapter())
-                .create();
-    }
 
     private Helper() {
     }
