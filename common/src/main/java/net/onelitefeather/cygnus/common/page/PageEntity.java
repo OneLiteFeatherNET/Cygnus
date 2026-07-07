@@ -26,12 +26,13 @@ import java.util.concurrent.CompletableFuture;
  * The entity consists of a visual display and an interaction hitbox to improve pickup detection.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @SuppressWarnings("java:S3252")
-public final class PageEntity extends Entity {
+public final class PageEntity extends Entity implements PageCreator{
 
+    private static final boolean CUSTOM_PAGES = Boolean.parseBoolean(System.getProperty("cygnus.custom_pages", "false"));
     private static final Vec HALF_BLOCK = new Vec(0, 0.5, 0);
     private static final long ADDITION_TIME = 1000L;
     private final Entity hitBox;
@@ -52,7 +53,7 @@ public final class PageEntity extends Entity {
         super(EntityType.ITEM_DISPLAY);
         this.setInstance(instance, spawnPos);
         this.hitBox = new Entity(EntityType.INTERACTION);
-        this.pageItem = ItemStack.builder(Material.PAPER).customName(Component.text("Page: " + pageCount)).build();
+        this.pageItem = createPageItem(CUSTOM_PAGES, pageCount);
         this.ttlTime = Helper.calculateOffsetTime(GameConfig.PAGE_TTL_TIME);
 
         ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) this.getEntityMeta();
