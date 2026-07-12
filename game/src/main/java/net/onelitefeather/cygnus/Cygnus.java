@@ -102,7 +102,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.mapProvider = new GameMapProvider(path);
         this.view = new GameViewImpl();
         this.createTeams(this.gameConfig, this.teamService);
-        this.ambientProvider = new AmbientProvider(this.teamService.getTeams().get(Helper.SLENDER_ID));
+        this.ambientProvider = new AmbientProvider(this.teamService.getTeams().get(Helper.SURVIVOR_ID));
         this.initPhases();
         this.initCommands();
         this.initListener();
