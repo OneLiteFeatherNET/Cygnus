@@ -41,7 +41,7 @@ public final class Helper {
     }
 
     public static int getRandomInt(int maximumValue) {
-        return ThreadLocalRandom.current().nextInt(1, maximumValue);
+        return ThreadLocalRandom.current().nextInt(0, maximumValue);
     }
 
     @Contract(pure = true)
