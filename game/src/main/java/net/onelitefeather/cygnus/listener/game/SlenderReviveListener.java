@@ -31,7 +31,7 @@ public class SlenderReviveListener implements Consumer<SlenderReviveEvent> {
     public void accept(SlenderReviveEvent event) {
         Player player = event.getPlayer();
         staminaService.setSlenderBar(player, true);
-        player.setTag(Tags.GAME_TAG, Helper.SLENDER_ID);
+        player.setTag(Tags.TEAM_ID, Helper.SLENDER_ID);
         player.teleport(gameMap.getSlenderSpawn());
         Items.setSlenderEye(player);
     }
