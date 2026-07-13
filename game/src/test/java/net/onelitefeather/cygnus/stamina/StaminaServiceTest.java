@@ -44,21 +44,6 @@ class StaminaServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    void testSlenderForceStop(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
-
-        assertNull(staminaService.getSlenderBar());
-        staminaService.setSlenderBar(player);
-        assertNotNull(staminaService.getSlenderBar());
-
-        staminaService.forceStopSlenderBar();
-
-        assertNull(staminaService.getSlenderBar());
-        env.destroyInstance(instance, true);
-    }
-
-    @Test
     void testSlenderBarSwitch(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);

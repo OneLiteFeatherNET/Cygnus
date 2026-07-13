@@ -16,6 +16,7 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
+import net.onelitefeather.cygnus.stamina.StaminaService;
 
 import java.util.ArrayList;
 import java.util.function.Consumer;
@@ -43,7 +44,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
 
     private final Supplier<Phase> phaseSupplier;
     private final TeamService teamService;
-    private final Runnable stopSlenderBar;
+    private final StaminaService staminaService;
     private final int maxReviveCount;
     private final int minPlayers;
     private int currentReviveCount = 0;
@@ -53,27 +54,29 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
      *
      * @param phaseSupplier  supplier to retrieve the current active phase
      * @param teamService    service to manage teams
-     * @param stopSlenderBar action to stop the Slender progress bar
+     * @param staminaService service to manage player stamina
      * @param minPlayers     minimum players required for the game
      */
     public PlayerQuitListener(
             Supplier<Phase> phaseSupplier,
             TeamService teamService,
-            Runnable stopSlenderBar,
+            StaminaService staminaService,
             int minPlayers
     ) {
         this.phaseSupplier = phaseSupplier;
         this.teamService = teamService;
-        this.stopSlenderBar = stopSlenderBar;
+        this.staminaService = staminaService;
         this.minPlayers = minPlayers;
         this.maxReviveCount = this.minPlayers - 1;
     }
 
     @Override
     public void accept(PlayerDisconnectEvent event) {
+        Player player = event.getPlayer();
+        this.staminaService.removePlayer(player);
         switch (phaseSupplier.get()) {
-            case LobbyPhase lobbyPhase -> handleLobbyQuit(event.getPlayer(), lobbyPhase);
-            case GamePhase gamePhase -> handleInGameQuit(event.getPlayer(), gamePhase);
+            case LobbyPhase lobbyPhase -> handleLobbyQuit(player, lobbyPhase);
+            case GamePhase gamePhase -> handleInGameQuit(player, gamePhase);
             default -> {
                 // Nothing to do here currently
             }
@@ -109,7 +112,6 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
 
         // If the Slender player disconnected, check if we can revive a replacement
         if (SLENDER_TEAM_NAME.equals(teamName)) {
-            stopSlenderBar.run();
             var survivorSize = teamService.getTeams().get(Helper.SURVIVOR_ID).getCurrentSize();
             boolean canRevive = currentReviveCount < this.maxReviveCount 
                     && gamePhase.getCurrentTicks() >= MINIMUM_SLENDER_RE_CHECK 

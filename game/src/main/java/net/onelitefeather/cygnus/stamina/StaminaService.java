@@ -94,12 +94,19 @@ public final class StaminaService {
     }
 
     /**
-     * Force stops the internal dispatch logic of the bar.
+     * Stops and removes all stamina bars associated with the given player.
+     *
+     * @param player the player whose stamina bars should be removed
      */
-    public void forceStopSlenderBar() {
-        if (this.slenderBar == null) return;
-        this.slenderBar.stop();
-        this.slenderBar = null;
+    public void removePlayer(Player player) {
+        StaminaBar bar = this.staminaBars.remove(player.getUuid());
+        if (bar != null) {
+            bar.stop();
+        }
+        if (this.slenderBar != null && this.slenderBar.player.equals(player)) {
+            this.slenderBar.stop();
+            this.slenderBar = null;
+        }
     }
 
     /**
