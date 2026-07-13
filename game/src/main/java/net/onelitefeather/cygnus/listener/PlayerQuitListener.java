@@ -31,7 +31,7 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.SLENDER_TEAM_NA
  * required player thresholds are no longer met.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  **/
 public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent> {
@@ -71,14 +71,12 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
 
     @Override
     public void accept(PlayerDisconnectEvent event) {
-        Phase phase = phaseSupplier.get();
-        if (phase instanceof LobbyPhase lobbyPhase) {
-            handleLobbyQuit(event.getPlayer(), lobbyPhase);
-            return;
-        }
-
-        if (phase instanceof GamePhase gamePhase) {
-            handleInGameQuit(event.getPlayer(), gamePhase);
+        switch (phaseSupplier.get()) {
+            case LobbyPhase lobbyPhase -> handleLobbyQuit(event.getPlayer(), lobbyPhase);
+            case GamePhase gamePhase -> handleInGameQuit(event.getPlayer(), gamePhase);
+            default -> {
+                // Nothing to do here currently
+            }
         }
     }
 
