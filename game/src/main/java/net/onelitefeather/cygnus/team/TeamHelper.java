@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.team;
 
+import net.onelitefeather.cygnus.common.strategy.TeleportStrategy;
 import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
 import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.xerus.api.team.Team;
@@ -107,23 +108,33 @@ public final class TeamHelper {
     }
 
     /**
-     * Teleport the teams to their spawn points
+     * Teleport the teams to their spawn points using the default round-robin random strategy.
      *
      * @param teamService  the service to get the teams
      * @param gameMap      the map to get the spawn points
      * @param gameInstance the instance to teleport the players
      */
     public static void teleportTeams(TeamService teamService, GameMap gameMap, Instance gameInstance) {
+        TeleportStrategy strategy = gameMap.getSurvivorSpawns().size() == 1
+                ? TeleportStrategy.SINGLE
+                : TeleportStrategy.ROUND_ROBIN_RANDOM;
+        teleportTeams(teamService, gameMap, gameInstance, strategy);
+    }
+
+    /**
+     * Teleport the teams to their spawn points using the specified teleportation strategy.
+     *
+     * @param teamService  the service to get the teams
+     * @param gameMap      the map to get the spawn points
+     * @param gameInstance the instance to teleport the players
+     * @param strategy     the strategy to use for survivor teleportation
+     */
+    public static void teleportTeams(TeamService teamService, GameMap gameMap, Instance gameInstance, TeleportStrategy strategy) {
         Team slenderTeam = teamService.getTeams().getFirst();
         slenderTeam.getPlayers().forEach(player -> updateInstance(player, gameInstance, gameMap.getSlenderSpawn()));
 
         Team survivorTeam = teamService.getTeams().getLast();
-        if (gameMap.getSurvivorSpawns().size() == 1) {
-            Pos position = gameMap.getSurvivorSpawns().iterator().next();
-            survivorTeam.getPlayers().forEach(player -> updateInstance(player, gameInstance, position));
-        }
-
-        //throw new UnsupportedOperationException("Multiple survivor spawns are not supported yet");
+        strategy.teleport(survivorTeam.getPlayers(), gameInstance, gameMap.getSurvivorSpawns());
     }
 
     /**
