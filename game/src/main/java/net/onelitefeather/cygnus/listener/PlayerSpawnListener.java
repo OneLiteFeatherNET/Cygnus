@@ -35,7 +35,6 @@ public final class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
 
         if (phaseSupplier.get() instanceof LobbyPhase lobbyPhase) {
             Broadcaster.broadcast(Messages.getJoinMessage(player));
-            player.setDisplayName(Component.text(player.getUsername()));
             this.spawnSupplier.accept(player);
             lobbyPhase.setLevel(player);
             lobbyPhase.checkStartCondition();
