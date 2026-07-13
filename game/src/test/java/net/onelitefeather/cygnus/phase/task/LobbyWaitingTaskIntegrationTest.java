@@ -32,7 +32,8 @@ class LobbyWaitingTaskIntegrationTest {
         List<ActionBarPacket> packets = packetCollector.collect();
         assertFalse(packets.isEmpty(), "An ActionBarPacket should have been sent to the player.");
 
-        Component lastSentComponent = packets.getLast().components().stream().findFirst().get();
+        Component lastSentComponent = packets.getLast().components().stream().findFirst().orElse(null);
+        assertNotNull(lastSentComponent, "ActionBarPacket should contain a component.");
         String plainText = PlainTextComponentSerializer.plainText().serialize(lastSentComponent);
         assertEquals("Need 1 players to start", plainText, "Action bar text should request 1 more player.");
 
