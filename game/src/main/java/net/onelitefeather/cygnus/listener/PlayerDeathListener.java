@@ -14,7 +14,6 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
 
 import java.util.function.Consumer;
-import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
@@ -22,12 +21,12 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
     private final Component kickMessage = Component.text("Thanks for playing it. <3", NamedTextColor.RED);
     private final Supplier<Phase> phaseSupplier;
     private final Team survivorTeam;
-    private final IntFunction<Team> slenderGetter;
+    private final Team slenderTeam;
 
     public PlayerDeathListener(Supplier<Phase> phaseSupplier, TeamService teamService) {
         this.phaseSupplier = phaseSupplier;
         this.survivorTeam = teamService.getTeams().get(Helper.SURVIVOR_ID);
-        this.slenderGetter = ignore -> teamService.getTeams().getFirst();
+        this.slenderTeam = teamService.getTeams().get(Helper.SLENDER_ID);
     }
 
     @Override
@@ -41,7 +40,7 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
         //TODO: Should be tested
         if (!(currentPhase instanceof GamePhase gamePhase) || !survivorTeam.isEmpty()) return;
         event.setChatMessage(null);
-        var slenderPlayer = this.slenderGetter.apply(0).getPlayers().iterator().next();
+        Player slenderPlayer = this.slenderTeam.getPlayers().iterator().next();
         gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_SURVIVOR_DEAD, slenderPlayer));
         gamePhase.finish();
     }
