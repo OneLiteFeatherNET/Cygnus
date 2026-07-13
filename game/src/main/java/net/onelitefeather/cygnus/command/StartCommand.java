@@ -10,10 +10,10 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 
 /**
- * The command allows to force start the game.
+ * This command allows players to force start the game.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.0.1
  * @since 1.0.0
  **/
 public class StartCommand extends Command {
@@ -21,7 +21,7 @@ public class StartCommand extends Command {
     public StartCommand(LinearPhaseSeries<TimedPhase> timedPhase) {
         super("start");
         Component unableToStart = Messages.withPrefix(
-                Component.text("Unable to start the game because the timer is to low!", NamedTextColor.RED)
+                Component.text("Unable to start the game because the timer is too low!", NamedTextColor.RED)
         );
         addSyntax((sender, context) -> {
             if (!(timedPhase.getCurrentPhase() instanceof LobbyPhase lobbyPhase)) return;
