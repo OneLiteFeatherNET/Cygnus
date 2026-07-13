@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Contract;
  * @since 1.0.0
  * @version 1.0.0
  */
-public abstract class PageFactory {
+public final class PageFactory {
 
     private PageFactory() {}
 

@@ -11,7 +11,7 @@ import net.onelitefeather.cygnus.player.CygnusPlayer;
  * @version 1.0.0
  * @since 1.0.0
  **/
-public abstract class StaminaFactory {
+public final class StaminaFactory {
 
     private StaminaFactory() {
     }
