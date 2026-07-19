@@ -41,7 +41,6 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
         var message = Messages.getSurvivorJoinMessage(String.valueOf(this.pageProvider.getMaxPageAmount()));
         this.teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID).getPlayers().forEach(player -> {
             player.sendMessage(message);
-            player.setTag(Tags.HIDDEN, SlenderBarHelper.VISIBLE);
         });
         TeamHelper.updateTabList(this.teamService);
         PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
