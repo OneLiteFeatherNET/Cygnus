@@ -18,9 +18,6 @@ import net.onelitefeather.cygnus.common.map.GameMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import static net.onelitefeather.cygnus.common.util.Helper.SLENDER_ID;
-import static net.onelitefeather.cygnus.common.util.Helper.SURVIVOR_ID;
-
 /**
  * This class provides utility methods for the team handling in the game.
  *
@@ -29,6 +26,16 @@ import static net.onelitefeather.cygnus.common.util.Helper.SURVIVOR_ID;
  * @since 1.0.0
  */
 public final class TeamHelper {
+
+    /**
+     * The ID representing the Slender team.
+     */
+    public static final byte SLENDER_TEAM_ID = 0;
+
+    /**
+     * The ID representing the Survivor team.
+     */
+    public static final byte SURVIVOR_TEAM_ID = 1;
 
     /**
      * Result of a team allocation, containing the chosen slender player and the resulting survivors.
@@ -75,7 +82,7 @@ public final class TeamHelper {
      * @param slenderTeam the team to add the player to
      */
     private static void assignSlender(Player player, Team slenderTeam) {
-        player.setTag(Tags.TEAM_ID, SLENDER_ID);
+        player.setTag(Tags.TEAM_ID, SLENDER_TEAM_ID);
         player.updateViewableRule(ViewRuleUpdater::viewableRuleForSlender);
         slenderTeam.addPlayer(player);
     }
@@ -103,7 +110,7 @@ public final class TeamHelper {
      * @param survivorTeam the team to add them to
      */
     private static void assignSurvivors(Set<Player> survivors, Team survivorTeam) {
-        survivors.forEach(player -> player.setTag(Tags.TEAM_ID, SURVIVOR_ID));
+        survivors.forEach(player -> player.setTag(Tags.TEAM_ID, SURVIVOR_TEAM_ID));
         survivorTeam.addPlayers(survivors);
     }
 
@@ -171,7 +178,8 @@ public final class TeamHelper {
      * @return true if the player is in the slender team
      */
     public static boolean isSlenderTeam(Player player) {
-        return player.getTag(Tags.TEAM_ID) == SLENDER_ID;
+        Byte teamId = player.getTag(Tags.TEAM_ID);
+        return teamId != null && teamId == SLENDER_TEAM_ID;
     }
 
     /**
@@ -181,7 +189,8 @@ public final class TeamHelper {
      * @return true if the player is in the survivor team
      */
     public static boolean isSurvivorTeam(Player player) {
-        return player.getTag(Tags.TEAM_ID) == SURVIVOR_ID;
+        Byte teamId = player.getTag(Tags.TEAM_ID);
+        return teamId != null && teamId == SURVIVOR_TEAM_ID;
     }
 
     /**

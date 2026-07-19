@@ -9,9 +9,9 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
-import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
+import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -25,8 +25,8 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
 
     public PlayerDeathListener(Supplier<Phase> phaseSupplier, TeamService teamService) {
         this.phaseSupplier = phaseSupplier;
-        this.survivorTeam = teamService.getTeams().get(Helper.SURVIVOR_ID);
-        this.slenderTeam = teamService.getTeams().get(Helper.SLENDER_ID);
+        this.survivorTeam = teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID);
+        this.slenderTeam = teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID);
     }
 
     @Override

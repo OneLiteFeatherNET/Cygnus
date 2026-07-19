@@ -11,12 +11,12 @@ import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
-import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.stamina.StaminaService;
+import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.ArrayList;
 import java.util.function.Consumer;
@@ -112,7 +112,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
 
         // If the Slender player disconnected, check if we can revive a replacement
         if (SLENDER_TEAM_NAME.equals(teamName)) {
-            var survivorSize = teamService.getTeams().get(Helper.SURVIVOR_ID).getCurrentSize();
+            var survivorSize = teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID).getCurrentSize();
             boolean canRevive = currentReviveCount < this.maxReviveCount 
                     && gamePhase.getCurrentTicks() >= MINIMUM_SLENDER_RE_CHECK 
                     && survivorSize > this.minPlayers;
@@ -126,11 +126,11 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
 
             // Perform Slender revival logic
             ++currentReviveCount;
-            var survivorTeam = teamService.getTeams().get(Helper.SURVIVOR_ID);
+            var survivorTeam = teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID);
             var randomPlayer = Players.getRandomPlayer(new ArrayList<>(survivorTeam.getPlayers())).get();
 
             survivorTeam.removePlayer(randomPlayer);
-            teamService.getTeams().get(Helper.SLENDER_ID).addPlayer(randomPlayer);
+            teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID).addPlayer(randomPlayer);
 
             EventDispatcher.call(new SlenderReviveEvent(randomPlayer));
             return;
@@ -138,7 +138,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
 
         // If a survivor disconnected, check if there are any survivors left
         if (!team.getPlayers().isEmpty()) return;
-        Team slenderTeam = teamService.getTeams().get(Helper.SLENDER_ID);
+        Team slenderTeam = teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID);
         if (slenderTeam.isEmpty()) return;
         Player slenderPlayer = slenderTeam.getPlayers().iterator().next();
         

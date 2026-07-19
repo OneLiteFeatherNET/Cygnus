@@ -17,30 +17,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Helper {
 
     /**
-     * Constant byte representing the value zero.
-     */
-    public static final byte ZERO_ID = 0;
-
-    /**
-     * Constant byte representing the value one.
-     */
-    public static final byte ONE_ID = 1;
-
-    /**
-     * The ID representing the Slender team.
-     * @deprecated Use {@link #ZERO_ID} or team configurations instead.
-     */
-    @Deprecated
-    public static final byte SLENDER_ID = 0;
-
-    /**
-     * The ID representing the Survivor team.
-     * @deprecated Use {@link #ONE_ID} or team configurations instead.
-     */
-    @Deprecated
-    public static final byte SURVIVOR_ID = 1;
-
-    /**
      * Minecraft time value representing midnight (18000 ticks).
      */
     public static final long MIDNIGHT_TIME = 18000L;

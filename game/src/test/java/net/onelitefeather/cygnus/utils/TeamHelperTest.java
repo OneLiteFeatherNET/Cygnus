@@ -18,7 +18,6 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
 import net.onelitefeather.cygnus.common.map.GameMap;
-import net.onelitefeather.cygnus.common.util.Helper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -188,14 +187,14 @@ class TeamHelperTest {
 
     @Test
     void testIsInSlenderTeam() {
-        player.setTag(Tags.TEAM_ID, Helper.SLENDER_ID);
+        player.setTag(Tags.TEAM_ID, TeamHelper.SLENDER_TEAM_ID);
         assertTrue(TeamHelper.isSlenderTeam(player));
         assertFalse(TeamHelper.isSurvivorTeam(player));
     }
 
     @Test
     void testIsInSurvivorTeam() {
-        player.setTag(Tags.TEAM_ID, Helper.SURVIVOR_ID);
+        player.setTag(Tags.TEAM_ID, TeamHelper.SURVIVOR_TEAM_ID);
         assertFalse(TeamHelper.isSlenderTeam(player));
         assertTrue(TeamHelper.isSurvivorTeam(player));
     }

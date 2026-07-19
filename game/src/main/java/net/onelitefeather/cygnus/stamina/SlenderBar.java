@@ -6,7 +6,6 @@ import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.Tags;
-import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 
@@ -64,7 +63,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
         }
         state = State.REGENERATING;
         colorState = StaminaColors.REGENERATING;
-        player.setTag(Tags.HIDDEN, Helper.ONE_ID);
+        player.setTag(Tags.HIDDEN, HIDDEN);
         EventDispatcher.call(new StaminaStateChangeEvent(player, state));
         this.applyNightVision(player);
         player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1f);
@@ -91,7 +90,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
             case READY -> {
                 state = State.DRAINING;
                 colorState = StaminaColors.DRAINING;
-                player.setTag(Tags.HIDDEN, Helper.ONE_ID);
+                player.setTag(Tags.HIDDEN, HIDDEN);
                 this.applyBlindness(player);
                 player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.0669);
                 player.sendSpringPackets();
@@ -102,7 +101,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
             case REGENERATING -> {
                 state = State.DRAINING;
                 colorState = StaminaColors.DRAINING;
-                player.setTag(Tags.HIDDEN, Helper.ONE_ID);
+                player.setTag(Tags.HIDDEN, HIDDEN);
                 this.playSpawnSound(player.getInstance(), player.getPosition(), player.getUuid());
                 this.applyBlindness(player);
                 player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.0669);
@@ -114,7 +113,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
             case DRAINING -> {
                 state = State.REGENERATING;
                 colorState = StaminaColors.REGENERATING;
-                player.setTag(Tags.HIDDEN, Helper.ZERO_ID);
+                player.setTag(Tags.HIDDEN, VISIBLE);
                 this.playTeleportSound(player.getInstance(), player.getPosition(), player.getUuid());
                 this.applyNightVision(player);
                 player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1f);

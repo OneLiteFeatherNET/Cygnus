@@ -23,7 +23,10 @@ import java.util.function.BiPredicate;
  * @since 1.0.0
  */
 @SuppressWarnings({"java:S3252"})
-interface SlenderBarHelper {
+public interface SlenderBarHelper {
+
+    byte VISIBLE = 0;
+    byte HIDDEN = 1;
 
     Sound TELEPORT = Sound.sound(SoundEvent.ENTITY_ENDERMAN_TELEPORT, Sound.Source.MASTER, 1F, 0.2F);
     Sound SPAWN = Sound.sound(SoundEvent.ENTITY_WITHER_SPAWN, Sound.Source.MASTER, 0.4F, 0F);
