@@ -31,7 +31,7 @@ public interface TeamCreator {
                 gameConfig.slenderTeamSize()
         );
         slenderTeam.add(ColorComponent.class, new ColorComponent(ColorData.BLACK));
-        slenderTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
+        slenderTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SLENDER_TEAM_NAME));
 
         teamService.add(slenderTeam);
 
