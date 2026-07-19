@@ -24,42 +24,15 @@ record InternalGameConfig(
         int survivorTeamSize
 ) implements GameConfig {
 
+    private static final GameConfig DEFAULT = new InternalGameConfig(2, 13, 30, 900, 1, 12);
+
     /**
      * Returns the default configuration for the game.
      *
      * @return the default configuration
      */
     public static GameConfig defaultConfig() {
-        return Instances.INTERNAL;
-    }
-
-    /**
-     * Holds the reference to the default configuration instance.
-     */
-    static final class Instances {
-        private static final int MAX_GAME_TIME = 900;
-        private static final int LOBBY_PHASE_TIME = 30;
-        private static final int MAX_PLAYERS = 13;
-        private static final int MIN_PLAYERS = 2;
-        private static final int SLENDER_TEAM_SIZE = 1;
-        private static final int SURVIVOR_TEAM_SIZE = 12;
-
-        static final GameConfig INTERNAL;
-
-        static {
-            INTERNAL = new InternalGameConfig(
-                    MIN_PLAYERS,
-                    MAX_PLAYERS,
-                    LOBBY_PHASE_TIME,
-                    MAX_GAME_TIME,
-                    SLENDER_TEAM_SIZE,
-                    SURVIVOR_TEAM_SIZE
-            );
-        }
-
-        private Instances() {
-            throw new UnsupportedOperationException("This class cannot be instantiated");
-        }
+        return DEFAULT;
     }
 }
 

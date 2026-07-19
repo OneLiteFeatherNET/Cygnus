@@ -75,48 +75,26 @@ public final class GameConfigReader {
         GameConfig internal = InternalGameConfig.defaultConfig();
         GameConfig.Builder configBuilder = GameConfig.builder();
 
-        int minPlayers = internal.minPlayers();
-        if (properties.containsKey("minPlayers")) {
-            minPlayers = Integer.parseInt(properties.getProperty("minPlayers"));
-        }
-
-        int maxPlayers = internal.maxPlayers();
-
-        if (properties.containsKey("maxPlayers")) {
-            maxPlayers = Integer.parseInt(properties.getProperty("maxPlayers"));
-        }
-
-        int lobbyTime = internal.lobbyTime();
-
-        if (properties.containsKey("lobbyTime")) {
-            lobbyTime = Integer.parseInt(properties.getProperty("lobbyTime"));
-        }
-
-        int maxGameTime = internal.gameTime();
-
-        if (properties.containsKey("gameTime")) {
-            maxGameTime = Integer.parseInt(properties.getProperty("gameTime"));
-        }
-
-        int survivorTeamSize = internal.survivorTeamSize();
-
-        if (properties.containsKey("survivorTeamSize")) {
-            survivorTeamSize = Integer.parseInt(properties.getProperty("survivorTeamSize"));
-        }
-
-        int slenderTeamSize = internal.slenderTeamSize();
-
-        if (properties.containsKey("slenderTeamSize")) {
-            slenderTeamSize = Integer.parseInt(properties.getProperty("slenderTeamSize"));
-        }
-
-        configBuilder.minPlayers(minPlayers)
-                .maxPlayers(maxPlayers)
-                .lobbyTime(lobbyTime)
-                .gameTime(maxGameTime)
-                .survivorTeamSize(survivorTeamSize)
-                .slenderTeamSize(slenderTeamSize);
+        configBuilder.minPlayers(getInt(properties, "minPlayers", internal.minPlayers()))
+                .maxPlayers(getInt(properties, "maxPlayers", internal.maxPlayers()))
+                .lobbyTime(getInt(properties, "lobbyTime", internal.lobbyTime()))
+                .gameTime(getInt(properties, "gameTime", internal.gameTime()))
+                .survivorTeamSize(getInt(properties, "survivorTeamSize", internal.survivorTeamSize()))
+                .slenderTeamSize(getInt(properties, "slenderTeamSize", internal.slenderTeamSize()));
 
         return configBuilder.build();
+    }
+
+    private int getInt(Properties properties, String key, int defaultValue) {
+        String value = properties.getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException exception) {
+            CONFIG_LOGGER.warn("Failed to parse integer config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
+            return defaultValue;
+        }
     }
 }

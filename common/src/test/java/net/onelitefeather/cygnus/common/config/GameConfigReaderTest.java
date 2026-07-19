@@ -32,4 +32,23 @@ class GameConfigReaderTest {
         assertEquals(1, gameConfig.slenderTeamSize());
         assertEquals(12, gameConfig.survivorTeamSize());
     }
+
+    @Test
+    void testInvalidConfigReadFallback(@org.junit.jupiter.api.io.TempDir Path tempDir) throws java.io.IOException {
+        Path configFile = tempDir.resolve("config.properties");
+
+        // Write invalid/malformed values alongside valid ones
+        Files.writeString(configFile, "minPlayers=not-an-integer\nmaxPlayers=15\nlobbyTime=abc\n");
+
+        GameConfigReader reader = new GameConfigReader(tempDir);
+        GameConfig config = reader.getConfig();
+
+        assertNotNull(config);
+        // "minPlayers" was invalid, should fall back to default (2)
+        assertEquals(2, config.minPlayers());
+        // "maxPlayers" was valid, should parse correctly (15)
+        assertEquals(15, config.maxPlayers());
+        // "lobbyTime" was invalid, should fall back to default (30)
+        assertEquals(30, config.lobbyTime());
+    }
 }
