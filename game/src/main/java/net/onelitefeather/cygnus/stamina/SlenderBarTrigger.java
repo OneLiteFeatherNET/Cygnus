@@ -6,7 +6,6 @@ import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
 import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.Tags;
-import net.onelitefeather.cygnus.common.util.Helper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -68,7 +67,8 @@ public final class SlenderBarTrigger {
      * @param player the player to change the visibility status
      */
     private void changeVisibilityStatus(Player player) {
-        byte currentValue = player.getTag(Tags.HIDDEN);
-        player.setTag(Tags.HIDDEN, currentValue == Helper.ZERO_ID ? Helper.ONE_ID : Helper.ZERO_ID);
+        Byte value = player.getTag(Tags.HIDDEN);
+        byte currentValue = value != null ? value : SlenderBarHelper.VISIBLE;
+        player.setTag(Tags.HIDDEN, currentValue == SlenderBarHelper.VISIBLE ? SlenderBarHelper.HIDDEN : SlenderBarHelper.VISIBLE);
     }
 }
