@@ -8,7 +8,7 @@ import net.minestom.server.event.trait.PlayerEvent;
  *
  * @author theEvilReaper
  * @version 1.0.0
- * @since 1.0.0
+ * @since 2.6.6
  **/
 @SuppressWarnings("java:S6206")
 public final class SlenderVisibilityChangeEvent implements PlayerEvent {
