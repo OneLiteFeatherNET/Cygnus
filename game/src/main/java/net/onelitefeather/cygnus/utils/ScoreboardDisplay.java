@@ -10,7 +10,7 @@ import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.scoreboard.TeamBuilder;
 import net.minestom.server.scoreboard.TeamManager;
 import net.onelitefeather.cygnus.common.config.GameConfig;
-import net.onelitefeather.cygnus.common.util.Helper;
+import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.List;
 
@@ -77,6 +77,6 @@ public final class ScoreboardDisplay {
      * @return the team name
      */
     private String getTeamName(byte teamId) {
-        return teamId == Helper.SLENDER_ID ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
+        return teamId == TeamHelper.SLENDER_TEAM_ID ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
     }
 }
