@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.team;
 
+import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.common.strategy.TeleportStrategy;
 import net.onelitefeather.cygnus.event.SlenderVisibilityChangeEvent;
 import net.theevilreaper.aves.util.Players;
@@ -83,7 +84,7 @@ public final class TeamHelper {
      */
     private static void assignSlender(Player player, Team slenderTeam) {
         player.setTag(Tags.TEAM_ID, SLENDER_TEAM_ID);
-        MinecraftServer.getGlobalEventHandler().call(new SlenderVisibilityChangeEvent(player, false));
+        EventDispatcher.call(new SlenderVisibilityChangeEvent(player, false));
         slenderTeam.addPlayer(player);
     }
 

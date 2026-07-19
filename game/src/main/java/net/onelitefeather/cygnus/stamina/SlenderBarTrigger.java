@@ -1,8 +1,8 @@
 package net.onelitefeather.cygnus.stamina;
 
+import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.kyori.adventure.sound.Sound;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.Tags;
@@ -68,6 +68,6 @@ public final class SlenderBarTrigger {
         byte currentValue = value != null ? value : SlenderBarHelper.VISIBLE;
         byte newValue = currentValue == SlenderBarHelper.VISIBLE ? SlenderBarHelper.HIDDEN : SlenderBarHelper.VISIBLE;
         player.setTag(Tags.HIDDEN, newValue);
-        MinecraftServer.getGlobalEventHandler().call(new SlenderVisibilityChangeEvent(player, newValue == SlenderBarHelper.HIDDEN));
+        EventDispatcher.call(new SlenderVisibilityChangeEvent(player, newValue == SlenderBarHelper.HIDDEN));
     }
 }
