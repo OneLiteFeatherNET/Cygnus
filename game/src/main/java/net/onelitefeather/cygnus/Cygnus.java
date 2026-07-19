@@ -180,7 +180,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.pageProvider.cleanUp();
         this.staminaService.cleanUp();
         this.ambientProvider.stopTask();
-        this.staminaService.cleanUp();
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, EntityActionListener::listener);
     }
 
