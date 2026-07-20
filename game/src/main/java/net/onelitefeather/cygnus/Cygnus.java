@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus;
 
+import net.minestom.server.event.GlobalEventHandler;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.listener.game.GameStartListener;
@@ -26,6 +27,7 @@ import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
+import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
@@ -36,7 +38,6 @@ import net.onelitefeather.cygnus.common.config.GameConfigReader;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageEvent;
-import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
@@ -141,23 +142,23 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
 
     private void registerGameListener() {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
-        var manager = MinecraftServer.getGlobalEventHandler();
+        GlobalEventHandler handler = MinecraftServer.getGlobalEventHandler();
 
         SlenderBarTrigger trigger = new SlenderBarTrigger(this.staminaService::getSlenderBar, this::triggerViewRuleUpdate);
-        new SlenderItemListener(trigger, manager);
-        manager.addListener(GameFinishEvent.class, new GameFinishListener());
-        manager.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider));
-        manager.addListener(PlayerDeathEvent.class, new PlayerDeathListener(phaseSupplier, this.teamService));
-        manager.addListener(PlayerEntityInteractEvent.class, new PlayerPageInteractListener(this.pageProvider));
-        manager.addListener(PageEvent.class, new GamePageListener(this.pageProvider));
-        manager.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
-        manager.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
-        manager.addListener(
+        handler.addListener(PlayerUseItemEvent.class, new SlenderItemListener(trigger));
+        handler.addListener(GameFinishEvent.class, new GameFinishListener());
+        handler.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider));
+        handler.addListener(PlayerDeathEvent.class, new PlayerDeathListener(phaseSupplier, this.teamService));
+        handler.addListener(PlayerEntityInteractEvent.class, new PlayerPageInteractListener(this.pageProvider));
+        handler.addListener(PageEvent.class, new GamePageListener(this.pageProvider));
+        handler.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
+        handler.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
+        handler.addListener(
                 SlenderReviveEvent.class, new SlenderReviveListener(((GameMapProvider) this.mapProvider).getGameMap(), this.staminaService));
-        manager.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
-        manager.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
-        manager.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
-        manager.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));
+        handler.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
+        handler.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
+        handler.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
+        handler.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
     }
 

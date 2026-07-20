@@ -1,31 +1,33 @@
 package net.onelitefeather.cygnus.listener.game;
 
 import net.minestom.server.entity.Player;
-import net.minestom.server.event.Event;
-import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerUseItemEvent;
-import net.minestom.server.event.trait.ItemEvent;
 import net.minestom.server.item.ItemStack;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.team.TeamHelper;
 
-public final class SlenderItemListener {
+import java.util.function.Consumer;
+
+public final class SlenderItemListener implements Consumer<PlayerUseItemEvent> {
 
     private final SlenderBarTrigger barTrigger;
 
-    public SlenderItemListener(SlenderBarTrigger barTrigger, EventNode<Event> eventNode) {
+    public SlenderItemListener(SlenderBarTrigger barTrigger) {
         this.barTrigger = barTrigger;
-        eventNode.addListener(PlayerUseItemEvent.class, event -> trigger(event.getPlayer(), event));
     }
 
-    private void trigger(Player player, ItemEvent event) {
+    @Override
+    public void accept(PlayerUseItemEvent event) {
+        Player player = event.getPlayer();
         ItemStack stack = event.getItemStack();
+        
         if (!stack.hasTag(Tags.ITEM_TAG)) return;
-        byte tagValue = stack.getTag(Tags.ITEM_TAG);
+        Byte tagValue = stack.getTag(Tags.ITEM_TAG);
 
-        if (tagValue != 0) return;
+        if (tagValue == null || tagValue != 0) return;
         if (!TeamHelper.isSlenderTeam(player)) return;
+        
         barTrigger.trigger(player);
     }
 }
