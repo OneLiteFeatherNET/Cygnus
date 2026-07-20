@@ -1,17 +1,15 @@
 package net.onelitefeather.cygnus.phase;
 
+import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.Player;
+import net.minestom.server.network.ConnectionManager;
 import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
+import net.onelitefeather.cygnus.phase.task.LobbyWaitingTask;
 import net.theevilreaper.xerus.api.phase.TickDirection;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.minestom.server.MinecraftServer;
-import net.minestom.server.entity.Player;
-import net.minestom.server.network.ConnectionManager;
-import net.minestom.server.timer.Task;
 
 import java.time.temporal.ChronoUnit;
 
@@ -19,31 +17,31 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIM
 
 /**
  * Represents the lobby phase of the game.
- *
- * <p>During this phase the game waits until enough players joined to start the
+ * <p>
+ * During this phase, the game waits until enough players have joined to start the
  * match countdown. The phase updates the player level and experience bar to
- * visualize the remaining time until the game starts.</p>
- *
- * <p>The phase can be paused automatically if the required player count is not
- * reached anymore. It also supports force starting the game with a reduced
- * countdown duration.</p>
- *
- * <p>While the countdown is running, the game map loading and stamina
- * initialization are triggered at specific countdown timestamps.</p>
+ * visualize the remaining time until the game starts, and manages the action bar
+ * waiting display using a tick-aligned scheduler.
+ * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class LobbyPhase extends TimedPhase {
 
     private static final ConnectionManager CONNECTION_MANAGER = MinecraftServer.getConnectionManager();
-    private final Task waitingTask;
+
     private final int lobbyTime;
     private final int minPlayers;
+    private final LobbyWaitingTask waitingDisplay;
     private boolean forceStarted;
-    private Component displayComponent;
 
+    /**
+     * Constructs a new LobbyPhase.
+     *
+     * @param gameConfig the configuration settings for the game
+     */
     public LobbyPhase(GameConfig gameConfig) {
         super("Lobby", ChronoUnit.SECONDS, 1);
         this.lobbyTime = gameConfig.lobbyTime();
@@ -51,39 +49,44 @@ public final class LobbyPhase extends TimedPhase {
         this.setPaused(true);
         this.setCurrentTicks(lobbyTime);
         this.setTickDirection(TickDirection.DOWN);
-        this.updateComponent();
-        this.waitingTask = MinecraftServer.getSchedulerManager().buildTask(() -> {
-            if (isPaused() || isFinished() || CONNECTION_MANAGER.getOnlinePlayers().isEmpty())
-                return;
-            CONNECTION_MANAGER.getOnlinePlayers().forEach(
-                    player -> player.sendActionBar(this.displayComponent)
-            );
-        }).repeat(30, ChronoUnit.SECONDS).schedule();
+
+        // Instantiate the waiting display only once during initialization
+        this.waitingDisplay = new LobbyWaitingTask(this.minPlayers);
+        this.waitingDisplay.update(CONNECTION_MANAGER.getOnlinePlayers().size());
     }
 
-    private void updateComponent() {
-        int playerDifference = Math.max(0, this.minPlayers - CONNECTION_MANAGER.getOnlinePlayers().size());
-        this.displayComponent = Component.text("Need", NamedTextColor.GRAY)
-                .append(Component.space())
-                .append(Component.text(playerDifference, NamedTextColor.RED))
-                .append(Component.space())
-                .append(Component.text("players to start", NamedTextColor.GRAY));
-    }
-
+    /**
+     * Checks if the start condition is met.
+     * If the online player count reaches the minimum requirement, the countdown starts
+     * and the waiting action bar display is stopped.
+     */
     public void checkStartCondition() {
-        this.updateComponent();
-        if (isPaused() && CONNECTION_MANAGER.getOnlinePlayers().size() >= this.minPlayers) {
+        int onlineCount = CONNECTION_MANAGER.getOnlinePlayers().size();
+
+        if (isPaused() && onlineCount >= this.minPlayers) {
             this.setPaused(false);
+            this.waitingDisplay.stop(); // Stop the loop, but keep the final object
+        } else {
+            this.waitingDisplay.update(onlineCount);
         }
     }
 
+    /**
+     * Checks if the countdown should stop when players leave the server.
+     * Re-activates the waiting display if the player count drops below the requirement.
+     */
     public void checkStopCondition() {
-        if (waitingTask.isAlive() && CONNECTION_MANAGER.getOnlinePlayers().size() - 1 <= this.minPlayers) {
+        int onlineCount = CONNECTION_MANAGER.getOnlinePlayers().size();
+
+        if (onlineCount - 1 < this.minPlayers) {
             this.setPaused(true);
-            this.updateComponent();
             this.setCurrentTicks(this.lobbyTime);
             this.forceStarted = false;
-            setLevel();
+            this.setLevel();
+
+            // Simply restart the existing display instead of allocating a new one
+            this.waitingDisplay.start();
+            this.waitingDisplay.update(onlineCount);
         }
     }
 
@@ -95,7 +98,7 @@ public final class LobbyPhase extends TimedPhase {
 
     @Override
     protected void onFinish() {
-        this.waitingTask.cancel();
+        this.waitingDisplay.stop(); // Stop the tick-aligned loop
     }
 
     @Override
@@ -113,14 +116,20 @@ public final class LobbyPhase extends TimedPhase {
 
     /**
      * Checks if the player requirements are met.
-     * If the player requirements are not met, the phase will be paused.
+     * Re-creates the display if the player count drops below the threshold.
      */
     public void checkPlayerRequirements() {
-        if (CONNECTION_MANAGER.getOnlinePlayers().size() - 1 < this.minPlayers) {
+        int onlineCount = CONNECTION_MANAGER.getOnlinePlayers().size();
+
+        if (onlineCount - 1 < this.minPlayers) {
             this.setPaused(true);
             this.setForceStarted(false);
             this.setCurrentTicks(this.lobbyTime);
             this.setLevel(this.lobbyTime);
+
+            // Simply restart the existing display instead of allocating a new one
+            this.waitingDisplay.start();
+            this.waitingDisplay.update(onlineCount);
         }
     }
 
@@ -129,11 +138,9 @@ public final class LobbyPhase extends TimedPhase {
     }
 
     /**
-     * Sets the level for all online players.
-     * The level is calculated by the current ticks.
-     * The experience is calculated by the current ticks divided by the lobby phase time.
+     * Sets the level and XP progress for all online players.
      *
-     * @param amount the amount of the level
+     * @param amount the current countdown level
      */
     private void setLevel(int amount) {
         if (amount < 0) return;
@@ -146,25 +153,36 @@ public final class LobbyPhase extends TimedPhase {
     }
 
     /**
-     * Sets the level for the given player.
+     * Sets the level for a specific player (typically called on join).
+     * Also immediately sends the waiting action bar if the lobby is paused.
      *
-     * @param player the player to set the level
+     * @param player the player to set the level for
      */
     public void setLevel(Player player) {
         if (getCurrentTicks() < 0) return;
         player.setLevel(getCurrentTicks());
         player.setExp(getCurrentTicks() / (float) this.lobbyTime);
+
+        // Immediately send the action bar to the newly spawned player
+        if (isPaused()) {
+            this.waitingDisplay.send(player);
+        }
     }
 
     /**
      * Returns if the phase was force started.
      *
-     * @return True if the phase was force started otherwise false
+     * @return true if the phase was force started, otherwise false
      */
     public boolean isForceStarted() {
         return forceStarted;
     }
 
+    /**
+     * Sets whether the phase is force started.
+     *
+     * @param forceStarted true to force start, otherwise false
+     */
     public void setForceStarted(boolean forceStarted) {
         if (forceStarted) {
             this.setCurrentTicks(FORCE_START_TIME);
