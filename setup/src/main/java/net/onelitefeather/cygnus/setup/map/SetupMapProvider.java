@@ -18,7 +18,7 @@ public final class SetupMapProvider extends AbstractMapProvider {
         this.loadMapEntries(path.resolve("maps"));
 
         Optional<MapEntry> lobbyOptional = this.mapEntries.stream().filter(MapEntry::hasMapFile)
-                .filter(mapEntry -> mapEntry.getDirectoryRoot().equals("lobby"))
+                .filter(mapEntry -> mapEntry.getDirectoryRoot().getFileName().toString().equals("lobby"))
                 .findAny();
 
         if (lobbyOptional.isEmpty()) {
