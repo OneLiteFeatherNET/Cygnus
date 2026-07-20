@@ -1,11 +1,12 @@
 package net.onelitefeather.cygnus.stamina;
 
+import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.team.TeamHelper;
-import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
 import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.event.SlenderVisibilityChangeEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -25,7 +26,6 @@ public final class SlenderBarTrigger {
     private static final Sound ABORT_SOUND = Sound.sound(SoundEvent.ENTITY_ITEM_BREAK, Sound.Source.MASTER, 1F, 0F);
 
     private final Supplier<@Nullable StaminaBar> slenderBarSupplier;
-    private final PlayerConsumer updateRuneFunction;
 
     private long lastSoundTimeStamp = 0;
 
@@ -33,11 +33,9 @@ public final class SlenderBarTrigger {
      * Creates a new instance of this class.
      *
      * @param slenderBarSupplier the supplier to get the {@link SlenderBar}
-     * @param updateRuneFunction the function to update the rune status
      */
-    public SlenderBarTrigger(Supplier<@Nullable StaminaBar> slenderBarSupplier, PlayerConsumer updateRuneFunction) {
+    public SlenderBarTrigger(Supplier<@Nullable StaminaBar> slenderBarSupplier) {
         this.slenderBarSupplier = slenderBarSupplier;
-        this.updateRuneFunction = updateRuneFunction;
     }
 
     /**
@@ -57,7 +55,6 @@ public final class SlenderBarTrigger {
         lastSoundTimeStamp = System.currentTimeMillis() + COOLDOWN_TIME;
         if (slenderBar.changeStatus()) {
             this.changeVisibilityStatus(player);
-            this.updateRuneFunction.accept(player);
         }
     }
 
@@ -69,6 +66,8 @@ public final class SlenderBarTrigger {
     private void changeVisibilityStatus(Player player) {
         Byte value = player.getTag(Tags.HIDDEN);
         byte currentValue = value != null ? value : SlenderBarHelper.VISIBLE;
-        player.setTag(Tags.HIDDEN, currentValue == SlenderBarHelper.VISIBLE ? SlenderBarHelper.HIDDEN : SlenderBarHelper.VISIBLE);
+        byte newValue = currentValue == SlenderBarHelper.VISIBLE ? SlenderBarHelper.HIDDEN : SlenderBarHelper.VISIBLE;
+        player.setTag(Tags.HIDDEN, newValue);
+        EventDispatcher.call(new SlenderVisibilityChangeEvent(player, newValue == SlenderBarHelper.HIDDEN));
     }
 }

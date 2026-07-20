@@ -1,7 +1,8 @@
 package net.onelitefeather.cygnus.team;
 
+import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.common.strategy.TeleportStrategy;
-import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
+import net.onelitefeather.cygnus.event.SlenderVisibilityChangeEvent;
 import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
@@ -83,7 +84,7 @@ public final class TeamHelper {
      */
     private static void assignSlender(Player player, Team slenderTeam) {
         player.setTag(Tags.TEAM_ID, SLENDER_TEAM_ID);
-        player.updateViewableRule(ViewRuleUpdater::viewableRuleForSlender);
+        EventDispatcher.call(new SlenderVisibilityChangeEvent(player, false));
         slenderTeam.addPlayer(player);
     }
 
