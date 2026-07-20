@@ -25,7 +25,8 @@ public final class InstanceAddListener implements Consumer<AddEntityToInstanceEv
         if (event.getInstance().getUuid().equals(mainInstanceID)) return;
 
         MinecraftServer.getSchedulerManager().scheduleNextTick(() -> {
-            int modeId = player.getTag(SetupTags.SETUP_ID_TAG).byteValue();
+            Integer modeTag = player.getTag(SetupTags.SETUP_ID_TAG);
+            int modeId = modeTag != null ? modeTag : -1;
             if (modeId == 0) {
                 SetupItems.setLobbyLayout(player);
                 return;
