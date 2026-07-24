@@ -6,8 +6,6 @@ import net.minestom.server.event.instance.AddEntityToInstanceEvent;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.function.Consumer;
 

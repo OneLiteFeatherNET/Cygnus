@@ -6,7 +6,6 @@ import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.function.Consumer;
 
 public final class GameViewImpl implements GameView {

@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.setup.listener;
 
-import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.onelitefeather.cygnus.setup.data.GameData;
@@ -13,10 +12,10 @@ import java.util.function.Consumer;
 
 public class SpawnCreationListener implements Consumer<PlayerBlockBreakEvent> {
 
-    private final SetupDataService setupData;
+    private final SetupDataService setupService;
 
-    public SpawnCreationListener(SetupDataService setupData) {
-        this.setupData = setupData;
+    public SpawnCreationListener(SetupDataService setupService) {
+        this.setupService = setupService;
     }
 
     @Override
@@ -27,7 +26,7 @@ public class SpawnCreationListener implements Consumer<PlayerBlockBreakEvent> {
 
         if (!player.hasTag(SetupTags.SETUP_ID_TAG)) return;
 
-        SetupData setupData = this.setupData.get(player.getUuid()).orElse(null);
+        SetupData setupData = this.setupService.get(player.getUuid()).orElse(null);
 
         if (setupData == null) return;
 

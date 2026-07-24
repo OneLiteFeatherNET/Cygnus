@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.utils;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
-import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 
 
