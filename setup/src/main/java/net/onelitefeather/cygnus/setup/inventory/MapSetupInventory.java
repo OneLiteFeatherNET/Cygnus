@@ -2,8 +2,8 @@ package net.onelitefeather.cygnus.setup.inventory;
 
 import net.minestom.server.inventory.click.Click;
 import net.theevilreaper.aves.inventory.GlobalInventoryBuilder;
-import net.theevilreaper.aves.inventory.InventoryLayout;
 import net.theevilreaper.aves.inventory.click.ClickHolder;
+import net.theevilreaper.aves.inventory.layout.InventoryLayout;
 import net.theevilreaper.aves.inventory.util.LayoutCalculator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
