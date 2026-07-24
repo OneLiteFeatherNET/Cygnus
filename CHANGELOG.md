@@ -5,6 +5,32 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.7.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.6...v2.7.0) (2026-07-24)
+
+
+### Features
+
+* **common:** add custom dimension presets ([#132](https://github.com/OneLiteFeatherNET/Cygnus/issues/132)) ([2e5482d](https://github.com/OneLiteFeatherNET/Cygnus/commit/2e5482dde4871dc491f09695976dca6d7a529429))
+* **game:** add ability to use a custom page model ([#133](https://github.com/OneLiteFeatherNET/Cygnus/issues/133)) ([c069dbb](https://github.com/OneLiteFeatherNET/Cygnus/commit/c069dbb5bf73b9bd3eee2ef53721f11c2e9a3162))
+* **setup:** add ability to delete locations in map setup ([#126](https://github.com/OneLiteFeatherNET/Cygnus/issues/126)) ([ea30cce](https://github.com/OneLiteFeatherNET/Cygnus/commit/ea30cced193ba1547d6d27e813b26bd1aa1ff0ac))
+* **setup:** add default lore for fallback items ([#125](https://github.com/OneLiteFeatherNET/Cygnus/issues/125)) ([c2e324a](https://github.com/OneLiteFeatherNET/Cygnus/commit/c2e324a5d11e86e6eac5857e1a9af667d80321cd))
+* **setup:** improve setup item display ([#124](https://github.com/OneLiteFeatherNET/Cygnus/issues/124)) ([dd475df](https://github.com/OneLiteFeatherNET/Cygnus/commit/dd475df97e70afe79cf152c182fdc83bcc0374b9))
+* **setup:** overhaul dialog data handling ([#128](https://github.com/OneLiteFeatherNET/Cygnus/issues/128)) ([622dcdf](https://github.com/OneLiteFeatherNET/Cygnus/commit/622dcdfd0e8b06afc94bb425dc77ab06578ffa39))
+* **teleport:** add strategy interface ([#135](https://github.com/OneLiteFeatherNET/Cygnus/issues/135)) ([bffa72f](https://github.com/OneLiteFeatherNET/Cygnus/commit/bffa72f0b4ea9992b4375b039af8eb3e7c49477f))
+
+
+### Bug Fixes
+
+* **ambient:** use survivor team ([75aff1a](https://github.com/OneLiteFeatherNET/Cygnus/commit/75aff1aaf42b6092456062be87b6080c91739bd3))
+* **category:** avoid typo in one enum entry declaration ([b79d4e6](https://github.com/OneLiteFeatherNET/Cygnus/commit/b79d4e69b4e051732632eb9d85162494207eb67e))
+* **data:** improve save logic ([d2b94ec](https://github.com/OneLiteFeatherNET/Cygnus/commit/d2b94ecb5f6a1d44223ca15eb1050521ef74a08a))
+* **game:** avoid double stamina service cleanup calls ([07417cd](https://github.com/OneLiteFeatherNET/Cygnus/commit/07417cdf7dfd09d0c9475e7732c4911452931f3d))
+* **helper:** avoid secure random usage and add missing documentation ([3deffe9](https://github.com/OneLiteFeatherNET/Cygnus/commit/3deffe95c5f7243abd18aa64ab65ad2fd55768c1))
+* **helper:** improve random access value ([f12c806](https://github.com/OneLiteFeatherNET/Cygnus/commit/f12c8063c334a5064729d3db09039505015c70a9))
+* **lobby:** improve file check to avoid exception throw during the setup ([9a80218](https://github.com/OneLiteFeatherNET/Cygnus/commit/9a802181c5924dec86881ec1c9895b0ae70b8edf))
+* **quit:** improve revive logic ([1486306](https://github.com/OneLiteFeatherNET/Cygnus/commit/1486306219a95581877624380067a6c16178e2da))
+* **team:** use right name for the slender team creation ([ad18a42](https://github.com/OneLiteFeatherNET/Cygnus/commit/ad18a424641cbc10e7bd07eae2fc31e2fcd23189))
+
 ## [2.6.6](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.5...v2.6.6) (2026-06-29)
 
 
