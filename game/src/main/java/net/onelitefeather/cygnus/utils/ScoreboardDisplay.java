@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.utils;
 
+import net.minestom.server.color.TeamColor;
 import net.onelitefeather.cygnus.component.TeamNameComponent;
 import net.theevilreaper.xerus.api.ColorData;
 import net.theevilreaper.xerus.api.component.team.ColorComponent;
@@ -40,7 +41,8 @@ public final class ScoreboardDisplay {
                     .createBuilder(teamName)
                     .nameTagVisibility(TeamsPacket.NameTagVisibility.NEVER)
                     .collisionRule(TeamsPacket.CollisionRule.NEVER)
-                    .teamColor(colorData.getChatColor());
+                    // temp fix
+                    .teamColor(TeamColor.fromName(colorData.name()));
 
             sbTeamBuilder.build();
         }

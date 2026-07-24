@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -29,7 +30,7 @@ public final class GameViewImpl implements GameView {
     }
 
     @Override
-    public void addPlayers(Set<Player> set, @Nullable Consumer<Player> consumer) {
+    public void addPlayers(Collection<Player> set, @Nullable Consumer<Player> consumer) {
         set.forEach(player -> {
             player.showBossBar(this.bossBar);
             if (consumer == null) return;
@@ -45,7 +46,7 @@ public final class GameViewImpl implements GameView {
     }
 
     @Override
-    public void removePlayers(Set<Player> set, @Nullable Consumer<Player> consumer) {
+    public void removePlayers(Collection<Player> set, @Nullable Consumer<Player> consumer) {
         set.forEach(player -> {
             player.hideBossBar(this.bossBar);
             if (consumer == null) return;
