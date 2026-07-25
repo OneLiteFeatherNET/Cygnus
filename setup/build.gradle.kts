@@ -20,6 +20,18 @@ dependencies {
     implementation(libs.pica)
     implementation(libs.guira)
 
+    //LuckPerms
+    implementation(libs.guava)
+    compileOnly(libs.luckperms.api) {
+        exclude(group = "net.kyori.adventure")
+    }
+    compileOnly(libs.luckperms.minestom.loader) {
+        exclude(group = "net.kyori.adventure")
+    }
+    runtimeOnly(libs.luckperms.minestom.loader) {
+        exclude(group = "net.kyori.adventure")
+    }
+
     testImplementation(libs.minestom)
     testImplementation(libs.cyano)
     testImplementation(libs.xerus)
@@ -28,6 +40,10 @@ dependencies {
     testImplementation(libs.junit.params)
     testImplementation(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.engine)
+}
+
+configurations.testRuntimeClasspath {
+    exclude(group = "net.luckperms", module = "minestom-loader")
 }
 tasks {
     jar {

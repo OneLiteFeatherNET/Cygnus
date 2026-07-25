@@ -10,6 +10,9 @@ dependencies {
     compileOnly(libs.minestom)
     compileOnly(libs.aves)
     compileOnly(libs.xerus)
+    compileOnly(libs.luckperms.api) {
+        exclude(group = "net.kyori.adventure")
+    }
 
     testImplementation(libs.minestom)
     testImplementation(libs.cyano)

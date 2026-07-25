@@ -29,9 +29,15 @@ dependencyResolutionManagement {
             version("cyclonedx", "3.3.0")
             version("pica", "0.1.1")
             version("slf4j", "2.0.18")
+            version("luckperms", "5.5")
+            version("luckperms-minestom-loader", "5.6-SNAPSHOT")
+            version("guava", "33.6.0-jre")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("slf4j.api", "org.slf4j", "slf4j-api").versionRef("slf4j")
+            library("guava", "com.google.guava", "guava").versionRef("guava")
+            library("luckperms.api", "net.luckperms", "api").versionRef("luckperms")
+            library("luckperms.minestom.loader", "net.luckperms", "minestom-loader").versionRef("luckperms-minestom-loader")
 
             library("minestom", "net.minestom", "minestom").withoutVersion()
             library("adventure", "net.kyori", "adventure-text-minimessage").withoutVersion()

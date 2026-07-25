@@ -33,3 +33,6 @@ bin/
 # OS-spezifisch
 .DS_Store
 Thumbs.db
+
+# LuckPerms (runtime-generated: config, H2 database, relocated libs)
+data/
