@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.common.bootstrap;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -14,11 +15,13 @@ class ServiceBootstrapTest {
     }
 
     @Test
+    @DisabledIfSystemProperty(named = "service.bind.host", matches = ".+")
     void testDefaultBindHost() {
         assertEquals("localhost", ServiceBootstrap.resolveBindHost());
     }
 
     @Test
+    @DisabledIfSystemProperty(named = "service.bind.port", matches = ".+")
     void testDefaultBindPort() {
         assertEquals(25565, ServiceBootstrap.resolveBindPort());
     }
