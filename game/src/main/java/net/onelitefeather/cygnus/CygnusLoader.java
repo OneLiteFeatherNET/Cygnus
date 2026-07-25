@@ -4,6 +4,7 @@ import dev.derklaro.aerogel.Injector;
 import eu.cloudnetservice.driver.inject.InjectionLayer;
 import eu.cloudnetservice.modules.bridge.impl.platform.minestom.MinestomBridgeExtension;
 import net.minestom.server.MinecraftServer;
+import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
 import net.onelitefeather.cygnus.common.dimension.DimensionFactory;
 
 public final class CygnusLoader {
@@ -18,6 +19,7 @@ public final class CygnusLoader {
         try (InjectionLayer<Injector> layer = InjectionLayer.ext()) {
             layer.instance(MinestomBridgeExtension.class).onLoad();
         }
-        server.start("0.0.0.0", 25565);
+        ServiceBootstrap.installShutdownHandling();
+        server.start(ServiceBootstrap.resolveBindHost(), ServiceBootstrap.resolveBindPort());
     }
 }
