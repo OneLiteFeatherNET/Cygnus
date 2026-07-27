@@ -23,7 +23,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("libs") {
-            version("shadow", "9.6.0")
+            version("shadow", "9.6.1")
             version("cloudnet", "4.0.0-RC16")
             version("aonyx", "0.8.1")
             version("cyclonedx", "3.3.0")
