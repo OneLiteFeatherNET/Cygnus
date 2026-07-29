@@ -1,9 +1,11 @@
 package net.onelitefeather.cygnus.listener.game;
 
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
+import net.onelitefeather.cygnus.event.SlenderVisibilityChangeEvent;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
@@ -32,6 +34,7 @@ public class SlenderReviveListener implements Consumer<SlenderReviveEvent> {
         Player player = event.getPlayer();
         staminaService.setSlenderBar(player, true);
         player.setTag(Tags.TEAM_ID, TeamHelper.SLENDER_TEAM_ID);
+        MinecraftServer.getGlobalEventHandler().call(new SlenderVisibilityChangeEvent(player, false));
         player.teleport(gameMap.getSlenderSpawn());
         Items.setSlenderEye(player);
     }
