@@ -30,7 +30,7 @@ public abstract class DialogBase {
         return CompoundBinaryTag.builder().build();
     }
 
-    private DialogBase() {
+    protected DialogBase() {
         // Nothing to do here
     }
 }
