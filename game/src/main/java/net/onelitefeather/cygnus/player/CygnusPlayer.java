@@ -8,9 +8,10 @@ import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.network.packet.server.play.EntityAttributesPacket;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
+import net.onelitefeather.cygnus.common.player.InstanceSwitchChunkPlayer;
 
 @SuppressWarnings("java:S3252")
-public final class CygnusPlayer extends Player {
+public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
 
     private static final AttributeModifier SPEED_MODIFIER_SPRINTING =
             new AttributeModifier(Key.key("minecraft:sprinting"), 0.25, AttributeOperation.ADD_MULTIPLIED_TOTAL);
