@@ -39,7 +39,7 @@ public interface TeamCreator {
                 Key.key("cygnus", GameConfig.SURVIVOR_TEAM_NAME.toLowerCase(Locale.ROOT)),
                 gameConfig.survivorTeamSize()
         );
-        survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.LIGHT_GREEN));
+        survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.GREEN));
         survivorTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
         teamService.add(survivorTeam);
         teamService.add(survivorTeam);
