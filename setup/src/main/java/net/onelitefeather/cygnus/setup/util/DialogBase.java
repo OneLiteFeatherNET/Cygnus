@@ -15,6 +15,7 @@ public abstract class DialogBase {
      * @param value the value of the key
      * @return the created instance
      */
+    @Contract(value = "_ -> new", pure = true)
     protected static Key create(String value) {
         return Key.key("cygnus", value);
     }
@@ -24,8 +25,12 @@ public abstract class DialogBase {
      *
      * @return the created tag
      */
-    @Contract(pure = true)
+    @Contract(value = "-> new", pure = true)
     protected static CompoundBinaryTag getEmptyPayload() {
         return CompoundBinaryTag.builder().build();
+    }
+
+    private DialogBase() {
+        // Nothing to do here
     }
 }
