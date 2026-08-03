@@ -101,6 +101,16 @@ public final class GameMapBuilder extends BaseMapBuilder {
     }
 
     /**
+     * Removes a page from the map.
+     *
+     * @param pageResource the page resource to remove
+     * @return true if the page was removed
+     */
+    public boolean removePage(PageResource pageResource) {
+        return this.pageFaces.remove(pageResource);
+    }
+
+    /**
      * Returns the {@link Set} of {@link PageResource} which are used for the game.
      *
      * @return the underlying set
