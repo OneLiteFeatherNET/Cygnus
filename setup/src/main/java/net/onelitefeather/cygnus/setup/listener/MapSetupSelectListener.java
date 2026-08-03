@@ -43,8 +43,8 @@ public final class MapSetupSelectListener implements Consumer<MapSetupSelectEven
         }
 
         SetupData setupData = switch (event.getSetupMode()) {
-            case GAME -> new GameData(player.getUuid(), event.getMapEntry());
-            case LOBBY -> new LobbyData(player.getUuid(), event.getMapEntry());
+            case GAME -> new GameData(player, event.getMapEntry());
+            case LOBBY -> new LobbyData(player, event.getMapEntry());
         };
 
         player.setTag(SetupTags.SETUP_ID_TAG, event.getSetupMode().ordinal());

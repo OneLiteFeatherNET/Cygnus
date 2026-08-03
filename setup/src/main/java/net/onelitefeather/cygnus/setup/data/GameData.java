@@ -22,7 +22,6 @@ import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 
 import java.util.Optional;
-import java.util.UUID;
 
 public class GameData extends InstanceSetupData {
 
@@ -35,16 +34,12 @@ public class GameData extends InstanceSetupData {
     /**
      * Constructs a new GameData instance.
      *
-     * @param uuid       the UUID of the player
-     * @param mapEntry   the map entry associated with this game data
+     * @param player   who owns the data object
+     * @param mapEntry the map entry associated with this game data
      */
-    public GameData(UUID uuid, MapEntry mapEntry) {
-        super(uuid, mapEntry, BossBar.Color.RED);
-        Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid);
+    public GameData(Player player, MapEntry mapEntry) {
+        super(player.getUuid(), mapEntry, BossBar.Color.RED);
         this.loadData();
-        if (player == null) {
-            throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
-        }
 
         this.inventory = new MapDataOverviewInventory(player, this.gameMapBuilder, InventoryMode.GAME);
         this.survivorInventory = new SurvivorViewInventory(player, this.gameMapBuilder);
@@ -57,7 +52,9 @@ public class GameData extends InstanceSetupData {
         this.pageMode = !this.pageMode;
     }
 
-    public void swapSurvivorMode() { this.survivorMode = !this.survivorMode; }
+    public void swapSurvivorMode() {
+        this.survivorMode = !this.survivorMode;
+    }
 
     /**
      * {@inheritDoc}
@@ -128,7 +125,8 @@ public class GameData extends InstanceSetupData {
                 this.gameMapBuilder.addSurvivorSpawn(spawnPos);
                 triggerUpdate(InventoryTarget.SURVIVOR);
             }
-            default -> {}
+            default -> {
+            }
         }
     }
 

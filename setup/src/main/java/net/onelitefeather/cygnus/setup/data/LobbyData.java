@@ -17,22 +17,21 @@ import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 
 import java.util.Optional;
-import java.util.UUID;
 
 public final class LobbyData extends InstanceSetupData {
 
     private final PersonalInventoryBuilder viewInventory;
     private BaseMapBuilder mapBuilder;
 
-    public LobbyData(UUID uuid, MapEntry mapEntry) {
-        super(uuid, mapEntry, BossBar.Color.GREEN);
+    /**
+     * Creates a new instance of the class with the given parameter value.
+     *
+     * @param player   who owns the data class for the lobby
+     * @param mapEntry that contains the map
+     */
+    public LobbyData(Player player, MapEntry mapEntry) {
+        super(player.getUuid(), mapEntry, BossBar.Color.GREEN);
         this.loadData();
-        Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid);
-
-        if (player == null) {
-            throw new IllegalArgumentException("Player with UUID " + uuid + " is not online.");
-        }
-
         this.viewInventory = new MapDataOverviewInventory(player, this.mapBuilder, InventoryMode.LOBBY);
     }
 
