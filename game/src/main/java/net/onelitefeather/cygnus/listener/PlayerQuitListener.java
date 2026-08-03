@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static net.onelitefeather.cygnus.common.config.GameConfig.SLENDER_TEAM_NAME;
+import static net.onelitefeather.cygnus.common.config.GameConfig.SLENDER_KEY;
 
 /**
  * Listener that handles player disconnect events.
@@ -108,10 +108,9 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
         if (team == null) return;
 
         team.removePlayer(player);
-        String teamName = team.get(TeamNameComponent.class).teamName();
 
         // If the Slender player disconnected, check if we can revive a replacement
-        if (SLENDER_TEAM_NAME.equals(teamName)) {
+        if (SLENDER_KEY.equals(team.key())) {
             var survivorSize = teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID).getCurrentSize();
             boolean canRevive = currentReviveCount < this.maxReviveCount 
                     && gamePhase.getCurrentTicks() >= MINIMUM_SLENDER_RE_CHECK 

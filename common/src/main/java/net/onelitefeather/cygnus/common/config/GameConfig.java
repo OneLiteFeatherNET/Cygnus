@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.common.config;
 
+import net.kyori.adventure.key.Key;
 import org.jetbrains.annotations.Contract;
 
 /**
@@ -17,11 +18,12 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     /* The name of the Slender team.
      */
     String SLENDER_TEAM_NAME = "Slender";
+    Key SLENDER_KEY = Key.key("cygnus", "slender");
     /**
      * The name of the Survivor team.
      */
     String SURVIVOR_TEAM_NAME = "Survivor";
-
+    Key SURVIVOR_KEY = Key.key("cygnus", "survivor");
     String MAP_FILE_NAME = "map.json";
 
     int MIN_ACTIVE_PAGE_COUNT = 4;
