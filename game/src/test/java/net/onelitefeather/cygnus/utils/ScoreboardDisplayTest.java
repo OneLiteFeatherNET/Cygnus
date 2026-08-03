@@ -54,11 +54,11 @@ class ScoreboardDisplayTest {
 
     @Test
     void testScoreboardDisplayFlow(@NotNull Env env) {
-        Team slenderTeam = Team.of(Key.key("cygnus", GameConfig.SLENDER_TEAM_NAME.toLowerCase(Locale.ROOT)), 1);
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
         slenderTeam.add(ColorComponent.class, new ColorComponent(ColorData.AQUA));
         slenderTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SLENDER_TEAM_NAME));
 
-        Team survivorTeam = Team.of(Key.key("cygnus", GameConfig.SURVIVOR_TEAM_NAME.toLowerCase(Locale.ROOT)), 10);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 10);
         survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.AQUA));
         survivorTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
 

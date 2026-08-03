@@ -65,8 +65,8 @@ class TeamHelperTest {
 
     @Test
     void testFailedTeamAllocation() {
-        Team slenderTeam = Team.of(Key.key("slender", "slender"), 0);
-        Team survivor = Team.of(Key.key("survivor", "survivor"), 11);
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 0);
+        Team survivor = Team.of(GameConfig.SURVIVOR_KEY, 11);
 
         assertNotNull(slenderTeam);
         assertNotNull(survivor);
@@ -88,8 +88,8 @@ class TeamHelperTest {
             env.createPlayer(instance);
         }
 
-        Team slenderTeam = Team.of(Key.key("slender", "slender"), 1);
-        Team survivor = Team.of(Key.key("survivor", "survivor"), 11);
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivor = Team.of(GameConfig.SURVIVOR_KEY, 11);
 
         assertNotNull(slenderTeam);
         assertNotNull(survivor);
@@ -117,7 +117,7 @@ class TeamHelperTest {
 
         assertEquals(2, teamService.getTeams().size());
 
-        teamService.getTeam(Key.key(GameConfig.SLENDER_TEAM_NAME)).get().addPlayer(player);
+        teamService.getTeam(GameConfig.SLENDER_KEY).get().addPlayer(player);
         TeamHelper.teleportTeams(teamService, gameMap, testInstance);
 
         assertEquals(slenderSpawn, player.getPosition());
