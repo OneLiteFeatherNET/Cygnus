@@ -11,11 +11,13 @@ application {
 
 dependencies {
     implementation(platform(libs.aonyx.bom))
+    implementation(platform(libs.falco.bom))
     implementation(project(":common"))
     implementation(libs.slf4j.api)
     implementation(libs.minestom)
     implementation(libs.aves)
     implementation(libs.xerus)
+    implementation(libs.falco.anvil)
 
     // SLF4J needs a binding at runtime; without one it falls back to NOP and the
     // server logs nothing at all.

@@ -8,12 +8,15 @@ import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.world.DimensionType;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
+import net.onelitefeather.falco.anvil.FalcoAnvilLoader;
 import net.onelitefeather.guira.data.SetupData;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.UUID;
 
 /**
@@ -34,6 +37,7 @@ public abstract class InstanceSetupData implements SetupData {
     protected UUID uuid;
     protected MapEntry mapEntry;
     protected @Nullable InstanceContainer instance;
+    protected @Nullable FalcoAnvilLoader chunkLoader;
     protected BossBar bossBar;
     protected @Nullable Component title;
 
@@ -119,12 +123,35 @@ public abstract class InstanceSetupData implements SetupData {
     }
 
     /**
-     * Resets this setup and unregisters its instance if present.
+     * Creates the instance this setup works on and attaches a {@link FalcoAnvilLoader} to it.
+     *
+     * <p>The loader reads the world below {@link MapEntry#getDirectoryRoot()} — the world root, not
+     * its {@code region} directory. It is kept in {@link #chunkLoader} because it holds its region
+     * files open and has to be closed again in {@link #reset()}.</p>
+     */
+    protected void createInstance() {
+        this.instance = MinecraftServer.getInstanceManager().createInstanceContainer();
+        this.chunkLoader = new FalcoAnvilLoader(this.mapEntry.getDirectoryRoot(), DimensionType.OVERWORLD.key());
+        this.instance.setChunkLoader(this.chunkLoader);
+    }
+
+    /**
+     * Resets this setup, unregisters its instance and closes its chunk loader if present.
      */
     @Override
     public void reset() {
         if (instance == null) return;
         MinecraftServer.getInstanceManager().unregisterInstance(instance);
+
+        if (this.chunkLoader == null) return;
+
+        try {
+            this.chunkLoader.close();
+        } catch (IOException exception) {
+            MinecraftServer.getExceptionManager().handleException(exception);
+        } finally {
+            this.chunkLoader = null;
+        }
     }
 
     /**

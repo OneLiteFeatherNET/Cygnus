@@ -3,19 +3,25 @@ package net.onelitefeather.cygnus.map;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.world.DimensionType;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.filter.MapFilters;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
+import net.onelitefeather.falco.anvil.FalcoAnvilLoader;
 import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.MapEntry;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class GameMapProvider extends AbstractMapProvider {
 
+    private final List<FalcoAnvilLoader> chunkLoaders = new ArrayList<>();
     private InstanceContainer gameInstance;
     private GameMap gameMap;
 
@@ -41,7 +47,7 @@ public final class GameMapProvider extends AbstractMapProvider {
         this.gameMap = this.fileHandler.load(gameEntry.getMapFile(), GameMap.class).get();
         this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer();
         this.gameInstance.setTime(Helper.NEW_MOON_TIME);
-        this.registerInstance(this.gameInstance, gameEntry);
+        this.registerFalcoInstance(this.gameInstance, gameEntry);
         EventDispatcher.call(new GameMapLoadedEvent(this.gameMap, this.gameInstance));
     }
 
@@ -67,9 +73,53 @@ public final class GameMapProvider extends AbstractMapProvider {
 
         this.activeMap = this.fileHandler.load(lobbyEntry.getMapFile(), BaseMap.class).get();
         InstanceContainer instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer();
-        this.registerInstance(instanceContainer, lobbyEntry);
+        this.registerFalcoInstance(instanceContainer, lobbyEntry);
         this.activeInstance = instanceContainer;
         return this.activeMap;
+    }
+
+    /**
+     * Registers the given instance with a {@link FalcoAnvilLoader} attached to it.
+     *
+     * <p>This mirrors {@link AbstractMapProvider#registerInstance(InstanceContainer, MapEntry)} but
+     * swaps the chunk loader: the Aves method hard-wires Minestom's own {@code AnvilLoader}, while
+     * Falco reads region files in parallel and fails loudly on a broken chunk instead of reporting
+     * it as absent. The loader is kept so it can be closed in {@link #close()}.</p>
+     *
+     * @param instance the instance the map is loaded into
+     * @param mapEntry the map entry whose directory root is the world root of the loader
+     */
+    private void registerFalcoInstance(InstanceContainer instance, MapEntry mapEntry) {
+        FalcoAnvilLoader chunkLoader =
+                new FalcoAnvilLoader(mapEntry.getDirectoryRoot(), DimensionType.OVERWORLD.key());
+        this.chunkLoaders.add(chunkLoader);
+
+        instance.setChunkLoader(chunkLoader);
+        instance.enableAutoChunkLoad(true);
+
+        var defaultClock = instance.defaultClock();
+        if (defaultClock != null) {
+            defaultClock.rate(0f);
+        }
+        MinecraftServer.getInstanceManager().registerInstance(instance);
+    }
+
+    /**
+     * Closes every chunk loader this provider opened.
+     *
+     * <p>Unlike Minestom's {@code AnvilLoader}, a {@link FalcoAnvilLoader} holds its region files
+     * open, so it has to be closed once the server shuts down. Calling this more than once is
+     * harmless.</p>
+     */
+    public void close() {
+        for (FalcoAnvilLoader chunkLoader : this.chunkLoaders) {
+            try {
+                chunkLoader.close();
+            } catch (IOException exception) {
+                MinecraftServer.getExceptionManager().handleException(exception);
+            }
+        }
+        this.chunkLoaders.clear();
     }
 
     @Override
