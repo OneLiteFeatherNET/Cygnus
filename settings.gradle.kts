@@ -60,6 +60,7 @@ dependencyResolutionManagement {
             library("cloudnet-jvm-wrapper", "eu.cloudnetservice.cloudnet", "wrapper-jvm-api").withoutVersion()
 
             plugin("shadow", "com.gradleup.shadow").versionRef("shadow")
+            plugin("cyclonedx", "org.cyclonedx.bom").versionRef("cyclonedx")
 
             bundle(
                 "cloudnet",
@@ -71,8 +72,6 @@ dependencyResolutionManagement {
                     "cloudnet-jvm-wrapper"
                 )
             )
-
-            plugin("cyclonedx", "org.cyclonedx.bom").versionRef("cyclonedx")
         }
     }
 }
