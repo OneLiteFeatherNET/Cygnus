@@ -15,6 +15,7 @@ import net.theevilreaper.aves.util.Components;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import static net.onelitefeather.cygnus.setup.util.PositionFormat.DECIMAL_FORMAT;
@@ -61,5 +62,18 @@ public class PageSlot extends AbstractDataSlot {
             default -> {
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PageSlot pageSlot = (PageSlot) o;
+        return Objects.equals(pageResource, pageSlot.pageResource);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pageResource);
     }
 }
