@@ -3,7 +3,7 @@ package net.onelitefeather.cygnus.setup.listener.data;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.page.PageResource;
-import net.onelitefeather.cygnus.setup.dialogs.MapDialogs;
+import net.onelitefeather.cygnus.setup.dialog.MapDialogs;
 import net.onelitefeather.cygnus.setup.event.PlayerRemoveDataEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
