@@ -7,6 +7,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.dialog.DialogAction;
 import net.minestom.server.dialog.DialogAfterAction;
 import net.minestom.server.entity.Player;
+import net.minestom.server.coordinate.Point;
+import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.cygnus.setup.util.DialogBase;
@@ -26,7 +28,6 @@ public final class MapDialogs extends DialogBase {
     public static final Key AUTHOR_INPUT_ENTRY_KEY = create("author_input_dialog");
     public static final Key NON_DYNAMIC_DELETE_KEY = create("non_dynamic_delete_dialog");
     public static final Key DYNAMIC_DELETE_KEY = create("dynamic_delete_dialog");
-
 
     /**
      * Opens the dialog to allow the input of a name.
@@ -97,7 +98,11 @@ public final class MapDialogs extends DialogBase {
     }
 
     public static void openDeleteDialog(Player player, MapDataCategory mapDataCategory, @Nullable DialogContext context) {
-        DialogContext.PositionContent positionContent = (DialogContext.PositionContent) context;
+        Point point = switch (context) {
+            case DialogContext.PositionContent(Point p) -> p;
+            case DialogContext.PageContent(PageResource resource) -> resource.position();
+            default -> null;
+        };
         DialogTemplate dialogTemplate = DialogType.confirm(DYNAMIC_DELETE_KEY)
                 .meta(dialogMeta -> {
                     dialogMeta.closeWithEscape(false);
@@ -109,16 +114,18 @@ public final class MapDialogs extends DialogBase {
                             template.contents(Component.text("Do you want to delete the following data?")));
                     dialogMeta.emptyMessage();
                     dialogMeta.messageBody(template -> template.contents(Component.text("Category: ").append(Component.text(mapDataCategory.getName()))));
-                    dialogMeta.emptyMessage();
-                    dialogMeta.messageBody(componentTemplate -> {
-                       componentTemplate.contents(Component.text("x: ", NamedTextColor.WHITE).append(Component.text(positionContent.point().x())));
-                    });
-                    dialogMeta.messageBody(componentTemplate -> {
-                        componentTemplate.contents(Component.text("y: ", NamedTextColor.WHITE).append(Component.text(positionContent.point().y())));
-                    });
-                    dialogMeta.messageBody(componentTemplate -> {
-                        componentTemplate.contents(Component.text("z: ", NamedTextColor.WHITE).append(Component.text(positionContent.point().z())));
-                    });
+                    if (point != null) {
+                        dialogMeta.emptyMessage();
+                        dialogMeta.messageBody(componentTemplate -> {
+                            componentTemplate.contents(Component.text("x: ", NamedTextColor.WHITE).append(Component.text(point.x())));
+                        });
+                        dialogMeta.messageBody(componentTemplate -> {
+                            componentTemplate.contents(Component.text("y: ", NamedTextColor.WHITE).append(Component.text(point.y())));
+                        });
+                        dialogMeta.messageBody(componentTemplate -> {
+                            componentTemplate.contents(Component.text("z: ", NamedTextColor.WHITE).append(Component.text(point.z())));
+                        });
+                    }
                 })
                 .yesButton(button -> button.width(101).label(Component.text("Save"))
                         .action(new DialogAction.DynamicCustom(DYNAMIC_DELETE_KEY, getCategoryPayload(mapDataCategory.ordinal())))
