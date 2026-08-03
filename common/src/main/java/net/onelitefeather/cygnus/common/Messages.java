@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  **/
 public final class Messages {
@@ -38,14 +38,14 @@ public final class Messages {
     static {
         int forceStartTime = GameConfig.FORCE_START_TIME - 1;
         PREFIX = MINI_MESSAGE.deserialize("<gradient:#ff5555:#00:#ff5555:#ff0d00:#00:0.4>Slender </gradient><color:#cc0000>⛧</color>");
-        ALREADY_FORCE_STARTED = withMiniPrefix("<red>The game has already been force started!");
-        PHASE_NOT_RUNNING = withMiniPrefix("<red>The lobby countdown is not running!");
+        ALREADY_FORCE_STARTED = withPrefix(Component.text("The game has already been force started!", NamedTextColor.RED));
+        PHASE_NOT_RUNNING = withPrefix(Component.text("The lobby countdown is not running!", NamedTextColor.RED));
         PHASE_FORCE_STARTED = withMiniPrefix("<gray>The timer has been set to <color:#09ff00><seconds></color> seconds!",
                 TagResolver.builder().tag("seconds", (argumentQueue, context) -> Tag.preProcessParsed(String.valueOf(forceStartTime))).build());
-        PAGE_FOUND_PART = withMini("<gray>found a page!");
+        PAGE_FOUND_PART = withPrefix(Component.text("found a page!", NamedTextColor.GRAY));
 
         VIEW_TIME = withMini("<gradient:#ff5555:#fffffff:#ff5555:#ff0d00:#fffffff:0.6>Time:</gradient>");
-        VIEW_PAGES = withMini("<gray>Pages:");
+        VIEW_PAGES = withPrefix(Component.text("Pages:", NamedTextColor.GRAY));
 
         SLENDER_WIN_MESSAGE =
                 withMini("<gray>has <green>won the game!")
@@ -55,8 +55,8 @@ public final class Messages {
                 TagResolver.builder().tag("team", (argumentQueue, context) ->
                         Tag.preProcessParsed(GameConfig.SURVIVOR_TEAM_NAME)).build());
 
-        LEAVE_PART = withMini("<gray>left the game!");
-        JOIN_PART = withMini("<gray>joined the game!");
+        LEAVE_PART = withPrefix(Component.text("left the game!", NamedTextColor.GRAY));
+        JOIN_PART = withPrefix(Component.text("joined the game!", NamedTextColor.GRAY));
         LIGHT_WENT_OUT = withMiniPrefix("<color:#ff00d4>Your light went out!</color>");
 
         SURVIVOR_JOIN_PART_UPPER = withMiniPrefix("<yellow>You are a Survivor! Find various <red>Pages").append(Component.space());
@@ -68,7 +68,7 @@ public final class Messages {
 
         SLENDER_JOIN_PART = withMiniPrefix("<yellow>Find survivors and <red>get as close as you can <yellow>to kill them")
                 .append(Component.newline())
-                .append(withMiniPrefix("<yellow>Eliminate all survivors to win the game!"))
+                .append(withPrefix(Component.text("Eliminate all survivors to win the game!", NamedTextColor.YELLOW)))
                 .append(Component.newline())
                 .append(withMiniPrefix("<red>Right-click your <color:#ff00d4>SlenderEye</color> <red>to toggle invisibility!"));
     }
