@@ -21,7 +21,7 @@ import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
-import net.theevilreaper.aves.inventory.InventoryLayout;
+import net.theevilreaper.aves.inventory.layout.InventoryLayout;
 import net.theevilreaper.aves.inventory.pageable.PageableInventory;
 import net.theevilreaper.aves.inventory.pageable.TitleData;
 import net.theevilreaper.aves.inventory.slot.ISlot;
