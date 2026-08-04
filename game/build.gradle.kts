@@ -27,8 +27,8 @@ dependencies {
     // CloudNet is provided by the CloudNet wrapper at runtime and its bridge is loaded as a
     // Minestom extension (separate classloader, see the :bridge module), so :game neither
     // references nor bundles any CloudNet artifact.
-    implementation(libs.minestom.ce.extensions)
-    implementation(libs.kotlin.stdlib.jdk8)
+    implementation(platform(libs.minestom.extensions.bom))
+    implementation(libs.minestom.extensions)
 
     // LuckPerms; guava used to arrive transitively through CloudNet, so bundle it explicitly now.
     implementation(libs.guava)

@@ -8,7 +8,7 @@ import net.onelitefeather.cygnus.common.dimension.DimensionFactory;
 public final class CygnusLoader {
 
     static void main() {
-        // minestom-ce-extensions loads platform extensions - the CloudNet bridge and our
+        // minestom-extensions loads platform extensions - the CloudNet bridge and our
         // :bridge permission extension among them - from the extensions/ folder. Running
         // standalone simply loads none. This also performs MinecraftServer.init().
         ExtensionBootstrap bootstrap = ExtensionBootstrap.init();

@@ -29,8 +29,8 @@ dependencies {
     // CloudNet is provided by the CloudNet wrapper at runtime and its bridge is loaded as a
     // Minestom extension (separate classloader, see the :bridge module), so :setup neither
     // references nor bundles any CloudNet artifact.
-    implementation(libs.minestom.ce.extensions)
-    implementation(libs.kotlin.stdlib.jdk8)
+    implementation(platform(libs.minestom.extensions.bom))
+    implementation(libs.minestom.extensions)
 
     // LuckPerms
     implementation(libs.guava)
