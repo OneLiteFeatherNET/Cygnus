@@ -31,7 +31,12 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
 
     @Override
     public void accept(GameStartEvent event) {
-        var slenderPlayer = this.teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID).getPlayers().stream().findFirst().get();
+        var slenderTeam = this.teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID);
+        if (slenderTeam == null) {
+            throw new IllegalStateException("Slender team is missing");
+        }
+        var slenderPlayer = slenderTeam.getPlayers().stream().findFirst()
+                .orElseThrow(() -> new IllegalStateException("Slender team has no assigned player"));
         slenderPlayer.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
         slenderPlayer.sendMessage(Messages.SLENDER_JOIN_PART);
         Items.setSlenderEye(slenderPlayer);

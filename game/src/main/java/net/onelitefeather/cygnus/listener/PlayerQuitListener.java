@@ -19,6 +19,7 @@ import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -125,8 +126,14 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
 
             // Perform Slender revival logic
             ++currentReviveCount;
-            var survivorTeam = teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID);
-            var randomPlayer = Players.getRandomPlayer(new ArrayList<>(survivorTeam.getPlayers())).get();
+            Team survivorTeam = teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID);
+            Optional<Player> randomPlayerOpt = Players.getRandomPlayer(new ArrayList<>(survivorTeam.getPlayers()));
+            if (randomPlayerOpt.isEmpty()) {
+                gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.SLENDER_LEFT));
+                gamePhase.finish();
+                return;
+            }
+            Player randomPlayer = randomPlayerOpt.get();
 
             survivorTeam.removePlayer(randomPlayer);
             teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID).addPlayer(randomPlayer);

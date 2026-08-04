@@ -64,7 +64,11 @@ public class SetupExtension implements ListenerHandling {
         var spawnPos = new Pos(0, 150, 0);
 
         Supplier<Instance> instanceSupplier = this.mapProvider.getActiveInstance();
-        UUID instanceUUID = instanceSupplier.get().getUuid();
+        Instance activeInstance = instanceSupplier.get();
+        if (activeInstance == null) {
+            throw new IllegalStateException("No active instance available for setup extension");
+        }
+        UUID instanceUUID = activeInstance.getUuid();
 
         manager.addListener(MapSetupSelectEvent.class, new MapSetupSelectListener(this.dataService));
         manager.addListener(PlayerUseItemEvent.class, new SetupItemListener(this.dataService, mapSetupInventory));

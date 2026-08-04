@@ -13,6 +13,7 @@ import net.onelitefeather.falco.anvil.FalcoAnvilLoader;
 import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.MapEntry;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,14 +22,14 @@ import java.util.List;
 
 public final class GameMapProvider extends AbstractMapProvider {
 
-    private final List<FalcoAnvilLoader> chunkLoaders = new ArrayList<>();
-    private InstanceContainer gameInstance;
-    private GameMap gameMap;
+    private final List<FalcoAnvilLoader> chunkLoaders;
+    private @Nullable InstanceContainer gameInstance;
+    private @Nullable GameMap gameMap;
 
     public GameMapProvider(Path path) {
         super(GsonHelper.FILE_HANDLER, MapFilters::filterMapsForGame);
         this.loadMapEntries(path.resolve("game").resolve("maps"));
-
+        this.chunkLoaders = new ArrayList<>();
         if (this.mapEntries.isEmpty()) {
             throw new IllegalStateException("No maps found in the given path");
         }
@@ -44,7 +45,8 @@ public final class GameMapProvider extends AbstractMapProvider {
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("No game map found"));
 
-        this.gameMap = this.fileHandler.load(gameEntry.getMapFile(), GameMap.class).get();
+        this.gameMap = this.fileHandler.load(gameEntry.getMapFile(), GameMap.class)
+                .orElseThrow(() -> new IllegalStateException("Failed to load GameMap from file: " + gameEntry.getMapFile()));
         this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer();
         this.gameInstance.setTime(Helper.NEW_MOON_TIME);
         this.registerFalcoInstance(this.gameInstance, gameEntry);
@@ -71,7 +73,8 @@ public final class GameMapProvider extends AbstractMapProvider {
 
         this.mapEntries.remove(lobbyEntry);
 
-        this.activeMap = this.fileHandler.load(lobbyEntry.getMapFile(), BaseMap.class).get();
+        this.activeMap = this.fileHandler.load(lobbyEntry.getMapFile(), BaseMap.class)
+                .orElseThrow(() -> new IllegalStateException("Failed to load LobbyMap from file: " + lobbyEntry.getMapFile()));
         InstanceContainer instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer();
         this.registerFalcoInstance(instanceContainer, lobbyEntry);
         this.activeInstance = instanceContainer;
@@ -122,16 +125,15 @@ public final class GameMapProvider extends AbstractMapProvider {
         this.chunkLoaders.clear();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void saveMap(Path path, BaseMap baseMap) {
         throw new UnsupportedOperationException();
     }
 
-    public BaseMap getActiveMap() {
-        return this.activeMap;
-    }
-
-    public GameMap getGameMap() {
-        return gameMap;
+    public @Nullable GameMap getGameMap() {
+        return this.gameMap;
     }
 }

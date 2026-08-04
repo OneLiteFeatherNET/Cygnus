@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus;
 
 import net.minestom.server.event.GlobalEventHandler;
+import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.listener.game.GameStartListener;
@@ -157,7 +158,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
         handler.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
         handler.addListener(
-                SlenderReviveEvent.class, new SlenderReviveListener(((GameMapProvider) this.mapProvider).getGameMap(), this.staminaService));
+                SlenderReviveEvent.class, new SlenderReviveListener(((GameMapProvider) this.mapProvider)::getGameMap, this.staminaService));
         handler.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         handler.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
         handler.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
@@ -168,11 +169,17 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initPhases() {
         GameMapProvider gameMapProvider = ((GameMapProvider) this.mapProvider);
         VoidConsumer instanceSwitch = gameMapProvider::switchToGameMap;
-        VoidConsumer teamInitializer = () -> TeamHelper.teleportTeams(
-                this.teamService,
-                gameMapProvider.getGameMap(),
-                gameMapProvider.getActiveInstance().get()
-        );
+        VoidConsumer teamInitializer = () -> {
+            Instance activeInstance = gameMapProvider.getActiveInstance().get();
+            if (activeInstance == null) {
+                throw new IllegalStateException("Active instance not available for team teleport");
+            }
+            TeamHelper.teleportTeams(
+                    this.teamService,
+                    gameMapProvider.getGameMap(),
+                    activeInstance
+            );
+        };
         LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig);
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
