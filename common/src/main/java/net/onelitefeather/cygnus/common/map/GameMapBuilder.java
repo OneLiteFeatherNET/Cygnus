@@ -44,7 +44,8 @@ public final class GameMapBuilder extends BaseMapBuilder {
                         .thenComparingInt(Pos::blockY)
                         .thenComparingInt(Pos::blockZ)
         );
-        this.pageFaces = gameMap.getPageFaces();
+        this.survivorSpawns.addAll(gameMap.getSurvivorSpawns());
+        this.pageFaces = new HashSet<>(gameMap.getPageFaces());
     }
 
     /**
