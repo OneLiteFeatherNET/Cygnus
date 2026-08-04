@@ -31,7 +31,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  * @author theEvilReaper
  * @version 1.1.0
- * @since 1.0.0
+ * @since 2.7.0
  */
 public final class JumpScareManager {
 
