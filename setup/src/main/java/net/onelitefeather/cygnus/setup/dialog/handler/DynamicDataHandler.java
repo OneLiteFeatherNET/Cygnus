@@ -34,7 +34,7 @@ public final class DynamicDataHandler implements DialogHandler{
                 point = player.getSurvivorToDelete();
             }
             if (category == MapDataCategory.PAGE) {
-                point = player.getPageToDelete();
+                point = player.getPageToDelete() != null ? player.getPageToDelete() : (player.getPageResource() != null ? player.getPageResource().position() : null);
             }
             ((InstanceSetupData)data).handleDataContextDelete(category, point);
             if (category == MapDataCategory.SURVIVOR) {
@@ -42,6 +42,7 @@ public final class DynamicDataHandler implements DialogHandler{
             }
             if (category == MapDataCategory.PAGE) {
                 player.setPageToDelete(null);
+                player.setPageResource(null);
             }
         });
 

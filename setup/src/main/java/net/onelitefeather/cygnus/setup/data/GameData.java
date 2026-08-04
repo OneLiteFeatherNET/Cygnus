@@ -5,28 +5,43 @@ import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.anvil.AnvilLoader;
+import net.minestom.server.utils.Direction;
 import net.minestom.server.world.DimensionType;
+import net.minestom.server.inventory.InventoryType;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
+import net.onelitefeather.cygnus.setup.inventory.page.PageHeaderFormatter;
+import net.onelitefeather.cygnus.setup.inventory.slot.PageSlot;
 import net.onelitefeather.cygnus.setup.inventory.view.InventoryMode;
 import net.onelitefeather.cygnus.setup.inventory.view.MapDataOverviewInventory;
 import net.onelitefeather.cygnus.setup.inventory.view.SurvivorViewInventory;
 import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
+import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.setup.player.SetupPlayer;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
+import net.theevilreaper.aves.inventory.layout.InventoryLayout;
+import net.theevilreaper.aves.inventory.pageable.PageableInventory;
+import net.theevilreaper.aves.inventory.pageable.TitleData;
+import net.theevilreaper.aves.inventory.slot.ISlot;
+import net.theevilreaper.aves.inventory.util.LayoutCalculator;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class GameData extends InstanceSetupData {
 
     private final MapDataOverviewInventory inventory;
     private final SurvivorViewInventory survivorInventory;
+    private final PageableInventory pageInventory;
     private GameMapBuilder gameMapBuilder;
     private boolean pageMode;
     private boolean survivorMode;
@@ -43,6 +58,59 @@ public class GameData extends InstanceSetupData {
 
         this.inventory = new MapDataOverviewInventory(player, this.gameMapBuilder, InventoryMode.GAME);
         this.survivorInventory = new SurvivorViewInventory(player, this.gameMapBuilder);
+        this.pageInventory = createPageInventory(player);
+    }
+
+    /**
+     * Creates the [{@link PageableInventory} to display the given {@link PageResource}s.
+     *
+     * @param player who owns the inventory
+     * @return the created inventory
+     */
+    private PageableInventory createPageInventory(Player player) {
+        InventoryLayout layout = InventoryLayout.fromType(InventoryType.CHEST_6_ROW);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), SetupItems.DECORATION_PANE);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_6_ROW), SetupItems.DECORATION_PANE);
+
+        return PageableInventory
+                .builder()
+                .titleData(
+                        TitleData
+                                .builder()
+                                .title(Component.text("Page positions - "))
+                                .pageMapper(PageHeaderFormatter::format)
+                                .showPageNumbers(true)
+                                .build()
+                )
+                .player(player)
+                .slotRange(LayoutCalculator.quad(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_5_ROW.getSize() - 1))
+                .layout(layout)
+                .values(getPageSlots())
+                .build();
+    }
+
+    /**
+     * Adds a new {@link PageResource} to the builder and inventory
+     *
+     * @param pos  of the resource
+     * @param face of the resource
+     */
+    public void addPage(Vec pos, Direction face) {
+        PageResource pageResource = new PageResource(pos, face);
+        this.gameMapBuilder.addPage(pos, face);
+        this.pageInventory.add(new PageSlot(pageResource));
+    }
+
+    /**
+     * Returns the list of slots for the given {@link PageResource}s
+     *
+     * @return the created list
+     */
+    private List<ISlot> getPageSlots() {
+        if (this.gameMapBuilder.getPageFaces().isEmpty()) return new ArrayList<>();
+        List<ISlot> pageSlots = new ArrayList<>(this.gameMapBuilder.getPageFaces().size());
+        this.gameMapBuilder.getPageFaces().forEach(pageFace -> pageSlots.add(new PageSlot(pageFace)));
+        return pageSlots;
     }
 
     /**
@@ -52,6 +120,9 @@ public class GameData extends InstanceSetupData {
         this.pageMode = !this.pageMode;
     }
 
+    /**
+     * Swaps to the survivor mode.
+     */
     public void swapSurvivorMode() {
         this.survivorMode = !this.survivorMode;
     }
@@ -64,9 +135,7 @@ public class GameData extends InstanceSetupData {
         switch (target) {
             case GENERAL -> this.inventory.open();
             case SURVIVOR -> this.survivorInventory.open();
-            case PAGE -> {
-
-            }
+            case PAGE -> this.pageInventory.open();
         }
     }
 
@@ -79,7 +148,6 @@ public class GameData extends InstanceSetupData {
             case GENERAL -> this.inventory.invalidateDataLayout();
             case SURVIVOR -> this.survivorInventory.invalidateDataLayout();
             case PAGE -> {
-                // Nothing to do here
             }
         }
     }
@@ -89,7 +157,6 @@ public class GameData extends InstanceSetupData {
      */
     @Override
     public void updateTitle() {
-        System.out.println("TItle is " + (title == null));
         if (getMapBuilder().getName().equalsIgnoreCase("Map")) {
             this.title = null;
             super.updateTitle();
@@ -168,6 +235,11 @@ public class GameData extends InstanceSetupData {
             return;
         }
 
+        if (SetupItemId.PAGES == tagValue) {
+            this.openInventory(InventoryTarget.PAGE);
+            return;
+        }
+
         super.handleItemInteraction(player, tagValue);
     }
 
@@ -194,9 +266,19 @@ public class GameData extends InstanceSetupData {
      */
     @Override
     public void handleDataContextDelete(MapDataCategory category, Point point) {
-        if (point instanceof Pos pos) {
+        if (category == MapDataCategory.SURVIVOR && point instanceof Pos pos) {
             this.gameMapBuilder.removeSurvivorSpawn(pos);
             this.triggerUpdate(InventoryTarget.SURVIVOR);
+        } else if (category == MapDataCategory.PAGE) {
+            Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(this.uuid);
+            PageResource pageResource = null;
+            if (player instanceof SetupPlayer setupPlayer) {
+                pageResource = setupPlayer.getPageResource();
+            }
+            if (pageResource != null) {
+                this.gameMapBuilder.removePage(pageResource);
+                this.pageInventory.remove(new PageSlot(pageResource));
+            }
         }
     }
 
@@ -228,6 +310,7 @@ public class GameData extends InstanceSetupData {
         super.reset();
         this.survivorInventory.unregister();
         this.inventory.unregister();
+        this.pageInventory.unregister();
     }
 
     /**
@@ -262,6 +345,11 @@ public class GameData extends InstanceSetupData {
         return pageMode;
     }
 
+    /**
+     * Returns an indication if the survivor mode is active or not.
+     *
+     * @return true for yes otherwise false
+     */
     public boolean hasSurvivorMode() {
         return this.survivorMode;
     }

@@ -96,6 +96,17 @@ public final class SetupItems {
         gameSetupLayout.set(7, saveItem);
 
         pageLayout = new HotBarLayout();
+        pageLayout.set(2, ItemStack.builder(Material.COMPASS)
+                .customName(Component.text("Pages", NamedTextColor.YELLOW))
+                .lore(
+                        getLore(SPACE_SEPARATOR
+                                .append(Component.text("View all available ", NamedTextColor.WHITE))
+                                .append(Component.text("Pages", NamedTextColor.YELLOW))
+                        )
+                )
+                .set(Tags.ITEM_TAG, SetupItemId.PAGES)
+                .build()
+        );
         pageLayout.set(4, ItemStack.builder(Material.BARRIER)
                 .customName(Component.text("Leave mode", NamedTextColor.RED))
                 .lore(
@@ -111,12 +122,12 @@ public final class SetupItems {
 
         survivorSpawnLayout = new HotBarLayout();
         survivorSpawnLayout.set(2, ItemStack.builder(Material.CHEST)
-                        .customName(Component.text("Spawns", NamedTextColor.AQUA))
-                        .lore(
-                                getLore(SPACE_SEPARATOR
-                                        .append(Component.text("View all available ", NamedTextColor.WHITE))
-                                        .append(Component.text("Survivor ", NamedTextColor.GREEN))
-                                        .append(Component.text("spawns", NamedTextColor.WHITE)))
+                .customName(Component.text("Spawns", NamedTextColor.AQUA))
+                .lore(
+                        getLore(SPACE_SEPARATOR
+                                .append(Component.text("View all available ", NamedTextColor.WHITE))
+                                .append(Component.text("Survivor ", NamedTextColor.GREEN))
+                                .append(Component.text("spawns", NamedTextColor.WHITE)))
                 )
                 .set(Tags.ITEM_TAG, SetupItemId.SPAWNS)
                 .build()
