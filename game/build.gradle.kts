@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.aves)
     implementation(libs.xerus)
     implementation(libs.falco.anvil)
+    implementation(libs.adventure)
 
     // SLF4J needs a binding at runtime; without one it falls back to NOP and the
     // server logs nothing at all.
