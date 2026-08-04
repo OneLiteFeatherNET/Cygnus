@@ -106,8 +106,9 @@ now depends on it.
 
 - `LuckPermsSupportTest` (`common`): `isPresent()` is `false` during tests and `bootstrap()`
   completes without throwing. Pins the assumption every other test relies on.
-- `PermissionAwarePlayerTest` (`common`): `value("cygnus.test")` returns `TriState.TRUE` instead of
-  throwing `IllegalStateException`. Not testable today.
+- `PermissionAwarePlayerIntegrationTest` (`common`): `value("cygnus.test")` returns `TriState.TRUE`
+  instead of throwing `IllegalStateException`. Not testable today. The `IntegrationTest` suffix
+  follows the convention for tests that use Cyano's `Env`.
 - `StopCommandTest` (`common`): add a case for a real player; the existing tests only cover the
   console sender.
 
