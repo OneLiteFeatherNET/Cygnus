@@ -1,0 +1,7 @@
+{
+  "name": "CygnusCloudNetPermissions",
+  "version": "@version@",
+  "entrypoint": "net.onelitefeather.cygnus.bridge.CygnusBridgePermissionExtension",
+  "authors": ["OneLiteFeather"],
+  "dependencies": ["CloudNet_Bridge"]
+}

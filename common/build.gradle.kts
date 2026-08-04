@@ -15,6 +15,9 @@ dependencies {
     }
 
     testImplementation(libs.minestom)
+    testImplementation(libs.luckperms.api) {
+        exclude(group = "net.kyori.adventure")
+    }
     testImplementation(libs.cyano)
     testImplementation(libs.aves)
     testImplementation(libs.xerus)
