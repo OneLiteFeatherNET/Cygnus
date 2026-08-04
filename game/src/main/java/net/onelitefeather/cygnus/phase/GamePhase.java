@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.phase;
 
 import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
 import net.theevilreaper.xerus.api.phase.TickDirection;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
@@ -23,24 +24,29 @@ import java.util.HashSet;
 public final class GamePhase extends TimedPhase {
 
     private final GameView gameView;
+    private final JumpScareManager jumpscareManager;
     private @Nullable GameFinishEvent finishEvent;
 
     /**
      * Creates a new instance from the {@link GamePhase}.
      *
-     * @param gameView        the view to update
-     * @param endRunnable     the runnable to execute on end
+     * @param gameView         the view to update
+     * @param endRunnable      the runnable to execute on end
+     * @param gameTime         the game time
+     * @param jumpscareManager the jumpscare manager instance
      */
     public GamePhase(
             GameView gameView,
             Runnable endRunnable,
-            int gameTime
+            int gameTime,
+            JumpScareManager jumpscareManager
     ) {
         super("GamePhase", ChronoUnit.SECONDS, 1);
         this.setCurrentTicks(gameTime);
         this.setTickDirection(TickDirection.DOWN);
         this.setEndTicks(0);
         this.gameView = gameView;
+        this.jumpscareManager = jumpscareManager;
         this.setFinishedCallback(endRunnable);
     }
 
@@ -57,7 +63,7 @@ public final class GamePhase extends TimedPhase {
     @Override
     public void onStart() {
         super.onStart();
-        addListener(PlayerTickEvent.class, new CygnusPlayerTickListener());
+        addListener(PlayerTickEvent.class, new CygnusPlayerTickListener(this.jumpscareManager));
         EventDispatcher.call(new GameStartEvent());
     }
 
@@ -76,3 +82,4 @@ public final class GamePhase extends TimedPhase {
         EventDispatcher.call(new ViewUpdateEvent(getCurrentTicks()));
     }
 }
+

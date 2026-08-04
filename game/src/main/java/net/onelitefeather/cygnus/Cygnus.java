@@ -42,6 +42,7 @@ import net.onelitefeather.cygnus.common.page.event.PageEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
+import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.listener.PlayerChatListener;
 import net.onelitefeather.cygnus.listener.PlayerDeathListener;
 import net.onelitefeather.cygnus.listener.PlayerLoginListener;
@@ -92,12 +93,14 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final GameView view;
     private final AbstractMapProvider mapProvider;
     private final GameConfig gameConfig;
+    private final JumpScareManager jumpscareManager;
 
     public Cygnus() {
         Path path = Paths.get("");
         this.teamService = TeamService.of();
         this.linearPhaseSeries = new LinearPhaseSeries<>("game");
         this.staminaService = new StaminaService();
+        this.jumpscareManager = new JumpScareManager();
         this.gameConfig = new GameConfigReader(path).getConfig();
         MinecraftServer.getConnectionManager().setPlayerProvider(CygnusPlayer::new);
         this.pageProvider = new PageProvider();
@@ -119,6 +122,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
     }
+
 
     private void initListener() {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
@@ -152,7 +156,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(PlayerUseItemEvent.class, new SlenderItemListener(trigger));
         handler.addListener(GameFinishEvent.class, new GameFinishListener());
         handler.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider));
-        handler.addListener(PlayerDeathEvent.class, new PlayerDeathListener(phaseSupplier, this.teamService));
+        handler.addListener(PlayerDeathEvent.class, new PlayerDeathListener(phaseSupplier, this.teamService, this.jumpscareManager));
         handler.addListener(PlayerEntityInteractEvent.class, new PlayerPageInteractListener(this.pageProvider));
         handler.addListener(PageEvent.class, new GamePageListener(this.pageProvider));
         handler.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
@@ -183,7 +187,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig);
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
-        this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime()));
+        this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime(), this.jumpscareManager));
         this.linearPhaseSeries.add(new RestartPhase());
     }
 
@@ -191,6 +195,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.pageProvider.cleanUp();
         this.staminaService.cleanUp();
         this.ambientProvider.stopTask();
+        this.jumpscareManager.cleanUp();
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, EntityActionListener::listener);
     }
 

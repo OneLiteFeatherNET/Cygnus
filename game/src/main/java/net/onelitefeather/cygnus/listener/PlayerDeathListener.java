@@ -5,11 +5,14 @@ import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
+import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.team.TeamHelper;
 
@@ -22,16 +25,26 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
     private final Supplier<Phase> phaseSupplier;
     private final Team survivorTeam;
     private final Team slenderTeam;
+    private final JumpScareManager jumpscareManager;
 
-    public PlayerDeathListener(Supplier<Phase> phaseSupplier, TeamService teamService) {
+    public PlayerDeathListener(Supplier<Phase> phaseSupplier, TeamService teamService, JumpScareManager jumpscareManager) {
         this.phaseSupplier = phaseSupplier;
         this.survivorTeam = teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID);
         this.slenderTeam = teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID);
+        this.jumpscareManager = jumpscareManager;
     }
 
     @Override
     public void accept(PlayerDeathEvent event) {
         Player player = event.getPlayer();
+
+        if (survivorTeam.getPlayers().contains(player) && player.getInstance() != null) {
+            Pos deathPos = player.getPosition();
+            DeadPlayerMannequin mannequin = DeadPlayerMannequin.sleeping(player);
+            mannequin.setInstance(player.getInstance(), deathPos.add(0, 0.15, 0));
+            this.jumpscareManager.register(mannequin);
+        }
+
         event.setChatMessage(Messages.getDeathComponent(player));
         survivorTeam.removePlayer(player);
         player.removeTag(Tags.TEAM_ID);
@@ -45,3 +58,4 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
         gamePhase.finish();
     }
 }
+
