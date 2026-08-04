@@ -17,6 +17,10 @@ dependencies {
     implementation(libs.aves)
     implementation(libs.xerus)
 
+    // SLF4J needs a binding at runtime; without one it falls back to NOP and the
+    // server logs nothing at all.
+    runtimeOnly(libs.slf4j.simple)
+
     //CloudNet
     implementation(platform(libs.cloudnet.bom))
     implementation(libs.bundles.cloudnet)
