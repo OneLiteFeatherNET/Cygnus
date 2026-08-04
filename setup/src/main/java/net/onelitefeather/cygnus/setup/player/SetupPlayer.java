@@ -4,6 +4,7 @@ import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
+import net.onelitefeather.cygnus.common.player.InstanceSwitchChunkPlayer;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -13,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
  * @version 1.0.0
  * @since 2.0.0
  */
-public final class SetupPlayer extends Player {
+public final class SetupPlayer extends InstanceSwitchChunkPlayer {
 
     private @Nullable Point survivorToDelete;
     private @Nullable Point pageToDelete;
