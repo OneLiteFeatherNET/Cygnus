@@ -91,12 +91,20 @@ that is correct production behaviour and unrelated to this change.
 
 The fat jar bundles the loader, so `java -jar cygnus.jar` and `./gradlew :game:run` keep running
 with LuckPerms. Reaching the fallback needs a start path with a filtered class path: a `JavaExec`
-task `runWithoutLuckPerms` in `:game` and `:setup` whose configuration excludes
-`net.luckperms:minestom-loader`, mirroring the existing `testRuntimeClasspath` exclusion. Main class
-and working directory match the `run` task the `application` plugin provides.
+task `runWithoutLuckPerms` in `:game` and `:setup` whose classpath is `sourceSets.main.runtimeClasspath`
+with every file whose name starts with `minestom-loader-` filtered out. That mirrors the *effect* of
+the existing `testRuntimeClasspath` exclusion, but not its mechanism: `testRuntimeClasspath` excludes
+the dependency by coordinate (`group = "net.luckperms", module = "minestom-loader"`), while the task
+filters the resolved classpath by jar file name instead. Applying the same coordinate-based exclusion
+to a `JavaExec` classpath is a deferred follow-up. Main class matches the `run` task the `application`
+plugin provides; working directory is set explicitly to the repository root (see below), which does
+not match `run`'s default of the module directory.
 
 Unchanged: the server still resolves maps relative to the working directory, so `game/maps` or
-`setup/maps` must exist or startup ends at `No maps found in the given path`.
+`setup/maps` must exist or startup ends at `No maps found in the given path`. Concretely, `Cygnus`
+resolves `<workingDir>/game/maps` and `SetupExtension` resolves `<workingDir>/setup/maps`, so both
+`runWithoutLuckPerms` tasks set `workingDir` to the repository root to match
+`docs/cloudnet-deployment.md`.
 
 ## Tests
 

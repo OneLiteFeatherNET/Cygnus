@@ -1,3 +1,5 @@
+import java.util.zip.ZipFile
+
 plugins {
     id("cygnus.java-conventions")
     `maven-publish`
@@ -76,6 +78,10 @@ tasks {
 // Local counterpart to `run`: the same entry point, but with the LuckPerms loader filtered out of
 // the class path, so LuckPermsSupport reports absent and every permission check answers TRUE. No
 // data/ directory, no H2 database, no library downloads.
+//
+// SetupExtension resolves maps as `<workingDir>/setup/maps` (see SetupExtension / SetupMapProvider),
+// so the working directory has to be the repository root for that path to line up with
+// docs/cloudnet-deployment.md.
 tasks.register<JavaExec>("runWithoutLuckPerms") {
     group = "application"
     description = "Runs the setup service without LuckPerms; every permission check resolves to TRUE."
@@ -83,6 +89,36 @@ tasks.register<JavaExec>("runWithoutLuckPerms") {
     classpath = sourceSets.main.get().runtimeClasspath.filter { file ->
         !file.name.startsWith("minestom-loader-")
     }
+    workingDir = rootProject.projectDir
+}
+
+// Guards the fat jar against silently shipping in "every permission is TRUE" mode: before this
+// branch a build without the loader died instantly with NoClassDefFoundError, so a dropped
+// runtimeOnly(libs.luckperms.minestom.loader) line or an over-wide shadowJar exclude has to fail
+// the build just as loudly now that the fallback boots successfully instead of crashing.
+val verifyLuckPermsLoaderBundled = tasks.register("verifyLuckPermsLoaderBundled") {
+    group = "verification"
+    description = "Fails the build when setup.jar does not bundle the LuckPerms Minestom loader."
+    dependsOn(tasks.shadowJar)
+    val archiveFile = tasks.shadowJar.flatMap { it.archiveFile }
+    inputs.file(archiveFile)
+    doLast {
+        val jarFile = archiveFile.get().asFile
+        val requiredEntry = "me/lucko/luckperms/minestom/loader/MinestomLoader.class"
+        val bundled = ZipFile(jarFile).use { zip -> zip.getEntry(requiredEntry) != null }
+        if (!bundled) {
+            throw GradleException(
+                "setup.jar is missing $requiredEntry. Without the LuckPerms Minestom loader bundled, " +
+                    "the shipped jar boots in fallback mode where every permission check silently " +
+                    "resolves to TRUE for every player. Check that runtimeOnly(libs.luckperms.minestom.loader) " +
+                    "is still declared in setup/build.gradle.kts and that no shadowJar exclude filters it out."
+            )
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn(verifyLuckPermsLoaderBundled)
 }
 
 publishing {

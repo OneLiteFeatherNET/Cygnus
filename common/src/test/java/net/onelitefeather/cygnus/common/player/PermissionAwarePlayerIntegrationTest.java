@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
@@ -38,6 +39,22 @@ class PermissionAwarePlayerIntegrationTest {
 
         PermissionAwarePlayer permissionAware = assertInstanceOf(PermissionAwarePlayer.class, player);
         assertEquals(TriState.TRUE, permissionAware.value("cygnus.test"));
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testRepeatedFallbackChecksDoNotThrow(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        PermissionAwarePlayer permissionAware = assertInstanceOf(PermissionAwarePlayer.class, player);
+        assertDoesNotThrow(() -> {
+            for (int i = 0; i < 5; i++) {
+                assertEquals(TriState.TRUE, permissionAware.value("cygnus.test"));
+                assertEquals(TriState.TRUE, permissionAware.value("cygnus.other"));
+            }
+        });
 
         env.destroyInstance(instance, true);
     }

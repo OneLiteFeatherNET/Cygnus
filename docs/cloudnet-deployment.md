@@ -92,3 +92,6 @@ It filters the LuckPerms loader off the class path. Every permission check then 
 `/stop` and permission-gated commands stay reachable. The same state applies during tests, where
 `configurations.testRuntimeClasspath` already excludes the loader. The fat jar is unaffected and
 always runs with LuckPerms.
+
+Both tasks run with the repository root as their working directory, so they still look for
+`game/maps` / `setup/maps` relative to the repository root, exactly as described above.

@@ -65,6 +65,7 @@ public abstract class PermissionAwarePlayer extends Player implements Permission
     @Override
     public @NotNull TriState value(@NotNull String permission) {
         if (!LuckPermsSupport.isPresent()) {
+            LuckPermsSupport.noteFallbackGrant(permission);
             return TriState.TRUE;
         }
         User user = LuckPermsProvider.get().getUserManager().getUser(getUuid());

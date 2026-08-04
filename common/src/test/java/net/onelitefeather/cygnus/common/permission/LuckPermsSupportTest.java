@@ -24,4 +24,13 @@ class LuckPermsSupportTest {
     void testBootstrapIsSilentWithoutLoader() {
         assertDoesNotThrow(LuckPermsSupport::bootstrap);
     }
+
+    @Test
+    void testNoteFallbackGrantDoesNotThrowOnRepeatedCalls() {
+        assertDoesNotThrow(() -> {
+            LuckPermsSupport.noteFallbackGrant("cygnus.test");
+            LuckPermsSupport.noteFallbackGrant("cygnus.test");
+            LuckPermsSupport.noteFallbackGrant("cygnus.other");
+        });
+    }
 }
