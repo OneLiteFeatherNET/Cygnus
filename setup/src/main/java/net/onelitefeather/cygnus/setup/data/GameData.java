@@ -7,10 +7,8 @@ import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
-import net.minestom.server.instance.anvil.AnvilLoader;
-import net.minestom.server.utils.Direction;
-import net.minestom.server.world.DimensionType;
 import net.minestom.server.inventory.InventoryType;
+import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
@@ -327,10 +325,7 @@ public class GameData extends InstanceSetupData {
                 .map(GameMapBuilder::new)
                 .orElseGet(GameMapBuilder::new);
 
-        this.instance = MinecraftServer.getInstanceManager().createInstanceContainer();
-
-        AnvilLoader anvilLoader = new AnvilLoader(this.mapEntry.getDirectoryRoot(), DimensionType.OVERWORLD.key());
-        this.instance.setChunkLoader(anvilLoader);
+        this.createInstance();
 
         this.updateTitle();
         MinecraftServer.getInstanceManager().registerInstance(this.instance);

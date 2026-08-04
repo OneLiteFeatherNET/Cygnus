@@ -35,4 +35,8 @@ bin/
 Thumbs.db
 
 # LuckPerms (runtime-generated: config, H2 database, relocated libs)
-data/
+# Anchored to the working directories a service runs in: an unanchored "data/" also
+# hides the net.onelitefeather.cygnus.setup.data Java package.
+/data/
+/setup/data/
+/game/data/

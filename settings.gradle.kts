@@ -32,6 +32,7 @@ dependencyResolutionManagement {
             version("luckperms", "5.5")
             version("luckperms-minestom-loader", "5.6-SNAPSHOT")
             version("guava", "33.6.0-jre")
+            version("falco", "1.0.0")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("slf4j.api", "org.slf4j", "slf4j-api").versionRef("slf4j")
@@ -51,6 +52,8 @@ dependencyResolutionManagement {
             library("aves", "net.theevilreaper", "aves").withoutVersion()
             library("xerus", "net.theevilreaper", "xerus").withoutVersion()
             library("pica", "net.onelitefeather", "pica").versionRef("pica")
+            library("falco.bom", "net.onelitefeather", "falco-bom").versionRef("falco")
+            library("falco.anvil", "net.onelitefeather", "falco-anvil").withoutVersion()
             library("canis", "com.github.theEvilReaper", "Canis").version("master-SNAPSHOT")
 
             library("cloudnet-bom", "eu.cloudnetservice.cloudnet", "bom").versionRef("cloudnet")
