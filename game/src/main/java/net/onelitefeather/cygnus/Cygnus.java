@@ -33,6 +33,8 @@ import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.StartCommand;
+import net.onelitefeather.cygnus.command.SpawnMannequinCommand;
+import net.onelitefeather.cygnus.command.TriggerJumpscareCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
@@ -121,6 +123,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initCommands() {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
+        manager.register(new SpawnMannequinCommand(this.jumpscareManager));
+        manager.register(new TriggerJumpscareCommand(this.jumpscareManager));
     }
 
 
