@@ -4,6 +4,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
 import net.minestom.server.network.packet.server.play.SpawnEntityPacket;
 import net.minestom.testing.Collector;
@@ -217,6 +218,42 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         for (int i = 0; i < 10; i++) env.tick();
 
         assertTrue(corpse.isViewer(victimB), "victim B should see the corpse again once their own scare despawns");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testPhantomSpawnClampsBeforeSolidWall(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Pos deathPos = new Pos(10, 41, 10);
+
+        // Wall directly in the victim's forward direction (yaw 0 -> +Z), one block away,
+        // covering both feet and head height so the phantom cannot clip through it.
+        instance.setBlock(10, 41, 11, Block.STONE);
+        instance.setBlock(10, 42, 11, Block.STONE);
+
+        TestConnection corpseOwnerConn = env.createConnection();
+        Player corpseOwner = corpseOwnerConn.connect(instance, new Pos(12, 41, 10));
+
+        TestConnection victimConn = env.createConnection();
+        Player victim = victimConn.connect(instance, new Pos(10, 41, 10, 0f, 0f));
+
+        DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
+        corpse.setInstance(instance, deathPos);
+
+        JumpScareManager manager = new JumpScareManager();
+        manager.register(corpse);
+
+        for (int i = 0; i < 5; i++) env.tick();
+
+        Collector<SpawnEntityPacket> victimSpawns = victimConn.trackIncoming(SpawnEntityPacket.class);
+        assertTrue(manager.force(victim));
+
+        SpawnEntityPacket phantomSpawn = victimSpawns.collect().getFirst();
+        double spawnDistance = phantomSpawn.position().z() - victim.getPosition().z();
+
+        assertTrue(spawnDistance < 2.2, "the phantom must not spawn past the wall at the full 2.2 block distance");
+        assertEquals(0.8, spawnDistance, 0.01, "the phantom should clamp to the last free spot before the wall");
 
         env.destroyInstance(instance, true);
     }
