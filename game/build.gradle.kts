@@ -24,11 +24,13 @@ dependencies {
     // server logs nothing at all.
     runtimeOnly(libs.slf4j.simple)
 
-    //CloudNet
-    implementation(platform(libs.cloudnet.bom))
-    implementation(libs.bundles.cloudnet)
+    // CloudNet is provided by the CloudNet wrapper at runtime and its bridge is loaded as a
+    // Minestom extension (separate classloader, see the :bridge module), so :game neither
+    // references nor bundles any CloudNet artifact.
+    implementation(libs.minestom.ce.extensions)
+    implementation(libs.kotlin.stdlib.jdk8)
 
-    //LuckPerms
+    // LuckPerms; guava used to arrive transitively through CloudNet, so bundle it explicitly now.
     implementation(libs.guava)
     compileOnly(libs.luckperms.api) {
         exclude(group = "net.kyori.adventure")
@@ -65,6 +67,10 @@ tasks {
         archiveClassifier.set("")
         archiveFileName.set("cygnus.jar")
         mergeServiceFiles()
+        // Shaded deps ship signed and multi-release jars that break a relocation-free
+        // application fat jar; drop signatures and module-info.
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+        exclude("module-info.class", "META-INF/versions/**/module-info.class")
     }
 }
 

@@ -35,13 +35,15 @@ import java.util.concurrent.CompletableFuture;
  *
  * <p><b>Remove this class</b> once the server runs a Minestom build that contains PR #3308 — as of
  * {@code 2026.07.22-26.2} the newest published build predates the merge. Upstream itself intends to
- * revert the workaround for 26.3, where the client bug is fixed.</p>
+ * revert the workaround for 26.3, where the client bug is fixed. When that happens, let the
+ * subclasses extend {@link PermissionAwarePlayer} directly — the permission pointer it installs is
+ * unrelated to this workaround and must survive its removal.</p>
  *
  * @author TheMeinerLP
  * @version 1.0.0
  * @since 2.6.7
  */
-public abstract class InstanceSwitchChunkPlayer extends Player {
+public abstract class InstanceSwitchChunkPlayer extends PermissionAwarePlayer {
 
     private volatile @Nullable TargetView targetView;
 
