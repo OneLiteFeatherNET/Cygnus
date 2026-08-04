@@ -19,7 +19,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -141,10 +140,6 @@ public final class JumpScareManager {
         if (activeMannequins.isEmpty()) return false;
 
         DeadPlayerMannequin sampleCorpse = activeMannequins.get(random.nextInt(activeMannequins.size()));
-        if (sampleCorpse.getInstance() == null || sampleCorpse.isRemoved()) {
-            activeMannequins.remove(sampleCorpse);
-            return false;
-        }
 
         jumpScareCooldowns.put(player.getUuid(), System.currentTimeMillis());
 
