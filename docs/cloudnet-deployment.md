@@ -93,5 +93,11 @@ run that way, because `configurations.testRuntimeClasspath` excludes the loader 
 local server run needs a launch whose class path omits `minestom-loader-<version>.jar` — for example
 an IDE run configuration built from the module's runtime class path minus that jar.
 
-The published fat jars always bundle the loader and therefore always run with LuckPerms;
-`verifyLuckPermsLoaderBundled` fails the build if one ever does not.
+The published fat jars bundle the loader through `runtimeOnly(libs.luckperms.minestom.loader)` and
+therefore always run with LuckPerms. Nothing verifies that at build time — a jar that lost the loader
+would start in fallback mode and grant every player every permission, with only the two log lines to
+show for it. If permission checks ever pass for someone they should not, check the jar first:
+
+```
+unzip -l cygnus.jar | grep MinestomLoader.class
+```

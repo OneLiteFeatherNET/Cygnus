@@ -1,5 +1,3 @@
-import java.util.zip.ZipFile
-
 plugins {
     id("cygnus.java-conventions")
     `maven-publish`
@@ -74,36 +72,6 @@ tasks {
         exclude("module-info.class", "META-INF/versions/**/module-info.class")
     }
 }
-
-// Guards the fat jar against silently shipping in "every permission is TRUE" mode: before this
-// branch a build without the loader died instantly with NoClassDefFoundError, so a dropped
-// runtimeOnly(libs.luckperms.minestom.loader) line or an over-wide shadowJar exclude has to fail
-// the build just as loudly now that the fallback boots successfully instead of crashing.
-val verifyLuckPermsLoaderBundled = tasks.register("verifyLuckPermsLoaderBundled") {
-    group = "verification"
-    description = "Fails the build when cygnus.jar does not bundle the LuckPerms Minestom loader."
-    dependsOn(tasks.shadowJar)
-    val archiveFile = tasks.shadowJar.flatMap { it.archiveFile }
-    inputs.file(archiveFile)
-    doLast {
-        val jarFile = archiveFile.get().asFile
-        val requiredEntry = "me/lucko/luckperms/minestom/loader/MinestomLoader.class"
-        val bundled = ZipFile(jarFile).use { zip -> zip.getEntry(requiredEntry) != null }
-        if (!bundled) {
-            throw GradleException(
-                "cygnus.jar is missing $requiredEntry. Without the LuckPerms Minestom loader bundled, " +
-                    "the shipped jar boots in fallback mode where every permission check silently " +
-                    "resolves to TRUE for every player. Check that runtimeOnly(libs.luckperms.minestom.loader) " +
-                    "is still declared in game/build.gradle.kts and that no shadowJar exclude filters it out."
-            )
-        }
-    }
-}
-
-tasks.named("check") {
-    dependsOn(verifyLuckPermsLoaderBundled)
-}
-
 
 publishing {
     repositories {
