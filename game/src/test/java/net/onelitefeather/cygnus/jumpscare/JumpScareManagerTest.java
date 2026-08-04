@@ -171,4 +171,53 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
 
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    void testConcurrentJumpScaresAgainstSameCorpseDoNotLeakVisibility(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Pos deathPos = new Pos(10, 41, 10);
+
+        TestConnection corpseOwnerConn = env.createConnection();
+        Player corpseOwner = corpseOwnerConn.connect(instance, deathPos);
+
+        TestConnection victimAConn = env.createConnection();
+        Player victimA = victimAConn.connect(instance, new Pos(12, 41, 10));
+
+        TestConnection victimBConn = env.createConnection();
+        Player victimB = victimBConn.connect(instance, new Pos(8, 41, 10));
+
+        DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
+        corpse.setInstance(instance, deathPos);
+
+        JumpScareManager manager = new JumpScareManager();
+        manager.register(corpse);
+
+        for (int i = 0; i < 5; i++) env.tick();
+
+        // Victim A's scare starts first.
+        assertTrue(manager.force(victimA));
+        assertFalse(corpse.isViewer(victimA), "corpse must be hidden from victim A during their scare");
+
+        // A few ticks later, victim B triggers a scare against the same corpse while A's is still active.
+        for (int i = 0; i < 5; i++) env.tick();
+        assertTrue(manager.force(victimB));
+
+        assertFalse(corpse.isViewer(victimA),
+                "victim B's scare must not re-reveal the corpse to victim A, whose own scare is still running");
+        assertFalse(corpse.isViewer(victimB), "corpse must be hidden from victim B during their scare");
+
+        // Advance to just past A's despawn (50 ticks after A's trigger), but before B's (50 ticks after B's trigger).
+        for (int i = 0; i < 46; i++) env.tick();
+
+        assertTrue(corpse.isViewer(victimA), "victim A should see the corpse again once their own scare despawns");
+        assertFalse(corpse.isViewer(victimB),
+                "victim A's despawn must not restore visibility for victim B, whose scare is still active");
+
+        // Advance past B's despawn too.
+        for (int i = 0; i < 10; i++) env.tick();
+
+        assertTrue(corpse.isViewer(victimB), "victim B should see the corpse again once their own scare despawns");
+
+        env.destroyInstance(instance, true);
+    }
 }

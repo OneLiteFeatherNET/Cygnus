@@ -19,11 +19,12 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -42,6 +43,7 @@ public final class JumpScareManager {
     private final List<DeadPlayerMannequin> activeMannequins;
     private final Map<UUID, Long> jumpScareCooldowns;
     private final Map<UUID, Float> playerLastYaws;
+    private final Map<DeadPlayerMannequin, Set<UUID>> corpseHiddenFromViewers;
     private final Random random;
 
     /**
@@ -49,8 +51,9 @@ public final class JumpScareManager {
      */
     public JumpScareManager() {
         this.activeMannequins = new CopyOnWriteArrayList<>();
-        this.jumpScareCooldowns = new HashMap<>();
-        this.playerLastYaws = new HashMap<>();
+        this.jumpScareCooldowns = new ConcurrentHashMap<>();
+        this.playerLastYaws = new ConcurrentHashMap<>();
+        this.corpseHiddenFromViewers = new ConcurrentHashMap<>();
         this.random = new Random();
     }
 
@@ -133,11 +136,10 @@ public final class JumpScareManager {
     private boolean execute(Player player) {
         if (activeMannequins.isEmpty()) return false;
 
+        activeMannequins.removeIf(corpse -> corpse.getInstance() == null || corpse.isRemoved());
+        if (activeMannequins.isEmpty()) return false;
+
         DeadPlayerMannequin sampleCorpse = activeMannequins.get(random.nextInt(activeMannequins.size()));
-        if (sampleCorpse.getInstance() == null || sampleCorpse.isRemoved()) {
-            activeMannequins.remove(sampleCorpse);
-            return false;
-        }
 
         jumpScareCooldowns.put(player.getUuid(), System.currentTimeMillis());
 
@@ -150,7 +152,7 @@ public final class JumpScareManager {
         );
         int phantomEntityId = phantom.getEntityId();
 
-        sampleCorpse.updateViewableRule(viewer -> !viewer.equals(player));
+        hideCorpseFromViewer(sampleCorpse, player);
 
         player.sendPacket(phantom.toSpawnPacket());
         player.sendPacket(phantom.getMetadataPacket());
@@ -195,7 +197,7 @@ public final class JumpScareManager {
                 ));
                 player.sendPacket(new DestroyEntitiesPacket(phantomEntityId));
             }
-            restoreCorpseVisibility(sampleCorpse);
+            restoreCorpseVisibility(sampleCorpse, player);
         }).delay(TaskSchedule.tick(50)).schedule();
 
         return true;
@@ -233,18 +235,44 @@ public final class JumpScareManager {
     }
 
     /**
-     * Updates corpse visibility of a given {@link DeadPlayerMannequin}.
+     * Hides a corpse from a single victim without affecting any other viewer's visibility rule,
+     * even if another jumpscare is concurrently hiding the same corpse from a different victim.
      *
-     * @param corpse to update
+     * @param corpse the corpse to hide
+     * @param victim the player it should be hidden from
      */
-    private void restoreCorpseVisibility(DeadPlayerMannequin corpse) {
-        if (corpse.getInstance() != null && !corpse.isRemoved()) {
+    private void hideCorpseFromViewer(DeadPlayerMannequin corpse, Player victim) {
+        Set<UUID> hiddenFrom = corpseHiddenFromViewers.computeIfAbsent(corpse, _ -> ConcurrentHashMap.newKeySet());
+        hiddenFrom.add(victim.getUuid());
+        corpse.updateViewableRule(viewer -> !hiddenFrom.contains(viewer.getUuid()));
+    }
+
+    /**
+     * Restores corpse visibility for a single victim, leaving the corpse hidden for any other
+     * victim whose jumpscare against the same corpse is still active.
+     *
+     * @param corpse the corpse to update
+     * @param victim the player it should become visible to again
+     */
+    private void restoreCorpseVisibility(DeadPlayerMannequin corpse, Player victim) {
+        Set<UUID> hiddenFrom = corpseHiddenFromViewers.get(corpse);
+        if (hiddenFrom == null) return;
+        hiddenFrom.remove(victim.getUuid());
+
+        if (corpse.getInstance() == null || corpse.isRemoved()) {
+            corpseHiddenFromViewers.remove(corpse);
+            return;
+        }
+
+        if (hiddenFrom.isEmpty()) {
+            corpseHiddenFromViewers.remove(corpse);
             corpse.updateViewableRule(null);
+        } else {
+            corpse.updateViewableRule(viewer -> !hiddenFrom.contains(viewer.getUuid()));
         }
     }
 
     /**
-     * +
      * Removes all existing mannequin from the {@link Instance}.
      */
     public void cleanUp() {
@@ -256,6 +284,7 @@ public final class JumpScareManager {
         activeMannequins.clear();
         jumpScareCooldowns.clear();
         playerLastYaws.clear();
+        corpseHiddenFromViewers.clear();
     }
 
     /**
