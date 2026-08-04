@@ -49,7 +49,7 @@ class SetupItemsTest {
 
         SetupItems.setPageItems(player);
         assertItem(player, 2, SetupItemId.PAGES);
-        assertItem(player, 4, SetupItemId.LEAVE_PAGE);
+        assertItem(player, 6, SetupItemId.LEAVE_PAGE);
 
         env.destroyInstance(instance, true);
     }
