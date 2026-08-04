@@ -12,6 +12,8 @@ import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.player.InstanceSwitchChunkPlayer;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 @SuppressWarnings("java:S3252")
 public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
 
@@ -22,8 +24,8 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
             new AttributeModifier(Key.key("minecraft:sprinting"), 0.0, AttributeOperation.ADD_MULTIPLIED_TOTAL);
 
     private static final float HEALTH_THRESHOLD = 6.0f; // 3 hearts
-    private static final int MAX_INTERVAL_TICKS = 30;   // Every 1.5s
-    private static final int MIN_INTERVAL_TICKS = 8;    // Every 0.4s
+    private static final int MAX_INTERVAL_TICKS = 36;   // Every 1.8s (slow, subtle pulse at start)
+    private static final int MIN_INTERVAL_TICKS = 12;   // Every 0.6s (fast & tense without sound overlapping)
 
     private boolean blockedSprinting;
     private int heartbeatTicks;
@@ -103,10 +105,24 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
 
         float intensity = Math.clamp(1.0f - (health / HEALTH_THRESHOLD), 0.0f, 1.0f);
 
-        int warningBlocks = (int) (intensity * 45);
+        double distanceToBorder = 29_999_984.0;
+        var instance = getInstance();
+        if (instance != null && instance.getWorldBorder() != null) {
+            var border = instance.getWorldBorder();
+            double radius = border.diameter() / 2.0;
+            double dx = Math.abs(getPosition().x() - border.centerX());
+            double dz = Math.abs(getPosition().z() - border.centerZ());
+            distanceToBorder = Math.max(1.0, radius - Math.max(dx, dz));
+        }
+
+        // Non-linear visual curve makes the red border vignette stronger earlier and very intense at low HP
+        float visualIntensity = (float) Math.pow(intensity, 0.6);
+        float clampedIntensity = Math.min(visualIntensity, 0.995f);
+        int warningBlocks = (int) (distanceToBorder / (1.0f - clampedIntensity));
         sendPacket(new WorldBorderWarningReachPacket(warningBlocks));
 
-        int targetInterval = (int) (MAX_INTERVAL_TICKS - (intensity * (MAX_INTERVAL_TICKS - MIN_INTERVAL_TICKS)));
+        float intervalFactor = (float) Math.pow(intensity, 0.85);
+        int targetInterval = (int) (MAX_INTERVAL_TICKS - (intervalFactor * (MAX_INTERVAL_TICKS - MIN_INTERVAL_TICKS)));
         heartbeatTicks++;
 
         if (heartbeatTicks >= targetInterval) {
@@ -116,8 +132,9 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     }
 
     private void playHeartbeatSound(float intensity) {
-        float volume = 0.3f + (intensity * 0.7f);
-        float pitch = 0.8f + (intensity * 0.4f);
+        float volume = 0.4f + (intensity * 0.6f);
+        float randomPitchOffset = (float) (ThreadLocalRandom.current().nextDouble(-0.03, 0.03));
+        float pitch = 0.75f + (intensity * 0.30f) + randomPitchOffset;
 
         Sound heartbeat = Sound.sound(
                 SoundEvent.ENTITY_WARDEN_HEARTBEAT,
