@@ -80,18 +80,18 @@ java -jar build/libs/cygnus.jar
 Binds `localhost:25565`. Run it from a directory that contains `game/maps` (or `setup/maps`). `stop` on the
 console shuts it down. No CloudNet, no extensions and no system properties are required.
 
-To run without LuckPerms — no `data/` directory, no H2 database, no library downloads — use the
-Gradle task instead:
+## Running without LuckPerms
 
-```
-./gradlew :game:runWithoutLuckPerms
-./gradlew :setup:runWithoutLuckPerms
-```
+LuckPerms is optional at runtime. When `me.lucko.luckperms.minestom.loader.MinestomLoader` is not on
+the class path, `LuckPermsSupport` reports it absent, LuckPerms is never started — no `data/`
+directory, no H2 database, no library downloads — and every permission check answers `TRUE`, so
+`/stop` and permission-gated commands stay reachable. A WARN line at startup and a one-shot line on
+the first granted permission mark that mode in the log.
 
-It filters the LuckPerms loader off the class path. Every permission check then answers `TRUE`, so
-`/stop` and permission-gated commands stay reachable. The same state applies during tests, where
-`configurations.testRuntimeClasspath` already excludes the loader. The fat jar is unaffected and
-always runs with LuckPerms.
+That state is reached by leaving the loader off the class path; nothing else switches it on. Tests
+run that way, because `configurations.testRuntimeClasspath` excludes the loader in both services. A
+local server run needs a launch whose class path omits `minestom-loader-<version>.jar` — for example
+an IDE run configuration built from the module's runtime class path minus that jar.
 
-Both tasks run with the repository root as their working directory, so they still look for
-`game/maps` / `setup/maps` relative to the repository root, exactly as described above.
+The published fat jars always bundle the loader and therefore always run with LuckPerms;
+`verifyLuckPermsLoaderBundled` fails the build if one ever does not.

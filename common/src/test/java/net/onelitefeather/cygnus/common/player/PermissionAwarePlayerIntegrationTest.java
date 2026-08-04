@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 /**
  * Verifies that a player answers permission questions without LuckPerms present, which is the state
- * every test run and every {@code runWithoutLuckPerms} start is in.
+ * every test run is in.
  *
  * @author TheMeinerLP
  * @version 1.0.0

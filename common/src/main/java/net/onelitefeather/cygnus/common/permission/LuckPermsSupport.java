@@ -10,10 +10,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Decides whether Cygnus runs with LuckPerms.
  * <p>
  * Minestom has no plugin folder, so LuckPerms is bootstrapped from {@code main} and shipped inside
- * the fat jar. A build that leaves the loader out - the test class path and the
- * {@code runWithoutLuckPerms} task do exactly that - runs without any permission backend, and
- * {@code PermissionAwarePlayer} then grants every permission instead of failing on
- * {@code LuckPermsProvider.get()}.
+ * the fat jar. A class path that leaves the loader out - the test class path does exactly that -
+ * runs without any permission backend, and {@code PermissionAwarePlayer} then grants every
+ * permission instead of failing on {@code LuckPermsProvider.get()}.
  * <p>
  * Detection reads the class path once and caches the answer, so a permission check never pays for
  * it twice.

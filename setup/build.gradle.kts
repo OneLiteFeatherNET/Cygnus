@@ -75,23 +75,6 @@ tasks {
     }
 }
 
-// Local counterpart to `run`: the same entry point, but with the LuckPerms loader filtered out of
-// the class path, so LuckPermsSupport reports absent and every permission check answers TRUE. No
-// data/ directory, no H2 database, no library downloads.
-//
-// SetupExtension resolves maps as `<workingDir>/setup/maps` (see SetupExtension / SetupMapProvider),
-// so the working directory has to be the repository root for that path to line up with
-// docs/cloudnet-deployment.md.
-tasks.register<JavaExec>("runWithoutLuckPerms") {
-    group = "application"
-    description = "Runs the setup service without LuckPerms; every permission check resolves to TRUE."
-    mainClass.set(application.mainClass)
-    classpath = sourceSets.main.get().runtimeClasspath.filter { file ->
-        !file.name.startsWith("minestom-loader-")
-    }
-    workingDir = rootProject.projectDir
-}
-
 // Guards the fat jar against silently shipping in "every permission is TRUE" mode: before this
 // branch a build without the loader died instantly with NoClassDefFoundError, so a dropped
 // runtimeOnly(libs.luckperms.minestom.loader) line or an over-wide shadowJar exclude has to fail
