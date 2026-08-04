@@ -14,7 +14,8 @@ dependencies {
     compileOnly(platform(libs.aonyx.bom))
     compileOnly(libs.minestom)
     compileOnly(libs.adventure)
-    compileOnly(libs.minestom.ce.extensions)
+    compileOnly(platform(libs.minestom.extensions.bom))
+    compileOnly(libs.minestom.extensions)
 
     compileOnly(platform(libs.cloudnet.bom))
     compileOnly(libs.cloudnet.driver.api)
