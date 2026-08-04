@@ -12,7 +12,7 @@ import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
-import net.onelitefeather.cygnus.jumpscare.JumpscareManager;
+import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.team.TeamHelper;
 
@@ -25,9 +25,9 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
     private final Supplier<Phase> phaseSupplier;
     private final Team survivorTeam;
     private final Team slenderTeam;
-    private final JumpscareManager jumpscareManager;
+    private final JumpScareManager jumpscareManager;
 
-    public PlayerDeathListener(Supplier<Phase> phaseSupplier, TeamService teamService, JumpscareManager jumpscareManager) {
+    public PlayerDeathListener(Supplier<Phase> phaseSupplier, TeamService teamService, JumpScareManager jumpscareManager) {
         this.phaseSupplier = phaseSupplier;
         this.survivorTeam = teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID);
         this.slenderTeam = teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID);
@@ -42,7 +42,7 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
             Pos deathPos = player.getPosition();
             DeadPlayerMannequin mannequin = DeadPlayerMannequin.sleeping(player);
             mannequin.setInstance(player.getInstance(), deathPos.add(0, 0.15, 0));
-            this.jumpscareManager.registerMannequin(mannequin);
+            this.jumpscareManager.register(mannequin);
         }
 
         event.setChatMessage(Messages.getDeathComponent(player));
