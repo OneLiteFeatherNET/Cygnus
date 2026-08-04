@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.common.map.filter;
 
+import net.kyori.adventure.key.Key;
+import net.minestom.server.world.DimensionType;
 import net.theevilreaper.aves.map.MapEntry;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -13,13 +15,15 @@ import java.util.stream.Stream;
  * The game module needs another filter to logic than the setup.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class MapFilters {
 
     private static final String REGION_FOLDER = "region";
+    private static final String DIMENSIONS_FOLDER = "dimensions";
     private static final String MAP_FILE_NAME = "map.json";
+    private static final Key OVERWORLD_KEY = DimensionType.OVERWORLD.key();
 
     private MapFilters() {
 
@@ -34,7 +38,7 @@ public final class MapFilters {
     public static @Unmodifiable List<MapEntry> filterMapsForGame(Stream<Path> mapStream) {
         return mapStream
                 .filter(Files::isDirectory)
-                .filter(path -> Files.exists(path.resolve(REGION_FOLDER)))
+                .filter(MapFilters::hasRegionFolder)
                 .filter(path -> Files.exists(path.resolve(MAP_FILE_NAME)))
                 .map(MapEntry::of)
                 .toList();
@@ -49,8 +53,28 @@ public final class MapFilters {
     public static @Unmodifiable List<MapEntry> filterMapsForSetup(Stream<Path> mapStream) {
         return mapStream
                 .filter(Files::isDirectory)
-                .filter(path -> Files.exists(path.resolve(REGION_FOLDER)))
+                .filter(MapFilters::hasRegionFolder)
                 .map(MapEntry::of)
                 .toList();
+    }
+
+    /**
+     * Checks whether the given world root holds the region files of the overworld.
+     *
+     * <p>A world written by 26.2 keeps its region files below
+     * {@code dimensions/<namespace>/<dimension>/region}, while a world written before that keeps
+     * them in a {@code region} directory next to {@code level.dat}. Both chunk loaders the project
+     * uses read the current layout and fall back to the legacy one, so a world counts as a map as
+     * soon as one of the two directories exists.</p>
+     *
+     * @param worldRoot the root directory of the world
+     * @return {@code true} if the world holds region files in either layout, otherwise {@code false}
+     */
+    private static boolean hasRegionFolder(Path worldRoot) {
+        Path dimensionRegion = worldRoot.resolve(DIMENSIONS_FOLDER)
+                .resolve(OVERWORLD_KEY.namespace())
+                .resolve(OVERWORLD_KEY.value())
+                .resolve(REGION_FOLDER);
+        return Files.isDirectory(dimensionRegion) || Files.isDirectory(worldRoot.resolve(REGION_FOLDER));
     }
 }

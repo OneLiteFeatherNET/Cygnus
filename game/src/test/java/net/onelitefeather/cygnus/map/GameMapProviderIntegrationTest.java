@@ -87,25 +87,33 @@ class GameMapProviderIntegrationTest {
      */
     private GameMapProvider createProvider(Path root) throws IOException {
         Path maps = root.resolve("game").resolve("maps");
-        writeMap(maps.resolve("lobby"), new BaseMap("lobby", Pos.ZERO, List.of()));
+        writeMap(maps.resolve("lobby"), new BaseMap("lobby", Pos.ZERO, List.of()), false);
         writeMap(
                 maps.resolve(ARENA_NAME),
-                new GameMap(ARENA_NAME, Pos.ZERO, new Pos(1, 1, 1), Set.of(), Set.of(new Pos(2, 2, 2)), List.of())
+                new GameMap(ARENA_NAME, Pos.ZERO, new Pos(1, 1, 1), Set.of(), Set.of(new Pos(2, 2, 2)), List.of()),
+                true
         );
         return new GameMapProvider(root);
     }
 
     /**
-     * Writes a map directory the way {@code MapFilters} expects it: a {@code region} directory next
-     * to a {@code map.json}. The directory stays empty, so the loader simply finds no region file
-     * and hands out no chunk — which is all this test needs from it.
+     * Writes a map directory the way {@code MapFilters} expects it: a region directory next to a
+     * {@code map.json}. The directory stays empty, so the loader simply finds no region file and
+     * hands out no chunk — which is all this test needs from it.
      *
-     * @param directoryRoot the world root of the map
-     * @param map           the map data written to {@code map.json}
+     * <p>The lobby is written in the layout used before 26.2 and the game map in the one 26.2
+     * writes, so a single provider covers both.</p>
+     *
+     * @param directoryRoot   the world root of the map
+     * @param map             the map data written to {@code map.json}
+     * @param dimensionLayout whether the region directory is written below {@code dimensions}
      * @throws IOException if the layout cannot be written
      */
-    private void writeMap(Path directoryRoot, BaseMap map) throws IOException {
-        Files.createDirectories(directoryRoot.resolve("region"));
+    private void writeMap(Path directoryRoot, BaseMap map, boolean dimensionLayout) throws IOException {
+        Path regionDirectory = dimensionLayout
+                ? directoryRoot.resolve("dimensions").resolve("minecraft").resolve("overworld").resolve("region")
+                : directoryRoot.resolve("region");
+        Files.createDirectories(regionDirectory);
         Files.writeString(directoryRoot.resolve("map.json"), GsonHelper.GSON.toJson(map), StandardCharsets.UTF_8);
     }
 }
