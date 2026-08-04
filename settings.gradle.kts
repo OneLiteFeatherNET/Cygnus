@@ -35,6 +35,7 @@ dependencyResolutionManagement {
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("slf4j.api", "org.slf4j", "slf4j-api").versionRef("slf4j")
+            library("slf4j.simple", "org.slf4j", "slf4j-simple").versionRef("slf4j")
             library("guava", "com.google.guava", "guava").versionRef("guava")
             library("luckperms.api", "net.luckperms", "api").versionRef("luckperms")
             library("luckperms.minestom.loader", "net.luckperms", "minestom-loader").versionRef("luckperms-minestom-loader")

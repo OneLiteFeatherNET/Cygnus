@@ -20,6 +20,10 @@ dependencies {
     implementation(libs.pica)
     implementation(libs.guira)
 
+    // SLF4J needs a binding at runtime; without one it falls back to NOP and the
+    // server logs nothing at all.
+    runtimeOnly(libs.slf4j.simple)
+
     //LuckPerms
     implementation(libs.guava)
     compileOnly(libs.luckperms.api) {
