@@ -107,7 +107,7 @@ public final class SetupItems {
                 .set(Tags.ITEM_TAG, SetupItemId.PAGES)
                 .build()
         );
-        pageLayout.set(4, ItemStack.builder(Material.BARRIER)
+        pageLayout.set(6, ItemStack.builder(Material.BARRIER)
                 .customName(Component.text("Leave mode", NamedTextColor.RED))
                 .lore(
                         getLore(
