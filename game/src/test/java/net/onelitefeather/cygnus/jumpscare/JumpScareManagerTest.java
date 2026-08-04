@@ -257,4 +257,37 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
 
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    void testJumpScareSkippedWhenVictimStandsFlushAgainstWall(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Pos deathPos = new Pos(10, 41, 10);
+
+        // Wall right in front of the victim (less than one collision-check step away), so there
+        // is no free spot at all to place the phantom.
+        instance.setBlock(10, 41, 11, Block.STONE);
+        instance.setBlock(10, 42, 11, Block.STONE);
+
+        TestConnection corpseOwnerConn = env.createConnection();
+        Player corpseOwner = corpseOwnerConn.connect(instance, new Pos(12, 41, 10));
+
+        TestConnection victimConn = env.createConnection();
+        Player victim = victimConn.connect(instance, new Pos(10, 41, 10.9, 0f, 0f));
+
+        DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
+        corpse.setInstance(instance, deathPos);
+
+        JumpScareManager manager = new JumpScareManager();
+        manager.register(corpse);
+
+        for (int i = 0; i < 5; i++) env.tick();
+
+        Collector<SpawnEntityPacket> victimSpawns = victimConn.trackIncoming(SpawnEntityPacket.class);
+
+        assertFalse(manager.force(victim), "the scare must not fire when there is no free spot for the phantom");
+        assertTrue(victimSpawns.collect().isEmpty(), "no phantom spawn packet should be sent when the scare is skipped");
+        assertTrue(corpse.isViewer(victim), "the real corpse must stay visible since no scare actually started");
+
+        env.destroyInstance(instance, true);
+    }
 }

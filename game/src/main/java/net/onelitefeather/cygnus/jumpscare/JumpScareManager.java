@@ -18,6 +18,7 @@ import net.minestom.server.timer.TaskSchedule;
 import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -143,11 +144,13 @@ public final class JumpScareManager {
         activeMannequins.removeIf(corpse -> corpse.getInstance() == null || corpse.isRemoved());
         if (activeMannequins.isEmpty()) return false;
 
+        // No free spot to place the phantom in (e.g. the victim is pressed flush against a wall)
+        Pos jumpscarePos = getJumpscarePos(player);
+        if (jumpscarePos == null) return false;
+
         DeadPlayerMannequin sampleCorpse = activeMannequins.get(random.nextInt(activeMannequins.size()));
 
         jumpScareCooldowns.put(player.getUuid(), System.currentTimeMillis());
-
-        Pos jumpscarePos = getJumpscarePos(player);
 
         DeadPlayerMannequin phantom = DeadPlayerMannequin.standing(
                 sampleCorpse.getOriginalPlayerUuid(),
@@ -211,15 +214,17 @@ public final class JumpScareManager {
      * Extracts the position for the jump scare from a {@link Player} target.
      *
      * @param player which is the target
-     * @return extracted position
+     * @return the extracted position, or null if there is no free spot in front of the player
+     *         to place the phantom (e.g. the player stands flush against a wall)
      */
-    private static Pos getJumpscarePos(Player player) {
+    private static @Nullable Pos getJumpscarePos(Player player) {
         Pos playerPos = player.getPosition();
         // Calculate strictly 2D horizontal forward vector on XZ plane at exact foot Y level
         float yawRad = (float) Math.toRadians(playerPos.yaw());
         double dirX = -Math.sin(yawRad);
         double dirZ = Math.cos(yawRad);
         double distance = clampToFreeDistance(player.getInstance(), playerPos, dirX, dirZ);
+        if (distance < MIN_PHANTOM_SPAWN_DISTANCE) return null;
 
         double phantomX = playerPos.x() + dirX * distance;
         double phantomZ = playerPos.z() + dirZ * distance;
@@ -246,7 +251,8 @@ public final class JumpScareManager {
      * @param playerPos the player's position, used as the ray origin
      * @param dirX      the horizontal forward direction on the X axis
      * @param dirZ      the horizontal forward direction on the Z axis
-     * @return the largest free distance up to {@link #PHANTOM_SPAWN_DISTANCE}
+     * @return the largest free distance up to {@link #PHANTOM_SPAWN_DISTANCE}; may be smaller
+     *         than {@link #MIN_PHANTOM_SPAWN_DISTANCE} if solid geometry starts right away
      */
     private static double clampToFreeDistance(Instance instance, Pos playerPos, double dirX, double dirZ) {
         double freeDistance = PHANTOM_SPAWN_DISTANCE;
@@ -260,7 +266,7 @@ public final class JumpScareManager {
                 break;
             }
         }
-        return Math.max(freeDistance, MIN_PHANTOM_SPAWN_DISTANCE);
+        return freeDistance;
     }
 
     /**
