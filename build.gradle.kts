@@ -2,6 +2,5 @@ plugins {
     alias(libs.plugins.cyclonedx)
 }
 
-allprojects {
-    version = (version as String).substringBefore('#').trim()
-}
+group = "net.onelitefeather"
+version = "2.6.6" // x-release-please-version
