@@ -62,6 +62,9 @@ dependencyResolutionManagement {
             // DependencyGetter, so no Kotlin stdlib is needed on the class path anymore.
             library("minestom-extensions-bom", "net.onelitefeather", "minestom-extensions-bom").versionRef("minestom-extensions")
             library("minestom-extensions", "net.onelitefeather", "minestom-extensions").withoutVersion()
+            // Generates extension.json from @ExtensionInfo at compile time; source retention, so
+            // the annotation itself never reaches the extension jar.
+            library("minestom-extensions-processor", "net.onelitefeather", "minestom-extensions-processor").withoutVersion()
             library("adventure", "net.kyori", "adventure-text-minimessage").withoutVersion()
             library("cyano", "net.onelitefeather", "cyano").withoutVersion()
             library("guira", "net.onelitefeather", "guira").withoutVersion()
