@@ -54,7 +54,7 @@ public class DeadPlayerMannequin extends LivingEntity {
     }
 
     /**
-     * Creates a standing, packet-only jumpscare phantom for a player identity. Never call
+     * Creates a standing, packet-only JumpScare phantom for a player identity. Never call
      * {@link #setInstance} on the result, it only exists as raw packets sent to one victim.
      *
      * @param originalPlayerUuid the UUID of the player this phantom impersonates
