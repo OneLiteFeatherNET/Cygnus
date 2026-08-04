@@ -1,13 +1,15 @@
 package net.onelitefeather.cygnus.player;
 
 import net.kyori.adventure.key.Key;
-import net.minestom.server.entity.Player;
+import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.network.packet.server.play.EntityAttributesPacket;
+import net.minestom.server.network.packet.server.play.WorldBorderWarningReachPacket;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
+import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.player.InstanceSwitchChunkPlayer;
 
 @SuppressWarnings("java:S3252")
@@ -19,11 +21,19 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private static final AttributeModifier DISABLED_SPRINT_MODIFIER =
             new AttributeModifier(Key.key("minecraft:sprinting"), 0.0, AttributeOperation.ADD_MULTIPLIED_TOTAL);
 
+    private static final float HEALTH_THRESHOLD = 6.0f; // 3 hearts
+    private static final int MAX_INTERVAL_TICKS = 30;   // Every 1.5s
+    private static final int MIN_INTERVAL_TICKS = 8;    // Every 0.4s
+
     private boolean blockedSprinting;
+    private int heartbeatTicks;
+    private boolean heartbeatActive;
 
     public CygnusPlayer(PlayerConnection playerConnection, GameProfile gameProfile) {
         super(playerConnection, gameProfile);
         this.blockedSprinting = false;
+        this.heartbeatTicks = 0;
+        this.heartbeatActive = false;
     }
 
     /**
@@ -76,8 +86,67 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
         return blockedSprinting;
     }
 
+    /**
+     * Updates the heartbeat sound and red border vignette effect on player tick.
+     */
+    public void tickHeartbeat() {
+        float health = getHealth();
+
+        if (health > HEALTH_THRESHOLD || health <= 0 || isDead()) {
+            if (heartbeatActive) {
+                resetHeartbeat();
+            }
+            return;
+        }
+
+        heartbeatActive = true;
+
+        float intensity = Math.clamp(1.0f - (health / HEALTH_THRESHOLD), 0.0f, 1.0f);
+
+        int warningBlocks = (int) (intensity * 45);
+        sendPacket(new WorldBorderWarningReachPacket(warningBlocks));
+
+        int targetInterval = (int) (MAX_INTERVAL_TICKS - (intensity * (MAX_INTERVAL_TICKS - MIN_INTERVAL_TICKS)));
+        heartbeatTicks++;
+
+        if (heartbeatTicks >= targetInterval) {
+            playHeartbeatSound(intensity);
+            heartbeatTicks = 0;
+        }
+    }
+
+    private void playHeartbeatSound(float intensity) {
+        float volume = 0.3f + (intensity * 0.7f);
+        float pitch = 0.8f + (intensity * 0.4f);
+
+        Sound heartbeat = Sound.sound(
+                SoundEvent.ENTITY_WARDEN_HEARTBEAT,
+                Sound.Source.MASTER,
+                volume,
+                pitch
+        );
+
+        playSound(heartbeat, getPosition());
+    }
+
+    private void resetHeartbeat() {
+        heartbeatActive = false;
+        heartbeatTicks = 0;
+        sendPacket(new WorldBorderWarningReachPacket(0));
+    }
+
+    /**
+     * Returns whether the heartbeat effect is currently active for this player.
+     *
+     * @return {@code true} if heartbeat is active, otherwise {@code false}.
+     */
+    public boolean isHeartbeatActive() {
+        return heartbeatActive;
+    }
+
     @Override
     public EntityAttributesPacket getPropertiesPacket() {
         return super.getPropertiesPacket();
     }
 }
+
