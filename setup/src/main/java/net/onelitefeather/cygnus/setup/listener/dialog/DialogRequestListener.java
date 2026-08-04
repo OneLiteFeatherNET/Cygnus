@@ -20,13 +20,15 @@ public class DialogRequestListener implements Consumer<DialogRequestEvent> {
         switch (target) {
             case CREATE_NAME -> MapDialogs.openNameCreateDialog(player);
             case UPDATE_NAME -> {
-                if (context == null) return;
-                MapDialogs.openNameUpdateDialog(player, ((DialogContext.NameContext) context).name());
+                if (context instanceof DialogContext.NameContext nameContext) {
+                    MapDialogs.openNameUpdateDialog(player, nameContext.name());
+                }
             }
             case CREATE_AUTHORS -> AuthorDialogs.openAuthorRequestDialog(player);
             case AUTHOR_INPUT -> {
-                if (context == null) return;
-                AuthorDialogs.openAuthorInput(player, ((DialogContext.AuthorAmount)context).amount());
+                if (context instanceof DialogContext.AuthorAmount authorAmount) {
+                    AuthorDialogs.openAuthorInput(player, authorAmount.amount());
+                }
             }
             default -> {
                 // Nothing to do here
