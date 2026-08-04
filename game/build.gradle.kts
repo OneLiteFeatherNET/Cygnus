@@ -73,6 +73,18 @@ tasks {
     }
 }
 
+// Local counterpart to `run`: the same entry point, but with the LuckPerms loader filtered out of
+// the class path, so LuckPermsSupport reports absent and every permission check answers TRUE. No
+// data/ directory, no H2 database, no library downloads.
+tasks.register<JavaExec>("runWithoutLuckPerms") {
+    group = "application"
+    description = "Runs the game service without LuckPerms; every permission check resolves to TRUE."
+    mainClass.set(application.mainClass)
+    classpath = sourceSets.main.get().runtimeClasspath.filter { file ->
+        !file.name.startsWith("minestom-loader-")
+    }
+}
+
 
 publishing {
     repositories {

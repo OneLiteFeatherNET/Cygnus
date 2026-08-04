@@ -79,3 +79,16 @@ java -jar build/libs/cygnus.jar
 
 Binds `localhost:25565`. Run it from a directory that contains `game/maps` (or `setup/maps`). `stop` on the
 console shuts it down. No CloudNet, no extensions and no system properties are required.
+
+To run without LuckPerms — no `data/` directory, no H2 database, no library downloads — use the
+Gradle task instead:
+
+```
+./gradlew :game:runWithoutLuckPerms
+./gradlew :setup:runWithoutLuckPerms
+```
+
+It filters the LuckPerms loader off the class path. Every permission check then answers `TRUE`, so
+`/stop` and permission-gated commands stay reachable. The same state applies during tests, where
+`configurations.testRuntimeClasspath` already excludes the loader. The fat jar is unaffected and
+always runs with LuckPerms.
