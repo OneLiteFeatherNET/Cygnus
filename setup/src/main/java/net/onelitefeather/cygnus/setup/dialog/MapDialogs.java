@@ -101,7 +101,7 @@ public final class MapDialogs extends DialogBase {
         Point point = switch (context) {
             case DialogContext.PositionContent(Point p) -> p;
             case DialogContext.PageContent(PageResource resource) -> resource.position();
-            default -> null;
+            case null, default -> null;
         };
         DialogTemplate dialogTemplate = DialogType.confirm(DYNAMIC_DELETE_KEY)
                 .meta(dialogMeta -> {
