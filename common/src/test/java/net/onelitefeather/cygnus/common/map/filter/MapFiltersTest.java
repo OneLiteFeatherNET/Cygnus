@@ -16,8 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies that both world layouts are recognized as maps: the one 26.2 writes, where the region
- * files live below {@code dimensions/minecraft/overworld}, and the legacy one which keeps them in a
- * {@code region} directory next to {@code level.dat}.
+ * files live below {@code dimensions}, and the legacy one which keeps them in a {@code region}
+ * directory next to {@code level.dat}.
  *
  * @author TheMeinerLP
  * @version 1.0.0
@@ -46,6 +46,14 @@ class MapFiltersTest {
 
         assertEquals(1, entries.size());
         assertEquals(arena, entries.getFirst().getDirectoryRoot());
+    }
+
+    @Test
+    void testGameFilterAcceptsBareDimensionsFolder(@TempDir Path maps) throws IOException {
+        Path arena = Files.createDirectories(maps.resolve("arena").resolve("dimensions")).getParent();
+        Files.writeString(arena.resolve("map.json"), "{}", StandardCharsets.UTF_8);
+
+        assertEquals(1, filterForGame(maps).size());
     }
 
     @Test

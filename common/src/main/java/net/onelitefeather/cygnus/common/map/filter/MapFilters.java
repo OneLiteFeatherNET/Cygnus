@@ -1,7 +1,5 @@
 package net.onelitefeather.cygnus.common.map.filter;
 
-import net.kyori.adventure.key.Key;
-import net.minestom.server.world.DimensionType;
 import net.theevilreaper.aves.map.MapEntry;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -23,7 +21,6 @@ public final class MapFilters {
     private static final String REGION_FOLDER = "region";
     private static final String DIMENSIONS_FOLDER = "dimensions";
     private static final String MAP_FILE_NAME = "map.json";
-    private static final Key OVERWORLD_KEY = DimensionType.OVERWORLD.key();
 
     private MapFilters() {
 
@@ -59,22 +56,18 @@ public final class MapFilters {
     }
 
     /**
-     * Checks whether the given world root holds the region files of the overworld.
+     * Checks whether the given world root holds chunk data.
      *
-     * <p>A world written by 26.2 keeps its region files below
-     * {@code dimensions/<namespace>/<dimension>/region}, while a world written before that keeps
-     * them in a {@code region} directory next to {@code level.dat}. Both chunk loaders the project
-     * uses read the current layout and fall back to the legacy one, so a world counts as a map as
-     * soon as one of the two directories exists.</p>
+     * <p>A world written by 26.2 keeps its region files below {@code dimensions}, one directory per
+     * dimension, while a world written before that keeps them in a {@code region} directory next to
+     * {@code level.dat}. Which dimension is read is up to the chunk loader, so the filter only asks
+     * whether one of the two directories is there.</p>
      *
      * @param worldRoot the root directory of the world
      * @return {@code true} if the world holds region files in either layout, otherwise {@code false}
      */
     private static boolean hasRegionFolder(Path worldRoot) {
-        Path dimensionRegion = worldRoot.resolve(DIMENSIONS_FOLDER)
-                .resolve(OVERWORLD_KEY.namespace())
-                .resolve(OVERWORLD_KEY.value())
-                .resolve(REGION_FOLDER);
-        return Files.isDirectory(dimensionRegion) || Files.isDirectory(worldRoot.resolve(REGION_FOLDER));
+        return Files.isDirectory(worldRoot.resolve(DIMENSIONS_FOLDER))
+                || Files.isDirectory(worldRoot.resolve(REGION_FOLDER));
     }
 }
