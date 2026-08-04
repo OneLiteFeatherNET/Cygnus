@@ -40,3 +40,13 @@ Thumbs.db
 /data/
 /setup/data/
 /game/data/
+
+# Setup world data & report artifacts
+/setup/setup/
+*/setup/maps/
+chunk-loader-report.csv
+
+# Agent & Tooling directories
+.claude/
+.serena/
+.mcp.json
