@@ -39,6 +39,7 @@ import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.onelitefeather.guira.SetupDataService;
+import net.onelitefeather.guira.data.SetupData;
 
 import java.nio.file.Paths;
 import java.util.UUID;
@@ -71,9 +72,8 @@ public class SetupExtension implements ListenerHandling {
         manager.addListener(AsyncPlayerConfigurationEvent.class, event -> event.setSpawningInstance(instanceSupplier.get()));
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(spawnPos));
 
-        manager.addListener(PlayerDisconnectEvent.class, event -> {
-            this.dataService.remove(event.getPlayer().getUuid());
-        });
+        manager.addListener(PlayerDisconnectEvent.class, event ->
+                this.dataService.remove(event.getPlayer().getUuid()).ifPresent(SetupData::reset));
         manager.addListener(PlayerBlockBreakEvent.class, new PageCreationListener(this.dataService));
         manager.addListener(EventListener.builder(PlayerBlockBreakEvent.class)
                 .ignoreCancelled(false)
