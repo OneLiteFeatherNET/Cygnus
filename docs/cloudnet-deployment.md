@@ -79,3 +79,25 @@ java -jar build/libs/cygnus.jar
 
 Binds `localhost:25565`. Run it from a directory that contains `game/maps` (or `setup/maps`). `stop` on the
 console shuts it down. No CloudNet, no extensions and no system properties are required.
+
+## Running without LuckPerms
+
+LuckPerms is optional at runtime. When `me.lucko.luckperms.minestom.loader.MinestomLoader` is not on
+the class path, `LuckPermsSupport` reports it absent, LuckPerms is never started — no `data/`
+directory, no H2 database, no library downloads — and every permission check answers `TRUE`, so
+`/stop` and permission-gated commands stay reachable. A WARN line at startup and a one-shot line on
+the first granted permission mark that mode in the log.
+
+That state is reached by leaving the loader off the class path; nothing else switches it on. Tests
+run that way, because `configurations.testRuntimeClasspath` excludes the loader in both services. A
+local server run needs a launch whose class path omits `minestom-loader-<version>.jar` — for example
+an IDE run configuration built from the module's runtime class path minus that jar.
+
+The published fat jars bundle the loader through `runtimeOnly(libs.luckperms.minestom.loader)` and
+therefore always run with LuckPerms. Nothing verifies that at build time — a jar that lost the loader
+would start in fallback mode and grant every player every permission, with only the two log lines to
+show for it. If permission checks ever pass for someone they should not, check the jar first:
+
+```
+unzip -l cygnus.jar | grep MinestomLoader.class
+```

@@ -37,9 +37,6 @@ dependencies {
     compileOnly(libs.luckperms.api) {
         exclude(group = "net.kyori.adventure")
     }
-    compileOnly(libs.luckperms.minestom.loader) {
-        exclude(group = "net.kyori.adventure")
-    }
     runtimeOnly(libs.luckperms.minestom.loader) {
         exclude(group = "net.kyori.adventure")
     }
@@ -54,6 +51,8 @@ dependencies {
     testRuntimeOnly(libs.junit.engine)
 }
 
+// Keeps the loader off the test class path, which is what makes LuckPermsSupport report absent and
+// every permission check answer TRUE during tests.
 configurations.testRuntimeClasspath {
     exclude(group = "net.luckperms", module = "minestom-loader")
 }
