@@ -44,6 +44,9 @@ public final class JumpScareManager {
     private final Map<UUID, Float> playerLastYaws;
     private final Random random;
 
+    /**
+     * Creates a new instance of the service.
+     */
     public JumpScareManager() {
         this.activeMannequins = new CopyOnWriteArrayList<>();
         this.jumpScareCooldowns = new HashMap<>();
@@ -138,27 +141,7 @@ public final class JumpScareManager {
 
         jumpScareCooldowns.put(player.getUuid(), System.currentTimeMillis());
 
-        Pos playerPos = player.getPosition();
-        // Calculate strictly 2D horizontal forward vector on XZ plane at exact foot Y level
-        float yawRad = (float) Math.toRadians(playerPos.yaw());
-        double dirX = -Math.sin(yawRad);
-        double dirZ = Math.cos(yawRad);
-        double distance = 2.2; // 2.2 blocks in front
-
-        double phantomX = playerPos.x() + dirX * distance;
-        double phantomZ = playerPos.z() + dirZ * distance;
-        double eyeHeight = player.getEyeHeight();
-
-        Pos eyeToEyeView = new Pos(phantomX, playerPos.y() + eyeHeight, phantomZ)
-                .withLookAt(playerPos.add(0, eyeHeight, 0));
-
-        Pos jumpscarePos = new Pos(
-                phantomX,
-                playerPos.y(),
-                phantomZ,
-                eyeToEyeView.yaw(),
-                eyeToEyeView.pitch()
-        );
+        Pos jumpscarePos = getJumpscarePos(player);
 
         DeadPlayerMannequin phantom = DeadPlayerMannequin.standing(
                 sampleCorpse.getOriginalPlayerUuid(),
@@ -216,6 +199,37 @@ public final class JumpScareManager {
         }).delay(TaskSchedule.tick(50)).schedule();
 
         return true;
+    }
+
+    /**
+     * Extracts the position for the jump scare from a {@link Player} target.
+     *
+     * @param player which is the target
+     * @return extracted position
+     */
+    private static Pos getJumpscarePos(Player player) {
+        Pos playerPos = player.getPosition();
+        // Calculate strictly 2D horizontal forward vector on XZ plane at exact foot Y level
+        float yawRad = (float) Math.toRadians(playerPos.yaw());
+        double dirX = -Math.sin(yawRad);
+        double dirZ = Math.cos(yawRad);
+        double distance = 2.2; // 2.2 blocks in front
+
+        double phantomX = playerPos.x() + dirX * distance;
+        double phantomZ = playerPos.z() + dirZ * distance;
+        double eyeHeight = player.getEyeHeight();
+
+        Pos eyeToEyeView = new Pos(phantomX, playerPos.y() + eyeHeight, phantomZ)
+                .withLookAt(playerPos.add(0, eyeHeight, 0));
+
+        Pos jumpscarePos = new Pos(
+                phantomX,
+                playerPos.y(),
+                phantomZ,
+                eyeToEyeView.yaw(),
+                eyeToEyeView.pitch()
+        );
+        return jumpscarePos;
     }
 
     /**
