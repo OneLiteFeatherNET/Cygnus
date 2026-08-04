@@ -41,7 +41,7 @@ dependencyResolutionManagement {
             version("guava", "33.6.0-jre")
             version("falco", "1.0.0")
             version("minestom-ce-extensions", "1.2.0")
-            version("kotlin", "2.4.0")
+            version("kotlin", "2.4.10")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("slf4j.api", "org.slf4j", "slf4j-api").versionRef("slf4j")
