@@ -91,4 +91,23 @@ class GameMapTest {
         assertEquals(Vec.ZERO, pageResource.position());
         assertEquals(Direction.NORTH, pageResource.face());
     }
+
+    @Test
+    void testGameMapCopy() {
+        Pos slenderPos = new Pos(10, 10, 10);
+        Pos survivorPos = new Pos(5, 5, 5);
+        PageResource pageResource = new PageResource(Vec.ZERO, Direction.SOUTH);
+
+        GameMap originalMap = new GameMap("Map", Pos.ZERO, slenderPos, Set.of(pageResource), Set.of(survivorPos), List.of("Author"));
+        GameMapBuilder copyBuilder = new GameMapBuilder(originalMap);
+
+        assertEquals(1, copyBuilder.getSurvivorSpawns().size());
+        assertTrue(copyBuilder.getSurvivorSpawns().contains(survivorPos));
+        assertEquals(1, copyBuilder.getPageFaces().size());
+        assertTrue(copyBuilder.getPageFaces().contains(pageResource));
+
+        GameMap rebuiltMap = copyBuilder.build();
+        assertEquals(originalMap.getSurvivorSpawns(), rebuiltMap.getSurvivorSpawns());
+        assertEquals(originalMap.getPageFaces(), rebuiltMap.getPageFaces());
+    }
 }
