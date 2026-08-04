@@ -55,8 +55,8 @@ public final class Messages {
                 TagResolver.builder().tag("team", (argumentQueue, context) ->
                         Tag.preProcessParsed(GameConfig.SURVIVOR_TEAM_NAME)).build());
 
-        LEAVE_PART = withPrefix(Component.text("left the game!", NamedTextColor.GRAY));
-        JOIN_PART = withPrefix(Component.text("joined the game!", NamedTextColor.GRAY));
+        LEAVE_PART = Component.text("left the game!", NamedTextColor.GRAY);
+        JOIN_PART = Component.text("joined the game!", NamedTextColor.GRAY);
         LIGHT_WENT_OUT = withMiniPrefix("<color:#ff00d4>Your light went out!</color>");
 
         SURVIVOR_JOIN_PART_UPPER = withMiniPrefix("<yellow>You are a Survivor! Find various <red>Pages").append(Component.space());
