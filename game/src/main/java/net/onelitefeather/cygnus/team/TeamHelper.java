@@ -5,6 +5,7 @@ import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
 import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
@@ -13,6 +14,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.map.GameMap;
 
 import java.util.HashSet;
@@ -36,6 +38,27 @@ public final class TeamHelper {
      * The ID representing the Survivor team.
      */
     public static final byte SURVIVOR_TEAM_ID = 1;
+
+    /**
+     * The ID representing the Spectator team.
+     */
+    public static final byte SPECTATOR_TEAM_ID = 2;
+
+    /**
+     * Resolves the {@link Key} a numeric team ID tag value refers to.
+     *
+     * @param id the team ID (see {@link Tags#TEAM_ID})
+     * @return the team's key
+     * @throws IllegalArgumentException if the ID does not name a known team
+     */
+    public static Key keyForTeamId(byte id) {
+        return switch (id) {
+            case SLENDER_TEAM_ID -> GameConfig.SLENDER_KEY;
+            case SURVIVOR_TEAM_ID -> GameConfig.SURVIVOR_KEY;
+            case SPECTATOR_TEAM_ID -> GameConfig.SPECTATOR_KEY;
+            default -> throw new IllegalArgumentException("Unknown team ID: " + id);
+        };
+    }
 
     /**
      * Result of a team allocation, containing the chosen slender player and the resulting survivors.
@@ -137,10 +160,12 @@ public final class TeamHelper {
      * @param strategy     the strategy to use for survivor teleportation
      */
     public static void teleportTeams(TeamService teamService, GameMap gameMap, Instance gameInstance, TeleportStrategy strategy) {
-        Team slenderTeam = teamService.getTeams().getFirst();
+        Team slenderTeam = teamService.getTeam(GameConfig.SLENDER_KEY)
+                .orElseThrow(() -> new IllegalStateException("Slender team not found"));
         slenderTeam.getPlayers().forEach(player -> updateInstance(player, gameInstance, gameMap.getSlenderSpawn()));
 
-        Team survivorTeam = teamService.getTeams().getLast();
+        Team survivorTeam = teamService.getTeam(GameConfig.SURVIVOR_KEY)
+                .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
         strategy.teleport(survivorTeam.getPlayers(), gameInstance, gameMap.getSurvivorSpawns());
     }
 
@@ -152,8 +177,10 @@ public final class TeamHelper {
     public static void updateTabList(TeamService teamService) {
         if (!teamService.hasTeams()) return;
 
-        Team slenderTeam = teamService.getTeams().getFirst();
-        Team survivorTeam = teamService.getTeams().getLast();
+        Team slenderTeam = teamService.getTeam(GameConfig.SLENDER_KEY)
+                .orElseThrow(() -> new IllegalStateException("Slender team not found"));
+        Team survivorTeam = teamService.getTeam(GameConfig.SURVIVOR_KEY)
+                .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
 
         if (slenderTeam.isEmpty()) {
             throw new IllegalStateException("The slender team must have at least one player");
@@ -191,6 +218,17 @@ public final class TeamHelper {
     public static boolean isSurvivorTeam(Player player) {
         Byte teamId = player.getTag(Tags.TEAM_ID);
         return teamId != null && teamId == SURVIVOR_TEAM_ID;
+    }
+
+    /**
+     * Check if the player is in the spectator team
+     *
+     * @param player the player to check
+     * @return true if the player is in the spectator team
+     */
+    public static boolean isSpectatorTeam(Player player) {
+        Byte teamId = player.getTag(Tags.TEAM_ID);
+        return teamId != null && teamId == SPECTATOR_TEAM_ID;
     }
 
     /**

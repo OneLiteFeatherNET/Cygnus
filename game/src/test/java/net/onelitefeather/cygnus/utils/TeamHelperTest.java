@@ -164,8 +164,8 @@ class TeamHelperTest {
 
         assertEquals(3, survivors.size());
 
-        teamService.getTeams().getFirst().addPlayer(player);
-        Team survivorTeam = teamService.getTeams().getLast();
+        teamService.getTeam(GameConfig.SLENDER_KEY).orElseThrow().addPlayer(player);
+        Team survivorTeam = teamService.getTeam(GameConfig.SURVIVOR_KEY).orElseThrow();
         survivorTeam.addPlayers(survivors);
 
         TeamHelper.updateTabList(teamService);
@@ -197,5 +197,13 @@ class TeamHelperTest {
         player.setTag(Tags.TEAM_ID, TeamHelper.SURVIVOR_TEAM_ID);
         assertFalse(TeamHelper.isSlenderTeam(player));
         assertTrue(TeamHelper.isSurvivorTeam(player));
+    }
+
+    @Test
+    void testIsInSpectatorTeam() {
+        player.setTag(Tags.TEAM_ID, TeamHelper.SPECTATOR_TEAM_ID);
+        assertFalse(TeamHelper.isSlenderTeam(player));
+        assertFalse(TeamHelper.isSurvivorTeam(player));
+        assertTrue(TeamHelper.isSpectatorTeam(player));
     }
 }
