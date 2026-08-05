@@ -8,6 +8,7 @@ import net.theevilreaper.xerus.api.team.TeamService;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 
 import static net.onelitefeather.cygnus.common.config.GameConfig.SLENDER_KEY;
+import static net.onelitefeather.cygnus.common.config.GameConfig.SPECTATOR_KEY;
 import static net.onelitefeather.cygnus.common.config.GameConfig.SURVIVOR_KEY;
 
 /**
@@ -22,8 +23,8 @@ public interface TeamCreator {
     /**
      * Creates the teams for the game.
      *
-     * @param gameConfig      the configuration to get some values from it
-     * @param teamService     the service to add the teams
+     * @param gameConfig  the configuration to get some values from it
+     * @param teamService the service to add the teams
      */
     default void createTeams(GameConfig gameConfig, TeamService teamService) {
         Team slenderTeam = Team.of(SLENDER_KEY, gameConfig.slenderTeamSize());
@@ -36,5 +37,9 @@ public interface TeamCreator {
         survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.GREEN));
         survivorTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
         teamService.add(survivorTeam);
+
+        Team spectatorTeam = Team.of(SPECTATOR_KEY, gameConfig.survivorTeamSize() + 1);
+        spectatorTeam.add(ColorComponent.class, new ColorComponent(ColorData.GRAY));
+        teamService.add(spectatorTeam);
     }
 }
