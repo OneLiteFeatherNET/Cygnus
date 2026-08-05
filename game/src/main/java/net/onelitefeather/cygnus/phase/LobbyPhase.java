@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.phase;
 
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
-import net.minestom.server.network.ConnectionManager;
 import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
@@ -30,8 +29,6 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIM
  */
 public final class LobbyPhase extends TimedPhase {
 
-    private static final ConnectionManager CONNECTION_MANAGER = MinecraftServer.getConnectionManager();
-
     private final int lobbyTime;
     private final int minPlayers;
     private final LobbyWaitingTask waitingDisplay;
@@ -52,7 +49,7 @@ public final class LobbyPhase extends TimedPhase {
 
         // Instantiate the waiting display only once during initialization
         this.waitingDisplay = new LobbyWaitingTask(this.minPlayers);
-        this.waitingDisplay.update(CONNECTION_MANAGER.getOnlinePlayers().size());
+        this.waitingDisplay.update(MinecraftServer.getConnectionManager().getOnlinePlayers().size());
     }
 
     /**
@@ -61,7 +58,7 @@ public final class LobbyPhase extends TimedPhase {
      * and the waiting action bar display is stopped.
      */
     public void checkStartCondition() {
-        int onlineCount = CONNECTION_MANAGER.getOnlinePlayers().size();
+        int onlineCount = MinecraftServer.getConnectionManager().getOnlinePlayers().size();
 
         if (isPaused() && onlineCount >= this.minPlayers) {
             this.setPaused(false);
@@ -76,7 +73,7 @@ public final class LobbyPhase extends TimedPhase {
      * Re-activates the waiting display if the player count drops below the requirement.
      */
     public void checkStopCondition() {
-        int onlineCount = CONNECTION_MANAGER.getOnlinePlayers().size();
+        int onlineCount = MinecraftServer.getConnectionManager().getOnlinePlayers().size();
 
         if (onlineCount - 1 < this.minPlayers) {
             this.setPaused(true);
@@ -119,7 +116,7 @@ public final class LobbyPhase extends TimedPhase {
      * Re-creates the display if the player count drops below the threshold.
      */
     public void checkPlayerRequirements() {
-        int onlineCount = CONNECTION_MANAGER.getOnlinePlayers().size();
+        int onlineCount = MinecraftServer.getConnectionManager().getOnlinePlayers().size();
 
         if (onlineCount - 1 < this.minPlayers) {
             this.setPaused(true);
@@ -146,7 +143,7 @@ public final class LobbyPhase extends TimedPhase {
         if (amount < 0) return;
         int time = isForceStarted() ? FORCE_START_TIME : this.lobbyTime;
         float currentExpCount = (float) this.getCurrentTicks() / time;
-        for (Player onlinePlayer : CONNECTION_MANAGER.getOnlinePlayers()) {
+        for (Player onlinePlayer : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
             onlinePlayer.setLevel(amount);
             onlinePlayer.setExp(currentExpCount);
         }

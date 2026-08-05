@@ -11,6 +11,7 @@ import net.onelitefeather.cygnus.map.GameMapProvider;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
+import net.onelitefeather.cygnus.spectator.SpectatorService;
 import net.onelitefeather.cygnus.team.TeamCreator;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
@@ -19,6 +20,7 @@ import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.LinearPhaseSeries;
 import net.theevilreaper.xerus.api.phase.Phase;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
+import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
@@ -94,6 +96,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final AbstractMapProvider mapProvider;
     private final GameConfig gameConfig;
     private final JumpScareManager jumpscareManager;
+    private final SpectatorService spectatorService;
 
     public Cygnus() {
         Path path = Paths.get("");
@@ -110,7 +113,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getSchedulerManager().buildShutdownTask(gameMapProvider::close);
         this.view = new GameViewImpl();
         this.createTeams(this.gameConfig, this.teamService);
-        this.ambientProvider = new AmbientProvider(this.teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID));
+        Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
+                .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
+        this.ambientProvider = new AmbientProvider(survivorTeam);
+        Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
+                .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
+        this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
         this.initPhases();
         this.initCommands();
         this.initListener();
@@ -140,7 +148,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         linearPhaseSeries::getCurrentPhase
                 )
         );
-        manager.addListener(PlayerChatEvent.class, new PlayerChatListener());
+        Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
+                .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
+        manager.addListener(PlayerChatEvent.class, new PlayerChatListener(spectatorTeam, phaseSupplier));
         manager.addListener(GameMapLoadEvent.class, _ -> ((GameMapProvider) this.mapProvider).loadGameMap());
         manager.addListener(GamePrepareEvent.class, _ -> {
             StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
@@ -168,6 +178,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
         handler.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
+
+        spectatorService.registerListener(handler);
     }
 
     private void initPhases() {
