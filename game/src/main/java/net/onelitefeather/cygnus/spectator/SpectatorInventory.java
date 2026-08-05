@@ -15,11 +15,11 @@ import net.theevilreaper.aves.inventory.click.ClickHolder;
 import net.theevilreaper.aves.inventory.layout.InventoryLayout;
 import net.theevilreaper.aves.inventory.util.LayoutCalculator;
 import net.theevilreaper.xerus.api.team.Team;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class SpectatorInventory extends GlobalInventoryBuilder {
@@ -27,7 +27,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
     private static final ItemStack DECORATION_PANE = ItemStack.builder(Material.BLACK_STAINED_GLASS_PANE)
             .customName(Component.empty())
             .build();
-    private static final Tag<UUID> TARGET_TAG = Tag.UUID("target");
+    static final Tag<UUID> TARGET_TAG = Tag.UUID("target");
 
     private static final List<Component> LORE_LINES = List.of(
             Component.empty(),
@@ -35,12 +35,15 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
             Component.empty()
     );
 
+    private final BiConsumer<Player, Player> teleportCallback;
+
     /**
      * Creates a new instance from the builder with the given parameter values.
      *
      */
-    public SpectatorInventory(Team survivorTeam) {
+    public SpectatorInventory(Team survivorTeam, BiConsumer<Player, Player> teleportCallback) {
         super(Component.text("Spectate"), InventoryType.CHEST_4_ROW);
+        this.teleportCallback = teleportCallback;
 
         InventoryLayout layout = InventoryLayout.fromType(getType());
         layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), DECORATION_PANE);
@@ -76,7 +79,16 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
         this.register();
     }
 
-    private void handleClick(Player player, int i, Click click, ItemStack stack, Consumer<ClickHolder> holder) {
+    /**
+     * Contains the logic what should happen when a player clicks on a player.
+     *
+     * @param player who is involved in the click
+     * @param slot   of the click
+     * @param click  reference
+     * @param stack  which is clicked
+     * @param holder the result of the click
+     */
+    void handleClick(Player player, int slot, Click click, ItemStack stack, Consumer<ClickHolder> holder) {
         holder.accept(ClickHolder.cancelClick());
 
         UUID target = stack.getTag(TARGET_TAG);
@@ -89,6 +101,15 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
         }
 
         player.closeInventory();
-        player.teleport(player.getPosition());
+        teleportCallback.accept(player, targetPlayer);
+    }
+
+    /**
+     * Opens the inventory for a specific {@link Player}.
+     *
+     * @param player who should get it
+     */
+    public void open(Player player) {
+        player.openInventory(getInventory());
     }
 }
