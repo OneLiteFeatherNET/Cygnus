@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Contract;
  * Each static value indicates that it is a constant value and should not be changed.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
@@ -18,13 +18,18 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     /* The name of the Slender team.
      */
     String SLENDER_TEAM_NAME = "Slender";
+
     Key SLENDER_KEY = Key.key("cygnus", "slender");
     /**
      * The name of the Survivor team.
      */
     String SURVIVOR_TEAM_NAME = "Survivor";
+
     Key SURVIVOR_KEY = Key.key("cygnus", "survivor");
-    String MAP_FILE_NAME = "map.json";
+
+    String SPECTATOR_TEAM_NAME = "Spectator";
+
+    Key SPECTATOR_KEY = Key.key("cygnus", "spectator");
 
     int MIN_ACTIVE_PAGE_COUNT = 4;
 
@@ -154,5 +159,4 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          */
         GameConfig build();
     }
-
 }
