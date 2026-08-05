@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.listener;
 
-import net.onelitefeather.cygnus.component.TeamNameComponent;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.xerus.api.phase.Phase;
@@ -24,6 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static net.onelitefeather.cygnus.common.config.GameConfig.SLENDER_KEY;
+import static net.onelitefeather.cygnus.common.config.GameConfig.SURVIVOR_KEY;
 
 /**
  * Listener that handles player disconnect events.
@@ -104,51 +104,74 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
     private void handleInGameQuit(Player player, GamePhase gamePhase) {
         if (!player.hasTag(Tags.TEAM_ID)) return;
         byte teamID = player.getTag(Tags.TEAM_ID);
-        Team team = teamService.getTeams().get(teamID);
+        Optional<Team> teamOpt = teamService.getTeam(TeamHelper.keyForTeamId(teamID));
 
-        if (team == null) return;
+        if (teamOpt.isEmpty()) return;
+        Team team = teamOpt.get();
 
         team.removePlayer(player);
 
-        // If the Slender player disconnected, check if we can revive a replacement
         if (SLENDER_KEY.equals(team.key())) {
-            var survivorSize = teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID).getCurrentSize();
-            boolean canRevive = currentReviveCount < this.maxReviveCount 
-                    && gamePhase.getCurrentTicks() >= MINIMUM_SLENDER_RE_CHECK 
-                    && survivorSize > this.minPlayers;
-
-            if (!canRevive) {
-                // Terminate game since we cannot replace the Slender player
-                gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.SLENDER_LEFT));
-                gamePhase.finish();
-                return;
-            }
-
-            // Perform Slender revival logic
-            ++currentReviveCount;
-            Team survivorTeam = teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID);
-            Optional<Player> randomPlayerOpt = Players.getRandomPlayer(new ArrayList<>(survivorTeam.getPlayers()));
-            if (randomPlayerOpt.isEmpty()) {
-                gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.SLENDER_LEFT));
-                gamePhase.finish();
-                return;
-            }
-            Player randomPlayer = randomPlayerOpt.get();
-
-            survivorTeam.removePlayer(randomPlayer);
-            teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID).addPlayer(randomPlayer);
-
-            EventDispatcher.call(new SlenderReviveEvent(randomPlayer));
+            handleSlenderQuit(gamePhase);
             return;
         }
 
-        // If a survivor disconnected, check if there are any survivors left
-        if (!team.getPlayers().isEmpty()) return;
-        Team slenderTeam = teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID);
+        if (SURVIVOR_KEY.equals(team.key())) {
+            handleSurvivorQuit(team, gamePhase);
+        }
+    }
+
+    /**
+     * Handles the Slender player disconnecting: attempts a revival, otherwise ends the match.
+     *
+     * @param gamePhase the active game phase
+     */
+    private void handleSlenderQuit(GamePhase gamePhase) {
+        var survivorSize = teamService.getTeam(SURVIVOR_KEY)
+                .orElseThrow(() -> new IllegalStateException("Survivor team not found"))
+                .getCurrentSize();
+        boolean canRevive = currentReviveCount < this.maxReviveCount
+                && gamePhase.getCurrentTicks() >= MINIMUM_SLENDER_RE_CHECK
+                && survivorSize > this.minPlayers;
+
+        if (!canRevive) {
+            gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.SLENDER_LEFT));
+            gamePhase.finish();
+            return;
+        }
+
+        ++currentReviveCount;
+        Team survivorTeam = teamService.getTeam(SURVIVOR_KEY)
+                .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
+        Optional<Player> randomPlayerOpt = Players.getRandomPlayer(new ArrayList<>(survivorTeam.getPlayers()));
+        if (randomPlayerOpt.isEmpty()) {
+            gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.SLENDER_LEFT));
+            gamePhase.finish();
+            return;
+        }
+        Player randomPlayer = randomPlayerOpt.get();
+
+        survivorTeam.removePlayer(randomPlayer);
+        teamService.getTeam(SLENDER_KEY)
+                .orElseThrow(() -> new IllegalStateException("Slender team not found"))
+                .addPlayer(randomPlayer);
+
+        EventDispatcher.call(new SlenderReviveEvent(randomPlayer));
+    }
+
+    /**
+     * Handles a survivor disconnecting: ends the match if no survivors remain.
+     *
+     * @param survivorTeam the survivor team, after the disconnecting player was already removed
+     * @param gamePhase    the active game phase
+     */
+    private void handleSurvivorQuit(Team survivorTeam, GamePhase gamePhase) {
+        if (!survivorTeam.getPlayers().isEmpty()) return;
+        Team slenderTeam = teamService.getTeam(SLENDER_KEY)
+                .orElseThrow(() -> new IllegalStateException("Slender team not found"));
         if (slenderTeam.isEmpty()) return;
         Player slenderPlayer = slenderTeam.getPlayers().iterator().next();
-        
-        // Terminate game since all survivors left
+
         gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.SURVIVOR_LEFT, slenderPlayer));
         gamePhase.finish();
     }
