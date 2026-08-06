@@ -72,17 +72,17 @@ class ScoreboardDisplayTest {
         assertNotNull(scoreboardDisplay);
 
         TeamManager teamManager = env.process().team();
-        scoreboardDisplay.addPlayer(testPlayer, (byte) 0x00);
+        scoreboardDisplay.addPlayer(testPlayer, GameConfig.SLENDER_KEY);
         String rawTeamName = slenderTeam.get(TeamNameComponent.class).teamName();
         assertTrue(teamManager.getTeam(rawTeamName).getMembers().contains(testPlayer.getUsername()));
-        scoreboardDisplay.removePlayer(testPlayer, (byte) 0x00);
+        scoreboardDisplay.removePlayer(testPlayer, GameConfig.SLENDER_KEY);
         assertFalse(teamManager.getTeam(rawTeamName).getMembers().contains(testPlayer.getUsername()));
 
 
-        scoreboardDisplay.addPlayer(testPlayer, (byte) 0x01);
+        scoreboardDisplay.addPlayer(testPlayer, GameConfig.SURVIVOR_KEY);
         rawTeamName = survivorTeam.get(TeamNameComponent.class).teamName();
         assertTrue(teamManager.getTeam(rawTeamName).getMembers().contains(testPlayer.getUsername()));
-        scoreboardDisplay.removePlayer(testPlayer, (byte) 0x01);
+        scoreboardDisplay.removePlayer(testPlayer, GameConfig.SURVIVOR_KEY);
         assertFalse(teamManager.getTeam(rawTeamName).getMembers().contains(testPlayer.getUsername()));
     }
 }

@@ -30,37 +30,6 @@ import java.util.Set;
 public final class TeamHelper {
 
     /**
-     * The ID representing the Slender team.
-     */
-    public static final byte SLENDER_TEAM_ID = 0;
-
-    /**
-     * The ID representing the Survivor team.
-     */
-    public static final byte SURVIVOR_TEAM_ID = 1;
-
-    /**
-     * The ID representing the Spectator team.
-     */
-    public static final byte SPECTATOR_TEAM_ID = 2;
-
-    /**
-     * Resolves the {@link Key} a numeric team ID tag value refers to.
-     *
-     * @param id the team ID (see {@link Tags#TEAM_ID})
-     * @return the team's key
-     * @throws IllegalArgumentException if the ID does not name a known team
-     */
-    public static Key keyForTeamId(byte id) {
-        return switch (id) {
-            case SLENDER_TEAM_ID -> GameConfig.SLENDER_KEY;
-            case SURVIVOR_TEAM_ID -> GameConfig.SURVIVOR_KEY;
-            case SPECTATOR_TEAM_ID -> GameConfig.SPECTATOR_KEY;
-            default -> throw new IllegalArgumentException("Unknown team ID: " + id);
-        };
-    }
-
-    /**
      * Result of a team allocation, containing the chosen slender player and the resulting survivors.
      *
      * @param slender   the player who is the slender
@@ -105,7 +74,7 @@ public final class TeamHelper {
      * @param slenderTeam the team to add the player to
      */
     private static void assignSlender(Player player, Team slenderTeam) {
-        player.setTag(Tags.TEAM_ID, SLENDER_TEAM_ID);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         player.updateViewableRule(ViewRuleUpdater::viewableRuleForSlender);
         slenderTeam.addPlayer(player);
     }
@@ -133,7 +102,7 @@ public final class TeamHelper {
      * @param survivorTeam the team to add them to
      */
     private static void assignSurvivors(Set<Player> survivors, Team survivorTeam) {
-        survivors.forEach(player -> player.setTag(Tags.TEAM_ID, SURVIVOR_TEAM_ID));
+        survivors.forEach(player -> player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY));
         survivorTeam.addPlayers(survivors);
     }
 
@@ -205,8 +174,7 @@ public final class TeamHelper {
      * @return true if the player is in the slender team
      */
     public static boolean isSlenderTeam(Player player) {
-        Byte teamId = player.getTag(Tags.TEAM_ID);
-        return teamId != null && teamId == SLENDER_TEAM_ID;
+        return GameConfig.SLENDER_KEY.equals(player.getTag(Tags.TEAM_KEY));
     }
 
     /**
@@ -216,8 +184,7 @@ public final class TeamHelper {
      * @return true if the player is in the survivor team
      */
     public static boolean isSurvivorTeam(Player player) {
-        Byte teamId = player.getTag(Tags.TEAM_ID);
-        return teamId != null && teamId == SURVIVOR_TEAM_ID;
+        return GameConfig.SURVIVOR_KEY.equals(player.getTag(Tags.TEAM_KEY));
     }
 
     /**
@@ -227,8 +194,7 @@ public final class TeamHelper {
      * @return true if the player is in the spectator team
      */
     public static boolean isSpectatorTeam(Player player) {
-        Byte teamId = player.getTag(Tags.TEAM_ID);
-        return teamId != null && teamId == SPECTATOR_TEAM_ID;
+        return GameConfig.SPECTATOR_KEY.equals(player.getTag(Tags.TEAM_KEY));
     }
 
     /**

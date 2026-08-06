@@ -54,7 +54,7 @@ class TeamHelperTest {
 
     @AfterEach
     void cleanup() {
-        player.removeTag(Tags.TEAM_ID);
+        player.removeTag(Tags.TEAM_KEY);
         player.setDisplayName(Component.text(player.getUsername()));
     }
 
@@ -187,21 +187,21 @@ class TeamHelperTest {
 
     @Test
     void testIsInSlenderTeam() {
-        player.setTag(Tags.TEAM_ID, TeamHelper.SLENDER_TEAM_ID);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         assertTrue(TeamHelper.isSlenderTeam(player));
         assertFalse(TeamHelper.isSurvivorTeam(player));
     }
 
     @Test
     void testIsInSurvivorTeam() {
-        player.setTag(Tags.TEAM_ID, TeamHelper.SURVIVOR_TEAM_ID);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
         assertFalse(TeamHelper.isSlenderTeam(player));
         assertTrue(TeamHelper.isSurvivorTeam(player));
     }
 
     @Test
     void testIsInSpectatorTeam() {
-        player.setTag(Tags.TEAM_ID, TeamHelper.SPECTATOR_TEAM_ID);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
         assertFalse(TeamHelper.isSlenderTeam(player));
         assertFalse(TeamHelper.isSurvivorTeam(player));
         assertTrue(TeamHelper.isSpectatorTeam(player));

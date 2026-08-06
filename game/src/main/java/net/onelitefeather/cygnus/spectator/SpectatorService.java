@@ -8,6 +8,7 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
 import net.onelitefeather.cygnus.player.listener.SpectatorAddListener;
 import net.onelitefeather.cygnus.player.listener.SpectatorItemListener;
@@ -54,7 +55,7 @@ public final class SpectatorService {
      */
     public void join(Player player) {
         player.setGameMode(GameMode.SPECTATOR);
-        player.setTag(Tags.TEAM_ID, TeamHelper.SPECTATOR_TEAM_ID);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
         spectatorTeam.addPlayer(player);
         Items.setSpectatorLayout(player);
         player.updateViewableRule(_ -> false);

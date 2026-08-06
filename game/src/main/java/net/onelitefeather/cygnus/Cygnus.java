@@ -213,6 +213,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     }
 
     private void triggerViewRuleUpdate(@NotNull Player player) {
-        ViewRuleUpdater.updateViewer(player, this.teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID));
+        ViewRuleUpdater.updateViewer(player, this.teamService.getTeam(GameConfig.SURVIVOR_KEY).orElseThrow());
     }
 }

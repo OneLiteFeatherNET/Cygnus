@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.listener;
 
+import net.kyori.adventure.key.Key;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.xerus.api.phase.Phase;
@@ -102,9 +103,9 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
      * @param gamePhase the active game phase
      */
     private void handleInGameQuit(Player player, GamePhase gamePhase) {
-        if (!player.hasTag(Tags.TEAM_ID)) return;
-        byte teamID = player.getTag(Tags.TEAM_ID);
-        Optional<Team> teamOpt = teamService.getTeam(TeamHelper.keyForTeamId(teamID));
+        if (!player.hasTag(Tags.TEAM_KEY)) return;
+        Key teamKey = player.getTag(Tags.TEAM_KEY);
+        Optional<Team> teamOpt = teamService.getTeam(teamKey);
 
         if (teamOpt.isEmpty()) return;
         Team team = teamOpt.get();

@@ -20,7 +20,7 @@ public class PlayerStopSprintingListener implements Consumer<PlayerStopSprinting
     @Override
     public void accept(PlayerStopSprintingEvent event) {
         var player = event.getPlayer();
-        if (!player.hasTag(Tags.TEAM_ID)) return;
+        if (!player.hasTag(Tags.TEAM_KEY)) return;
         if (!TeamHelper.isSurvivorTeam(player)) return;
 
         FoodBar staminaBarRef = staminaFunction.apply(player);

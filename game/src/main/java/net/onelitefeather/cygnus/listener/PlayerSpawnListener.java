@@ -41,7 +41,7 @@ public final class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
             return;
         }
 
-        var tag = player.getTag(Tags.TEAM_ID);
+        var tag = player.getTag(Tags.TEAM_KEY);
 
         if (tag == null) {
             this.spawnSupplier.accept(player);

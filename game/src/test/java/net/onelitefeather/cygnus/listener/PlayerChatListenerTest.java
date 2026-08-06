@@ -34,7 +34,7 @@ class PlayerChatListenerTest extends CygnusPlayerTestBase {
 
         Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
         spectatorTeam.addPlayer(spectator);
-        spectator.setTag(Tags.TEAM_ID, TeamHelper.SPECTATOR_TEAM_ID);
+        spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerChatListener listener = new PlayerChatListener(spectatorTeam, () -> gamePhase);
@@ -78,7 +78,7 @@ class PlayerChatListenerTest extends CygnusPlayerTestBase {
 
         Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
         spectatorTeam.addPlayer(spectator);
-        spectator.setTag(Tags.TEAM_ID, TeamHelper.SPECTATOR_TEAM_ID);
+        spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
 
         GameConfig config = GameConfig.builder().lobbyTime(30).minPlayers(2).gameTime(600).maxPlayers(10).build();
         LobbyPhase lobbyPhase = new LobbyPhase(config);

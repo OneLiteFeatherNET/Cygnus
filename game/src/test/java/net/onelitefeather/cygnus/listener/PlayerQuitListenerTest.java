@@ -42,11 +42,11 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         teamService.add(spectatorTeam);
 
         slenderTeam.addPlayer(slender);
-        slender.setTag(Tags.TEAM_ID, TeamHelper.SLENDER_TEAM_ID);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         survivorTeam.addPlayer(survivor);
-        survivor.setTag(Tags.TEAM_ID, TeamHelper.SURVIVOR_TEAM_ID);
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
         spectatorTeam.addPlayer(spectator);
-        spectator.setTag(Tags.TEAM_ID, TeamHelper.SPECTATOR_TEAM_ID);
+        spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
@@ -80,9 +80,9 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         teamService.add(spectatorTeam);
 
         slenderTeam.addPlayer(slender);
-        slender.setTag(Tags.TEAM_ID, TeamHelper.SLENDER_TEAM_ID);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         survivorTeam.addPlayer(survivor);
-        survivor.setTag(Tags.TEAM_ID, TeamHelper.SURVIVOR_TEAM_ID);
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);

@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.listener.game;
 
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.stamina.StaminaService;
@@ -32,7 +33,7 @@ public class SlenderReviveListener implements Consumer<SlenderReviveEvent> {
     public void accept(SlenderReviveEvent event) {
         Player player = event.getPlayer();
         staminaService.setSlenderBar(player, true);
-        player.setTag(Tags.TEAM_ID, TeamHelper.SLENDER_TEAM_ID);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         GameMap gameMap = gameMapSupplier.get();
         if (gameMap != null && gameMap.getSlenderSpawn() != null) {
             player.teleport(gameMap.getSlenderSpawn());

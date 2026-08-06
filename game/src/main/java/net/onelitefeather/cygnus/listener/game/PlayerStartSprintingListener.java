@@ -21,7 +21,7 @@ public final class PlayerStartSprintingListener implements Consumer<PlayerStartS
     @Override
     public void accept(PlayerStartSprintingEvent event) {
         var player = event.getPlayer();
-        if (!player.hasTag(Tags.TEAM_ID)) return;
+        if (!player.hasTag(Tags.TEAM_KEY)) return;
         if (TeamHelper.isSlenderTeam(player)) return;
 
         CygnusPlayer cygnusPlayer = (CygnusPlayer) player;
