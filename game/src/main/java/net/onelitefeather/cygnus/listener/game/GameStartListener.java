@@ -1,16 +1,20 @@
 package net.onelitefeather.cygnus.listener.game;
 
+import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.Player;
 import net.minestom.server.utils.PacketSendingUtils;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
+import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 
 import java.util.function.Consumer;
@@ -31,11 +35,9 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
 
     @Override
     public void accept(GameStartEvent event) {
-        var slenderTeam = this.teamService.getTeams().get(TeamHelper.SLENDER_TEAM_ID);
-        if (slenderTeam == null) {
-            throw new IllegalStateException("Slender team is missing");
-        }
-        var slenderPlayer = slenderTeam.getPlayers().stream().findFirst()
+        Team slenderTeam = this.teamService.getTeam(GameConfig.SLENDER_KEY)
+                .orElseThrow(() -> new IllegalStateException("Slender team is missing"));
+        Player slenderPlayer = slenderTeam.getPlayers().stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("Slender team has no assigned player"));
         slenderPlayer.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
         slenderPlayer.sendMessage(Messages.SLENDER_JOIN_PART);
@@ -43,8 +45,10 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
         this.staminaService.start();
         this.pageProvider.spawn();
         this.ambientProvider.startTask();
-        var message = Messages.getSurvivorJoinMessage(String.valueOf(this.pageProvider.getMaxPageAmount()));
-        this.teamService.getTeams().get(TeamHelper.SURVIVOR_TEAM_ID).getPlayers().forEach(player -> {
+        Component message = Messages.getSurvivorJoinMessage(String.valueOf(this.pageProvider.getMaxPageAmount()));
+        Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
+                .orElseThrow(() -> new IllegalStateException("Survivor team is missing"));
+        survivorTeam.getPlayers().forEach(player -> {
             player.sendMessage(message);
             player.setTag(Tags.HIDDEN, SlenderBarHelper.VISIBLE);
         });
