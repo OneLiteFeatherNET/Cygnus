@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.utils;
 
+import net.kyori.adventure.key.Key;
 import net.minestom.server.color.TeamColor;
 import net.onelitefeather.cygnus.component.TeamNameComponent;
 import net.theevilreaper.xerus.api.ColorData;
@@ -54,7 +55,7 @@ public final class ScoreboardDisplay {
      * @param player  the player to add
      * @param teamKey the key of the team to add the player to
      */
-    public void addPlayer(Player player, net.kyori.adventure.key.Key teamKey) {
+    public void addPlayer(Player player, Key teamKey) {
         var teamName = getTeamName(teamKey);
         var team = MinecraftServer.getTeamManager().getTeam(teamName);
         if (team != null) {
@@ -68,7 +69,7 @@ public final class ScoreboardDisplay {
      * @param player  the player to remove
      * @param teamKey the key of the team to remove the player from
      */
-    public void removePlayer(Player player, net.kyori.adventure.key.Key teamKey) {
+    public void removePlayer(Player player, Key teamKey) {
         var teamName = getTeamName(teamKey);
         var team = MinecraftServer.getTeamManager().getTeam(teamName);
         if (team != null) {
@@ -82,7 +83,7 @@ public final class ScoreboardDisplay {
      * @param teamKey the team key
      * @return the team name
      */
-    private String getTeamName(net.kyori.adventure.key.Key teamKey) {
+    private String getTeamName(Key teamKey) {
         return GameConfig.SLENDER_KEY.equals(teamKey) ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
     }
 }
