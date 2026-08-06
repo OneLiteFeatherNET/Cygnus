@@ -35,6 +35,12 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
 
     @Override
     public void accept(GameStartEvent event) {
+        handleSlenderStart();
+        handleSurvivorStart();
+        startGlobalMechanics();
+    }
+
+    private void handleSlenderStart() {
         Team slenderTeam = this.teamService.getTeam(GameConfig.SLENDER_KEY)
                 .orElseThrow(() -> new IllegalStateException("Slender team is missing"));
         Player slenderPlayer = slenderTeam.getPlayers().stream().findFirst()
@@ -42,22 +48,29 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
         slenderPlayer.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
         slenderPlayer.sendMessage(Messages.SLENDER_JOIN_PART);
         Items.setSlenderEye(slenderPlayer);
-        this.staminaService.start();
-        this.pageProvider.spawn();
-        this.ambientProvider.startTask();
-        Component message = Messages.getSurvivorJoinMessage(String.valueOf(this.pageProvider.getMaxPageAmount()));
-        Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
-                .orElseThrow(() -> new IllegalStateException("Survivor team is missing"));
-        survivorTeam.getPlayers().forEach(player -> {
-            player.sendMessage(message);
-            player.setTag(Tags.HIDDEN, SlenderBarHelper.VISIBLE);
-        });
-        TeamHelper.updateTabList(this.teamService);
+
         PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
         MinecraftServer.getConnectionManager().getOnlinePlayers()
                 .stream()
                 .filter(p -> !p.equals(slenderPlayer))
                 .forEach(slenderPlayer::updateOldViewer);
         PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
+    }
+
+    private void handleSurvivorStart() {
+        Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
+                .orElseThrow(() -> new IllegalStateException("Survivor team is missing"));
+        Component message = Messages.getSurvivorJoinMessage(String.valueOf(this.pageProvider.getMaxPageAmount()));
+        survivorTeam.getPlayers().forEach(player -> {
+            player.sendMessage(message);
+            player.setTag(Tags.HIDDEN, SlenderBarHelper.VISIBLE);
+        });
+    }
+
+    private void startGlobalMechanics() {
+        this.staminaService.start();
+        this.pageProvider.spawn();
+        this.ambientProvider.startTask();
+        TeamHelper.updateTabList(this.teamService);
     }
 }
