@@ -54,7 +54,7 @@ public final class SpectatorService {
      */
     public void join(Player player) {
         player.setGameMode(GameMode.SPECTATOR);
-        player.setTag(Tags.TEAM_ID, TeamHelper.SPECTATOR_TEAM_ID);
+        player.setTag(Tags.TEAM_KEY, net.onelitefeather.cygnus.common.config.GameConfig.SPECTATOR_KEY);
         spectatorTeam.addPlayer(player);
         Items.setSpectatorLayout(player);
         player.updateViewableRule(_ -> false);
