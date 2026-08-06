@@ -6,6 +6,7 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.stamina.StaminaService;
@@ -46,7 +47,7 @@ class SlenderReviveIntegrationTest extends CygnusPlayerTestBase {
 
         env.process().eventHandler().call(new SlenderReviveEvent(player));
 
-        assertEquals(TeamHelper.SLENDER_TEAM_ID, player.getTag(Tags.TEAM_ID));
+        assertEquals(GameConfig.SLENDER_KEY, player.getTag(Tags.TEAM_KEY));
         assertEquals(targetSpawn, player.getPosition());
         assertNotNull(staminaService.getSlenderBar());
 

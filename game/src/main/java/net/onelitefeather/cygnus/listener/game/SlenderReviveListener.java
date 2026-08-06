@@ -32,7 +32,7 @@ public class SlenderReviveListener implements Consumer<SlenderReviveEvent> {
     public void accept(SlenderReviveEvent event) {
         Player player = event.getPlayer();
         staminaService.setSlenderBar(player, true);
-        player.setTag(Tags.TEAM_ID, TeamHelper.SLENDER_TEAM_ID);
+        player.setTag(Tags.TEAM_KEY, net.onelitefeather.cygnus.common.config.GameConfig.SLENDER_KEY);
         GameMap gameMap = gameMapSupplier.get();
         if (gameMap != null && gameMap.getSlenderSpawn() != null) {
             player.teleport(gameMap.getSlenderSpawn());

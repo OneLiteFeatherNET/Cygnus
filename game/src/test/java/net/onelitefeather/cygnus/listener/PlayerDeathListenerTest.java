@@ -31,7 +31,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         teamService.add(survivorTeam);
 
         survivorTeam.addPlayer(player);
-        player.setTag(Tags.TEAM_ID, TeamHelper.SURVIVOR_TEAM_ID);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager());
 

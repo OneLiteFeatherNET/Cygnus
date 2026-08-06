@@ -48,7 +48,7 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
 
         event.setChatMessage(Messages.getDeathComponent(player));
         survivorTeam.removePlayer(player);
-        player.removeTag(Tags.TEAM_ID);
+        player.removeTag(Tags.TEAM_KEY);
         EventDispatcher.call(new SpectatorAddEvent(player));
         Phase currentPhase = this.phaseSupplier.get();
         //TODO: Should be tested

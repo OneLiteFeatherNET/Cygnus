@@ -51,34 +51,38 @@ public final class ScoreboardDisplay {
     /**
      * Add a player to a team
      *
-     * @param player the player to add
-     * @param teamId the team id to add the player to
+     * @param player  the player to add
+     * @param teamKey the key of the team to add the player to
      */
-    public void addPlayer(Player player, byte teamId) {
-        var teamName = getTeamName(teamId);
+    public void addPlayer(Player player, net.kyori.adventure.key.Key teamKey) {
+        var teamName = getTeamName(teamKey);
         var team = MinecraftServer.getTeamManager().getTeam(teamName);
-        team.addMember(player.getUsername());
+        if (team != null) {
+            team.addMember(player.getUsername());
+        }
     }
 
     /**
      * Remove a player from a team
      *
-     * @param player the player to remove
-     * @param teamId the team id to remove the player from
+     * @param player  the player to remove
+     * @param teamKey the key of the team to remove the player from
      */
-    public void removePlayer(Player player, byte teamId) {
-        var teamName = getTeamName(teamId);
+    public void removePlayer(Player player, net.kyori.adventure.key.Key teamKey) {
+        var teamName = getTeamName(teamKey);
         var team = MinecraftServer.getTeamManager().getTeam(teamName);
-        team.removeMember(player.getUsername());
+        if (team != null) {
+            team.removeMember(player.getUsername());
+        }
     }
 
     /**
-     * Get the team name by the team id
+     * Get the team name by the team key
      *
-     * @param teamId the team id
+     * @param teamKey the team key
      * @return the team name
      */
-    private String getTeamName(byte teamId) {
-        return teamId == TeamHelper.SLENDER_TEAM_ID ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
+    private String getTeamName(net.kyori.adventure.key.Key teamKey) {
+        return GameConfig.SLENDER_KEY.equals(teamKey) ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
     }
 }
