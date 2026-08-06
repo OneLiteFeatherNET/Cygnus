@@ -55,7 +55,7 @@ public non-sealed class FoodBar extends StaminaBar {
      * Handles the food regeneration for the player.
      */
     private void handleFoodRegeneration() {
-        if (this.currentSpeedCount == MAX_FOOD) {
+        if (this.currentSpeedCount >= MAX_FOOD) {
             state = State.READY;
             player.setBlockedSprinting(false);
             return;
@@ -76,16 +76,11 @@ public non-sealed class FoodBar extends StaminaBar {
     }
 
     public boolean canConsume() {
-        if (state == State.READY) {
-            state = State.DRAINING;
-            return true;
-        }
-        if (state == State.REGENERATING && currentSpeedCount > 7D) {
-            state = State.DRAINING;
-            return true;
-        }
+        return (state == State.READY) || (state == State.DRAINING && currentSpeedCount > 7D);
+    }
 
-        return false;
+    public void startConsume() {
+        state = State.DRAINING;
     }
 
     /**
