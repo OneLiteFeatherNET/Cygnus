@@ -36,11 +36,11 @@ public final class WaitingPhase extends TimedPhase {
     public void onStart() {
         super.onStart();
         EventDispatcher.call(new GamePreLaunchEvent());
+        this.instanceSwitch.apply();
     }
 
     @Override
     protected void onFinish() {
-        this.instanceSwitch.apply();
         this.gameView.addPlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
     }
 

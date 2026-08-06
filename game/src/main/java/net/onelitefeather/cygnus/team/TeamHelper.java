@@ -119,7 +119,7 @@ public final class TeamHelper {
     private static Set<Player> collectSurvivors(Player slenderPlayer) {
         Set<Player> survivors = new HashSet<>();
         for (Player player : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
-            if (!player.getUuid().equals(slenderPlayer.getUuid())) {
+            if (slenderPlayer == null || !player.getUuid().equals(slenderPlayer.getUuid())) {
                 survivors.add(player);
             }
         }
@@ -239,6 +239,10 @@ public final class TeamHelper {
      * @param position the new position
      */
     private static void updateInstance(Player player, Instance instance, Pos position) {
+        if (instance.equals(player.getInstance())) {
+            player.teleport(position);
+            return;
+        }
         player.setInstance(instance, position);
     }
 

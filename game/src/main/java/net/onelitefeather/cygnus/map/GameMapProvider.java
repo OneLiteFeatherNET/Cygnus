@@ -25,6 +25,7 @@ public final class GameMapProvider extends AbstractMapProvider {
     private final List<FalcoAnvilLoader> chunkLoaders;
     private @Nullable InstanceContainer gameInstance;
     private @Nullable GameMap gameMap;
+    private @Nullable InstanceContainer previousInstance;
 
     public GameMapProvider(Path path) {
         super(GsonHelper.FILE_HANDLER, MapFilters::filterMapsForGame);
@@ -53,14 +54,34 @@ public final class GameMapProvider extends AbstractMapProvider {
         EventDispatcher.call(new GameMapLoadedEvent(this.gameMap, this.gameInstance));
     }
 
+    /**
+     * Switches the provider over to the game map.
+     *
+     * <p>This only moves the active references; the lobby instance stays registered so the players
+     * can still be moved out of it. Call {@link #releasePreviousInstance()} once they are gone.</p>
+     *
+     * @throws IllegalStateException if the game map has not been loaded yet
+     */
     public void switchToGameMap() {
-        if (this.activeInstance != null) {
-            MinecraftServer.getInstanceManager().unregisterInstance(this.activeInstance);
-            this.activeInstance = null;
-            this.activeMap = null;
+        if (this.gameInstance == null || this.gameMap == null) {
+            throw new IllegalStateException("The game map has not been loaded yet");
         }
+        this.previousInstance = this.activeInstance;
         this.activeInstance = this.gameInstance;
         this.activeMap = this.gameMap;
+    }
+
+    /**
+     * Unregisters the instance the provider was on before the last switch.
+     *
+     * <p>Minestom refuses to unregister an instance that still holds online players, so this must
+     * run after every player has been moved into the new instance. Calling it more than once, or
+     * without a previous switch, does nothing.</p>
+     */
+    public void releasePreviousInstance() {
+        if (this.previousInstance == null) return;
+        MinecraftServer.getInstanceManager().unregisterInstance(this.previousInstance);
+        this.previousInstance = null;
     }
 
     private BaseMap loadLobbyMap() {
