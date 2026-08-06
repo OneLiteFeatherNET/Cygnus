@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.utils;
 
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
@@ -22,9 +23,10 @@ public final class StaminaHelper {
      * @param staminaService The service that contains the stamina bars
      */
     public static void initStaminaObjects(TeamService teamService, StaminaService staminaService) {
-        Team slenderTeam = teamService.getTeams().getFirst();
-        Team survivorTeam = teamService.getTeams().getLast();
-
+        Team slenderTeam = teamService.getTeam(GameConfig.SLENDER_KEY)
+                .orElseThrow(() -> new IllegalStateException("Slender team not found"));
+        Team survivorTeam = teamService.getTeam(GameConfig.SURVIVOR_KEY)
+                .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
         TeamHelper.TeamAllocation allocation = TeamHelper.prepareTeamAllocation(slenderTeam, survivorTeam);
 
         staminaService.setSlenderBar(allocation.slender(), true);
