@@ -28,11 +28,14 @@ public final class PlayerStartSprintingListener implements Consumer<PlayerStartS
 
         if (cygnusPlayer.hasBlockedSprinting()) {
             event.setCancelled(true);
+            return;
         }
 
         FoodBar staminaBarRef = staminaFunction.apply(player);
         if (!staminaBarRef.canConsume()) {
             event.setCancelled(true);
+            return;
         }
+        staminaBarRef.startConsume();
     }
 }
