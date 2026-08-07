@@ -2,7 +2,7 @@ package net.onelitefeather.cygnus.listener.page;
 
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.page.PageProvider;
-import net.onelitefeather.cygnus.page.event.PageSpawnEvent;
+import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;

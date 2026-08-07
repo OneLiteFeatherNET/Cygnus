@@ -11,7 +11,7 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.event.GameStartEvent;
-import net.onelitefeather.cygnus.page.event.PageSpawnEvent;
+import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;

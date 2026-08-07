@@ -4,7 +4,7 @@ import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
-import net.onelitefeather.cygnus.page.event.PageSpawnEvent;
+import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
 import net.onelitefeather.cygnus.listener.game.GameStartListener;
 import net.onelitefeather.cygnus.listener.page.PageSpawnListener;
 import net.onelitefeather.cygnus.listener.view.ViewUpdateListener;
