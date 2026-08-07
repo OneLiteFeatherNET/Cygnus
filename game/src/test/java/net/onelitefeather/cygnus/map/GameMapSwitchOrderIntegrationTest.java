@@ -56,7 +56,8 @@ class GameMapSwitchOrderIntegrationTest {
         assertNotSame(lobbyInstance, gameInstance);
 
         TeamHelper.teleportTeams(teamService, provider.getGameMap(), gameInstance);
-        for (int i = 0; i < 10; i++) {
+        // Player#setInstance is asynchronous (chunk loading), so poll instead of guessing a fixed tick count.
+        for (int i = 0; i < 100 && (slender.getInstance() != gameInstance || survivor.getInstance() != gameInstance); i++) {
             env.tick();
         }
         assertSame(gameInstance, slender.getInstance());
