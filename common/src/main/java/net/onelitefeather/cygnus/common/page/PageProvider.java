@@ -166,11 +166,14 @@ public final class PageProvider {
         int foundCount = this.currentFoundedPageCount.incrementAndGet();
         this.updatePageDisplay();
 
-        updatePageData(pageEntity);
-
         if (foundCount >= maxPageAmount) {
             EventDispatcher.call(new PageDiscoveryCompletedEvent());
         }
+
+        // Re-inserting the entity makes it discoverable again, so this must happen last:
+        // doing it earlier reopens a window where a concurrent call for the same uuid
+        // legitimately re-claims it and double-credits the find.
+        updatePageData(pageEntity);
     }
 
     private void updatePageData(PageEntity entity) {
