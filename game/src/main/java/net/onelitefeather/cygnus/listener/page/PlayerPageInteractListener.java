@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.listener.game;
+package net.onelitefeather.cygnus.listener.page;
 
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
