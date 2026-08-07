@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.listener.game;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.utils.PacketSendingUtils;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.Messages;
@@ -10,6 +11,7 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
@@ -69,7 +71,7 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
 
     private void startGlobalMechanics() {
         this.staminaService.start();
-        this.pageProvider.spawn();
+        EventDispatcher.call(new PageSpawnEvent());
         this.ambientProvider.startTask();
         TeamHelper.updateTabList(this.teamService);
     }

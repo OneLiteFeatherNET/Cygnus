@@ -15,7 +15,7 @@ import net.minestom.server.item.Material;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
-import net.onelitefeather.cygnus.common.page.event.PageEvent;
+import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
 
 import java.util.UUID;
@@ -148,7 +148,7 @@ public final class PageEntity extends Entity implements PageCreator{
         if (currentTickTime >= ttlTime) {
             this.disableInteraction();
             send = true;
-            EventDispatcher.call(new PageEvent(this, PageEvent.Reason.TTL));
+            EventDispatcher.call(new PageExpiredEvent(this));
         }
     }
 
