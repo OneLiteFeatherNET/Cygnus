@@ -5,6 +5,49 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.7.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.6...v2.7.0) (2026-08-08)
+
+
+### Features
+
+* **common:** add custom dimension presets ([#132](https://github.com/OneLiteFeatherNET/Cygnus/issues/132)) ([2e5482d](https://github.com/OneLiteFeatherNET/Cygnus/commit/2e5482dde4871dc491f09695976dca6d7a529429))
+* **game:** add ability to use a custom page model ([#133](https://github.com/OneLiteFeatherNET/Cygnus/issues/133)) ([c069dbb](https://github.com/OneLiteFeatherNET/Cygnus/commit/c069dbb5bf73b9bd3eee2ef53721f11c2e9a3162))
+* **game:** add mannequin entity ([#150](https://github.com/OneLiteFeatherNET/Cygnus/issues/150)) ([c86bffb](https://github.com/OneLiteFeatherNET/Cygnus/commit/c86bffb9a61ac17d8dc698777ae397416baec7dd))
+* **game:** add player heartbeat ([#147](https://github.com/OneLiteFeatherNET/Cygnus/issues/147)) ([7c8f7f0](https://github.com/OneLiteFeatherNET/Cygnus/commit/7c8f7f056779896bcb0102c9f5ada94fa851e9e0))
+* **game:** transition to night at the end of the lobby phase ([#165](https://github.com/OneLiteFeatherNET/Cygnus/issues/165)) ([8766880](https://github.com/OneLiteFeatherNET/Cygnus/commit/8766880f39b27eeac6be3b6f24c72e172abdcc12))
+* **map:** read worlds through Falco instead of the Minestom loader ([#143](https://github.com/OneLiteFeatherNET/Cygnus/issues/143)) ([0c0ef46](https://github.com/OneLiteFeatherNET/Cygnus/commit/0c0ef465208db83838f1d3084caaa63a169388bb))
+* **pack:** add resource pack handling ([#164](https://github.com/OneLiteFeatherNET/Cygnus/issues/164)) ([f1b1266](https://github.com/OneLiteFeatherNET/Cygnus/commit/f1b12665b3c70de9a16b0d84450967313d8005b3))
+* run Cygnus without LuckPerms ([#154](https://github.com/OneLiteFeatherNET/Cygnus/issues/154)) ([aa00aa3](https://github.com/OneLiteFeatherNET/Cygnus/commit/aa00aa3b78ec1a7e8d5216e6d4d35565fc646848))
+* **setup:** add ability to delete locations in map setup ([#126](https://github.com/OneLiteFeatherNET/Cygnus/issues/126)) ([ea30cce](https://github.com/OneLiteFeatherNET/Cygnus/commit/ea30cced193ba1547d6d27e813b26bd1aa1ff0ac))
+* **setup:** add default lore for fallback items ([#125](https://github.com/OneLiteFeatherNET/Cygnus/issues/125)) ([c2e324a](https://github.com/OneLiteFeatherNET/Cygnus/commit/c2e324a5d11e86e6eac5857e1a9af667d80321cd))
+* **setup:** add page setup part ([#146](https://github.com/OneLiteFeatherNET/Cygnus/issues/146)) ([f035799](https://github.com/OneLiteFeatherNET/Cygnus/commit/f0357996f3ac51a78cf64fde77b1d2d27e9c706c))
+* **setup:** improve setup item display ([#124](https://github.com/OneLiteFeatherNET/Cygnus/issues/124)) ([dd475df](https://github.com/OneLiteFeatherNET/Cygnus/commit/dd475df97e70afe79cf152c182fdc83bcc0374b9))
+* **setup:** overhaul dialog data handling ([#128](https://github.com/OneLiteFeatherNET/Cygnus/issues/128)) ([622dcdf](https://github.com/OneLiteFeatherNET/Cygnus/commit/622dcdfd0e8b06afc94bb425dc77ab06578ffa39))
+* **spectator:** add ability to spectate players ([#159](https://github.com/OneLiteFeatherNET/Cygnus/issues/159)) ([d29578b](https://github.com/OneLiteFeatherNET/Cygnus/commit/d29578b31bb55d6f662421bafa4449e06dd95376))
+* **teleport:** add strategy interface ([#135](https://github.com/OneLiteFeatherNET/Cygnus/issues/135)) ([bffa72f](https://github.com/OneLiteFeatherNET/Cygnus/commit/bffa72f0b4ea9992b4375b039af8eb3e7c49477f))
+
+
+### Bug Fixes
+
+* **ambient:** use survivor team ([75aff1a](https://github.com/OneLiteFeatherNET/Cygnus/commit/75aff1aaf42b6092456062be87b6080c91739bd3))
+* **category:** avoid typo in one enum entry declaration ([b79d4e6](https://github.com/OneLiteFeatherNET/Cygnus/commit/b79d4e69b4e051732632eb9d85162494207eb67e))
+* **cloudnet:** bind address from service properties + clean stdin shutdown ([#141](https://github.com/OneLiteFeatherNET/Cygnus/issues/141)) ([4abda36](https://github.com/OneLiteFeatherNET/Cygnus/commit/4abda36e4aba6bf78d7611e4346a8eb330d5870f))
+* **cloudnet:** load the bridge as a Minestom extension in game and setup ([#148](https://github.com/OneLiteFeatherNET/Cygnus/issues/148)) ([07e2f8c](https://github.com/OneLiteFeatherNET/Cygnus/commit/07e2f8caf59b4b9ca9cb69b9239528ada275a55c))
+* **data:** improve save logic ([d2b94ec](https://github.com/OneLiteFeatherNET/Cygnus/commit/d2b94ecb5f6a1d44223ca15eb1050521ef74a08a))
+* **deps:** update dependency net.onelitefeather:falco-bom to v2 ([#158](https://github.com/OneLiteFeatherNET/Cygnus/issues/158)) ([1f40661](https://github.com/OneLiteFeatherNET/Cygnus/commit/1f406612543a35f91da60a63690c80253a7bfb54))
+* **game:** avoid double stamina service cleanup calls ([07417cd](https://github.com/OneLiteFeatherNET/Cygnus/commit/07417cdf7dfd09d0c9475e7732c4911452931f3d))
+* **helper:** avoid secure random usage and add missing documentation ([3deffe9](https://github.com/OneLiteFeatherNET/Cygnus/commit/3deffe95c5f7243abd18aa64ab65ad2fd55768c1))
+* **helper:** improve random access value ([f12c806](https://github.com/OneLiteFeatherNET/Cygnus/commit/f12c8063c334a5064729d3db09039505015c70a9))
+* **lobby:** improve file check to avoid exception throw during the setup ([9a80218](https://github.com/OneLiteFeatherNET/Cygnus/commit/9a802181c5924dec86881ec1c9895b0ae70b8edf))
+* **map:** accept the 26.2 world layout when filtering maps ([#151](https://github.com/OneLiteFeatherNET/Cygnus/issues/151)) ([499993e](https://github.com/OneLiteFeatherNET/Cygnus/commit/499993e209439f7745c2320071e00d989b4fb360))
+* **map:** change instance unregister to avoid exception throw ([#161](https://github.com/OneLiteFeatherNET/Cygnus/issues/161)) ([80b274d](https://github.com/OneLiteFeatherNET/Cygnus/commit/80b274d568704ea1e616827f8035b7006c6a627e))
+* **player:** keep chunks visible when a player changes instance ([#144](https://github.com/OneLiteFeatherNET/Cygnus/issues/144)) ([f5c11c7](https://github.com/OneLiteFeatherNET/Cygnus/commit/f5c11c73ae6eeade94c3809e9f8fe1d39b13afff))
+* **quit:** improve revive logic ([1486306](https://github.com/OneLiteFeatherNET/Cygnus/commit/1486306219a95581877624380067a6c16178e2da))
+* **scare:** improve spawn logic and prevent spawning inside blocks ([#152](https://github.com/OneLiteFeatherNET/Cygnus/issues/152)) ([c46b5a5](https://github.com/OneLiteFeatherNET/Cygnus/commit/c46b5a54158f36ba3326d3a84fe131562c41ef39))
+* **stamina:** optimize stamina regeneration and consumption check ([#160](https://github.com/OneLiteFeatherNET/Cygnus/issues/160)) ([0313782](https://github.com/OneLiteFeatherNET/Cygnus/commit/0313782848b4522f8bf385942a86a431c2ade1b2))
+* **team:** update color import ([7029da9](https://github.com/OneLiteFeatherNET/Cygnus/commit/7029da9a053a77b8c0a39ae3d8f36050469bb219))
+* **team:** use right name for the slender team creation ([ad18a42](https://github.com/OneLiteFeatherNET/Cygnus/commit/ad18a424641cbc10e7bd07eae2fc31e2fcd23189))
+
 ## [2.6.6](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.5...v2.6.6) (2026-06-29)
 
 
