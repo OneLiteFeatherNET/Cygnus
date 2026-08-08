@@ -200,7 +200,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             );
             MinecraftServer.getSchedulerManager().scheduleNextTick(gameMapProvider::releasePreviousInstance);
         };
-        LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig);
+        LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig, gameMapProvider.getActiveInstance());
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime(), this.jumpscareManager));
