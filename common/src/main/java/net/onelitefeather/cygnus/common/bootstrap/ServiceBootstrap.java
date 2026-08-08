@@ -9,6 +9,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Wires the parts a CloudNet-managed service process needs: reading the bind address CloudNet
@@ -24,6 +26,7 @@ public final class ServiceBootstrap {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceBootstrap.class);
     private static final String DEFAULT_BIND_HOST = "localhost";
     private static final int DEFAULT_BIND_PORT = 25565;
+    private static final String DEFAULT_WORKING_DIR = "";
 
     private ServiceBootstrap() {
     }
@@ -46,6 +49,16 @@ public final class ServiceBootstrap {
      */
     public static int resolveBindPort() {
         return Integer.getInteger("service.bind.port", DEFAULT_BIND_PORT);
+    }
+
+    /**
+     * Resolves the working directory root used to locate config, map, and other data files.
+     *
+     * @return the value of the {@code service.working.dir} system property CloudNet assigns per
+     * service, or the JVM's current working directory for standalone (non-CloudNet) runs
+     */
+    public static Path resolveWorkingDirectory() {
+        return Paths.get(System.getProperty("service.working.dir", DEFAULT_WORKING_DIR));
     }
 
     /**
