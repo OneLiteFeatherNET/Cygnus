@@ -4,6 +4,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
+import java.nio.file.Paths;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ServiceBootstrapTest {
@@ -36,5 +38,22 @@ class ServiceBootstrapTest {
     void testBindPortFromSystemProperty() {
         System.setProperty("service.bind.port", "30000");
         assertEquals(30000, ServiceBootstrap.resolveBindPort());
+    }
+
+    @AfterEach
+    void clearWorkingDirProperty() {
+        System.clearProperty("service.working.dir");
+    }
+
+    @Test
+    @DisabledIfSystemProperty(named = "service.working.dir", matches = ".+")
+    void testDefaultWorkingDirectory() {
+        assertEquals(Paths.get(""), ServiceBootstrap.resolveWorkingDirectory());
+    }
+
+    @Test
+    void testWorkingDirectoryFromSystemProperty() {
+        System.setProperty("service.working.dir", "/app");
+        assertEquals(Paths.get("/app"), ServiceBootstrap.resolveWorkingDirectory());
     }
 }

@@ -7,7 +7,9 @@ import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
+import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -22,11 +24,13 @@ public final class PlayerLoginListener implements Consumer<AsyncPlayerConfigurat
     private final Supplier<Instance> instance;
     private final int maxPlayers;
     private final Supplier<Phase> currentPhase;
+    private final Optional<ResourcePackService> resourcePackService;
 
-    public PlayerLoginListener(Supplier<Instance> instance, int maxPlayers, Supplier<Phase> currentPhase) {
+    public PlayerLoginListener(Supplier<Instance> instance, int maxPlayers, Supplier<Phase> currentPhase, Optional<ResourcePackService> resourcePackService) {
         this.instance = instance;
         this.maxPlayers = maxPlayers;
         this.currentPhase = currentPhase;
+        this.resourcePackService = resourcePackService;
     }
 
     @Override
@@ -40,5 +44,6 @@ public final class PlayerLoginListener implements Consumer<AsyncPlayerConfigurat
             return;
         }
         event.setSpawningInstance(this.instance.get());
+        resourcePackService.ifPresent(service -> service.sendTo(event.getPlayer()));
     }
 }
