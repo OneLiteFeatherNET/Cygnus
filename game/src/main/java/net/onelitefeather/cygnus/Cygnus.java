@@ -38,6 +38,7 @@ import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
+import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
@@ -69,6 +70,7 @@ import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.phase.RestartPhase;
 import net.onelitefeather.cygnus.phase.WaitingPhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
@@ -78,7 +80,7 @@ import net.onelitefeather.cygnus.view.GameViewImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -99,9 +101,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final GameConfig gameConfig;
     private final JumpScareManager jumpscareManager;
     private final SpectatorService spectatorService;
+    private final Optional<ResourcePackService> resourcePackService;
 
     public Cygnus() {
-        Path path = Paths.get("");
+        Path path = ServiceBootstrap.resolveWorkingDirectory();
         this.teamService = TeamService.of();
         this.linearPhaseSeries = new LinearPhaseSeries<>("game");
         this.staminaService = new StaminaService();
@@ -121,6 +124,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
+        this.resourcePackService = ResourcePackService.create();
         this.initPhases();
         this.initCommands();
         this.initListener();
@@ -147,9 +151,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 new PlayerLoginListener(
                         this.mapProvider.getActiveInstance(),
                         this.gameConfig.maxPlayers(),
-                        linearPhaseSeries::getCurrentPhase
+                        linearPhaseSeries::getCurrentPhase,
+                        this.resourcePackService
                 )
         );
+        this.resourcePackService.ifPresent(service -> service.registerListener(manager));
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener(spectatorTeam, phaseSupplier));

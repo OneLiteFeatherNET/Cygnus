@@ -14,6 +14,7 @@ import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.ListenerHandling;
+import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.setup.event.MapSetupSaveEvent;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
@@ -41,7 +42,6 @@ import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.onelitefeather.guira.SetupDataService;
 import net.onelitefeather.guira.data.SetupData;
 
-import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -53,7 +53,7 @@ public class SetupExtension implements ListenerHandling {
 
     public SetupExtension() {
         this.dataService = SetupDataService.create();
-        this.mapProvider = new SetupMapProvider(Paths.get("").resolve("setup"));
+        this.mapProvider = new SetupMapProvider(ServiceBootstrap.resolveWorkingDirectory().resolve("setup"));
         this.mapSetupInventory = new MapSetupInventory(mapProvider.getEntries());
         registerSetupComponents();
         this.registerMapListeners();
