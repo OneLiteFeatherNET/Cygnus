@@ -7,6 +7,7 @@ import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
+import net.onelitefeather.cygnus.phase.task.LobbyCountdownSoundTask;
 import net.onelitefeather.cygnus.phase.task.LobbyTimeTransitionTask;
 import net.onelitefeather.cygnus.phase.task.LobbyWaitingTask;
 import net.theevilreaper.xerus.api.phase.TickDirection;
@@ -23,22 +24,24 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIM
  * During this phase, the game waits until enough players have joined to start the
  * match countdown. The phase updates the player level and experience bar to
  * visualize the remaining time until the game starts, manages the action bar
- * waiting display using a tick-aligned scheduler, and smoothly transitions world time
- * towards midnight as the countdown nears completion.
+ * waiting display using a tick-aligned scheduler, smoothly transitions world time
+ * towards midnight as the countdown nears completion, and plays a tension-building
+ * horror sound cue during the last seconds before the match starts.
  * </p>
  *
  * @author theEvilReaper
- * @version 1.3.0
+ * @version 1.4.0
  * @since 1.0.0
  */
 public final class LobbyPhase extends TimedPhase {
 
-    private static final int TIME_TRANSITION_START_SECONDS = 10;
+    private static final int TIME_TRANSITION_START_SECONDS = LobbyCountdownSoundTask.WINDOW_START_SECONDS;
 
     private final int lobbyTime;
     private final int minPlayers;
     private final LobbyWaitingTask waitingDisplay;
     private final LobbyTimeTransitionTask timeTransitionTask;
+    private final LobbyCountdownSoundTask countdownSoundTask;
     private boolean forceStarted;
 
     /**
@@ -68,6 +71,7 @@ public final class LobbyPhase extends TimedPhase {
         this.waitingDisplay = new LobbyWaitingTask(this.minPlayers);
         this.waitingDisplay.update(MinecraftServer.getConnectionManager().getOnlinePlayers().size());
         this.timeTransitionTask = new LobbyTimeTransitionTask(instanceSupplier, TIME_TRANSITION_START_SECONDS);
+        this.countdownSoundTask = new LobbyCountdownSoundTask();
     }
 
     /**
@@ -100,6 +104,7 @@ public final class LobbyPhase extends TimedPhase {
             this.setLevel();
 
             this.timeTransitionTask.reset();
+            this.countdownSoundTask.reset();
             // Simply restart the existing display instead of allocating a new one
             this.waitingDisplay.start();
             this.waitingDisplay.update(onlineCount);
@@ -121,6 +126,7 @@ public final class LobbyPhase extends TimedPhase {
     @Override
     public void onUpdate() {
         setLevel();
+        this.countdownSoundTask.onTick(getCurrentTicks());
 
         if (getCurrentTicks() == TIME_TRANSITION_START_SECONDS) {
             this.timeTransitionTask.start();
@@ -149,6 +155,7 @@ public final class LobbyPhase extends TimedPhase {
             this.setLevel(this.lobbyTime);
 
             this.timeTransitionTask.reset();
+            this.countdownSoundTask.reset();
             // Simply restart the existing display instead of allocating a new one
             this.waitingDisplay.start();
             this.waitingDisplay.update(onlineCount);
