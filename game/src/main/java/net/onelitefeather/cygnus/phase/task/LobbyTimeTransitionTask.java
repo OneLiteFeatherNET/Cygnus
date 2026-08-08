@@ -59,10 +59,6 @@ public final class LobbyTimeTransitionTask {
                 }
 
                 Instance instance = instanceSupplier.get();
-                if (instance == null) {
-                    stop();
-                    return;
-                }
 
                 if (!initialized) {
                     initialTime = instance.getTime();
@@ -92,9 +88,6 @@ public final class LobbyTimeTransitionTask {
         }
 
         Instance instance = instanceSupplier.get();
-        if (instance == null) {
-            return;
-        }
 
         this.running = true;
         this.initialized = false;
@@ -120,9 +113,7 @@ public final class LobbyTimeTransitionTask {
         stop();
         if (initialized) {
             Instance instance = instanceSupplier.get();
-            if (instance != null) {
-                instance.setTime(initialTime);
-            }
+            instance.setTime(initialTime);
             initialized = false;
             currentTick = 0;
         }
