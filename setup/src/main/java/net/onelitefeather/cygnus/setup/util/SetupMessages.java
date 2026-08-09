@@ -32,7 +32,6 @@ public final class SetupMessages {
     public static final Component DELETE_CLICK;
     public static final Component PAGE_MODE_ENABLED;
     public static final Component PAGE_MODE_DISABLED;
-    public static final Component PAGE_MODE_INFORM;
     public static final Component SURVIVOR_MODE_ENABLED;
     public static final Component SURVIVOR_MODE_DISABLED;
 
@@ -76,7 +75,6 @@ public final class SetupMessages {
                         .append(Component.space())
                         .append(Component.text("disabled", NamedTextColor.RED))
         );
-        PAGE_MODE_INFORM = Messages.withPrefix(Component.text("Don't forget to disable this mode", NamedTextColor.GRAY));
         SURVIVOR_MODE_ENABLED = Messages.withPrefix(
                 Component.text("The survivor mode has been", NamedTextColor.GRAY)
                         .append(Component.space())
@@ -104,6 +102,19 @@ public final class SetupMessages {
         PreProcess facePreProcess = Tag.preProcessParsed(face);
         TagResolver faceTag = TagResolver.builder().tag("face", (_, _) -> facePreProcess).build();
         return Messages.withMini("<red>You are looking in an invalid direction! <gray>(<gold><face><gray>)", faceTag);
+    }
+
+    /**
+     * Creates a new {@link Component} instance which informs the player to disable the given mode.
+     *
+     * @param mode which should be displayed
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getModeInform(@NotNull String mode) {
+        PreProcess modePreProcess = Tag.preProcessParsed(mode);
+        TagResolver modeTag = TagResolver.builder().tag("mode", (_, _) -> modePreProcess).build();
+        return Messages.withMiniPrefix("<gray>Don't forget to disable <mode> mode", modeTag);
     }
 
     /**

@@ -204,7 +204,7 @@ public class GameData extends InstanceSetupData {
             swapPageMode();
             if (hasPageMode()) {
                 player.sendMessage(SetupMessages.PAGE_MODE_ENABLED);
-                player.sendMessage(SetupMessages.PAGE_MODE_INFORM);
+                player.sendMessage(SetupMessages.getModeInform("page"));
                 SetupItems.setPageItems(player);
             } else {
                 player.sendMessage(SetupMessages.PAGE_MODE_DISABLED);
@@ -225,7 +225,7 @@ public class GameData extends InstanceSetupData {
             this.swapSurvivorMode();
             if (hasSurvivorMode()) {
                 player.sendMessage(SetupMessages.SURVIVOR_MODE_ENABLED);
-                player.sendMessage(SetupMessages.PAGE_MODE_INFORM);
+                player.sendMessage(SetupMessages.getModeInform("survivor"));
                 SetupItems.setSurvivorSpawn(player);
             } else {
                 player.sendMessage(SetupMessages.SURVIVOR_MODE_DISABLED);
