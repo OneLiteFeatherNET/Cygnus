@@ -49,7 +49,7 @@ public class SetupExtension implements ListenerHandling {
 
     private final SetupDataService dataService;
     private final MapSetupInventory mapSetupInventory;
-    private final AbstractMapProvider mapProvider;
+    private final SetupMapProvider mapProvider;
 
     public SetupExtension() {
         this.dataService = SetupDataService.create();
@@ -61,7 +61,6 @@ public class SetupExtension implements ListenerHandling {
 
     private void registerSetupComponents() {
         var manager = MinecraftServer.getGlobalEventHandler();
-        var spawnPos = new Pos(0, 150, 0);
 
         Supplier<Instance> instanceSupplier = this.mapProvider.getActiveInstance();
         Instance activeInstance = instanceSupplier.get();
@@ -74,7 +73,7 @@ public class SetupExtension implements ListenerHandling {
         manager.addListener(PlayerUseItemEvent.class, new SetupItemListener(this.dataService, mapSetupInventory));
 
         manager.addListener(AsyncPlayerConfigurationEvent.class, event -> event.setSpawningInstance(instanceSupplier.get()));
-        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(spawnPos));
+        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener((mapProvider::teleportToSpawn)));
 
         manager.addListener(PlayerDisconnectEvent.class, event ->
                 this.dataService.remove(event.getPlayer().getUuid()).ifPresent(SetupData::reset));
