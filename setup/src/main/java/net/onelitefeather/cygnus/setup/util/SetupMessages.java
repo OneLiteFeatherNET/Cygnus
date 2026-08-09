@@ -33,6 +33,8 @@ public final class SetupMessages {
     public static final Component PAGE_MODE_ENABLED;
     public static final Component PAGE_MODE_DISABLED;
     public static final Component PAGE_MODE_INFORM;
+    public static final Component SURVIVOR_MODE_ENABLED;
+    public static final Component SURVIVOR_MODE_DISABLED;
 
     static {
         SPACE_SEPARATOR = Component.text("» ", NamedTextColor.GRAY);
@@ -75,6 +77,16 @@ public final class SetupMessages {
                         .append(Component.text("disabled", NamedTextColor.RED))
         );
         PAGE_MODE_INFORM = Messages.withPrefix(Component.text("Don't forget to disable this mode", NamedTextColor.GRAY));
+        SURVIVOR_MODE_ENABLED = Messages.withPrefix(
+                Component.text("The survivor mode has been", NamedTextColor.GRAY)
+                        .append(Component.space())
+                        .append(Component.text("enabled", NamedTextColor.GREEN))
+        );
+        SURVIVOR_MODE_DISABLED = Messages.withPrefix(
+                Component.text("The survivor mode has been", NamedTextColor.GRAY)
+                        .append(Component.space())
+                        .append(Component.text("disabled", NamedTextColor.RED))
+        );
     }
 
     private SetupMessages() {
