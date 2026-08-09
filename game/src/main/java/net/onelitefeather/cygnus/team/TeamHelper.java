@@ -5,7 +5,6 @@ import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
 import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
@@ -75,7 +74,7 @@ public final class TeamHelper {
      */
     private static void assignSlender(Player player, Team slenderTeam) {
         player.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
-        player.updateViewableRule(ViewRuleUpdater::viewableRuleForSlender);
+        player.updateViewableRule(_ -> !ViewRuleUpdater.isHidden(player));
         slenderTeam.addPlayer(player);
     }
 

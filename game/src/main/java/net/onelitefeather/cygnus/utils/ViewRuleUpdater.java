@@ -17,29 +17,11 @@ public final class ViewRuleUpdater {
             if (onlinePlayer.getUuid().equals(target.getUuid())) continue;
             onlinePlayer.updateViewableRule();
         }
-        survivor.getPlayers().forEach(ViewRuleUpdater::showSlender);
-        showSurvivor(target);
         target.updateViewableRule();
         survivor.getPlayers().forEach(Player::updateViewableRule);
     }
 
-    public static void showSurvivor(Player player) {
-        if (isViewAble(player)) {
-            player.setTag(Tags.HIDDEN, SlenderBarHelper.VISIBLE);
-        } else {
-            player.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
-        }
-    }
-
-    public static void showSlender(Player player) {
-        if (!isViewAble(player)) {
-            player.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
-        } else {
-            player.setTag(Tags.HIDDEN, SlenderBarHelper.VISIBLE);
-        }
-    }
-
-    public static boolean viewableRuleForSlender(Player player) {
+    public static boolean isHidden(Player player) {
         return player.hasTag(Tags.HIDDEN) && player.getTag(Tags.HIDDEN) == SlenderBarHelper.HIDDEN;
     }
 
