@@ -31,11 +31,18 @@ public final class GameMap extends BaseMap {
      * @param survivorSpawns the spawn positions for the survivors
      * @param builders       the builders for the map
      */
-    public GameMap(String name, Pos spawn, Pos slenderSpawn, Set<PageResource> pageFaces, Set<Pos> survivorSpawns, List<String> builders) {
+    public GameMap(
+            String name,
+            Pos spawn,
+            Pos slenderSpawn,
+            Set<PageResource> pageFaces,
+            Set<Pos> survivorSpawns,
+            List<String> builders
+    ) {
         super(name, spawn, builders);
         this.slenderSpawn = slenderSpawn;
-        this.pageFaces = pageFaces != null ? Set.copyOf(pageFaces) : Set.of();
-        this.survivorSpawns = survivorSpawns != null ? Set.copyOf(survivorSpawns) : Set.of();
+        this.pageFaces = Set.copyOf(pageFaces);
+        this.survivorSpawns = Set.copyOf(survivorSpawns);
     }
 
     /**

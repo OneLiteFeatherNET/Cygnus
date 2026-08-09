@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.common.util;
 import com.google.gson.Gson;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.map.adapter.GameMapAdapter;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.page.adapter.PageResourceAdapter;
 import net.theevilreaper.aves.file.GsonFileHandler;
@@ -27,6 +29,7 @@ public final class GsonHelper {
                 .registerTypeAdapter(Pos.class, typeAdapter)
                 .registerTypeAdapter(Vec.class, typeAdapter)
                 .registerTypeAdapter(PageResource.class, new PageResourceAdapter())
+                .registerTypeAdapter(GameMap.class, new GameMapAdapter())
                 .create();
         FILE_HANDLER = new GsonFileHandler(GSON);
     }

@@ -1,4 +1,4 @@
 @NotNullByDefault
-package net.onelitefeather.cygnus.common.map.filter;
+package net.onelitefeather.cygnus.common.map.adapter;
 
 import org.jetbrains.annotations.NotNullByDefault;
