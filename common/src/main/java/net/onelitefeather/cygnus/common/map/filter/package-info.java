@@ -1,4 +1,3 @@
-
 @NotNullByDefault
 package net.onelitefeather.cygnus.common.map.filter;
 
