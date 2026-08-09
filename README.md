@@ -16,15 +16,14 @@ It is an **asymmetrical multiplayer game** where a team of Survivors faces off a
 
 ### Core Mechanics
 
-- **Page Collection:** Survivors must explore the map and interact with pages scattered around before the time runs out.
+- **Page Collection:** Survivors must explore the map and interact with pages scattered around before the time runs out
 - **Stamina System:** Managing your stamina is critical. Sprinting drains your energy, forcing you to think carefully
-  about when to run and when to hide.
-- **Jumpscares & Ambience:** Custom atmospheric sounds and a dedicated jumpscare system ensure a terrifying and
-  immersive experience.
-- **Resource Pack Driven:** Heavily utilizes custom resource packs for scary visuals, custom items (like
-  flashlights/slender items), and ambient audio.
+  about when to run and when to hide
+- **Jumpscares & Ambience:** Atmospheric sounds and a dedicated jumpscare system ensure a terrifying and
+  immersive experience
+- **Resource Pack:** Custom resource packs for visual adjustments visuals and ambient audio
 - **Spectator Mode:** Once defeated, players join the spectator team to watch the remaining survivors struggle in the
-  dark.
+  dark
 
 ## Feedback & Bugs
 
