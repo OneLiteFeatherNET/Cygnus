@@ -37,8 +37,9 @@ public class SurvivorViewInventory extends PersonalInventoryBuilder {
         this.setDataLayoutFunction(dataLayout -> {
             InventoryLayout internalLayout = dataLayout != null ? dataLayout : InventoryLayout.fromType(getType());
 
+            internalLayout.blank(SLOTS);
+
             if (this.mapBuilder.getSurvivorSpawns().isEmpty()) {
-                internalLayout.blank(SLOTS);
                 return internalLayout;
             }
 
