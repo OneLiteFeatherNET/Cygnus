@@ -110,4 +110,15 @@ class GameMapTest {
         assertEquals(originalMap.getSurvivorSpawns(), rebuiltMap.getSurvivorSpawns());
         assertEquals(originalMap.getPageFaces(), rebuiltMap.getPageFaces());
     }
+
+    @Test
+    void testGameMapCopyWithEmptyCollections() {
+        GameMap mapWithEmptyCollections = new GameMap("Map", Pos.ZERO, null, Set.of(), Set.of(), List.of());
+        GameMapBuilder builder = new GameMapBuilder(mapWithEmptyCollections);
+
+        assertNotNull(builder.getSurvivorSpawns());
+        assertTrue(builder.getSurvivorSpawns().isEmpty());
+        assertNotNull(builder.getPageFaces());
+        assertTrue(builder.getPageFaces().isEmpty());
+    }
 }
