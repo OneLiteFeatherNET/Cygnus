@@ -30,6 +30,7 @@ public class MapSetupSaveListener implements Consumer<MapSetupSaveEvent> {
         SetupData data = setupData.get();
 
         data.save();
+        this.dataService.remove(player.getUuid());
         this.teleportBackLogic.accept(event.getPlayer());
         MinecraftServer.getSchedulerManager().scheduleNextTick(data::reset);
     }

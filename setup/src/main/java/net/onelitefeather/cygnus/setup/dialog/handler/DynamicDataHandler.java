@@ -36,13 +36,16 @@ public final class DynamicDataHandler implements DialogHandler{
             if (category == MapDataCategory.PAGE) {
                 point = player.getPageToDelete() != null ? player.getPageToDelete() : (player.getPageResource() != null ? player.getPageResource().position() : null);
             }
-            ((InstanceSetupData)data).handleDataContextDelete(category, point);
+            InstanceSetupData setupData = (InstanceSetupData) data;
+            setupData.handleDataContextDelete(category, point);
             if (category == MapDataCategory.SURVIVOR) {
                 player.setSurvivorToDelete(null);
+                setupData.openInventory(InstanceSetupData.InventoryTarget.SURVIVOR);
             }
             if (category == MapDataCategory.PAGE) {
                 player.setPageToDelete(null);
                 player.setPageResource(null);
+                setupData.openInventory(InstanceSetupData.InventoryTarget.PAGE);
             }
         });
 

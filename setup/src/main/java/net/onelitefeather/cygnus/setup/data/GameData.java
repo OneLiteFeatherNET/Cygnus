@@ -143,8 +143,14 @@ public class GameData extends InstanceSetupData {
     @Override
     public void triggerUpdate(InventoryTarget target) {
         switch (target) {
-            case GENERAL -> this.inventory.invalidateDataLayout();
-            case SURVIVOR -> this.survivorInventory.invalidateDataLayout();
+            case GENERAL -> {
+                this.inventory.invalidateDataLayout();
+                this.inventory.invalidateLayout();
+            }
+            case SURVIVOR -> {
+                this.survivorInventory.invalidateDataLayout();
+                this.survivorInventory.invalidateLayout();
+            }
             case PAGE -> {
             }
         }
@@ -180,13 +186,7 @@ public class GameData extends InstanceSetupData {
                 triggerUpdate(InventoryTarget.GENERAL);
             }
             case SURVIVOR -> {
-                Pos spawnPos = new Pos(
-                        pos.blockX(),
-                        pos.blockY() + 1,
-                        pos.blockZ(),
-                        player.getPosition().yaw(),
-                        0f
-                );
+                Pos spawnPos = new Pos(pos.x(), pos.y(), pos.z(), pos.yaw(), 0f);
                 this.gameMapBuilder.addSurvivorSpawn(spawnPos);
                 triggerUpdate(InventoryTarget.SURVIVOR);
             }
@@ -204,13 +204,18 @@ public class GameData extends InstanceSetupData {
             swapPageMode();
             if (hasPageMode()) {
                 player.sendMessage(SetupMessages.PAGE_MODE_ENABLED);
-                player.sendMessage(SetupMessages.PAGE_MODE_INFORM);
+                player.sendMessage(SetupMessages.getModeInform("page"));
+                SetupItems.setPageItems(player);
+            } else {
+                player.sendMessage(SetupMessages.PAGE_MODE_DISABLED);
+                SetupItems.setGameLayout(player);
             }
-            SetupItems.setPageItems(player);
             return;
         }
         if (SetupItemId.LEAVE_PAGE == tagValue) {
-            swapPageMode();
+            if (hasPageMode()) {
+                swapPageMode();
+            }
             player.sendMessage(SetupMessages.PAGE_MODE_DISABLED);
             SetupItems.setGameLayout(player);
             return;
@@ -218,7 +223,14 @@ public class GameData extends InstanceSetupData {
 
         if (SetupItemId.SURVIVOR == tagValue) {
             this.swapSurvivorMode();
-            SetupItems.setSurvivorSpawn(player);
+            if (hasSurvivorMode()) {
+                player.sendMessage(SetupMessages.SURVIVOR_MODE_ENABLED);
+                player.sendMessage(SetupMessages.getModeInform("survivor"));
+                SetupItems.setSurvivorSpawn(player);
+            } else {
+                player.sendMessage(SetupMessages.SURVIVOR_MODE_DISABLED);
+                SetupItems.setGameLayout(player);
+            }
             return;
         }
 
@@ -228,7 +240,10 @@ public class GameData extends InstanceSetupData {
         }
 
         if (SetupItemId.LEAVE_MODE == tagValue) {
-            this.swapSurvivorMode();
+            if (hasSurvivorMode()) {
+                this.swapSurvivorMode();
+            }
+            player.sendMessage(SetupMessages.SURVIVOR_MODE_DISABLED);
             SetupItems.setGameLayout(player);
             return;
         }
@@ -264,7 +279,8 @@ public class GameData extends InstanceSetupData {
      */
     @Override
     public void handleDataContextDelete(MapDataCategory category, Point point) {
-        if (category == MapDataCategory.SURVIVOR && point instanceof Pos pos) {
+        if (category == MapDataCategory.SURVIVOR) {
+            Pos pos = point instanceof Pos givenPos ? givenPos : new Pos(point.x(), point.y(), point.z());
             this.gameMapBuilder.removeSurvivorSpawn(pos);
             this.triggerUpdate(InventoryTarget.SURVIVOR);
         } else if (category == MapDataCategory.PAGE) {

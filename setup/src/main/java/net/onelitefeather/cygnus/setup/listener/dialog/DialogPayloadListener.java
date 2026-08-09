@@ -36,7 +36,10 @@ public class DialogPayloadListener implements Consumer<PlayerCustomClickEvent> {
         BinaryTag payload = event.getPayload();
         if (payload == null) return;
 
+        DialogHandler handler = this.handlers.get(key);
+        if (handler == null) return;
+
         CompoundBinaryTag castedPayload = (CompoundBinaryTag) payload;
-        this.handlers.get(key).handle(event, castedPayload);
+        handler.handle(event, castedPayload);
     }
 }
