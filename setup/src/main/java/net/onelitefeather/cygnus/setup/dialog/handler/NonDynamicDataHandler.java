@@ -26,7 +26,9 @@ public final class NonDynamicDataHandler implements DialogHandler {
         MapDataCategory category = MapDataCategory.byId(categoryId);
 
         dataService.get(event.getPlayer().getUuid()).ifPresent(data -> {
-            ((InstanceSetupData)data).handleDataDelete(category);
+            InstanceSetupData setupData = (InstanceSetupData) data;
+            setupData.handleDataDelete(category);
+            setupData.openInventory(InstanceSetupData.InventoryTarget.GENERAL);
         });
     }
 }

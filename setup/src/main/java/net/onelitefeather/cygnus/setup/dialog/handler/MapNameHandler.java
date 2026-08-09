@@ -31,6 +31,7 @@ public final class MapNameHandler implements DialogHandler{
             instance.getMapBuilder().name(nameEntry);
             instance.triggerUpdate(InstanceSetupData.InventoryTarget.GENERAL);
             instance.updateTitle();
+            instance.openInventory(InstanceSetupData.InventoryTarget.GENERAL);
         });
     }
 }

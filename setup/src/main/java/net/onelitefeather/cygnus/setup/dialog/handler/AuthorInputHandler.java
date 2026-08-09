@@ -4,6 +4,7 @@ import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.FloatBinaryTag;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
 import net.onelitefeather.cygnus.setup.data.InstanceSetupData;
+import net.onelitefeather.cygnus.setup.data.InstanceSetupData.InventoryTarget;
 import net.onelitefeather.guira.SetupDataService;
 
 public final class AuthorInputHandler implements DialogHandler {
@@ -32,7 +33,8 @@ public final class AuthorInputHandler implements DialogHandler {
         setupDataService.get(event.getPlayer().getUuid()).ifPresent(data -> {
             InstanceSetupData instanceSetupData = (InstanceSetupData) data;
             instanceSetupData.getMapBuilder().builders(authors);
-            instanceSetupData.triggerUpdate(InstanceSetupData.InventoryTarget.GENERAL);
+            instanceSetupData.triggerUpdate(InventoryTarget.GENERAL);
+            instanceSetupData.openInventory(InventoryTarget.GENERAL);
         });
     }
 }
