@@ -6,6 +6,7 @@ import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
 import net.onelitefeather.cygnus.listener.game.GameStartListener;
+import net.onelitefeather.cygnus.listener.map.GameMapLoadedListener;
 import net.onelitefeather.cygnus.listener.page.PageSpawnListener;
 import net.onelitefeather.cygnus.listener.view.ViewUpdateListener;
 import net.onelitefeather.cygnus.listener.page.PageDiscoveryCompleteListener;
@@ -144,6 +145,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(GameMapLoadedEvent.class, event ->
                 this.pageProvider.loadPageData(event.gameMap().getPageFaces())
         );
+        manager.addListener(GameMapLoadedEvent.class, new GameMapLoadedListener());
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier));
         PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.gameConfig.minPlayers());
         manager.addListener(PlayerDisconnectEvent.class, quitListener);
