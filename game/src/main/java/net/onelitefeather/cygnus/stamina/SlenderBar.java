@@ -58,7 +58,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
             currentTime -= TIME_STEP;
             Instance instance = player.getInstance();
             applyDamage(instance, player.getUuid(), player.getPosition(), 3, TIME_STEP);
-            this.colorState.sendProgressBar(player, tileChar, (int) currentTime);
+            this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
             return;
         }
         state = State.REGENERATING;
@@ -69,23 +69,22 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
         player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1f);
         player.sendSpringPackets();
         player.setBlockedSprinting(false);
-        this.colorState.sendProgressBar(player, tileChar, (int) currentTime);
+        this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
     }
 
     private void handleRegeneration() {
-        this.colorState.sendProgressBar(player, tileChar, (int) currentTime);
-        if (currentTime <= time + TIME_STEP) {
-            currentTime += TIME_STEP;
-        } else {
-            state = State.READY;
-            colorState = StaminaColors.DRAINING;
-            player.playSound(LEVEL, player.getPosition());
-
+        if (currentTime < time) {
+            currentTime = Math.min(time, currentTime + TIME_STEP);
+            this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
+            return;
         }
+        state = State.READY;
+        colorState = StaminaColors.DRAINING;
+        player.playSound(LEVEL, player.getPosition());
     }
 
     public boolean changeStatus() {
-        if (state == State.REGENERATING && this.time <= 10) return false;
+        if (state == State.REGENERATING && this.currentTime <= 10) return false;
         switch (state) {
             case READY -> {
                 state = State.DRAINING;
@@ -97,6 +96,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.setSprinting(false);
                 player.setBlockedSprinting(true);
                 EventDispatcher.call(new StaminaStateChangeEvent(player, state));
+                this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
             }
             case REGENERATING -> {
                 state = State.DRAINING;
@@ -109,6 +109,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.setSprinting(false);
                 player.setBlockedSprinting(true);
                 EventDispatcher.call(new StaminaStateChangeEvent(player, state));
+                this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
             }
             case DRAINING -> {
                 state = State.REGENERATING;
@@ -120,6 +121,7 @@ public non-sealed class SlenderBar extends StaminaBar implements SlenderBarHelpe
                 player.sendSpringPackets();
                 player.setBlockedSprinting(false);
                 EventDispatcher.call(new StaminaStateChangeEvent(player, state));
+                this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
             }
         }
         return true;
