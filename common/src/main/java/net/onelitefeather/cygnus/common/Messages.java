@@ -48,7 +48,7 @@ public final class Messages {
         PAGE_FOUND_PART = withPrefix(Component.text("found a page!", NamedTextColor.GRAY));
 
         VIEW_TIME = withMini("<gradient:#ff5555:#fffffff:#ff5555:#ff0d00:#fffffff:0.6>Time:</gradient>");
-        VIEW_PAGES = withPrefix(Component.text("Pages:", NamedTextColor.GRAY));
+        VIEW_PAGES = Component.text("Pages:", NamedTextColor.GRAY);
 
         SLENDER_WIN_MESSAGE =
                 withMini("<gray>has <green>won the game!")
