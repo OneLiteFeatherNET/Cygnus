@@ -15,7 +15,7 @@ class MessagesTest {
         Component message = Messages.getMapAnnouncementMessage("Granskoga", List.of("Alice", "Bob"));
 
         assertEquals(
-                "──────────────────────\nNow playing: Granskoga\nBuilt by: Alice, Bob\n──────────────────────",
+                "\n──────────────────────\nNow playing: Granskoga\nBuilt by: Alice, Bob\n──────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(message)
         );
     }
@@ -25,7 +25,7 @@ class MessagesTest {
         Component message = Messages.getMapAnnouncementMessage("Granskoga", null);
 
         assertEquals(
-                "──────────────────────\nNow playing: Granskoga\n──────────────────────",
+                "\n──────────────────────\nNow playing: Granskoga\n──────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(message)
         );
     }
@@ -35,7 +35,7 @@ class MessagesTest {
         Component message = Messages.getMapAnnouncementMessage("Granskoga", List.of());
 
         assertEquals(
-                "──────────────────────\nNow playing: Granskoga\n──────────────────────",
+                "\n──────────────────────\nNow playing: Granskoga\n──────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(message)
         );
     }
@@ -48,7 +48,7 @@ class MessagesTest {
         );
 
         assertEquals(
-                "───────────────────────────────────────\nNow playing: Very Long Map Name Example\nBuilt by: Alice, Bob, Charlie, Dave\n───────────────────────────────────────",
+                "\n───────────────────────────────────────\nNow playing: Very Long Map Name Example\nBuilt by: Alice, Bob, Charlie, Dave\n───────────────────────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(message)
         );
     }

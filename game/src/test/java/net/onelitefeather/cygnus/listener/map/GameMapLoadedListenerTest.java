@@ -44,7 +44,7 @@ class GameMapLoadedListenerTest extends CygnusPlayerTestBase {
         List<SystemChatPacket> received = packets.collect();
         assertEquals(1, received.size(), "Player should have received exactly one map announcement message.");
         assertEquals(
-                "──────────────────────\nNow playing: Granskoga\nBuilt by: Alice, Bob\n──────────────────────",
+                "\n──────────────────────\nNow playing: Granskoga\nBuilt by: Alice, Bob\n──────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(received.getFirst().message())
         );
 
@@ -75,7 +75,7 @@ class GameMapLoadedListenerTest extends CygnusPlayerTestBase {
         List<SystemChatPacket> received = packets.collect();
         assertEquals(1, received.size(), "Player should have received exactly one map announcement message.");
         assertEquals(
-                "──────────────────────\nNow playing: Granskoga\n──────────────────────",
+                "\n──────────────────────\nNow playing: Granskoga\n──────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(received.getFirst().message())
         );
 
