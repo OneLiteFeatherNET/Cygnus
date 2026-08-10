@@ -5,12 +5,13 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.network.packet.server.play.ActionBarPacket;
+import net.minestom.server.network.packet.server.play.SetTitleTextPacket;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
-import net.onelitefeather.cygnus.tunnelvision.ActionBarTunnelVisionRenderer;
+import net.onelitefeather.cygnus.tunnelvision.TitleTunnelVisionRenderer;
+import net.onelitefeather.cygnus.tunnelvision.TunnelVisionStage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +36,7 @@ class TunnelVisionCommandTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, new Pos(0, 40, 0));
-        Collector<ActionBarPacket> collector = connection.trackIncoming(ActionBarPacket.class);
+        Collector<SetTitleTextPacket> collector = connection.trackIncoming(SetTitleTextPacket.class);
         register();
 
         MinecraftServer.getCommandManager().execute(player, "tunnelvision stage 5");
@@ -53,7 +54,7 @@ class TunnelVisionCommandTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, new Pos(0, 40, 0));
-        Collector<ActionBarPacket> collector = connection.trackIncoming(ActionBarPacket.class);
+        Collector<SetTitleTextPacket> collector = connection.trackIncoming(SetTitleTextPacket.class);
         register();
 
         MinecraftServer.getCommandManager().execute(player, "tunnelvision off");
@@ -67,13 +68,13 @@ class TunnelVisionCommandTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, new Pos(0, 40, 0));
-        Collector<ActionBarPacket> collector = connection.trackIncoming(ActionBarPacket.class);
+        Collector<SetTitleTextPacket> collector = connection.trackIncoming(SetTitleTextPacket.class);
         register();
 
         MinecraftServer.getCommandManager().execute(player, "tunnelvision intensity 1.0");
 
         collector.assertSingle(packet -> assertEquals(
-                glyphOf(8),
+                glyphOf(TunnelVisionStage.MAX_STAGE),
                 plain(packet),
                 "full intensity starts at the tightest stage"
         ));
@@ -85,17 +86,17 @@ class TunnelVisionCommandTest extends CygnusPlayerTestBase {
      */
     private void register() {
         if (MinecraftServer.getCommandManager().getCommand("tunnelvision") != null) return;
-        MinecraftServer.getCommandManager().register(new TunnelVisionCommand(new ActionBarTunnelVisionRenderer()));
+        MinecraftServer.getCommandManager().register(new TunnelVisionCommand(new TitleTunnelVisionRenderer()));
     }
 
     /**
-     * Reads the bare text out of an action bar packet.
+     * Reads the bare text out of a title packet.
      *
      * @param packet the packet to read
      * @return the plain text
      */
-    private String plain(ActionBarPacket packet) {
-        return PlainTextComponentSerializer.plainText().serialize(packet.text());
+    private String plain(SetTitleTextPacket packet) {
+        return PlainTextComponentSerializer.plainText().serialize(packet.title());
     }
 
     /**

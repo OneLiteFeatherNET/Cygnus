@@ -16,8 +16,15 @@ package net.onelitefeather.cygnus.tunnelvision;
  */
 public final class TunnelVisionStage {
 
-    /** Number of stages the overlay is quantised to; stage {@code 0} means no overlay. */
-    public static final int MAX_STAGE = 8;
+    /**
+     * Number of stages the overlay is quantised to; stage {@code 0} means no overlay.
+     * <p>
+     * These double as the frames of the heartbeat: Minecraft cannot animate a font texture, so the
+     * animation is the server walking through the stages. Sixteen of them make that walk read as
+     * motion rather than as steps.
+     * </p>
+     */
+    public static final int MAX_STAGE = 16;
 
     /** Interval the service updates at, which is also the sampling rate of the heartbeat. */
     public static final int TICK_MILLIS = 100;
@@ -25,8 +32,11 @@ public final class TunnelVisionStage {
     /** Distance in stages the intensity has to travel before the base stage follows. */
     private static final double HYSTERESIS = 0.6D;
 
-    /** Depth of the heartbeat in stages at full intensity. */
-    private static final double PULSE_DEPTH = 0.5D;
+    /**
+     * Depth of the heartbeat in stages at full intensity, as a fraction of the whole scale so it
+     * stays equally visible whatever {@link #MAX_STAGE} is.
+     */
+    private static final double PULSE_DEPTH = MAX_STAGE / 16.0D;
 
     /** Heartbeat frequency in hertz while the survivor is barely threatened. */
     private static final double BASE_FREQUENCY = 1.0D;

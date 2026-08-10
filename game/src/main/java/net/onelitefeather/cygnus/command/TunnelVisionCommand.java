@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Puts the tunnel vision on screen without a running round, so the glyph sizes in the resource
  * pack can be judged from the lobby.
  * <p>
- * {@code /tunnelvision stage <0-8>} freezes a single stage, which is what the font's
+ * {@code /tunnelvision stage <0-16>} freezes a single stage, which is what the font's
  * {@code height} and {@code ascent} are calibrated against. {@code /tunnelvision intensity
  * <0.0-1.0>} runs the same heartbeat the game uses, to judge how the pulse feels. Both are ended
  * by {@code /tunnelvision off}.
@@ -49,7 +49,7 @@ public final class TunnelVisionCommand extends Command {
         var intensity = ArgumentType.Double("amount").between(0.0D, 1.0D);
 
         this.setDefaultExecutor((sender, context) -> sender.sendMessage(
-                Messages.withMiniPrefix("<gray>Usage: <yellow>/tunnelvision stage <0-8> | intensity <0.0-1.0> | off")
+                Messages.withMiniPrefix("<gray>Usage: <yellow>/tunnelvision stage <0-16> | intensity <0.0-1.0> | off")
         ));
 
         this.addSyntax((sender, context) -> {
