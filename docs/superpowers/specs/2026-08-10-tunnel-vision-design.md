@@ -20,7 +20,7 @@ That changes in 26.3: snapshot 3 (7 July 2026) added `/posteffect add|remove <pl
 plus the always-on `minecraft:end_of_frame` context. 26.3 is still in snapshots, and Minestom
 ships 26.2 (`net.minestom:minestom:2026.07.22-26.2`).
 
-So the effect is rendered as a HUD overlay through the action bar today, behind an interface that
+So the effect is rendered as a HUD overlay through the title today, behind an interface that
 a post-effect renderer can slot into once 26.3 and Minestom support land. The gameplay side does
 not change when that happens.
 
@@ -67,17 +67,20 @@ atmosphere anyway.
 
 ## Stages and pulse
 
-The continuous value is quantised to 8 stages. Two mechanisms sit on top, in this order:
+The continuous value is quantised to 16 stages, which double as the frames of the heartbeat.
+Minecraft cannot animate a font texture — `.mcmeta` animation covers block, item, particle,
+painting and effect textures only, and vanilla ships no font texture with one — so the animation
+is the server walking through the frames. Two mechanisms sit on top, in this order:
 
-1. **Hysteresis on the base value.** `baseStage` starts as `round(combined * 8)` and afterwards
-   only moves when `combined * 8` is more than 0.6 stages away from it. Distance and stamina both
+1. **Hysteresis on the base value.** `baseStage` starts as `round(combined * 16)` and afterwards
+   only moves when `combined * 16` is more than 0.6 stages away from it. Distance and stamina both
    jitter constantly; without this the overlay flickers at every stage boundary.
 2. **Pulse on top of the stabilised stage.**
 
 ```
-depth     = 0.5 * combined
+depth     = (16 / 16) * combined          // one stage per 16, i.e. a fixed share of the scale
 frequency = 1.0 + 1.5 * combined          // Hz
-display   = clamp(round(baseStage + depth * (sin(2*pi * frequency * t) - 1)), 0, 8)
+display   = clamp(round(baseStage + depth * (sin(2*pi * frequency * t) - 1)), 0, 16)
 ```
 
 The heartbeat gets faster and deeper as it gets tighter, and stays nearly invisible at low
@@ -101,15 +104,15 @@ a tiny packet per survivor.
 In `cygnus-pack`, namespace `cygnus`:
 
 ```
-pack/assets/cygnus/textures/gui/tunnel_vision/stage_1.png … stage_8.png
+pack/assets/cygnus/textures/gui/tunnel_vision/stage_1.png … stage_16.png
 pack/assets/cygnus/font/tunnel_vision.json
 ```
 
 Each texture is 256×128, 2:1 so it covers a widescreen viewport, and fully opaque at the outer
 edge. The darkening closes in from all four edges rather than as a circle from the middle: it is a
 superellipse whose exponent eases from 4 at stage 1 — a rounded rectangle framing the screen — to 2
-at stage 8, where a plain ellipse reads as a tunnel rather than a frame. The font is a bitmap
-provider mapping `U+E000`–`U+E007` to stages 1–8.
+at stage 16, where a plain ellipse reads as a tunnel rather than a frame. The font is a bitmap
+provider mapping `U+E000`–`U+E00F` to stages 1–16.
 
 **The 256 pixel limit is not cosmetic.** Font glyphs are stamped into 256×256 sheets at their
 texture resolution, and a glyph that does not fit is dropped without a word in the log — the
@@ -117,25 +120,22 @@ client then draws the missing-glyph box. Anything larger simply does not work, h
 looks in an image viewer. The glyph is still drawn several times that size; each texture carries a
 `blur` mcmeta so that upscale stays smooth instead of banding into nearest-neighbour blocks.
 
-The server builds a `Component` carrying `font("cygnus:tunnel_vision")` and sends it with
-`sendActionBar`. Two details that otherwise look broken:
+The server builds a `Component` carrying `font("cygnus:tunnel_vision")` and sends it as the title.
+Three details that otherwise look broken:
 
 - `shadowColor` must be transparent, or Minecraft renders the vignette a second time, offset,
   underneath itself.
-- The action bar fades after 3 seconds. The 100 ms tick refreshes it long before that.
+- The title times are sent once per player with `fadeIn` and `fadeOut` at zero. A fade would make
+  the vignette pump on every update, and repeating the times ten times a second would double the
+  packet count for nothing — they stay in effect for every following title.
+- `stay` is two seconds: long enough that the overlay never blinks between updates, short enough
+  that it disappears on its own if the server stops drawing.
 
-**Positioning is approximate by construction.** Font glyphs render relative to the action bar, and
-the server knows neither the client's resolution nor its GUI scale, so pixel-accurate centring is
-impossible. The texture is deliberately larger than any realistic viewport and fully opaque at the
-edge: the overhang is clipped, and because the vignette is soft, the offset does not read as an
-error. `height` and `ascent` in the font provider are calibration values, currently `height: 280`
-and `ascent: 195`, which centre the vignette on a 427×240 GUI viewport (an 854×480 window at auto
-scale). A different window size moves it, and `/tunnelvision stage <n>` is how it gets pulled back
-into place: `ascent` ≈ `screenHeight/2 - 65 + height/2`, with `height` at least the screen height
-so the edges stay covered.
-
-This is the cost of the action-bar approach against a real post effect, which would be
-full-screen by nature.
+**The title is the channel, not the action bar.** Titles render centred on the screen and at four
+times scale, which is what makes the position independent of the client's resolution: centring
+needs `ascent = height/2 - 3` regardless of window size, where the action bar's anchor at the
+bottom edge forced a recalibration for every viewport. `height: 70` covers a 240-pixel-high GUI
+viewport four times over at that scale, and the 2:1 texture covers the width.
 
 ## Components
 
@@ -145,10 +145,10 @@ New package `net.onelitefeather.cygnus.tunnelvision`:
 - `TunnelVisionStage` — one survivor's overlay state: hysteresis and heartbeat. Also pure.
 - `TunnelVisionRenderer` — `render(player, stage)` and `clear(player)`. This is the seam a
   post-effect renderer slots into on 26.3.
-- `ActionBarTunnelVisionRenderer` — the implementation described above.
+- `TitleTunnelVisionRenderer` — the implementation described above.
 - `TunnelVisionService` — holds a `TunnelVisionStage` per survivor and ticks all of them in one
   scheduler task.
-- `TunnelVisionCommand` — `/tunnelvision stage <0-8> | intensity <0.0-1.0> | off`, for judging the
+- `TunnelVisionCommand` — `/tunnelvision stage <0-16> | intensity <0.0-1.0> | off`, for judging the
   vignette from the lobby without a running round. `stage` freezes one stage to calibrate the font
   against; `intensity` runs the real heartbeat.
 
@@ -189,7 +189,7 @@ The service keeps running in all of these; none of them throws.
 | No Slender (disconnected, not yet assigned) | stamina share only |
 | Slender in a different instance | slender share is 0 |
 | No `FoodBar` registered for a player | stamina share is 0 |
-| Stage drops to 0 | `clear()` rather than rendering — otherwise the last vignette lingers for three seconds until the action bar fades on its own |
+| Stage drops to 0 | `clear()` rather than rendering — otherwise the last vignette lingers until the title's `stay` runs out |
 | Player dies or becomes a spectator | explicit `clear()`, same reason |
 
 ## Tests
@@ -198,9 +198,9 @@ The service keeps running in all of these; none of them throws.
   empty stamina at close range gives 1), monotonicity in both inputs, and the view factor.
 - `TunnelVisionStageTest` — plain JUnit: the pulse at full intensity, steadiness at low intensity,
   hysteresis (a small oscillation around a stage boundary must not change the stage), and bounds.
-- `ActionBarTunnelVisionRendererTest` — Cyano: the player receives an action bar packet with the
-  expected code point and the `cygnus:tunnel_vision` font, the shadow is transparent, and
-  `clear()` sends an empty component.
+- `TitleTunnelVisionRendererTest` — Cyano: the player receives a title packet with the expected
+  code point and the `cygnus:tunnel_vision` font, the shadow is transparent, the times hold rather
+  than fade and are sent only once, and `clear()` empties the title.
 - `TunnelVisionServiceTest` — lifecycle: start and stop, removing a player, behaviour with no
   Slender or one in another instance, and the four lifecycle events.
 - `TunnelVisionCommandTest` — the command draws the requested stage, previews an intensity, and

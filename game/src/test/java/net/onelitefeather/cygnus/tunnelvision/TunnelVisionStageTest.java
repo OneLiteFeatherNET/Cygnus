@@ -26,7 +26,7 @@ class TunnelVisionStageTest {
     }
 
     @Test
-    @DisplayName("Full intensity pulses between the last two stages")
+    @DisplayName("Full intensity pulses across the top of the scale")
     void fullIntensityPulses() {
         TunnelVisionStage stage = new TunnelVisionStage();
         int lowest = TunnelVisionStage.MAX_STAGE;
@@ -37,7 +37,7 @@ class TunnelVisionStageTest {
             highest = Math.max(highest, current);
         }
         assertEquals(TunnelVisionStage.MAX_STAGE, highest, "the pulse never reaches the peak");
-        assertEquals(TunnelVisionStage.MAX_STAGE - 1, lowest, "the pulse does not open up again");
+        assertEquals(TunnelVisionStage.MAX_STAGE - 2, lowest, "the pulse does not open up again");
     }
 
     @Test
@@ -55,16 +55,17 @@ class TunnelVisionStageTest {
     void hysteresisHoldsTheStage() {
         TunnelVisionStage stage = new TunnelVisionStage();
         int settled = highestOver(stage, 0.5D);
-        assertEquals(4, settled, "half intensity should settle on the middle stage");
-        assertEquals(settled, highestOver(stage, 0.55D), "the stage moved on a small fluctuation");
+        assertEquals(TunnelVisionStage.MAX_STAGE / 2, settled, "half intensity should settle on the middle stage");
+        assertEquals(settled, highestOver(stage, 0.52D), "the stage moved on a small fluctuation");
     }
 
     @Test
     @DisplayName("A real change moves the stage")
     void largerChangeMovesTheStage() {
         TunnelVisionStage stage = new TunnelVisionStage();
-        assertEquals(4, highestOver(stage, 0.5D));
-        assertEquals(5, highestOver(stage, 0.6D), "the stage should follow a real change");
+        assertEquals(TunnelVisionStage.MAX_STAGE / 2, highestOver(stage, 0.5D));
+        assertEquals(TunnelVisionStage.MAX_STAGE / 2 + 1, highestOver(stage, 0.56D),
+                "the stage should follow a real change");
     }
 
     @Test
