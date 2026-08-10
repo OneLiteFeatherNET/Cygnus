@@ -38,9 +38,10 @@ enum StaminaColors {
      * @param player      the player to send the progress bar
      * @param tileChar    the character to use for the progress bar
      * @param currentTime the current time to display
+     * @param maxTime     the maximum time the bar represents
      */
-    public void sendProgressBar(Player player, String tileChar, int currentTime) {
-        Component progressBar = Components.getProgressBar(currentTime, 17, 17, tileChar, this.completeColor, this.emptyColor);
+    public void sendProgressBar(Player player, String tileChar, int currentTime, int maxTime) {
+        Component progressBar = Components.getProgressBar(currentTime, maxTime, maxTime, tileChar, this.completeColor, this.emptyColor);
         player.sendActionBar(progressBar);
     }
 
