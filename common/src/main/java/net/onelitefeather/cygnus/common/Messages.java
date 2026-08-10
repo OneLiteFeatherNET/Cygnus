@@ -10,9 +10,11 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  **/
 public final class Messages {
@@ -34,6 +36,7 @@ public final class Messages {
     private static final Component SURVIVOR_JOIN_PART_UPPER;
     private static final Component SURVIVOR_JOIN_LOWER_PART;
     public static final Component SLENDER_JOIN_PART;
+    private static final int MAP_ANNOUNCEMENT_MIN_WIDTH = 20;
 
     static {
         int forceStartTime = GameConfig.FORCE_START_TIME - 1;
@@ -170,5 +173,39 @@ public final class Messages {
         return SURVIVOR_JOIN_PART_UPPER.append(withMini("<red>(" + pageCount + " TO WIN)"))
                 .append(Component.newline())
                 .append(SURVIVOR_JOIN_LOWER_PART);
+    }
+
+    /**
+     * Returns a {@link Component} which contains information about which map is used for the game.
+     *
+     * @param mapName  of the map
+     * @param builders of the map
+     * @return the created {@link Component} reference
+     */
+    @Contract(value = "_, _ -> new", pure = true)
+    public static Component getMapAnnouncementMessage(String mapName, @Nullable List<String> builders) {
+        boolean hasBuilders = builders != null && !builders.isEmpty();
+        String joinedBuilders = hasBuilders ? String.join(", ", builders) : "";
+
+        int width = Math.max(MAP_ANNOUNCEMENT_MIN_WIDTH, ("Now playing: " + mapName).length());
+        if (hasBuilders) {
+            width = Math.max(width, ("Built by: " + joinedBuilders).length());
+        }
+        Component separator = Component.text("─".repeat(width), NamedTextColor.DARK_GRAY);
+
+        Component message = Component.newline().append(separator)
+                .append(Component.newline())
+                .append(Component.text("Now playing: ", NamedTextColor.GRAY))
+                .append(Component.text(mapName, NamedTextColor.GOLD))
+                .append(Component.newline());
+
+        if (hasBuilders) {
+            message = message
+                    .append(Component.text("Built by: ", NamedTextColor.GRAY))
+                    .append(Component.text(joinedBuilders, NamedTextColor.AQUA))
+                    .append(Component.newline());
+        }
+
+        return message.append(separator).append(Component.newline());
     }
 }
