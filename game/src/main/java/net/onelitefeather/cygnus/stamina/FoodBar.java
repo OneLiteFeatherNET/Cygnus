@@ -99,6 +99,19 @@ public non-sealed class FoodBar extends StaminaBar {
     }
 
     /**
+     * Returns the remaining stamina as a share of a full bar.
+     * <p>
+     * This is what drives the survivor's tunnel vision. The bar mirrors the same value into the
+     * experience bar, but reading it back from there would tie game logic to a display detail.
+     * </p>
+     *
+     * @return the remaining stamina between {@code 0.0f} and {@code 1.0f}
+     */
+    public float remainingShare() {
+        return normalize(this.currentSpeedCount);
+    }
+
+    /**
      * Returns an indication state if the bar could be consumed.
      *
      * @return true for yes otherwise false

@@ -75,20 +75,26 @@ The continuous value is quantised to 8 stages. Two mechanisms sit on top, in thi
 2. **Pulse on top of the stabilised stage.**
 
 ```
-amplitude = 0.5 * combined
+depth     = 0.5 * combined
 frequency = 1.0 + 1.5 * combined          // Hz
-display   = clamp(round(baseStage + amplitude * sin(2*pi * frequency * t)), 0, 8)
+display   = clamp(round(baseStage + depth * (sin(2*pi * frequency * t) - 1)), 0, 8)
 ```
 
 The heartbeat gets faster and deeper as it gets tighter, and stays nearly invisible at low
-intensity — an amplitude that does not scale would make stage 1 flicker between 0 and 1.
+intensity — a depth that does not scale would make stage 1 flicker between 0 and 1.
+
+The pulse only ever opens the view back up, never past the base stage. A symmetric pulse would be
+clipped away exactly where it matters most: at full intensity the base stage is already the
+maximum, so everything above it is lost and the heartbeat disappears.
 
 The order matters: hysteresis applies to the base value, the pulse is added afterwards. Reversed,
 the hysteresis would damp out exactly the pulsing it is there to allow.
 
 Stage 0 is not a texture. It clears the overlay.
 
-Service tick: 250 ms.
+**Service tick: 100 ms.** The heartbeat reaches 2.5 Hz, and sampling it at 4 Hz — a 250 ms tick —
+aliases it into something jerky. 100 ms samples it ten times per second, which is smooth and still
+a tiny packet per survivor.
 
 ## Pack assets
 
@@ -99,22 +105,24 @@ pack/assets/cygnus/textures/gui/tunnel_vision/stage_1.png … stage_8.png
 pack/assets/cygnus/font/tunnel_vision.json
 ```
 
-Each texture is a soft radial darkening, 512×512, fully opaque at the outer edge. The font is a
-bitmap provider mapping `U+E000`–`U+E007` to stages 1–8.
+Each texture is a soft radial darkening, 1024×512, fully opaque at the outer edge — 2:1 rather
+than square so it covers a widescreen viewport. The font is a bitmap provider mapping
+`U+E000`–`U+E007` to stages 1–8.
 
 The server builds a `Component` carrying `font("cygnus:tunnel_vision")` and sends it with
 `sendActionBar`. Two details that otherwise look broken:
 
 - `shadowColor` must be transparent, or Minecraft renders the vignette a second time, offset,
   underneath itself.
-- The action bar fades after 3 seconds. The 250 ms tick refreshes it long before that.
+- The action bar fades after 3 seconds. The 100 ms tick refreshes it long before that.
 
 **Positioning is approximate by construction.** Font glyphs render relative to the action bar, and
 the server knows neither the client's resolution nor its GUI scale, so pixel-accurate centring is
 impossible. The texture is deliberately larger than any realistic viewport and fully opaque at the
 edge: the overhang is clipped, and because the vignette is soft, the offset does not read as an
-error. `height` and `ascent` in the font provider are calibration values — they start at `height:
-512`, `ascent: 200` and get adjusted in-game against a snapshot build of the pack.
+error. `height` and `ascent` in the font provider are calibration values. They start at `height:
+540`, `ascent: 478`, which centres the vignette on a 1080p client at GUI scale 2, and get adjusted
+in-game with `/tunnelvision stage <n>`.
 
 This is the cost of the action-bar approach against a real post effect, which would be
 full-screen by nature.
@@ -124,26 +132,34 @@ full-screen by nature.
 New package `net.onelitefeather.cygnus.tunnelvision`:
 
 - `TunnelVisionIntensity` — the calculation above. Pure, no server needed to test it.
+- `TunnelVisionStage` — one survivor's overlay state: hysteresis and heartbeat. Also pure.
 - `TunnelVisionRenderer` — `render(player, stage)` and `clear(player)`. This is the seam a
   post-effect renderer slots into on 26.3.
 - `ActionBarTunnelVisionRenderer` — the implementation described above.
-- `TunnelVisionService` — holds per-survivor state (current stage for hysteresis, pulse phase) and
-  ticks all survivors in one scheduler task.
+- `TunnelVisionService` — holds a `TunnelVisionStage` per survivor and ticks all of them in one
+  scheduler task.
+- `TunnelVisionCommand` — `/tunnelvision stage <0-8> | intensity <0.0-1.0> | off`, for judging the
+  vignette from the lobby without a running round. `stage` freezes one stage to calibrate the font
+  against; `intensity` runs the real heartbeat.
 
 One task for everyone rather than one per player as `StaminaBar` does: the Slender position is
 read once per tick instead of once per survivor, and cleanup happens in one place.
 
 ## Wiring
 
-Along the paths `StaminaService` already uses:
+`Cygnus` creates the service and the command. The service then listens for the round's lifecycle
+itself, the way `SpectatorService` and `ResourcePackService` already do, rather than being called
+from the existing listeners:
 
-| Point | What happens |
+| Event | What happens |
 | --- | --- |
-| `Cygnus` | creates the service |
-| `GameStartListener` | starts it for the survivor set |
-| `PlayerDeathListener` | removes the player (transition to spectator) |
-| `PlayerQuitListener` | removes the player |
-| wherever `staminaService.cleanUp()` runs | full cleanup |
+| `GameStartEvent` | starts drawing for the survivor team |
+| `PlayerDeathEvent` | removes the player (transition to spectator) |
+| `PlayerDisconnectEvent` | removes the player |
+| `GameFinishEvent` | full cleanup |
+
+This keeps `GameStartListener`, `PlayerDeathListener` and `PlayerQuitListener` — and their tests —
+untouched: none of them has anything the service needs beyond the moment itself.
 
 Two changes to existing code:
 
@@ -169,13 +185,17 @@ The service keeps running in all of these; none of them throws.
 ## Tests
 
 - `TunnelVisionIntensityTest` — plain JUnit: edge values (full stamina at long range gives 0,
-  empty stamina at close range gives 1), monotonicity in both inputs, the view factor, and
-  hysteresis — a small oscillation around a stage boundary must not change the stage.
+  empty stamina at close range gives 1), monotonicity in both inputs, and the view factor.
+- `TunnelVisionStageTest` — plain JUnit: the pulse at full intensity, steadiness at low intensity,
+  hysteresis (a small oscillation around a stage boundary must not change the stage), and bounds.
 - `ActionBarTunnelVisionRendererTest` — Cyano: the player receives an action bar packet with the
   expected code point and the `cygnus:tunnel_vision` font, the shadow is transparent, and
   `clear()` sends an empty component.
 - `TunnelVisionServiceTest` — lifecycle: start and stop, removing a player, behaviour with no
-  Slender.
+  Slender or one in another instance, and the four lifecycle events.
+- `TunnelVisionCommandTest` — the command draws the requested stage, previews an intensity, and
+  clears on `off`.
+- `FoodBarTest` — a fresh bar reports a full share.
 
 The pack side cannot be tested automatically. Glyph sizing and the look of the vignette are
 verified in-game against a snapshot build of `cygnus-pack`; that is an explicit step in the
