@@ -105,14 +105,16 @@ pack/assets/cygnus/textures/gui/tunnel_vision/stage_1.png … stage_8.png
 pack/assets/cygnus/font/tunnel_vision.json
 ```
 
-Each texture is a soft radial darkening, 256×128, fully opaque at the outer edge — 2:1 rather than
-square so it covers a widescreen viewport. The font is a bitmap provider mapping `U+E000`–`U+E007`
-to stages 1–8.
+Each texture is 256×128, 2:1 so it covers a widescreen viewport, and fully opaque at the outer
+edge. The darkening closes in from all four edges rather than as a circle from the middle: it is a
+superellipse whose exponent eases from 4 at stage 1 — a rounded rectangle framing the screen — to 2
+at stage 8, where a plain ellipse reads as a tunnel rather than a frame. The font is a bitmap
+provider mapping `U+E000`–`U+E007` to stages 1–8.
 
 **The 256 pixel limit is not cosmetic.** Font glyphs are stamped into 256×256 sheets at their
 texture resolution, and a glyph that does not fit is dropped without a word in the log — the
 client then draws the missing-glyph box. Anything larger simply does not work, however good it
-looks in an image viewer. The glyph is still drawn at 540 pixels high; each texture carries a
+looks in an image viewer. The glyph is still drawn several times that size; each texture carries a
 `blur` mcmeta so that upscale stays smooth instead of banding into nearest-neighbour blocks.
 
 The server builds a `Component` carrying `font("cygnus:tunnel_vision")` and sends it with
@@ -126,9 +128,11 @@ The server builds a `Component` carrying `font("cygnus:tunnel_vision")` and send
 the server knows neither the client's resolution nor its GUI scale, so pixel-accurate centring is
 impossible. The texture is deliberately larger than any realistic viewport and fully opaque at the
 edge: the overhang is clipped, and because the vignette is soft, the offset does not read as an
-error. `height` and `ascent` in the font provider are calibration values. They start at `height:
-540`, `ascent: 478`, which centres the vignette on a 1080p client at GUI scale 2, and get adjusted
-in-game with `/tunnelvision stage <n>`.
+error. `height` and `ascent` in the font provider are calibration values, currently `height: 280`
+and `ascent: 195`, which centre the vignette on a 427×240 GUI viewport (an 854×480 window at auto
+scale). A different window size moves it, and `/tunnelvision stage <n>` is how it gets pulled back
+into place: `ascent` ≈ `screenHeight/2 - 65 + height/2`, with `height` at least the screen height
+so the edges stay covered.
 
 This is the cost of the action-bar approach against a real post effect, which would be
 full-screen by nature.
