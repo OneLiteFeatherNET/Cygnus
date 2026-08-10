@@ -105,9 +105,15 @@ pack/assets/cygnus/textures/gui/tunnel_vision/stage_1.png … stage_8.png
 pack/assets/cygnus/font/tunnel_vision.json
 ```
 
-Each texture is a soft radial darkening, 1024×512, fully opaque at the outer edge — 2:1 rather
-than square so it covers a widescreen viewport. The font is a bitmap provider mapping
-`U+E000`–`U+E007` to stages 1–8.
+Each texture is a soft radial darkening, 256×128, fully opaque at the outer edge — 2:1 rather than
+square so it covers a widescreen viewport. The font is a bitmap provider mapping `U+E000`–`U+E007`
+to stages 1–8.
+
+**The 256 pixel limit is not cosmetic.** Font glyphs are stamped into 256×256 sheets at their
+texture resolution, and a glyph that does not fit is dropped without a word in the log — the
+client then draws the missing-glyph box. Anything larger simply does not work, however good it
+looks in an image viewer. The glyph is still drawn at 540 pixels high; each texture carries a
+`blur` mcmeta so that upscale stays smooth instead of banding into nearest-neighbour blocks.
 
 The server builds a `Component` carrying `font("cygnus:tunnel_vision")` and sends it with
 `sendActionBar`. Two details that otherwise look broken:
