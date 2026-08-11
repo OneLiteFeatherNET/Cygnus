@@ -39,6 +39,8 @@ import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
+import net.onelitefeather.cygnus.blood.BloodSplatterService;
+import net.onelitefeather.cygnus.command.BloodCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.command.TunnelVisionCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -79,7 +81,9 @@ import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.stamina.FoodBar;
-import net.onelitefeather.cygnus.tunnelvision.TitleTunnelVisionRenderer;
+import net.onelitefeather.cygnus.overlay.ScreenOverlay;
+import net.onelitefeather.cygnus.overlay.TitleScreenOverlay;
+import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionService;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
@@ -90,6 +94,7 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 /**
@@ -111,7 +116,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final JumpScareManager jumpscareManager;
     private final SpectatorService spectatorService;
     private final Optional<ResourcePackService> resourcePackService;
+    private final ScreenOverlay screenOverlay;
     private final TunnelVisionRenderer tunnelVisionRenderer;
+    private final BloodSplatterService bloodSplatterService;
     private final TunnelVisionService tunnelVisionService;
 
     public Cygnus() {
@@ -136,7 +143,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
         this.resourcePackService = ResourcePackService.create();
-        this.tunnelVisionRenderer = new TitleTunnelVisionRenderer();
+        this.screenOverlay = new TitleScreenOverlay();
+        this.tunnelVisionRenderer = new OverlayTunnelVisionRenderer(this.screenOverlay);
+        this.bloodSplatterService = new BloodSplatterService(
+                this.screenOverlay,
+                bound -> ThreadLocalRandom.current().nextInt(bound)
+        );
         this.tunnelVisionService = new TunnelVisionService(
                 this.tunnelVisionRenderer,
                 this::remainingStamina,
@@ -153,6 +165,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
         manager.register(new TunnelVisionCommand(this.tunnelVisionRenderer));
+        manager.register(new BloodCommand(this.bloodSplatterService));
     }
 
     /**
@@ -241,8 +254,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
 
         // Without the pack the vignette font does not exist and survivors would stare at an
         // empty box, so the effect stays off wherever the pack is not delivered.
-        this.resourcePackService.ifPresent(
-                _ -> this.tunnelVisionService.registerListener(handler, this::currentSurvivors));
+        this.resourcePackService.ifPresent(_ -> {
+            this.tunnelVisionService.registerListener(handler, this::currentSurvivors);
+            this.bloodSplatterService.registerListener(handler);
+        });
     }
 
     private void initPhases() {

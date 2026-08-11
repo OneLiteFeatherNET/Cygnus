@@ -10,7 +10,8 @@ import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
-import net.onelitefeather.cygnus.tunnelvision.TitleTunnelVisionRenderer;
+import net.onelitefeather.cygnus.overlay.TitleScreenOverlay;
+import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionStage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -86,7 +87,7 @@ class TunnelVisionCommandTest extends CygnusPlayerTestBase {
      */
     private void register() {
         if (MinecraftServer.getCommandManager().getCommand("tunnelvision") != null) return;
-        MinecraftServer.getCommandManager().register(new TunnelVisionCommand(new TitleTunnelVisionRenderer()));
+        MinecraftServer.getCommandManager().register(new TunnelVisionCommand(new OverlayTunnelVisionRenderer(new TitleScreenOverlay())));
     }
 
     /**
