@@ -8,12 +8,11 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.component.Equippable;
 import net.minestom.server.sound.SoundEvent;
+import net.onelitefeather.cygnus.common.util.PlayerState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Puts the overlay on screen as the {@code camera_overlay} of an item worn on the head.
@@ -49,8 +48,8 @@ public final class EquipmentScreenOverlay implements ScreenOverlay {
     /** Vanilla's silent sound; the default equip sound would click on every stage change. */
     private static final SoundEvent SILENT = SoundEvent.of(Key.key("minecraft:intentionally_empty"), null);
 
-    private final Map<UUID, Map<OverlayLayer, Key>> layers = new ConcurrentHashMap<>();
-    private final Map<UUID, Key> shown = new ConcurrentHashMap<>();
+    private final PlayerState<Map<OverlayLayer, Key>> layers = new PlayerState<>();
+    private final PlayerState<Key> shown = new PlayerState<>();
 
     /**
      * {@inheritDoc}
@@ -58,7 +57,7 @@ public final class EquipmentScreenOverlay implements ScreenOverlay {
     @Override
     public void set(Player player, OverlayLayer layer, @Nullable Key texture) {
         Map<OverlayLayer, Key> current = this.layers
-                .computeIfAbsent(player.getUuid(), _ -> new EnumMap<>(OverlayLayer.class));
+                .computeIfAbsent(player, () -> new EnumMap<>(OverlayLayer.class));
 
         if (texture == null) {
             current.remove(layer);
@@ -74,8 +73,8 @@ public final class EquipmentScreenOverlay implements ScreenOverlay {
      */
     @Override
     public void clear(Player player) {
-        this.layers.remove(player.getUuid());
-        this.shown.remove(player.getUuid());
+        this.layers.remove(player);
+        this.shown.remove(player);
         player.setHelmet(ItemStack.AIR);
     }
 
@@ -89,16 +88,16 @@ public final class EquipmentScreenOverlay implements ScreenOverlay {
         Key topmost = this.topmost(current);
 
         if (topmost == null) {
-            if (this.shown.remove(player.getUuid()) == null) return;
+            if (this.shown.remove(player) == null) return;
             player.setHelmet(ItemStack.AIR);
             return;
         }
 
         // The overlay is refreshed many times a second; re-sending an unchanged item would put an
         // equipment update on the wire for every viewer each time.
-        if (topmost.equals(this.shown.get(player.getUuid()))) return;
+        if (topmost.equals(this.shown.get(player))) return;
 
-        this.shown.put(player.getUuid(), topmost);
+        this.shown.put(player, topmost);
         player.setHelmet(carrierFor(topmost));
     }
 
