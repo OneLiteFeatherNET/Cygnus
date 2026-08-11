@@ -34,6 +34,7 @@ public final class SetupMessages {
     public static final Component PAGE_MODE_DISABLED;
     public static final Component SURVIVOR_MODE_ENABLED;
     public static final Component SURVIVOR_MODE_DISABLED;
+    public static final Component DUPLICATE_PAGE;
 
     static {
         SPACE_SEPARATOR = Component.text("» ", NamedTextColor.GRAY);
@@ -84,6 +85,9 @@ public final class SetupMessages {
                 Component.text("The survivor mode has been", NamedTextColor.GRAY)
                         .append(Component.space())
                         .append(Component.text("disabled", NamedTextColor.RED))
+        );
+        DUPLICATE_PAGE = Messages.withPrefix(
+                Component.text("A page with this direction already exists at this position", NamedTextColor.RED)
         );
     }
 
