@@ -12,7 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * Creates page items for the game.
  * <p>
  * When custom pages are enabled, a random item model is assigned to the page.
- * The available models range from {@code page_0} up to {@code page_(MAX_CUSTOM_PAGE_ID - 1)}.
+ * Available models are {@code page_1}, {@code page_2}, {@code page_4}, {@code page_5}, and {@code page_6}.
  * If custom pages are disabled, a regular paper item is returned instead.
  *
  * @author theEvilReaper
@@ -24,7 +24,7 @@ public interface PageCreator {
     /**
      * Number of available custom page models.
      */
-    int MAX_CUSTOM_PAGE_ID = 6;
+    int MAX_CUSTOM_PAGE_ID = 5;
 
     /**
      * Creates a page item with the given page number.
@@ -43,7 +43,9 @@ public interface PageCreator {
             return builder.build();
         }
 
-        int randomPage = ThreadLocalRandom.current().nextInt(MAX_CUSTOM_PAGE_ID);
+        int MAX_CUSTOM_PAGE_ID = 6;
+
+        int randomPage = ThreadLocalRandom.current().nextInt(1, MAX_CUSTOM_PAGE_ID + 1);
 
         return builder
                 .set(DataComponents.ITEM_MODEL, Key.key("cygnus", "page_" + randomPage).asString())
