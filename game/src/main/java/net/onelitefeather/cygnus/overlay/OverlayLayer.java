@@ -10,8 +10,11 @@ package net.onelitefeather.cygnus.overlay;
  */
 public enum OverlayLayer {
 
-    /** The narrowing view, driven by stamina and the slender's presence. */
+    /** The narrowing view, driven by how much stamina a survivor has left. */
     TUNNEL_VISION,
+
+    /** The tearing that comes over a survivor while the slender is in their view. */
+    GLITCH,
 
     /** The splatter that flashes up when the player is hit; sits closest to the eye. */
     BLOOD

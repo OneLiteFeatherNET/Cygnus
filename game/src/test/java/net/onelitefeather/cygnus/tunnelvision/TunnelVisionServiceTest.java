@@ -26,8 +26,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies how the service feeds survivors through the intensity calculation and what happens
- * when a source of it is missing.
+ * Verifies how the service feeds survivors through the intensity calculation.
+ * <p>
+ * The slender no longer feeds into this — he speaks through {@code SlenderGazeService} — so what
+ * is left here is the stamina and the lifecycle.
+ * </p>
  *
  * @author TheMeinerLP
  * @version 1.0.0
@@ -39,11 +42,11 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     private static final double NO_STAMINA = 0.0D;
 
     @Test
-    @DisplayName("An exhausted survivor sees the tightest stage even without a slender")
+    @DisplayName("An exhausted survivor sees the tightest stage")
     void exhaustedSurvivorIsFullyNarrowed(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> null);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
         service.start(Set.of(survivor));
 
         service.tick();
@@ -56,36 +59,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void restedSurvivorSeesNothing(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> FULL_STAMINA, () -> null);
-        service.start(Set.of(survivor));
-
-        service.tick();
-
-        assertEquals(0, renderer.stageOf(survivor));
-    }
-
-    @Test
-    @DisplayName("A slender standing close narrows the view of a rested survivor")
-    void nearbySlenderNarrowsTheView(Env env) {
-        RecordingRenderer renderer = new RecordingRenderer();
-        Instance instance = env.createFlatInstance();
-        Player survivor = spawn(env, instance, new Pos(0, 40, 0));
-        Player slender = spawn(env, instance, new Pos(0, 40, 5));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> FULL_STAMINA, () -> slender);
-        service.start(Set.of(survivor));
-
-        service.tick();
-
-        assertEquals(TunnelVisionStage.MAX_STAGE, renderer.stageOf(survivor));
-    }
-
-    @Test
-    @DisplayName("A slender in another instance is out of reach")
-    void slenderInAnotherInstanceIsIgnored(Env env) {
-        RecordingRenderer renderer = new RecordingRenderer();
-        Player survivor = spawn(env, new Pos(0, 40, 0));
-        Player slender = spawn(env, new Pos(0, 40, 5));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> FULL_STAMINA, () -> slender);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> FULL_STAMINA);
         service.start(Set.of(survivor));
 
         service.tick();
@@ -98,7 +72,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void removedSurvivorIsCleared(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> null);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
         service.start(Set.of(survivor));
         service.tick();
         renderer.forget();
@@ -117,7 +91,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player first = spawn(env, instance, new Pos(0, 40, 0));
         Player second = spawn(env, instance, new Pos(4, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> null);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
         service.start(Set.of(first, second));
         service.tick();
 
@@ -136,7 +110,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void gameStartRegistersSurvivors(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> null);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
 
         EventDispatcher.call(new GameStartEvent());
@@ -150,7 +124,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void deathClearsTheOverlay(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> null);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
         service.start(Set.of(survivor));
         service.tick();
@@ -168,7 +142,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void gameFinishCleansUp(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> null);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
         service.start(Set.of(survivor));
         service.tick();

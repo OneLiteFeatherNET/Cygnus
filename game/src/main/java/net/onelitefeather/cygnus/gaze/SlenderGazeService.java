@@ -1,0 +1,197 @@
+package net.onelitefeather.cygnus.gaze;
+
+import net.kyori.adventure.key.Key;
+import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.Player;
+import net.minestom.server.event.Event;
+import net.minestom.server.event.EventNode;
+import net.minestom.server.event.player.PlayerDeathEvent;
+import net.minestom.server.event.player.PlayerDisconnectEvent;
+import net.minestom.server.instance.Instance;
+import net.minestom.server.timer.Task;
+import net.onelitefeather.cygnus.event.GameFinishEvent;
+import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.overlay.OverlayLayer;
+import net.onelitefeather.cygnus.overlay.ScreenOverlay;
+import org.jetbrains.annotations.Nullable;
+
+import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Supplier;
+
+/**
+ * Tears a survivor's picture apart while the slender stands in their view.
+ * <p>
+ * This replaces what the tunnel vision used to do when he came near, and it asks a different
+ * question: not how close he is, but whether they can see him. Standing behind a survivor does
+ * nothing at all.
+ * </p>
+ * <p>
+ * A real colour-space shift would need a post-processing shader, and on Minecraft 26.2 those
+ * cannot be switched on for a single player, so this is a camera overlay like the others — the
+ * colour is laid over the world rather than the world being recalculated.
+ * </p>
+ *
+ * @author TheMeinerLP
+ * @version 1.0.0
+ * @since 2.7.0
+ */
+public final class SlenderGazeService {
+
+    /** Where the glitch textures live, as {@code camera_overlay} resolves them. */
+    static final String TEXTURE_PATH = "gui/glitch/level_";
+
+    /** How many frames the tearing runs through. */
+    static final int FRAMES = 4;
+
+    /** How long a frame stays on screen. */
+    static final int TICK_MILLIS = 100;
+
+    private static final Key[][] TEXTURES = buildTextures();
+
+    private final ScreenOverlay overlay;
+    private final Supplier<@Nullable Player> slender;
+    private final Map<UUID, Player> survivors = new LinkedHashMap<>();
+
+    private int frame;
+    private @Nullable Task task;
+
+    /**
+     * Creates a new service.
+     *
+     * @param overlay the overlay that owns the players' screens
+     * @param slender supplies the current slender, or {@code null} while there is none
+     */
+    public SlenderGazeService(ScreenOverlay overlay, Supplier<@Nullable Player> slender) {
+        this.overlay = overlay;
+        this.slender = slender;
+    }
+
+    /**
+     * Hooks the service into the round's lifecycle.
+     *
+     * @param node      the node to register on
+     * @param survivors supplies the survivors of the starting round
+     */
+    public void registerListener(EventNode<Event> node, Supplier<Set<Player>> survivors) {
+        node.addListener(GameStartEvent.class, event -> this.start(survivors.get()));
+        node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
+        node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
+        node.addListener(GameFinishEvent.class, event -> this.cleanUp());
+    }
+
+    /**
+     * Starts watching the given survivors.
+     *
+     * @param survivors the survivors to draw for
+     */
+    public void start(Set<Player> survivors) {
+        for (Player survivor : survivors) {
+            this.survivors.put(survivor.getUuid(), survivor);
+        }
+
+        if (this.task != null) return;
+        this.task = MinecraftServer.getSchedulerManager()
+                .buildTask(this::tick)
+                .repeat(TICK_MILLIS, ChronoUnit.MILLIS)
+                .schedule();
+    }
+
+    /**
+     * Stops drawing for a survivor and clears what is left on their screen.
+     *
+     * @param player the survivor to drop
+     */
+    public void remove(Player player) {
+        if (this.survivors.remove(player.getUuid()) == null) return;
+        this.overlay.set(player, OverlayLayer.GLITCH, null);
+    }
+
+    /**
+     * Clears every survivor's screen and stops the task.
+     */
+    public void cleanUp() {
+        for (Player survivor : this.survivors.values()) {
+            this.overlay.set(survivor, OverlayLayer.GLITCH, null);
+        }
+        this.survivors.clear();
+
+        if (this.task == null) return;
+        this.task.cancel();
+        this.task = null;
+    }
+
+    /**
+     * Puts one level on a player's screen and leaves it there, for judging the drawings without a
+     * slender to walk in front of.
+     *
+     * @param player the player to draw for
+     * @param level  the level between {@code 0} and {@code SlenderGaze.LEVELS - 1}
+     */
+    public void show(Player player, int level) {
+        int clamped = Math.min(SlenderGaze.LEVELS - 1, Math.max(0, level));
+        this.overlay.set(player, OverlayLayer.GLITCH, TEXTURES[clamped][this.frame % FRAMES]);
+    }
+
+    /**
+     * Takes the tearing off a player's screen.
+     *
+     * @param player the player to clear
+     */
+    public void hide(Player player) {
+        this.overlay.set(player, OverlayLayer.GLITCH, null);
+    }
+
+    /**
+     * Advances the tearing by one frame and redraws every survivor.
+     */
+    void tick() {
+        if (this.survivors.isEmpty()) return;
+
+        Player currentSlender = this.slender.get();
+        this.frame++;
+
+        for (Player survivor : this.survivors.values()) {
+            int level = this.levelFor(survivor, currentSlender);
+            if (level == SlenderGaze.NONE) {
+                this.overlay.set(survivor, OverlayLayer.GLITCH, null);
+                continue;
+            }
+            this.overlay.set(survivor, OverlayLayer.GLITCH, TEXTURES[level][this.frame % FRAMES]);
+        }
+    }
+
+    /**
+     * Works out the tearing one survivor gets.
+     *
+     * @param survivor the survivor to look at
+     * @param slender  the current slender, may be {@code null}
+     * @return the level, or {@link SlenderGaze#NONE}
+     */
+    private int levelFor(Player survivor, @Nullable Player slender) {
+        if (slender == null) return SlenderGaze.NONE;
+
+        Instance instance = slender.getInstance();
+        if (instance == null || !instance.equals(survivor.getInstance())) return SlenderGaze.NONE;
+
+        return SlenderGaze.levelOf(survivor.getPosition(), slender.getPosition());
+    }
+
+    /**
+     * Builds the texture key for every level and frame.
+     *
+     * @return the keys, indexed by level and frame
+     */
+    private static Key[][] buildTextures() {
+        Key[][] textures = new Key[SlenderGaze.LEVELS][FRAMES];
+        for (int level = 0; level < SlenderGaze.LEVELS; level++) {
+            for (int frame = 0; frame < FRAMES; frame++) {
+                textures[level][frame] = Key.key("cygnus", "%s%d_%d".formatted(TEXTURE_PATH, level + 1, frame + 1));
+            }
+        }
+        return textures;
+    }
+}

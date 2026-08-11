@@ -41,6 +41,7 @@ import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.blood.BloodSplatterService;
 import net.onelitefeather.cygnus.command.BloodCommand;
+import net.onelitefeather.cygnus.command.GlitchCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.command.TunnelVisionCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -51,6 +52,7 @@ import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
+import net.onelitefeather.cygnus.gaze.SlenderGazeService;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
@@ -121,6 +123,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final TunnelVisionRenderer tunnelVisionRenderer;
     private final BloodSplatterService bloodSplatterService;
     private final TunnelVisionService tunnelVisionService;
+    private final SlenderGazeService slenderGazeService;
 
     public Cygnus() {
         Path path = ServiceBootstrap.resolveWorkingDirectory();
@@ -150,11 +153,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 this.screenOverlay,
                 bound -> ThreadLocalRandom.current().nextInt(bound)
         );
-        this.tunnelVisionService = new TunnelVisionService(
-                this.tunnelVisionRenderer,
-                this::remainingStamina,
-                this::currentSlender
-        );
+        this.tunnelVisionService = new TunnelVisionService(this.tunnelVisionRenderer, this::remainingStamina);
+        this.slenderGazeService = new SlenderGazeService(this.screenOverlay, this::currentSlender);
         this.initPhases();
         this.initCommands();
         this.initListener();
@@ -167,6 +167,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.register(new StartCommand(this.linearPhaseSeries));
         manager.register(new TunnelVisionCommand(this.tunnelVisionRenderer));
         manager.register(new BloodCommand(this.bloodSplatterService));
+        manager.register(new GlitchCommand(this.slenderGazeService));
     }
 
     /**
@@ -257,6 +258,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // empty box, so the effect stays off wherever the pack is not delivered.
         if (OverlayProperties.enabled()) {
             this.tunnelVisionService.registerListener(handler, this::currentSurvivors);
+            this.slenderGazeService.registerListener(handler, this::currentSurvivors);
             this.bloodSplatterService.registerListener(handler);
         }
     }
