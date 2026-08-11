@@ -44,8 +44,9 @@ class GameDataTest {
 
         GameData gameData = new GameData(player, mapEntry);
 
-        gameData.addPage(Vec.ZERO, Direction.NORTH);
-        assertNotNull(gameData);
+        assertTrue(gameData.addPage(Vec.ZERO, Direction.NORTH));
+        assertFalse(gameData.addPage(Vec.ZERO, Direction.NORTH));
+        assertTrue(gameData.addPage(Vec.ZERO, Direction.SOUTH));
 
         env.destroyInstance(instance, true);
     }
