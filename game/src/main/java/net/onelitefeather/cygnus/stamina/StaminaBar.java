@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.stamina;
 
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.timer.ExecutionType;
 import net.minestom.server.timer.Task;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.Nullable;
@@ -42,12 +43,18 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
 
     /**
      * Creates a new {@link Task} which executes the {@link StaminaBar#consume()} method on each iteration.
+     * <p>
+     * Runs at {@link ExecutionType#TICK_END} rather than the default {@code TICK_START}: incoming player
+     * packets (e.g. a manual state change via {@link net.minestom.server.event.player.PlayerUseItemEvent})
+     * are handled between those two phases, so this guarantees {@link #consume()} always sees a state
+     * already updated by a same-tick manual transition instead of racing it with stale data.
      */
     public void start() {
         if (task != null) return;
         this.onStart();
         task = MinecraftServer.getSchedulerManager()
                 .buildTask(this::consume)
+                .executionType(ExecutionType.TICK_END)
                 .repeat(this.period, this.chronoUnit).schedule();
     }
 
