@@ -82,7 +82,7 @@ import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.stamina.FoodBar;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
-import net.onelitefeather.cygnus.overlay.TitleScreenOverlay;
+import net.onelitefeather.cygnus.overlay.EquipmentScreenOverlay;
 import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionService;
@@ -143,7 +143,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
         this.resourcePackService = ResourcePackService.create();
-        this.screenOverlay = new TitleScreenOverlay();
+        this.screenOverlay = new EquipmentScreenOverlay();
         this.tunnelVisionRenderer = new OverlayTunnelVisionRenderer(this.screenOverlay);
         this.bloodSplatterService = new BloodSplatterService(
                 this.screenOverlay,

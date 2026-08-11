@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.command;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.coordinate.Pos;
@@ -99,15 +98,15 @@ class BloodCommandTest extends CygnusPlayerTestBase {
      */
     private static final class RecordingOverlay implements ScreenOverlay {
 
-        private final Map<OverlayLayer, Component> layers = new EnumMap<>(OverlayLayer.class);
+        private final Map<OverlayLayer, Key> layers = new EnumMap<>(OverlayLayer.class);
 
         @Override
-        public void set(Player player, OverlayLayer layer, @Nullable Component glyph) {
-            if (glyph == null) {
+        public void set(Player player, OverlayLayer layer, @Nullable Key texture) {
+            if (texture == null) {
                 this.layers.remove(layer);
                 return;
             }
-            this.layers.put(layer, glyph);
+            this.layers.put(layer, texture);
         }
 
         @Override
@@ -116,9 +115,9 @@ class BloodCommandTest extends CygnusPlayerTestBase {
         }
 
         /**
-         * @return the glyph currently on the blood layer, or {@code null} if there is none
+         * @return the texture currently on the blood layer, or {@code null} if there is none
          */
-        private @Nullable Component blood() {
+        private @Nullable Key blood() {
             return this.layers.get(OverlayLayer.BLOOD);
         }
 

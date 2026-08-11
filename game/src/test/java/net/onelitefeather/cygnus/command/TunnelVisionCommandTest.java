@@ -1,84 +1,68 @@
 package net.onelitefeather.cygnus.command;
 
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.network.packet.server.play.SetTitleTextPacket;
-import net.minestom.testing.Collector;
+import net.minestom.server.item.component.Equippable;
 import net.minestom.testing.Env;
-import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
-import net.onelitefeather.cygnus.overlay.TitleScreenOverlay;
+import net.onelitefeather.cygnus.overlay.EquipmentScreenOverlay;
 import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionStage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies the command used to eyeball the vignette while the round has not started yet.
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2.7.0
  */
 class TunnelVisionCommandTest extends CygnusPlayerTestBase {
 
-    /** First glyph of the pack font; stage 1 lives here, the rest follows consecutively. */
-    private static final int FIRST_CODE_POINT = 0xE000;
-
     @Test
     @DisplayName("A requested stage is drawn right away")
     void stageIsDrawnOnRequest(Env env) {
-        Instance instance = env.createFlatInstance();
-        TestConnection connection = env.createConnection();
-        Player player = connection.connect(instance, new Pos(0, 40, 0));
-        Collector<SetTitleTextPacket> collector = connection.trackIncoming(SetTitleTextPacket.class);
+        Player player = spawn(env);
         register();
 
         MinecraftServer.getCommandManager().execute(player, "tunnelvision stage 5");
 
-        collector.assertSingle(packet -> assertEquals(
-                glyphOf(5),
-                plain(packet),
-                "the command must draw the requested stage"
-        ));
+        assertEquals(textureOf(5), cameraOverlay(player), "the command must draw the requested stage");
     }
 
     @Test
     @DisplayName("Switching the preview off clears the screen")
     void offClearsTheScreen(Env env) {
-        Instance instance = env.createFlatInstance();
-        TestConnection connection = env.createConnection();
-        Player player = connection.connect(instance, new Pos(0, 40, 0));
-        Collector<SetTitleTextPacket> collector = connection.trackIncoming(SetTitleTextPacket.class);
+        Player player = spawn(env);
         register();
+        MinecraftServer.getCommandManager().execute(player, "tunnelvision stage 5");
 
         MinecraftServer.getCommandManager().execute(player, "tunnelvision off");
 
-        collector.assertSingle(packet -> assertTrue(plain(packet).isEmpty(), "the preview must disappear"));
+        assertTrue(player.getHelmet().isAir(), "the preview must disappear");
     }
 
     @Test
     @DisplayName("A previewed intensity starts at its stage")
     void intensityStartsDrawing(Env env) {
-        Instance instance = env.createFlatInstance();
-        TestConnection connection = env.createConnection();
-        Player player = connection.connect(instance, new Pos(0, 40, 0));
-        Collector<SetTitleTextPacket> collector = connection.trackIncoming(SetTitleTextPacket.class);
+        Player player = spawn(env);
         register();
 
         MinecraftServer.getCommandManager().execute(player, "tunnelvision intensity 1.0");
 
-        collector.assertSingle(packet -> assertEquals(
-                glyphOf(TunnelVisionStage.MAX_STAGE),
-                plain(packet),
+        assertEquals(
+                textureOf(TunnelVisionStage.MAX_STAGE),
+                cameraOverlay(player),
                 "full intensity starts at the tightest stage"
-        ));
+        );
     }
 
     /**
@@ -87,26 +71,40 @@ class TunnelVisionCommandTest extends CygnusPlayerTestBase {
      */
     private void register() {
         if (MinecraftServer.getCommandManager().getCommand("tunnelvision") != null) return;
-        MinecraftServer.getCommandManager().register(new TunnelVisionCommand(new OverlayTunnelVisionRenderer(new TitleScreenOverlay())));
+        MinecraftServer.getCommandManager().register(
+                new TunnelVisionCommand(new OverlayTunnelVisionRenderer(new EquipmentScreenOverlay())));
     }
 
     /**
-     * Reads the bare text out of a title packet.
+     * Connects a player into a fresh instance.
      *
-     * @param packet the packet to read
-     * @return the plain text
+     * @param env the test environment
+     * @return the connected player
      */
-    private String plain(SetTitleTextPacket packet) {
-        return PlainTextComponentSerializer.plainText().serialize(packet.title());
+    private Player spawn(Env env) {
+        Instance instance = env.createFlatInstance();
+        return env.createConnection().connect(instance, new Pos(0, 40, 0));
     }
 
     /**
-     * Builds the glyph expected for a stage.
+     * Reads the camera overlay the player is currently wearing.
+     *
+     * @param player the player to read
+     * @return the overlay texture as a string
+     */
+    private String cameraOverlay(Player player) {
+        Equippable equippable = player.getHelmet().get(DataComponents.EQUIPPABLE);
+        assertNotNull(equippable, "nothing is carrying an overlay");
+        return equippable.cameraOverlay();
+    }
+
+    /**
+     * Builds the texture expected for a stage.
      *
      * @param stage the stage
-     * @return the glyph as a string
+     * @return the texture as a string
      */
-    private String glyphOf(int stage) {
-        return new String(Character.toChars(FIRST_CODE_POINT + stage - 1));
+    private String textureOf(int stage) {
+        return "cygnus:gui/tunnel_vision/stage_" + stage;
     }
 }

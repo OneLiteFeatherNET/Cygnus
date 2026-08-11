@@ -1,6 +1,6 @@
 package net.onelitefeather.cygnus.blood;
 
-import net.kyori.adventure.text.Component;
+import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
@@ -8,12 +8,12 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.timer.Task;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
-import net.onelitefeather.cygnus.overlay.OverlayFont;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -23,20 +23,16 @@ import java.util.function.IntUnaryOperator;
 /**
  * Throws a splatter of blood across the screen when a player is hit and fades it out again.
  * <p>
- * The glyphs are laid out as direction × variant × frame, in that order, starting at
- * {@link #FIRST_CODE_POINT}. The direction aims the splatter at the side the hit came from, the
- * variant keeps repeated hits from looking mechanical, and the frames are the fade — Minecraft
- * cannot animate a font texture, so the server steps through them.
+ * The textures are laid out as direction × variant × frame. The direction aims the splatter at the
+ * side the hit came from, the variant keeps repeated hits from looking mechanical, and the frames
+ * are the fade — Minecraft cannot animate a camera overlay, so the server steps through them.
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2.7.0
  */
 public final class BloodSplatterService {
-
-    /** Code point of the first frame; direction, variant and frame follow in that nesting. */
-    static final int FIRST_CODE_POINT = 0xE100;
 
     /** How many drawings exist per direction. */
     static final int VARIANTS = 2;
@@ -47,7 +43,10 @@ public final class BloodSplatterService {
     /** How long a single frame stays on screen. */
     static final int FRAME_MILLIS = 200;
 
-    private static final Component[] GLYPHS = buildGlyphs();
+    /** Where the splatter textures live, as {@code camera_overlay} resolves them. */
+    static final String TEXTURE_PATH = "gui/blood/";
+
+    private static final Key[] TEXTURES = buildTextures();
 
     private final ScreenOverlay overlay;
     private final IntUnaryOperator variantPicker;
@@ -58,7 +57,7 @@ public final class BloodSplatterService {
     /**
      * Creates a new service.
      *
-     * @param overlay       the overlay that owns the HUD channel
+     * @param overlay       the overlay that owns the player's screen
      * @param variantPicker picks a variant below the given bound
      */
     public BloodSplatterService(ScreenOverlay overlay, IntUnaryOperator variantPicker) {
@@ -132,7 +131,7 @@ public final class BloodSplatterService {
      */
     private void draw(Splatter splatter) {
         int index = (splatter.direction.ordinal() * VARIANTS + splatter.variant) * FRAMES + splatter.frame;
-        this.overlay.set(splatter.player, OverlayLayer.BLOOD, GLYPHS[index]);
+        this.overlay.set(splatter.player, OverlayLayer.BLOOD, TEXTURES[index]);
     }
 
     /**
@@ -147,16 +146,23 @@ public final class BloodSplatterService {
     }
 
     /**
-     * Builds every glyph of the direction × variant × frame grid.
+     * Builds the texture key for every cell of the direction × variant × frame grid.
      *
-     * @return the prepared components, indexed the same way
+     * @return the keys, indexed the same way
      */
-    private static Component[] buildGlyphs() {
-        Component[] glyphs = new Component[BloodDirection.values().length * VARIANTS * FRAMES];
-        for (int index = 0; index < glyphs.length; index++) {
-            glyphs[index] = OverlayFont.glyph(FIRST_CODE_POINT + index);
+    private static Key[] buildTextures() {
+        Key[] textures = new Key[BloodDirection.values().length * VARIANTS * FRAMES];
+        for (BloodDirection direction : BloodDirection.values()) {
+            for (int variant = 0; variant < VARIANTS; variant++) {
+                for (int frame = 0; frame < FRAMES; frame++) {
+                    int index = (direction.ordinal() * VARIANTS + variant) * FRAMES + frame;
+                    String name = "%s%s_%d_%d".formatted(
+                            TEXTURE_PATH, direction.name().toLowerCase(Locale.ROOT), variant + 1, frame + 1);
+                    textures[index] = Key.key("cygnus", name);
+                }
+            }
         }
-        return glyphs;
+        return textures;
     }
 
     /**

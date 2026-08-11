@@ -1,14 +1,11 @@
 package net.onelitefeather.cygnus.tunnelvision;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.ShadowColor;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.key.Key;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
-import net.onelitefeather.cygnus.overlay.OverlayFont;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 import org.jetbrains.annotations.Nullable;
@@ -21,40 +18,29 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies which glyph the tunnel vision contributes to the shared screen overlay.
+ * Verifies which texture the tunnel vision contributes to the shared screen overlay.
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2.7.0
  */
 class OverlayTunnelVisionRendererTest extends CygnusPlayerTestBase {
 
     @Test
-    @DisplayName("A stage is contributed as its glyph in the pack font")
-    void stageIsContributedAsGlyph(Env env) {
+    @DisplayName("A stage is contributed as its overlay texture")
+    void stageIsContributedAsTexture(Env env) {
         RecordingOverlay overlay = new RecordingOverlay();
         Player player = spawn(env);
 
         new OverlayTunnelVisionRenderer(overlay).render(player, 3);
 
-        Component glyph = overlay.of(OverlayLayer.TUNNEL_VISION);
-        assertEquals(OverlayFont.KEY, glyph.style().font(), "the overlay must use the pack font");
-        assertEquals(glyphOf(3), plain(glyph), "the glyph must match the stage");
-    }
-
-    @Test
-    @DisplayName("The glyph is drawn without a text shadow")
-    void glyphHasNoShadow(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
-        Player player = spawn(env);
-
-        new OverlayTunnelVisionRenderer(overlay).render(player, TunnelVisionStage.MAX_STAGE);
-
-        assertEquals(ShadowColor.none(), overlay.of(OverlayLayer.TUNNEL_VISION).style().shadowColor(),
-                "a shadow would render the vignette a second time, offset");
+        assertEquals(
+                Key.key("cygnus", OverlayTunnelVisionRenderer.TEXTURE_PATH + "3"),
+                overlay.of(OverlayLayer.TUNNEL_VISION),
+                "the texture must match the stage"
+        );
     }
 
     @Test
@@ -72,7 +58,7 @@ class OverlayTunnelVisionRendererTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("Stage zero drops the layer instead of drawing an empty glyph")
+    @DisplayName("Stage zero drops the layer instead of drawing an empty texture")
     void zeroStageDropsTheLayer(Env env) {
         RecordingOverlay overlay = new RecordingOverlay();
         Player player = spawn(env);
@@ -80,6 +66,20 @@ class OverlayTunnelVisionRendererTest extends CygnusPlayerTestBase {
         new OverlayTunnelVisionRenderer(overlay).render(player, 0);
 
         assertNull(overlay.of(OverlayLayer.TUNNEL_VISION));
+    }
+
+    @Test
+    @DisplayName("The tightest stage has a texture of its own")
+    void tightestStageHasItsOwnTexture(Env env) {
+        RecordingOverlay overlay = new RecordingOverlay();
+        Player player = spawn(env);
+
+        new OverlayTunnelVisionRenderer(overlay).render(player, TunnelVisionStage.MAX_STAGE);
+
+        assertEquals(
+                Key.key("cygnus", OverlayTunnelVisionRenderer.TEXTURE_PATH + TunnelVisionStage.MAX_STAGE),
+                overlay.of(OverlayLayer.TUNNEL_VISION)
+        );
     }
 
     /**
@@ -94,40 +94,20 @@ class OverlayTunnelVisionRendererTest extends CygnusPlayerTestBase {
     }
 
     /**
-     * Serialises a component down to its bare text.
-     *
-     * @param component the component to serialise
-     * @return the plain text
-     */
-    private String plain(Component component) {
-        return PlainTextComponentSerializer.plainText().serialize(component);
-    }
-
-    /**
-     * Builds the glyph expected for a stage.
-     *
-     * @param stage the stage
-     * @return the glyph as a string
-     */
-    private String glyphOf(int stage) {
-        return new String(Character.toChars(OverlayTunnelVisionRenderer.FIRST_CODE_POINT + stage - 1));
-    }
-
-    /**
-     * Records what a renderer contributes, standing in for the title-backed overlay.
+     * Records what a renderer contributes, standing in for the equipment-backed overlay.
      */
     private static final class RecordingOverlay implements ScreenOverlay {
 
-        private final Map<OverlayLayer, Component> layers = new EnumMap<>(OverlayLayer.class);
+        private final Map<OverlayLayer, Key> layers = new EnumMap<>(OverlayLayer.class);
         private boolean wiped;
 
         @Override
-        public void set(Player player, OverlayLayer layer, @Nullable Component glyph) {
-            if (glyph == null) {
+        public void set(Player player, OverlayLayer layer, @Nullable Key texture) {
+            if (texture == null) {
                 this.layers.remove(layer);
                 return;
             }
-            this.layers.put(layer, glyph);
+            this.layers.put(layer, texture);
         }
 
         @Override
@@ -138,9 +118,9 @@ class OverlayTunnelVisionRendererTest extends CygnusPlayerTestBase {
 
         /**
          * @param layer the layer to look up
-         * @return the glyph currently set for the layer, or {@code null} if there is none
+         * @return the texture currently set for the layer, or {@code null} if there is none
          */
-        private @Nullable Component of(OverlayLayer layer) {
+        private @Nullable Key of(OverlayLayer layer) {
             return this.layers.get(layer);
         }
 

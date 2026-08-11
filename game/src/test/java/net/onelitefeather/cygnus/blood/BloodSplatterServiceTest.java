@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.blood;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.key.Key;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
@@ -9,7 +8,6 @@ import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
-import net.onelitefeather.cygnus.overlay.OverlayFont;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 import org.jetbrains.annotations.Nullable;
@@ -47,7 +45,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
 
         service.splatter(player, BloodDirection.FRONT);
 
-        assertEquals(codePointOf(BloodDirection.FRONT, 0, 0), glyphOf(overlay, player));
+        assertEquals(textureOf(BloodDirection.FRONT, 0, 0), overlay.of(player, OverlayLayer.BLOOD));
     }
 
     @Test
@@ -59,8 +57,8 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
 
         service.splatter(player, BloodDirection.LEFT);
 
-        assertEquals(codePointOf(BloodDirection.LEFT, 0, 0), glyphOf(overlay, player));
-        assertNotEquals(codePointOf(BloodDirection.FRONT, 0, 0), glyphOf(overlay, player));
+        assertEquals(textureOf(BloodDirection.LEFT, 0, 0), overlay.of(player, OverlayLayer.BLOOD));
+        assertNotEquals(textureOf(BloodDirection.FRONT, 0, 0), overlay.of(player, OverlayLayer.BLOOD));
     }
 
     @Test
@@ -72,7 +70,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
         service.splatter(player, BloodDirection.FRONT);
 
         service.tick();
-        assertEquals(codePointOf(BloodDirection.FRONT, 0, 1), glyphOf(overlay, player), "the second frame follows");
+        assertEquals(textureOf(BloodDirection.FRONT, 0, 1), overlay.of(player, OverlayLayer.BLOOD), "the second frame follows");
 
         for (int remaining = 1; remaining < BloodSplatterService.FRAMES; remaining++) {
             service.tick();
@@ -93,7 +91,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
 
         service.splatter(player, BloodDirection.FRONT);
 
-        assertEquals(codePointOf(BloodDirection.FRONT, 0, 0), glyphOf(overlay, player), "a fresh hit starts over");
+        assertEquals(textureOf(BloodDirection.FRONT, 0, 0), overlay.of(player, OverlayLayer.BLOOD), "a fresh hit starts over");
     }
 
     @Test
@@ -136,8 +134,8 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
         service.tick();
         service.splatter(second, BloodDirection.BACK);
 
-        assertEquals(codePointOf(BloodDirection.FRONT, 0, 1), glyphOf(overlay, first));
-        assertEquals(codePointOf(BloodDirection.BACK, 0, 0), glyphOf(overlay, second));
+        assertEquals(textureOf(BloodDirection.FRONT, 0, 1), overlay.of(first, OverlayLayer.BLOOD));
+        assertEquals(textureOf(BloodDirection.BACK, 0, 0), overlay.of(second, OverlayLayer.BLOOD));
     }
 
     /**
@@ -152,30 +150,20 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     }
 
     /**
-     * Reads the code point the blood layer currently shows for a player.
-     *
-     * @param overlay the overlay to read
-     * @param player  the player to look up
-     * @return the code point
-     */
-    private int glyphOf(RecordingOverlay overlay, Player player) {
-        Component glyph = overlay.of(player, OverlayLayer.BLOOD);
-        assertTrue(glyph != null, "no blood on screen");
-        assertEquals(OverlayFont.KEY, glyph.style().font(), "the splatter must use the pack font");
-        return PlainTextComponentSerializer.plainText().serialize(glyph).codePointAt(0);
-    }
-
-    /**
-     * Works out the code point a direction, variant and frame map to.
+     * Works out the texture a direction, variant and frame map to.
      *
      * @param direction the direction of the hit
      * @param variant   the variant index
      * @param frame     the frame index
-     * @return the code point
+     * @return the texture key
      */
-    private int codePointOf(BloodDirection direction, int variant, int frame) {
-        int index = (direction.ordinal() * BloodSplatterService.VARIANTS + variant) * BloodSplatterService.FRAMES;
-        return BloodSplatterService.FIRST_CODE_POINT + index + frame;
+    private Key textureOf(BloodDirection direction, int variant, int frame) {
+        return Key.key("cygnus", "%s%s_%d_%d".formatted(
+                BloodSplatterService.TEXTURE_PATH,
+                direction.name().toLowerCase(java.util.Locale.ROOT),
+                variant + 1,
+                frame + 1
+        ));
     }
 
     /**
@@ -183,17 +171,17 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
      */
     private static final class RecordingOverlay implements ScreenOverlay {
 
-        private final Map<UUID, Map<OverlayLayer, Component>> layers = new HashMap<>();
+        private final Map<UUID, Map<OverlayLayer, Key>> layers = new HashMap<>();
 
         @Override
-        public void set(Player player, OverlayLayer layer, @Nullable Component glyph) {
-            Map<OverlayLayer, Component> current =
+        public void set(Player player, OverlayLayer layer, @Nullable Key texture) {
+            Map<OverlayLayer, Key> current =
                     this.layers.computeIfAbsent(player.getUuid(), key -> new EnumMap<>(OverlayLayer.class));
-            if (glyph == null) {
+            if (texture == null) {
                 current.remove(layer);
                 return;
             }
-            current.put(layer, glyph);
+            current.put(layer, texture);
         }
 
         @Override
@@ -206,7 +194,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
          * @param layer  the layer to look up
          * @return the glyph currently set, or {@code null} if there is none
          */
-        private @Nullable Component of(Player player, OverlayLayer layer) {
+        private @Nullable Key of(Player player, OverlayLayer layer) {
             return this.layers.getOrDefault(player.getUuid(), Map.of()).get(layer);
         }
     }
