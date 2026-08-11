@@ -1,20 +1,15 @@
 package net.onelitefeather.cygnus.command;
 
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.arguments.ArgumentType;
-import net.minestom.server.command.CommandSender;
 import net.minestom.server.entity.Player;
-import net.minestom.server.timer.Task;
-import net.minestom.server.timer.TaskSchedule;
 import net.onelitefeather.cygnus.common.Messages;
+import net.onelitefeather.cygnus.common.util.PlayerState;
+import net.onelitefeather.cygnus.common.util.RepeatingTask;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionStage;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Puts the tunnel vision on screen without a running round, so the glyph sizes in the resource
@@ -27,13 +22,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.0
  */
 public final class TunnelVisionCommand extends Command {
 
     private final TunnelVisionRenderer renderer;
-    private final Map<UUID, Task> previews;
+    private final PlayerState<RepeatingTask> previews;
 
     /**
      * Creates the command.
@@ -43,7 +38,7 @@ public final class TunnelVisionCommand extends Command {
     public TunnelVisionCommand(TunnelVisionRenderer renderer) {
         super("tunnelvision");
         this.renderer = renderer;
-        this.previews = new ConcurrentHashMap<>();
+        this.previews = new PlayerState<>();
 
         var stage = ArgumentType.Integer("level").between(0, TunnelVisionStage.MAX_STAGE);
         var intensity = ArgumentType.Double("amount").between(0.0D, 1.0D);
@@ -53,20 +48,20 @@ public final class TunnelVisionCommand extends Command {
         ));
 
         this.addSyntax((sender, context) -> {
-            Player player = asPlayer(sender);
+            Player player = CommandSenders.asPlayer(sender, "can preview the tunnel vision.");
             if (player == null) return;
             this.stopPreview(player);
             this.renderer.render(player, context.get(stage));
         }, ArgumentType.Literal("stage"), stage);
 
         this.addSyntax((sender, context) -> {
-            Player player = asPlayer(sender);
+            Player player = CommandSenders.asPlayer(sender, "can preview the tunnel vision.");
             if (player == null) return;
             this.startPreview(player, context.get(intensity));
         }, ArgumentType.Literal("intensity"), intensity);
 
         this.addSyntax((sender, context) -> {
-            Player player = asPlayer(sender);
+            Player player = CommandSenders.asPlayer(sender, "can preview the tunnel vision.");
             if (player == null) return;
             this.stopPreview(player);
             this.renderer.clear(player);
@@ -83,13 +78,20 @@ public final class TunnelVisionCommand extends Command {
         this.stopPreview(player);
 
         TunnelVisionStage stage = new TunnelVisionStage();
-        // submitTask runs its first pass immediately, which is the initial draw.
-        Task task = MinecraftServer.getSchedulerManager().submitTask(() -> {
-            if (!player.isOnline()) return TaskSchedule.stop();
+        // The task alone would only draw from its first repetition onward, so the initial stage is
+        // rendered here, the same way BloodSplatterService and SlenderGazeService draw their first
+        // frame before ever starting their own repeating task.
+        this.renderer.render(player, stage.update(intensity));
+
+        RepeatingTask task = new RepeatingTask(() -> {
+            if (!player.isOnline()) {
+                this.stopPreview(player);
+                return;
+            }
             this.renderer.render(player, stage.update(intensity));
-            return TaskSchedule.millis(TunnelVisionStage.TICK_MILLIS);
         });
-        this.previews.put(player.getUuid(), task);
+        this.previews.put(player, task);
+        task.start(TunnelVisionStage.TICK_MILLIS, ChronoUnit.MILLIS);
     }
 
     /**
@@ -98,19 +100,7 @@ public final class TunnelVisionCommand extends Command {
      * @param player the player whose preview to end
      */
     private void stopPreview(Player player) {
-        Task running = this.previews.remove(player.getUuid());
-        if (running != null) running.cancel();
-    }
-
-    /**
-     * Narrows a sender down to a player, since the preview needs a screen to draw on.
-     *
-     * @param sender the sender to narrow
-     * @return the player, or {@code null} if the sender has no screen
-     */
-    private static @Nullable Player asPlayer(CommandSender sender) {
-        if (sender instanceof Player player) return player;
-        sender.sendMessage(Messages.withMiniPrefix("<red>Only players can preview the tunnel vision."));
-        return null;
+        RepeatingTask task = this.previews.remove(player);
+        if (task != null) task.stop();
     }
 }
