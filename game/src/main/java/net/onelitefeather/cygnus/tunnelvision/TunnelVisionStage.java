@@ -19,12 +19,12 @@ public final class TunnelVisionStage {
     /**
      * Number of stages the overlay is quantised to; stage {@code 0} means no overlay.
      * <p>
-     * These double as the frames of the heartbeat: Minecraft cannot animate a font texture, so the
-     * animation is the server walking through the stages. Sixteen of them make that walk read as
-     * motion rather than as steps.
+     * These double as the frames of the heartbeat: Minecraft cannot animate an overlay texture, so
+     * the animation is the server walking through the stages. Thirty-two of them make the view
+     * close smoothly; at sixteen the steps were visible as the tunnel narrowed.
      * </p>
      */
-    public static final int MAX_STAGE = 16;
+    public static final int MAX_STAGE = 32;
 
     /** Interval the service updates at, which is also the sampling rate of the heartbeat. */
     public static final int TICK_MILLIS = 100;

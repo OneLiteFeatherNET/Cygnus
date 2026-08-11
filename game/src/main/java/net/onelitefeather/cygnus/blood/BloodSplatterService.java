@@ -38,10 +38,14 @@ public final class BloodSplatterService {
     static final int VARIANTS = 2;
 
     /** How many frames a splatter fades over. */
-    static final int FRAMES = 6;
+    static final int FRAMES = 12;
 
-    /** How long a single frame stays on screen. */
-    static final int FRAME_MILLIS = 200;
+    /**
+     * How long a single frame stays on screen. Twelve frames at this rate keep the splatter alive
+     * for the same 1.2 seconds as six did at twice the interval, but it runs down the screen
+     * smoothly rather than in visible steps.
+     */
+    static final int FRAME_MILLIS = 100;
 
     /** Where the splatter textures live, as {@code camera_overlay} resolves them. */
     static final String TEXTURE_PATH = "gui/blood/";

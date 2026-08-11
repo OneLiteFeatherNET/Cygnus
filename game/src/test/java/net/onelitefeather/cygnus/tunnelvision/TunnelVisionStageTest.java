@@ -37,7 +37,11 @@ class TunnelVisionStageTest {
             highest = Math.max(highest, current);
         }
         assertEquals(TunnelVisionStage.MAX_STAGE, highest, "the pulse never reaches the peak");
-        assertEquals(TunnelVisionStage.MAX_STAGE - 2, lowest, "the pulse does not open up again");
+        // Stated as a share of the scale rather than as a stage count, so raising the number of
+        // stages does not turn this into a test of one particular pulse depth.
+        assertTrue(lowest < highest, "the pulse does not open up again");
+        assertTrue(lowest >= TunnelVisionStage.MAX_STAGE - TunnelVisionStage.MAX_STAGE / 4,
+                "the pulse swings the view too far open at full intensity");
     }
 
     @Test
@@ -56,7 +60,7 @@ class TunnelVisionStageTest {
         TunnelVisionStage stage = new TunnelVisionStage();
         int settled = highestOver(stage, 0.5D);
         assertEquals(TunnelVisionStage.MAX_STAGE / 2, settled, "half intensity should settle on the middle stage");
-        assertEquals(settled, highestOver(stage, 0.52D), "the stage moved on a small fluctuation");
+        assertEquals(settled, highestOver(stage, 0.51D), "the stage moved on a small fluctuation");
     }
 
     @Test
@@ -64,7 +68,7 @@ class TunnelVisionStageTest {
     void largerChangeMovesTheStage() {
         TunnelVisionStage stage = new TunnelVisionStage();
         assertEquals(TunnelVisionStage.MAX_STAGE / 2, highestOver(stage, 0.5D));
-        assertEquals(TunnelVisionStage.MAX_STAGE / 2 + 1, highestOver(stage, 0.56D),
+        assertEquals(TunnelVisionStage.MAX_STAGE / 2 + 1, highestOver(stage, 0.53D),
                 "the stage should follow a real change");
     }
 
