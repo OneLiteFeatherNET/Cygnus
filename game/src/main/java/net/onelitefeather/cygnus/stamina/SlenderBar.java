@@ -107,7 +107,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
             currentTime -= TIME_STEP;
             Instance instance = player.getInstance();
             applyDamage(instance, player.getUuid(), player.getPosition(), DAMAGE_RANGE, TIME_STEP);
-            this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
+            this.colorState.sendProgressBar(player, tileChar, currentTime, time);
             return;
         }
         enterRegenerating();
@@ -116,7 +116,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private void handleRegeneration() {
         if (currentTime < time) {
             currentTime = Math.min(time, currentTime + TIME_STEP);
-            this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
+            this.colorState.sendProgressBar(player, tileChar, currentTime, time);
             return;
         }
         enterReady();
@@ -155,7 +155,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         player.setSprinting(false);
         player.setBlockedSprinting(true);
         EventDispatcher.call(new StaminaStateChangeEvent(player, state));
-        this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
+        this.colorState.sendProgressBar(player, tileChar, currentTime, time);
     }
 
     private void enterRegenerating() {
@@ -168,7 +168,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         player.sendSpringPackets();
         player.setBlockedSprinting(false);
         EventDispatcher.call(new StaminaStateChangeEvent(player, state));
-        this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
+        this.colorState.sendProgressBar(player, tileChar, currentTime, time);
     }
 
     private void enterReady() {
