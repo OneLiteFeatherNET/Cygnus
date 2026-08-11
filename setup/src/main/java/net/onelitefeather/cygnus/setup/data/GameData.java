@@ -92,11 +92,15 @@ public class GameData extends InstanceSetupData {
      *
      * @param pos  of the resource
      * @param face of the resource
+     * @return true if the page was added, false if a page at the position and face already exists
      */
-    public void addPage(Vec pos, Direction face) {
+    public boolean addPage(Vec pos, Direction face) {
         PageResource pageResource = new PageResource(pos, face);
-        this.gameMapBuilder.addPage(pos, face);
-        this.pageInventory.add(new PageSlot(pageResource));
+        boolean added = this.gameMapBuilder.addPage(pos, face);
+        if (added) {
+            this.pageInventory.add(new PageSlot(pageResource));
+        }
+        return added;
     }
 
     /**
