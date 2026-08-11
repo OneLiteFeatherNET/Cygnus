@@ -82,7 +82,7 @@ class GameMapTest {
         assertNotNull(mapBuilder);
         assertTrue(mapBuilder.getPageFaces().isEmpty());
 
-        mapBuilder.addPage(Vec.ZERO, Direction.NORTH);
+        assertTrue(mapBuilder.addPage(Vec.ZERO, Direction.NORTH));
 
         assertFalse(mapBuilder.getPageFaces().isEmpty());
 
@@ -90,6 +90,15 @@ class GameMapTest {
 
         assertEquals(Vec.ZERO, pageResource.position());
         assertEquals(Direction.NORTH, pageResource.face());
+    }
+
+    @Test
+    void testDuplicatePageHandling() {
+        GameMapBuilder mapBuilder = new GameMapBuilder();
+        assertTrue(mapBuilder.addPage(Vec.ZERO, Direction.NORTH));
+        assertFalse(mapBuilder.addPage(Vec.ZERO, Direction.NORTH));
+        assertTrue(mapBuilder.addPage(Vec.ZERO, Direction.EAST));
+        assertEquals(2, mapBuilder.getPageFaces().size());
     }
 
     @Test

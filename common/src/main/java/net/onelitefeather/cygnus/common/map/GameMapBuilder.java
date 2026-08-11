@@ -96,9 +96,10 @@ public final class GameMapBuilder extends BaseMapBuilder {
      *
      * @param pos  the position to add
      * @param face the face of the page
+     * @return true if the page was added, false if a page at the position and face already exists
      */
-    public void addPage(Vec pos, Direction face) {
-        this.pageFaces.add(new PageResource(pos, face));
+    public boolean addPage(Vec pos, Direction face) {
+        return this.pageFaces.add(new PageResource(pos, face));
     }
 
     /**
