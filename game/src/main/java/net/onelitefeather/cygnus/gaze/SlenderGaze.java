@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.gaze;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.onelitefeather.cygnus.common.util.Helper;
 
 /**
  * Works out how badly the sight of the slender tears a survivor's view apart.
@@ -62,7 +63,7 @@ public final class SlenderGaze {
         if (survivor.direction().dot(towardsSlender) < FIELD_OF_VIEW) return NONE;
 
         double nearness = (RANGE - distance) / (RANGE - CLOSE);
-        double clamped = Math.min(1.0D, Math.max(0.0D, nearness));
+        double clamped = Helper.clamp(nearness, 0.0D, 1.0D);
         return (int) Math.round(clamped * (LEVELS - 1));
     }
 }
