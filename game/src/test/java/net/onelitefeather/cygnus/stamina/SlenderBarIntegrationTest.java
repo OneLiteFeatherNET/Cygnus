@@ -2,7 +2,9 @@ package net.onelitefeather.cygnus.stamina;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.network.packet.server.ServerPacket;
 import net.minestom.server.network.packet.server.play.ActionBarPacket;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
@@ -18,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Integration test verifying that the {@link SlenderBar} renders its progress bar correctly.
@@ -100,5 +103,38 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
 
         slenderBar.stop();
         env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAutomaticDepletionPlaysTeleportSoundToNearbyPlayers(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
+        TestConnection survivorConnection = env.createConnection();
+        Player nearbySurvivor = survivorConnection.connect(instance);
+        nearbySurvivor.teleport(player.getPosition()).join();
+        env.tick();
+
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        slenderBar.start();
+        slenderBar.changeStatus(); // READY -> DRAINING
+
+        // the teleport sound plays to nearby SURVIVORS, not to the slender player themselves
+        Collector<ServerPacket> collector = survivorConnection.trackIncoming();
+        // fully drain so the bar automatically switches to REGENERATING
+        for (int i = 0; i < 34; i++) {
+            slenderBar.consume();
+        }
+
+        assertTrue(soundWasSent(collector),
+                "nearby players should hear the teleport sound when draining runs out on its own too, " +
+                        "not just when it's manually cancelled");
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
+    private static boolean soundWasSent(Collector<ServerPacket> collector) {
+        return collector.collect().stream().anyMatch(packet -> packet.getClass().getSimpleName().contains("Sound"));
     }
 }

@@ -102,15 +102,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
             this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
             return;
         }
-        state = State.REGENERATING;
-        colorState = StaminaColors.REGENERATING;
-        player.setTag(Tags.HIDDEN, HIDDEN);
-        EventDispatcher.call(new StaminaStateChangeEvent(player, state));
-        this.applyNightVision(player);
-        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(HIDDEN_MOVEMENT_SPEED);
-        player.sendSpringPackets();
-        player.setBlockedSprinting(false);
-        this.colorState.sendProgressBar(player, tileChar, (int) currentTime, time);
+        enterRegenerating();
     }
 
     private void handleRegeneration() {
