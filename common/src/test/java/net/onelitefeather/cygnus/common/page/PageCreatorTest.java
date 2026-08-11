@@ -25,7 +25,7 @@ class PageCreatorTest {
 
     @Test
     @SetSystemProperty(key = "cygnus.custom_pages", value = "false")
-    void shouldCreateDefaultPageWhenCustomPagesAreDisabled(Env ignored) {
+    void testDefaultPageCreation(Env ignored) {
         boolean useCustomPage = Boolean.parseBoolean(System.getProperty("cygnus.custom_pages"));
         ItemStack page = pageCreator.createPageItem(useCustomPage, 5);
 
@@ -38,14 +38,19 @@ class PageCreatorTest {
 
     @Test
     @SetSystemProperty(key = "cygnus.custom_pages", value = "true")
-    void shouldAssignCustomModelWhenCustomPagesAreEnabled(Env ignored) {
+    void testCustomPageCreation(Env ignored) {
         boolean useCustomPage = Boolean.parseBoolean(System.getProperty("cygnus.custom_pages"));
-        ItemStack page = pageCreator.createPageItem(useCustomPage, 5);
 
-        assertTrue(page.has(DataComponents.ITEM_MODEL));
-        String model = page.get(DataComponents.ITEM_MODEL);
+        for (int i = 0; i < 100; i++) {
+            ItemStack page = pageCreator.createPageItem(useCustomPage, 5);
 
-        assertNotNull(model);
-        assertTrue(model.matches("cygnus:page_[0-5]"));
+            assertEquals(Material.PAPER, page.material());
+            assertTrue(page.has(DataComponents.ITEM_MODEL));
+
+            String model = page.get(DataComponents.ITEM_MODEL);
+
+            assertNotNull(model);
+            assertTrue(model.matches("cygnus:page_[1-6]"));
+        }
     }
 }
