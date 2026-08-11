@@ -83,6 +83,7 @@ import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.stamina.FoodBar;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 import net.onelitefeather.cygnus.overlay.EquipmentScreenOverlay;
+import net.onelitefeather.cygnus.overlay.OverlayProperties;
 import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionService;
@@ -254,10 +255,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
 
         // Without the pack the vignette font does not exist and survivors would stare at an
         // empty box, so the effect stays off wherever the pack is not delivered.
-        this.resourcePackService.ifPresent(_ -> {
+        if (OverlayProperties.enabled()) {
             this.tunnelVisionService.registerListener(handler, this::currentSurvivors);
             this.bloodSplatterService.registerListener(handler);
-        });
+        }
     }
 
     private void initPhases() {
