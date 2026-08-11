@@ -1,25 +1,23 @@
 package net.onelitefeather.cygnus.gaze;
 
 import net.kyori.adventure.key.Key;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.timer.Task;
+import net.onelitefeather.cygnus.common.util.PlayerState;
+import net.onelitefeather.cygnus.common.util.RepeatingTask;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
+import net.onelitefeather.cygnus.overlay.OverlayTextureKeys;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
@@ -36,7 +34,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2.7.0
  */
 public final class SlenderGazeService {
@@ -50,14 +48,15 @@ public final class SlenderGazeService {
     /** How long a frame stays on screen. */
     static final int TICK_MILLIS = 100;
 
-    private static final Key[][] TEXTURES = buildTextures();
+    private static final Key[][] TEXTURES = OverlayTextureKeys.table(
+            TEXTURE_PATH, SlenderGaze.LEVELS, FRAMES, OverlayTextureKeys.ONE_BASED, OverlayTextureKeys.ONE_BASED);
 
     private final ScreenOverlay overlay;
     private final Supplier<@Nullable Player> slender;
-    private final Map<UUID, Player> survivors = new LinkedHashMap<>();
+    private final PlayerState<Player> survivors = new PlayerState<>();
+    private final RepeatingTask task = new RepeatingTask(this::tick);
 
     private int frame;
-    private @Nullable Task task;
 
     /**
      * Creates a new service.
@@ -72,32 +71,55 @@ public final class SlenderGazeService {
 
     /**
      * Hooks the service into the round's lifecycle.
+     * <p>
+     * Mirrors {@code TunnelVisionService}: the service listens for itself rather than being called
+     * from {@code GameStartListener} and friends, because — unlike {@code AmbientProvider}, which
+     * has no per-player state to speak of — it has to drop an individual survivor's tracking the
+     * moment they die or disconnect, not only when the whole round ends. Folding that into the
+     * round's start and finish hooks would mean widening their signatures for every service that
+     * needs it; listening for itself keeps this self-contained instead.
+     * </p>
      *
      * @param node      the node to register on
      * @param survivors supplies the survivors of the starting round
      */
     public void registerListener(EventNode<Event> node, Supplier<Set<Player>> survivors) {
-        node.addListener(GameStartEvent.class, event -> this.start(survivors.get()));
+        node.addListener(GameStartEvent.class, event -> {
+            this.startTask();
+            for (Player survivor : survivors.get()) {
+                this.watch(survivor);
+            }
+        });
         node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
-        node.addListener(GameFinishEvent.class, event -> this.cleanUp());
+        node.addListener(GameFinishEvent.class, event -> {
+            this.clear();
+            this.stopTask();
+        });
     }
 
     /**
-     * Starts watching the given survivors.
-     *
-     * @param survivors the survivors to draw for
+     * Starts the update task. Does nothing if it is already running.
      */
-    public void start(Set<Player> survivors) {
-        for (Player survivor : survivors) {
-            this.survivors.put(survivor.getUuid(), survivor);
-        }
+    public void startTask() {
+        this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
+    }
 
-        if (this.task != null) return;
-        this.task = MinecraftServer.getSchedulerManager()
-                .buildTask(this::tick)
-                .repeat(TICK_MILLIS, ChronoUnit.MILLIS)
-                .schedule();
+    /**
+     * Stops the update task. Does nothing if it is not running. Leaves whatever is on a tracked
+     * survivor's screen where it is — pair with {@link #clear()} where every screen needs wiping too.
+     */
+    public void stopTask() {
+        this.task.stop();
+    }
+
+    /**
+     * Starts watching a survivor.
+     *
+     * @param survivor the survivor to draw for
+     */
+    public void watch(Player survivor) {
+        this.survivors.put(survivor, survivor);
     }
 
     /**
@@ -106,27 +128,29 @@ public final class SlenderGazeService {
      * @param player the survivor to drop
      */
     public void remove(Player player) {
-        if (this.survivors.remove(player.getUuid()) == null) return;
+        if (this.survivors.remove(player) == null) return;
         this.overlay.set(player, OverlayLayer.GLITCH, null);
     }
 
     /**
-     * Clears every survivor's screen and stops the task.
+     * Clears every tracked survivor's screen and forgets all of them.
      */
-    public void cleanUp() {
+    public void clear() {
         for (Player survivor : this.survivors.values()) {
             this.overlay.set(survivor, OverlayLayer.GLITCH, null);
         }
         this.survivors.clear();
-
-        if (this.task == null) return;
-        this.task.cancel();
-        this.task = null;
     }
 
     /**
      * Puts one level on a player's screen and leaves it there, for judging the drawings without a
      * slender to walk in front of.
+     * <p>
+     * This sits on the service rather than a separate type because it draws from the very texture
+     * table {@link #tick()} already builds; splitting it out would mean either rebuilding that table
+     * a second time or exposing it, trading one seam for a worse one over two lines of
+     * {@code GlitchCommand} preview code.
+     * </p>
      *
      * @param player the player to draw for
      * @param level  the level between {@code 0} and {@code SlenderGaze.LEVELS - 1}
@@ -178,20 +202,5 @@ public final class SlenderGazeService {
         if (instance == null || !instance.equals(survivor.getInstance())) return SlenderGaze.NONE;
 
         return SlenderGaze.levelOf(survivor.getPosition(), slender.getPosition());
-    }
-
-    /**
-     * Builds the texture key for every level and frame.
-     *
-     * @return the keys, indexed by level and frame
-     */
-    private static Key[][] buildTextures() {
-        Key[][] textures = new Key[SlenderGaze.LEVELS][FRAMES];
-        for (int level = 0; level < SlenderGaze.LEVELS; level++) {
-            for (int frame = 0; frame < FRAMES; frame++) {
-                textures[level][frame] = Key.key("cygnus", "%s%d_%d".formatted(TEXTURE_PATH, level + 1, frame + 1));
-            }
-        }
-        return textures;
     }
 }
