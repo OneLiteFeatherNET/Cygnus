@@ -1,23 +1,20 @@
 package net.onelitefeather.cygnus.blood;
 
 import net.kyori.adventure.key.Key;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
-import net.minestom.server.timer.Task;
+import net.onelitefeather.cygnus.common.util.PlayerState;
+import net.onelitefeather.cygnus.common.util.RepeatingTask;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
+import net.onelitefeather.cygnus.overlay.OverlayTextureKeys;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
-import java.util.Locale;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Locale;
 import java.util.function.IntUnaryOperator;
 
 /**
@@ -29,7 +26,7 @@ import java.util.function.IntUnaryOperator;
  * </p>
  *
  * @author TheMeinerLP
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2.7.0
  */
 public final class BloodSplatterService {
@@ -50,13 +47,15 @@ public final class BloodSplatterService {
     /** Where the splatter textures live, as {@code camera_overlay} resolves them. */
     static final String TEXTURE_PATH = "gui/blood/";
 
-    private static final Key[] TEXTURES = buildTextures();
+    /** The keys, indexed {@code [direction][variant][frame]}. */
+    private static final Key[][][] TEXTURES = buildTextures();
 
     private final ScreenOverlay overlay;
     private final IntUnaryOperator variantPicker;
-    private final Map<UUID, Splatter> active = new ConcurrentHashMap<>();
+    private final PlayerState<Splatter> active = new PlayerState<>();
 
-    private @Nullable Task task;
+    /** Fades every active splatter forward by one frame. Runs only while someone is bleeding. */
+    final RepeatingTask fadeTask = new RepeatingTask(this::tick);
 
     /**
      * Creates a new service.
@@ -90,9 +89,9 @@ public final class BloodSplatterService {
      */
     public void splatter(Player player, BloodDirection direction) {
         Splatter splatter = new Splatter(player, direction, this.variantPicker.applyAsInt(VARIANTS));
-        this.active.put(player.getUuid(), splatter);
+        this.active.put(player, splatter);
         this.draw(splatter);
-        this.ensureTask();
+        this.fadeTask.start(FRAME_MILLIS, ChronoUnit.MILLIS);
     }
 
     /**
@@ -101,7 +100,7 @@ public final class BloodSplatterService {
      * @param player the player to clear
      */
     public void clear(Player player) {
-        if (this.active.remove(player.getUuid()) == null) return;
+        if (this.active.remove(player) == null) return;
         this.overlay.set(player, OverlayLayer.BLOOD, null);
     }
 
@@ -122,10 +121,8 @@ public final class BloodSplatterService {
             this.draw(splatter);
         }
 
-        if (!this.active.isEmpty() || this.task == null) return;
         // Nothing is bleeding; the task would only spin over an empty map until the next hit.
-        this.task.cancel();
-        this.task = null;
+        if (this.active.isEmpty()) this.fadeTask.stop();
     }
 
     /**
@@ -134,39 +131,23 @@ public final class BloodSplatterService {
      * @param splatter the splatter to draw
      */
     private void draw(Splatter splatter) {
-        int index = (splatter.direction.ordinal() * VARIANTS + splatter.variant) * FRAMES + splatter.frame;
-        this.overlay.set(splatter.player, OverlayLayer.BLOOD, TEXTURES[index]);
-    }
-
-    /**
-     * Starts the fade task unless it is already running.
-     */
-    private void ensureTask() {
-        if (this.task != null) return;
-        this.task = MinecraftServer.getSchedulerManager()
-                .buildTask(this::tick)
-                .repeat(FRAME_MILLIS, ChronoUnit.MILLIS)
-                .schedule();
+        this.overlay.set(splatter.player, OverlayLayer.BLOOD,
+                TEXTURES[splatter.direction.ordinal()][splatter.variant][splatter.frame]);
     }
 
     /**
      * Builds the texture key for every cell of the direction × variant × frame grid.
      *
-     * @return the keys, indexed the same way
+     * @return the keys, indexed {@code [direction][variant][frame]}
      */
-    private static Key[] buildTextures() {
-        Key[] textures = new Key[BloodDirection.values().length * VARIANTS * FRAMES];
-        for (BloodDirection direction : BloodDirection.values()) {
-            for (int variant = 0; variant < VARIANTS; variant++) {
-                for (int frame = 0; frame < FRAMES; frame++) {
-                    int index = (direction.ordinal() * VARIANTS + variant) * FRAMES + frame;
-                    String name = "%s%s_%d_%d".formatted(
-                            TEXTURE_PATH, direction.name().toLowerCase(Locale.ROOT), variant + 1, frame + 1);
-                    textures[index] = Key.key("cygnus", name);
-                }
-            }
-        }
-        return textures;
+    private static Key[][][] buildTextures() {
+        return OverlayTextureKeys.cube(
+                TEXTURE_PATH,
+                BloodDirection.values().length, VARIANTS, FRAMES,
+                direction -> BloodDirection.values()[direction].name().toLowerCase(Locale.ROOT),
+                OverlayTextureKeys.ONE_BASED,
+                OverlayTextureKeys.ONE_BASED
+        );
     }
 
     /**

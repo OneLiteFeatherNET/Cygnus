@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -119,6 +120,24 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
         service.clear(player);
 
         assertNull(overlay.of(player, OverlayLayer.BLOOD));
+    }
+
+    @Test
+    @DisplayName("The fade task only runs while something is bleeding")
+    void fadeTaskTracksActiveSplatters(Env env) {
+        RecordingOverlay overlay = new RecordingOverlay();
+        Player player = spawn(env);
+        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
+        assertFalse(service.fadeTask.isRunning(), "nothing is bleeding yet");
+
+        service.splatter(player, BloodDirection.FRONT);
+        assertTrue(service.fadeTask.isRunning(), "a hit has to keep the fade task alive");
+
+        for (int remaining = 0; remaining < BloodSplatterService.FRAMES; remaining++) {
+            service.tick();
+        }
+
+        assertFalse(service.fadeTask.isRunning(), "the task stops itself once nothing is bleeding any more");
     }
 
     @Test
