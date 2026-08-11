@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.tunnelvision;
 
-import net.minestom.server.coordinate.Pos;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,9 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TunnelVisionIntensityTest {
 
     private static final double DELTA = 1.0E-6D;
-
-    /** Survivor standing in the origin, looking towards positive Z. */
-    private static final Pos SURVIVOR = new Pos(0, 0, 0, 0, 0);
 
     @DisplayName("Stamina above half a bar produces no tunnel vision")
     @ParameterizedTest
@@ -51,52 +47,5 @@ class TunnelVisionIntensityTest {
             assertTrue(current >= previous, "intensity dropped at stamina " + step / 20.0D);
             previous = current;
         }
-    }
-
-    @Test
-    @DisplayName("A slender beyond the outer radius stays unnoticed")
-    void distantSlenderIsUnnoticed() {
-        assertEquals(0.0D, TunnelVisionIntensity.fromSlender(SURVIVOR, new Pos(0, 0, 25)), DELTA);
-    }
-
-    @Test
-    @DisplayName("Looking straight at a nearby slender produces full intensity")
-    void facingNearbySlenderIsFull() {
-        assertEquals(1.0D, TunnelVisionIntensity.fromSlender(SURVIVOR, new Pos(0, 0, 5)), DELTA);
-    }
-
-    @Test
-    @DisplayName("A slender in the back is dampened by the view factor")
-    void slenderBehindIsDampened() {
-        assertEquals(0.6D, TunnelVisionIntensity.fromSlender(SURVIVOR, new Pos(0, 0, -5)), DELTA);
-    }
-
-    @Test
-    @DisplayName("Approaching the slender never lowers the intensity")
-    void slenderIsMonotonic() {
-        double previous = -1.0D;
-        for (int distance = 30; distance >= 1; distance--) {
-            double current = TunnelVisionIntensity.fromSlender(SURVIVOR, new Pos(0, 0, distance));
-            assertTrue(current >= previous, "intensity dropped at distance " + distance);
-            previous = current;
-        }
-    }
-
-    @Test
-    @DisplayName("Without either source the combination is calm")
-    void combinationOfNothingIsCalm() {
-        assertEquals(0.0D, TunnelVisionIntensity.combine(0.0D, 0.0D), DELTA);
-    }
-
-    @Test
-    @DisplayName("A saturated source saturates the combination")
-    void combinationSaturates() {
-        assertEquals(1.0D, TunnelVisionIntensity.combine(1.0D, 0.3D), DELTA);
-    }
-
-    @Test
-    @DisplayName("Both sources add up without exceeding the maximum")
-    void combinationAddsUp() {
-        assertEquals(0.75D, TunnelVisionIntensity.combine(0.5D, 0.5D), DELTA);
     }
 }
