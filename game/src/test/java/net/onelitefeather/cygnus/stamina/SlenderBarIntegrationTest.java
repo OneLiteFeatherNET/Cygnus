@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
 
     @Test
-    void testActivatingSlenderBarShowsFullProgressBarImmediately(@NotNull Env env) {
+    void testActivationShowsFullBar(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
@@ -53,7 +53,7 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    void testRegenerationStopsExactlyAtFullBar(@NotNull Env env) {
+    void testRegenerationStopsAtFullBar(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
@@ -83,7 +83,7 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    void testCannotReactivateBeforeSufficientRegeneration(@NotNull Env env) {
+    void testCannotReactivateTooEarly(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
@@ -106,7 +106,32 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    void testAutomaticDepletionPlaysTeleportSoundToNearbyPlayers(@NotNull Env env) {
+    void testCanReactivateAtThreshold(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
+
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        slenderBar.start();
+        slenderBar.changeStatus(); // READY -> DRAINING
+
+        // 34 ticks to fully drain and auto-switch to REGENERATING at currentTime == -0.5,
+        // then 21 more ticks of +0.5 regeneration land currentTime exactly on 10.0.
+        for (int i = 0; i < 55; i++) {
+            slenderBar.consume();
+        }
+
+        boolean reactivated = slenderBar.changeStatus();
+
+        assertTrue(reactivated, "the javadoc says regeneration must \"reach\" the threshold - " +
+                "landing exactly on it should be sufficient, not just exceeding it");
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAutoDepletionPlaysTeleportSound(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
