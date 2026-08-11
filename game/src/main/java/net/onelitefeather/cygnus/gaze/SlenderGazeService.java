@@ -7,6 +7,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
+import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.common.util.PlayerState;
 import net.onelitefeather.cygnus.common.util.RepeatingTask;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
@@ -87,13 +88,13 @@ public final class SlenderGazeService {
         node.addListener(GameStartEvent.class, event -> {
             this.startTask();
             for (Player survivor : survivors.get()) {
-                this.watch(survivor);
+                this.track(survivor);
             }
         });
         node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(GameFinishEvent.class, event -> {
-            this.clear();
+            this.clearAll();
             this.stopTask();
         });
     }
@@ -107,18 +108,19 @@ public final class SlenderGazeService {
 
     /**
      * Stops the update task. Does nothing if it is not running. Leaves whatever is on a tracked
-     * survivor's screen where it is — pair with {@link #clear()} where every screen needs wiping too.
+     * survivor's screen where it is — pair with {@link #clearAll()} where every screen needs wiping
+     * too.
      */
     public void stopTask() {
         this.task.stop();
     }
 
     /**
-     * Starts watching a survivor.
+     * Starts drawing for a survivor.
      *
      * @param survivor the survivor to draw for
      */
-    public void watch(Player survivor) {
+    public void track(Player survivor) {
         this.survivors.put(survivor, survivor);
     }
 
@@ -135,7 +137,7 @@ public final class SlenderGazeService {
     /**
      * Clears every tracked survivor's screen and forgets all of them.
      */
-    public void clear() {
+    public void clearAll() {
         for (Player survivor : this.survivors.values()) {
             this.overlay.set(survivor, OverlayLayer.GLITCH, null);
         }
@@ -156,7 +158,7 @@ public final class SlenderGazeService {
      * @param level  the level between {@code 0} and {@code SlenderGaze.LEVELS - 1}
      */
     public void show(Player player, int level) {
-        int clamped = Math.min(SlenderGaze.LEVELS - 1, Math.max(0, level));
+        int clamped = Helper.clamp(level, 0, SlenderGaze.LEVELS - 1);
         this.overlay.set(player, OverlayLayer.GLITCH, TEXTURES[clamped][this.frame % FRAMES]);
     }
 

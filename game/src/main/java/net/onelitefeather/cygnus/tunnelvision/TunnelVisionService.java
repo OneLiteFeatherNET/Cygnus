@@ -78,18 +78,16 @@ public final class TunnelVisionService {
     }
 
     /**
-     * Starts drawing for the given survivors, each with a fresh stage.
+     * Starts drawing for a survivor, with a fresh stage.
      * <p>
      * This is bookkeeping only: it does not touch the update task, so {@link #registerListener} can
      * compose it with {@link #startTask()} instead of the two always happening together.
      * </p>
      *
-     * @param survivors the survivors to draw for
+     * @param survivor the survivor to draw for
      */
-    public void track(Set<Player> survivors) {
-        for (Player survivor : survivors) {
-            this.survivors.put(survivor, new Tracked(survivor, new TunnelVisionStage()));
-        }
+    public void track(Player survivor) {
+        this.survivors.put(survivor, new Tracked(survivor, new TunnelVisionStage()));
     }
 
     /**
@@ -104,8 +102,10 @@ public final class TunnelVisionService {
      */
     public void registerListener(EventNode<Event> node, Supplier<Set<Player>> survivors) {
         node.addListener(GameStartEvent.class, event -> {
-            this.track(survivors.get());
             this.startTask();
+            for (Player survivor : survivors.get()) {
+                this.track(survivor);
+            }
         });
         node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));

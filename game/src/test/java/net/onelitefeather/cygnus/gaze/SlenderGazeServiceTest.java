@@ -45,7 +45,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
         SlenderGazeService service = new SlenderGazeService(overlay, () -> slender);
-        service.watch(survivor);
+        service.track(survivor);
 
         service.tick();
 
@@ -60,7 +60,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, -5));
         SlenderGazeService service = new SlenderGazeService(overlay, () -> slender);
-        service.watch(survivor);
+        service.track(survivor);
 
         service.tick();
 
@@ -75,7 +75,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
         SlenderGazeService service = new SlenderGazeService(overlay, () -> slender);
-        service.watch(survivor);
+        service.track(survivor);
         service.tick();
 
         survivor.teleport(new Pos(0, 40, 0, 180, 0));
@@ -92,7 +92,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
         SlenderGazeService service = new SlenderGazeService(overlay, () -> slender);
-        service.watch(survivor);
+        service.track(survivor);
 
         service.tick();
         Key first = overlay.of(survivor, OverlayLayer.GLITCH);
@@ -108,7 +108,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         RecordingOverlay overlay = new RecordingOverlay();
         Player survivor = connect(env, env.createFlatInstance(), new Pos(0, 40, 0, 0, 0));
         SlenderGazeService service = new SlenderGazeService(overlay, () -> null);
-        service.watch(survivor);
+        service.track(survivor);
 
         service.tick();
 
@@ -123,7 +123,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
         SlenderGazeService service = new SlenderGazeService(overlay, () -> slender);
-        service.watch(survivor);
+        service.track(survivor);
         service.tick();
 
         service.remove(survivor);
@@ -133,30 +133,30 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("Clearing gives every survivor their screen back")
-    void clearWipesEveryone(Env env) {
+    @DisplayName("Clearing everyone gives every survivor their screen back")
+    void clearAllWipesEveryone(Env env) {
         RecordingOverlay overlay = new RecordingOverlay();
         Instance instance = env.createFlatInstance();
         Player first = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player second = connect(env, instance, new Pos(4, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
         SlenderGazeService service = new SlenderGazeService(overlay, () -> slender);
-        service.watch(first);
-        service.watch(second);
+        service.track(first);
+        service.track(second);
         service.tick();
 
-        service.clear();
+        service.clearAll();
 
         assertNull(overlay.of(first, OverlayLayer.GLITCH));
         assertNull(overlay.of(second, OverlayLayer.GLITCH));
 
         service.tick();
-        assertNull(overlay.of(first, OverlayLayer.GLITCH), "clear must stop the drawing as well");
+        assertNull(overlay.of(first, OverlayLayer.GLITCH), "clearAll must stop the drawing as well");
     }
 
     @Test
     @DisplayName("The start of a round takes the survivors on board")
-    void gameStartWatchesSurvivors(Env env) {
+    void gameStartTracksSurvivors(Env env) {
         RecordingOverlay overlay = new RecordingOverlay();
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
@@ -179,7 +179,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player slender = connect(env, instance, new Pos(0, 40, 5));
         SlenderGazeService service = new SlenderGazeService(overlay, () -> slender);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
-        service.watch(survivor);
+        service.track(survivor);
         service.tick();
 
         EventDispatcher.call(new PlayerDeathEvent(survivor, Component.empty(), Component.empty()));
@@ -197,7 +197,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player slender = connect(env, instance, new Pos(0, 40, 5));
         SlenderGazeService service = new SlenderGazeService(overlay, () -> slender);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
-        service.watch(survivor);
+        service.track(survivor);
         service.tick();
 
         EventDispatcher.call(new GameFinishEvent(GameFinishEvent.Reason.TIME_OVER));
