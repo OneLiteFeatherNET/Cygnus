@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.tunnelvision;
 
+import net.onelitefeather.cygnus.common.util.Helper;
+
 /**
  * Holds the overlay state of a single survivor: which of the discrete stages is currently shown,
  * and where the heartbeat that modulates it stands.
@@ -72,6 +74,6 @@ public final class TunnelVisionStage {
         double pulse = depth * (Math.sin(2.0D * Math.PI * frequency * this.elapsedSeconds) - 1.0D);
 
         int rendered = (int) Math.round(this.baseStage + pulse);
-        return Math.min(MAX_STAGE, Math.max(0, rendered));
+        return Helper.clamp(rendered, 0, MAX_STAGE);
     }
 }

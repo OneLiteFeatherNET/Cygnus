@@ -1,21 +1,17 @@
 package net.onelitefeather.cygnus.tunnelvision;
 
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
-import net.minestom.server.timer.Task;
+import net.onelitefeather.cygnus.common.util.PlayerState;
+import net.onelitefeather.cygnus.common.util.RepeatingTask;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
@@ -33,18 +29,28 @@ import java.util.function.ToDoubleFunction;
  * The slender used to feed into this as well. He now speaks through {@code SlenderGazeService}
  * instead, which asks whether a survivor can see him rather than how near he is.
  * </p>
+ * <p>
+ * Unlike {@code AmbientProvider}, this service is not merely started and stopped by name from
+ * {@code GameStartListener} and {@code Cygnus.finishGame()} — it still exposes {@link #startTask()}
+ * and {@link #stopTask()} for exactly that purpose, but it also has to react the moment a single
+ * survivor dies or disconnects, or the vignette they last saw keeps showing on a screen nobody is
+ * playing through any more. Neither of those listeners knows about individual players today, and
+ * teaching them to would spread a tunnel-vision concern into files that otherwise have nothing to do
+ * with it. Registering here, scoped to this service's own node, keeps that mapping local to the one
+ * class that needs it — {@code BloodSplatterService} and {@code SlenderGazeService} register
+ * themselves for the same reason.
+ * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2.7.0
  */
 public final class TunnelVisionService {
 
     private final TunnelVisionRenderer renderer;
     private final ToDoubleFunction<Player> stamina;
-    private final Map<UUID, Tracked> survivors;
-
-    private @Nullable Task task;
+    private final PlayerState<Tracked> survivors = new PlayerState<>();
+    private final RepeatingTask task = new RepeatingTask(this::tick);
 
     /**
      * Creates a new service.
@@ -55,42 +61,58 @@ public final class TunnelVisionService {
     public TunnelVisionService(TunnelVisionRenderer renderer, ToDoubleFunction<Player> stamina) {
         this.renderer = renderer;
         this.stamina = stamina;
-        this.survivors = new LinkedHashMap<>();
     }
 
     /**
-     * Registers the given survivors and starts the update task if it is not already running.
+     * Starts the update task. Does nothing if it is already running.
+     */
+    public void startTask() {
+        this.task.start(TunnelVisionStage.TICK_MILLIS, ChronoUnit.MILLIS);
+    }
+
+    /**
+     * Stops the update task. Does nothing if it is not running.
+     */
+    public void stopTask() {
+        this.task.stop();
+    }
+
+    /**
+     * Starts drawing for the given survivors, each with a fresh stage.
+     * <p>
+     * This is bookkeeping only: it does not touch the update task, so {@link #registerListener} can
+     * compose it with {@link #startTask()} instead of the two always happening together.
+     * </p>
      *
      * @param survivors the survivors to draw for
      */
-    public void start(Set<Player> survivors) {
+    public void track(Set<Player> survivors) {
         for (Player survivor : survivors) {
-            this.survivors.put(survivor.getUuid(), new Tracked(survivor, new TunnelVisionStage()));
+            this.survivors.put(survivor, new Tracked(survivor, new TunnelVisionStage()));
         }
-
-        if (this.task != null) return;
-        this.task = MinecraftServer.getSchedulerManager()
-                .buildTask(this::tick)
-                .repeat(TunnelVisionStage.TICK_MILLIS, ChronoUnit.MILLIS)
-                .schedule();
     }
 
     /**
      * Hooks the service into the round's lifecycle.
      * <p>
-     * The service listens for itself rather than being called from {@code GameStartListener} and
-     * friends: it needs nothing from them beyond the moment, and keeping the wiring here leaves
-     * their signatures alone.
+     * See the class documentation for why this service registers itself rather than being called by
+     * name the way {@code AmbientProvider} is.
      * </p>
      *
      * @param node      the node to register on
      * @param survivors supplies the survivors of the starting round
      */
     public void registerListener(EventNode<Event> node, Supplier<Set<Player>> survivors) {
-        node.addListener(GameStartEvent.class, event -> this.start(survivors.get()));
+        node.addListener(GameStartEvent.class, event -> {
+            this.track(survivors.get());
+            this.startTask();
+        });
         node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
-        node.addListener(GameFinishEvent.class, event -> this.cleanUp());
+        node.addListener(GameFinishEvent.class, event -> {
+            this.clearAll();
+            this.stopTask();
+        });
     }
 
     /**
@@ -100,22 +122,19 @@ public final class TunnelVisionService {
      * @param player the survivor to drop
      */
     public void remove(Player player) {
-        if (this.survivors.remove(player.getUuid()) == null) return;
+        if (this.survivors.remove(player) == null) return;
         this.renderer.clear(player);
     }
 
     /**
-     * Clears every survivor's screen and stops the update task.
+     * Clears every survivor's screen and stops tracking all of them, without touching the update
+     * task — pair with {@link #stopTask()} to end a round the way {@link #registerListener} does.
      */
-    public void cleanUp() {
+    public void clearAll() {
         for (Tracked tracked : this.survivors.values()) {
             this.renderer.clear(tracked.player());
         }
         this.survivors.clear();
-
-        if (this.task == null) return;
-        this.task.cancel();
-        this.task = null;
     }
 
     /**

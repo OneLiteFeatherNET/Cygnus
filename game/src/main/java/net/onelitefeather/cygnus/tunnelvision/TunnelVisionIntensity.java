@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.tunnelvision;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.onelitefeather.cygnus.common.util.Helper;
 
 /**
  * Turns the two sources of dread — a draining stamina bar and an approaching slender — into a
@@ -51,7 +52,7 @@ public final class TunnelVisionIntensity {
     public static double fromStamina(double normalizedStamina) {
         if (normalizedStamina >= STAMINA_THRESHOLD) return 0.0D;
         double drained = (STAMINA_THRESHOLD - normalizedStamina) / STAMINA_THRESHOLD;
-        return clamp(drained * drained);
+        return Helper.clamp(drained * drained, 0.0D, 1.0D);
     }
 
     /**
@@ -68,7 +69,7 @@ public final class TunnelVisionIntensity {
     public static double fromSlender(Pos survivor, Pos slender) {
         double distance = survivor.distance(slender);
         double span = SLENDER_OUTER_RADIUS - SLENDER_INNER_RADIUS;
-        double proximity = clamp((SLENDER_OUTER_RADIUS - distance) / span);
+        double proximity = Helper.clamp((SLENDER_OUTER_RADIUS - distance) / span, 0.0D, 1.0D);
         if (proximity == 0.0D) return 0.0D;
         return proximity * viewFactor(survivor, slender, distance);
     }
@@ -85,7 +86,9 @@ public final class TunnelVisionIntensity {
      * @return the combined intensity in {@code [0, 1]}
      */
     public static double combine(double stamina, double slender) {
-        return clamp(1.0D - (1.0D - clamp(stamina)) * (1.0D - clamp(slender)));
+        double staminaShare = Helper.clamp(stamina, 0.0D, 1.0D);
+        double slenderShare = Helper.clamp(slender, 0.0D, 1.0D);
+        return Helper.clamp(1.0D - (1.0D - staminaShare) * (1.0D - slenderShare), 0.0D, 1.0D);
     }
 
     /**
@@ -105,15 +108,5 @@ public final class TunnelVisionIntensity {
         ).div(distance);
         double alignment = Math.max(0.0D, survivor.direction().dot(towardsSlender));
         return VIEW_BASE + VIEW_BONUS * alignment;
-    }
-
-    /**
-     * Restricts a value to the {@code [0, 1]} range the whole calculation operates in.
-     *
-     * @param value the value to restrict
-     * @return the restricted value
-     */
-    private static double clamp(double value) {
-        return Math.min(1.0D, Math.max(0.0D, value));
     }
 }

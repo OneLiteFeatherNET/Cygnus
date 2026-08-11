@@ -47,7 +47,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
         TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
-        service.start(Set.of(survivor));
+        service.track(Set.of(survivor));
 
         service.tick();
 
@@ -60,7 +60,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
         TunnelVisionService service = new TunnelVisionService(renderer, player -> FULL_STAMINA);
-        service.start(Set.of(survivor));
+        service.track(Set.of(survivor));
 
         service.tick();
 
@@ -73,7 +73,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
         TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
-        service.start(Set.of(survivor));
+        service.track(Set.of(survivor));
         service.tick();
         renderer.forget();
 
@@ -85,24 +85,36 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("Cleaning up gives every survivor their screen back")
-    void cleanUpClearsEveryone(Env env) {
+    @DisplayName("Clearing everyone gives every survivor their screen back")
+    void clearAllClearsEveryone(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Instance instance = env.createFlatInstance();
         Player first = spawn(env, instance, new Pos(0, 40, 0));
         Player second = spawn(env, instance, new Pos(4, 40, 0));
         TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
-        service.start(Set.of(first, second));
+        service.track(Set.of(first, second));
         service.tick();
 
-        service.cleanUp();
+        service.clearAll();
 
         assertTrue(renderer.wasCleared(first));
         assertTrue(renderer.wasCleared(second));
 
         renderer.forget();
         service.tick();
-        assertNull(renderer.stageOf(first), "cleanup must stop the drawing as well");
+        assertNull(renderer.stageOf(first), "clearing must stop the drawing as well");
+    }
+
+    @Test
+    @DisplayName("Starting and stopping the task is idempotent")
+    void startAndStopTaskAreIdempotent(Env env) {
+        RecordingRenderer renderer = new RecordingRenderer();
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
+
+        service.startTask();
+        service.startTask();
+        service.stopTask();
+        service.stopTask();
     }
 
     @Test
@@ -126,7 +138,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         Player survivor = spawn(env, new Pos(0, 40, 0));
         TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
-        service.start(Set.of(survivor));
+        service.track(Set.of(survivor));
         service.tick();
         renderer.forget();
 
@@ -144,7 +156,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         Player survivor = spawn(env, new Pos(0, 40, 0));
         TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
-        service.start(Set.of(survivor));
+        service.track(Set.of(survivor));
         service.tick();
         renderer.forget();
 

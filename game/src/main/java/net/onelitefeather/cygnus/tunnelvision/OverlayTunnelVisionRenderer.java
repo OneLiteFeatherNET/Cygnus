@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.tunnelvision;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
+import net.onelitefeather.cygnus.overlay.OverlayTextureKeys;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 
 /**
@@ -21,7 +22,8 @@ public final class OverlayTunnelVisionRenderer implements TunnelVisionRenderer {
     /** Where the stage textures live, as {@code camera_overlay} resolves them. */
     static final String TEXTURE_PATH = "gui/tunnel_vision/stage_";
 
-    private static final Key[] TEXTURES = buildTextures();
+    private static final Key[] TEXTURES =
+            OverlayTextureKeys.flat(TEXTURE_PATH, TunnelVisionStage.MAX_STAGE, OverlayTextureKeys.ONE_BASED);
 
     private final ScreenOverlay overlay;
 
@@ -55,18 +57,5 @@ public final class OverlayTunnelVisionRenderer implements TunnelVisionRenderer {
     @Override
     public void clear(Player player) {
         this.overlay.set(player, OverlayLayer.TUNNEL_VISION, null);
-    }
-
-    /**
-     * Builds the texture key for every stage.
-     *
-     * @return the keys, indexed by {@code stage - 1}
-     */
-    private static Key[] buildTextures() {
-        Key[] textures = new Key[TunnelVisionStage.MAX_STAGE];
-        for (int stage = 1; stage <= TunnelVisionStage.MAX_STAGE; stage++) {
-            textures[stage - 1] = Key.key("cygnus", TEXTURE_PATH + stage);
-        }
-        return textures;
     }
 }
