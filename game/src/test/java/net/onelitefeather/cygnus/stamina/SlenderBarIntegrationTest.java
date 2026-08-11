@@ -83,6 +83,33 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    void testHalfDrainedTickShowsAHalfTileInsteadOfDroppingAWholeTile(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
+
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        slenderBar.start();
+        slenderBar.changeStatus(); // READY -> DRAINING, currentTime starts at 16.0
+
+        Collector<ActionBarPacket> collector = connection.trackIncoming(ActionBarPacket.class);
+        slenderBar.consume(); // one 0.5 tick: currentTime becomes 15.5
+
+        collector.assertSingle(packet -> {
+            TextComponent root = assertInstanceOf(TextComponent.class, packet.text());
+            assertEquals("▋".repeat(15), root.content(), "15 full tiles should stay filled after only half a tile drained");
+            assertEquals(2, root.children().size(), "a half-drained tile needs its own segment next to the empty segment");
+            TextComponent half = assertInstanceOf(TextComponent.class, root.children().get(0));
+            assertEquals("▍", half.content(), "the 16th tile should render as a half tile, not disappear entirely");
+            TextComponent empty = assertInstanceOf(TextComponent.class, root.children().get(1));
+            assertEquals("", empty.content(), "no fully empty tiles yet after just one tick");
+        });
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
     void testCannotReactivateTooEarly(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
