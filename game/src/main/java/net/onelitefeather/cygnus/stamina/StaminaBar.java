@@ -22,6 +22,7 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
 
     protected final CygnusPlayer player;
     private final ChronoUnit chronoUnit;
+    private final ExecutionType executionType;
     protected int period;
     protected State state;
     private @Nullable Task task;
@@ -29,32 +30,29 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
     /**
      * Creates a new reference from an {@link StaminaBar}.
      *
-     * @param player     the player who owns the bar
-     * @param chronoUnit the tick interval for the bar
-     * @param period     the tick period for the par
+     * @param player        the player who owns the bar
+     * @param chronoUnit    the tick interval for the bar
+     * @param period        the tick period for the par
+     * @param executionType when in the server tick the periodic {@link #consume()} task runs
      */
-    protected StaminaBar(CygnusPlayer player, ChronoUnit chronoUnit, int period) {
+    protected StaminaBar(CygnusPlayer player, ChronoUnit chronoUnit, int period, ExecutionType executionType) {
         this.player = player;
         this.chronoUnit = chronoUnit;
         this.period = period;
+        this.executionType = executionType;
     }
 
     protected abstract void onStart();
 
     /**
      * Creates a new {@link Task} which executes the {@link StaminaBar#consume()} method on each iteration.
-     * <p>
-     * Runs at {@link ExecutionType#TICK_END} rather than the default {@code TICK_START}: incoming player
-     * packets (e.g. a manual state change via {@link net.minestom.server.event.player.PlayerUseItemEvent})
-     * are handled between those two phases, so this guarantees {@link #consume()} always sees a state
-     * already updated by a same-tick manual transition instead of racing it with stale data.
      */
     public void start() {
         if (task != null) return;
         this.onStart();
         task = MinecraftServer.getSchedulerManager()
                 .buildTask(this::consume)
-                .executionType(ExecutionType.TICK_END)
+                .executionType(executionType)
                 .repeat(this.period, this.chronoUnit).schedule();
     }
 

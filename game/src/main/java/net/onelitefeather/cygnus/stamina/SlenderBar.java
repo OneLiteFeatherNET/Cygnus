@@ -5,6 +5,7 @@ import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.sound.SoundEvent;
+import net.minestom.server.timer.ExecutionType;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
@@ -64,8 +65,15 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private double currentTime;
     private StaminaColors colorState;
 
+    /**
+     * Runs its periodic {@link #consume()} at {@link ExecutionType#TICK_END} rather than the default
+     * {@code TICK_START}: incoming player packets (e.g. a manual state change via
+     * {@link net.minestom.server.event.player.PlayerUseItemEvent}) are handled between those two phases,
+     * so this guarantees {@link #consume()} always sees a state already updated by a same-tick manual
+     * transition instead of racing it with stale data.
+     */
     SlenderBar(CygnusPlayer player) {
-        super(player, ChronoUnit.MILLIS, 500);
+        super(player, ChronoUnit.MILLIS, 500, ExecutionType.TICK_END);
         this.tileChar = "▋";
         this.time = MAX_TIME;
         this.currentTime = time;
@@ -122,7 +130,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
      * status could not be changed, {@code true} otherwise
      */
     public boolean changeStatus() {
-        if (state == State.REGENERATING && this.currentTime <= MIN_TIME_TO_REACTIVATE) return false;
+        if (state == State.REGENERATING && this.currentTime < MIN_TIME_TO_REACTIVATE) return false;
         switch (state) {
             case READY -> enterDraining(false);
             case REGENERATING -> enterDraining(true);
