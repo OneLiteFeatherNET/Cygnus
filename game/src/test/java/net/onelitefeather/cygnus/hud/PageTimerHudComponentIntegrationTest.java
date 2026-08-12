@@ -9,23 +9,19 @@ import net.minestom.server.network.packet.server.play.BossBarPacket;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
-import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.text.TextWidth;
 import net.onelitefeather.cygnus.listener.view.ViewUpdateListener;
 import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MicrotusExtension.class)
-class PageTimerHudComponentIntegrationTest {
+class PageTimerHudComponentIntegrationTest extends CygnusPlayerTestBase {
 
     private static final Key MISC_FONT = Key.key("cygnus", "misc");
 
-    @Disabled("Investigate why this test is broken")
     @Test
     void testViewUpdate(Env env) {
         Instance instance = env.createEmptyInstance();

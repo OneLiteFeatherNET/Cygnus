@@ -10,6 +10,7 @@ import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
+import net.onelitefeather.cygnus.hud.PageCountHudComponent;
 import net.onelitefeather.cygnus.hud.PageTimerHudComponent;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -52,7 +53,7 @@ class PlayerLoginListenerTest extends CygnusPlayerTestBase {
     void testKicksWhenPhaseIsNotLobby(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
-        GamePhase gamePhase = new GamePhase(new PageTimerHudComponent(), () -> {
+        GamePhase gamePhase = new GamePhase(new PageTimerHudComponent(), new PageCountHudComponent(), () -> {
         }, 600, new JumpScareManager());
 
         PlayerLoginListener listener = new PlayerLoginListener(() -> instance, 10, () -> gamePhase, Optional.empty());

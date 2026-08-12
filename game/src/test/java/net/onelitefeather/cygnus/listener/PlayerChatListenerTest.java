@@ -12,6 +12,7 @@ import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.team.TeamHelper;
+import net.onelitefeather.cygnus.hud.PageCountHudComponent;
 import net.onelitefeather.cygnus.hud.PageTimerHudComponent;
 import net.theevilreaper.xerus.api.team.Team;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +37,7 @@ class PlayerChatListenerTest extends CygnusPlayerTestBase {
         spectatorTeam.addPlayer(spectator);
         spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new PageTimerHudComponent(), () -> {}, 600, new JumpScareManager());
+        GamePhase gamePhase = new GamePhase(new PageTimerHudComponent(), new PageCountHudComponent(), () -> {}, 600, new JumpScareManager());
         PlayerChatListener listener = new PlayerChatListener(spectatorTeam, () -> gamePhase);
         PlayerChatEvent event = new PlayerChatEvent(spectator, List.of(spectator, survivor), "hi");
 
@@ -56,7 +57,7 @@ class PlayerChatListenerTest extends CygnusPlayerTestBase {
         spectator.setDisplayName(Component.text(spectator.getUsername()));
 
         Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
-        GamePhase gamePhase = new GamePhase(new PageTimerHudComponent(), () -> {}, 600, new JumpScareManager());
+        GamePhase gamePhase = new GamePhase(new PageTimerHudComponent(), new PageCountHudComponent(), () -> {}, 600, new JumpScareManager());
         PlayerChatListener listener = new PlayerChatListener(spectatorTeam, () -> gamePhase);
 
         PlayerChatEvent event = new PlayerChatEvent(survivor, List.of(survivor, spectator), "hi");

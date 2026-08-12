@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.phase;
 
+import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
@@ -10,11 +11,13 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.listener.player.CygnusPlayerTickListener;
+import net.onelitefeather.cygnus.hud.PageCountHudComponent;
 import net.onelitefeather.cygnus.hud.PageTimerHudComponent;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author theEvilReaper
@@ -24,6 +27,7 @@ import java.util.HashSet;
 public final class GamePhase extends TimedPhase {
 
     private final PageTimerHudComponent pageTimerHudComponent;
+    private final PageCountHudComponent pageCountHudComponent;
     private final JumpScareManager jumpscareManager;
     private @Nullable GameFinishEvent finishEvent;
 
@@ -31,12 +35,14 @@ public final class GamePhase extends TimedPhase {
      * Creates a new instance from the {@link GamePhase}.
      *
      * @param pageTimerHudComponent the HUD component to update
+     * @param pageCountHudComponent the HUD component to update, shares pageTimerHudComponent's visibility lifecycle
      * @param endRunnable      the runnable to execute on end
      * @param gameTime         the game time
      * @param jumpscareManager the jumpscare manager instance
      */
     public GamePhase(
             PageTimerHudComponent pageTimerHudComponent,
+            PageCountHudComponent pageCountHudComponent,
             Runnable endRunnable,
             int gameTime,
             JumpScareManager jumpscareManager
@@ -46,6 +52,7 @@ public final class GamePhase extends TimedPhase {
         this.setTickDirection(TickDirection.DOWN);
         this.setEndTicks(0);
         this.pageTimerHudComponent = pageTimerHudComponent;
+        this.pageCountHudComponent = pageCountHudComponent;
         this.jumpscareManager = jumpscareManager;
         this.setFinishedCallback(endRunnable);
     }
@@ -71,7 +78,9 @@ public final class GamePhase extends TimedPhase {
     protected void onFinish() {
         finishEvent = finishEvent == null ? new GameFinishEvent(GameFinishEvent.Reason.TIME_OVER) : finishEvent;
         MinecraftServer.getGlobalEventHandler().call(finishEvent);
-        this.pageTimerHudComponent.removePlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
+        Set<Player> onlinePlayers = new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers());
+        this.pageTimerHudComponent.removePlayers(onlinePlayers);
+        this.pageCountHudComponent.removePlayers(onlinePlayers);
     }
 
     /**

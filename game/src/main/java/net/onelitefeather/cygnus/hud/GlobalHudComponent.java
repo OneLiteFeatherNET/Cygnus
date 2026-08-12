@@ -5,6 +5,8 @@ import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.theevilreaper.xerus.api.Joinable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -13,6 +15,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public abstract class GlobalHudComponent implements HudComponent, Joinable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalHudComponent.class);
 
     protected final Set<CygnusPlayer> players;
     protected boolean visible = true;
@@ -30,6 +34,8 @@ public abstract class GlobalHudComponent implements HudComponent, Joinable {
         if (player instanceof CygnusPlayer cygnusPlayer) {
             players.add(cygnusPlayer);
             if (consumer != null) consumer.accept(player);
+        } else {
+            LOGGER.debug("Ignored addPlayer for non-CygnusPlayer {}", player.getUsername());
         }
     }
 
@@ -45,6 +51,8 @@ public abstract class GlobalHudComponent implements HudComponent, Joinable {
         if (player instanceof CygnusPlayer cygnusPlayer) {
             players.remove(cygnusPlayer);
             if (consumer != null) consumer.accept(player);
+        } else {
+            LOGGER.debug("Ignored removePlayer for non-CygnusPlayer {}", player.getUsername());
         }
     }
 
