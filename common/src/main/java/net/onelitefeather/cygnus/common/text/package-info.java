@@ -1,4 +1,4 @@
 @NotNullByDefault
-package net.theevilreaper.manis.common.font;
+package net.onelitefeather.cygnus.common.text;
 
 import org.jetbrains.annotations.NotNullByDefault;

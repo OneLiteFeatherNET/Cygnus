@@ -1,4 +1,4 @@
-package net.theevilreaper.manis.common.font;
+package net.onelitefeather.cygnus.common.text;
 
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;

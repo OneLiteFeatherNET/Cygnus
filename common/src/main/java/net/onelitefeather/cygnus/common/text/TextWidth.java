@@ -1,4 +1,4 @@
-package net.theevilreaper.manis.common.font;
+package net.onelitefeather.cygnus.common.text;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

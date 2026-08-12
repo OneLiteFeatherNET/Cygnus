@@ -1,4 +1,4 @@
-package net.theevilreaper.manis.common.font;
+package net.onelitefeather.cygnus.common.text;
 
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Contract;
 
 public final class BackgroundBar {
 
-    private static final Key FONT_KEY = Key.key("manis", "misc");
+    private static final Key FONT_KEY = Key.key("cygnus", "misc");
 
     private static final char GLYPH_1   = '\ue001';
     private static final char GLYPH_2   = '\ue002';
