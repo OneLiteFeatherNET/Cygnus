@@ -1,32 +1,29 @@
 package net.onelitefeather.cygnus.listener.view;
 
 import net.kyori.adventure.text.Component;
-import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.page.PageProvider;
-import net.onelitefeather.cygnus.view.GameView;
+import net.onelitefeather.cygnus.hud.PageCountHudComponent;
+import net.onelitefeather.cygnus.hud.PageTimerHudComponent;
 import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
-import net.theevilreaper.aves.util.Strings;
-import net.theevilreaper.aves.util.TimeFormat;
 
 import java.util.function.Consumer;
 
 public class ViewUpdateListener implements Consumer<ViewUpdateEvent> {
 
-    private final GameView gameView;
+    private final PageTimerHudComponent pageTimerHudComponent;
+    private final PageCountHudComponent pageCountHudComponent;
     private final PageProvider pageProvider;
 
-    public ViewUpdateListener(GameView gameView, PageProvider pageProvider) {
-        this.gameView = gameView;
+    public ViewUpdateListener(PageTimerHudComponent pageTimerHudComponent, PageCountHudComponent pageCountHudComponent, PageProvider pageProvider) {
+        this.pageTimerHudComponent = pageTimerHudComponent;
+        this.pageCountHudComponent = pageCountHudComponent;
         this.pageProvider = pageProvider;
     }
 
     @Override
     public void accept(ViewUpdateEvent event) {
-        int ticks = event.ticks();
-        Component component = Messages.getViewComponent(
-                Strings.getTimeString(TimeFormat.MM_SS, ticks),
-                this.pageProvider.getPageStatus()
-        );
-        this.gameView.updateView(component);
+        Component pageStatus = this.pageProvider.getPageStatus();
+        this.pageTimerHudComponent.update(event.ticks(), pageStatus);
+        this.pageCountHudComponent.update(pageStatus);
     }
 }

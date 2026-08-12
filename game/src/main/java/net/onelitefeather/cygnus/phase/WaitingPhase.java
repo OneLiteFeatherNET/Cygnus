@@ -5,7 +5,7 @@ import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
-import net.onelitefeather.cygnus.view.GameView;
+import net.onelitefeather.cygnus.hud.PageTimerHudComponent;
 
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
@@ -18,16 +18,16 @@ import java.util.HashSet;
 @SuppressWarnings("java:S1185")
 public final class WaitingPhase extends TimedPhase {
 
-    private final GameView gameView;
+    private final PageTimerHudComponent pageTimerHudComponent;
     private final VoidConsumer instanceSwitch;
     private final VoidConsumer teleportLogic;
 
-    public WaitingPhase(GameView gameView, VoidConsumer instanceSwitch, VoidConsumer teleportLogic) {
+    public WaitingPhase(PageTimerHudComponent pageTimerHudComponent, VoidConsumer instanceSwitch, VoidConsumer teleportLogic) {
         super("Waiting", ChronoUnit.SECONDS, 1);
         this.setPaused(false);
         this.setCurrentTicks(3);
         this.setEndTicks(0);
-        this.gameView = gameView;
+        this.pageTimerHudComponent = pageTimerHudComponent;
         this.instanceSwitch = instanceSwitch;
         this.teleportLogic = teleportLogic;
     }
@@ -41,7 +41,7 @@ public final class WaitingPhase extends TimedPhase {
 
     @Override
     protected void onFinish() {
-        this.gameView.addPlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
+        this.pageTimerHudComponent.addPlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
     }
 
     @Override

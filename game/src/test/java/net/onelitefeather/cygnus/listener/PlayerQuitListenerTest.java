@@ -13,7 +13,7 @@ import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
-import net.onelitefeather.cygnus.view.GameViewImpl;
+import net.onelitefeather.cygnus.hud.PageTimerHudComponent;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +48,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         spectatorTeam.addPlayer(spectator);
         spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
+        GamePhase gamePhase = new GamePhase(new PageTimerHudComponent(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
 
         // Cyano's FlexibleListener#failFollowup() can't cleanly express "this event never
@@ -84,7 +84,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(survivor);
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
+        GamePhase gamePhase = new GamePhase(new PageTimerHudComponent(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
 
         env.listen(GameFinishEvent.class)

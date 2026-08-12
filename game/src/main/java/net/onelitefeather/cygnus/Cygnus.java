@@ -76,8 +76,8 @@ import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
-import net.onelitefeather.cygnus.view.GameView;
-import net.onelitefeather.cygnus.view.GameViewImpl;
+import net.onelitefeather.cygnus.hud.PageCountHudComponent;
+import net.onelitefeather.cygnus.hud.PageTimerHudComponent;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -97,7 +97,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final AmbientProvider ambientProvider;
     private final StaminaService staminaService;
     private final PageProvider pageProvider;
-    private final GameView view;
+    private final PageTimerHudComponent pageTimerHudComponent;
+    private final PageCountHudComponent pageCountHudComponent;
     private final AbstractMapProvider mapProvider;
     private final GameConfig gameConfig;
     private final JumpScareManager jumpscareManager;
@@ -117,7 +118,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.mapProvider = gameMapProvider;
         // Falco keeps its region files open, so the loaders have to be released on shutdown
         MinecraftServer.getSchedulerManager().buildShutdownTask(gameMapProvider::close);
-        this.view = new GameViewImpl();
+        this.pageTimerHudComponent = new PageTimerHudComponent();
+        this.pageCountHudComponent = new PageCountHudComponent();
         this.createTeams(this.gameConfig, this.teamService);
         Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
@@ -187,7 +189,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         handler.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
         handler.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
-        handler.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));
+        handler.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.pageTimerHudComponent, this.pageCountHudComponent, this.pageProvider));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
 
         spectatorService.registerListener(handler);
@@ -210,8 +212,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         };
         LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig, gameMapProvider.getActiveInstance());
         this.linearPhaseSeries.add(lobbyPhase);
-        this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
-        this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime(), this.jumpscareManager));
+        this.linearPhaseSeries.add(new WaitingPhase(this.pageTimerHudComponent, instanceSwitch, teamInitializer));
+        this.linearPhaseSeries.add(new GamePhase(this.pageTimerHudComponent, this::finishGame, this.gameConfig.gameTime(), this.jumpscareManager));
         this.linearPhaseSeries.add(new RestartPhase());
     }
 

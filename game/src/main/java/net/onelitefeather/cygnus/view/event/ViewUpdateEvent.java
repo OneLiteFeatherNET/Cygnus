@@ -3,7 +3,9 @@ package net.onelitefeather.cygnus.view.event;
 import net.minestom.server.event.Event;
 
 /**
- * The event is used that the {@link net.onelitefeather.cygnus.view.GameView} needs to be updated.
+ * The event is used to signal that the round's HUD components (e.g. {@link
+ * net.onelitefeather.cygnus.hud.PageTimerHudComponent} and {@link
+ * net.onelitefeather.cygnus.hud.PageCountHudComponent}) need to be updated.
  *
  * @param ticks value to update the view
  * @author theEvilReaper
