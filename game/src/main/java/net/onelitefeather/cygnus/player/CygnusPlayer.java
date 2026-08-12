@@ -11,6 +11,7 @@ import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.player.InstanceSwitchChunkPlayer;
+import net.onelitefeather.cygnus.hud.player.PlayerHudContainer;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -30,12 +31,23 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private boolean blockedSprinting;
     private int heartbeatTicks;
     private boolean heartbeatActive;
+    private int pageCount;
+    private final PlayerHudContainer hudContainer;
 
     public CygnusPlayer(PlayerConnection playerConnection, GameProfile gameProfile) {
         super(playerConnection, gameProfile);
         this.blockedSprinting = false;
         this.heartbeatTicks = 0;
         this.heartbeatActive = false;
+        this.pageCount = 0;
+        this.hudContainer = new PlayerHudContainer();
+    }
+
+    /**
+     * Increates the current page count by one.
+     */
+    public void increasePageCount() {
+        ++this.pageCount;
     }
 
     /**
@@ -164,6 +176,19 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     @Override
     public EntityAttributesPacket getPropertiesPacket() {
         return super.getPropertiesPacket();
+    }
+
+    public int getPageCount() {
+        return pageCount;
+    }
+
+    /**
+     * Returns the container that holds this player's active HUD components.
+     *
+     * @return the player's HUD container
+     */
+    public PlayerHudContainer getHudContainer() {
+        return hudContainer;
     }
 }
 

@@ -27,6 +27,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_ACTIVE_PAGE_COUNT;
 
@@ -155,13 +156,14 @@ public final class PageProvider {
         pageEntity.enableInteraction();
     }
 
-    public void triggerPageFound(Player player, UUID uuid) {
+    public void triggerPageFound(Player player, UUID uuid, Consumer<Player> playerUpdater) {
         PageEntity pageEntity = removeEntity(uuid);
         if (pageEntity == null) {
             LOGGER.debug("Page {} was already claimed when {} interacted, ignoring", uuid, player.getUsername());
             return;
         }
         player.getInventory().addItemStack(pageEntity.getPageItem());
+        playerUpdater.accept(player);
         Broadcaster.broadcast(Messages.getPageFoundComponent(player));
         int foundCount = this.currentFoundedPageCount.incrementAndGet();
         this.updatePageDisplay();

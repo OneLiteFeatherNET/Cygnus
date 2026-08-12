@@ -5,6 +5,8 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.page.PageProvider;
+import net.onelitefeather.cygnus.hud.player.PlayerPageComponent;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.UUID;
@@ -24,6 +26,10 @@ public class PlayerPageInteractListener implements Consumer<PlayerEntityInteract
         Entity target = event.getTarget();
         if (!TeamHelper.isSurvivorTeam(player) || !target.hasTag(Tags.PAGE_TAG)) return;
         UUID uuid = target.getTag(Tags.PAGE_TAG);
-        pageProvider.triggerPageFound(player, uuid);
+        pageProvider.triggerPageFound(player, uuid, player1 -> {
+            CygnusPlayer cygnusPlayer = (CygnusPlayer) player1;
+            cygnusPlayer.increasePageCount();
+            cygnusPlayer.getHudContainer().get(PlayerPageComponent.class).ifPresent(PlayerPageComponent::render);
+        });
     }
 }

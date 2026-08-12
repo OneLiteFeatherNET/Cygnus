@@ -90,7 +90,7 @@ class PageProviderTest {
         AtomicInteger completedEvents = new AtomicInteger();
         env.process().eventHandler().addListener(PageDiscoveryCompletedEvent.class, event -> completedEvents.incrementAndGet());
 
-        runConcurrently(Collections.nCopies(8, (Runnable) () -> pageProvider.triggerPageFound(player, uuid)));
+        runConcurrently(Collections.nCopies(8, (Runnable) () -> pageProvider.triggerPageFound(player, uuid, _ -> {})));
 
         assertEquals(1, completedEvents.get(), "the completion event must fire exactly once, not zero or more than once");
         assertEquals("1 / 1", plainStatus(pageProvider));
@@ -128,7 +128,7 @@ class PageProviderTest {
         env.process().eventHandler().addListener(PageDiscoveryCompletedEvent.class, event -> completedEvents.incrementAndGet());
 
         runConcurrently(entities.stream()
-                .map(entity -> (Runnable) () -> pageProvider.triggerPageFound(player, entity.getHitBoxUUID()))
+                .map(entity -> (Runnable) () -> pageProvider.triggerPageFound(player, entity.getHitBoxUUID(), _ -> {}))
                 .toList());
 
         assertEquals(pageCount + " / " + pageCount, plainStatus(pageProvider),
@@ -164,7 +164,7 @@ class PageProviderTest {
         Player player = env.createPlayer(instance);
 
         List<Runnable> tasks = new ArrayList<>(entities.stream()
-                .map(entity -> (Runnable) () -> pageProvider.triggerPageFound(player, entity.getHitBoxUUID()))
+                .map(entity -> (Runnable) () -> pageProvider.triggerPageFound(player, entity.getHitBoxUUID(), _ -> {}))
                 .toList());
         tasks.add(pageProvider::cleanUp);
 
