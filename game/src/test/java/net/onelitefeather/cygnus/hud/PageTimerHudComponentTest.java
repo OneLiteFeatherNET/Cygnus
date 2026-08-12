@@ -27,7 +27,8 @@ class PageTimerHudComponentTest extends CygnusPlayerTestBase {
 
     private static final TextColor MARKER_PAGES = TextColor.color(254, 254, 250);
     private static final TextColor MARKER_TIMER = TextColor.color(254, 254, 249);
-    private static final int ICON_WIDTH_PX = 9;
+    private static final char ICON_PAGE = '\ue102';
+    private static final char ICON_CLOCK = '\ue101';
     private static final int PADDING_PX = 2;
     private static final int GAP_PX = 4;
 
@@ -92,9 +93,9 @@ class PageTimerHudComponentTest extends CygnusPlayerTestBase {
         component.update(ticks, pageStatus);
 
         Component time = Component.text(Strings.getTimeString(TimeFormat.MM_SS, ticks));
-        Component expected = HudSegment.segment(pageStatus, ICON_WIDTH_PX, PADDING_PX, MARKER_PAGES)
+        Component expected = HudSegment.segment(ICON_PAGE, pageStatus, PADDING_PX, MARKER_PAGES)
                 .append(SpaceFont.positive(GAP_PX))
-                .append(HudSegment.segment(time, ICON_WIDTH_PX, PADDING_PX, MARKER_TIMER));
+                .append(HudSegment.segment(ICON_CLOCK, time, PADDING_PX, MARKER_TIMER));
 
         updateCollector.assertSingle(packet -> {
             assertInstanceOf(BossBarPacket.UpdateTitleAction.class, packet.action());

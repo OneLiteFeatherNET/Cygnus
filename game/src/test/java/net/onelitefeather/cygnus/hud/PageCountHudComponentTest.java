@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PageCountHudComponentTest extends CygnusPlayerTestBase {
 
     private static final TextColor MARKER_PAGES = TextColor.color(254, 254, 250);
-    private static final int ICON_WIDTH_PX = 9;
+    private static final char ICON_PAGE = '\ue102';
     private static final int PADDING_PX = 2;
 
     private Instance instance;
@@ -85,7 +85,7 @@ class PageCountHudComponentTest extends CygnusPlayerTestBase {
         Collector<BossBarPacket> updateCollector = connection.trackIncoming(BossBarPacket.class);
         component.update(pageStatus);
 
-        Component expected = HudSegment.segment(pageStatus, ICON_WIDTH_PX, PADDING_PX, MARKER_PAGES);
+        Component expected = HudSegment.segment(ICON_PAGE, pageStatus, PADDING_PX, MARKER_PAGES);
         updateCollector.assertSingle(packet -> {
             assertInstanceOf(BossBarPacket.UpdateTitleAction.class, packet.action());
             BossBarPacket.UpdateTitleAction updateTitle = (BossBarPacket.UpdateTitleAction) packet.action();

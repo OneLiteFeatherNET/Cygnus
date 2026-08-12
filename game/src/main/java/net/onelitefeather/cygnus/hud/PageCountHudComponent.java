@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 public final class PageCountHudComponent extends GlobalHudComponent {
 
     private static final TextColor MARKER_PAGES = TextColor.color(254, 254, 250);
-    private static final int ICON_WIDTH_PX = 9;
+    private static final char ICON_PAGE = '\ue102';
     private static final int PADDING_PX = 2;
 
     private final BossBar bossBar;
@@ -36,7 +36,7 @@ public final class PageCountHudComponent extends GlobalHudComponent {
      * @param pageStatus the current "found / max" page status component
      */
     public void update(Component pageStatus) {
-        this.bossBar.name(HudSegment.segment(pageStatus, ICON_WIDTH_PX, PADDING_PX, MARKER_PAGES));
+        this.bossBar.name(HudSegment.segment(ICON_PAGE, pageStatus, PADDING_PX, MARKER_PAGES));
     }
 
     @Override
