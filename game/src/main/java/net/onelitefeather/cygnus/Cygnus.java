@@ -38,6 +38,7 @@ import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
+import net.onelitefeather.cygnus.command.GlitchCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
@@ -47,6 +48,7 @@ import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
+import net.onelitefeather.cygnus.gaze.SlenderGazeService;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
@@ -76,12 +78,17 @@ import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
+import net.onelitefeather.cygnus.overlay.ScreenOverlay;
+import net.onelitefeather.cygnus.overlay.EquipmentScreenOverlay;
+import net.onelitefeather.cygnus.overlay.OverlayProperties;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -103,6 +110,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final JumpScareManager jumpscareManager;
     private final SpectatorService spectatorService;
     private final Optional<ResourcePackService> resourcePackService;
+    private final ScreenOverlay screenOverlay;
+    private final SlenderGazeService slenderGazeService;
 
     public Cygnus() {
         Path path = ServiceBootstrap.resolveWorkingDirectory();
@@ -126,6 +135,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
         this.resourcePackService = ResourcePackService.create();
+        this.screenOverlay = new EquipmentScreenOverlay();
+        this.slenderGazeService = new SlenderGazeService(this.screenOverlay, this::currentSlender);
         this.initPhases();
         this.initCommands();
         this.initListener();
@@ -136,6 +147,29 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initCommands() {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
+        manager.register(new GlitchCommand(this.slenderGazeService));
+    }
+
+    /**
+     * Looks up the player currently playing the slender.
+     *
+     * @return the slender, or {@code null} while the role is unassigned
+     */
+    private @Nullable Player currentSlender() {
+        return this.teamService.getTeam(GameConfig.SLENDER_KEY)
+                .flatMap(team -> team.getPlayers().stream().findFirst())
+                .orElse(null);
+    }
+
+    /**
+     * Collects the players that are currently survivors.
+     *
+     * @return the survivor team's players
+     */
+    private Set<Player> currentSurvivors() {
+        return this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
+                .map(team -> Set.copyOf(team.getPlayers()))
+                .orElseGet(Set::of);
     }
 
     private void initListener() {
@@ -188,6 +222,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientSettingsPacket.class, CygnusSettingsListener::listener);
 
         spectatorService.registerListener(handler);
+
+        // Without the pack the vignette font does not exist and survivors would stare at an
+        // empty box, so the effect stays off wherever the pack is not delivered.
+        if (OverlayProperties.enabled()) {
+            this.slenderGazeService.registerListener(handler, this::currentSurvivors);
+        }
     }
 
     private void initPhases() {
