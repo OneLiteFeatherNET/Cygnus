@@ -278,6 +278,7 @@ No new event, listener, or polling task is introduced — page-count changes are
 - `Cygnus.java` (constructs `new GameViewImpl()`) constructs `PageTimerHudComponent` and `PageCountHudComponent` instead.
 - `GamePhase`/`WaitingPhase` (constructor parameter `GameView gameView`, used only for `addPlayers`/`removePlayers` on round start/end) take `PageTimerHudComponent` instead — `GlobalHudComponent` already implements `Joinable` (Section 2), so the call sites (`this.gameView.addPlayers(...)` / `.removePlayers(...)`) are unchanged apart from the type.
 - `ViewUpdateListener` takes both new components instead of `GameView` (Section 5.4).
+- `PageCountHudComponent` shares `PageTimerHudComponent`'s visibility lifecycle: `GamePhase`/`WaitingPhase` take a second constructor parameter for it and call `addPlayers`/`removePlayers` on both components together (same player set, same call sites) — both bars appear and disappear for survivors at the same moments `GameView` used to.
 - Tests referencing `GameViewImpl` (`GameViewIntegrationTest`, `PlayerChatListenerTest`, `PlayerQuitListenerTest`, `PlayerLoginListenerTest`) are updated to construct `PageTimerHudComponent` instead; `GameViewIntegrationTest` is renamed/migrated to `PageTimerHudComponentIntegrationTest`.
 
 ### 5.6 Verification & Testing (Additive to Section 4)
