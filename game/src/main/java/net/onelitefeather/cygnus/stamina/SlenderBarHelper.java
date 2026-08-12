@@ -3,12 +3,14 @@ package net.onelitefeather.cygnus.stamina;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
+import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
+import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -86,6 +88,9 @@ public interface SlenderBarHelper {
             boolean hasSameUUID = UUID_COMPARATOR.test(uuid, nearbyEntity.getUuid());
             if (nearbyEntity instanceof Player target && !hasSameUUID && (target.getHealth() > 0)) {
                 target.setHealth(target.getHealth() - damage);
+                // Setting health never raises Minestom's own damage event, so anything reacting to
+                // a hit — the blood splatter above all — would otherwise never hear about it.
+                EventDispatcher.call(new PlayerDamagedEvent(target, center, damage));
             }
         }
     }
