@@ -498,11 +498,11 @@ Create `common/src/test/java/net/onelitefeather/cygnus/common/text/HudSegmentTes
 
 - [ ] **Step 4: Write unit tests for `PageCountHudComponent` and `PageTimerHudComponent`**
 
-Assert `update(...)` sets the expected `BossBar` name (compare against `HudSegment.segment(...)` output built the same way in the test), and that `addPlayer`/`removePlayer` show/hide the bar for the given player (mock `Player`).
+Assert `update(...)` sets the expected `BossBar` name (compare against `HudSegment.segment(...)` output built the same way in the test), and that `addPlayer`/`removePlayer` show/hide the bar for the given player. No Mockito (not a project dependency) — use a real `Player` from the `CygnusPlayerTestBase` + Microtus (`Env`/`MicrotusExtension`) convention, same as Task 1/2's tests. `GlobalHudComponent.addPlayer`/`removePlayer` accept a plain Minestom `Player` (they narrow to `CygnusPlayer` internally), so `env.createPlayer(instance)`'s return value can be passed directly without casting.
 
-- [ ] **Step 5: Implement `PageCountHudComponent`** per design doc Section 5.2 (placeholder `MARKER_PAGES = TextColor.color(254, 254, 250)`).
+- [ ] **Step 5: Implement `PageCountHudComponent`** per design doc Section 5.2. Placeholder constants (all easy to retune once the pack defines real shader slots): `MARKER_PAGES = TextColor.color(254, 254, 250)`, `ICON_WIDTH_PX = 9`, `PADDING_PX = 2`.
 
-- [ ] **Step 6: Implement `PageTimerHudComponent`** per design doc Section 5.3 (placeholder `MARKER_TIMER = TextColor.color(254, 254, 249)`).
+- [ ] **Step 6: Implement `PageTimerHudComponent`** per design doc Section 5.3. Placeholder constants: `MARKER_PAGES = TextColor.color(254, 254, 250)` (same value as `PageCountHudComponent`, both render a pages segment), `MARKER_TIMER = TextColor.color(254, 254, 249)`, `ICON_WIDTH_PX = 9`, `PADDING_PX = 2`, `GAP_PX = 4` (space between the two segments).
 
 - [ ] **Step 7: Run the two new component tests, confirm PASS.**
 
