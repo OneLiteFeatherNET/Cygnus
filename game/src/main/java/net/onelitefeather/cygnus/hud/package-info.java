@@ -1,4 +1,4 @@
 @NotNullByDefault
-package net.onelitefeather.cygnus.event;
+package net.onelitefeather.cygnus.hud;
 
 import org.jetbrains.annotations.NotNullByDefault;

@@ -1,5 +1,20 @@
-package net.onelitefeather.cygnus.hud;
+package net.onelitefeather.cygnus.hud.player;
 
-public class PlayerPageComponent implements HudComponent {
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 
+public class PlayerPageComponent extends PersonalHudComponent {
+
+    public PlayerPageComponent(CygnusPlayer player) {
+        super(player);
+    }
+
+    @Override
+    public void render() {
+
+    }
+
+    @Override
+    public void hide() {
+        this.visible = false;
+    }
 }
