@@ -12,7 +12,8 @@
 
 - Target Package: `net.onelitefeather.cygnus.hud` and `net.onelitefeather.cygnus.hud.player`
 - Must compile cleanly with `./gradlew build`
-- Must preserve backwards-compatibility for existing call sites where applicable
+- Must preserve backwards-compatibility for existing call sites where applicable — the one deliberate, user-approved exception is Task 3's removal of `GameView`/`GameViewImpl` in favor of `PageTimerHudComponent` (design doc Section 5.5); that call-site break is in scope, not a regression to avoid
+- No Mockito in this project (not a dependency); tests needing a `CygnusPlayer` use the existing `CygnusPlayerTestBase` + Microtus (`Env`/`MicrotusExtension`) convention (see `game/src/test/java/net/onelitefeather/cygnus/stamina/StaminaFactoryTest.java`)
 
 ---
 
@@ -34,22 +35,44 @@
 
 Create `game/src/test/java/net/onelitefeather/cygnus/hud/HudComponentTest.java`:
 
+No Mockito in this project — use the existing `CygnusPlayerTestBase` + Microtus (`Env`/`MicrotusExtension`) convention (see `game/src/test/java/net/onelitefeather/cygnus/stamina/StaminaFactoryTest.java` for the established pattern) to get a real connected `CygnusPlayer` instead of a mock:
+
 ```java
 package net.onelitefeather.cygnus.hud;
 
+import net.minestom.server.instance.Instance;
+import net.minestom.testing.Env;
+import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.hud.player.PersonalHudComponent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class HudComponentTest {
+class HudComponentTest extends CygnusPlayerTestBase {
+
+    private static Instance instance;
+    private static CygnusPlayer player;
+
+    @BeforeAll
+    static void setup(@NotNull Env env) {
+        instance = env.createFlatInstance();
+        player = (CygnusPlayer) env.createPlayer(instance);
+    }
+
+    @AfterAll
+    static void teardown(@NotNull Env env) {
+        env.destroyInstance(instance, true);
+        instance = null;
+        player = null;
+    }
 
     @Test
     void testPersonalHudComponentVisibility() {
-        CygnusPlayer mockPlayer = Mockito.mock(CygnusPlayer.class);
-        PersonalHudComponent component = new PersonalHudComponent(mockPlayer) {
+        PersonalHudComponent component = new PersonalHudComponent(player) {
             @Override
             public void render() {}
             @Override
@@ -59,14 +82,13 @@ class HudComponentTest {
         };
 
         assertTrue(component.isVisible());
-        assertEquals(mockPlayer, component.getPlayer());
+        assertEquals(player, component.getPlayer());
         component.hide();
         assertFalse(component.isVisible());
     }
 
     @Test
     void testGlobalHudComponentAddRemovePlayer() {
-        CygnusPlayer mockPlayer = Mockito.mock(CygnusPlayer.class);
         GlobalHudComponent component = new GlobalHudComponent() {
             @Override
             public void render() {}
@@ -77,10 +99,10 @@ class HudComponentTest {
         };
 
         assertTrue(component.getPlayers().isEmpty());
-        component.addPlayer(mockPlayer);
-        assertTrue(component.getPlayers().contains(mockPlayer));
-        component.removePlayer(mockPlayer);
-        assertFalse(component.getPlayers().contains(mockPlayer));
+        component.addPlayer(player);
+        assertTrue(component.getPlayers().contains(player));
+        component.removePlayer(player);
+        assertFalse(component.getPlayers().contains(player));
     }
 }
 ```
@@ -292,17 +314,39 @@ git commit -m "refactor(hud): decouple HudComponent from Joinable and add Person
 
 Create `game/src/test/java/net/onelitefeather/cygnus/hud/player/PlayerHudContainerTest.java`:
 
+No Mockito — same `CygnusPlayerTestBase` + Microtus convention as `HudComponentTest` in Task 1:
+
 ```java
 package net.onelitefeather.cygnus.hud.player;
 
-import net.onelitefeather.cygnus.hud.HudComponent;
+import net.minestom.server.instance.Instance;
+import net.minestom.testing.Env;
+import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PlayerHudContainerTest {
+class PlayerHudContainerTest extends CygnusPlayerTestBase {
+
+    private static Instance instance;
+    private static CygnusPlayer player;
+
+    @BeforeAll
+    static void setup(@NotNull Env env) {
+        instance = env.createFlatInstance();
+        player = (CygnusPlayer) env.createPlayer(instance);
+    }
+
+    @AfterAll
+    static void teardown(@NotNull Env env) {
+        env.destroyInstance(instance, true);
+        instance = null;
+        player = null;
+    }
 
     static class DummyScoreboardComponent extends PersonalHudComponent {
         boolean rendered = false;
@@ -326,9 +370,8 @@ class PlayerHudContainerTest {
 
     @Test
     void testRegisterGetAndRenderAll() {
-        CygnusPlayer mockPlayer = Mockito.mock(CygnusPlayer.class);
         PlayerHudContainer container = new PlayerHudContainer();
-        DummyScoreboardComponent scoreboard = new DummyScoreboardComponent(mockPlayer);
+        DummyScoreboardComponent scoreboard = new DummyScoreboardComponent(player);
 
         container.register(DummyScoreboardComponent.class, scoreboard);
         assertTrue(container.get(DummyScoreboardComponent.class).isPresent());
