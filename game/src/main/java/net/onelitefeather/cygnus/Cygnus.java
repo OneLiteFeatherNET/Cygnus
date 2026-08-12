@@ -37,6 +37,8 @@ import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
+import net.onelitefeather.cygnus.blood.BloodSplatterService;
+import net.onelitefeather.cygnus.command.BloodCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
@@ -66,6 +68,9 @@ import net.onelitefeather.cygnus.listener.game.SlenderItemListener;
 import net.onelitefeather.cygnus.movement.CygnusEntityActionListener;
 import net.onelitefeather.cygnus.movement.PlayerStartSprintingEvent;
 import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
+import net.onelitefeather.cygnus.overlay.EquipmentScreenOverlay;
+import net.onelitefeather.cygnus.overlay.OverlayProperties;
+import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.phase.RestartPhase;
@@ -82,6 +87,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 /**
@@ -103,6 +109,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final JumpScareManager jumpscareManager;
     private final SpectatorService spectatorService;
     private final Optional<ResourcePackService> resourcePackService;
+    private final ScreenOverlay screenOverlay;
+    private final BloodSplatterService bloodSplatterService;
 
     public Cygnus() {
         Path path = ServiceBootstrap.resolveWorkingDirectory();
@@ -126,6 +134,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
         this.resourcePackService = ResourcePackService.create();
+        this.screenOverlay = new EquipmentScreenOverlay();
+        this.bloodSplatterService = new BloodSplatterService(
+                this.screenOverlay,
+                bound -> ThreadLocalRandom.current().nextInt(bound)
+        );
         this.initPhases();
         this.initCommands();
         this.initListener();
@@ -136,6 +149,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initCommands() {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
+        manager.register(new BloodCommand(this.bloodSplatterService));
     }
 
 
@@ -191,6 +205,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
 
         spectatorService.registerListener(handler);
+
+        // Without the pack the splatter textures do not exist, so the effect stays off wherever
+        // the pack is not delivered.
+        if (OverlayProperties.enabled()) {
+            this.bloodSplatterService.registerListener(handler);
+        }
     }
 
     private void initPhases() {
