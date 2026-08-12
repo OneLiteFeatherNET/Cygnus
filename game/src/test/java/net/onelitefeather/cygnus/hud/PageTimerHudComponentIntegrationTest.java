@@ -28,11 +28,10 @@ class PageTimerHudComponentIntegrationTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         PageTimerHudComponent pageTimerHudComponent = new PageTimerHudComponent();
-        PageCountHudComponent pageCountHudComponent = new PageCountHudComponent();
         PageProvider pageProvider = new PageProvider();
 
         env.process().eventHandler().addListener(ViewUpdateEvent.class,
-                new ViewUpdateListener(pageTimerHudComponent, pageCountHudComponent, pageProvider));
+                new ViewUpdateListener(pageTimerHudComponent, pageProvider));
 
         Collector<BossBarPacket> barCollector = connection.trackIncoming(BossBarPacket.class);
 

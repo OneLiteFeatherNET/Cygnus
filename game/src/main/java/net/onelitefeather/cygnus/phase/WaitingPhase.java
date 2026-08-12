@@ -6,7 +6,6 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
-import net.onelitefeather.cygnus.hud.PageCountHudComponent;
 import net.onelitefeather.cygnus.hud.PageTimerHudComponent;
 
 import java.time.temporal.ChronoUnit;
@@ -22,7 +21,6 @@ import java.util.Set;
 public final class WaitingPhase extends TimedPhase {
 
     private final PageTimerHudComponent pageTimerHudComponent;
-    private final PageCountHudComponent pageCountHudComponent;
     private final VoidConsumer instanceSwitch;
     private final VoidConsumer teleportLogic;
 
@@ -30,13 +28,11 @@ public final class WaitingPhase extends TimedPhase {
      * Creates a new instance from the {@link WaitingPhase}.
      *
      * @param pageTimerHudComponent the HUD component to add players to on finish
-     * @param pageCountHudComponent the HUD component to add players to on finish, shares pageTimerHudComponent's visibility lifecycle
      * @param instanceSwitch        the logic to run on start to switch to the game instance
      * @param teleportLogic         the logic to run to teleport players to their spawns
      */
     public WaitingPhase(
             PageTimerHudComponent pageTimerHudComponent,
-            PageCountHudComponent pageCountHudComponent,
             VoidConsumer instanceSwitch,
             VoidConsumer teleportLogic
     ) {
@@ -45,7 +41,6 @@ public final class WaitingPhase extends TimedPhase {
         this.setCurrentTicks(3);
         this.setEndTicks(0);
         this.pageTimerHudComponent = pageTimerHudComponent;
-        this.pageCountHudComponent = pageCountHudComponent;
         this.instanceSwitch = instanceSwitch;
         this.teleportLogic = teleportLogic;
     }
@@ -61,7 +56,6 @@ public final class WaitingPhase extends TimedPhase {
     protected void onFinish() {
         Set<Player> onlinePlayers = new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers());
         this.pageTimerHudComponent.addPlayers(onlinePlayers);
-        this.pageCountHudComponent.addPlayers(onlinePlayers);
     }
 
     @Override

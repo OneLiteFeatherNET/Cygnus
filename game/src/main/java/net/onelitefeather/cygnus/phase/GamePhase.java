@@ -11,7 +11,6 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.listener.player.CygnusPlayerTickListener;
-import net.onelitefeather.cygnus.hud.PageCountHudComponent;
 import net.onelitefeather.cygnus.hud.PageTimerHudComponent;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +26,6 @@ import java.util.Set;
 public final class GamePhase extends TimedPhase {
 
     private final PageTimerHudComponent pageTimerHudComponent;
-    private final PageCountHudComponent pageCountHudComponent;
     private final JumpScareManager jumpscareManager;
     private @Nullable GameFinishEvent finishEvent;
 
@@ -35,14 +33,12 @@ public final class GamePhase extends TimedPhase {
      * Creates a new instance from the {@link GamePhase}.
      *
      * @param pageTimerHudComponent the HUD component to update
-     * @param pageCountHudComponent the HUD component to update, shares pageTimerHudComponent's visibility lifecycle
      * @param endRunnable      the runnable to execute on end
      * @param gameTime         the game time
      * @param jumpscareManager the jumpscare manager instance
      */
     public GamePhase(
             PageTimerHudComponent pageTimerHudComponent,
-            PageCountHudComponent pageCountHudComponent,
             Runnable endRunnable,
             int gameTime,
             JumpScareManager jumpscareManager
@@ -52,7 +48,6 @@ public final class GamePhase extends TimedPhase {
         this.setTickDirection(TickDirection.DOWN);
         this.setEndTicks(0);
         this.pageTimerHudComponent = pageTimerHudComponent;
-        this.pageCountHudComponent = pageCountHudComponent;
         this.jumpscareManager = jumpscareManager;
         this.setFinishedCallback(endRunnable);
     }
@@ -80,7 +75,6 @@ public final class GamePhase extends TimedPhase {
         MinecraftServer.getGlobalEventHandler().call(finishEvent);
         Set<Player> onlinePlayers = new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers());
         this.pageTimerHudComponent.removePlayers(onlinePlayers);
-        this.pageCountHudComponent.removePlayers(onlinePlayers);
     }
 
     /**
