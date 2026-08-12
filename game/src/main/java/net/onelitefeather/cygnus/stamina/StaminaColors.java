@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.stamina;
 
-import net.theevilreaper.aves.util.Components;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;
@@ -18,6 +17,8 @@ enum StaminaColors {
     DRAINING(NamedTextColor.GOLD, NamedTextColor.GRAY),
     REGENERATING(NamedTextColor.GREEN, NamedTextColor.GRAY);
 
+    private static final String HALF_TILE_CHAR = "▍";
+
     private final NamedTextColor completeColor;
     private final NamedTextColor emptyColor;
 
@@ -33,14 +34,25 @@ enum StaminaColors {
     }
 
     /**
-     * Sends a progress bar to the player
+     * Sends a progress bar to the player. A dangling half stamina unit is rendered as its own half tile
+     * instead of being rounded away, so the bar keeps the same width ({@code maxTime} tiles) while still
+     * reflecting every half-step change.
      *
      * @param player      the player to send the progress bar
-     * @param tileChar    the character to use for the progress bar
+     * @param tileChar    the character to use for a full tile
      * @param currentTime the current time to display
+     * @param maxTime     the maximum time the bar represents
      */
-    public void sendProgressBar(Player player, String tileChar, int currentTime) {
-        Component progressBar = Components.getProgressBar(currentTime, 17, 17, tileChar, this.completeColor, this.emptyColor);
+    public void sendProgressBar(Player player, String tileChar, double currentTime, int maxTime) {
+        int fullTiles = (int) currentTime;
+        boolean hasHalfTile = currentTime - fullTiles >= 0.5;
+        int emptyTiles = maxTime - fullTiles - (hasHalfTile ? 1 : 0);
+
+        Component progressBar = Component.text(tileChar.repeat(fullTiles), this.completeColor);
+        if (hasHalfTile) {
+            progressBar = progressBar.append(Component.text(HALF_TILE_CHAR, this.completeColor));
+        }
+        progressBar = progressBar.append(Component.text(tileChar.repeat(emptyTiles), this.emptyColor));
         player.sendActionBar(progressBar);
     }
 

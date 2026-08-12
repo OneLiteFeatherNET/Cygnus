@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.stamina;
 
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.timer.ExecutionType;
 import net.minestom.server.timer.Task;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.Nullable;
@@ -21,6 +22,7 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
 
     protected final CygnusPlayer player;
     private final ChronoUnit chronoUnit;
+    private final ExecutionType executionType;
     protected int period;
     protected State state;
     private @Nullable Task task;
@@ -28,14 +30,16 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
     /**
      * Creates a new reference from an {@link StaminaBar}.
      *
-     * @param player     the player who owns the bar
-     * @param chronoUnit the tick interval for the bar
-     * @param period     the tick period for the par
+     * @param player        the player who owns the bar
+     * @param chronoUnit    the tick interval for the bar
+     * @param period        the tick period for the par
+     * @param executionType when in the server tick the periodic {@link #consume()} task runs
      */
-    protected StaminaBar(CygnusPlayer player, ChronoUnit chronoUnit, int period) {
+    protected StaminaBar(CygnusPlayer player, ChronoUnit chronoUnit, int period, ExecutionType executionType) {
         this.player = player;
         this.chronoUnit = chronoUnit;
         this.period = period;
+        this.executionType = executionType;
     }
 
     protected abstract void onStart();
@@ -48,6 +52,7 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
         this.onStart();
         task = MinecraftServer.getSchedulerManager()
                 .buildTask(this::consume)
+                .executionType(executionType)
                 .repeat(this.period, this.chronoUnit).schedule();
     }
 

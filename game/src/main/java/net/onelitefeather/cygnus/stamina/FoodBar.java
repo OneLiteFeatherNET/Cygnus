@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.stamina;
 
 import net.minestom.server.event.EventDispatcher;
+import net.minestom.server.timer.ExecutionType;
 import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 
@@ -30,7 +31,7 @@ public non-sealed class FoodBar extends StaminaBar {
      * @param player who owns the bar
      */
     FoodBar(CygnusPlayer player) {
-        super(player, ChronoUnit.MILLIS, 1000);
+        super(player, ChronoUnit.MILLIS, 1000, ExecutionType.TICK_START);
         state = State.READY;
         this.currentSpeedCount = MAX_FOOD;
     }
