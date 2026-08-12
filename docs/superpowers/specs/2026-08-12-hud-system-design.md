@@ -216,74 +216,74 @@ public class PlayerHudContainer {
 
 ---
 
-## 5. Concrete Global HUD Components (Pages & Timer)
+## 5. Concrete Global HUD Component (Pages + Timer)
 
 This section mirrors the finished `net.theevilreaper.manis.hud` pattern from the sibling Manis project (sealed `HudComponent` → `AbstractHudComponent` holding a single `BossBar` → concrete components using `BackgroundBar`/`SpaceFont`/`TextWidth` glyph segments), but implemented on top of the `GlobalHudComponent` base kept from Section 2 rather than introducing a parallel sealed hierarchy.
+
+**Revision note:** an earlier revision of this section specified two separate BossBars (`PageCountHudComponent` standalone + `PageTimerHudComponent` combined). In-game testing showed two independently-positioned BossBars rendering cramped/overlapping with no clean way to separate them (per-vertex shader color-matching was considered and rejected — see below). `PageCountHudComponent` was removed; `PageTimerHudComponent` is the only HUD BossBar and already covers both pieces of information.
 
 ### 5.1 `HudSegment` (Rendering Primitive)
 
 Target: `common/src/main/java/net/onelitefeather/cygnus/common/text/HudSegment.java` (same package as `BackgroundBar`/`SpaceFont`/`TextWidth`, pure rendering logic with no game dependencies).
 
-Builds one reusable "icon + background-wrapped text" segment: a fixed pixel offset reserved for an icon glyph (not yet assigned — deferred to a later iteration), followed by `BackgroundBar.wrap(text, paddingPx, tint)`.
+Builds one reusable "icon + background-wrapped text" segment: an icon glyph from the `cygnus:misc` font, followed by `BackgroundBar.wrap(text, paddingPx, tint)`.
 
 ```java
-public static Component segment(Component text, int iconWidthPx, int paddingPx, TextColor tint) {
-    return SpaceFont.positive(iconWidthPx)
-            .append(BackgroundBar.wrap(text, paddingPx, tint));
+public static Component segment(char icon, Component text, int paddingPx, TextColor tint) {
+    Component iconGlyph = Component.text(String.valueOf(icon))
+            .font(FONT_KEY).color(tint).shadowColor(ShadowColor.none());
+    Component bar = BackgroundBar.wrap(text, paddingPx, tint).font(Style.DEFAULT_FONT);
+    return iconGlyph.append(bar);
 }
 ```
 
-The `tint` parameter doubles as the shader marker color (see Manis's `AbstractHudComponent`/`HealthComponent` convention: a near-white, per-component-unique `TextColor` that a resource-pack shader keys off to position the bar on screen). Cygnus does not yet have reserved marker colors for these two components, so placeholder constants are used (`MARKER_PAGES = TextColor.color(254, 254, 250)`, `MARKER_TIMER = TextColor.color(254, 254, 249)`) — easy to swap once the pack defines real slots.
+The `tint` parameter is applied to both the icon and the bar. It was originally scoped as a "shader marker color" (see Manis's `AbstractHudComponent`/`HealthComponent` convention: a per-component-unique `TextColor` a resource-pack shader keys off to reposition the bar on screen) — that idea was explored for separating multiple BossBars (see the revision note above) but abandoned: the marker color only sits on the icon/bar glyphs, not on the page-count digits or the time text (which keep their own colors, e.g. green/red for found/max), so a color-keyed shader would move the icon away from the numbers it labels. `tint` today is just the bar's visual color; current values: `MARKER_PAGES = TextColor.color(254, 254, 250)`, `MARKER_TIMER = TextColor.color(254, 254, 249)`.
 
-### 5.2 `PageCountHudComponent` (standalone, one segment)
+Icon glyphs (`cygnus:hud/clock.png` for the timer, `cygnus:item/page/page_1.png` reused for pages) are registered in cygnus-pack's `assets/cygnus/font/misc.json` at codepoints `\ue101`/`\ue102`, sized `ascent: 7, height: 8` to match vanilla `minecraft:default` text's row height (an earlier attempt at `ascent: 10, height: 13`, matching the bar glyphs, made the detailed icon artwork illegible at that scale). Their measured advance widths (`font-widths.json`, `cygnus:misc` — `57601: 9`, `57602: 7`) are each icon's opaque-pixel bounding box scaled to height 8, +1px per Minecraft's bitmap-provider advance rule (see `BackgroundBar`'s Javadoc for that formula).
 
-Target: `game/src/main/java/net/onelitefeather/cygnus/hud/PageCountHudComponent.java`.
-
-A `GlobalHudComponent` holding its own `BossBar` (same construction pattern as the current `GameViewImpl`: `BossBar.bossBar(Component.empty(), 1f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS)`). Exposes an `update(Component pageStatus)` method that rebuilds the bar's name from a single `HudSegment.segment(pageStatus, ICON_WIDTH_PX, PADDING_PX, MARKER_PAGES)`. `pageStatus` is sourced from `PageProvider.getPageStatus()` (already the live `"x / y"` component, updated on every page find).
-
-### 5.3 `PageTimerHudComponent` (composite, two segments)
+### 5.2 `PageTimerHudComponent` (single BossBar, two segments)
 
 Target: `game/src/main/java/net/onelitefeather/cygnus/hud/PageTimerHudComponent.java`.
 
-A `GlobalHudComponent` that **replaces `GameView`/`GameViewImpl`** (functionally identical role: the single combined time+pages BossBar shown to survivors during a round). Exposes `update(int ticks, Component pageStatus)`, which formats `ticks` via the existing `Strings.getTimeString(TimeFormat.MM_SS, ticks)` helper and joins two `HudSegment.segment(...)` calls (pages first, then time, using `MARKER_PAGES`/`MARKER_TIMER` respectively) with a `SpaceFont.positive(GAP_PX)` gap between them:
+A `GlobalHudComponent` that **replaces `GameView`/`GameViewImpl`** (functionally identical role: the single combined time+pages BossBar shown to survivors during a round). Exposes `update(int ticks, Component pageStatus)`, which formats `ticks` via the existing `Strings.getTimeString(TimeFormat.MM_SS, ticks)` helper and joins two `HudSegment.segment(...)` calls (pages first, then time, each with its own icon char and marker color) with a `SpaceFont.positive(GAP_PX)` gap between them:
 
 ```java
 public void update(int ticks, Component pageStatus) {
     Component time = Component.text(Strings.getTimeString(TimeFormat.MM_SS, ticks));
-    bossBar.name(HudSegment.segment(pageStatus, ICON_WIDTH_PX, PADDING_PX, MARKER_PAGES)
+    bossBar.name(HudSegment.segment(ICON_PAGE, pageStatus, PADDING_PX, MARKER_PAGES)
             .append(SpaceFont.positive(GAP_PX))
-            .append(HudSegment.segment(time, ICON_WIDTH_PX, PADDING_PX, MARKER_TIMER)));
+            .append(HudSegment.segment(ICON_CLOCK, time, PADDING_PX, MARKER_TIMER)));
 }
 ```
 
-### 5.4 Data Flow (No New Timer/Event Needed)
+`addPlayer`/`removePlayer` are overridden to show/hide the `BossBar` via `player.showBossBar(...)`/`hideBossBar(...)`, delegating to `GlobalHudComponent`'s `CygnusPlayer`-narrowing tracking logic through a wrapping `Consumer`.
 
-Cygnus already ticks a round countdown every second: `GamePhase.onUpdate()` (via the Xerus `TimedPhase` base) calls `EventDispatcher.call(new ViewUpdateEvent(getCurrentTicks()))` once per second, currently consumed by `ViewUpdateListener`, which reads `pageProvider.getPageStatus()` and calls `gameView.updateView(...)`. This listener is repointed at the two new components instead:
+### 5.3 Data Flow (No New Timer/Event Needed)
+
+Cygnus already ticks a round countdown every second: `GamePhase.onUpdate()` (via the Xerus `TimedPhase` base) calls `EventDispatcher.call(new ViewUpdateEvent(getCurrentTicks()))` once per second, currently consumed by `ViewUpdateListener`, which reads `pageProvider.getPageStatus()` and calls `gameView.updateView(...)`. This listener is repointed at the new component instead:
 
 ```java
 @Override
 public void accept(ViewUpdateEvent event) {
     Component pageStatus = this.pageProvider.getPageStatus();
     this.pageTimerHudComponent.update(event.ticks(), pageStatus);
-    this.pageCountHudComponent.update(pageStatus);
 }
 ```
 
 No new event, listener, or polling task is introduced — page-count changes are picked up on the next per-second tick, matching the existing precedent (the current combined time+pages bar already only refreshes once per second).
 
-### 5.5 Migration of `GameView`/`GameViewImpl`
+### 5.4 Migration of `GameView`/`GameViewImpl`
 
 `GameView` (interface) and `GameViewImpl` are deleted; `PageTimerHudComponent` takes over their role one-for-one:
 
-- `Cygnus.java` (constructs `new GameViewImpl()`) constructs `PageTimerHudComponent` and `PageCountHudComponent` instead.
+- `Cygnus.java` (constructs `new GameViewImpl()`) constructs `PageTimerHudComponent` instead.
 - `GamePhase`/`WaitingPhase` (constructor parameter `GameView gameView`, used only for `addPlayers`/`removePlayers` on round start/end) take `PageTimerHudComponent` instead — `GlobalHudComponent` already implements `Joinable` (Section 2), so the call sites (`this.gameView.addPlayers(...)` / `.removePlayers(...)`) are unchanged apart from the type.
-- `ViewUpdateListener` takes both new components instead of `GameView` (Section 5.4).
-- `PageCountHudComponent` shares `PageTimerHudComponent`'s visibility lifecycle: `GamePhase`/`WaitingPhase` take a second constructor parameter for it and call `addPlayers`/`removePlayers` on both components together (same player set, same call sites) — both bars appear and disappear for survivors at the same moments `GameView` used to.
+- `ViewUpdateListener` takes the new component instead of `GameView` (Section 5.3).
 - Tests referencing `GameViewImpl` (`GameViewIntegrationTest`, `PlayerChatListenerTest`, `PlayerQuitListenerTest`, `PlayerLoginListenerTest`) are updated to construct `PageTimerHudComponent` instead; `GameViewIntegrationTest` is renamed/migrated to `PageTimerHudComponentIntegrationTest`.
 
-### 5.6 Verification & Testing (Additive to Section 4)
+### 5.5 Verification & Testing (Additive to Section 4)
 
-1. `HudSegmentTest` (common): the icon offset is prepended correctly and the segment's total measured width (`TextWidth.widthOf`) matches `iconWidthPx + 2*paddingPx + textWidth`.
-2. `PageCountHudComponentTest` / `PageTimerHudComponentTest` (game): `update(...)` produces the expected `BossBar` name content; `addPlayer`/`removePlayer` show/hide the bar correctly.
+1. `HudSegmentTest` (common): the segment's total measured width (`TextWidth.widthOf`) matches the icon glyph's own measured width + `2*paddingPx` + the text's measured width.
+2. `PageTimerHudComponentTest` (game): `update(...)` produces the expected `BossBar` name content; `addPlayer`/`removePlayer` show/hide the bar correctly.
 3. `PageTimerHudComponentIntegrationTest` replaces `GameViewIntegrationTest`.
 4. `./gradlew build` stays green after the `GameView`/`GameViewImpl` removal (no leftover references).
