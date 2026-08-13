@@ -17,11 +17,11 @@ import java.util.concurrent.ThreadLocalRandom;
 @SuppressWarnings("java:S3252")
 public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
 
-    private static final AttributeModifier SPEED_MODIFIER_SPRINTING =
-            new AttributeModifier(Key.key("minecraft:sprinting"), 0.25, AttributeOperation.ADD_MULTIPLIED_TOTAL);
+    static final AttributeModifier SPEED_MODIFIER_SPRINTING =
+            new AttributeModifier(Key.key("cygnus:sprinting"), 0.25, AttributeOperation.ADD_MULTIPLIED_TOTAL);
 
-    private static final AttributeModifier DISABLED_SPRINT_MODIFIER =
-            new AttributeModifier(Key.key("minecraft:sprinting"), 0.0, AttributeOperation.ADD_MULTIPLIED_TOTAL);
+    static final AttributeModifier DISABLED_SPRINT_MODIFIER =
+            new AttributeModifier(Key.key("cygnus:sprinting"), 0.0, AttributeOperation.ADD_MULTIPLIED_TOTAL);
 
     private static final float HEALTH_THRESHOLD = 6.0f; // 3 hearts
     private static final int MAX_INTERVAL_TICKS = 36;   // Every 1.8s (slow, subtle pulse at start)
@@ -55,6 +55,8 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     @Override
     public void setSprinting(boolean sprinting) {
         if (blockedSprinting) {
+            this.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(SPEED_MODIFIER_SPRINTING);
+            this.getAttribute(Attribute.MOVEMENT_SPEED).addModifier(DISABLED_SPRINT_MODIFIER);
             this.entityMeta.setSprinting(false);
             this.sendSpringPackets();
             return;
