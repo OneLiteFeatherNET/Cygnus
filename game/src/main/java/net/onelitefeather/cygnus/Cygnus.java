@@ -34,7 +34,10 @@ import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
+import net.minestom.server.entity.EntityType;
 import net.minestom.server.listener.EntityActionListener;
+import net.minestom.server.listener.common.SettingsListener;
+import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.StartCommand;
@@ -49,6 +52,7 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
+import net.onelitefeather.cygnus.listener.CygnusSettingsListener;
 import net.onelitefeather.cygnus.listener.PlayerChatListener;
 import net.onelitefeather.cygnus.listener.PlayerDeathListener;
 import net.onelitefeather.cygnus.listener.PlayerLoginListener;
@@ -189,6 +193,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
         handler.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
+        MinecraftServer.getPacketListenerManager().setPlayListener(ClientSettingsPacket.class, CygnusSettingsListener::listener);
 
         spectatorService.registerListener(handler);
     }
@@ -220,7 +225,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.staminaService.cleanUp();
         this.ambientProvider.stopTask();
         this.jumpscareManager.cleanUp();
+        this.teamService.getTeam(GameConfig.SLENDER_KEY)
+                .ifPresent(slenderTeam -> slenderTeam.getPlayers()
+                        .forEach(player -> player.switchEntityType(EntityType.PLAYER)));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, EntityActionListener::listener);
+        MinecraftServer.getPacketListenerManager().setPlayListener(ClientSettingsPacket.class, SettingsListener::listener);
     }
 
     private void triggerViewRuleUpdate(@NotNull Player player) {
