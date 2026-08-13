@@ -16,17 +16,13 @@ import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
-
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 
 /**
  * Integration test verifying that the {@link SlenderBar} renders its progress bar correctly.
