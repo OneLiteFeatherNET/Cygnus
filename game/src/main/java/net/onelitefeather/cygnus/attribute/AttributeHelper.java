@@ -1,17 +1,28 @@
 package net.onelitefeather.cygnus.attribute;
 
+import net.kyori.adventure.key.Key;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
+import net.minestom.server.entity.attribute.AttributeModifier;
+import net.minestom.server.entity.attribute.AttributeOperation;
 
 /**
  * The {@link AttributeHelper} class provides utility methods to adjust the player's attributes.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  */
 @SuppressWarnings("java:S3252")
 public final class AttributeHelper {
+
+    public static final Key SLENDER_DRAINING_SPEED_KEY = Key.key("cygnus", "slender_draining");
+
+    private static final AttributeModifier SLENDER_DRAINING_SPEED_MODIFIER = new AttributeModifier(
+                    SLENDER_DRAINING_SPEED_KEY,
+            -0.331,
+            AttributeOperation.ADD_MULTIPLIED_TOTAL
+    );
 
     private static final double DEFAULT_JUMP_STRENGTH = 0.42;
     private static final double GAME_JUMP_STRENGTH = 0.0;
@@ -73,6 +84,26 @@ public final class AttributeHelper {
         float healthScale = (float) (player.getAttribute(Attribute.MAX_HEALTH).getBaseValue() + scale);
         player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(healthScale);
         player.setHealth(healthScale);
+    }
+
+    /**
+     * Applies the Slender draining speed modifier to the player.
+     *
+     * @param player the player to apply the draining speed modifier to
+     */
+    public static void applySlenderDrainingSpeed(Player player) {
+        var attr = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        attr.removeModifier(SLENDER_DRAINING_SPEED_KEY);
+        attr.addModifier(SLENDER_DRAINING_SPEED_MODIFIER);
+    }
+
+    /**
+     * Removes the Slender draining speed modifier from the player.
+     *
+     * @param player the player to remove the draining speed modifier from
+     */
+    public static void removeSlenderDrainingSpeed(Player player) {
+        player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(SLENDER_DRAINING_SPEED_KEY);
     }
 
     private AttributeHelper() {
