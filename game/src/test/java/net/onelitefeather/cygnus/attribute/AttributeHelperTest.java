@@ -52,4 +52,18 @@ class AttributeHelperTest {
         assertEquals(40.0, player.getAttribute(Attribute.MAX_HEALTH).getBaseValue());
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    void testSlenderDrainingSpeedModifier(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1);
+
+        AttributeHelper.applySlenderDrainingSpeed(player);
+        assertEquals(0.0669, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.001);
+
+        AttributeHelper.removeSlenderDrainingSpeed(player);
+        assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.001);
+        env.destroyInstance(instance, true);
+    }
 }
