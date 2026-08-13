@@ -15,7 +15,7 @@ import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
  *
  * @author theEvilReaper
  * @version 1.0.0
- * @since 2.7.1
+ * @since 2.7.0
  */
 public final class CygnusSettingsListener {
 
