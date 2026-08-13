@@ -11,8 +11,11 @@ import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.minestom.server.entity.attribute.Attribute;
+import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+
 
 import java.util.List;
 
@@ -20,7 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * Integration test verifying that the {@link SlenderBar} renders its progress bar correctly.
@@ -189,4 +195,30 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     private static boolean soundWasSent(Collector<ServerPacket> collector) {
         return collector.collect().stream().anyMatch(packet -> packet.getClass().getSimpleName().contains("Sound"));
     }
+
+    @Test
+    void testSlenderBarStateTransitionsUseModifiers(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
+
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        slenderBar.start();
+
+        assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue(), 0.001);
+
+        slenderBar.changeStatus(); // enter DRAINING
+        assertTrue(player.getAttribute(Attribute.MOVEMENT_SPEED).modifiers().stream().anyMatch(m -> m.id().equals(AttributeHelper.SLENDER_DRAINING_SPEED_KEY)));
+        assertEquals(0.0669, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.001);
+
+        slenderBar.changeStatus(); // enter REGENERATING
+        assertFalse(player.getAttribute(Attribute.MOVEMENT_SPEED).modifiers().stream().anyMatch(m -> m.id().equals(AttributeHelper.SLENDER_DRAINING_SPEED_KEY)));
+        assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue(), 0.001);
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
+
 }
+

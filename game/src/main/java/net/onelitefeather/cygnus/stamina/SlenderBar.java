@@ -1,11 +1,11 @@
 package net.onelitefeather.cygnus.stamina;
 
 import net.kyori.adventure.sound.Sound;
-import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.ExecutionType;
+import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
@@ -52,12 +52,6 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
      */
     private static final int MIN_TIME_TO_REACTIVATE = 10;
 
-    /**
-     * Movement speed while {@link State#DRAINING} - deliberately slow since the slender is visible then.
-     */
-    private static final double DRAINING_MOVEMENT_SPEED = 0.0669;
-
-    private static final float HIDDEN_MOVEMENT_SPEED = 0.1f;
     private static final int DAMAGE_RANGE = 3;
 
     private final String tileChar;
@@ -86,6 +80,8 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     @Override
     protected void onStart() {
         this.state = State.READY;
+        AttributeHelper.resetSpeed(player);
+        AttributeHelper.removeSlenderDrainingSpeed(player);
         this.player.addEffect(NIGHT_VISION.potion());
     }
 
@@ -150,7 +146,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
             this.playSpawnSound(player.getInstance(), player.getPosition(), player.getUuid());
         }
         this.applyBlindness(player);
-        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(DRAINING_MOVEMENT_SPEED);
+        AttributeHelper.applySlenderDrainingSpeed(player);
         player.sendSpringPackets();
         player.setSprinting(false);
         player.setBlockedSprinting(true);
@@ -164,12 +160,13 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         player.setTag(Tags.HIDDEN, HIDDEN);
         this.playTeleportSound(player.getInstance(), player.getPosition(), player.getUuid());
         this.applyNightVision(player);
-        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(HIDDEN_MOVEMENT_SPEED);
+        AttributeHelper.removeSlenderDrainingSpeed(player);
         player.sendSpringPackets();
         player.setBlockedSprinting(false);
         EventDispatcher.call(new StaminaStateChangeEvent(player, state));
         this.colorState.sendProgressBar(player, tileChar, currentTime, time);
     }
+
 
     private void enterReady() {
         state = State.READY;
