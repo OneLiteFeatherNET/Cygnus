@@ -30,7 +30,7 @@ import java.util.concurrent.CompletableFuture;
  * @since 1.0.0
  */
 @SuppressWarnings("java:S3252")
-public final class PageEntity extends Entity implements PageCreator{
+public final class PageEntity extends Entity implements PageCreator {
 
     private static final boolean CUSTOM_PAGES = Boolean.parseBoolean(System.getProperty("cygnus.custom_pages", "false"));
     private static final Vec HALF_BLOCK = new Vec(0, 0.5, 0);
