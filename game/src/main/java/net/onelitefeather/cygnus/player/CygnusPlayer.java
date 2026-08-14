@@ -6,7 +6,7 @@ import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.network.packet.server.play.EntityAttributesPacket;
-import net.minestom.server.network.packet.server.play.WorldBorderWarningReachPacket;
+import net.minestom.server.network.packet.server.play.InitializeWorldBorderPacket;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.sound.SoundEvent;
@@ -17,11 +17,21 @@ import java.util.concurrent.ThreadLocalRandom;
 @SuppressWarnings("java:S3252")
 public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
 
+    static final int PORTAL_TELEPORT_BOUNDARY = 29_999_984;
+
+    /**
+     * Radius (in blocks) of the virtual, per-player world border used to fake the heartbeat
+     * vignette. It is recentered on the player every tick, so the real client-side distance to
+     * its edge is always exactly this value, independent of the instance's actual world border.
+     */
+    static final double FAKE_BORDER_RADIUS = 50.0;
+    static final double FAKE_BORDER_DIAMETER = FAKE_BORDER_RADIUS * 2.0;
+
     static final AttributeModifier SPEED_MODIFIER_SPRINTING =
-            new AttributeModifier(Key.key("cygnus:sprinting"), 0.25, AttributeOperation.ADD_MULTIPLIED_TOTAL);
+            new AttributeModifier(Key.key("cygnus","sprinting"), 0.25, AttributeOperation.ADD_MULTIPLIED_TOTAL);
 
     static final AttributeModifier DISABLED_SPRINT_MODIFIER =
-            new AttributeModifier(Key.key("cygnus:sprinting"), 0.0, AttributeOperation.ADD_MULTIPLIED_TOTAL);
+            new AttributeModifier(Key.key("cygnus", "sprinting"), 0.0, AttributeOperation.ADD_MULTIPLIED_TOTAL);
 
     private static final float HEALTH_THRESHOLD = 6.0f; // 3 hearts
     private static final int MAX_INTERVAL_TICKS = 36;   // Every 1.8s (slow, subtle pulse at start)
@@ -107,21 +117,17 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
 
         float intensity = Math.clamp(1.0f - (health / HEALTH_THRESHOLD), 0.0f, 1.0f);
 
-        double distanceToBorder = 29_999_984.0;
-        var instance = getInstance();
-        if (instance != null && instance.getWorldBorder() != null) {
-            var border = instance.getWorldBorder();
-            double radius = border.diameter() / 2.0;
-            double dx = Math.abs(getPosition().x() - border.centerX());
-            double dz = Math.abs(getPosition().z() - border.centerZ());
-            distanceToBorder = Math.max(1.0, radius - Math.max(dx, dz));
-        }
-
         // Non-linear visual curve makes the red border vignette stronger earlier and very intense at low HP
         float visualIntensity = (float) Math.pow(intensity, 0.6);
         float clampedIntensity = Math.min(visualIntensity, 0.995f);
-        int warningBlocks = (int) (distanceToBorder / (1.0f - clampedIntensity));
-        sendPacket(new WorldBorderWarningReachPacket(warningBlocks));
+        int warningBlocks = (int) (FAKE_BORDER_RADIUS / (1.0f - clampedIntensity));
+
+        var position = getPosition();
+        sendPacket(new InitializeWorldBorderPacket(
+                position.x(), position.z(),
+                FAKE_BORDER_DIAMETER, FAKE_BORDER_DIAMETER, 0L,
+                PORTAL_TELEPORT_BOUNDARY, 0, warningBlocks
+        ));
 
         float intervalFactor = (float) Math.pow(intensity, 0.85);
         int targetInterval = (int) (MAX_INTERVAL_TICKS - (intervalFactor * (MAX_INTERVAL_TICKS - MIN_INTERVAL_TICKS)));
@@ -151,7 +157,9 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private void resetHeartbeat() {
         heartbeatActive = false;
         heartbeatTicks = 0;
-        sendPacket(new WorldBorderWarningReachPacket(0));
+        // Restores the real (instance-wide) world border after the per-tick fake one used for
+        // the vignette, so the client stops seeing the small virtual border we sent it.
+        sendPacket(getInstance().createInitializeWorldBorderPacket());
     }
 
     /**
@@ -163,6 +171,9 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
         return heartbeatActive;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public EntityAttributesPacket getPropertiesPacket() {
         return super.getPropertiesPacket();
