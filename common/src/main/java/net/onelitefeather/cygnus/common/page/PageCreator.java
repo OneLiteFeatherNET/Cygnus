@@ -24,7 +24,7 @@ public interface PageCreator {
     /**
      * Number of available custom page models.
      */
-    int MAX_CUSTOM_PAGE_ID = 5;
+    int MAX_CUSTOM_PAGE_ID = 6;
 
     /**
      * Creates a page item with the given page number.
@@ -42,8 +42,6 @@ public interface PageCreator {
         if (!customPage) {
             return builder.build();
         }
-
-        int MAX_CUSTOM_PAGE_ID = 6;
 
         int randomPage = ThreadLocalRandom.current().nextInt(1, MAX_CUSTOM_PAGE_ID + 1);
 
