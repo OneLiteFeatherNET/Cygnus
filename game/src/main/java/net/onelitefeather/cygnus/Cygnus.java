@@ -18,7 +18,6 @@ import net.onelitefeather.cygnus.spectator.SpectatorService;
 import net.onelitefeather.cygnus.team.TeamCreator;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
-import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.LinearPhaseSeries;
 import net.theevilreaper.xerus.api.phase.Phase;
@@ -102,7 +101,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final StaminaService staminaService;
     private final PageProvider pageProvider;
     private final GameView view;
-    private final AbstractMapProvider mapProvider;
+    private final GameMapProvider mapProvider;
     private final GameConfig gameConfig;
     private final JumpScareManager jumpscareManager;
     private final SpectatorService spectatorService;
@@ -142,7 +141,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.register(new StartCommand(this.linearPhaseSeries));
     }
 
-
     private void initListener() {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         var manager = MinecraftServer.getGlobalEventHandler();
@@ -165,10 +163,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener(spectatorTeam, phaseSupplier));
-        manager.addListener(GameMapLoadEvent.class, _ -> ((GameMapProvider) this.mapProvider).loadGameMap());
-        manager.addListener(GamePrepareEvent.class, _ -> {
-            StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
-        });
+        manager.addListener(GameMapLoadEvent.class, _ -> this.mapProvider.loadGameMap());
+        manager.addListener(GamePrepareEvent.class, _ -> StaminaHelper.initStaminaObjects(this.teamService, this.staminaService));
         registerCancelListener(manager);
     }
 
@@ -186,8 +182,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(PageExpiredEvent.class, new GamePageListener(this.pageProvider));
         handler.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
         handler.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
-        handler.addListener(
-                SlenderReviveEvent.class, new SlenderReviveListener(((GameMapProvider) this.mapProvider)::getGameMap, this.staminaService));
+        handler.addListener(SlenderReviveEvent.class, new SlenderReviveListener(this.mapProvider::getGameMap, this.staminaService));
         handler.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         handler.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
         handler.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
@@ -199,21 +194,20 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     }
 
     private void initPhases() {
-        GameMapProvider gameMapProvider = ((GameMapProvider) this.mapProvider);
-        VoidConsumer instanceSwitch = gameMapProvider::switchToGameMap;
+        VoidConsumer instanceSwitch = this.mapProvider::switchToGameMap;
         VoidConsumer teamInitializer = () -> {
-            Instance activeInstance = gameMapProvider.getActiveInstance().get();
+            Instance activeInstance = this.mapProvider.getActiveInstance().get();
             if (activeInstance == null) {
                 throw new IllegalStateException("Active instance not available for team teleport");
             }
             TeamHelper.teleportTeams(
                     this.teamService,
-                    gameMapProvider.getGameMap(),
+                    this.mapProvider.getGameMap(),
                     activeInstance
             );
-            MinecraftServer.getSchedulerManager().scheduleNextTick(gameMapProvider::releasePreviousInstance);
+            MinecraftServer.getSchedulerManager().scheduleNextTick(this.mapProvider::releasePreviousInstance);
         };
-        LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig, gameMapProvider.getActiveInstance());
+        LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig, this.mapProvider.getActiveInstance());
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime(), this.jumpscareManager));
