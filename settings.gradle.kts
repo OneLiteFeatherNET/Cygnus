@@ -39,7 +39,7 @@ dependencyResolutionManagement {
             version("shadow", "9.6.1")
             version("cloudnet", "4.0.0-RC16")
             version("aonyx", "0.8.4")
-            version("cyclonedx", "3.3.0")
+            version("cyclonedx", "3.4.0")
             version("pica", "0.1.2")
             version("slf4j", "2.0.18")
             version("luckperms", "5.5")
