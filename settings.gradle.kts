@@ -48,11 +48,11 @@ dependencyResolutionManagement {
             version("falco", "2.1.0")
             version("minestom-extensions", "2.1.1")
             version("hibernate", "6.6.55.Final")
-            version("mariadb-driver", "3.5.3")
+            version("postgresql-driver", "42.7.13")
             version("hikaricp", "6.3.0")
-            version("testcontainers", "1.20.6")
             version("jetbrains-annotations", "26.1.0")
             version("liquibase", "5.0.3")
+            version("h2", "2.4.240")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("jetbrains.annotations", "org.jetbrains", "annotations").versionRef("jetbrains-annotations")
@@ -87,12 +87,10 @@ dependencyResolutionManagement {
             library("canis", "com.github.theEvilReaper", "Canis").version("master-SNAPSHOT")
             library("hibernate.core", "org.hibernate.orm", "hibernate-core").versionRef("hibernate")
             library("hibernate.hikaricp", "org.hibernate.orm", "hibernate-hikaricp").versionRef("hibernate")
-            library("mariadb.driver", "org.mariadb.jdbc", "mariadb-java-client").versionRef("mariadb-driver")
+            library("postgresql.driver", "org.postgresql", "postgresql").versionRef("postgresql-driver")
             library("hikaricp", "com.zaxxer", "HikariCP").versionRef("hikaricp")
-            library("testcontainers", "org.testcontainers", "testcontainers").versionRef("testcontainers")
-            library("testcontainers.junit.jupiter", "org.testcontainers", "junit-jupiter").versionRef("testcontainers")
-            library("testcontainers.mariadb", "org.testcontainers", "mariadb").versionRef("testcontainers")
             library("liquibase.core", "org.liquibase", "liquibase-core").versionRef("liquibase")
+            library("h2", "com.h2database", "h2").versionRef("h2")
 
             // CloudNet is never bundled: the wrapper provides the driver at runtime and the bridge
             // arrives as a Minestom extension. Only the :bridge extension module compiles against it.

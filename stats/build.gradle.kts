@@ -10,14 +10,12 @@ dependencies {
     implementation(libs.hibernate.core)
     implementation(libs.hibernate.hikaricp)
     implementation(libs.hikaricp)
-    implementation(libs.mariadb.driver)
+    implementation(libs.postgresql.driver)
     implementation(libs.liquibase.core)
 
     testImplementation(libs.junit.api)
     testImplementation(libs.junit.params)
     testImplementation(libs.junit.platform.launcher)
-    testImplementation(libs.testcontainers)
-    testImplementation(libs.testcontainers.junit.jupiter)
-    testImplementation(libs.testcontainers.mariadb)
+    testImplementation(libs.h2)
     testRuntimeOnly(libs.junit.engine)
 }
