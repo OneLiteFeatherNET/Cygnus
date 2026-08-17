@@ -8,14 +8,15 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
-import net.onelitefeather.cygnus.team.TeamHelper;
-import net.theevilreaper.xerus.api.team.Team;
+ import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerDeathListenerTest extends CygnusPlayerTestBase {
 
@@ -39,6 +40,55 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
                 .followup(event -> assertEquals(player, event.getPlayer()));
 
         listener.accept(new PlayerDeathEvent(player, null, null));
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testDyingSurvivorIsMarkedAsDied(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
+
+        TeamService teamService = TeamService.of();
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        teamService.add(slenderTeam);
+        teamService.add(survivorTeam);
+
+        survivorTeam.addPlayer(player);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager());
+
+        listener.accept(new PlayerDeathEvent(player, null, null));
+
+        assertTrue(player.hasDied());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testDyingSurvivorIncrementsSlenderKills(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer survivor = (CygnusPlayer) env.createPlayer(instance);
+        CygnusPlayer slender = (CygnusPlayer) env.createPlayer(instance);
+
+        TeamService teamService = TeamService.of();
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        teamService.add(slenderTeam);
+        teamService.add(survivorTeam);
+
+        survivorTeam.addPlayer(survivor);
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        slenderTeam.addPlayer(slender);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager());
+
+        listener.accept(new PlayerDeathEvent(survivor, null, null));
+
+        assertEquals(1, slender.getKills());
 
         env.destroyInstance(instance, true);
     }
