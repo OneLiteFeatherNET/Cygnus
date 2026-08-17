@@ -11,6 +11,7 @@ dependencies {
     implementation(libs.hibernate.hikaricp)
     implementation(libs.hikaricp)
     implementation(libs.mariadb.driver)
+    implementation(libs.liquibase.core)
 
     testImplementation(libs.junit.api)
     testImplementation(libs.junit.params)

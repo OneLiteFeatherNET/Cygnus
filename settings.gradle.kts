@@ -52,6 +52,7 @@ dependencyResolutionManagement {
             version("hikaricp", "6.3.0")
             version("testcontainers", "1.20.6")
             version("jetbrains-annotations", "26.1.0")
+            version("liquibase", "5.0.3")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("jetbrains.annotations", "org.jetbrains", "annotations").versionRef("jetbrains-annotations")
@@ -91,6 +92,7 @@ dependencyResolutionManagement {
             library("testcontainers", "org.testcontainers", "testcontainers").versionRef("testcontainers")
             library("testcontainers.junit.jupiter", "org.testcontainers", "junit-jupiter").versionRef("testcontainers")
             library("testcontainers.mariadb", "org.testcontainers", "mariadb").versionRef("testcontainers")
+            library("liquibase.core", "org.liquibase", "liquibase-core").versionRef("liquibase")
 
             // CloudNet is never bundled: the wrapper provides the driver at runtime and the bridge
             // arrives as a Minestom extension. Only the :bridge extension module compiles against it.
