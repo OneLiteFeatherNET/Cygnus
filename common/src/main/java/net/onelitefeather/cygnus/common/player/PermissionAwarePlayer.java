@@ -34,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
  **/
 public abstract class PermissionAwarePlayer extends Player implements PermissionChecker {
 
-    private final @NotNull Pointers pointers = PermissionAwarePlayer.super.pointers()
+    private final Pointers pointers = PermissionAwarePlayer.super.pointers()
             .toBuilder()
             .withDynamic(PermissionChecker.POINTER, () -> this)
             .build();

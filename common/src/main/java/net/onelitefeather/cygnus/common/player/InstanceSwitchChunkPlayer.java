@@ -108,7 +108,7 @@ public abstract class InstanceSwitchChunkPlayer extends PermissionAwarePlayer {
      * <p>This is what {@code Player#effectiveViewDistance} computes, except that it asks the
      * instance the player is moving to instead of the one it is still in.</p>
      *
-     * @param instance the instance the player is moving to
+     * @param instance whose view distance to compute
      * @return the effective chunk view distance in that instance
      */
     private int targetViewDistance(Instance instance) {
@@ -118,8 +118,8 @@ public abstract class InstanceSwitchChunkPlayer extends PermissionAwarePlayer {
     /**
      * The chunk area a player is about to see, as a centre and a radius in chunks.
      *
-     * @param chunkX       the chunk x of the target position
-     * @param chunkZ       the chunk z of the target position
+     * @param chunkX       of the target position
+     * @param chunkZ       of the target position
      * @param viewDistance the effective view distance in the target instance
      */
     private record TargetView(int chunkX, int chunkZ, int viewDistance) {
@@ -127,8 +127,8 @@ public abstract class InstanceSwitchChunkPlayer extends PermissionAwarePlayer {
         /**
          * Returns whether the given chunk lies inside this view.
          *
-         * @param x the chunk x to check
-         * @param z the chunk z to check
+         * @param x to check
+         * @param z to check
          * @return true if the chunk is inside the view
          */
         boolean contains(int x, int z) {
