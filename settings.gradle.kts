@@ -47,8 +47,14 @@ dependencyResolutionManagement {
             version("guava", "33.6.0-jre")
             version("falco", "2.1.0")
             version("minestom-extensions", "2.1.1")
+            version("hibernate", "6.6.55.Final")
+            version("mariadb-driver", "3.5.3")
+            version("hikaricp", "6.3.0")
+            version("testcontainers", "1.20.6")
+            version("jetbrains-annotations", "26.1.0")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
+            library("jetbrains.annotations", "org.jetbrains", "annotations").versionRef("jetbrains-annotations")
             library("slf4j.api", "org.slf4j", "slf4j-api").versionRef("slf4j")
             library("slf4j.simple", "org.slf4j", "slf4j-simple").versionRef("slf4j")
             library("guava", "com.google.guava", "guava").versionRef("guava")
@@ -78,6 +84,13 @@ dependencyResolutionManagement {
             library("falco.bom", "net.onelitefeather", "falco-bom").versionRef("falco")
             library("falco.anvil", "net.onelitefeather", "falco-anvil").withoutVersion()
             library("canis", "com.github.theEvilReaper", "Canis").version("master-SNAPSHOT")
+            library("hibernate.core", "org.hibernate.orm", "hibernate-core").versionRef("hibernate")
+            library("hibernate.hikaricp", "org.hibernate.orm", "hibernate-hikaricp").versionRef("hibernate")
+            library("mariadb.driver", "org.mariadb.jdbc", "mariadb-java-client").versionRef("mariadb-driver")
+            library("hikaricp", "com.zaxxer", "HikariCP").versionRef("hikaricp")
+            library("testcontainers", "org.testcontainers", "testcontainers").versionRef("testcontainers")
+            library("testcontainers.junit.jupiter", "org.testcontainers", "junit-jupiter").versionRef("testcontainers")
+            library("testcontainers.mariadb", "org.testcontainers", "mariadb").versionRef("testcontainers")
 
             // CloudNet is never bundled: the wrapper provides the driver at runtime and the bridge
             // arrives as a Minestom extension. Only the :bridge extension module compiles against it.
@@ -100,3 +113,4 @@ include("common")
 include("setup")
 include("game")
 include("bridge")
+include("stats")
