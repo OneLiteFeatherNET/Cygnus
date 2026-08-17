@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <!--
+        Column types and constraints here were taken verbatim from Hibernate's own DDL export for
+        PlayerStatsEntity/PlayerMapStatsEntity (org.hibernate.dialect.MariaDBDialect), not hand-picked,
+        so they match exactly what hibernate.hbm2ddl.auto=validate expects to find at startup.
+    -->
+
+    <changeSet id="1-create-cygnus-player-stats" author="Joltra">
+        <createTable tableName="cygnus_player_stats">
+            <column name="player_id" type="BINARY(16)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="wins_survivor" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="wins_slender" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rounds_played" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deaths" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pages_found" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="playtime_seconds" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_win_streak" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="longest_win_streak" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2-create-cygnus-player-map-stats" author="Joltra">
+        <createTable tableName="cygnus_player_map_stats">
+            <column name="player_id" type="BINARY(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="map_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rounds_played" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="wins" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="cygnus_player_map_stats"
+                        columnNames="player_id, map_name"
+                        constraintName="pk_cygnus_player_map_stats"/>
+        <addForeignKeyConstraint baseTableName="cygnus_player_map_stats"
+                                  baseColumnNames="player_id"
+                                  constraintName="fk_cygnus_player_map_stats_player"
+                                  referencedTableName="cygnus_player_stats"
+                                  referencedColumnNames="player_id"/>
+    </changeSet>
+
+</databaseChangeLog>
