@@ -5,15 +5,9 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
 
-    <!--
-        Column types and constraints here were taken verbatim from Hibernate's own DDL export for
-        PlayerStatsEntity/PlayerMapStatsEntity (org.hibernate.dialect.MariaDBDialect), not hand-picked,
-        so they match exactly what hibernate.hbm2ddl.auto=validate expects to find at startup.
-    -->
-
     <changeSet id="1-create-cygnus-player-stats" author="Joltra">
         <createTable tableName="cygnus_player_stats">
-            <column name="player_id" type="BINARY(16)">
+            <column name="player_id" type="UUID">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="wins_survivor" type="INT">
@@ -45,7 +39,7 @@
 
     <changeSet id="2-create-cygnus-player-map-stats" author="Joltra">
         <createTable tableName="cygnus_player_map_stats">
-            <column name="player_id" type="BINARY(16)">
+            <column name="player_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
             <column name="map_name" type="VARCHAR(255)">
