@@ -36,6 +36,7 @@ public final class Messages {
     private static final Component SURVIVOR_JOIN_PART_UPPER;
     private static final Component SURVIVOR_JOIN_LOWER_PART;
     public static final Component SLENDER_JOIN_PART;
+    private static final Component STATS_HEADER;
     private static final int MAP_ANNOUNCEMENT_MIN_WIDTH = 20;
 
     static {
@@ -74,6 +75,8 @@ public final class Messages {
                 .append(withPrefix(Component.text("Eliminate all survivors to win the game!", NamedTextColor.YELLOW)))
                 .append(Component.newline())
                 .append(withMiniPrefix("<red>Right-click your <color:#ff00d4>SlenderEye</color> <red>to toggle invisibility!"));
+
+        STATS_HEADER = withMini("<dark_gray>---[<gold>Statistics<dark_gray>]---");
     }
 
     private Messages() {
@@ -126,6 +129,51 @@ public final class Messages {
         var playerName = Tag.preProcessParsed(player.getUsername());
         var playerTag = TagResolver.builder().tag("player", (argumentQueue, context) -> playerName).build();
         return PREFIX.append(Component.space()).append(withMini("<red><player> <color:#249D9F>was</color> <color:#ff0000>TAKEN!</color>", playerTag));
+    }
+
+    /**
+     * Builds the round-end stats box for a survivor.
+     *
+     * @param player     the survivor the box is about
+     * @param pageFounds how many pages the survivor found this round
+     * @param died       whether the survivor died this round
+     * @return the formatted stats box
+     */
+    @Contract(value = "_, _, _ -> new", pure = true)
+    public static Component getSurvivorRoundSummaryComponent(Player player, int pageFounds, boolean died) {
+        Component deathIcon = died
+                ? Component.text("✓", NamedTextColor.GREEN)
+                : Component.text("✗", NamedTextColor.RED);
+        var resolver = TagResolver.builder()
+                .tag("pages", (_, _) -> Tag.preProcessParsed(String.valueOf(pageFounds)))
+                .tag("died", Tag.inserting(deathIcon))
+                .build();
+        return Component.text(player.getUsername(), NamedTextColor.GOLD)
+                .append(Component.newline())
+                .append(STATS_HEADER)
+                .append(Component.newline())
+                .append(withMini("<gray>Pages: <green><pages>", resolver))
+                .append(Component.newline())
+                .append(withMini("<gray>Death: <died>", resolver));
+    }
+
+    /**
+     * Builds the round-end stats box for the slender.
+     *
+     * @param player the slender the box is about
+     * @param kills  how many survivors the slender caught this round
+     * @return the formatted stats box
+     */
+    @Contract(value = "_, _ -> new", pure = true)
+    public static Component getSlenderRoundSummaryComponent(Player player, int kills) {
+        var resolver = TagResolver.builder()
+                .tag("kills", (_, _) -> Tag.preProcessParsed(String.valueOf(kills)))
+                .build();
+        return Component.text(player.getUsername(), NamedTextColor.GOLD)
+                .append(Component.newline())
+                .append(STATS_HEADER)
+                .append(Component.newline())
+                .append(withMini("<gray>Kills: <green><kills>", resolver));
     }
 
 
