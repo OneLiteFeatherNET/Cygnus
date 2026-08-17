@@ -41,11 +41,18 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private int heartbeatTicks;
     private boolean heartbeatActive;
 
+    private int pageFounds;
+    private int kills;
+    private boolean death;
+
     public CygnusPlayer(PlayerConnection playerConnection, GameProfile gameProfile) {
         super(playerConnection, gameProfile);
         this.blockedSprinting = false;
         this.heartbeatTicks = 0;
         this.heartbeatActive = false;
+        this.pageFounds = 0;
+        this.kills = 0;
+        this.death = false;
     }
 
     /**
@@ -98,6 +105,56 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
      */
     public boolean hasBlockedSprinting() {
         return blockedSprinting;
+    }
+
+    /**
+     * Increments the number of pages this player has found in the current round.
+     */
+    public void incrementPageFound() {
+        this.pageFounds++;
+    }
+
+    /**
+     * Returns how many pages this player has found in the current round.
+     *
+     * @return the page count
+     */
+    public int getPageFounds() {
+        return pageFounds;
+    }
+
+    /**
+     * Increments the number of survivors this player has killed in the current round.
+     */
+    public void incrementKills() {
+        this.kills++;
+    }
+
+    /**
+     * Returns how many survivors this player has killed in the current round.
+     *
+     * @return the kill count
+     */
+    public int getKills() {
+        return kills;
+    }
+
+    /**
+     * Marks whether this player died during the current round.
+     *
+     * @param death {@code true} if the player died this round
+     */
+    public void setDeath(boolean death) {
+        this.death = death;
+    }
+
+    /**
+     * Checks if the player died during the current round.
+     *
+     * @return {@code true} if the player died this round, otherwise {@code false}.
+     */
+    public boolean hasDied() {
+        return death;
     }
 
     /**

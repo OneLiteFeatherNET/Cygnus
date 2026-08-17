@@ -14,6 +14,7 @@ import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
 
 import java.util.function.Consumer;
@@ -39,7 +40,12 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
     public void accept(PlayerDeathEvent event) {
         Player player = event.getPlayer();
 
-        if (survivorTeam.getPlayers().contains(player) && player.getInstance() != null) {
+        if (survivorTeam.getPlayers().contains(player)) {
+            ((CygnusPlayer) player).setDeath(true);
+            this.slenderTeam.getPlayers().stream().findFirst()
+                    .ifPresent(slender -> ((CygnusPlayer) slender).incrementKills());
+
+            if (player.getInstance() == null) return;
             Pos deathPos = player.getPosition();
             DeadPlayerMannequin mannequin = DeadPlayerMannequin.sleeping(player);
             mannequin.setInstance(player.getInstance(), deathPos.add(0, 0.15, 0));
