@@ -44,7 +44,7 @@ dependencyResolutionManagement {
             version("slf4j", "2.0.18")
             version("luckperms", "5.5")
             version("luckperms-minestom-loader", "5.6-SNAPSHOT")
-            version("guava", "33.7.0-jre")
+            version("guava", "33.7.1-android")
             version("falco", "2.1.0")
             version("minestom-extensions", "2.1.1")
 
