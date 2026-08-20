@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus;
 
 import net.hollowcube.minestom.extensions.ExtensionBootstrap;
+import net.onelitefeather.cygnus.common.block.BlockHandlers;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
 import net.onelitefeather.cygnus.common.dimension.DimensionFactory;
 import net.onelitefeather.cygnus.common.permission.LuckPermsSupport;
@@ -13,6 +14,7 @@ public final class CygnusLoader {
         // standalone simply loads none. This also performs MinecraftServer.init().
         ExtensionBootstrap bootstrap = ExtensionBootstrap.init();
         LuckPermsSupport.bootstrap();
+        BlockHandlers.registerAll();
         String customDimensions = System.getProperty("cygnus.customDimension", "false");
         if (Boolean.parseBoolean(customDimensions)) {
             DimensionFactory.registerAll();
