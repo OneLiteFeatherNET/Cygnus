@@ -1,7 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>OneLiteFeatherNET/renovate:default(OneLiteFeatherNET/cygnus-maintainers)"
+    "github>OneLiteFeatherNET/renovate:default(OneLiteFeatherNET/cygnus-maintainers)",
+    "github>OneLiteFeatherNET/renovate:minestom"
   ],
   "packageRules": [
     {
