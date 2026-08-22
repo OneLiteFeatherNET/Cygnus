@@ -9,7 +9,7 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
-import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
+import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -31,11 +31,10 @@ class SlenderBarTriggerIntegrationTest extends CygnusPlayerTestBase {
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
         slenderBar.start();
 
-        SlenderBarTrigger trigger = new SlenderBarTrigger(() -> slenderBar, ignored -> {
-        });
+        SlenderBarTrigger trigger = new SlenderBarTrigger(() -> slenderBar);
         trigger.trigger(player);
 
-        assertFalse(ViewRuleUpdater.isHidden(player), "player should be visible right after activating draining");
+        assertFalse(VisibilityRules.isHidden(player), "player should be visible right after activating draining");
 
         slenderBar.stop();
         env.destroyInstance(instance, true);
@@ -51,14 +50,13 @@ class SlenderBarTriggerIntegrationTest extends CygnusPlayerTestBase {
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
         slenderBar.start();
 
-        SlenderBarTrigger trigger = new SlenderBarTrigger(() -> slenderBar, ignored -> {
-        });
+        SlenderBarTrigger trigger = new SlenderBarTrigger(() -> slenderBar);
         trigger.trigger(player); // READY -> DRAINING
 
         Collector<ServerPacket> collector = connection.trackIncoming();
         trigger.trigger(player); // immediately again, still within the spam cooldown
 
-        assertFalse(ViewRuleUpdater.isHidden(player), "the second, cooldown-blocked trigger must not toggle the status again");
+        assertFalse(VisibilityRules.isHidden(player), "the second, cooldown-blocked trigger must not toggle the status again");
         assertTrue(soundWasSent(collector), "player should get audible feedback that the trigger is on cooldown");
 
         slenderBar.stop();
@@ -81,12 +79,11 @@ class SlenderBarTriggerIntegrationTest extends CygnusPlayerTestBase {
             slenderBar.consume();
         }
 
-        SlenderBarTrigger trigger = new SlenderBarTrigger(() -> slenderBar, ignored -> {
-        });
+        SlenderBarTrigger trigger = new SlenderBarTrigger(() -> slenderBar);
         Collector<ServerPacket> collector = connection.trackIncoming();
         trigger.trigger(player);
 
-        assertTrue(ViewRuleUpdater.isHidden(player), "player should stay hidden/blocked instead of toggling back to draining");
+        assertTrue(VisibilityRules.isHidden(player), "player should stay hidden/blocked instead of toggling back to draining");
         assertTrue(soundWasSent(collector), "player should get audible feedback when blocked by insufficient regeneration");
 
         slenderBar.stop();

@@ -42,10 +42,11 @@ class SpectatorServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    void testJoinMakesPlayerInvisibleToOthers(@NotNull Env env) {
+    void testJoinHidesSpectatorFromPlayersStillInTheRound(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player target = env.createPlayer(instance);
         Player other = env.createPlayer(instance);
+        other.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         for (int i = 0; i < 5; i++) env.tick();
         assertTrue(target.isViewer(other), "the target should be visible to the other player before joining spectator mode");
@@ -56,7 +57,29 @@ class SpectatorServiceTest extends CygnusPlayerTestBase {
 
         service.join(target);
 
-        assertFalse(target.isViewer(other), "A spectator must not be visible to other online players.");
+        assertFalse(target.isViewer(other), "a spectator must not be visible to players who are still in the round");
+        assertTrue(other.isViewer(target), "a spectator must keep seeing the players who are still in the round");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testJoinKeepsSpectatorsVisibleToEachOther(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player first = env.createPlayer(instance);
+        Player second = env.createPlayer(instance);
+
+        for (int i = 0; i < 5; i++) env.tick();
+
+        Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        SpectatorService service = new SpectatorService(spectatorTeam, survivorTeam);
+
+        service.join(first);
+        service.join(second);
+
+        assertTrue(first.isViewer(second), "spectators must see each other");
+        assertTrue(second.isViewer(first), "spectators must see each other");
 
         env.destroyInstance(instance, true);
     }

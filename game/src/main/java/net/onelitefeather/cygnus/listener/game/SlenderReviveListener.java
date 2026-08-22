@@ -5,9 +5,11 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
+import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
+import net.onelitefeather.cygnus.visibility.VisibilityRules;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -29,11 +31,21 @@ public class SlenderReviveListener implements Consumer<SlenderReviveEvent> {
         this.staminaService = staminaService;
     }
 
+    /**
+     * Turns the given player into the new slender.
+     * <p>
+     * Hidden state and viewable rule are set exactly like in the initial team allocation. Without them the
+     * revived slender would keep the survivor default and stay visible to everybody for the rest of the round.
+     *
+     * @param event the revive event carrying the player to promote
+     */
     @Override
     public void accept(SlenderReviveEvent event) {
         Player player = event.getPlayer();
         staminaService.setSlenderBar(player, true);
         player.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        player.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
+        player.updateViewableRule(VisibilityRules.slenderRule(player));
         GameMap gameMap = gameMapSupplier.get();
         if (gameMap != null && gameMap.getSlenderSpawn() != null) {
             player.teleport(gameMap.getSlenderSpawn());

@@ -1,10 +1,8 @@
 package net.onelitefeather.cygnus.listener.game;
 
 import net.kyori.adventure.text.Component;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
-import net.minestom.server.utils.PacketSendingUtils;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
@@ -16,6 +14,7 @@ import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
+import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 
@@ -51,12 +50,11 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
         slenderPlayer.sendMessage(Messages.SLENDER_JOIN_PART);
         Items.setSlenderEye(slenderPlayer);
 
-        PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
-        MinecraftServer.getConnectionManager().getOnlinePlayers()
-                .stream()
-                .filter(p -> !p.equals(slenderPlayer))
-                .forEach(slenderPlayer::updateOldViewer);
-        PacketSendingUtils.broadcastPlayPacket(slenderPlayer.getMetadataPacket());
+        // Hiding the slender goes exclusively through the viewable rule. The previous
+        // updateOldViewer/broadcastPlayPacket combination only sent packets: it left the viewer bit set
+        // untouched, so the next rule evaluation considered every player still registered and skipped the
+        // spawn packet when the slender revealed themselves again.
+        VisibilityRules.refresh(slenderPlayer);
     }
 
     private void handleSurvivorStart() {

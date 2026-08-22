@@ -10,6 +10,8 @@ import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
+import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.minestom.server.entity.attribute.Attribute;
 import net.onelitefeather.cygnus.attribute.AttributeHelper;
@@ -166,6 +168,7 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
         TestConnection survivorConnection = env.createConnection();
         Player nearbySurvivor = survivorConnection.connect(instance);
+        nearbySurvivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
         nearbySurvivor.teleport(player.getPosition()).join();
         env.tick();
 

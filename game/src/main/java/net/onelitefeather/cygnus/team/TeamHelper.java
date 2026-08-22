@@ -1,7 +1,8 @@
 package net.onelitefeather.cygnus.team;
 
 import net.onelitefeather.cygnus.common.strategy.TeleportStrategy;
-import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
+import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
+import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
@@ -67,14 +68,19 @@ public final class TeamHelper {
     }
 
     /**
-     * Tags and assigns the given player as the slender and updates their view rule.
+     * Tags and assigns the given player as the slender and installs their view rule.
+     * <p>
+     * {@link Tags#HIDDEN} has to be set <b>before</b> the rule is installed: the rule reads that tag and a
+     * missing tag counts as "revealed", which used to leave the slender visible for everybody between the
+     * team allocation and the game start.
      *
      * @param player      the player to become the slender
      * @param slenderTeam the team to add the player to
      */
     private static void assignSlender(Player player, Team slenderTeam) {
         player.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
-        player.updateViewableRule(_ -> !ViewRuleUpdater.isHidden(player));
+        player.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
+        player.updateViewableRule(VisibilityRules.slenderRule(player));
         slenderTeam.addPlayer(player);
     }
 

@@ -25,7 +25,6 @@ import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerChatEvent;
 import net.minestom.server.event.player.PlayerDeathEvent;
@@ -78,10 +77,8 @@ import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
-import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -162,7 +159,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.resourcePackService.ifPresent(service -> service.registerListener(manager));
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
-        manager.addListener(PlayerChatEvent.class, new PlayerChatListener(spectatorTeam, phaseSupplier));
+        manager.addListener(PlayerChatEvent.class, new PlayerChatListener(spectatorTeam));
         manager.addListener(GameMapLoadEvent.class, _ -> this.mapProvider.loadGameMap());
         manager.addListener(GamePrepareEvent.class, _ -> StaminaHelper.initStaminaObjects(this.teamService, this.staminaService));
         registerCancelListener(manager);
@@ -172,7 +169,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         GlobalEventHandler handler = MinecraftServer.getGlobalEventHandler();
 
-        SlenderBarTrigger trigger = new SlenderBarTrigger(this.staminaService::getSlenderBar, this::triggerViewRuleUpdate);
+        SlenderBarTrigger trigger = new SlenderBarTrigger(this.staminaService::getSlenderBar);
         handler.addListener(PlayerUseItemEvent.class, new SlenderItemListener(trigger));
         handler.addListener(GameFinishEvent.class, new GameFinishListener());
         handler.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider));
@@ -224,9 +221,5 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         .forEach(player -> player.switchEntityType(EntityType.PLAYER)));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, EntityActionListener::listener);
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientSettingsPacket.class, SettingsListener::listener);
-    }
-
-    private void triggerViewRuleUpdate(@NotNull Player player) {
-        ViewRuleUpdater.updateViewer(player, this.teamService.getTeam(GameConfig.SURVIVOR_KEY).orElseThrow());
     }
 }
