@@ -14,6 +14,7 @@ import net.onelitefeather.cygnus.player.listener.SpectatorAddListener;
 import net.onelitefeather.cygnus.player.listener.SpectatorItemListener;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
+import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.Team;
 
 import java.util.concurrent.CompletableFuture;
@@ -50,6 +51,11 @@ public final class SpectatorService {
 
     /**
      * Converts the given player into a spectator and update several things like hotbar, {@link GameMode} and so on.
+     * <p>
+     * The spectator rule keeps the player invisible for everybody who is still in the round but lets
+     * spectators see each other. Because {@link VisibilityRules#spectatorRule()} tests the viewer, the rules
+     * of all other players have to be re-evaluated as well so already present spectators pull the new one
+     * into their viewer set.
      *
      * @param player the player to convert
      */
@@ -58,7 +64,8 @@ public final class SpectatorService {
         player.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
         spectatorTeam.addPlayer(player);
         Items.setSpectatorLayout(player);
-        player.updateViewableRule(_ -> false);
+        player.updateViewableRule(VisibilityRules.spectatorRule());
+        VisibilityRules.refresh(player);
     }
 
     /**

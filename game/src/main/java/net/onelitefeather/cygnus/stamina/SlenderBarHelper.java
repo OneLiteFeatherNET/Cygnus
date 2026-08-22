@@ -9,6 +9,7 @@ import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
+import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -19,7 +20,7 @@ import java.util.function.BiPredicate;
  * The method will iterate over all entities in the given range and apply the damage to the entity if it is a player.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  */
 @SuppressWarnings({"java:S3252"})
@@ -83,11 +84,30 @@ public interface SlenderBarHelper {
         Collection<Entity> nearbyEntities = instance.getNearbyEntities(center, range);
         if (nearbyEntities.isEmpty()) return;
         for (Entity nearbyEntity : nearbyEntities) {
-            boolean hasSameUUID = UUID_COMPARATOR.test(uuid, nearbyEntity.getUuid());
-            if (nearbyEntity instanceof Player target && !hasSameUUID && (target.getHealth() > 0)) {
-                target.setHealth(target.getHealth() - damage);
-            }
+            if (!(nearbyEntity instanceof Player target)) continue;
+            if (UUID_COMPARATOR.test(uuid, target.getUuid())) continue;
+            if (!isDamageableSurvivor(target)) continue;
+            target.setHealth(target.getHealth() - damage);
         }
+    }
+
+    /**
+     * Checks whether the given player may take damage from the slender.
+     * <p>
+     * Only players of the survivor team are valid targets. The slender itself and every spectator
+     * must stay untouched, otherwise a spectator would slowly bleed out and trigger the whole death
+     * pipeline a second time. Because {@link Player#setHealth(float)} bypasses the damage event
+     * chain, the game mode is checked as a second, independent guard: it stays correct even if the
+     * team tag and the game mode ever drift apart.
+     *
+     * @param target the player to check
+     * @return {@code true} if the player is a living survivor that may take damage
+     */
+    private static boolean isDamageableSurvivor(Player target) {
+        return TeamHelper.isSurvivorTeam(target)
+                && !target.getGameMode().invulnerable()
+                && !target.isDead()
+                && target.getHealth() > 0;
     }
 
     /**
@@ -125,10 +145,12 @@ public interface SlenderBarHelper {
         if (nearbyEntities.isEmpty()) return;
 
         for (Entity nearbyEntity : nearbyEntities) {
-            boolean hasSameUUID = UUID_COMPARATOR.test(uuid, nearbyEntity.getUuid());
-            if (nearbyEntity instanceof Player target && !hasSameUUID) {
-                target.playSound(spawn ? SPAWN : TELEPORT, target.getPosition());
-            }
+            if (!(nearbyEntity instanceof Player target)) continue;
+            if (UUID_COMPARATOR.test(uuid, target.getUuid())) continue;
+            // The teleport sound fires exactly when the slender turns invisible, so it would tell a
+            // spectator both the position and the state of the slender. Only survivors may hear it.
+            if (!TeamHelper.isSurvivorTeam(target)) continue;
+            target.playSound(spawn ? SPAWN : TELEPORT, target.getPosition());
         }
     }
 }
