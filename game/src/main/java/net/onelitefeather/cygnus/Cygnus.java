@@ -14,6 +14,8 @@ import net.onelitefeather.cygnus.map.GameMapProvider;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
+import net.onelitefeather.cygnus.overlay.EquipmentScreenOverlay;
+import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 import net.onelitefeather.cygnus.spectator.SpectatorService;
 import net.onelitefeather.cygnus.team.TeamCreator;
 import net.onelitefeather.cygnus.team.TeamHelper;
@@ -84,11 +86,9 @@ import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -110,6 +110,14 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final JumpScareManager jumpscareManager;
     private final SpectatorService spectatorService;
     private final Optional<ResourcePackService> resourcePackService;
+    /**
+     * The one screen overlay every full-screen effect draws through.
+     * <p>
+     * A player wears a single head slot, so there is a single overlay to own it. Each effect
+     * contributes its own {@code OverlayLayer} to it; a second instance would mean two of them
+     * writing the same slot without knowing about each other, and whichever wrote last would win.
+     * </p>
+     */
     private final ScreenOverlay screenOverlay;
     private final SlenderGazeService slenderGazeService;
 
@@ -136,7 +144,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
         this.resourcePackService = ResourcePackService.create();
         this.screenOverlay = new EquipmentScreenOverlay();
-        this.slenderGazeService = new SlenderGazeService(this.screenOverlay, this::currentSlender);
+        this.slenderGazeService = new SlenderGazeService(
+                this.screenOverlay, () -> TeamHelper.slenderOf(this.teamService));
         this.initPhases();
         this.initCommands();
         this.initListener();
@@ -148,28 +157,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
         manager.register(new GlitchCommand(this.slenderGazeService));
-    }
-
-    /**
-     * Looks up the player currently playing the slender.
-     *
-     * @return the slender, or {@code null} while the role is unassigned
-     */
-    private @Nullable Player currentSlender() {
-        return this.teamService.getTeam(GameConfig.SLENDER_KEY)
-                .flatMap(team -> team.getPlayers().stream().findFirst())
-                .orElse(null);
-    }
-
-    /**
-     * Collects the players that are currently survivors.
-     *
-     * @return the survivor team's players
-     */
-    private Set<Player> currentSurvivors() {
-        return this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
-                .map(team -> Set.copyOf(team.getPlayers()))
-                .orElseGet(Set::of);
     }
 
 
@@ -229,7 +216,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // Without the pack the vignette font does not exist and survivors would stare at an
         // empty box, so the effect stays off wherever the pack is not delivered.
         if (OverlayProperties.enabled()) {
-            this.slenderGazeService.registerListener(handler, this::currentSurvivors);
+            this.slenderGazeService.registerListener(handler, () -> TeamHelper.survivorsOf(this.teamService));
         }
     }
 

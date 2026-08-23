@@ -12,6 +12,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.validate.Check;
+import org.jetbrains.annotations.Nullable;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.map.GameMap;
@@ -23,7 +24,7 @@ import java.util.Set;
  * This class provides utility methods for the team handling in the game.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  */
 public final class TeamHelper {
@@ -164,6 +165,40 @@ public final class TeamHelper {
             Component survivorDisplayName = Component.text(player.getUsername(), NamedTextColor.GREEN);
             player.setDisplayName(survivorDisplayName);
         });
+    }
+
+    /**
+     * Reads the players currently on the survivor team.
+     * <p>
+     * Every full-screen effect draws for the survivors and needs them once per tick, so each one
+     * would otherwise carry its own copy of this lookup. Returns an empty set rather than throwing
+     * while the teams are not set up yet: the effects are ticked from a scheduler, which runs
+     * before a round starts and after it ends.
+     * </p>
+     *
+     * @param teamService the service to read the team from
+     * @return the survivors, or an empty set while there is no survivor team
+     */
+    public static Set<Player> survivorsOf(TeamService teamService) {
+        return teamService.getTeam(GameConfig.SURVIVOR_KEY)
+                .map(team -> Set.copyOf(team.getPlayers()))
+                .orElseGet(Set::of);
+    }
+
+    /**
+     * Reads the player currently playing the slender.
+     * <p>
+     * The slender team has a capacity of one, which {@link #prepareTeamAllocation} enforces, so the
+     * first player on it is the only one.
+     * </p>
+     *
+     * @param teamService the service to read the team from
+     * @return the slender, or {@code null} while the role is unassigned
+     */
+    public static @Nullable Player slenderOf(TeamService teamService) {
+        return teamService.getTeam(GameConfig.SLENDER_KEY)
+                .flatMap(team -> team.getPlayers().stream().findFirst())
+                .orElse(null);
     }
 
     /**
