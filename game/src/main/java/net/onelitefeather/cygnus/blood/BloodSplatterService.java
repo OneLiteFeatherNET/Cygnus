@@ -5,12 +5,12 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
-import net.onelitefeather.cygnus.common.util.PlayerState;
-import net.onelitefeather.cygnus.common.util.RepeatingTask;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
 import net.onelitefeather.cygnus.overlay.OverlayTextureKeys;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
+import net.onelitefeather.cygnus.utils.PlayerState;
+import net.onelitefeather.cygnus.utils.RepeatingTask;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
@@ -26,7 +26,7 @@ import java.util.function.IntUnaryOperator;
  * </p>
  *
  * @author TheMeinerLP
- * @version 2.1.0
+ * @version 2.1.1
  * @since 2.7.0
  */
 public final class BloodSplatterService {

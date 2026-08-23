@@ -9,15 +9,9 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
-import net.onelitefeather.cygnus.overlay.ScreenOverlay;
-import org.jetbrains.annotations.Nullable;
+import net.onelitefeather.cygnus.overlay.RecordingScreenOverlay;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -29,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Verifies the splatter that flashes up when a player is hit and fades out on its own.
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.0
  */
 class BloodSplatterServiceTest extends CygnusPlayerTestBase {
@@ -40,7 +34,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A hit puts the first frame on screen right away")
     void hitShowsTheFirstFrame(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
         BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
 
@@ -52,7 +46,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("The direction of the hit picks a different set of frames")
     void directionPicksItsOwnFrames(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
         BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
 
@@ -65,7 +59,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("The splatter fades frame by frame and disappears")
     void splatterFadesAway(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
         BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
         service.splatter(player, BloodDirection.FRONT);
@@ -83,7 +77,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A second hit restarts the splatter")
     void secondHitRestarts(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
         BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
         service.splatter(player, BloodDirection.FRONT);
@@ -98,7 +92,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Being hit is announced by the damage event")
     void damageEventTriggersTheSplatter(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
         BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
         service.registerListener(env.process().eventHandler());
@@ -112,7 +106,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Clearing takes the splatter off the screen")
     void clearingRemovesTheSplatter(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
         BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
         service.splatter(player, BloodDirection.FRONT);
@@ -125,7 +119,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("The fade task only runs while something is bleeding")
     void fadeTaskTracksActiveSplatters(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
         BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
         assertFalse(service.fadeTask.isRunning(), "nothing is bleeding yet");
@@ -143,7 +137,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Two players bleed independently")
     void playersAreIndependent(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Instance instance = env.createFlatInstance();
         Player first = env.createConnection().connect(instance, new Pos(0, 40, 0));
         Player second = env.createConnection().connect(instance, new Pos(4, 40, 0));
@@ -183,38 +177,5 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
                 variant + 1,
                 frame + 1
         ));
-    }
-
-    /**
-     * Records what the service contributes, standing in for the title-backed overlay.
-     */
-    private static final class RecordingOverlay implements ScreenOverlay {
-
-        private final Map<UUID, Map<OverlayLayer, Key>> layers = new HashMap<>();
-
-        @Override
-        public void set(Player player, OverlayLayer layer, @Nullable Key texture) {
-            Map<OverlayLayer, Key> current =
-                    this.layers.computeIfAbsent(player.getUuid(), key -> new EnumMap<>(OverlayLayer.class));
-            if (texture == null) {
-                current.remove(layer);
-                return;
-            }
-            current.put(layer, texture);
-        }
-
-        @Override
-        public void clear(Player player) {
-            this.layers.remove(player.getUuid());
-        }
-
-        /**
-         * @param player the player to look up
-         * @param layer  the layer to look up
-         * @return the glyph currently set, or {@code null} if there is none
-         */
-        private @Nullable Key of(Player player, OverlayLayer layer) {
-            return this.layers.getOrDefault(player.getUuid(), Map.of()).get(layer);
-        }
     }
 }

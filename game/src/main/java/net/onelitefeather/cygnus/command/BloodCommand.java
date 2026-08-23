@@ -6,6 +6,7 @@ import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.blood.BloodDirection;
 import net.onelitefeather.cygnus.blood.BloodSplatterService;
+import net.onelitefeather.cygnus.common.Messages;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -16,7 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.0
  */
 public final class BloodCommand extends Command {
@@ -33,14 +34,14 @@ public final class BloodCommand extends Command {
                 .setFormat(ArgumentEnum.Format.LOWER_CASED);
 
         this.setDefaultExecutor((sender, context) -> {
-            Player player = CommandSenders.asPlayer(sender, "can bleed.");
+            Player player = CommandSenders.asPlayer(sender, Messages.ONLY_PLAYERS_CAN_BLEED);
             if (player == null) return;
             BloodDirection[] sides = BloodDirection.values();
             service.splatter(player, sides[ThreadLocalRandom.current().nextInt(sides.length)]);
         });
 
         this.addSyntax((sender, context) -> {
-            Player player = CommandSenders.asPlayer(sender, "can bleed.");
+            Player player = CommandSenders.asPlayer(sender, Messages.ONLY_PLAYERS_CAN_BLEED);
             if (player == null) return;
             service.splatter(player, context.get(direction));
         }, direction);
