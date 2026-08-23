@@ -83,7 +83,6 @@ import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
-import net.onelitefeather.cygnus.stamina.FoodBar;
 import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionService;
@@ -152,7 +151,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 bound -> ThreadLocalRandom.current().nextInt(bound)
         );
         this.tunnelVisionRenderer = new OverlayTunnelVisionRenderer(this.screenOverlay);
-        this.tunnelVisionService = new TunnelVisionService(this.tunnelVisionRenderer, this::remainingStamina);
+        this.tunnelVisionService = new TunnelVisionService(this.tunnelVisionRenderer, player -> StaminaHelper.remainingShare(this.staminaService, player));
         this.initPhases();
         this.initCommands();
         this.initListener();
@@ -167,16 +166,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.register(new TunnelVisionCommand(this.tunnelVisionRenderer));
     }
 
-    /**
-     * Reads a survivor's remaining stamina for the tunnel vision.
-     *
-     * @param player the survivor to read
-     * @return the remaining share, or a full bar while the player has none yet
-     */
-    private double remainingStamina(Player player) {
-        FoodBar bar = this.staminaService.getFoodBar(player);
-        return bar == null ? 1.0D : bar.remainingShare();
-    }
 
     private void initListener() {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
