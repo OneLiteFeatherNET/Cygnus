@@ -7,14 +7,13 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
-import net.onelitefeather.cygnus.common.util.Helper;
-import net.onelitefeather.cygnus.common.util.PlayerState;
-import net.onelitefeather.cygnus.common.util.RepeatingTask;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
 import net.onelitefeather.cygnus.overlay.OverlayTextureKeys;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
+import net.onelitefeather.cygnus.utils.PlayerState;
+import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
@@ -35,7 +34,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author TheMeinerLP
- * @version 2.0.0
+ * @version 3.0.0
  * @since 2.7.0
  */
 public final class SlenderGazeService {
@@ -94,7 +93,7 @@ public final class SlenderGazeService {
         node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(GameFinishEvent.class, event -> {
-            this.clearAll();
+            this.cleanUp();
             this.stopTask();
         });
     }
@@ -108,7 +107,7 @@ public final class SlenderGazeService {
 
     /**
      * Stops the update task. Does nothing if it is not running. Leaves whatever is on a tracked
-     * survivor's screen where it is — pair with {@link #clearAll()} where every screen needs wiping
+     * survivor's screen where it is — pair with {@link #cleanUp()} where every screen needs wiping
      * too.
      */
     public void stopTask() {
@@ -137,7 +136,7 @@ public final class SlenderGazeService {
     /**
      * Clears every tracked survivor's screen and forgets all of them.
      */
-    public void clearAll() {
+    public void cleanUp() {
         for (Player survivor : this.survivors.values()) {
             this.overlay.set(survivor, OverlayLayer.GLITCH, null);
         }
@@ -153,22 +152,25 @@ public final class SlenderGazeService {
      * a second time or exposing it, trading one seam for a worse one over two lines of
      * {@code GlitchCommand} preview code.
      * </p>
+     * <p>
+     * Showing and clearing are one method rather than two because {@link SlenderGaze#NONE} already
+     * says "nothing to draw" everywhere else in this class — {@link #tick()} reads it off
+     * {@link SlenderGaze#levelOf(net.minestom.server.coordinate.Pos, net.minestom.server.coordinate.Pos)}
+     * on every pass — so a separate {@code hide} would be a second spelling of a level the type
+     * already has.
+     * </p>
      *
      * @param player the player to draw for
-     * @param level  the level between {@code 0} and {@code SlenderGaze.LEVELS - 1}
+     * @param level  the level between {@code 0} and {@code SlenderGaze.LEVELS - 1}, or
+     *               {@link SlenderGaze#NONE} to take the tearing off their screen
      */
-    public void show(Player player, int level) {
-        int clamped = Helper.clamp(level, 0, SlenderGaze.LEVELS - 1);
+    public void preview(Player player, int level) {
+        if (level == SlenderGaze.NONE) {
+            this.overlay.set(player, OverlayLayer.GLITCH, null);
+            return;
+        }
+        int clamped = Math.clamp(level, 0, SlenderGaze.LEVELS - 1);
         this.overlay.set(player, OverlayLayer.GLITCH, TEXTURES[clamped][this.frame % FRAMES]);
-    }
-
-    /**
-     * Takes the tearing off a player's screen.
-     *
-     * @param player the player to clear
-     */
-    public void hide(Player player) {
-        this.overlay.set(player, OverlayLayer.GLITCH, null);
     }
 
     /**

@@ -12,16 +12,11 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
-import net.onelitefeather.cygnus.overlay.ScreenOverlay;
-import org.jetbrains.annotations.Nullable;
+import net.onelitefeather.cygnus.overlay.RecordingScreenOverlay;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -32,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * Verifies the tearing a survivor gets while the slender stands in their view.
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2.7.0
  */
 class SlenderGazeServiceTest extends CygnusPlayerTestBase {
@@ -40,7 +35,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Seeing the slender tears the survivor's view")
     void seeingHimTearsTheView(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
@@ -55,7 +50,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("With him behind them there is nothing to see")
     void behindThemNothingHappens(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, -5));
@@ -70,7 +65,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Looking away takes it off again")
     void lookingAwayClearsIt(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
@@ -87,7 +82,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("The tearing runs on while he stays in view")
     void tearingKeepsMoving(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
@@ -105,7 +100,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Without a slender nothing happens at all")
     void withoutASlenderNothingHappens(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player survivor = connect(env, env.createFlatInstance(), new Pos(0, 40, 0, 0, 0));
         SlenderGazeService service = new SlenderGazeService(overlay, () -> null);
         service.track(survivor);
@@ -118,7 +113,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A removed survivor gets their view back")
     void removedSurvivorIsCleared(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
@@ -134,8 +129,8 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
 
     @Test
     @DisplayName("Clearing everyone gives every survivor their screen back")
-    void clearAllWipesEveryone(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+    void cleanUpWipesEveryone(Env env) {
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Instance instance = env.createFlatInstance();
         Player first = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player second = connect(env, instance, new Pos(4, 40, 0, 0, 0));
@@ -145,19 +140,19 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         service.track(second);
         service.tick();
 
-        service.clearAll();
+        service.cleanUp();
 
         assertNull(overlay.of(first, OverlayLayer.GLITCH));
         assertNull(overlay.of(second, OverlayLayer.GLITCH));
 
         service.tick();
-        assertNull(overlay.of(first, OverlayLayer.GLITCH), "clearAll must stop the drawing as well");
+        assertNull(overlay.of(first, OverlayLayer.GLITCH), "cleanUp must stop the drawing as well");
     }
 
     @Test
     @DisplayName("The start of a round takes the survivors on board")
     void gameStartTracksSurvivors(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
@@ -173,7 +168,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A dying survivor gets their screen back")
     void deathRemovesTheSurvivor(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
@@ -191,7 +186,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("The end of a round clears everyone")
     void gameFinishClearsEveryone(Env env) {
-        RecordingOverlay overlay = new RecordingOverlay();
+        RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
@@ -215,38 +210,5 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
      */
     private Player connect(Env env, Instance instance, Pos position) {
         return env.createConnection().connect(instance, position);
-    }
-
-    /**
-     * Records what the service contributes, standing in for the equipment-backed overlay.
-     */
-    private static final class RecordingOverlay implements ScreenOverlay {
-
-        private final Map<UUID, Map<OverlayLayer, Key>> layers = new HashMap<>();
-
-        @Override
-        public void set(Player player, OverlayLayer layer, @Nullable Key texture) {
-            Map<OverlayLayer, Key> current =
-                    this.layers.computeIfAbsent(player.getUuid(), key -> new EnumMap<>(OverlayLayer.class));
-            if (texture == null) {
-                current.remove(layer);
-                return;
-            }
-            current.put(layer, texture);
-        }
-
-        @Override
-        public void clear(Player player) {
-            this.layers.remove(player.getUuid());
-        }
-
-        /**
-         * @param player the player to look up
-         * @param layer  the layer to look up
-         * @return the texture currently set, or {@code null} if there is none
-         */
-        private @Nullable Key of(Player player, OverlayLayer layer) {
-            return this.layers.getOrDefault(player.getUuid(), Map.of()).get(layer);
-        }
     }
 }

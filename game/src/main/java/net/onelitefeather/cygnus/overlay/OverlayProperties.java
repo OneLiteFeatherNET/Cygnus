@@ -1,7 +1,8 @@
 package net.onelitefeather.cygnus.overlay;
 
 /**
- * Decides whether the full-screen overlays — the tunnel vision and the blood splatter — run.
+ * Decides whether the full-screen overlays — the tunnel vision, the slender's glitch and the
+ * blood splatter — run.
  * <p>
  * They used to be tied to the ResourcePack feature, on the grounds that without the pack their
  * textures are missing and a player would get a fullscreen checkerboard. That was too blunt: a
@@ -10,7 +11,7 @@ package net.onelitefeather.cygnus.overlay;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.0
  */
 public final class OverlayProperties {
