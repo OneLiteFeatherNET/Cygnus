@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.common.util;
+package net.onelitefeather.cygnus.utils;
 
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;

@@ -2,15 +2,13 @@ package net.onelitefeather.cygnus.ambient;
 
 import net.theevilreaper.xerus.api.team.Team;
 import net.kyori.adventure.sound.Sound;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
-import net.minestom.server.timer.Task;
 import net.onelitefeather.cygnus.common.Messages;
-import org.jetbrains.annotations.Nullable;
+import net.onelitefeather.cygnus.utils.RepeatingTask;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -34,7 +32,7 @@ import static net.onelitefeather.cygnus.common.util.Helper.getRandomPitchValue;
  * }</pre>
  *
  * @author theEvilReaper
- * @version 2.0.0
+ * @version 2.1.0
  * @since 1.0.0
  */
 public final class AmbientProvider {
@@ -50,7 +48,7 @@ public final class AmbientProvider {
     };
 
     private final Team team;
-    private @Nullable Task task;
+    private final RepeatingTask task = new RepeatingTask(this::tick);
     private int currentTicks;
 
     /**
@@ -62,23 +60,17 @@ public final class AmbientProvider {
     }
 
     /**
-     * Starts the ambient task.
+     * Starts the ambient task. Does nothing if it is already running.
      */
     public void startTask() {
-        if (task != null) return;
-        task = MinecraftServer.getSchedulerManager()
-                .buildTask(this::tick)
-                .repeat(1, ChronoUnit.SECONDS)
-                .schedule();
+        this.task.start(1, ChronoUnit.SECONDS);
     }
 
     /**
-     * Stops the ambient task.
+     * Stops the ambient task. Does nothing if it is not running.
      */
     public void stopTask() {
-        if (task == null) return;
-        task.cancel();
-        task = null;
+        this.task.stop();
     }
 
     /**

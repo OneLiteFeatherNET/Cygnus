@@ -8,7 +8,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.component.Equippable;
 import net.minestom.server.sound.SoundEvent;
-import net.onelitefeather.cygnus.common.util.PlayerState;
+import net.onelitefeather.cygnus.utils.PlayerState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
