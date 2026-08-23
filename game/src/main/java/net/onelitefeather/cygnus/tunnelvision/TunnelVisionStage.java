@@ -55,18 +55,18 @@ public final class TunnelVisionStage {
     /**
      * Advances the heartbeat by one tick and reports the stage to render.
      *
-     * @param combined the combined intensity from {@link TunnelVisionIntensity}
+     * @param intensity the intensity from {@link TunnelVisionIntensity}
      * @return the stage to render, between {@code 0} and {@link #MAX_STAGE}
      */
-    public int update(double combined) {
-        double exactStage = combined * MAX_STAGE;
+    public int update(double intensity) {
+        double exactStage = intensity * MAX_STAGE;
         if (this.baseStage < 0 || Math.abs(exactStage - this.baseStage) > HYSTERESIS) {
             this.baseStage = (int) Math.round(exactStage);
         }
 
         this.elapsedSeconds += TICK_SECONDS;
-        double frequency = BASE_FREQUENCY + FREQUENCY_GAIN * combined;
-        double depth = PULSE_DEPTH * combined;
+        double frequency = BASE_FREQUENCY + FREQUENCY_GAIN * intensity;
+        double depth = PULSE_DEPTH * intensity;
         // The heartbeat only ever opens the view up, never beyond the base stage: at full
         // intensity the base stage is the maximum, and a symmetric pulse would be clipped away
         // exactly where it matters most.

@@ -30,8 +30,8 @@ Reference: [Shader – Minecraft Wiki](https://minecraft.wiki/w/Shader),
 
 ## Intensity
 
-`TunnelVisionIntensity` turns two inputs into a value in `[0, 1]`. It has no Minestom dependency
-beyond positions, so it is testable without a server.
+`TunnelVisionIntensity` turns the survivor's stamina into a value in `[0, 1]`. It has no Minestom
+dependency at all, so it is testable without a server.
 
 **Stamina.** With `s = currentSpeedCount / 20`:
 
@@ -42,27 +42,14 @@ stamina = s >= 0.5 ? 0 : ((0.5 - s) / 0.5)^2
 Nothing happens above half a bar; below it the curve accelerates, so the last few percent are far
 more dramatic than crossing the halfway mark.
 
-**Slender.** With `d` the distance between survivor and Slender:
+**Why the Slender is not an input.** An earlier draft folded a proximity term into this value, so
+that the view also narrowed as he closed in. That half of the idea became its own effect: the
+slender gaze glitch tears the screen when he is in view, driven by `SlenderGaze` with its own range
+and field-of-view constants, and both draw onto the same `ScreenOverlay` as separate layers. Keeping
+them apart means each can be tuned - and switched off - without touching the other, and a survivor
+who is merely exhausted does not get the effect meant for one who is being hunted.
 
-```
-proximity = clamp((25 - d) / (25 - 6), 0, 1)
-view      = 0.6 + 0.4 * max(0, dot(survivorLookDirection, directionToSlender))
-slender   = proximity * view
-```
-
-The effect starts at 25 blocks and peaks at 6. Looking straight at him is worse than having him
-behind you, but never by more than a factor of 1.67 — he is frightening either way.
-
-**Combination:**
-
-```
-combined = 1 - (1 - stamina) * (1 - slender)
-```
-
-Both sources add up noticeably but saturate cleanly at 1.0 instead of clamping hard, so neither
-one can hide the other.
-
-**No line-of-sight raycast.** A wall between survivor and Slender does not dampen the effect. It
+**No line-of-sight raycast.** Neither effect dampens on a wall between survivor and Slender. It
 would cost a block walk per survivor per tick, and "I can feel him through the wall" is the better
 atmosphere anyway.
 
@@ -74,14 +61,15 @@ painting and effect textures only — so the animation is the server walking thr
 Thirty-two of them make the view close smoothly; at sixteen the steps were visible as the tunnel
 narrowed. Two mechanisms sit on top, in this order:
 
-1. **Hysteresis on the base value.** `baseStage` starts as `round(combined * 32)` and afterwards
-   only moves when `combined * 32` is more than 0.6 stages away from it. Distance and stamina both
-   jitter constantly; without this the overlay flickers at every stage boundary.
+1. **Hysteresis on the base value.** `baseStage` starts as `round(intensity * 32)` and afterwards
+   only moves when `intensity * 32` is more than 0.6 stages away from it. Stamina jitters constantly
+   as a survivor starts and stops sprinting; without this the overlay flickers at every stage
+   boundary.
 2. **Pulse on top of the stabilised stage.**
 
 ```
-depth     = (32 / 16) * combined          // a sixteenth of the scale, whatever the stage count is
-frequency = 1.0 + 1.5 * combined          // Hz
+depth     = (32 / 16) * intensity         // a sixteenth of the scale, whatever the stage count is
+frequency = 1.0 + 1.5 * intensity         // Hz
 display   = clamp(round(baseStage + depth * (sin(2*pi * frequency * t) - 1)), 0, 32)
 ```
 
@@ -148,8 +136,9 @@ New package `net.onelitefeather.cygnus.tunnelvision`:
   vignette from the lobby without a running round. `stage` freezes one stage to judge the drawing;
   `intensity` runs the real heartbeat.
 
-One task for everyone rather than one per player as `StaminaBar` does: the Slender position is
-read once per tick instead of once per survivor, and cleanup happens in one place.
+One task for everyone rather than one per player as `StaminaBar` does: a single 100 ms task walks
+every tracked survivor, so the count of scheduler tasks does not grow with the lobby, and cleanup
+happens in one place.
 
 ## Wiring
 
@@ -171,10 +160,14 @@ Two changes to existing code:
 
 - **`FoodBar` gains a getter** for normalised stamina. `currentSpeedCount` is private today. The
   service could read `player.getExp()`, since `FoodBar` mirrors the value there, but that hangs
-  game logic off a display detail.
-- **The service only exists when the resource pack is active.** `Cygnus` creates it only if
-  `resourcePackService` is present, reusing the `Optional` already in place. Without the pack the
-  textures do not exist and players would get a fullscreen missing-texture checkerboard.
+  game logic off a display detail. `StaminaHelper.remainingShare` wraps the lookup, so the service
+  takes a plain `ToDoubleFunction<Player>` and `Cygnus` keeps none of it.
+- **The effects are gated by `OverlayProperties`, not by the resource pack.** An earlier draft tied
+  them to `resourcePackService` being present, on the grounds that the textures would otherwise be
+  missing. That conflated two questions: whether this server hands out a pack, and whether a player
+  has one loaded - a player can arrive with the pack already installed, and a server can hand one
+  out that a player declines. `cygnus.overlays` answers the second directly, and
+  `Cygnus.registerOverlayListeners` holds that one gate for all three effects.
 
 ## Failure modes
 
@@ -182,16 +175,16 @@ The service keeps running in all of these; none of them throws.
 
 | Situation | Behaviour |
 | --- | --- |
-| No Slender (disconnected, not yet assigned) | stamina share only |
-| Slender in a different instance | slender share is 0 |
-| No `FoodBar` registered for a player | stamina share is 0 |
+| No `FoodBar` registered for a player | reads as a full bar, so the effect stays off |
+| Ticked outside a round (before `GameStartEvent`, after `GameFinishEvent`) | nobody is tracked; the task does nothing |
 | Stage drops to 0 | the layer is dropped rather than drawn — otherwise the last vignette stays on the head |
 | Player dies or becomes a spectator | explicit `clear()`, same reason |
+| The pack is not loaded on a client | the overlay resolves to a missing texture for that player only; the server side is unaffected |
 
 ## Tests
 
-- `TunnelVisionIntensityTest` — plain JUnit: edge values (full stamina at long range gives 0,
-  empty stamina at close range gives 1), monotonicity in both inputs, and the view factor.
+- `TunnelVisionIntensityTest` — plain JUnit: the threshold at half a bar, an empty bar giving 1,
+  and monotonicity as the bar drains.
 - `TunnelVisionStageTest` — plain JUnit: the pulse at full intensity, steadiness at low intensity,
   hysteresis (a small oscillation around a stage boundary must not change the stage), and bounds.
 - `OverlayTunnelVisionRendererTest` — Cyano: the renderer contributes the expected texture, and
@@ -200,12 +193,16 @@ The service keeps running in all of these; none of them throws.
 - `EquipmentScreenOverlayTest` — Cyano: a layer becomes a camera overlay on the head, the blood
   wins over the tunnel vision and the tunnel vision returns afterwards, the last layer leaving
   empties the slot, and an unchanged overlay is not re-sent.
-- `TunnelVisionServiceTest` — lifecycle: start and stop, removing a player, behaviour with no
-  Slender or one in another instance, and the four lifecycle events.
+- `TunnelVisionServiceTest` — lifecycle: start and stop, removing a player, and the four lifecycle
+  events it registers for.
 - `TunnelVisionCommandTest` — the command draws the requested stage, previews an intensity, and
   clears on `off`.
 - `FoodBarTest` — a fresh bar reports a full share.
+- `StaminaShareTest` — `StaminaHelper.remainingShare` reads a full bar for a player who has none,
+  which is what keeps the effect off for anyone not playing a round.
 
-The pack side cannot be tested automatically. Glyph sizing and the look of the vignette are
-verified in-game against a snapshot build of `cygnus-pack`; that is an explicit step in the
-implementation plan, not an afterthought.
+The pack side cannot be tested automatically. The look of the vignette is verified in-game against a
+snapshot build of `cygnus-pack`; that is an explicit step in the implementation plan, not an
+afterthought. What *can* be checked mechanically is that both sides agree on the texture paths:
+`OverlayTextureKeys` builds them and `tools/README.md` in `cygnus-pack` documents them, and a
+mismatch shows up as a fullscreen missing-texture checkerboard with nothing in any log.
