@@ -15,6 +15,7 @@ import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
 import net.onelitefeather.cygnus.overlay.EquipmentScreenOverlay;
+import net.onelitefeather.cygnus.overlay.OverlayProperties;
 import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 import net.onelitefeather.cygnus.spectator.SpectatorService;
 import net.onelitefeather.cygnus.team.TeamCreator;
@@ -202,12 +203,23 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientSettingsPacket.class, CygnusSettingsListener::listener);
 
         spectatorService.registerListener(handler);
+        this.registerOverlayListeners(handler);
+    }
 
-        // Without the pack the vignette font does not exist and survivors would stare at an
-        // empty box, so the effect stays off wherever the pack is not delivered.
-        if (OverlayProperties.enabled()) {
-            this.slenderGazeService.registerListener(handler, () -> TeamHelper.survivorsOf(this.teamService));
-        }
+    /**
+     * Registers the full-screen effects, unless the overlays are switched off.
+     * <p>
+     * The effects are drawn as {@code camera_overlay} textures and are gated by
+     * {@link OverlayProperties} alone - deliberately not by whether this server hands out a resource
+     * pack. One gate for all of them, so that {@code cygnus.overlays} means what its name says and
+     * an effect cannot end up outside it by being wired in somewhere else.
+     * </p>
+     *
+     * @param handler the node the effects register their listeners on
+     */
+    private void registerOverlayListeners(GlobalEventHandler handler) {
+        if (!OverlayProperties.enabled()) return;
+        this.slenderGazeService.registerListener(handler, () -> TeamHelper.survivorsOf(this.teamService));
     }
 
     private void initPhases() {
