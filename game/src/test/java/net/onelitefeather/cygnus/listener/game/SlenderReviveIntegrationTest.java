@@ -9,8 +9,10 @@ import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
+import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +21,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Integration test verifying that {@link SlenderReviveListener} works correctly.
@@ -51,6 +55,29 @@ class SlenderReviveIntegrationTest extends CygnusPlayerTestBase {
         assertEquals(targetSpawn, player.getPosition());
         assertNotNull(staminaService.getSlenderBar());
 
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testRevivedSlenderIsHiddenFromEveryoneElse(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
+        CygnusPlayer survivor = (CygnusPlayer) env.createPlayer(instance);
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        for (int i = 0; i < 5; i++) env.tick();
+        assertTrue(player.isViewer(survivor), "precondition: both players see each other before the revive");
+
+        StaminaService staminaService = new StaminaService();
+        SlenderReviveListener listener = new SlenderReviveListener(() -> null, staminaService);
+
+        listener.accept(new SlenderReviveEvent(player));
+
+        assertEquals(SlenderBarHelper.HIDDEN, player.getTag(Tags.HIDDEN));
+        assertTrue(VisibilityRules.isHidden(player), "the revived slender has to start hidden");
+        assertFalse(player.isViewer(survivor), "the revived slender must not stay visible for the survivors");
+
+        staminaService.cleanUp();
         env.destroyInstance(instance, true);
     }
 }

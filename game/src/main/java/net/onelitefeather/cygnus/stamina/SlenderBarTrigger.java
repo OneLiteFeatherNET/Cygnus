@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.stamina;
 
 import net.onelitefeather.cygnus.team.TeamHelper;
-import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
 import net.minestom.server.sound.SoundEvent;
@@ -24,7 +23,6 @@ public final class SlenderBarTrigger {
     private static final Sound ABORT_SOUND = Sound.sound(SoundEvent.ENTITY_ITEM_BREAK, Sound.Source.MASTER, 1F, 0F);
 
     private final Supplier<@Nullable StaminaBar> slenderBarSupplier;
-    private final PlayerConsumer updateRuneFunction;
 
     private long lastSoundTimeStamp = 0;
 
@@ -32,11 +30,9 @@ public final class SlenderBarTrigger {
      * Creates a new instance of this class.
      *
      * @param slenderBarSupplier the supplier to get the {@link SlenderBar}
-     * @param updateRuneFunction the function to update the rune status
      */
-    public SlenderBarTrigger(Supplier<@Nullable StaminaBar> slenderBarSupplier, PlayerConsumer updateRuneFunction) {
+    public SlenderBarTrigger(Supplier<@Nullable StaminaBar> slenderBarSupplier) {
         this.slenderBarSupplier = slenderBarSupplier;
-        this.updateRuneFunction = updateRuneFunction;
     }
 
     /**
@@ -54,10 +50,10 @@ public final class SlenderBarTrigger {
             return;
         }
         lastSoundTimeStamp = System.currentTimeMillis() + COOLDOWN_TIME;
-        if (slenderBar.changeStatus()) {
-            this.updateRuneFunction.accept(player);
-            return;
-        }
+        // A successful status change flips Tags.HIDDEN and fires the StaminaStateChangeEvent, and
+        // StaminaStateChangeListener re-evaluates the viewable rule from there. Doing it a second time here
+        // would be the exact kind of competing second update path this class used to carry.
+        if (slenderBar.changeStatus()) return;
         player.playSound(ABORT_SOUND);
     }
 }
