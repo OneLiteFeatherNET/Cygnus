@@ -42,7 +42,6 @@ import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.GlitchCommand;
 import net.onelitefeather.cygnus.blood.BloodSplatterService;
-import net.onelitefeather.cygnus.command.BloodCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
