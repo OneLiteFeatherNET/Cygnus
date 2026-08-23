@@ -1,17 +1,21 @@
 package net.onelitefeather.cygnus.command;
 
+import net.kyori.adventure.text.Component;
 import net.minestom.server.command.CommandSender;
 import net.minestom.server.entity.Player;
-import net.onelitefeather.cygnus.common.Messages;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Narrows a {@link CommandSender} down to a {@link Player}, since every preview command in this
  * package draws on a screen and only a player has one.
  * <p>
- * {@code TunnelVisionCommand}, {@code BloodCommand} and {@code GlitchCommand} each hand-rolled an
- * identical {@code private static @Nullable Player asPlayer(CommandSender)}, differing only in the
- * error string sent back to the console. This type is that method, extracted once.
+ * On the branch these preview commands were cut from, {@code TunnelVisionCommand},
+ * {@code BloodCommand} and {@code GlitchCommand} each hand-rolled an identical
+ * {@code private static @Nullable Player asPlayer(CommandSender)}, differing only in the message
+ * sent back to the console. This type is that method, extracted once, so that the three land on top
+ * of it instead of bringing a fourth copy each. The message itself is passed in rather than
+ * assembled here, so it can stay with the other player-facing texts in
+ * {@link net.onelitefeather.cygnus.common.Messages}.
  * </p>
  * <p>
  * A static helper was chosen over an abstract base command on purpose. The narrowing check is the
@@ -36,13 +40,15 @@ public final class CommandSenders {
     /**
      * Narrows the given sender down to a player, telling them why not if it cannot.
      *
-     * @param sender the sender to narrow
-     * @param reason the rest of the sentence after {@code "Only players "}, e.g. {@code "can bleed."}
+     * @param sender  the sender to narrow
+     * @param message the message to send back when the sender is not a player, taken from
+     *                {@link net.onelitefeather.cygnus.common.Messages} like every other
+     *                player-facing text
      * @return the player, or {@code null} if the sender has no screen to draw on
      */
-    public static @Nullable Player asPlayer(CommandSender sender, String reason) {
+    public static @Nullable Player asPlayer(CommandSender sender, Component message) {
         if (sender instanceof Player player) return player;
-        sender.sendMessage(Messages.withMiniPrefix("<red>Only players " + reason));
+        sender.sendMessage(message);
         return null;
     }
 }
