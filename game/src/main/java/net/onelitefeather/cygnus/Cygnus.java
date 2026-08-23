@@ -162,9 +162,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
         manager.register(new GlitchCommand(this.slenderGazeService));
-        manager.register(new BloodCommand(this.bloodSplatterService));
     }
-
 
     private void initListener() {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
