@@ -41,10 +41,8 @@ import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
-import net.onelitefeather.cygnus.command.GlitchCommand;
 import net.onelitefeather.cygnus.blood.BloodSplatterService;
 import net.onelitefeather.cygnus.command.StartCommand;
-import net.onelitefeather.cygnus.command.TunnelVisionCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
 import net.onelitefeather.cygnus.common.config.GameConfig;
@@ -162,8 +160,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initCommands() {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
-        manager.register(new GlitchCommand(this.slenderGazeService));
-        manager.register(new TunnelVisionCommand(this.tunnelVisionRenderer));
     }
 
 
