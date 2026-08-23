@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * and game-specific identifiers or timings.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.0.2
  * @since 1.0.0
  **/
 public final class Helper {
@@ -67,34 +67,6 @@ public final class Helper {
      */
     public static int getRandomInt(int maximumValue) {
         return ThreadLocalRandom.current().nextInt(0, maximumValue);
-    }
-
-    /**
-     * Clamps a value to lie within the given bounds, in place of hand-rolling
-     * {@code Math.min(max, Math.max(min, value))} at every call site.
-     *
-     * @param value the value to clamp
-     * @param min   the inclusive lower bound
-     * @param max   the inclusive upper bound
-     * @return {@code min} if {@code value} is lower, {@code max} if it is higher, {@code value} otherwise
-     */
-    @Contract(pure = true)
-    public static int clamp(int value, int min, int max) {
-        return Math.clamp(value, min, max);
-    }
-
-    /**
-     * Clamps a value to lie within the given bounds, in place of hand-rolling
-     * {@code Math.min(max, Math.max(min, value))} at every call site.
-     *
-     * @param value the value to clamp
-     * @param min   the inclusive lower bound
-     * @param max   the inclusive upper bound
-     * @return {@code min} if {@code value} is lower, {@code max} if it is higher, {@code value} otherwise
-     */
-    @Contract(pure = true)
-    public static double clamp(double value, double min, double max) {
-        return Math.clamp(value, min, max);
     }
 
     /**
