@@ -143,8 +143,8 @@ public final class BloodSplatterService {
     private static Key[][][] buildTextures() {
         return OverlayTextureKeys.cube(
                 TEXTURE_PATH,
-                BloodDirection.values().length, VARIANTS, FRAMES,
-                direction -> BloodDirection.values()[direction].name().toLowerCase(Locale.ROOT),
+                BloodDirection.getValues().length, VARIANTS, FRAMES,
+                direction -> BloodDirection.getValues()[direction].name().toLowerCase(Locale.ROOT),
                 OverlayTextureKeys.ONE_BASED,
                 OverlayTextureKeys.ONE_BASED
         );

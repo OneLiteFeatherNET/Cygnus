@@ -19,10 +19,16 @@ public enum BloodDirection {
     BACK,
     LEFT;
 
-    /** Above this alignment with the view direction a hit counts as coming from straight ahead. */
+    private static final BloodDirection[] VALUES = values();
+
+    /**
+     * Above this alignment with the view direction a hit counts as coming from straight ahead.
+     */
     private static final double FORWARD_THRESHOLD = 0.5D;
 
-    /** Below this distance the direction to the source carries no meaning any more. */
+    /**
+     * Below this distance the direction to the source carries no meaning any more.
+     */
     private static final double DISTANCE_EPSILON = 1.0E-6D;
 
     /**
@@ -50,5 +56,14 @@ public enum BloodDirection {
         // The cross product points up when the source sits on the side the victim's left hand is
         // on, which for a player looking south is the east.
         return facing.cross(towardsSource).y() > 0 ? LEFT : RIGHT;
+    }
+
+    /**
+     * Returns all possible values of this enum.
+     *
+     * @return values of this enum
+     */
+    public static BloodDirection[] getValues() {
+        return VALUES;
     }
 }
