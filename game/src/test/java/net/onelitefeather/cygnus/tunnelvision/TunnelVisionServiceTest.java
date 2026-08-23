@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.0.1
  * @since 2.7.0
  */
 class TunnelVisionServiceTest extends CygnusPlayerTestBase {
@@ -86,7 +86,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
 
     @Test
     @DisplayName("Clearing everyone gives every survivor their screen back")
-    void clearAllClearsEveryone(Env env) {
+    void cleanUpClearsEveryone(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Instance instance = env.createFlatInstance();
         Player first = spawn(env, instance, new Pos(0, 40, 0));
@@ -96,7 +96,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         service.track(second);
         service.tick();
 
-        service.clearAll();
+        service.cleanUp();
 
         assertTrue(renderer.wasCleared(first));
         assertTrue(renderer.wasCleared(second));

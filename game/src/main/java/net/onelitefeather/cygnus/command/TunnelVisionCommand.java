@@ -4,10 +4,10 @@ import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Messages;
-import net.onelitefeather.cygnus.common.util.PlayerState;
-import net.onelitefeather.cygnus.common.util.RepeatingTask;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionStage;
+import net.onelitefeather.cygnus.utils.PlayerState;
+import net.onelitefeather.cygnus.utils.RepeatingTask;
 
 import java.time.temporal.ChronoUnit;
 
@@ -15,17 +15,19 @@ import java.time.temporal.ChronoUnit;
  * Puts the tunnel vision on screen without a running round, so the glyph sizes in the resource
  * pack can be judged from the lobby.
  * <p>
- * {@code /tunnelvision stage <0-16>} freezes a single stage, which is what the font's
- * {@code height} and {@code ascent} are calibrated against. {@code /tunnelvision intensity
- * <0.0-1.0>} runs the same heartbeat the game uses, to judge how the pulse feels. Both are ended
- * by {@code /tunnelvision off}.
+ * {@code /tunnelvision stage <0-32>} freezes a single stage, so the drawing of a single overlay
+ * texture can be judged on its own. {@code /tunnelvision intensity <0.0-1.0>} runs the same
+ * heartbeat the game uses, to judge how the pulse feels. Both are ended by
+ * {@code /tunnelvision off}. The upper bound of {@code stage} follows
+ * {@link TunnelVisionStage#MAX_STAGE}.
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.7.0
  */
 public final class TunnelVisionCommand extends Command {
+
 
     private final TunnelVisionRenderer renderer;
     private final PlayerState<RepeatingTask> previews;
@@ -44,24 +46,24 @@ public final class TunnelVisionCommand extends Command {
         var intensity = ArgumentType.Double("amount").between(0.0D, 1.0D);
 
         this.setDefaultExecutor((sender, context) -> sender.sendMessage(
-                Messages.withMiniPrefix("<gray>Usage: <yellow>/tunnelvision stage <0-16> | intensity <0.0-1.0> | off")
+                Messages.getTunnelVisionUsageMessage(TunnelVisionStage.MAX_STAGE)
         ));
 
         this.addSyntax((sender, context) -> {
-            Player player = CommandSenders.asPlayer(sender, "can preview the tunnel vision.");
+            Player player = CommandSenders.asPlayer(sender, Messages.ONLY_PLAYERS_CAN_PREVIEW);
             if (player == null) return;
             this.stopPreview(player);
             this.renderer.render(player, context.get(stage));
         }, ArgumentType.Literal("stage"), stage);
 
         this.addSyntax((sender, context) -> {
-            Player player = CommandSenders.asPlayer(sender, "can preview the tunnel vision.");
+            Player player = CommandSenders.asPlayer(sender, Messages.ONLY_PLAYERS_CAN_PREVIEW);
             if (player == null) return;
             this.startPreview(player, context.get(intensity));
         }, ArgumentType.Literal("intensity"), intensity);
 
         this.addSyntax((sender, context) -> {
-            Player player = CommandSenders.asPlayer(sender, "can preview the tunnel vision.");
+            Player player = CommandSenders.asPlayer(sender, Messages.ONLY_PLAYERS_CAN_PREVIEW);
             if (player == null) return;
             this.stopPreview(player);
             this.renderer.clear(player);

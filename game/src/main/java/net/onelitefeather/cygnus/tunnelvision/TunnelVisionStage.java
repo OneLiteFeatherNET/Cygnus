@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.tunnelvision;
 
-import net.onelitefeather.cygnus.common.util.Helper;
 
 /**
  * Holds the overlay state of a single survivor: which of the discrete stages is currently shown,
@@ -13,7 +12,7 @@ import net.onelitefeather.cygnus.common.util.Helper;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.0.1
  * @since 2.7.0
  */
 public final class TunnelVisionStage {
@@ -74,6 +73,6 @@ public final class TunnelVisionStage {
         double pulse = depth * (Math.sin(2.0D * Math.PI * frequency * this.elapsedSeconds) - 1.0D);
 
         int rendered = (int) Math.round(this.baseStage + pulse);
-        return Helper.clamp(rendered, 0, MAX_STAGE);
+        return Math.clamp(rendered, 0, MAX_STAGE);
     }
 }

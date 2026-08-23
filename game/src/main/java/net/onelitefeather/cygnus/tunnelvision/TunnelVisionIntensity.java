@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.tunnelvision;
 
-import net.onelitefeather.cygnus.common.util.Helper;
 
 /**
  * Turns a draining stamina bar into an intensity in {@code [0, 1]} that drives how far the
@@ -16,7 +15,7 @@ import net.onelitefeather.cygnus.common.util.Helper;
  * </p>
  *
  * @author TheMeinerLP
- * @version 2.0.0
+ * @version 2.0.1
  * @since 2.7.0
  */
 public final class TunnelVisionIntensity {
@@ -40,6 +39,6 @@ public final class TunnelVisionIntensity {
     public static double fromStamina(double normalizedStamina) {
         if (normalizedStamina >= STAMINA_THRESHOLD) return 0.0D;
         double drained = (STAMINA_THRESHOLD - normalizedStamina) / STAMINA_THRESHOLD;
-        return Helper.clamp(drained * drained, 0.0D, 1.0D);
+        return Math.clamp(drained * drained, 0.0D, 1.0D);
     }
 }

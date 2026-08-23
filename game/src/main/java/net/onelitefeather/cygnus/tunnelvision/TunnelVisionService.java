@@ -5,10 +5,10 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
-import net.onelitefeather.cygnus.common.util.PlayerState;
-import net.onelitefeather.cygnus.common.util.RepeatingTask;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.utils.PlayerState;
+import net.onelitefeather.cygnus.utils.RepeatingTask;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
@@ -42,7 +42,7 @@ import java.util.function.ToDoubleFunction;
  * </p>
  *
  * @author TheMeinerLP
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2.7.0
  */
 public final class TunnelVisionService {
@@ -110,7 +110,7 @@ public final class TunnelVisionService {
         node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(GameFinishEvent.class, event -> {
-            this.clearAll();
+            this.cleanUp();
             this.stopTask();
         });
     }
@@ -130,7 +130,7 @@ public final class TunnelVisionService {
      * Clears every survivor's screen and stops tracking all of them, without touching the update
      * task — pair with {@link #stopTask()} to end a round the way {@link #registerListener} does.
      */
-    public void clearAll() {
+    public void cleanUp() {
         for (Tracked tracked : this.survivors.values()) {
             this.renderer.clear(tracked.player());
         }
