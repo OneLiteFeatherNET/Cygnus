@@ -3,12 +3,14 @@ package net.onelitefeather.cygnus.stamina;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
+import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
+import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.Collection;
@@ -84,30 +86,14 @@ public interface SlenderBarHelper {
         Collection<Entity> nearbyEntities = instance.getNearbyEntities(center, range);
         if (nearbyEntities.isEmpty()) return;
         for (Entity nearbyEntity : nearbyEntities) {
-            if (!(nearbyEntity instanceof Player target)) continue;
-            if (UUID_COMPARATOR.test(uuid, target.getUuid())) continue;
-            if (!isDamageableSurvivor(target)) continue;
-            target.setHealth(target.getHealth() - damage);
+            boolean hasSameUUID = UUID_COMPARATOR.test(uuid, nearbyEntity.getUuid());
+            if (nearbyEntity instanceof Player target && !hasSameUUID && (target.getHealth() > 0)) {
+                target.setHealth(target.getHealth() - damage);
+                // Setting health never raises Minestom's own damage event, so anything reacting to
+                // a hit — the blood splatter above all — would otherwise never hear about it.
+                EventDispatcher.call(new PlayerDamagedEvent(target, center, damage));
+            }
         }
-    }
-
-    /**
-     * Checks whether the given player may take damage from the slender.
-     * <p>
-     * Only players of the survivor team are valid targets. The slender itself and every spectator
-     * must stay untouched, otherwise a spectator would slowly bleed out and trigger the whole death
-     * pipeline a second time. Because {@link Player#setHealth(float)} bypasses the damage event
-     * chain, the game mode is checked as a second, independent guard: it stays correct even if the
-     * team tag and the game mode ever drift apart.
-     *
-     * @param target the player to check
-     * @return {@code true} if the player is a living survivor that may take damage
-     */
-    private static boolean isDamageableSurvivor(Player target) {
-        return TeamHelper.isSurvivorTeam(target)
-                && !target.getGameMode().invulnerable()
-                && !target.isDead()
-                && target.getHealth() > 0;
     }
 
     /**

@@ -31,6 +31,7 @@ public final class Messages {
     public static final Component SURVIVOR_WIN_MESSAGE;
     public static final Component LIGHT_WENT_OUT;
     public static final Component ONLY_PLAYERS_HAVE_A_VIEW;
+    public static final Component ONLY_PLAYERS_CAN_BLEED;
     private static final Component PAGE_FOUND_PART;
     private static final Component LEAVE_PART;
     private static final Component JOIN_PART;
@@ -64,6 +65,7 @@ public final class Messages {
         JOIN_PART = Component.text("joined the game!", NamedTextColor.GRAY);
         LIGHT_WENT_OUT = withMiniPrefix("<color:#ff00d4>Your light went out!</color>");
         ONLY_PLAYERS_HAVE_A_VIEW = withMiniPrefix("<red>Only players have a view to lose.");
+        ONLY_PLAYERS_CAN_BLEED = withMiniPrefix("<red>Only players can bleed.");
 
         SURVIVOR_JOIN_PART_UPPER = withMiniPrefix("<yellow>You are a Survivor! Find various <red>Pages").append(Component.space());
 

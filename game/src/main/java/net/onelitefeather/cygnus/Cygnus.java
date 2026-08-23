@@ -42,6 +42,7 @@ import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.command.GlitchCommand;
+import net.onelitefeather.cygnus.blood.BloodSplatterService;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
@@ -81,9 +82,6 @@ import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
-import net.onelitefeather.cygnus.overlay.ScreenOverlay;
-import net.onelitefeather.cygnus.overlay.EquipmentScreenOverlay;
-import net.onelitefeather.cygnus.overlay.OverlayProperties;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
@@ -91,11 +89,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 /**
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -114,6 +113,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final Optional<ResourcePackService> resourcePackService;
     private final ScreenOverlay screenOverlay;
     private final SlenderGazeService slenderGazeService;
+    private final BloodSplatterService bloodSplatterService;
 
     public Cygnus() {
         Path path = ServiceBootstrap.resolveWorkingDirectory();
@@ -140,6 +140,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.screenOverlay = new EquipmentScreenOverlay();
         this.slenderGazeService = new SlenderGazeService(
                 this.screenOverlay, () -> TeamHelper.slenderOf(this.teamService));
+        this.bloodSplatterService = new BloodSplatterService(
+                this.screenOverlay,
+                bound -> ThreadLocalRandom.current().nextInt(bound)
+        );
         this.initPhases();
         this.initCommands();
         this.initListener();
@@ -220,6 +224,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void registerOverlayListeners(GlobalEventHandler handler) {
         if (!OverlayProperties.enabled()) return;
         this.slenderGazeService.registerListener(handler, () -> TeamHelper.survivorsOf(this.teamService));
+        this.bloodSplatterService.registerListener(handler);
     }
 
     private void initPhases() {
