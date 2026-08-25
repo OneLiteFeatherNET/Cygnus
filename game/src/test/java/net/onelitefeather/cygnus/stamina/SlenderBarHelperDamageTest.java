@@ -7,6 +7,8 @@ import net.minestom.server.instance.Instance;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
+import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +36,9 @@ class SlenderBarHelperDamageTest extends CygnusPlayerTestBase {
     void damageIsAnnounced(Env env) {
         Instance instance = env.createFlatInstance();
         Player attacker = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        attacker.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         Player victim = env.createConnection().connect(instance, new Pos(1, 40, 0));
+        victim.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
         Pos center = new Pos(0, 40, 0);
         Collector<PlayerDamagedEvent> collector =
                 env.trackEvent(PlayerDamagedEvent.class, EventFilter.PLAYER, victim);
@@ -53,6 +57,7 @@ class SlenderBarHelperDamageTest extends CygnusPlayerTestBase {
     void attackerIsNotAnnounced(Env env) {
         Instance instance = env.createFlatInstance();
         Player attacker = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        attacker.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         Collector<PlayerDamagedEvent> collector =
                 env.trackEvent(PlayerDamagedEvent.class, EventFilter.PLAYER, attacker);
 
