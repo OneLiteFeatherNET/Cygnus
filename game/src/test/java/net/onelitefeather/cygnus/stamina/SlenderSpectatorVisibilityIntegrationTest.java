@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.stamina;
 
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
@@ -8,9 +9,11 @@ import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
+import net.onelitefeather.cygnus.listener.stamina.StaminaStateChangeListener;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
-import net.onelitefeather.cygnus.utils.ViewRuleUpdater;
+import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.Team;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * visibility rule.
  * <p>
  * A dead survivor leaves the survivor team, so
- * {@link ViewRuleUpdater#updateViewer(Player, Team)} no longer reaches it through the team
+ * {@link VisibilityRules#refresh(Player)} no longer reaches it through the team
  * iteration. It is still covered by the online-player pass and by the slender's own
  * re-evaluation, so a spectator must keep following the slender's visibility in both
  * directions — it must see the slender during an attack and lose sight of it afterwards.
@@ -60,8 +63,12 @@ class SlenderSpectatorVisibilityIntegrationTest extends CygnusPlayerTestBase {
      * @param survivorTeam the survivor team
      */
     private void startRound(@NotNull Player slender, @NotNull Team survivorTeam) {
+        // The single production path from a stamina state change to a visibility update.
+        MinecraftServer.getGlobalEventHandler()
+                .addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
-        slender.updateViewableRule(_ -> !ViewRuleUpdater.isHidden(slender));
+        slender.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
+        slender.updateViewableRule(VisibilityRules.slenderRule(slender));
         survivorTeam.getPlayers().forEach(survivor -> {
             survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
             survivor.setTag(Tags.HIDDEN, SlenderBarHelper.VISIBLE);
@@ -72,19 +79,15 @@ class SlenderSpectatorVisibilityIntegrationTest extends CygnusPlayerTestBase {
 
     /**
      * Replays an eye press: {@code SlenderBarTrigger.trigger} plus the real
-     * {@link ViewRuleUpdater#updateViewer(Player, Team)}.
+     * {@link VisibilityRules#refresh(Player)}.
      *
      * @param bar          the slender bar to toggle
      * @param slender      the player acting as the slender
-     * @param survivorTeam the survivor team handed to the view rule updater
      */
-    private void pressEye(@NotNull SlenderBar bar, @NotNull Player slender, @NotNull Team survivorTeam) {
-        if (!bar.changeStatus()) return;
-        Byte value = slender.getTag(Tags.HIDDEN);
-        byte current = value != null ? value : SlenderBarHelper.VISIBLE;
-        slender.setTag(Tags.HIDDEN, current == SlenderBarHelper.VISIBLE
-                ? SlenderBarHelper.HIDDEN : SlenderBarHelper.VISIBLE);
-        ViewRuleUpdater.updateViewer(slender, survivorTeam);
+    private void pressEye(@NotNull SlenderBar bar, @NotNull Player slender) {
+        // SlenderBar flips Tags.HIDDEN itself and fires the StaminaStateChangeEvent;
+        // StaminaStateChangeListener re-evaluates the viewable rule from there.
+        bar.changeStatus();
     }
 
     /**
@@ -131,7 +134,7 @@ class SlenderSpectatorVisibilityIntegrationTest extends CygnusPlayerTestBase {
         env.tick();
 
         // Jetzt der Angriffsmodus - der Spectator muss den Slender sehen.
-        pressEye(slenderBar, slender, survivorTeam);
+        pressEye(slenderBar, slender);
         env.tick();
 
         assertTrue(slender.isViewer(alive),
@@ -167,7 +170,7 @@ class SlenderSpectatorVisibilityIntegrationTest extends CygnusPlayerTestBase {
         slenderBar.start();
 
         // Augendruck: Slender wird sichtbar.
-        pressEye(slenderBar, slender, survivorTeam);
+        pressEye(slenderBar, slender);
         env.tick();
         assertTrue(slender.isViewer(dying), "Vorbedingung: Slender muss sichtbar sein");
 
@@ -176,7 +179,7 @@ class SlenderSpectatorVisibilityIntegrationTest extends CygnusPlayerTestBase {
         env.tick();
 
         // Manueller Doppeldruck zurueck in den Regenerationsmodus.
-        pressEye(slenderBar, slender, survivorTeam);
+        pressEye(slenderBar, slender);
         env.tick();
 
         assertFalse(slender.isViewer(alive),
