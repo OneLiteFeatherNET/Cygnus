@@ -14,6 +14,9 @@ import net.onelitefeather.cygnus.map.GameMapProvider;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
+import net.onelitefeather.cygnus.overlay.EquipmentScreenOverlay;
+import net.onelitefeather.cygnus.overlay.OverlayProperties;
+import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 import net.onelitefeather.cygnus.spectator.SpectatorService;
 import net.onelitefeather.cygnus.team.TeamCreator;
 import net.onelitefeather.cygnus.team.TeamHelper;
@@ -38,6 +41,7 @@ import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
+import net.onelitefeather.cygnus.blood.BloodSplatterService;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
@@ -47,6 +51,7 @@ import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
+import net.onelitefeather.cygnus.gaze.SlenderGazeService;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
@@ -76,17 +81,22 @@ import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
+import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
+import net.onelitefeather.cygnus.tunnelvision.TunnelVisionRenderer;
+import net.onelitefeather.cygnus.tunnelvision.TunnelVisionService;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 /**
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -103,6 +113,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final JumpScareManager jumpscareManager;
     private final SpectatorService spectatorService;
     private final Optional<ResourcePackService> resourcePackService;
+    private final ScreenOverlay screenOverlay;
+    private final SlenderGazeService slenderGazeService;
+    private final BloodSplatterService bloodSplatterService;
+    private final TunnelVisionRenderer tunnelVisionRenderer;
+    private final TunnelVisionService tunnelVisionService;
 
     public Cygnus() {
         Path path = ServiceBootstrap.resolveWorkingDirectory();
@@ -126,6 +141,15 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
         this.resourcePackService = ResourcePackService.create();
+        this.screenOverlay = new EquipmentScreenOverlay();
+        this.slenderGazeService = new SlenderGazeService(
+                this.screenOverlay, () -> TeamHelper.slenderOf(this.teamService));
+        this.bloodSplatterService = new BloodSplatterService(
+                this.screenOverlay,
+                bound -> ThreadLocalRandom.current().nextInt(bound)
+        );
+        this.tunnelVisionRenderer = new OverlayTunnelVisionRenderer(this.screenOverlay);
+        this.tunnelVisionService = new TunnelVisionService(this.tunnelVisionRenderer, player -> StaminaHelper.remainingShare(this.staminaService, player));
         this.initPhases();
         this.initCommands();
         this.initListener();
@@ -137,6 +161,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
     }
+
 
     private void initListener() {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
@@ -188,6 +213,25 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientSettingsPacket.class, CygnusSettingsListener::listener);
 
         spectatorService.registerListener(handler);
+        this.registerOverlayListeners(handler);
+    }
+
+    /**
+     * Registers the full-screen effects, unless the overlays are switched off.
+     * <p>
+     * The effects are drawn as {@code camera_overlay} textures and are gated by
+     * {@link OverlayProperties} alone - deliberately not by whether this server hands out a resource
+     * pack. One gate for all of them, so that {@code cygnus.overlays} means what its name says and
+     * an effect cannot end up outside it by being wired in somewhere else.
+     * </p>
+     *
+     * @param handler the node the effects register their listeners on
+     */
+    private void registerOverlayListeners(GlobalEventHandler handler) {
+        if (!OverlayProperties.enabled()) return;
+        this.slenderGazeService.registerListener(handler, () -> TeamHelper.survivorsOf(this.teamService));
+        this.bloodSplatterService.registerListener(handler);
+        this.tunnelVisionService.registerListener(handler, () -> TeamHelper.survivorsOf(this.teamService));
     }
 
     private void initPhases() {

@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  **/
 public final class Messages {
@@ -30,6 +30,9 @@ public final class Messages {
     public static final Component SLENDER_WIN_MESSAGE;
     public static final Component SURVIVOR_WIN_MESSAGE;
     public static final Component LIGHT_WENT_OUT;
+    public static final Component ONLY_PLAYERS_HAVE_A_VIEW;
+    public static final Component ONLY_PLAYERS_CAN_BLEED;
+    public static final Component ONLY_PLAYERS_CAN_PREVIEW;
     private static final Component PAGE_FOUND_PART;
     private static final Component LEAVE_PART;
     private static final Component JOIN_PART;
@@ -62,6 +65,9 @@ public final class Messages {
         LEAVE_PART = Component.text("left the game!", NamedTextColor.GRAY);
         JOIN_PART = Component.text("joined the game!", NamedTextColor.GRAY);
         LIGHT_WENT_OUT = withMiniPrefix("<color:#ff00d4>Your light went out!</color>");
+        ONLY_PLAYERS_HAVE_A_VIEW = withMiniPrefix("<red>Only players have a view to lose.");
+        ONLY_PLAYERS_CAN_BLEED = withMiniPrefix("<red>Only players can bleed.");
+        ONLY_PLAYERS_CAN_PREVIEW = withMiniPrefix("<red>Only players can preview the tunnel vision.");
 
         SURVIVOR_JOIN_PART_UPPER = withMiniPrefix("<yellow>You are a Survivor! Find various <red>Pages").append(Component.space());
 
@@ -204,6 +210,22 @@ public final class Messages {
                 .append(Component.newline());
     }
 
+    /**
+     * Returns a {@link Component} explaining how the tunnel vision preview command is used.
+     * <p>
+     * The upper bound is passed in rather than written out, so it cannot drift away from the
+     * number of stages the overlay actually has.
+     * </p>
+     *
+     * @param maxStage the highest stage the preview accepts
+     * @return the created {@link Component} reference
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static Component getTunnelVisionUsageMessage(int maxStage) {
+        return withMiniPrefix("<gray>Usage: <yellow>/tunnelvision stage <0-" + maxStage
+                + "> | intensity <0.0-1.0> | off");
+    }
+
     @Contract(value = "_ -> new", pure = true)
     public static Component getJoinMessage(Player player) {
         return PREFIX.append(Component.space()).append(withMini("<color:#249D9F>" + player.getUsername() + "</color>"))
@@ -214,6 +236,17 @@ public final class Messages {
     public static Component getLeaveMessage(Player player) {
         return PREFIX.append(Component.space()).append(withMini("<color:#249D9F>" + player.getUsername() + "</color>"))
                 .append(Component.space()).append(LEAVE_PART);
+    }
+
+    /**
+     * Returns the usage line of the glitch preview command.
+     *
+     * @param levels how many degrees of tearing there are to pick from
+     * @return the created {@link Component} reference
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static Component getGlitchUsageMessage(int levels) {
+        return withMiniPrefix("<gray>Usage: <yellow>/glitch <1-" + levels + "> | off");
     }
 
     @Contract(value = "_ -> new", pure = true)
