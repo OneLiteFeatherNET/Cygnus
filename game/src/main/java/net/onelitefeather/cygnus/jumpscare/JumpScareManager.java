@@ -233,14 +233,13 @@ public final class JumpScareManager {
         Pos eyeToEyeView = new Pos(phantomX, playerPos.y() + eyeHeight, phantomZ)
                 .withLookAt(playerPos.add(0, eyeHeight, 0));
 
-        Pos jumpscarePos = new Pos(
+        return new Pos(
                 phantomX,
                 playerPos.y(),
                 phantomZ,
                 eyeToEyeView.yaw(),
                 eyeToEyeView.pitch()
         );
-        return jumpscarePos;
     }
 
     /**
