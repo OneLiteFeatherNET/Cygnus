@@ -46,7 +46,7 @@ dependencyResolutionManagement {
             version("luckperms-minestom-loader", "5.6-SNAPSHOT")
             version("guava", "33.7.1-jre")
             version("falco", "2.1.0")
-            version("minestom-extensions", "2.1.1")
+            version("minestom-extensions", "2.2.0")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("slf4j.api", "org.slf4j", "slf4j-api").versionRef("slf4j")
