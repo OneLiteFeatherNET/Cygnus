@@ -12,6 +12,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MicrotusExtension.class)
+@Execution(ExecutionMode.SAME_THREAD)
 class PageProviderTest {
 
     @Test
