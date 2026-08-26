@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.8.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.7.2...v2.8.0) (2026-08-26)
+
+
+### Features
+
+* enable Velocity modern forwarding via -Dminestom-velocity-secret ([#205](https://github.com/OneLiteFeatherNET/Cygnus/issues/205)) ([0831751](https://github.com/OneLiteFeatherNET/Cygnus/commit/08317515f0ad15c08df242b3d5e935233cdf3783))
+
 ## [2.7.2](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.7.1...v2.7.2) (2026-08-26)
 
 
