@@ -5,6 +5,14 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.7.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.7.0...v2.7.1) (2026-08-26)
+
+
+### Bug Fixes
+
+* **game:** add missing public keyword ([aba274e](https://github.com/OneLiteFeatherNET/Cygnus/commit/aba274ed76ce1ddb83483fe7d5aeeda69bcb0971))
+* **game:** restore old main class layout ([51edb9b](https://github.com/OneLiteFeatherNET/Cygnus/commit/51edb9bf738f3c2b414154ca135d37100023cef0))
+
 ## [2.7.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.6...v2.7.0) (2026-08-26)
 
 
