@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.7.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.7.0...v2.7.1) (2026-08-26)
+
+
+### Bug Fixes
+
+* **game:** add missign public keyword ([35f4b2e](https://github.com/OneLiteFeatherNET/Cygnus/commit/35f4b2ec800a97755239efb2ea5a46410954f360))
+
 ## [2.7.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.6.6...v2.7.0) (2026-08-26)
 
 
