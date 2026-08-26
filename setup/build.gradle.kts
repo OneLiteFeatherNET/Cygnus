@@ -22,10 +22,6 @@ dependencies {
     implementation(libs.guira)
     implementation(libs.falco.anvil)
 
-    // SLF4J needs a binding at runtime; without one it falls back to NOP and the
-    // server logs nothing at all.
-    runtimeOnly(libs.slf4j.simple)
-
     // CloudNet is provided by the CloudNet wrapper at runtime and its bridge is loaded as a
     // Minestom extension (separate classloader, see the :bridge module), so :setup neither
     // references nor bundles any CloudNet artifact.
@@ -40,6 +36,10 @@ dependencies {
     runtimeOnly(libs.luckperms.minestom.loader) {
         exclude(group = "net.kyori.adventure")
     }
+
+    // SLF4J needs a binding at runtime; without one it falls back to NOP and the
+    // server logs nothing at all.
+    runtimeOnly(libs.slf4j.simple)
 
     testImplementation(libs.minestom)
     testImplementation(libs.cyano)
