@@ -8,7 +8,7 @@ import net.onelitefeather.cygnus.common.permission.LuckPermsSupport;
 
 public final class CygnusLoader {
 
-    public static void main() {
+    public static void main(String[] args) {
         // minestom-extensions loads platform extensions - the CloudNet bridge and our
         // :bridge permission extension among them - from the extensions/ folder. Running
         // standalone simply loads none. This also performs MinecraftServer.init().
