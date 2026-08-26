@@ -9,14 +9,15 @@ plugins {
 // runtime: the CloudNet driver by the CloudNet wrapper, the bridge by the CloudNet_Bridge
 // extension, Minestom and Adventure by the application classloader.
 dependencies {
+    annotationProcessor(platform(libs.minestom.extensions.bom))
+    annotationProcessor(libs.minestom.extensions.processor)
+
     compileOnly(platform(libs.aonyx.bom))
     compileOnly(libs.minestom)
     compileOnly(libs.adventure)
     compileOnly(platform(libs.minestom.extensions.bom))
     compileOnly(libs.minestom.extensions)
     compileOnly(libs.minestom.extensions.processor)
-    annotationProcessor(platform(libs.minestom.extensions.bom))
-    annotationProcessor(libs.minestom.extensions.processor)
 
     compileOnly(platform(libs.cloudnet.bom))
     compileOnly(libs.cloudnet.driver.api)
