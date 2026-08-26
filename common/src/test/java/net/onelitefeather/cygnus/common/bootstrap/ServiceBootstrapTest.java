@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.common.bootstrap;
 
+import net.minestom.server.Auth;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class ServiceBootstrapTest {
 
@@ -14,6 +16,43 @@ class ServiceBootstrapTest {
     void clearSystemProperties() {
         System.clearProperty("service.bind.host");
         System.clearProperty("service.bind.port");
+    }
+
+    @AfterEach
+    void clearVelocitySecretProperty() {
+        System.clearProperty(ServiceBootstrap.VELOCITY_SECRET_PROPERTY);
+    }
+
+    @Test
+    @DisabledIfSystemProperty(named = ServiceBootstrap.VELOCITY_SECRET_PROPERTY, matches = ".+")
+    void testAuthDefaultsToOfflineWithoutVelocitySecret() {
+        assertInstanceOf(Auth.Offline.class, ServiceBootstrap.resolveAuth());
+    }
+
+    @Test
+    void testAuthUsesVelocityWhenSecretIsSet() {
+        System.setProperty(ServiceBootstrap.VELOCITY_SECRET_PROPERTY, "a-velocity-secret");
+
+        Auth auth = ServiceBootstrap.resolveAuth();
+
+        assertInstanceOf(Auth.Velocity.class, auth);
+        assertEquals(new Auth.Velocity("a-velocity-secret"), auth);
+    }
+
+    @Test
+    void testAuthTrimsVelocitySecret() {
+        System.setProperty(ServiceBootstrap.VELOCITY_SECRET_PROPERTY, "  a-velocity-secret\n");
+
+        assertEquals(new Auth.Velocity("a-velocity-secret"), ServiceBootstrap.resolveAuth());
+    }
+
+    @Test
+    void testAuthFallsBackToOfflineOnBlankVelocitySecret() {
+        // A start script whose $VELOCITY_SECRET never expanded - Auth.Velocity would reject the
+        // empty key with an exception that says nothing about the property it came from.
+        System.setProperty(ServiceBootstrap.VELOCITY_SECRET_PROPERTY, "   ");
+
+        assertInstanceOf(Auth.Offline.class, ServiceBootstrap.resolveAuth());
     }
 
     @Test
