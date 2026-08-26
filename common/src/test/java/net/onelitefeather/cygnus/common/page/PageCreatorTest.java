@@ -21,6 +21,7 @@ class PageCreatorTest {
     @AfterEach
     @ClearSystemProperty(key = "cygnus.custom_pages")
     void tearDown() {
+        // Nothing to do here
     }
 
     @Test

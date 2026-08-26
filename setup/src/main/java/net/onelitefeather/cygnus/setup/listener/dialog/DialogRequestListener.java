@@ -20,8 +20,8 @@ public class DialogRequestListener implements Consumer<DialogRequestEvent> {
         switch (target) {
             case CREATE_NAME -> MapDialogs.openNameCreateDialog(player);
             case UPDATE_NAME -> {
-                if (context instanceof DialogContext.NameContext nameContext) {
-                    MapDialogs.openNameUpdateDialog(player, nameContext.name());
+                if (context instanceof DialogContext.NameContext(String name)) {
+                    MapDialogs.openNameUpdateDialog(player, name);
                 }
             }
             case CREATE_AUTHORS -> AuthorDialogs.openAuthorRequestDialog(player);

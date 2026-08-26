@@ -116,15 +116,12 @@ public final class MapDialogs extends DialogBase {
                     dialogMeta.messageBody(template -> template.contents(Component.text("Category: ").append(Component.text(mapDataCategory.getName()))));
                     if (point != null) {
                         dialogMeta.emptyMessage();
-                        dialogMeta.messageBody(componentTemplate -> {
-                            componentTemplate.contents(Component.text("x: ", NamedTextColor.WHITE).append(Component.text(point.x())));
-                        });
-                        dialogMeta.messageBody(componentTemplate -> {
-                            componentTemplate.contents(Component.text("y: ", NamedTextColor.WHITE).append(Component.text(point.y())));
-                        });
-                        dialogMeta.messageBody(componentTemplate -> {
-                            componentTemplate.contents(Component.text("z: ", NamedTextColor.WHITE).append(Component.text(point.z())));
-                        });
+                        dialogMeta.messageBody(componentTemplate ->
+                                componentTemplate.contents(Component.text("x: ", NamedTextColor.WHITE).append(Component.text(point.x()))));
+                        dialogMeta.messageBody(componentTemplate ->
+                                componentTemplate.contents(Component.text("y: ", NamedTextColor.WHITE).append(Component.text(point.y()))));
+                        dialogMeta.messageBody(componentTemplate ->
+                                componentTemplate.contents(Component.text("z: ", NamedTextColor.WHITE).append(Component.text(point.z()))));
                     }
                 })
                 .yesButton(button -> button.width(101).label(Component.text("Save"))

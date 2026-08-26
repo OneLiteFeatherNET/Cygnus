@@ -85,7 +85,6 @@ class GameMapSwitchOrderIntegrationTest {
     @Test
     void testReleaseIsRepeatable(Env env, @TempDir Path root) throws IOException {
         GameMapProvider provider = createProvider(root);
-        InstanceContainer lobbyInstance = (InstanceContainer) provider.getActiveInstance().get();
         provider.loadGameMap();
         provider.switchToGameMap();
 

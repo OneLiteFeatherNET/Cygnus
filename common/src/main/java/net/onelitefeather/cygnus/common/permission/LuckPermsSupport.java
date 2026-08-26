@@ -82,7 +82,7 @@ public final class LuckPermsSupport {
         try {
             Class.forName(LOADER_CLASS, false, LuckPermsSupport.class.getClassLoader());
             return true;
-        } catch (ClassNotFoundException exception) {
+        } catch (ClassNotFoundException _) {
             LOGGER.warn("LuckPerms is not on the class path. Every permission check resolves to TRUE. "
                     + "This mode is meant for local runs and tests, never for production.");
             return false;

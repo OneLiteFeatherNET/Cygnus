@@ -10,6 +10,7 @@ import net.minestom.server.event.trait.PlayerEvent;
  * @since 2.1.0
  * @author theEvilReaper
  */
+@SuppressWarnings("java:S6206")
 public final class MapSetupSaveEvent implements PlayerEvent {
 
     private final Player player;
