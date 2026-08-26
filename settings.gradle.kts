@@ -43,7 +43,7 @@ dependencyResolutionManagement {
             version("pica", "0.1.2")
             version("slf4j", "2.0.18")
             version("luckperms", "5.5")
-            version("luckperms-minestom-loader", "5.6-SNAPSHOT")
+            version("luckperms-minestom-loader", "6.0.0")
             version("guava", "33.7.1-jre")
             version("falco", "2.1.0")
             version("minestom-extensions", "2.1.1")
