@@ -16,7 +16,6 @@ import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.stamina.StaminaService;
-import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.ArrayList;
 import java.util.Optional;

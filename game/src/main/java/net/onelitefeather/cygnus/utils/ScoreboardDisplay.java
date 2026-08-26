@@ -12,7 +12,6 @@ import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.scoreboard.TeamBuilder;
 import net.minestom.server.scoreboard.TeamManager;
 import net.onelitefeather.cygnus.common.config.GameConfig;
-import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.List;
 

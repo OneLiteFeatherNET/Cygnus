@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.setup;
 
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.event.EventListener;
 import net.minestom.server.event.GlobalEventHandler;
@@ -37,7 +36,6 @@ import net.onelitefeather.cygnus.setup.listener.map.MapSetupSaveListener;
 import net.onelitefeather.cygnus.setup.listener.position.PositionSetListener;
 import net.onelitefeather.cygnus.setup.map.SetupMapProvider;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
-import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.onelitefeather.guira.SetupDataService;
 import net.onelitefeather.guira.data.SetupData;

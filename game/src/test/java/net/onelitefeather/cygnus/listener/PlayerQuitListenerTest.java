@@ -12,7 +12,6 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.stamina.StaminaService;
-import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;

@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.setup.listener;
 
-import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.setup.data.GameData;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.onelitefeather.guira.SetupDataService;

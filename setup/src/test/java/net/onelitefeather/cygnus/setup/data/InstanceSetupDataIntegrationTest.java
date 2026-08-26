@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.setup.data;
 
 import net.kyori.adventure.bossbar.BossBar;
-import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Player;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
