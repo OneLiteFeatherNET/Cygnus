@@ -155,6 +155,15 @@ public abstract class InstanceSetupData implements SetupData {
     }
 
     /**
+     * Returns the map entry this setup works on.
+     *
+     * @return the map entry, whose directory root is the world root of the map
+     */
+    public MapEntry getMapEntry() {
+        return this.mapEntry;
+    }
+
+    /**
      * Returns the unique identifier of this setup.
      *
      * @return setup id

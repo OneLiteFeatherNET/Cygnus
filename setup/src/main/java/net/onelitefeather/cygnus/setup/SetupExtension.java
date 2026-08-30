@@ -7,6 +7,7 @@ import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.instance.AddEntityToInstanceEvent;
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
+import net.onelitefeather.cygnus.setup.atmosphere.AtmospherePreviewService;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
@@ -46,11 +47,13 @@ import java.util.function.Supplier;
 public class SetupExtension implements ListenerHandling {
 
     private final SetupDataService dataService;
+    private final AtmospherePreviewService previewService;
     private final MapSetupInventory mapSetupInventory;
     private final SetupMapProvider mapProvider;
 
     public SetupExtension() {
         this.dataService = SetupDataService.create();
+        this.previewService = new AtmospherePreviewService();
         this.mapProvider = new SetupMapProvider(ServiceBootstrap.resolveWorkingDirectory().resolve("setup"));
         this.mapSetupInventory = new MapSetupInventory(mapProvider.getEntries());
         registerSetupComponents();
@@ -70,11 +73,18 @@ public class SetupExtension implements ListenerHandling {
         manager.addListener(MapSetupSelectEvent.class, new MapSetupSelectListener(this.dataService));
         manager.addListener(PlayerUseItemEvent.class, new SetupItemListener(this.dataService, mapSetupInventory));
 
-        manager.addListener(AsyncPlayerConfigurationEvent.class, event -> event.setSpawningInstance(instanceSupplier.get()));
+        // A running atmosphere preview decides where its builder lands; everyone else goes to the
+        // setup hub. Asking here keeps the preview from having to outrank this listener.
+        manager.addListener(AsyncPlayerConfigurationEvent.class, event -> {
+            Instance preview = this.previewService.pendingInstance(event.getPlayer());
+            event.setSpawningInstance(preview != null ? preview : instanceSupplier.get());
+        });
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener((mapProvider::teleportToSpawn)));
 
-        manager.addListener(PlayerDisconnectEvent.class, event ->
-                this.dataService.remove(event.getPlayer().getUuid()).ifPresent(SetupData::reset));
+        manager.addListener(PlayerDisconnectEvent.class, event -> {
+            this.previewService.discard(event.getPlayer());
+            this.dataService.remove(event.getPlayer().getUuid()).ifPresent(SetupData::reset);
+        });
         manager.addListener(PlayerBlockBreakEvent.class, new PageCreationListener(this.dataService));
         manager.addListener(EventListener.builder(PlayerBlockBreakEvent.class)
                 .ignoreCancelled(false)
@@ -86,7 +96,7 @@ public class SetupExtension implements ListenerHandling {
 
         //Dialog listener
         manager.addListener(DialogRequestEvent.class, new DialogRequestListener());
-        manager.addListener(PlayerCustomClickEvent.class, new DialogPayloadListener(this.dataService));
+        manager.addListener(PlayerCustomClickEvent.class, new DialogPayloadListener(this.dataService, this.previewService));
 
         manager.addListener(PositionSetEvent.class, new PositionSetListener(this.dataService));
         manager.addListener(PlayerRemoveDataEvent.class, new PlayerRemoveDataListener());

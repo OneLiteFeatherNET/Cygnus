@@ -8,6 +8,7 @@ import net.minestom.server.inventory.click.Click;
 import net.minestom.server.item.ItemStack;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.setup.event.PlayerRemoveDataEvent;
+import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
@@ -76,7 +77,11 @@ public final class AtmosphereSlot extends AbstractDataSlot {
         result.accept(ClickHolder.cancelClick());
 
         switch (click) {
-            case Click.Left _ -> EventDispatcher.call(new DialogRequestEvent(player, DialogTarget.ATMOSPHERE_PRESET));
+            case Click.Left _ -> EventDispatcher.call(new DialogRequestEvent(
+                    player,
+                    DialogTarget.ATMOSPHERE_PRESET,
+                    atmosphere == null ? null : new DialogContext.AtmosphereContext(atmosphere)
+            ));
             case Click.Right _ when atmosphere != null ->
                     EventDispatcher.call(new PlayerRemoveDataEvent(player, type));
             default -> {

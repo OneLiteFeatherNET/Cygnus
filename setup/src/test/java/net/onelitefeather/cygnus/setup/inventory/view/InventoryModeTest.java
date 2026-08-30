@@ -24,17 +24,18 @@ class InventoryModeTest {
 
     @Test
     void gameHasCorrectSlots() {
-        assertArrayEquals(new int[]{10, 12, 14, 16}, InventoryMode.GAME.getSlots());
+        assertArrayEquals(new int[]{10, 11, 13, 15, 16}, InventoryMode.GAME.getSlots());
     }
 
     @Test
     void gameHasCorrectCategories() {
         Set<MapDataCategory> categories = InventoryMode.GAME.getCategories();
-        assertEquals(4, categories.size());
+        assertEquals(5, categories.size());
         assertTrue(categories.contains(MapDataCategory.NAME));
         assertTrue(categories.contains(MapDataCategory.AUTHOR));
         assertTrue(categories.contains(MapDataCategory.SPAWN));
         assertTrue(categories.contains(MapDataCategory.SLENDER));
+        assertTrue(categories.contains(MapDataCategory.ATMOSPHERE));
     }
 
     @Test

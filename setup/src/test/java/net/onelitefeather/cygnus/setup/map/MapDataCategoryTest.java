@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MapDataCategoryTest {
 
     @ParameterizedTest(name = "Test invalid entry: {0}")
-    @ValueSource(ints = {-1, 6, 100})
+    @ValueSource(ints = {-1, 7, 100})
     void testInvalidEntry(int entry) {
         assertThrows(IllegalArgumentException.class, () -> MapDataCategory.byId(entry));
     }
