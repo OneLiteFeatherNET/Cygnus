@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.common.map;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
+import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +16,7 @@ import java.util.TreeSet;
 public final class GameMapBuilder extends BaseMapBuilder {
 
     private @Nullable Pos slenderSpawn;
+    private @Nullable MapAtmosphere atmosphere;
     private final Set<PageResource> pageFaces;
     private final Set<Pos> survivorSpawns;
 
@@ -46,6 +48,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
         );
         this.survivorSpawns.addAll(gameMap.getSurvivorSpawns());
         this.pageFaces = new HashSet<>(gameMap.getPageFaces());
+        this.atmosphere = gameMap.getAtmosphere();
     }
 
     /**
@@ -88,7 +91,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
      */
     @Override
     public GameMap build() {
-        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders);
+        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders, atmosphere);
     }
 
     /**
@@ -146,5 +149,23 @@ public final class GameMapBuilder extends BaseMapBuilder {
      */
     public Set<Pos> getSurvivorSpawns() {
         return survivorSpawns;
+    }
+
+    /**
+     * Sets the atmosphere the map should be rendered with.
+     *
+     * @param atmosphere the atmosphere to set, or {@code null} to fall back to the overworld look
+     */
+    public void setAtmosphere(@Nullable MapAtmosphere atmosphere) {
+        this.atmosphere = atmosphere;
+    }
+
+    /**
+     * Returns the atmosphere currently configured for the map.
+     *
+     * @return the atmosphere, or {@code null} if none is set
+     */
+    public @Nullable MapAtmosphere getAtmosphere() {
+        return atmosphere;
     }
 }

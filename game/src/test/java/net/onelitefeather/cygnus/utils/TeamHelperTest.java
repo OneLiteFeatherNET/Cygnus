@@ -110,7 +110,7 @@ class TeamHelperTest {
         };
         teamCreator.createTeams(gameConfig, teamService);
         Pos slenderSpawn = new Pos(10, 10, 10);
-        GameMap gameMap = new GameMap("Test", Pos.ZERO, slenderSpawn, Set.of(), Set.of(), List.of());
+        GameMap gameMap = new GameMap("Test", Pos.ZERO, slenderSpawn, Set.of(), Set.of(), List.of(), null);
         assertNotNull(gameMap);
         assertEquals(slenderSpawn, gameMap.getSlenderSpawn());
 

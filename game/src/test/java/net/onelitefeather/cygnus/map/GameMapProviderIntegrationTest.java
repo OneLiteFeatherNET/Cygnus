@@ -90,7 +90,7 @@ class GameMapProviderIntegrationTest {
         writeMap(maps.resolve("lobby"), new BaseMap("lobby", Pos.ZERO, List.of()), false);
         writeMap(
                 maps.resolve(ARENA_NAME),
-                new GameMap(ARENA_NAME, Pos.ZERO, new Pos(1, 1, 1), Set.of(), Set.of(new Pos(2, 2, 2)), List.of()),
+                new GameMap(ARENA_NAME, Pos.ZERO, new Pos(1, 1, 1), Set.of(), Set.of(new Pos(2, 2, 2)), List.of(), null),
                 true
         );
         return new GameMapProvider(root);

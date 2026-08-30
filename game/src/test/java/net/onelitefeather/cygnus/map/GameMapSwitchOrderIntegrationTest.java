@@ -131,7 +131,7 @@ class GameMapSwitchOrderIntegrationTest {
         writeMap(maps.resolve("lobby"), new BaseMap("lobby", LOBBY_SPAWN, List.of()), false);
         writeMap(
                 maps.resolve(ARENA_NAME),
-                new GameMap(ARENA_NAME, LOBBY_SPAWN, SLENDER_SPAWN, Set.of(), Set.of(SURVIVOR_SPAWN), List.of()),
+                new GameMap(ARENA_NAME, LOBBY_SPAWN, SLENDER_SPAWN, Set.of(), Set.of(SURVIVOR_SPAWN), List.of(), null),
                 true
         );
         return new GameMapProvider(root);

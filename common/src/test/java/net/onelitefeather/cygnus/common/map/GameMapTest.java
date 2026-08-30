@@ -25,7 +25,7 @@ class GameMapTest {
         Pos slenderPos = new Pos(1, 1, 1);
         Set<PageResource> pages = Set.of();
         Set<Pos> survivorPos = Set.of(new Pos(2, 2, 2), new Pos(3, 3, 3));
-        GameMap gameMap = new GameMap(name, spawnPos, slenderPos, pages, survivorPos, List.of("Test"));
+        GameMap gameMap = new GameMap(name, spawnPos, slenderPos, pages, survivorPos, List.of("Test"), null);
 
         assertNotNull(gameMap);
         assertEquals(name, gameMap.name());
@@ -107,7 +107,7 @@ class GameMapTest {
         Pos survivorPos = new Pos(5, 5, 5);
         PageResource pageResource = new PageResource(Vec.ZERO, Direction.SOUTH);
 
-        GameMap originalMap = new GameMap("Map", Pos.ZERO, slenderPos, Set.of(pageResource), Set.of(survivorPos), List.of("Author"));
+        GameMap originalMap = new GameMap("Map", Pos.ZERO, slenderPos, Set.of(pageResource), Set.of(survivorPos), List.of("Author"), null);
         GameMapBuilder copyBuilder = new GameMapBuilder(originalMap);
 
         assertEquals(1, copyBuilder.getSurvivorSpawns().size());
@@ -122,7 +122,7 @@ class GameMapTest {
 
     @Test
     void testGameMapCopyWithEmptyCollections() {
-        GameMap mapWithEmptyCollections = new GameMap("Map", Pos.ZERO, null, Set.of(), Set.of(), List.of());
+        GameMap mapWithEmptyCollections = new GameMap("Map", Pos.ZERO, null, Set.of(), Set.of(), List.of(), null);
         GameMapBuilder builder = new GameMapBuilder(mapWithEmptyCollections);
 
         assertNotNull(builder.getSurvivorSpawns());
