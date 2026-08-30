@@ -18,6 +18,8 @@ import net.theevilreaper.aves.map.BaseMap;
 import net.theevilreaper.aves.map.MapEntry;
 import net.theevilreaper.aves.map.provider.AbstractMapProvider;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,6 +28,8 @@ import java.util.List;
 import java.util.Locale;
 
 public final class GameMapProvider extends AbstractMapProvider {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GameMapProvider.class);
 
     /** Namespace every dimension this provider registers lives in. */
     private static final String DIMENSION_NAMESPACE = "cygnus";
@@ -67,9 +71,17 @@ public final class GameMapProvider extends AbstractMapProvider {
      */
     private RegistryKey<DimensionType> registerDimension(GameMap map) {
         MapAtmosphere atmosphere = map.getAtmosphere();
-        if (atmosphere == null) return DimensionType.OVERWORLD;
+        if (atmosphere == null) {
+            LOGGER.info("Map {} declares no atmosphere, running it on {}", map.name(), DimensionType.OVERWORLD.key());
+            return DimensionType.OVERWORLD;
+        }
 
-        return DimensionFactory.create(Key.key(DIMENSION_NAMESPACE, "map/" + toKeyValue(map.name())), atmosphere);
+        Key key = Key.key(DIMENSION_NAMESPACE, "map/" + toKeyValue(map.name()));
+        LOGGER.info(
+                "Registered dimension {} for map {}: fog {} from {} to {} blocks",
+                key, map.name(), atmosphere.fogColor(), atmosphere.fogStartDistance(), atmosphere.fogEndDistance()
+        );
+        return DimensionFactory.create(key, atmosphere);
     }
 
     /**
