@@ -1,6 +1,9 @@
 package net.onelitefeather.cygnus.gaze;
 
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.ShadowColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
@@ -26,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class BossBarGazeSignalTest extends CygnusPlayerTestBase {
 
     @Test
-    @DisplayName("Attaching gives the survivor an unflagged bar in the signal colour")
-    void attachingCreatesAnUnflaggedBar(Env env) {
+    @DisplayName("Attaching gives the survivor a carrier bar signalling nothing")
+    void attachingCreatesACarrierBar(Env env) {
         BossBarGazeSignal signal = new BossBarGazeSignal();
         Player survivor = connect(env, env.createFlatInstance());
 
@@ -35,23 +38,42 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
 
         BossBar bar = signal.barOf(survivor);
         assertNotNull(bar);
-        assertEquals(BossBarGazeSignal.SIGNAL_COLOR, bar.color(), "the pack hides exactly this colour");
-        assertTrue(bar.name().equals(net.kyori.adventure.text.Component.empty()), "an empty name draws no text");
-        assertFalse(bar.hasFlag(BossBar.Flag.DARKEN_SCREEN), "nothing is signalled before a level arrives");
+        assertEquals(BossBarGazeSignal.CARRIER_COLOR, bar.color(), "the pack hides exactly this colour");
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE, colourOf(bar), "nothing is signalled before a level arrives");
     }
 
     @Test
-    @DisplayName("A level raises the flag, none takes it back down")
-    void levelTogglesTheFlag(Env env) {
+    @DisplayName("The level is encoded into the glyph's colour")
+    void levelIsEncodedIntoTheColour(Env env) {
         BossBarGazeSignal signal = new BossBarGazeSignal();
         Player survivor = connect(env, env.createFlatInstance());
         signal.attach(survivor);
 
-        signal.level(survivor, 2);
-        assertTrue(signal.barOf(survivor).hasFlag(BossBar.Flag.DARKEN_SCREEN));
+        signal.level(survivor, 0);
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE + 1, colourOf(signal.barOf(survivor)));
+
+        signal.level(survivor, 3);
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE + 4, colourOf(signal.barOf(survivor)),
+                "the strongest level must not wrap - that was the bug in the first encoding");
 
         signal.level(survivor, SlenderGaze.NONE);
-        assertFalse(signal.barOf(survivor).hasFlag(BossBar.Flag.DARKEN_SCREEN));
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE, colourOf(signal.barOf(survivor)));
+    }
+
+    @Test
+    @DisplayName("The signal carries font, glyph and no shadow")
+    void signalCarriesEverythingTheShaderNeeds(Env env) {
+        BossBarGazeSignal signal = new BossBarGazeSignal();
+        Player survivor = connect(env, env.createFlatInstance());
+        signal.attach(survivor);
+        signal.level(survivor, 2);
+
+        Component name = signal.barOf(survivor).name();
+        assertEquals(BossBarGazeSignal.SIGNAL_FONT, name.font(), "a missing font renders a fallback glyph");
+        assertEquals(BossBarGazeSignal.SIGNAL_GLYPH, ((net.kyori.adventure.text.TextComponent) name).content(),
+                "a space produces no geometry and therefore no vertex to read");
+        assertEquals(ShadowColor.none(), name.shadowColor(),
+                "a shadow is drawn as a second pass in a darkened colour, so it would arrive as a second signal");
     }
 
     @Test
@@ -67,8 +89,8 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
         signal.level(first, 3);
 
         assertNotSame(signal.barOf(first), signal.barOf(second));
-        assertTrue(signal.barOf(first).hasFlag(BossBar.Flag.DARKEN_SCREEN));
-        assertFalse(signal.barOf(second).hasFlag(BossBar.Flag.DARKEN_SCREEN),
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE + 4, colourOf(signal.barOf(first)));
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE, colourOf(signal.barOf(second)),
                 "a shared bar would broadcast one survivor's gaze to everyone");
     }
 
@@ -93,6 +115,17 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
         signal.level(survivor, 1);
 
         assertNull(signal.barOf(survivor));
+    }
+
+    /**
+     * Reads the encoded colour back out of a bar's title.
+     *
+     * @param bar the bar to read
+     * @return the colour value, or -1 if the title carries none
+     */
+    private static int colourOf(BossBar bar) {
+        TextColor color = bar.name().color();
+        return color == null ? -1 : color.value();
     }
 
     private Player connect(Env env, Instance instance) {
