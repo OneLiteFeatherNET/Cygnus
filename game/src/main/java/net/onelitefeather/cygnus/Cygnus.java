@@ -142,8 +142,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
         this.resourcePackService = ResourcePackService.create();
         this.screenOverlay = new EquipmentScreenOverlay();
-        this.slenderGazeService = new SlenderGazeService(
-                this.screenOverlay, () -> TeamHelper.slenderOf(this.teamService));
+        this.slenderGazeService = new SlenderGazeService(() -> TeamHelper.slenderOf(this.teamService));
         this.bloodSplatterService = new BloodSplatterService(
                 this.screenOverlay,
                 bound -> ThreadLocalRandom.current().nextInt(bound)

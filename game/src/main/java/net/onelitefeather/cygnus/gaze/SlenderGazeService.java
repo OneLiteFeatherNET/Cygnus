@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.gaze;
 
-import net.kyori.adventure.key.Key;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -9,14 +8,12 @@ import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
-import net.onelitefeather.cygnus.overlay.OverlayLayer;
-import net.onelitefeather.cygnus.overlay.OverlayTextureKeys;
-import net.onelitefeather.cygnus.overlay.ScreenOverlay;
 import net.onelitefeather.cygnus.utils.PlayerState;
 import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -39,33 +36,21 @@ import java.util.function.Supplier;
  */
 public final class SlenderGazeService {
 
-    /** Where the glitch textures live, as {@code camera_overlay} resolves them. */
-    static final String TEXTURE_PATH = "gui/glitch/level_";
 
     /** How many frames the tearing runs through. */
-    static final int FRAMES = 4;
-
-    /** How long a frame stays on screen. */
+    /** Interval the service updates at. */
     static final int TICK_MILLIS = 100;
 
-    private static final Key[][] TEXTURES = OverlayTextureKeys.table(
-            TEXTURE_PATH, SlenderGaze.LEVELS, FRAMES, OverlayTextureKeys.ONE_BASED, OverlayTextureKeys.ONE_BASED);
-
-    private final ScreenOverlay overlay;
     private final Supplier<@Nullable Player> slender;
-    private final PlayerState<Player> survivors = new PlayerState<>();
+    private final PlayerState<Tracked> survivors = new PlayerState<>();
     private final RepeatingTask task = new RepeatingTask(this::tick);
-
-    private int frame;
 
     /**
      * Creates a new service.
      *
-     * @param overlay the overlay that owns the players' screens
      * @param slender supplies the current slender, or {@code null} while there is none
      */
-    public SlenderGazeService(ScreenOverlay overlay, Supplier<@Nullable Player> slender) {
-        this.overlay = overlay;
+    public SlenderGazeService(Supplier<@Nullable Player> slender) {
         this.slender = slender;
     }
 
@@ -120,75 +105,48 @@ public final class SlenderGazeService {
      * @param survivor the survivor to draw for
      */
     public void track(Player survivor) {
-        this.survivors.put(survivor, survivor);
+        this.survivors.put(survivor, new Tracked(survivor, SlenderGaze.NONE));
     }
 
     /**
-     * Stops drawing for a survivor and clears what is left on their screen.
+     * Stops tracking a survivor. Their level reads as {@link SlenderGaze#NONE} afterwards.
      *
      * @param player the survivor to drop
      */
     public void remove(Player player) {
-        if (this.survivors.remove(player) == null) return;
-        this.overlay.set(player, OverlayLayer.GLITCH, null);
+        this.survivors.remove(player);
     }
 
     /**
-     * Clears every tracked survivor's screen and forgets all of them.
+     * Forgets every tracked survivor.
      */
     public void cleanUp() {
-        for (Player survivor : this.survivors.values()) {
-            this.overlay.set(survivor, OverlayLayer.GLITCH, null);
-        }
         this.survivors.clear();
     }
 
     /**
-     * Puts one level on a player's screen and leaves it there, for judging the drawings without a
-     * slender to walk in front of.
-     * <p>
-     * This sits on the service rather than a separate type because it draws from the very texture
-     * table {@link #tick()} already builds; splitting it out would mean either rebuilding that table
-     * a second time or exposing it, trading one seam for a worse one over two lines of
-     * {@code GlitchCommand} preview code.
-     * </p>
-     * <p>
-     * Showing and clearing are one method rather than two because {@link SlenderGaze#NONE} already
-     * says "nothing to draw" everywhere else in this class — {@link #tick()} reads it off
-     * {@link SlenderGaze#levelOf(net.minestom.server.coordinate.Pos, net.minestom.server.coordinate.Pos)}
-     * on every pass — so a separate {@code hide} would be a second spelling of a level the type
-     * already has.
-     * </p>
+     * Returns how badly the sight of the slender is tearing this survivor's view right now.
      *
-     * @param player the player to draw for
-     * @param level  the level between {@code 0} and {@code SlenderGaze.LEVELS - 1}, or
-     *               {@link SlenderGaze#NONE} to take the tearing off their screen
+     * @param player the survivor to ask about
+     * @return a level between {@code 0} and {@link SlenderGaze#LEVELS} minus one, or
+     *         {@link SlenderGaze#NONE} when he is out of sight or the player is not tracked
      */
-    public void preview(Player player, int level) {
-        if (level == SlenderGaze.NONE) {
-            this.overlay.set(player, OverlayLayer.GLITCH, null);
-            return;
-        }
-        int clamped = Math.clamp(level, 0, SlenderGaze.LEVELS - 1);
-        this.overlay.set(player, OverlayLayer.GLITCH, TEXTURES[clamped][this.frame % FRAMES]);
+    public int levelOf(Player player) {
+        Tracked tracked = this.survivors.get(player);
+        return tracked == null ? SlenderGaze.NONE : tracked.level();
     }
 
     /**
-     * Advances the tearing by one frame and redraws every survivor.
+     * Recomputes the level of every tracked survivor.
      */
     void tick() {
         if (this.survivors.isEmpty()) return;
 
         Player currentSlender = this.slender.get();
-        this.frame++;
 
-        for (Player survivor : this.survivors.values()) {
-            int level = this.levelFor(survivor, currentSlender);
-            if (level == SlenderGaze.NONE) {
-                this.overlay.set(survivor, OverlayLayer.GLITCH, null);
-                continue;
-            }
-            this.overlay.set(survivor, OverlayLayer.GLITCH, TEXTURES[level][this.frame % FRAMES]);
+        for (Tracked tracked : List.copyOf(this.survivors.values())) {
+            Player survivor = tracked.player();
+            this.survivors.put(survivor, new Tracked(survivor, this.levelFor(survivor, currentSlender)));
         }
     }
 
@@ -206,5 +164,14 @@ public final class SlenderGazeService {
         if (instance == null || !instance.equals(survivor.getInstance())) return SlenderGaze.NONE;
 
         return SlenderGaze.levelOf(survivor.getPosition(), slender.getPosition());
+    }
+
+    /**
+     * One survivor and the level their view is currently torn at.
+     *
+     * @param player the survivor
+     * @param level  their level, or {@link SlenderGaze#NONE}
+     */
+    private record Tracked(Player player, int level) {
     }
 }
