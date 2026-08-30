@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.common.util;
 
 import com.google.gson.Gson;
+import net.minestom.server.color.Color;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.onelitefeather.cygnus.common.map.GameMap;
@@ -28,6 +29,7 @@ public final class GsonHelper {
         GSON = new Gson().newBuilder()
                 .registerTypeAdapter(Pos.class, typeAdapter)
                 .registerTypeAdapter(Vec.class, typeAdapter)
+                .registerTypeAdapter(Color.class, new ColorGsonAdapter())
                 .registerTypeAdapter(PageResource.class, new PageResourceAdapter())
                 .registerTypeAdapter(GameMap.class, new GameMapAdapter())
                 .create();
