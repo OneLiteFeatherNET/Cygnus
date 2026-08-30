@@ -5,6 +5,7 @@ import net.minestom.server.event.EventDispatcher;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.registry.RegistryKey;
+import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.world.DimensionType;
 import net.onelitefeather.cygnus.common.dimension.DimensionFactory;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
@@ -40,6 +41,7 @@ public final class GameMapProvider extends AbstractMapProvider {
     private @Nullable InstanceContainer gameInstance;
     private @Nullable GameMap gameMap;
     private @Nullable InstanceContainer previousInstance;
+    private boolean releasePending;
 
     public GameMapProvider(Path path) {
         super(GsonHelper.FILE_HANDLER, MapFilters::filterMapsForGame);
@@ -147,14 +149,37 @@ public final class GameMapProvider extends AbstractMapProvider {
     /**
      * Unregisters the instance the provider was on before the last switch.
      *
-     * <p>Minestom refuses to unregister an instance that still holds online players, so this must
-     * run after every player has been moved into the new instance. Calling it more than once, or
-     * without a previous switch, does nothing.</p>
+     * <p>Minestom refuses to unregister an instance that still holds online players, so this waits
+     * until the instance is empty rather than assuming the move is done. {@code Player#setInstance}
+     * completes only once the target chunks have loaded, and since the game map runs on its own
+     * dimension that move also costs a full respawn - far longer than the tick the caller schedules
+     * this on. Calling it more than once, or without a previous switch, does nothing.</p>
      */
     public void releasePreviousInstance() {
-        if (this.previousInstance == null) return;
-        MinecraftServer.getInstanceManager().unregisterInstance(this.previousInstance);
-        this.previousInstance = null;
+        InstanceContainer previous = this.previousInstance;
+        if (previous == null) return;
+
+        if (previous.getPlayers().isEmpty()) {
+            MinecraftServer.getInstanceManager().unregisterInstance(previous);
+            this.previousInstance = null;
+            return;
+        }
+
+        if (this.releasePending) return;
+        this.releasePending = true;
+        MinecraftServer.getSchedulerManager().submitTask(() -> {
+            InstanceContainer pending = this.previousInstance;
+            if (pending == null) {
+                this.releasePending = false;
+                return TaskSchedule.stop();
+            }
+            if (!pending.getPlayers().isEmpty()) return TaskSchedule.nextTick();
+
+            MinecraftServer.getInstanceManager().unregisterInstance(pending);
+            this.previousInstance = null;
+            this.releasePending = false;
+            return TaskSchedule.stop();
+        });
     }
 
     private BaseMap loadLobbyMap() {
