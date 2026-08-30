@@ -2,8 +2,12 @@ package net.onelitefeather.cygnus.map;
 
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.EventDispatcher;
+import net.kyori.adventure.key.Key;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.world.DimensionType;
+import net.onelitefeather.cygnus.common.dimension.DimensionFactory;
+import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.filter.MapFilters;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
@@ -19,10 +23,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public final class GameMapProvider extends AbstractMapProvider {
 
+    /** Namespace every dimension this provider registers lives in. */
+    private static final String DIMENSION_NAMESPACE = "cygnus";
+
     private final List<FalcoAnvilLoader> chunkLoaders;
+    private final MapEntry gameEntry;
+    private final RegistryKey<DimensionType> gameDimension;
     private @Nullable InstanceContainer gameInstance;
     private @Nullable GameMap gameMap;
     private @Nullable InstanceContainer previousInstance;
@@ -36,22 +46,73 @@ public final class GameMapProvider extends AbstractMapProvider {
         }
 
         this.loadLobbyMap();
+        this.gameEntry = this.mapEntries.stream()
+                .filter(entry -> !entry.getDirectoryRoot().toString().equalsIgnoreCase("lobby"))
+                .findAny()
+                .orElseThrow(() -> new IllegalStateException("No game map found"));
+        this.gameDimension = registerDimension(readGameMap());
+    }
+
+    /**
+     * Registers the dimension the game map asks for, if it asks for one.
+     *
+     * <p>This happens here, in the constructor, rather than in {@link #loadGameMap()} on purpose:
+     * registry data only reaches a client during its configuration phase, and the provider is built
+     * before the server starts accepting connections. Registering later would leave every player
+     * already online without the dimension they are about to be moved into.</p>
+     *
+     * @param map the loaded game map
+     * @return the key of the registered dimension, or {@link DimensionType#OVERWORLD} if the map
+     *         declares no atmosphere
+     */
+    private RegistryKey<DimensionType> registerDimension(GameMap map) {
+        MapAtmosphere atmosphere = map.getAtmosphere();
+        if (atmosphere == null) return DimensionType.OVERWORLD;
+
+        return DimensionFactory.create(Key.key(DIMENSION_NAMESPACE, "map/" + toKeyValue(map.name())), atmosphere);
+    }
+
+    /**
+     * Reduces a map name to the characters a {@link Key} accepts, so any name a builder types still
+     * yields a registrable dimension key.
+     *
+     * @param name the map name
+     * @return the name in lower case with every unsupported character replaced by an underscore
+     */
+    private static String toKeyValue(String name) {
+        String sanitized = name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_.-]", "_");
+        return sanitized.isBlank() ? "unnamed" : sanitized;
+    }
+
+    /**
+     * Reads the game map from its map file.
+     *
+     * @return the loaded game map
+     * @throws IllegalStateException if the file cannot be read
+     */
+    private GameMap readGameMap() {
+        return this.fileHandler.load(this.gameEntry.getMapFile(), GameMap.class)
+                .orElseThrow(() -> new IllegalStateException("Failed to load GameMap from file: " + this.gameEntry.getMapFile()));
     }
 
     public void loadGameMap() {
         if (this.gameMap != null) return; // idempotent
 
-        MapEntry gameEntry = this.mapEntries.stream()
-                .filter(e -> !e.getDirectoryRoot().toString().equalsIgnoreCase("lobby"))
-                .findAny()
-                .orElseThrow(() -> new IllegalStateException("No game map found"));
-
-        this.gameMap = this.fileHandler.load(gameEntry.getMapFile(), GameMap.class)
-                .orElseThrow(() -> new IllegalStateException("Failed to load GameMap from file: " + gameEntry.getMapFile()));
-        this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer();
+        this.gameMap = readGameMap();
+        this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer(this.gameDimension);
         this.gameInstance.setTime(Helper.NEW_MOON_TIME);
-        this.registerFalcoInstance(this.gameInstance, gameEntry);
+        this.registerFalcoInstance(this.gameInstance, this.gameEntry);
         EventDispatcher.call(new GameMapLoadedEvent(this.gameMap, this.gameInstance));
+    }
+
+    /**
+     * Returns the dimension the game instance runs on.
+     *
+     * @return the registered per-map dimension, or {@link DimensionType#OVERWORLD} if the map
+     *         declares no atmosphere
+     */
+    public RegistryKey<DimensionType> getGameDimension() {
+        return gameDimension;
     }
 
     /**

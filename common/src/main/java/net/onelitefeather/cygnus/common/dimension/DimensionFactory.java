@@ -3,9 +3,11 @@ package net.onelitefeather.cygnus.common.dimension;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.registry.RegistryKey;
+import net.minestom.server.world.clock.WorldClock;
 import net.minestom.server.world.DimensionType;
 import net.minestom.server.world.attribute.EnvironmentAttribute;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Small factory class to create custom {@link RegistryKey<DimensionType>} instances from custom
@@ -35,7 +37,7 @@ public final class DimensionFactory {
      */
     @Contract(value = "_, _ -> new", pure = true)
     public static RegistryKey<DimensionType> create(Key registryKey, DimensionAtmosphere atmosphere) {
-        DimensionType type = DimensionType.builder()
+        DimensionType.Builder builder = DimensionType.builder()
                 .setAttribute(EnvironmentAttribute.FOG_START_DISTANCE, atmosphere.fogStartDistance())
                 .setAttribute(EnvironmentAttribute.FOG_END_DISTANCE, atmosphere.fogEndDistance())
                 .setAttribute(EnvironmentAttribute.SKY_FOG_END_DISTANCE, atmosphere.skyFogEndDistance())
@@ -44,10 +46,29 @@ public final class DimensionFactory {
                 .setAttribute(EnvironmentAttribute.SKY_LIGHT_COLOR, atmosphere.skyLightColor())
                 .setAttribute(EnvironmentAttribute.SKY_LIGHT_FACTOR, atmosphere.skyLightFactor())
                 .setAttribute(EnvironmentAttribute.SUN_ANGLE, 180f)
-                .setAttribute(EnvironmentAttribute.MOON_ANGLE, 180f)
-                .defaultClock(DimensionType.OVERWORLD.asValue().defaultClock())
-                .build();
-        return MinecraftServer.getDimensionTypeRegistry().register(registryKey, type);
+                .setAttribute(EnvironmentAttribute.MOON_ANGLE, 180f);
+
+        RegistryKey<WorldClock> clock = overworldClock();
+        if (clock != null) {
+            builder.defaultClock(clock);
+        }
+
+        return MinecraftServer.getDimensionTypeRegistry().register(registryKey, builder.build());
+    }
+
+    /**
+     * Looks up the clock the overworld runs on, so a custom dimension keeps the day/night cycle
+     * players expect instead of whatever the builder happens to default to.
+     *
+     * <p>The key has to be resolved through the registry: {@code RegistryKey#asValue()} answers
+     * {@code null} without a registry to resolve against. If the lookup comes up empty the caller
+     * keeps the builder default rather than failing to register a dimension over a clock.</p>
+     *
+     * @return the overworld's clock, or {@code null} if it cannot be resolved
+     */
+    private static @Nullable RegistryKey<WorldClock> overworldClock() {
+        DimensionType overworld = MinecraftServer.getDimensionTypeRegistry().get(DimensionType.OVERWORLD);
+        return overworld == null ? null : overworld.defaultClock();
     }
 
     /**
