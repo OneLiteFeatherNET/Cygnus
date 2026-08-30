@@ -14,7 +14,7 @@ import java.util.Map;
  * Enumeration of each possible map data which is required for the setup.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.5.0
  */
 public enum MapDataCategory {
@@ -24,7 +24,8 @@ public enum MapDataCategory {
     SPAWN("Spawn", Material.COMPASS, NamedTextColor.RED),
     SLENDER("Slender", Material.ENDER_EYE, NamedTextColor.DARK_PURPLE),
     SURVIVOR("Survivor", Material.CLOCK, NamedTextColor.GREEN),
-    PAGE("Page", Material.PAPER, NamedTextColor.WHITE);
+    PAGE("Page", Material.PAPER, NamedTextColor.WHITE),
+    ATMOSPHERE("Fog", Material.CAMPFIRE, NamedTextColor.GRAY);
 
     private static final MapDataCategory[] VALUES = values();
     private static final Map<MapDataCategory, ItemStack> DEFAULT_CACHE = new EnumMap<>(MapDataCategory.class);
