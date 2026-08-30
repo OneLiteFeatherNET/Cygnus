@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.common.dimension;
 
 import net.kyori.adventure.util.RGBLike;
 import net.minestom.server.color.Color;
+import net.onelitefeather.cygnus.common.util.ColorUtil;
 
 /**
  * Hand-crafted dimension atmospheres with predefined settings.
@@ -9,7 +10,7 @@ import net.minestom.server.color.Color;
  * {@link SeedDimensionPreset}.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.6.6
  */
 public enum StaticDimensionPreset implements DimensionPreset {
@@ -303,5 +304,16 @@ public enum StaticDimensionPreset implements DimensionPreset {
      */
     public static StaticDimensionPreset[] getValues() {
         return VALUES;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Derived from the fog rather than declared per preset: the light that remains in complete
+     * darkness should carry the same tint as the haze, only far dimmer.</p>
+     */
+    @Override
+    public RGBLike ambientLightColor() {
+        return ColorUtil.dim(fogColor(), AMBIENT_LIGHT_SHARE);
     }
 }

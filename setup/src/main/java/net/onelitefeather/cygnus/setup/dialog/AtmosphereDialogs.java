@@ -57,6 +57,7 @@ public final class AtmosphereDialogs extends DialogBase {
     public static final String FOG_COLOR_INPUT = "fog_color";
     public static final String SKY_LIGHT_COLOR_INPUT = "sky_light_color";
     public static final String SKY_COLOR_INPUT = "sky_color";
+    public static final String AMBIENT_LIGHT_COLOR_INPUT = "ambient_light_color";
 
     /** Factor between the whole-step slider and the fractional sky-light factor it stands for. */
     public static final float SKY_LIGHT_SCALE = 1000f;
@@ -168,6 +169,8 @@ public final class AtmosphereDialogs extends DialogBase {
                             .maxLength(HEX_LENGTH).initial(asHex(atmosphere.skyLightColor())));
                     meta.text(SKY_COLOR_INPUT, text -> text.label(Component.text("Sky color"))
                             .maxLength(HEX_LENGTH).initial(asHex(atmosphere.skyColor())));
+                    meta.text(AMBIENT_LIGHT_COLOR_INPUT, text -> text.label(Component.text("Ambient light"))
+                            .maxLength(HEX_LENGTH).initial(asHex(atmosphere.ambientLightColor())));
                 })
                 .yesButton(button -> button.width(BUTTON_WIDTH).label(Component.text("Preview"))
                         .action(new DialogAction.DynamicCustom(VALUES_KEY, getEmptyPayload())))

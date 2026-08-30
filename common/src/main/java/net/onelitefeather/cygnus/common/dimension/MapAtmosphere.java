@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.common.dimension;
 
 import net.minestom.server.color.Color;
+import net.onelitefeather.cygnus.common.util.ColorUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -27,18 +28,21 @@ import org.slf4j.LoggerFactory;
  * @param fogColor          the color of the fog itself
  * @param skyLightColor     the color of the light coming down from the sky
  * @param skyColor          the sky's own background color
+ * @param ambientLightColor the light that remains where nothing lights a block; derived from the
+ *                          fog when the map file leaves it out, and never black
  * @param skyLightFactor    how strongly sky-light affects the map, in {@code [0, 1]}
  * @param fogStartDistance  the distance at which fog becomes noticeable, at least {@code 0}
  * @param fogEndDistance    the distance at which fog is fully opaque, above {@code fogStartDistance}
  * @param skyFogEndDistance the same for the sky-colored fog at the horizon, above {@code 0}
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.3
  */
 public record MapAtmosphere(
         Color fogColor,
         Color skyLightColor,
         Color skyColor,
+        Color ambientLightColor,
         float skyLightFactor,
         float fogStartDistance,
         float fogEndDistance,
@@ -60,6 +64,13 @@ public record MapAtmosphere(
         fogColor = orBlack(fogColor, "fogColor");
         skyLightColor = orBlack(skyLightColor, "skyLightColor");
         skyColor = orBlack(skyColor, "skyColor");
+
+        // A map file that says nothing about ambient light gets a dim version of its own fog, not
+        // black: a fully black ambient colour makes an unlit lightmap cell exactly zero, and a
+        // shader normalising by the largest channel then divides zero by zero.
+        ambientLightColor = ambientLightColor != null
+                ? ColorUtil.dim(ambientLightColor, 1f)
+                : ColorUtil.dim(fogColor, AMBIENT_LIGHT_SHARE);
 
         if (skyLightFactor < 0f || skyLightFactor > 1f) {
             LOGGER.warn("skyLightFactor {} is outside [0, 1], clamping it", skyLightFactor);
@@ -99,6 +110,7 @@ public record MapAtmosphere(
                 Color.fromRGBLike(atmosphere.fogColor()),
                 Color.fromRGBLike(atmosphere.skyLightColor()),
                 Color.fromRGBLike(atmosphere.skyColor()),
+                Color.fromRGBLike(atmosphere.ambientLightColor()),
                 atmosphere.skyLightFactor(),
                 atmosphere.fogStartDistance(),
                 atmosphere.fogEndDistance(),

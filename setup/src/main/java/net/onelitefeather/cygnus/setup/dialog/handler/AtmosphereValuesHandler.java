@@ -80,6 +80,7 @@ public final class AtmosphereValuesHandler implements DialogHandler {
                 color(payload.get(AtmosphereDialogs.FOG_COLOR_INPUT), previous == null ? null : previous.fogColor()),
                 color(payload.get(AtmosphereDialogs.SKY_LIGHT_COLOR_INPUT), previous == null ? null : previous.skyLightColor()),
                 color(payload.get(AtmosphereDialogs.SKY_COLOR_INPUT), previous == null ? null : previous.skyColor()),
+                color(payload.get(AtmosphereDialogs.AMBIENT_LIGHT_COLOR_INPUT), previous == null ? null : previous.ambientLightColor()),
                 number(payload.get(AtmosphereDialogs.SKY_LIGHT_INPUT), 8f) / AtmosphereDialogs.SKY_LIGHT_SCALE,
                 number(payload.get(AtmosphereDialogs.FOG_START_INPUT), 0f),
                 number(payload.get(AtmosphereDialogs.FOG_END_INPUT), 48f),

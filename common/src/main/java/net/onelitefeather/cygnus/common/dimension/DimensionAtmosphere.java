@@ -12,10 +12,15 @@ import net.kyori.adventure.util.RGBLike;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.3
  */
 public interface DimensionAtmosphere {
+
+    /**
+     * How much of the fog colour is left over as ambient light when nothing else lights a block.
+     */
+    float AMBIENT_LIGHT_SHARE = 0.10f;
 
     /**
      * The color of the fog itself.
@@ -37,6 +42,18 @@ public interface DimensionAtmosphere {
      * @return the sky color
      */
     RGBLike skyColor();
+
+    /**
+     * The colour of the light that is there even where nothing lights the block at all.
+     *
+     * <p>Never black. A lightmap cell with no block and no sky light would otherwise be exactly
+     * {@code vec3(0.0)}, which a shader that normalises by the largest channel turns into
+     * {@code 0.0 / 0.0} - and a NaN in the lightmap renders unlit surfaces bright rather than
+     * dark.</p>
+     *
+     * @return the ambient light colour
+     */
+    RGBLike ambientLightColor();
 
     /**
      * How strongly sky-light affects the dimension. Higher values feel brighter and more open;

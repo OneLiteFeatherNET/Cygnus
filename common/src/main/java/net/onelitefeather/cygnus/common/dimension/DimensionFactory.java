@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
  * </p>
  *
  * @author Joltra
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2.6.6
  */
 public final class DimensionFactory {
@@ -45,6 +45,7 @@ public final class DimensionFactory {
                 .setAttribute(EnvironmentAttribute.SKY_COLOR, atmosphere.skyColor())
                 .setAttribute(EnvironmentAttribute.SKY_LIGHT_COLOR, atmosphere.skyLightColor())
                 .setAttribute(EnvironmentAttribute.SKY_LIGHT_FACTOR, atmosphere.skyLightFactor())
+                .setAttribute(EnvironmentAttribute.AMBIENT_LIGHT_COLOR, atmosphere.ambientLightColor())
                 .setAttribute(EnvironmentAttribute.SUN_ANGLE, 180f)
                 .setAttribute(EnvironmentAttribute.MOON_ANGLE, 180f);
 

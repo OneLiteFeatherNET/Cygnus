@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.common.dimension;
 
 import net.minestom.server.color.Color;
+import net.onelitefeather.cygnus.common.util.ColorUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,7 +14,7 @@ class MapAtmosphereTest {
     private static final Color BLACK = Color.fromRGBLike(Color.BLACK);
 
     private static MapAtmosphere with(float skyLightFactor, float fogStart, float fogEnd, float skyFogEnd) {
-        return new MapAtmosphere(FOG, SKY_LIGHT, BLACK, skyLightFactor, fogStart, fogEnd, skyFogEnd);
+        return new MapAtmosphere(FOG, SKY_LIGHT, BLACK, null, skyLightFactor, fogStart, fogEnd, skyFogEnd);
     }
 
     @Test
@@ -65,5 +66,37 @@ class MapAtmosphereTest {
     @Test
     void twoAtmospheresWithTheSameValuesAreEqual() {
         assertEquals(with(0.008f, 0f, 48f, 32f), with(0.008f, 0f, 48f, 32f));
+    }
+
+    @Test
+    void derivesAmbientLightFromTheFogWhenAbsent() {
+        MapAtmosphere atmosphere = with(0.008f, 0f, 48f, 32f);
+
+        assertEquals(ColorUtil.dim(FOG, DimensionAtmosphere.AMBIENT_LIGHT_SHARE), atmosphere.ambientLightColor());
+    }
+
+    @Test
+    void neverLeavesAmbientLightFullyBlack() {
+        MapAtmosphere fromBlackFog = new MapAtmosphere(
+                BLACK, SKY_LIGHT, BLACK, null, 0.008f, 0f, 48f, 32f);
+        MapAtmosphere declaredBlack = new MapAtmosphere(
+                FOG, SKY_LIGHT, BLACK, BLACK, 0.008f, 0f, 48f, 32f);
+
+        for (MapAtmosphere atmosphere : new MapAtmosphere[]{fromBlackFog, declaredBlack}) {
+            Color ambient = atmosphere.ambientLightColor();
+            assertTrue(
+                    ambient.red() > 0 && ambient.green() > 0 && ambient.blue() > 0,
+                    "a black ambient colour is what makes an unlit lightmap cell divide by zero"
+            );
+        }
+    }
+
+    @Test
+    void keepsADeclaredAmbientLightColor() {
+        Color declared = new Color(40, 30, 50);
+        MapAtmosphere atmosphere = new MapAtmosphere(
+                FOG, SKY_LIGHT, BLACK, declared, 0.008f, 0f, 48f, 32f);
+
+        assertEquals(declared, atmosphere.ambientLightColor());
     }
 }
