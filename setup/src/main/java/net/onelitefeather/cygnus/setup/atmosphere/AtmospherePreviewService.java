@@ -70,6 +70,10 @@ public final class AtmospherePreviewService {
         Instance origin = previous != null ? previous.origin() : player.getInstance();
         Pos originPosition = previous != null ? previous.originPosition() : player.getPosition();
         int counter = previous != null ? previous.counter() + 1 : 1;
+        if (previous != null && previous.returning()) {
+            // A preview that is already on its way out has released its instance; start fresh.
+            previous = null;
+        }
 
         if (origin == null) {
             LOGGER.warn("Cannot preview an atmosphere for {}: the player is in no instance", player.getUsername());
@@ -95,10 +99,12 @@ public final class AtmospherePreviewService {
         instance.enableAutoChunkLoad(true);
         MinecraftServer.getInstanceManager().registerInstance(instance);
 
-        Session session = new Session(instance, loader, origin, originPosition, counter);
+        Session session = new Session(instance, loader, origin, originPosition, counter, false);
         this.sessions.put(player.getUuid(), session);
 
-        send(player, instance, originPosition);
+        // The builder stays where they are standing rather than being sent back to where the first
+        // preview started, so comparing two sets of values means comparing the same view twice.
+        send(player, instance, player.getPosition());
         release(previous);
     }
 
@@ -109,9 +115,13 @@ public final class AtmospherePreviewService {
      * @param player the builder to bring back
      */
     public void leave(Player player) {
-        Session session = this.sessions.remove(player.getUuid());
-        if (session == null) return;
+        Session session = this.sessions.get(player.getUuid());
+        if (session == null || session.returning()) return;
 
+        // The session outlives the move on purpose. Going back also runs through a configuration
+        // phase, and until it completes this service still has to answer where the builder belongs
+        // - otherwise the setup hub's own listeners would claim them instead.
+        this.sessions.put(player.getUuid(), session.returning(true));
         send(player, session.origin(), session.originPosition());
         release(session);
     }
@@ -136,7 +146,34 @@ public final class AtmospherePreviewService {
      */
     public @Nullable Instance pendingInstance(Player player) {
         Session session = this.sessions.get(player.getUuid());
-        return session == null ? null : session.instance();
+        if (session == null) return null;
+        return session.returning() ? session.origin() : session.instance();
+    }
+
+    /**
+     * Reports whether the given player is mid-preview, in either direction.
+     *
+     * <p>Coming back from a configuration phase looks like a first spawn to Minestom, because the
+     * player holds no instance while they are in it. The setup's spawn handling would take that as
+     * a fresh join and send the builder to the hub, so it has to ask here first.</p>
+     *
+     * @param player the player that just spawned
+     * @return {@code true} while a preview is running or being left
+     */
+    public boolean isPreviewing(Player player) {
+        return this.sessions.containsKey(player.getUuid());
+    }
+
+    /**
+     * Closes out a preview once the builder has arrived back where they started.
+     *
+     * @param player the player that just spawned
+     */
+    public void handleSpawn(Player player) {
+        Session session = this.sessions.get(player.getUuid());
+        if (session != null && session.returning()) {
+            this.sessions.remove(player.getUuid());
+        }
     }
 
     /**
@@ -189,13 +226,25 @@ public final class AtmospherePreviewService {
      * @param originPosition where in that instance they stood
      * @param counter        how many previews this builder has rendered, used to keep registry keys
      *                       unique
+     * @param returning      whether the builder is on their way back out of the preview
      */
     private record Session(
             InstanceContainer instance,
             FalcoAnvilLoader loader,
             Instance origin,
             Pos originPosition,
-            int counter
+            int counter,
+            boolean returning
     ) {
+
+        /**
+         * Returns a copy of this session with the return flag set as given.
+         *
+         * @param value the new flag value
+         * @return the adjusted session
+         */
+        private Session returning(boolean value) {
+            return new Session(instance, loader, origin, originPosition, counter, value);
+        }
     }
 }

@@ -79,7 +79,16 @@ public class SetupExtension implements ListenerHandling {
             Instance preview = this.previewService.pendingInstance(event.getPlayer());
             event.setSpawningInstance(preview != null ? preview : instanceSupplier.get());
         });
-        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener((mapProvider::teleportToSpawn)));
+        // Returning from a configuration phase looks like a first spawn to Minestom, so an
+        // atmosphere preview would otherwise be undone by the hub teleport below on arrival.
+        PlayerSpawnListener spawnListener = new PlayerSpawnListener(mapProvider::teleportToSpawn);
+        manager.addListener(PlayerSpawnEvent.class, event -> {
+            if (this.previewService.isPreviewing(event.getPlayer())) {
+                this.previewService.handleSpawn(event.getPlayer());
+                return;
+            }
+            spawnListener.accept(event);
+        });
 
         manager.addListener(PlayerDisconnectEvent.class, event -> {
             this.previewService.discard(event.getPlayer());
