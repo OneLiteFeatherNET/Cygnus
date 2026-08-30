@@ -41,6 +41,7 @@ public final class SlenderGazeService {
     /** Interval the service updates at. */
     static final int TICK_MILLIS = 100;
 
+    private final GazeSink sink;
     private final Supplier<@Nullable Player> slender;
     private final PlayerState<Tracked> survivors = new PlayerState<>();
     private final RepeatingTask task = new RepeatingTask(this::tick);
@@ -48,9 +49,12 @@ public final class SlenderGazeService {
     /**
      * Creates a new service.
      *
+     * @param sink    where a survivor's level is signalled to, {@link GazeSink#NONE} to work the
+     *                levels out without sending them anywhere
      * @param slender supplies the current slender, or {@code null} while there is none
      */
-    public SlenderGazeService(Supplier<@Nullable Player> slender) {
+    public SlenderGazeService(GazeSink sink, Supplier<@Nullable Player> slender) {
+        this.sink = sink;
         this.slender = slender;
     }
 
@@ -106,6 +110,7 @@ public final class SlenderGazeService {
      */
     public void track(Player survivor) {
         this.survivors.put(survivor, new Tracked(survivor, SlenderGaze.NONE));
+        this.sink.attach(survivor);
     }
 
     /**
@@ -114,13 +119,17 @@ public final class SlenderGazeService {
      * @param player the survivor to drop
      */
     public void remove(Player player) {
-        this.survivors.remove(player);
+        if (this.survivors.remove(player) == null) return;
+        this.sink.detach(player);
     }
 
     /**
      * Forgets every tracked survivor.
      */
     public void cleanUp() {
+        for (Tracked tracked : List.copyOf(this.survivors.values())) {
+            this.sink.detach(tracked.player());
+        }
         this.survivors.clear();
     }
 
@@ -146,7 +155,13 @@ public final class SlenderGazeService {
 
         for (Tracked tracked : List.copyOf(this.survivors.values())) {
             Player survivor = tracked.player();
-            this.survivors.put(survivor, new Tracked(survivor, this.levelFor(survivor, currentSlender)));
+            int level = this.levelFor(survivor, currentSlender);
+            if (level == tracked.level()) continue;
+
+            // Only on a change: every channel a sink can use costs the client something, so
+            // repeating an unchanged level is waste at best and a stutter at worst.
+            this.survivors.put(survivor, new Tracked(survivor, level));
+            this.sink.level(survivor, level);
         }
     }
 

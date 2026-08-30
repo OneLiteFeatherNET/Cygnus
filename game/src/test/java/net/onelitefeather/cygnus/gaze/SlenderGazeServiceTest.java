@@ -13,6 +13,8 @@ import net.onelitefeather.cygnus.event.GameStartEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,7 +39,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(() -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
         service.track(survivor);
 
         service.tick();
@@ -51,7 +53,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, -5));
-        SlenderGazeService service = new SlenderGazeService(() -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
         service.track(survivor);
 
         service.tick();
@@ -65,7 +67,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(() -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
         service.track(survivor);
         service.tick();
 
@@ -81,7 +83,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 25));
-        SlenderGazeService service = new SlenderGazeService(() -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
         service.track(survivor);
 
         service.tick();
@@ -97,7 +99,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     @DisplayName("Without a slender nothing happens at all")
     void withoutASlenderNothingHappens(Env env) {
         Player survivor = connect(env, env.createFlatInstance(), new Pos(0, 40, 0, 0, 0));
-        SlenderGazeService service = new SlenderGazeService(() -> null);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> null);
         service.track(survivor);
 
         service.tick();
@@ -111,7 +113,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(() -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
         service.track(survivor);
         service.tick();
 
@@ -128,7 +130,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player first = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player second = connect(env, instance, new Pos(4, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(() -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
         service.track(first);
         service.track(second);
         service.tick();
@@ -148,7 +150,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(() -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
 
         EventDispatcher.call(new GameStartEvent());
@@ -163,7 +165,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(() -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
         service.track(survivor);
         service.tick();
@@ -180,7 +182,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(() -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
         service.track(survivor);
         service.tick();
@@ -188,6 +190,82 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new GameFinishEvent(GameFinishEvent.Reason.TIME_OVER));
 
         assertEquals(SlenderGaze.NONE, service.levelOf(survivor));
+    }
+
+    @Test
+    @DisplayName("The sink hears about a level only when it changes")
+    void sinkOnlyHearsAboutChanges(Env env) {
+        RecordingSink sink = new RecordingSink();
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
+        Player slender = connect(env, instance, new Pos(0, 40, 5));
+        SlenderGazeService service = new SlenderGazeService(sink, () -> slender);
+        service.track(survivor);
+
+        service.tick();
+        int afterFirst = sink.levels.size();
+        service.tick();
+        service.tick();
+
+        assertEquals(1, afterFirst, "the first tick moves off NONE, so it reports once");
+        assertEquals(afterFirst, sink.levels.size(), "standing still must not repeat the level");
+    }
+
+    @Test
+    @DisplayName("Losing sight of him reports once more")
+    void losingSightReportsAgain(Env env) {
+        RecordingSink sink = new RecordingSink();
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
+        Player slender = connect(env, instance, new Pos(0, 40, 5));
+        SlenderGazeService service = new SlenderGazeService(sink, () -> slender);
+        service.track(survivor);
+        service.tick();
+
+        survivor.teleport(new Pos(0, 40, 0, 180, 0));
+        service.tick();
+
+        assertEquals(SlenderGaze.NONE, sink.levels.getLast());
+    }
+
+    @Test
+    @DisplayName("Tracking and dropping a survivor reaches the sink")
+    void trackAndRemoveReachTheSink(Env env) {
+        RecordingSink sink = new RecordingSink();
+        Player survivor = connect(env, env.createFlatInstance(), new Pos(0, 40, 0, 0, 0));
+        SlenderGazeService service = new SlenderGazeService(sink, () -> null);
+
+        service.track(survivor);
+        assertEquals(1, sink.attached);
+
+        service.remove(survivor);
+        assertEquals(1, sink.detached);
+
+        service.remove(survivor);
+        assertEquals(1, sink.detached, "dropping someone twice must not signal twice");
+    }
+
+    /** Records what the service hands it, so the tests can look at the traffic. */
+    private static final class RecordingSink implements GazeSink {
+
+        private final List<Integer> levels = new ArrayList<>();
+        private int attached;
+        private int detached;
+
+        @Override
+        public void attach(Player survivor) {
+            this.attached++;
+        }
+
+        @Override
+        public void detach(Player survivor) {
+            this.detached++;
+        }
+
+        @Override
+        public void level(Player survivor, int level) {
+            this.levels.add(level);
+        }
     }
 
     /**
