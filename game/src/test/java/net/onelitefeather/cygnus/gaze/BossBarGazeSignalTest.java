@@ -117,6 +117,23 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
         assertNull(signal.barOf(survivor));
     }
 
+    @Test
+    @DisplayName("The level travels twice: as a colour and as the world-tint bit")
+    void levelCarriesBothChannels(Env env) {
+        BossBarGazeSignal signal = new BossBarGazeSignal();
+        Player survivor = connect(env, env.createFlatInstance());
+        signal.attach(survivor);
+
+        signal.level(survivor, 2);
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE + 3, colourOf(signal.barOf(survivor)));
+        assertTrue(signal.barOf(survivor).hasFlag(BossBar.Flag.DARKEN_SCREEN),
+                "the world tint needs the bit, the veil alone is not the effect");
+
+        signal.level(survivor, SlenderGaze.NONE);
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE, colourOf(signal.barOf(survivor)));
+        assertFalse(signal.barOf(survivor).hasFlag(BossBar.Flag.DARKEN_SCREEN));
+    }
+
     /**
      * Reads the encoded colour back out of a bar's title.
      *

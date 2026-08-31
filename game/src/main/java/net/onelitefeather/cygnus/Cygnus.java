@@ -53,7 +53,6 @@ import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.gaze.BossBarGazeSignal;
-import net.onelitefeather.cygnus.gaze.GazeSink;
 import net.onelitefeather.cygnus.gaze.SlenderGazeService;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
@@ -147,10 +146,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.resourcePackService = ResourcePackService.create();
         this.screenOverlay = new EquipmentScreenOverlay();
         this.gazeSignal = new BossBarGazeSignal();
-        // Der Kanal wird vorerst nur vom /glitch-Command bedient. Liefe der Service gegen
-        // denselben Sink, ueberschriebe er die gewaehlte Stufe im naechsten Durchgang.
+        // The service drives the signal during a round. Outside one it does not tick - it starts on
+        // GameStartEvent - so /glitch keeps working in the lobby for judging a level by hand.
         this.slenderGazeService = new SlenderGazeService(
-                GazeSink.NONE, () -> TeamHelper.slenderOf(this.teamService));
+                this.gazeSignal, () -> TeamHelper.slenderOf(this.teamService));
         this.bloodSplatterService = new BloodSplatterService(
                 this.screenOverlay,
                 bound -> ThreadLocalRandom.current().nextInt(bound)

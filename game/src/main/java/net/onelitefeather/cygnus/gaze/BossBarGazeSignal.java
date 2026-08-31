@@ -18,12 +18,17 @@ import org.jetbrains.annotations.Nullable;
  * reserved range, reads the level out of the low bits, and blows the glyph's quad up to cover the
  * screen. The glyph is therefore never seen where it is written.</p>
  *
- * <p>Four other channels were tried first and all of them failed. A boss bar's darken_screen flag
- * reaches only {@code lightmap.fsh}, which writes a 16x16 texture and has no screen position, so it
- * cannot carry a screen-space effect. Night vision and blindness are both already used for
+ * <p>The bar carries two channels at once. Its title colour is the level, which the pack's text
+ * shader reads to draw a graded veil. Its {@code darken_screen} flag is a single bit arriving in
+ * {@code lightmap.fsh} as {@code BossOverlayWorldDarkeningFactor} - the one per-player value that
+ * reaches the world's own lighting, since the lightmap is multiplied into {@code vertexColor}
+ * before any world shader sees it. The two passes cannot talk to each other, so the level travels
+ * twice: as a bit for the world tint, as a colour for the veil on top.</p>
+ *
+ * <p>Night vision and blindness were the other candidates for the bit and are both already used for
  * gameplay - {@code AmbientProvider} puts blindness on survivors periodically, which would fire the
- * effect at random. A per-player biome would work but needs a chunk mesh rebuild on every change.
- * The colour of a glyph costs none of that.</p>
+ * effect at random. A per-player biome would carry more than a bit but needs a chunk mesh rebuild on
+ * every change.</p>
  *
  * <p>Three details decide whether the signal survives the trip, and all three are set here:</p>
  * <ul>
@@ -40,7 +45,7 @@ import org.jetbrains.annotations.Nullable;
  * shared bar would send every survivor the same level.</p>
  *
  * @author TheMeinerLP
- * @version 2.0.0
+ * @version 4.0.0
  * @since 2.7.3
  */
 public final class BossBarGazeSignal implements GazeSink {
@@ -57,6 +62,15 @@ public final class BossBarGazeSignal implements GazeSink {
     /** Base of the reserved colour range the pack's text shader watches for. */
     static final int SIGNAL_BASE = 0xFE0000;
 
+
+    /*
+     * One carrier, deliberately. A diagnostic round sent the signal over the boss bar title, the
+     * scoreboard sidebar and the action bar at once to find out which of them reaches the pack's
+     * text shader. All three did - and every recognised vertex expands to its own full-screen quad,
+     * so the overlays stacked. The action bar made that visible as flicker: it fades by itself
+     * after a few seconds, and Cygnus overwrites it in the lobby anyway, so one of the three
+     * overlays kept appearing and vanishing underneath the others.
+     */
     private final PlayerState<BossBar> bars = new PlayerState<>();
 
     /**
@@ -101,7 +115,21 @@ public final class BossBarGazeSignal implements GazeSink {
     public void level(Player survivor, int level) {
         BossBar bar = this.bars.get(survivor);
         if (bar == null) return;
+
+        // Two channels on one bar, because the effect needs both halves and neither can carry it
+        // alone. The title's colour is the level, read by the pack's text shader, which draws the
+        // graded veil. The darken_screen flag is a single bit that arrives in lightmap.fsh as
+        // BossOverlayWorldDarkeningFactor, and that is the only per-player value which reaches the
+        // world's lighting - the lightmap is multiplied into vertexColor before any world shader
+        // sees it, so a hue rotation there tints everything. The text shader runs in a different
+        // pass and cannot tell the lightmap anything, which is why the level has to travel twice.
         bar.name(signalFor(level));
+
+        if (level == SlenderGaze.NONE) {
+            bar.removeFlag(BossBar.Flag.DARKEN_SCREEN);
+            return;
+        }
+        bar.addFlag(BossBar.Flag.DARKEN_SCREEN);
     }
 
     /**
