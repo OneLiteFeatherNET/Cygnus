@@ -47,9 +47,4 @@ public final class CygnusEntityActionListener {
         // var propertiesPacket = new EntityAttributesPacket(player.getEntityId(), new ArrayList<>(Collections.singletonList(attribute)));
 //        player.sendPacketToViewersAndSelf(propertiesPacket);
     }
-
-    private static void startFlyingElytra(Player player) {
-        player.setFlyingWithElytra(true);
-        EventDispatcher.call(new PlayerStartFlyingWithElytraEvent(player));
-    }
 }
