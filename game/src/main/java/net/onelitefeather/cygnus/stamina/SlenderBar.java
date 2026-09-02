@@ -147,7 +147,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         }
         this.applyBlindness(player);
         AttributeHelper.applySlenderDrainingSpeed(player);
-        player.sendSpringPackets();
+        player.sendSprintPackets();
         player.setSprinting(false);
         player.setBlockedSprinting(true);
         EventDispatcher.call(new StaminaStateChangeEvent(player, state));
@@ -161,7 +161,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         this.playTeleportSound(player.getInstance(), player.getPosition(), player.getUuid());
         this.applyNightVision(player);
         AttributeHelper.removeSlenderDrainingSpeed(player);
-        player.sendSpringPackets();
+        player.sendSprintPackets();
         player.setBlockedSprinting(false);
         EventDispatcher.call(new StaminaStateChangeEvent(player, state));
         this.colorState.sendProgressBar(player, tileChar, currentTime, time);

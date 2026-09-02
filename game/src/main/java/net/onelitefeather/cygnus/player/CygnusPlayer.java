@@ -21,7 +21,7 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
 
     /**
      * Radius (in blocks) of the virtual, per-player world border used to fake the heartbeat
-     * vignette. It is recentered on the player every tick, so the real client-side distance to
+     * vignette. It is centered on the player every tick, so the real client-side distance to
      * its edge is always exactly this value, independent of the instance's actual world border.
      */
     static final double FAKE_BORDER_RADIUS = 50.0;
@@ -75,7 +75,7 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
             this.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(SPEED_MODIFIER_SPRINTING);
             this.getAttribute(Attribute.MOVEMENT_SPEED).addModifier(DISABLED_SPRINT_MODIFIER);
             this.entityMeta.setSprinting(false);
-            this.sendSpringPackets();
+            this.sendSprintPackets();
             return;
         }
 
@@ -87,13 +87,13 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
             this.getAttribute(Attribute.MOVEMENT_SPEED).addModifier(DISABLED_SPRINT_MODIFIER);
         }
         this.entityMeta.setSprinting(sprinting);
-        this.sendSpringPackets();
+        this.sendSprintPackets();
     }
 
     /**
      * Sends the packets to the player to update the sprinting state.
      */
-    public void sendSpringPackets() {
+    public void sendSprintPackets() {
         sendPacket(getPropertiesPacket());
         sendPacket(getMetadataPacket());
     }
