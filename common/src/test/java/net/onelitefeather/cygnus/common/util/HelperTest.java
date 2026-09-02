@@ -59,4 +59,57 @@ class HelperTest {
         assertThrows(IllegalArgumentException.class, () -> Helper.updatePosition(origin, Direction.UP));
         assertThrows(IllegalArgumentException.class, () -> Helper.updatePosition(origin, Direction.DOWN));
     }
+
+    @Test
+    void testCalculatePageTeleportPositionNorth() {
+        Pos blockPos = new Pos(10, 20, 30);
+        Pos teleportPos = Helper.calculatePageTeleportPosition(blockPos, Direction.NORTH);
+        assertEquals(10.5, teleportPos.x());
+        assertEquals(20.0, teleportPos.y());
+        assertEquals(31.5, teleportPos.z());
+        assertEquals(180.0f, teleportPos.yaw());
+        assertEquals(0.0f, teleportPos.pitch());
+    }
+
+    @Test
+    void testCalculatePageTeleportPositionSouth() {
+        Pos blockPos = new Pos(10, 20, 30);
+        Pos teleportPos = Helper.calculatePageTeleportPosition(blockPos, Direction.SOUTH);
+        assertEquals(10.5, teleportPos.x());
+        assertEquals(20.0, teleportPos.y());
+        assertEquals(29.5, teleportPos.z());
+        assertEquals(0.0f, teleportPos.yaw());
+        assertEquals(0.0f, teleportPos.pitch());
+    }
+
+    @Test
+    void testCalculatePageTeleportPositionEast() {
+        Pos blockPos = new Pos(10, 20, 30);
+        Pos teleportPos = Helper.calculatePageTeleportPosition(blockPos, Direction.EAST);
+        assertEquals(9.5, teleportPos.x());
+        assertEquals(20.0, teleportPos.y());
+        assertEquals(30.5, teleportPos.z());
+        assertEquals(-90.0f, teleportPos.yaw());
+        assertEquals(0.0f, teleportPos.pitch());
+    }
+
+    @Test
+    void testCalculatePageTeleportPositionWest() {
+        Pos blockPos = new Pos(10, 20, 30);
+        Pos teleportPos = Helper.calculatePageTeleportPosition(blockPos, Direction.WEST);
+        assertEquals(11.5, teleportPos.x());
+        assertEquals(20.0, teleportPos.y());
+        assertEquals(30.5, teleportPos.z());
+        assertEquals(90.0f, teleportPos.yaw());
+        assertEquals(0.0f, teleportPos.pitch());
+    }
+
+    @Test
+    void testCalculatePageTeleportPositionUnsupportedDirection() {
+        Pos blockPos = new Pos(10, 20, 30);
+        Pos teleportPos = Helper.calculatePageTeleportPosition(blockPos, Direction.UP);
+        assertEquals(10.5, teleportPos.x());
+        assertEquals(20.0, teleportPos.y());
+        assertEquals(30.5, teleportPos.z());
+    }
 }

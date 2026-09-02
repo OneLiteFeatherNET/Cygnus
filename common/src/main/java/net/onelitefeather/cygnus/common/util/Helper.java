@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.common.util;
 
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.utils.Direction;
 import org.jetbrains.annotations.Contract;
@@ -86,6 +87,29 @@ public final class Helper {
             case EAST -> pos.add(PAGE_VISIBLE_OFFSET, 0.5, 0.5).withView(-90, 0);
             case WEST -> pos.add(1.0, 0.5, 0.5).withView(90, 0);
             default -> throw new IllegalArgumentException("Found a direction that is not supported: " + direction);
+        };
+    }
+
+    /**
+     * Calculates the player teleport position standing one block in front of a page,
+     * facing towards the page on the block.
+     *
+     * @param blockPoint the position of the block the page is attached to
+     * @param direction  the direction the page faces
+     * @return the teleport position with proper orientation
+     */
+    @Contract(pure = true)
+    public static Pos calculatePageTeleportPosition(Point blockPoint, Direction direction) {
+        double x = blockPoint.blockX() + 0.5;
+        double y = blockPoint.blockY();
+        double z = blockPoint.blockZ() + 0.5;
+
+        return switch (direction) {
+            case NORTH -> new Pos(x, y, z + 1.0, 180f, 0f);
+            case SOUTH -> new Pos(x, y, z - 1.0, 0f, 0f);
+            case EAST  -> new Pos(x - 1.0, y, z, -90f, 0f);
+            case WEST  -> new Pos(x + 1.0, y, z, 90f, 0f);
+            default -> new Pos(x, y, z);
         };
     }
 }
