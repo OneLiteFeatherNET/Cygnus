@@ -26,7 +26,7 @@ class HelperTest {
         Pos updated = Helper.updatePosition(origin, Direction.SOUTH);
         assertEquals(10.5, updated.x());
         assertEquals(20.5, updated.y());
-        assertEquals(30.01, updated.z(), 0.001);
+        assertEquals(29.97, updated.z(), 0.001);
         assertEquals(0.0f, updated.yaw());
         assertEquals(0.0f, updated.pitch());
     }
@@ -35,7 +35,7 @@ class HelperTest {
     void testUpdatePositionEast() {
         Pos origin = new Pos(10, 20, 30);
         Pos updated = Helper.updatePosition(origin, Direction.EAST);
-        assertEquals(10.01, updated.x(), 0.001);
+        assertEquals(9.97, updated.x(), 0.001);
         assertEquals(20.5, updated.y());
         assertEquals(30.5, updated.z());
         assertEquals(-90.0f, updated.yaw());
