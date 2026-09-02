@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.9.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.9.0...v2.9.1) (2026-09-02)
+
+
+### Bug Fixes
+
+* **slender:** improve revive and disconnect handling ([#212](https://github.com/OneLiteFeatherNET/Cygnus/issues/212)) ([ded3c32](https://github.com/OneLiteFeatherNET/Cygnus/commit/ded3c32538c34626b5fff501a57b3a8756d8f240))
+
 ## [2.9.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.8.0...v2.9.0) (2026-09-02)
 
 
