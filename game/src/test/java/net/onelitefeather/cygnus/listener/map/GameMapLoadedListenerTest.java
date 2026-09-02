@@ -36,7 +36,8 @@ class GameMapLoadedListenerTest extends CygnusPlayerTestBase {
                 Pos.ZERO,
                 Set.of(),
                 Set.of(),
-                List.of("Alice", "Bob")
+                List.of("Alice", "Bob"),
+                null
         );
 
         new GameMapLoadedListener().accept(new GameMapLoadedEvent(gameMap, gameInstance));
@@ -67,7 +68,8 @@ class GameMapLoadedListenerTest extends CygnusPlayerTestBase {
                 Pos.ZERO,
                 Set.of(),
                 Set.of(),
-                List.of()
+                List.of(),
+                null
         );
 
         new GameMapLoadedListener().accept(new GameMapLoadedEvent(gameMap, gameInstance));

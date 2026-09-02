@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MicrotusExtension.class)
@@ -66,6 +67,44 @@ class GameMapSwitchOrderIntegrationTest {
 
         assertDoesNotThrow(provider::releasePreviousInstance);
         assertFalse(MinecraftServer.getInstanceManager().getInstances().contains(lobbyInstance));
+
+        provider.close();
+        env.destroyInstance(gameInstance, true);
+    }
+
+    @Test
+    void testReleaseWaitsForPlayersToLeaveTheOldInstance(Env env, @TempDir Path root) throws IOException {
+        GameMapProvider provider = createProvider(root);
+        InstanceContainer lobbyInstance = (InstanceContainer) provider.getActiveInstance().get();
+        provider.loadGameMap();
+
+        Player survivor = env.createPlayer(lobbyInstance, LOBBY_SPAWN);
+        TeamService teamService = createTeamService();
+        teamService.getTeam(GameConfig.SURVIVOR_KEY).orElseThrow().addPlayers(Set.of(survivor));
+
+        provider.switchToGameMap();
+        InstanceContainer gameInstance = (InstanceContainer) provider.getActiveInstance().get();
+        TeamHelper.teleportTeams(teamService, provider.getGameMap(), gameInstance);
+
+        // The production caller releases one tick after the teleport is kicked off. Player#setInstance
+        // is still in flight then - the game map runs on its own dimension, so the move costs a full
+        // respawn - and unregistering an occupied instance would throw.
+        assertTrue(lobbyInstance.getPlayers().contains(survivor), "the move should still be in flight");
+        assertDoesNotThrow(provider::releasePreviousInstance);
+        assertTrue(
+                MinecraftServer.getInstanceManager().getInstances().contains(lobbyInstance),
+                "the old instance must survive until its last player has left"
+        );
+
+        for (int i = 0; i < 100 && survivor.getInstance() != gameInstance; i++) {
+            env.tick();
+        }
+        env.tick();
+
+        assertFalse(
+                MinecraftServer.getInstanceManager().getInstances().contains(lobbyInstance),
+                "once empty, the old instance should be released without another call"
+        );
 
         provider.close();
         env.destroyInstance(gameInstance, true);
@@ -131,7 +170,7 @@ class GameMapSwitchOrderIntegrationTest {
         writeMap(maps.resolve("lobby"), new BaseMap("lobby", LOBBY_SPAWN, List.of()), false);
         writeMap(
                 maps.resolve(ARENA_NAME),
-                new GameMap(ARENA_NAME, LOBBY_SPAWN, SLENDER_SPAWN, Set.of(), Set.of(SURVIVOR_SPAWN), List.of()),
+                new GameMap(ARENA_NAME, LOBBY_SPAWN, SLENDER_SPAWN, Set.of(), Set.of(SURVIVOR_SPAWN), List.of(), null),
                 true
         );
         return new GameMapProvider(root);

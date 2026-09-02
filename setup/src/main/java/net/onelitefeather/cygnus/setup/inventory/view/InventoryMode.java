@@ -11,20 +11,23 @@ import java.util.Set;
  * Defines the available inventory modes for the {@link MapDataOverviewInventory}.
  * Each mode specifies which {@link MapDataCategory} entries are displayed and at which slot positions.
  *
- * <p>The slot indices and categories are aligned by position — the first category maps to the first slot index, and so on.</p>
+ * <p>The slot indices and categories are aligned by position — the first category maps to the first slot index, and so on.
+ * Note that the categories are held in an {@link EnumSet}, which iterates in declaration order of
+ * {@link MapDataCategory} rather than in the order they are passed here.</p>
  *
  * <ul>
  *   <li>{@link #LOBBY} — displays name, author, and spawn; used for lobby map setup.</li>
- *   <li>{@link #GAME} — additionally displays the slender category; used for game map setup.</li>
+ *   <li>{@link #GAME} — additionally displays the slender and atmosphere categories; used for game map setup.</li>
  * </ul>
  *
  * @author Joltra
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.5.0
  */
 public enum InventoryMode {
     LOBBY(new int[]{11, 13, 15}, MapDataCategory.NAME, MapDataCategory.AUTHOR, MapDataCategory.SPAWN),
-    GAME(new int[]{10, 12, 14, 16}, MapDataCategory.NAME, MapDataCategory.AUTHOR, MapDataCategory.SPAWN, MapDataCategory.SLENDER);
+    GAME(new int[]{10, 11, 13, 15, 16}, MapDataCategory.NAME, MapDataCategory.AUTHOR, MapDataCategory.SPAWN,
+            MapDataCategory.SLENDER, MapDataCategory.ATMOSPHERE);
 
     private final EnumSet<MapDataCategory> categories;
     private final int[] slots;

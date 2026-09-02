@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.setup.listener.dialog;
 
 import net.minestom.server.entity.Player;
+import net.onelitefeather.cygnus.setup.dialog.AtmosphereDialogs;
 import net.onelitefeather.cygnus.setup.dialog.AuthorDialogs;
 import net.onelitefeather.cygnus.setup.dialog.MapDialogs;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
@@ -25,6 +26,15 @@ public class DialogRequestListener implements Consumer<DialogRequestEvent> {
                 }
             }
             case CREATE_AUTHORS -> AuthorDialogs.openAuthorRequestDialog(player);
+            case ATMOSPHERE_PRESET -> AtmosphereDialogs.openPresetDialog(
+                    player,
+                    context instanceof DialogContext.AtmosphereContext
+            );
+            case ATMOSPHERE_VALUES -> {
+                if (context instanceof DialogContext.AtmosphereContext(var atmosphere)) {
+                    AtmosphereDialogs.openValueDialog(player, atmosphere);
+                }
+            }
             case AUTHOR_INPUT -> {
                 if (context instanceof DialogContext.AuthorAmount authorAmount) {
                     AuthorDialogs.openAuthorInput(player, authorAmount.amount());

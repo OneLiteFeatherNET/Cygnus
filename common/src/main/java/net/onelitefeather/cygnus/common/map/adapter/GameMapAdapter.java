@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +20,7 @@ import java.util.Set;
  * Custom JsonDeserializer for {@link GameMap} to safely handle missing or null collections during deserialization.
  *
  * @author Jotras
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.0
  */
 public final class GameMapAdapter implements JsonDeserializer<GameMap> {
@@ -30,6 +31,7 @@ public final class GameMapAdapter implements JsonDeserializer<GameMap> {
     private static final String PAGE_FACES_KEY = "pageFaces";
     private static final String SURVIVOR_SPAWNS_KEY = "survivorSpawns";
     private static final String BUILDERS_KEY = "builders";
+    private static final String ATMOSPHERE_KEY = "atmosphere";
 
     private static final Type PAGE_FACES_TYPE = TypeToken.getParameterized(Set.class, PageResource.class).getType();
     private static final Type SURVIVOR_SPAWNS_TYPE = TypeToken.getParameterized(Set.class, Pos.class).getType();
@@ -56,8 +58,9 @@ public final class GameMapAdapter implements JsonDeserializer<GameMap> {
         Set<PageResource> pageFaces = deserializeOrDefault(object, PAGE_FACES_KEY, PAGE_FACES_TYPE, context, Set.of());
         Set<Pos> survivorSpawns = deserializeOrDefault(object, SURVIVOR_SPAWNS_KEY, SURVIVOR_SPAWNS_TYPE, context, Set.of());
         List<String> builders = deserializeOrDefault(object, BUILDERS_KEY, BUILDERS_TYPE, context, List.of());
+        MapAtmosphere atmosphere = deserializeOrDefault(object, ATMOSPHERE_KEY, MapAtmosphere.class, context, null);
 
-        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders);
+        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders, atmosphere);
     }
 
     /**

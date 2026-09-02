@@ -46,7 +46,7 @@ class SlenderReviveIntegrationTest extends CygnusPlayerTestBase {
         env.process().eventHandler().addListener(SlenderReviveEvent.class, listener);
 
         Pos targetSpawn = new Pos(25, 70, 25);
-        GameMap gameMap = new GameMap("Map", Pos.ZERO, targetSpawn, Set.of(), Set.of(new Pos(2, 64, 2)), List.of());
+        GameMap gameMap = new GameMap("Map", Pos.ZERO, targetSpawn, Set.of(), Set.of(new Pos(2, 64, 2)), List.of(), null);
         mapSupplierRef.set(gameMap);
 
         env.process().eventHandler().call(new SlenderReviveEvent(player));

@@ -273,6 +273,7 @@ public class GameData extends InstanceSetupData {
             }
             case AUTHOR -> gameMapBuilder.builders("");
             case SLENDER -> gameMapBuilder.setSlenderSpawn(null);
+            case ATMOSPHERE -> gameMapBuilder.setAtmosphere(null);
             default -> throw new IllegalArgumentException("Unknown inventory category: " + category);
         }
         this.triggerUpdate(InventoryTarget.GENERAL);

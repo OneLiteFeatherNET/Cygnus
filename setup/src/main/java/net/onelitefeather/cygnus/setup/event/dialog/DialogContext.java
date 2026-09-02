@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.setup.event.dialog;
 
 import net.minestom.server.coordinate.Point;
+import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.page.PageResource;
 
 /**
@@ -8,7 +9,7 @@ import net.onelitefeather.cygnus.common.page.PageResource;
  * to open the correct dialog for a specific {@link DialogTarget}.
  *
  * @author Joltra
- * @version 1.5.0
+ * @version 1.6.0
  * @see DialogTarget
  * @since 0.1.0
  */
@@ -16,7 +17,8 @@ public sealed interface DialogContext permits
         DialogContext.NameContext,
         DialogContext.PositionContent,
         DialogContext.AuthorAmount,
-        DialogContext.PageContent {
+        DialogContext.PageContent,
+        DialogContext.AtmosphereContext {
 
     /**
      * Specific context for the update or deletion of a name.
@@ -51,6 +53,16 @@ public sealed interface DialogContext permits
      * @param resource to bind
      */
     record PageContent(PageResource resource) implements DialogContext {
+
+    }
+
+    /**
+     * Carries the atmosphere a builder is currently editing from one dialog of the chain to the
+     * next, so the value dialog can pre-fill its sliders with what the preset step produced.
+     *
+     * @param atmosphere the atmosphere being edited
+     */
+    record AtmosphereContext(MapAtmosphere atmosphere) implements DialogContext {
 
     }
 }

@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.Player;
 import net.minestom.server.inventory.InventoryType;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
+import net.onelitefeather.cygnus.setup.inventory.slot.AtmosphereSlot;
 import net.onelitefeather.cygnus.setup.inventory.slot.MultiStringSlot;
 import net.onelitefeather.cygnus.setup.inventory.slot.PositionSlot;
 import net.onelitefeather.cygnus.setup.inventory.slot.StringSlot;
@@ -60,6 +61,7 @@ public class MapDataOverviewInventory extends PersonalInventoryBuilder {
             case AUTHOR -> new MultiStringSlot(MapDataCategory.AUTHOR, mapBuilder.getBuilders());
             case SPAWN -> new PositionSlot(MapDataCategory.SPAWN, mapBuilder.getSpawn());
             case SLENDER -> new PositionSlot(MapDataCategory.SLENDER, ((GameMapBuilder) mapBuilder).getSlenderSpawn());
+            case ATMOSPHERE -> new AtmosphereSlot(((GameMapBuilder) mapBuilder).getAtmosphere());
             default -> throw new IllegalStateException("Unknown category: " + category);
         };
     }

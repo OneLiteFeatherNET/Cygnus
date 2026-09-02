@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.common.util;
 
+import net.kyori.adventure.util.RGBLike;
 import net.minestom.server.color.Color;
 
 /**
@@ -92,5 +93,26 @@ public final class ColorUtil {
      */
     private static float clamp(float value) {
         return Math.clamp(value, 0f, 1f);
+    }
+
+    /**
+     * Darkens a colour towards, but never all the way to, black.
+     *
+     * <p>Used to derive an ambient light colour from an atmosphere's fog: the light that remains in
+     * complete darkness should carry the same tint as the haze, only far dimmer. The floor of one
+     * per channel is not cosmetic - a fully black ambient colour is what makes a lightmap cell
+     * exactly zero, and a shader normalising by the largest channel then divides zero by zero.</p>
+     *
+     * @param color  the colour to darken
+     * @param factor how much of it to keep, from 0 to 1
+     * @return the darkened colour, with every channel at least 1
+     */
+    public static Color dim(RGBLike color, float factor) {
+        float clamped = Math.clamp(factor, 0f, 1f);
+        return new Color(
+                Math.max(1, Math.round(color.red() * clamped)),
+                Math.max(1, Math.round(color.green() * clamped)),
+                Math.max(1, Math.round(color.blue() * clamped))
+        );
     }
 }

@@ -2,8 +2,11 @@ package net.onelitefeather.cygnus.map;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.world.DimensionType;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
+import net.onelitefeather.cygnus.common.dimension.StaticDimensionPreset;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.falco.anvil.FalcoAnvilLoader;
@@ -22,7 +25,9 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies that the maps of the game module are read through Falco instead of the chunk loader
@@ -78,6 +83,39 @@ class GameMapProviderIntegrationTest {
         env.destroyInstance(lobbyInstance, true);
     }
 
+    @Test
+    void testGameInstanceRunsOnTheMapsOwnDimension(Env env, @TempDir Path root) throws IOException {
+        GameMapProvider provider = createProvider(root, MapAtmosphere.from(StaticDimensionPreset.DENSE_FOG));
+
+        provider.loadGameMap();
+        provider.switchToGameMap();
+        InstanceContainer gameInstance = (InstanceContainer) provider.getActiveInstance().get();
+
+        assertNotSame(DimensionType.OVERWORLD, gameInstance.getDimensionType());
+        assertEquals("cygnus", gameInstance.getDimensionType().key().namespace());
+        assertTrue(
+                gameInstance.getDimensionType().key().value().startsWith("map/"),
+                "Expected a per-map dimension key, got: " + gameInstance.getDimensionType().key()
+        );
+
+        provider.close();
+        env.destroyInstance(gameInstance, true);
+    }
+
+    @Test
+    void testGameInstanceStaysOnOverworldWithoutAnAtmosphere(Env env, @TempDir Path root) throws IOException {
+        GameMapProvider provider = createProvider(root, null);
+
+        provider.loadGameMap();
+        provider.switchToGameMap();
+        InstanceContainer gameInstance = (InstanceContainer) provider.getActiveInstance().get();
+
+        assertEquals(DimensionType.OVERWORLD, gameInstance.getDimensionType());
+
+        provider.close();
+        env.destroyInstance(gameInstance, true);
+    }
+
     /**
      * Creates a map directory layout the provider accepts and returns a provider reading it.
      *
@@ -86,11 +124,24 @@ class GameMapProviderIntegrationTest {
      * @throws IOException if the layout cannot be written
      */
     private GameMapProvider createProvider(Path root) throws IOException {
+        return createProvider(root, null);
+    }
+
+    /**
+     * Creates a map directory layout the provider accepts and returns a provider reading it.
+     *
+     * @param root       the directory the {@code game/maps} tree is written below
+     * @param atmosphere the atmosphere written into the game map's {@code map.json}, or
+     *                   {@code null} for a map file without an {@code atmosphere} block
+     * @return the provider for the written maps
+     * @throws IOException if the layout cannot be written
+     */
+    private GameMapProvider createProvider(Path root, MapAtmosphere atmosphere) throws IOException {
         Path maps = root.resolve("game").resolve("maps");
         writeMap(maps.resolve("lobby"), new BaseMap("lobby", Pos.ZERO, List.of()), false);
         writeMap(
                 maps.resolve(ARENA_NAME),
-                new GameMap(ARENA_NAME, Pos.ZERO, new Pos(1, 1, 1), Set.of(), Set.of(new Pos(2, 2, 2)), List.of()),
+                new GameMap(ARENA_NAME, Pos.ZERO, new Pos(1, 1, 1), Set.of(), Set.of(new Pos(2, 2, 2)), List.of(), atmosphere),
                 true
         );
         return new GameMapProvider(root);
