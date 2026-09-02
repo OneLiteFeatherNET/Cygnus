@@ -7,6 +7,7 @@ import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.inventory.click.Click;
 import net.minestom.server.item.ItemStack;
 import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.setup.event.PlayerRemoveDataEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
@@ -54,8 +55,10 @@ public class PageSlot extends AbstractDataSlot {
         switch (click) {
             case Click.Left _ -> {
                 player.closeInventory();
-                //TODO: Teleport one block in front
-                player.teleport(this.pageResource.position().asPos());
+                player.teleport(Helper.calculatePageTeleportPosition(
+                        this.pageResource.position(),
+                        this.pageResource.face()
+                ));
             }
             case Click.Right _ ->
                     EventDispatcher.call(new PlayerRemoveDataEvent(player, type, new DialogContext.PageContent(this.pageResource)));
