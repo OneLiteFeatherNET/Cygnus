@@ -1,7 +1,8 @@
 package net.onelitefeather.cygnus.listener;
 
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.Event;
+import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
@@ -17,19 +18,38 @@ import net.onelitefeather.cygnus.view.GameViewImpl;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
+    private EventNode<Event> testNode;
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(@NotNull Env env) {
+        testNode = EventNode.all("test-node-" + UUID.randomUUID());
+        env.process().eventHandler().addChild(testNode);
+        instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(@NotNull Env env) {
+        env.process().eventHandler().removeChild(testNode);
+        env.destroyInstance(instance, true);
+    }
+
     @Test
     void testSpectatorDisconnectDoesNotEndTheMatch(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player spectator = env.createPlayer(instance);
         Player survivor = env.createPlayer(instance);
         Player slender = env.createPlayer(instance);
@@ -51,34 +71,27 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
+        testNode.addListener(PlayerDisconnectEvent.class, listener);
 
-        // Cyano's FlexibleListener#failFollowup() can't cleanly express "this event never
-        // fires" here (clearing the guard afterward re-triggers the same check), so this
-        // negative assertion stays on a plain listener instead of env.listen(...).
         AtomicBoolean finishFired = new AtomicBoolean(false);
-        MinecraftServer.getGlobalEventHandler().addListener(GameFinishEvent.class, event -> finishFired.set(true));
+        testNode.addListener(GameFinishEvent.class, event -> finishFired.set(true));
 
-        listener.accept(new PlayerDisconnectEvent(spectator));
+        playerQuit(spectator, env);
 
         assertFalse(finishFired.get(), "A disconnecting spectator must not trigger match end.");
         assertFalse(spectatorTeam.getPlayers().contains(spectator), "The spectator must still be removed from the spectator team.");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testLastSurvivorDisconnectStillEndsTheMatch(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createPlayer(instance);
         Player slender = env.createPlayer(instance);
 
         TeamService teamService = TeamService.of();
         Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
-        Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
         teamService.add(slenderTeam);
         teamService.add(survivorTeam);
-        teamService.add(spectatorTeam);
 
         slenderTeam.addPlayer(slender);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
@@ -87,18 +100,19 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
+        testNode.addListener(PlayerDisconnectEvent.class, listener);
 
-        env.listen(GameFinishEvent.class)
-                .followup(event -> assertEquals(GameFinishEvent.Reason.SURVIVOR_LEFT, event.reason()));
+        AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
+        testNode.addListener(GameFinishEvent.class, finishEvent::set);
 
-        listener.accept(new PlayerDisconnectEvent(survivor));
+        playerQuit(survivor, env);
 
-        env.destroyInstance(instance, true);
+        assertNotNull(finishEvent.get(), "GameFinishEvent must be dispatched");
+        assertEquals(GameFinishEvent.Reason.SURVIVOR_LEFT, finishEvent.get().reason());
     }
 
     @Test
     void testSlenderDisconnectTriggersReviveWhenEnoughSurvivors(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor1 = env.createPlayer(instance);
         Player survivor2 = env.createPlayer(instance);
         Player slender = env.createPlayer(instance);
@@ -118,22 +132,20 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
+        testNode.addListener(PlayerDisconnectEvent.class, listener);
 
-        AtomicBoolean reviveFired = new AtomicBoolean(false);
-        MinecraftServer.getGlobalEventHandler().addListener(SlenderReviveEvent.class, event -> reviveFired.set(true));
+        AtomicReference<SlenderReviveEvent> reviveEvent = new AtomicReference<>();
+        testNode.addListener(SlenderReviveEvent.class, reviveEvent::set);
 
-        listener.accept(new PlayerDisconnectEvent(slender));
+        playerQuit(slender, env);
 
-        assertTrue(reviveFired.get(), "Slender disconnect with >= 2 survivors must trigger revive.");
+        assertNotNull(reviveEvent.get(), "Slender disconnect with >= 2 survivors must trigger revive.");
         assertEquals(1, slenderTeam.getCurrentSize(), "Slender team must have the revived player.");
         assertEquals(1, survivorTeam.getCurrentSize(), "Survivor team must have 1 remaining player.");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testSlenderDisconnectEndsMatchWhenNotEnoughSurvivors(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createPlayer(instance);
         Player slender = env.createPlayer(instance);
 
@@ -150,12 +162,18 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
+        testNode.addListener(PlayerDisconnectEvent.class, listener);
 
-        env.listen(GameFinishEvent.class)
-                .followup(event -> assertEquals(GameFinishEvent.Reason.SLENDER_LEFT, event.reason()));
+        AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
+        testNode.addListener(GameFinishEvent.class, finishEvent::set);
 
-        listener.accept(new PlayerDisconnectEvent(slender));
+        playerQuit(slender, env);
 
-        env.destroyInstance(instance, true);
+        assertNotNull(finishEvent.get(), "GameFinishEvent must be dispatched");
+        assertEquals(GameFinishEvent.Reason.SLENDER_LEFT, finishEvent.get().reason());
+    }
+
+    private static void playerQuit(Player player, Env env) {
+        env.process().eventHandler().call(new PlayerDisconnectEvent(player));
     }
 }
