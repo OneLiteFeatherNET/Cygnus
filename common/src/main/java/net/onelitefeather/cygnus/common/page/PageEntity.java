@@ -103,7 +103,7 @@ public final class PageEntity extends Entity implements PageCreator {
      * @param pageCount the current page count
      */
     public void updateItemStack(int pageCount) {
-        this.pageItem = ItemStack.builder(Material.PAPER).customName(Component.text("Page: " + pageCount)).build();
+        this.pageItem = createPageItem(CUSTOM_PAGES, pageCount);
     }
 
     /**

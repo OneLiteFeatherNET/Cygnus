@@ -11,7 +11,7 @@ import net.onelitefeather.cygnus.team.TeamHelper;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public class PlayerPageInteractListener implements Consumer<PlayerEntityInteractEvent> {
+public final class PlayerPageInteractListener implements Consumer<PlayerEntityInteractEvent> {
 
     private final PageProvider pageProvider;
 
@@ -25,7 +25,8 @@ public class PlayerPageInteractListener implements Consumer<PlayerEntityInteract
         Entity target = event.getTarget();
         if (!TeamHelper.isSurvivorTeam(player) || !target.hasTag(Tags.PAGE_TAG)) return;
         UUID uuid = target.getTag(Tags.PAGE_TAG);
-        ((CygnusPlayer) player).incrementPageFound();
-        pageProvider.triggerPageFound(player, uuid);
+        if (this.pageProvider.triggerPageFound(player, uuid) && player instanceof CygnusPlayer cygnusPlayer) {
+            cygnusPlayer.incrementPageFound();
+        }
     }
 }

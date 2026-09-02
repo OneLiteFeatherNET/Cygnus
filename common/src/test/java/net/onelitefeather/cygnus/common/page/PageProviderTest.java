@@ -98,6 +98,28 @@ class PageProviderTest {
         env.destroyInstance(instance, true);
     }
 
+    @Test
+    void testTriggerPageFound(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
+        pageProvider.setMaxPageAmount(1);
+
+        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        UUID uuid = pageEntity.getHitBoxUUID();
+        seedActivePages(pageProvider, pageEntity);
+
+        Player player = env.createPlayer(instance);
+
+        boolean firstClaim = pageProvider.triggerPageFound(player, uuid);
+        boolean nonExistentClaim = pageProvider.triggerPageFound(player, UUID.randomUUID());
+
+        assertTrue(firstClaim, "first claim must return true");
+        assertFalse(nonExistentClaim, "claim on missing uuid must return false");
+
+        env.destroyInstance(instance, true);
+    }
+
     /**
      * Reproduces the lost-update race on {@code currentFoundedPageCount}: with a plain {@code int} and
      * {@code ++}, concurrent finds of distinct pages could overwrite each other's increment and the

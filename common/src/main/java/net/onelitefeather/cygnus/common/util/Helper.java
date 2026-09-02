@@ -84,7 +84,7 @@ public final class Helper {
             case NORTH -> pos.add(0.5, 0.5, 1.0);
             case SOUTH -> pos.add(0.5, 0.5, PAGE_VISIBLE_OFFSET);
             case EAST -> pos.add(PAGE_VISIBLE_OFFSET, 0.5, 0.5).withView(-90, 0);
-            case WEST -> pos.add(1.0, 0.5, 0.5).withView(-90, 0);
+            case WEST -> pos.add(1.0, 0.5, 0.5).withView(90, 0);
             default -> throw new IllegalArgumentException("Found a direction that is not supported: " + direction);
         };
     }
