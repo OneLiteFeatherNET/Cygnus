@@ -45,8 +45,10 @@ public final class EquipmentScreenOverlay implements ScreenOverlay {
      */
     private static final String EMPTY_ASSET = "cygnus:empty";
 
+    private static final OverlayLayer[] LAYERS = OverlayLayer.values();
+
     /** Vanilla's silent sound; the default equip sound would click on every stage change. */
-    private static final SoundEvent SILENT = SoundEvent.of(Key.key("minecraft:intentionally_empty"), null);
+    private static final SoundEvent SILENT = SoundEvent.of(Key.key("minecraft", "intentionally_empty"), null);
 
     private final PlayerState<Map<OverlayLayer, Key>> layers = new PlayerState<>();
     private final PlayerState<Key> shown = new PlayerState<>();
@@ -110,7 +112,7 @@ public final class EquipmentScreenOverlay implements ScreenOverlay {
     private @Nullable Key topmost(Map<OverlayLayer, Key> current) {
         Key topmost = null;
         // Declaration order of OverlayLayer is drawing order, so the last hit wins.
-        for (OverlayLayer layer : OverlayLayer.values()) {
+        for (OverlayLayer layer : LAYERS) {
             Key texture = current.get(layer);
             if (texture != null) topmost = texture;
         }
