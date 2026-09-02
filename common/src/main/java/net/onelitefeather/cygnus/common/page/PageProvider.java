@@ -81,8 +81,11 @@ public final class PageProvider {
 
         Set<Integer> candidateHashes = new HashSet<>();
 
-        while (counter != MIN_ACTIVE_PAGE_COUNT) {
+        while (counter < MIN_ACTIVE_PAGE_COUNT && !this.globalCache.isEmpty()) {
             var page = this.globalCache.poll();
+            if (page == null) {
+                break;
+            }
 
             if (candidateHashes.add(page.hashCode())) {
                 Direction direction = page.face();
@@ -155,11 +158,11 @@ public final class PageProvider {
         pageEntity.enableInteraction();
     }
 
-    public void triggerPageFound(Player player, UUID uuid) {
+    public boolean triggerPageFound(Player player, UUID uuid) {
         PageEntity pageEntity = removeEntity(uuid);
         if (pageEntity == null) {
             LOGGER.debug("Page {} was already claimed when {} interacted, ignoring", uuid, player.getUsername());
-            return;
+            return false;
         }
         player.getInventory().addItemStack(pageEntity.getPageItem());
         Broadcaster.broadcast(Messages.getPageFoundComponent(player));
@@ -174,6 +177,7 @@ public final class PageProvider {
         // doing it earlier reopens a window where a concurrent call for the same uuid
         // legitimately re-claims it and double-credits the find.
         updatePageData(pageEntity);
+        return true;
     }
 
     private void updatePageData(PageEntity entity) {
