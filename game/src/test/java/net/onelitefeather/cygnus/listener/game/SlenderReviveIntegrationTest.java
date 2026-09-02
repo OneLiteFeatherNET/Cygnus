@@ -13,6 +13,7 @@ import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
+import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -39,9 +40,10 @@ class SlenderReviveIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
         StaminaService staminaService = new StaminaService();
+        TeamService teamService = TeamService.of();
 
         AtomicReference<GameMap> mapSupplierRef = new AtomicReference<>(null);
-        SlenderReviveListener listener = new SlenderReviveListener(mapSupplierRef::get, staminaService);
+        SlenderReviveListener listener = new SlenderReviveListener(mapSupplierRef::get, staminaService, teamService);
 
         env.process().eventHandler().addListener(SlenderReviveEvent.class, listener);
 
@@ -64,12 +66,13 @@ class SlenderReviveIntegrationTest extends CygnusPlayerTestBase {
         CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
         CygnusPlayer survivor = (CygnusPlayer) env.createPlayer(instance);
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        TeamService teamService = TeamService.of();
 
         for (int i = 0; i < 5; i++) env.tick();
         assertTrue(player.isViewer(survivor), "precondition: both players see each other before the revive");
 
         StaminaService staminaService = new StaminaService();
-        SlenderReviveListener listener = new SlenderReviveListener(() -> null, staminaService);
+        SlenderReviveListener listener = new SlenderReviveListener(() -> null, staminaService, teamService);
 
         listener.accept(new SlenderReviveEvent(player));
 

@@ -42,7 +42,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
      * Minimum remaining game ticks (seconds) required to allow a Slender player revival.
      */
     private static final int MINIMUM_SLENDER_RE_CHECK = 120;
-
+    private static final int GLOBAL_MIN_PLAYERS = 2;
     private final Supplier<Phase> phaseSupplier;
     private final TeamService teamService;
     private final StaminaService staminaService;
@@ -132,7 +132,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
                 .getCurrentSize();
         boolean canRevive = currentReviveCount < this.maxReviveCount
                 && gamePhase.getCurrentTicks() >= MINIMUM_SLENDER_RE_CHECK
-                && survivorSize > this.minPlayers;
+                && survivorSize >= GLOBAL_MIN_PLAYERS;
 
         if (!canRevive) {
             gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.SLENDER_LEFT));
