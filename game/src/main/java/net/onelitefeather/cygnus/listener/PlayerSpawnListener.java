@@ -30,6 +30,8 @@ public final class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
 
     @Override
     public void accept(PlayerSpawnEvent event) {
+        if (!event.isFirstSpawn()) return;
+
         Player player = event.getPlayer();
         player.setDisplayName(Component.text(player.getUsername()));
 

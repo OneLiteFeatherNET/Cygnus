@@ -20,7 +20,6 @@ import java.util.function.Supplier;
  **/
 public final class PlayerLoginListener implements Consumer<AsyncPlayerConfigurationEvent> {
 
-    private static final Component KICK_COMPONENT = Messages.withMini("<red>The game has already started! Unable to join!");
     private final Supplier<Instance> instance;
     private final int maxPlayers;
     private final Supplier<Phase> currentPhase;
@@ -36,11 +35,11 @@ public final class PlayerLoginListener implements Consumer<AsyncPlayerConfigurat
     @Override
     public void accept(AsyncPlayerConfigurationEvent event) {
         if (MinecraftServer.getConnectionManager().getOnlinePlayers().size() + 1 > maxPlayers) {
-            event.getPlayer().kick(KICK_COMPONENT);
+            event.getPlayer().kick(Messages.SERVER_FULL);
             return;
         }
         if (!(currentPhase.get() instanceof LobbyPhase)) {
-            event.getPlayer().kick(KICK_COMPONENT);
+            event.getPlayer().kick(Messages.GAME_ALREADY_STARTED);
             return;
         }
         event.setSpawningInstance(this.instance.get());
