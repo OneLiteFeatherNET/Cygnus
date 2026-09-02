@@ -5,6 +5,22 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.9.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.8.0...v2.9.0) (2026-09-02)
+
+
+### Features
+
+* **game:** per-map horror fog ([#208](https://github.com/OneLiteFeatherNET/Cygnus/issues/208)) ([a2df474](https://github.com/OneLiteFeatherNET/Cygnus/commit/a2df47499abf648401bd022d999e3c6451f2b824))
+
+
+### Bug Fixes
+
+* **deps:** update dependency net.onelitefeather:aonyx-bom to v0.8.5 ([#213](https://github.com/OneLiteFeatherNET/Cygnus/issues/213)) ([1b2f0c4](https://github.com/OneLiteFeatherNET/Cygnus/commit/1b2f0c43831ee007609172c9af8d8fa91058360d))
+* **deps:** update dependency net.onelitefeather:pica to v0.1.3 ([#209](https://github.com/OneLiteFeatherNET/Cygnus/issues/209)) ([f9f3faa](https://github.com/OneLiteFeatherNET/Cygnus/commit/f9f3faab6b652f14b7e03f992df946c1ec081dcd))
+* **page:** correct wall alignment and prevent duplicate collection ([#211](https://github.com/OneLiteFeatherNET/Cygnus/issues/211)) ([325505a](https://github.com/OneLiteFeatherNET/Cygnus/commit/325505a6a2c0170dc304d3a5c61c31c0af906b6b))
+* **player:** rename method to avoid a typo ([0065930](https://github.com/OneLiteFeatherNET/Cygnus/commit/0065930c57757cec46353afd82b6559636f5fe8c))
+* **setup:** page teleport ([#214](https://github.com/OneLiteFeatherNET/Cygnus/issues/214)) ([dfdda45](https://github.com/OneLiteFeatherNET/Cygnus/commit/dfdda45521a79e969dd41541d1c70bdfd8f36c4b))
+
 ## [2.8.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.7.2...v2.8.0) (2026-08-26)
 
 
