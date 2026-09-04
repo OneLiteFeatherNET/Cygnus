@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.9.2](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.9.1...v2.9.2) (2026-09-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency net.onelitefeather:aonyx-bom to v0.8.6 ([#216](https://github.com/OneLiteFeatherNET/Cygnus/issues/216)) ([9f27517](https://github.com/OneLiteFeatherNET/Cygnus/commit/9f275179f06c26451c4886c69f94779d628cbe02))
+
 ## [2.9.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.9.0...v2.9.1) (2026-09-02)
 
 
