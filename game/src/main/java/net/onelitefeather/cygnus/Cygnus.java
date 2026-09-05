@@ -42,6 +42,7 @@ import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.blood.BloodSplatterService;
+import net.onelitefeather.cygnus.command.GlitchCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
@@ -51,6 +52,7 @@ import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
+import net.onelitefeather.cygnus.gaze.BossBarGazeSignal;
 import net.onelitefeather.cygnus.gaze.SlenderGazeService;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
@@ -115,6 +117,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final Optional<ResourcePackService> resourcePackService;
     private final ScreenOverlay screenOverlay;
     private final SlenderGazeService slenderGazeService;
+    private final BossBarGazeSignal gazeSignal;
     private final BloodSplatterService bloodSplatterService;
     private final TunnelVisionRenderer tunnelVisionRenderer;
     private final TunnelVisionService tunnelVisionService;
@@ -142,8 +145,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
         this.resourcePackService = ResourcePackService.create();
         this.screenOverlay = new EquipmentScreenOverlay();
+        this.gazeSignal = new BossBarGazeSignal();
+        // The service drives the signal during a round. Outside one it does not tick - it starts on
+        // GameStartEvent - so /glitch keeps working in the lobby for judging a level by hand.
         this.slenderGazeService = new SlenderGazeService(
-                this.screenOverlay, () -> TeamHelper.slenderOf(this.teamService));
+                this.gazeSignal, () -> TeamHelper.slenderOf(this.teamService));
         this.bloodSplatterService = new BloodSplatterService(
                 this.screenOverlay,
                 bound -> ThreadLocalRandom.current().nextInt(bound)
@@ -160,6 +166,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initCommands() {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
+        manager.register(new GlitchCommand(this.gazeSignal));
     }
 
 
