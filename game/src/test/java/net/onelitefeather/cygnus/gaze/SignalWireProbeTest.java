@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -40,7 +41,9 @@ class SignalWireProbeTest {
     @Test
     @DisplayName("Every level lands on its own colour, the strongest included")
     void everyLevelHasItsOwnColour(Env env) {
-        assertTrue(serialize(SlenderGaze.NONE).contains("#FE0000"));
+        // Not "#FE0000 with a level of zero": that colour is inside the range the pack watches, so
+        // it would keep the effect switched on. Without a gaze nothing is sent at all.
+        assertFalse(serialize(SlenderGaze.NONE).contains("#FE00"));
         assertTrue(serialize(0).contains("#FE0001"));
         assertTrue(serialize(1).contains("#FE0002"));
         assertTrue(serialize(2).contains("#FE0003"));
