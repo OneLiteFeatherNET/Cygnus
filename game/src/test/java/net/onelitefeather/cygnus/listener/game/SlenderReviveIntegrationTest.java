@@ -7,12 +7,17 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.component.TeamNameComponent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
+import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
+import net.theevilreaper.xerus.api.ColorData;
+import net.theevilreaper.xerus.api.component.team.ColorComponent;
+import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -81,6 +86,44 @@ class SlenderReviveIntegrationTest extends CygnusPlayerTestBase {
         assertFalse(player.isViewer(survivor), "the revived slender must not stay visible for the survivors");
 
         staminaService.cleanUp();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testRevivedSlenderUpdatesScoreboard(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
+
+        TeamService teamService = TeamService.of();
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        slenderTeam.add(ColorComponent.class, new ColorComponent(ColorData.BLACK));
+        slenderTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SLENDER_TEAM_NAME));
+
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.GREEN));
+        survivorTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
+
+        teamService.add(slenderTeam);
+        teamService.add(survivorTeam);
+
+        ScoreboardDisplay scoreboardDisplay = new ScoreboardDisplay(teamService.getTeams());
+        scoreboardDisplay.addPlayer(player, GameConfig.SURVIVOR_KEY);
+
+        net.minestom.server.scoreboard.Team sbSurvivor = env.process().team().getTeam(GameConfig.SURVIVOR_TEAM_NAME);
+        net.minestom.server.scoreboard.Team sbSlender = env.process().team().getTeam(GameConfig.SLENDER_TEAM_NAME);
+        assertTrue(sbSurvivor.getMembers().contains(player.getUsername()));
+        assertFalse(sbSlender.getMembers().contains(player.getUsername()));
+
+        StaminaService staminaService = new StaminaService();
+        SlenderReviveListener listener = new SlenderReviveListener(() -> null, staminaService, teamService, scoreboardDisplay);
+        slenderTeam.addPlayer(player);
+        listener.accept(new SlenderReviveEvent(player));
+
+        assertFalse(sbSurvivor.getMembers().contains(player.getUsername()), "Revived slender must be removed from survivor scoreboard team");
+        assertTrue(sbSlender.getMembers().contains(player.getUsername()), "Revived slender must be added to slender scoreboard team");
+
+        staminaService.cleanUp();
+        scoreboardDisplay.clear();
         env.destroyInstance(instance, true);
     }
 }

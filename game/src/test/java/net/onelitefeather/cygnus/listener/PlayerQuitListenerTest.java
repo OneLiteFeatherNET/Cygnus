@@ -9,12 +9,17 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.component.TeamNameComponent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
+import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.stamina.StaminaService;
+import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
 import net.onelitefeather.cygnus.view.GameViewImpl;
+import net.theevilreaper.xerus.api.ColorData;
+import net.theevilreaper.xerus.api.component.team.ColorComponent;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;
@@ -29,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
@@ -171,6 +177,37 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         assertNotNull(finishEvent.get(), "GameFinishEvent must be dispatched");
         assertEquals(GameFinishEvent.Reason.SLENDER_LEFT, finishEvent.get().reason());
+    }
+
+    @Test
+    void testPlayerQuitRemovesFromScoreboard(@NotNull Env env) {
+        Player survivor = env.createPlayer(instance);
+
+        TeamService teamService = TeamService.of();
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.GREEN));
+        survivorTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
+        teamService.add(survivorTeam);
+
+        ScoreboardDisplay scoreboardDisplay = new ScoreboardDisplay(teamService.getTeams());
+        scoreboardDisplay.addPlayer(survivor, GameConfig.SURVIVOR_KEY);
+
+        net.minestom.server.scoreboard.Team sbSurvivor = env.process().team().getTeam(GameConfig.SURVIVOR_TEAM_NAME);
+        assertTrue(sbSurvivor.getMembers().contains(survivor.getUsername()));
+
+        PlayerQuitListener listener = new PlayerQuitListener(
+                () -> new LobbyPhase(GameConfig.builder().build(), () -> instance),
+                teamService,
+                new StaminaService(),
+                2,
+                scoreboardDisplay
+        );
+        testNode.addListener(PlayerDisconnectEvent.class, listener);
+
+        playerQuit(survivor, env);
+
+        assertFalse(sbSurvivor.getMembers().contains(survivor.getUsername()), "Player must be removed from scoreboard team on quit");
+        scoreboardDisplay.clear();
     }
 
     private static void playerQuit(Player player, Env env) {
