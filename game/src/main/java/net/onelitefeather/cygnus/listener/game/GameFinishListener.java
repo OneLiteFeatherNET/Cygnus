@@ -23,23 +23,19 @@ public final class GameFinishListener implements Consumer<GameFinishEvent> {
             case TIME_OVER, ALL_PAGES_FOUND, SLENDER_LEFT -> Messages.SURVIVOR_WIN_MESSAGE;
         };
         Broadcaster.broadcast(endComponent);
-        Broadcaster.broadcast(buildRoundSummary());
+        sendRoundSummary();
     }
 
     /**
-     * Builds a per-player summary of this round's stats, one line per {@link CygnusPlayer} online.
-     *
-     * @return the summary component
+     * Sends a per-player summary of this round's stats to each online {@link CygnusPlayer}.
      */
-    private Component buildRoundSummary() {
-        Component summary = Component.empty();
+    private void sendRoundSummary() {
         for (Player onlinePlayer : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
             if (!(onlinePlayer instanceof CygnusPlayer cygnusPlayer)) continue;
             Component box = TeamHelper.isSlenderTeam(onlinePlayer)
                     ? Messages.getSlenderRoundSummaryComponent(onlinePlayer, cygnusPlayer.getKills())
                     : Messages.getSurvivorRoundSummaryComponent(onlinePlayer, cygnusPlayer.getPageFounds(), cygnusPlayer.hasDied());
-            summary = summary.append(Component.newline()).append(box);
+            onlinePlayer.sendMessage(box);
         }
-        return summary;
     }
 }
