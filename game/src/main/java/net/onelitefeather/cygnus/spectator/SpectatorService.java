@@ -60,7 +60,8 @@ public final class SpectatorService {
      * @param player the player to convert
      */
     public void join(Player player) {
-        player.setGameMode(GameMode.SPECTATOR);
+        player.setGameMode(GameMode.SURVIVAL);
+        player.setFlying(true);
         player.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
         spectatorTeam.addPlayer(player);
         Items.setSpectatorLayout(player);
