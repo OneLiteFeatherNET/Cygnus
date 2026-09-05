@@ -82,7 +82,6 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         this.state = State.READY;
         AttributeHelper.resetSpeed(player);
         AttributeHelper.removeSlenderDrainingSpeed(player);
-        this.player.addEffect(NIGHT_VISION.potion());
     }
 
     /**
@@ -159,7 +158,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         colorState = StaminaColors.REGENERATING;
         player.setTag(Tags.HIDDEN, HIDDEN);
         this.playTeleportSound(player.getInstance(), player.getPosition(), player.getUuid());
-        this.applyNightVision(player);
+        this.clearBlindness(player);
         AttributeHelper.removeSlenderDrainingSpeed(player);
         player.sendSprintPackets();
         player.setBlockedSprinting(false);

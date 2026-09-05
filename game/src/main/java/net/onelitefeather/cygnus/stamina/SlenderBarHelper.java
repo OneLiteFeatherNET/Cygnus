@@ -34,18 +34,21 @@ public interface SlenderBarHelper {
     Sound TELEPORT = Sound.sound(SoundEvent.ENTITY_ENDERMAN_TELEPORT, Sound.Source.MASTER, 1F, 0.2F);
     Sound SPAWN = Sound.sound(SoundEvent.ENTITY_WITHER_SPAWN, Sound.Source.MASTER, 0.4F, 0F);
 
-    TimedPotion NIGHT_VISION = new TimedPotion(new Potion(PotionEffect.NIGHT_VISION, (byte) 1, -1), 0);
     TimedPotion BLINDNESS = new TimedPotion(new Potion(PotionEffect.BLINDNESS, (byte) 1, -1), 0);
 
     BiPredicate<UUID, UUID> UUID_COMPARATOR = UUID::equals;
 
     /**
-     * Applies the night vision effect to the given player.
+     * Takes the blindness back off the given player.
      *
-     * @param player the player to apply the effect
+     * <p>The slender used to receive night vision here, so that hiding also meant seeing better.
+     * He no longer does: hiding now only lifts the blindness, and he sees the map as everyone
+     * else does.</p>
+     *
+     * @param player the player to clear the effect from
      */
-    default void applyNightVision(Player player) {
-        updateEffect(player, true);
+    default void clearBlindness(Player player) {
+        player.removeEffect(BLINDNESS.potion().effect());
     }
 
     /**
@@ -54,22 +57,6 @@ public interface SlenderBarHelper {
      * @param player the player to apply the effect
      */
     default void applyBlindness(Player player) {
-        updateEffect(player, false);
-    }
-
-    /**
-     * Updates the effect for the given player.
-     *
-     * @param player      the player to update the effect
-     * @param nightVision if the night vision should be applied
-     */
-    private void updateEffect(Player player, boolean nightVision) {
-        if (nightVision) {
-            player.removeEffect(BLINDNESS.potion().effect());
-            player.addEffect(NIGHT_VISION.potion());
-            return;
-        }
-        player.removeEffect(NIGHT_VISION.potion().effect());
         player.addEffect(BLINDNESS.potion());
     }
 
