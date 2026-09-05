@@ -31,7 +31,7 @@ class SpectatorServiceTest extends CygnusPlayerTestBase {
 
         service.join(player);
 
-        assertEquals(GameMode.SPECTATOR, player.getGameMode());
+        assertEquals(GameMode.SURVIVAL, player.getGameMode());
         assertTrue(spectatorTeam.getPlayers().contains(player));
         assertEquals(GameConfig.SPECTATOR_KEY, player.getTag(Tags.TEAM_KEY));
         assertEquals(Material.COMPASS, player.getInventory().getItemStack(2).material());

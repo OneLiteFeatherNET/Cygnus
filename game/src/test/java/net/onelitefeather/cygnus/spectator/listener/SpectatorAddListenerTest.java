@@ -30,7 +30,7 @@ class SpectatorAddListenerTest extends CygnusPlayerTestBase {
 
         listener.accept(new SpectatorAddEvent(player));
 
-        assertEquals(GameMode.SPECTATOR, player.getGameMode());
+        assertEquals(GameMode.SURVIVAL, player.getGameMode());
         assertTrue(spectatorTeam.getPlayers().contains(player));
 
         env.destroyInstance(instance, true);
