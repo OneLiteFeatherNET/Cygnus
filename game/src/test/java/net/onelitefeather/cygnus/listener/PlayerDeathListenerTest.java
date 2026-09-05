@@ -36,7 +36,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(player);
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager());
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), () -> {});
 
         env.listen(SpectatorAddEvent.class)
                 .followup(event -> assertEquals(player, event.getPlayer()));
@@ -60,7 +60,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(player);
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager());
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), () -> {});
 
         listener.accept(new PlayerDeathEvent(player, null, null));
 
@@ -86,7 +86,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         slenderTeam.addPlayer(slender);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager());
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), () -> {});
 
         listener.accept(new PlayerDeathEvent(survivor, null, null));
 
@@ -115,7 +115,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         Pos mapSpawn = new Pos(0, 100, 0);
         player.setRespawnPoint(mapSpawn);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager());
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), () -> {});
         listener.accept(new PlayerDeathEvent(player, null, null));
 
         assertNotEquals(mapSpawn.blockY(), player.getRespawnPoint().blockY(),
