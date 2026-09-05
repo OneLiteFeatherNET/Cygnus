@@ -18,6 +18,8 @@ import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 
+import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
+import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
 public final class GameStartListener implements Consumer<GameStartEvent> {
@@ -26,12 +28,18 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
     private final AmbientProvider ambientProvider;
     private final StaminaService staminaService;
     private final PageProvider pageProvider;
+    private final ScoreboardDisplay scoreboardDisplay;
 
     public GameStartListener(TeamService teamService, AmbientProvider ambientProvider, StaminaService staminaService, PageProvider pageProvider) {
+        this(teamService, ambientProvider, staminaService, pageProvider, null);
+    }
+
+    public GameStartListener(TeamService teamService, AmbientProvider ambientProvider, StaminaService staminaService, PageProvider pageProvider, @Nullable ScoreboardDisplay scoreboardDisplay) {
         this.teamService = teamService;
         this.ambientProvider = ambientProvider;
         this.staminaService = staminaService;
         this.pageProvider = pageProvider;
+        this.scoreboardDisplay = scoreboardDisplay;
     }
 
     @Override
@@ -50,6 +58,10 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
         slenderPlayer.sendMessage(Messages.SLENDER_JOIN_PART);
         Items.setSlenderEye(slenderPlayer);
 
+        if (this.scoreboardDisplay != null) {
+            this.scoreboardDisplay.addPlayer(slenderPlayer, GameConfig.SLENDER_KEY);
+        }
+
         // Hiding the slender goes exclusively through the viewable rule. The previous
         // updateOldViewer/broadcastPlayPacket combination only sent packets: it left the viewer bit set
         // untouched, so the next rule evaluation considered every player still registered and skipped the
@@ -64,6 +76,9 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
         survivorTeam.getPlayers().forEach(player -> {
             player.sendMessage(message);
             player.setTag(Tags.HIDDEN, SlenderBarHelper.VISIBLE);
+            if (this.scoreboardDisplay != null) {
+                this.scoreboardDisplay.addPlayer(player, GameConfig.SURVIVOR_KEY);
+            }
         });
     }
 

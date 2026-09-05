@@ -13,6 +13,9 @@ import net.onelitefeather.cygnus.utils.Items;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.TeamService;
 
+import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -28,11 +31,22 @@ public final class SlenderReviveListener implements Consumer<SlenderReviveEvent>
     private final Supplier<GameMap> gameMapSupplier;
     private final StaminaService staminaService;
     private final TeamService teamService;
+    private final ScoreboardDisplay scoreboardDisplay;
 
     public SlenderReviveListener(Supplier<GameMap> gameMapSupplier, StaminaService staminaService, TeamService teamService) {
+        this(gameMapSupplier, staminaService, teamService, null);
+    }
+
+    public SlenderReviveListener(
+            Supplier<GameMap> gameMapSupplier,
+            StaminaService staminaService,
+            TeamService teamService,
+            @Nullable ScoreboardDisplay scoreboardDisplay
+    ) {
         this.gameMapSupplier = gameMapSupplier;
         this.staminaService = staminaService;
         this.teamService = teamService;
+        this.scoreboardDisplay = scoreboardDisplay;
     }
 
     /**
@@ -50,6 +64,10 @@ public final class SlenderReviveListener implements Consumer<SlenderReviveEvent>
         this.staminaService.setSlenderBar(player, true);
         player.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         player.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
+        if (this.scoreboardDisplay != null) {
+            this.scoreboardDisplay.removePlayer(player, GameConfig.SURVIVOR_KEY);
+            this.scoreboardDisplay.addPlayer(player, GameConfig.SLENDER_KEY);
+        }
         player.updateViewableRule(VisibilityRules.slenderRule(player));
         VisibilityRules.refresh(player);
         TeamHelper.updateTabList(this.teamService);

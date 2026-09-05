@@ -17,6 +17,8 @@ import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 
+import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -48,6 +50,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
     private final StaminaService staminaService;
     private final int maxReviveCount;
     private final int minPlayers;
+    private final ScoreboardDisplay scoreboardDisplay;
     private int currentReviveCount = 0;
 
     /**
@@ -64,16 +67,39 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
             StaminaService staminaService,
             int minPlayers
     ) {
+        this(phaseSupplier, teamService, staminaService, minPlayers, null);
+    }
+
+    /**
+     * Constructs a new PlayerQuitListener with a scoreboard display.
+     *
+     * @param phaseSupplier     supplier to retrieve the current active phase
+     * @param teamService       service to manage teams
+     * @param staminaService    service to manage player stamina
+     * @param minPlayers        minimum players required for the game
+     * @param scoreboardDisplay display to manage scoreboard teams
+     */
+    public PlayerQuitListener(
+            Supplier<Phase> phaseSupplier,
+            TeamService teamService,
+            StaminaService staminaService,
+            int minPlayers,
+            @Nullable ScoreboardDisplay scoreboardDisplay
+    ) {
         this.phaseSupplier = phaseSupplier;
         this.teamService = teamService;
         this.staminaService = staminaService;
         this.minPlayers = minPlayers;
         this.maxReviveCount = this.minPlayers - 1;
+        this.scoreboardDisplay = scoreboardDisplay;
     }
 
     @Override
     public void accept(PlayerDisconnectEvent event) {
         Player player = event.getPlayer();
+        if (this.scoreboardDisplay != null) {
+            this.scoreboardDisplay.removePlayer(player);
+        }
         this.staminaService.removePlayer(player);
         switch (phaseSupplier.get()) {
             case LobbyPhase lobbyPhase -> handleLobbyQuit(player, lobbyPhase);
