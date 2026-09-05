@@ -5,6 +5,14 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.10.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.10.0...v2.10.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* **gaze:** send nothing while the slender is out of sight ([#223](https://github.com/OneLiteFeatherNET/Cygnus/issues/223)) ([1a9a8b8](https://github.com/OneLiteFeatherNET/Cygnus/commit/1a9a8b8801f5b37fe83fac2e7ee5b1932192d909))
+* **spectator:** fix missing player heads and invalidate spectator inventory ([#225](https://github.com/OneLiteFeatherNET/Cygnus/issues/225)) ([2355306](https://github.com/OneLiteFeatherNET/Cygnus/commit/2355306ea4c5c2bd06bf361a4ca39e19c3fefba8))
+
 ## [2.10.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.9.2...v2.10.0) (2026-09-05)
 
 
