@@ -1,7 +1,10 @@
 package net.onelitefeather.cygnus.command;
 
+import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.util.TriState;
+import net.minestom.server.command.CommandSender;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.entity.Player;
@@ -14,15 +17,21 @@ import net.onelitefeather.cygnus.gaze.SlenderGaze;
  * slender to walk in front of.
  *
  * <p>This drives {@link BossBarGazeSignal} directly rather than going through
- * {@code SlenderGazeService}: the point of the preview is to test the channel on its own. Were the
- * service running against the same sink, it would overwrite the chosen level on its next pass and
- * a failure would be impossible to attribute.</p>
+ * {@code SlenderGazeService}: the point of the preview is to judge a level on its own. During a
+ * round the service overwrites the chosen level on its next pass, so the command is only useful
+ * outside one - which is exactly where a player must not be able to reach it.</p>
+ *
+ * <p>Hence {@value #PERMISSION}. The gaze itself never runs in the lobby: the service starts on
+ * {@code GameStartEvent} and clears every survivor on {@code GameFinishEvent}. This command was the
+ * one way around that, and it is now closed to anyone without the node.</p>
  *
  * @author TheMeinerLP
  * @version 1.0.0
  * @since 2.7.3
  */
 public final class GlitchCommand extends Command {
+
+    private static final String PERMISSION = "cygnus.command.glitch";
 
     /**
      * Creates the command.
@@ -31,6 +40,7 @@ public final class GlitchCommand extends Command {
      */
     public GlitchCommand(BossBarGazeSignal signal) {
         super("glitch");
+        setCondition((sender, commandString) -> !(sender instanceof Player) || hasGlitchPermission(sender));
 
         setDefaultExecutor((sender, context) ->
                 sender.sendMessage(Messages.getGlitchUsageMessage(SlenderGaze.LEVELS)));
@@ -60,5 +70,20 @@ public final class GlitchCommand extends Command {
             sender.sendMessage(Messages.withPrefix(
                     Component.text("Glitch signal at level " + level + ".", NamedTextColor.GRAY)));
         }, ArgumentType.Integer("level"));
+    }
+
+    /**
+     * Checks whether the given sender is allowed to run this command.
+     *
+     * <p>Reads Adventure's {@link PermissionChecker#POINTER}, which our player implementation backs
+     * with LuckPerms (see {@code PermissionAwarePlayer}), the same way {@code StopCommand} does. A
+     * sender without that pointer is denied.</p>
+     *
+     * @param sender the sender to check
+     * @return {@code true} if the sender holds {@value #PERMISSION}, {@code false} otherwise
+     */
+    private static boolean hasGlitchPermission(CommandSender sender) {
+        return sender.getOrDefault(PermissionChecker.POINTER, PermissionChecker.always(TriState.FALSE))
+                .test(PERMISSION);
     }
 }
