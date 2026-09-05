@@ -40,6 +40,7 @@ public interface TeamCreator {
 
         Team spectatorTeam = Team.of(SPECTATOR_KEY, gameConfig.survivorTeamSize() + 1);
         spectatorTeam.add(ColorComponent.class, new ColorComponent(ColorData.GRAY));
+        spectatorTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SPECTATOR_TEAM_NAME));
         teamService.add(spectatorTeam);
     }
 }
