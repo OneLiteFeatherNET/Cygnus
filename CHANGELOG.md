@@ -5,6 +5,23 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.10.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.9.2...v2.10.0) (2026-09-05)
+
+
+### Features
+
+* **gaze:** drive the glitch from the slender's gaze, in the round only ([#222](https://github.com/OneLiteFeatherNET/Cygnus/issues/222)) ([f84f5ec](https://github.com/OneLiteFeatherNET/Cygnus/commit/f84f5ec5247f3145b11d10cd77b0541867e95e30))
+* **slender:** take the night vision off the slender ([#220](https://github.com/OneLiteFeatherNET/Cygnus/issues/220)) ([71fea24](https://github.com/OneLiteFeatherNET/Cygnus/commit/71fea24167312ed0102e36b86e8a414f7b402527))
+* **spectator:** leave a dead player where they fell ([#221](https://github.com/OneLiteFeatherNET/Cygnus/issues/221)) ([d0fcb82](https://github.com/OneLiteFeatherNET/Cygnus/commit/d0fcb82090259252e6130584d800c19366ceceab))
+
+
+### Bug Fixes
+
+* **deps:** update slf4j to v2.0.19 ([#218](https://github.com/OneLiteFeatherNET/Cygnus/issues/218)) ([63a425e](https://github.com/OneLiteFeatherNET/Cygnus/commit/63a425edffdcaa3f8735e2391bdde351f65e6488))
+* **message:** remove unwanted prefix ([6cd87d7](https://github.com/OneLiteFeatherNET/Cygnus/commit/6cd87d73ef00a7e1e97b1b320efe042157cbf08d))
+* **spectator:** avoid spectator gamemode usage ([ff0ff0c](https://github.com/OneLiteFeatherNET/Cygnus/commit/ff0ff0c237c243434cad103110de3199110fc1dd))
+* **stats:** only print personal stats ([df5d7a4](https://github.com/OneLiteFeatherNET/Cygnus/commit/df5d7a4411de333c8699c3620fa2025890fb6d8d))
+
 ## [2.9.2](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.9.1...v2.9.2) (2026-09-03)
 
 
