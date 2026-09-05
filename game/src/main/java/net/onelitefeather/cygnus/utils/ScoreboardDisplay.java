@@ -34,12 +34,17 @@ public final class ScoreboardDisplay {
         TeamManager teamManager = MinecraftServer.getTeamManager();
 
         for (Team team : teams) {
+            if (!team.has(TeamNameComponent.class)) continue;
             String teamName = team.get(TeamNameComponent.class).teamName();
-            ColorData colorData = team.get(ColorComponent.class).colorData();
+            ColorData colorData = team.has(ColorComponent.class) ? team.get(ColorComponent.class).colorData() : ColorData.WHITE;
+
+            TeamsPacket.NameTagVisibility visibility = GameConfig.SURVIVOR_TEAM_NAME.equals(teamName)
+                    ? TeamsPacket.NameTagVisibility.HIDE_FOR_OTHER_TEAMS
+                    : TeamsPacket.NameTagVisibility.NEVER;
 
             TeamBuilder sbTeamBuilder = teamManager
                     .createBuilder(teamName)
-                    .nameTagVisibility(TeamsPacket.NameTagVisibility.NEVER)
+                    .nameTagVisibility(visibility)
                     .collisionRule(TeamsPacket.CollisionRule.NEVER)
                     // temp fix
                     .teamColor(TeamColor.fromName(colorData.name()));
@@ -56,6 +61,7 @@ public final class ScoreboardDisplay {
      */
     public void addPlayer(Player player, Key teamKey) {
         var teamName = getTeamName(teamKey);
+        if (teamName == null) return;
         var team = MinecraftServer.getTeamManager().getTeam(teamName);
         if (team != null) {
             team.addMember(player.getUsername());
@@ -70,6 +76,7 @@ public final class ScoreboardDisplay {
      */
     public void removePlayer(Player player, Key teamKey) {
         var teamName = getTeamName(teamKey);
+        if (teamName == null) return;
         var team = MinecraftServer.getTeamManager().getTeam(teamName);
         if (team != null) {
             team.removeMember(player.getUsername());
@@ -77,12 +84,43 @@ public final class ScoreboardDisplay {
     }
 
     /**
+     * Remove a player from all scoreboard teams.
+     *
+     * @param player the player to remove
+     */
+    public void removePlayer(Player player) {
+        for (net.minestom.server.scoreboard.Team team : MinecraftServer.getTeamManager().getTeams()) {
+            if (team.getMembers().contains(player.getUsername())) {
+                team.removeMember(player.getUsername());
+            }
+        }
+    }
+
+    /**
+     * Clears all members from all registered scoreboard teams.
+     */
+    public void clear() {
+        for (net.minestom.server.scoreboard.Team team : MinecraftServer.getTeamManager().getTeams()) {
+            for (String member : List.copyOf(team.getMembers())) {
+                team.removeMember(member);
+            }
+        }
+    }
+
+    /**
      * Get the team name by the team key
      *
      * @param teamKey the team key
-     * @return the team name
+     * @return the team name, or {@code null} if unknown
      */
     private String getTeamName(Key teamKey) {
-        return GameConfig.SLENDER_KEY.equals(teamKey) ? GameConfig.SLENDER_TEAM_NAME : GameConfig.SURVIVOR_TEAM_NAME;
+        if (GameConfig.SLENDER_KEY.equals(teamKey)) {
+            return GameConfig.SLENDER_TEAM_NAME;
+        } else if (GameConfig.SURVIVOR_KEY.equals(teamKey)) {
+            return GameConfig.SURVIVOR_TEAM_NAME;
+        } else if (GameConfig.SPECTATOR_KEY.equals(teamKey)) {
+            return GameConfig.SPECTATOR_TEAM_NAME;
+        }
+        return null;
     }
 }
