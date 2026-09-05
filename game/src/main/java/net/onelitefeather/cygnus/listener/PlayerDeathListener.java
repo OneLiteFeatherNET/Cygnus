@@ -40,13 +40,19 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
     public void accept(PlayerDeathEvent event) {
         Player player = event.getPlayer();
 
+        // Read before anything moves them, and used for both the mannequin and the respawn: a
+        // dead player is respawned at their respawn point, so without this a spectator would blink
+        // back to the map spawn and lose the spot they died in - the one place they have any reason
+        // to look at.
+        Pos deathPos = player.getPosition();
+        player.setRespawnPoint(deathPos);
+
         if (survivorTeam.getPlayers().contains(player)) {
             ((CygnusPlayer) player).setDeath(true);
             this.slenderTeam.getPlayers().stream().findFirst()
                     .ifPresent(slender -> ((CygnusPlayer) slender).incrementKills());
 
             if (player.getInstance() == null) return;
-            Pos deathPos = player.getPosition();
             DeadPlayerMannequin mannequin = DeadPlayerMannequin.sleeping(player);
             mannequin.setInstance(player.getInstance(), deathPos.add(0, 0.15, 0));
             this.jumpscareManager.register(mannequin);

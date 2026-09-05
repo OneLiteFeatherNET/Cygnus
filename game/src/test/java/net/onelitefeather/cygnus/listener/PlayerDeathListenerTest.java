@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.listener;
 
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.instance.Instance;
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerDeathListenerTest extends CygnusPlayerTestBase {
@@ -89,6 +91,38 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         listener.accept(new PlayerDeathEvent(survivor, null, null));
 
         assertEquals(1, slender.getKills());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testDyingPlayerRespawnsWhereTheyFell(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Pos deathPos = new Pos(17.5, 64.0, -23.5, 90f, 10f);
+        Player player = env.createPlayer(instance, deathPos);
+
+        TeamService teamService = TeamService.of();
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        teamService.add(slenderTeam);
+        teamService.add(survivorTeam);
+        survivorTeam.addPlayer(player);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        // Stand in for the map spawn: whatever the round set as the respawn point before they
+        // died. Without the listener overwriting it, the spectator would be sent back here and
+        // lose the spot they died in.
+        Pos mapSpawn = new Pos(0, 100, 0);
+        player.setRespawnPoint(mapSpawn);
+
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager());
+        listener.accept(new PlayerDeathEvent(player, null, null));
+
+        assertNotEquals(mapSpawn.blockY(), player.getRespawnPoint().blockY(),
+                "the map spawn must not survive the death");
+        assertEquals(deathPos.blockX(), player.getRespawnPoint().blockX());
+        assertEquals(deathPos.blockY(), player.getRespawnPoint().blockY());
+        assertEquals(deathPos.blockZ(), player.getRespawnPoint().blockZ());
 
         env.destroyInstance(instance, true);
     }
