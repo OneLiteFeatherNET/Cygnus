@@ -51,7 +51,7 @@ public final class Messages {
         PHASE_NOT_RUNNING = withPrefix(Component.text("The lobby countdown is not running!", NamedTextColor.RED));
         PHASE_FORCE_STARTED = withMiniPrefix("<gray>The timer has been set to <color:#09ff00><seconds></color> seconds!",
                 TagResolver.builder().tag("seconds", (argumentQueue, context) -> Tag.preProcessParsed(String.valueOf(forceStartTime))).build());
-        PAGE_FOUND_PART = withPrefix(Component.text("found a page!", NamedTextColor.GRAY));
+        PAGE_FOUND_PART = Component.text("found a page!", NamedTextColor.GRAY);
 
         VIEW_TIME = withMini("<gradient:#ff5555:#fffffff:#ff5555:#ff0d00:#fffffff:0.6>Time:</gradient>");
         VIEW_PAGES = Component.text("Pages:", NamedTextColor.GRAY);
