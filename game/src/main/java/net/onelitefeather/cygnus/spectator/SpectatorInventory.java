@@ -8,6 +8,7 @@ import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.inventory.click.Click;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.ResolvableProfile;
 import net.minestom.server.tag.Tag;
 import net.theevilreaper.aves.inventory.GlobalInventoryBuilder;
@@ -35,6 +36,9 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
             Component.empty()
     );
 
+    private static final int[] SLOTS = LayoutCalculator
+            .quad(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_3_ROW.getSize() - 1);
+
     private final BiConsumer<Player, Player> teleportCallback;
 
     /**
@@ -54,23 +58,27 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
         this.setDataLayoutFunction(dataLFunction -> {
             InventoryLayout dataLayout = dataLFunction == null ? InventoryLayout.fromType(getType()) : dataLFunction;
 
-            int startSlot = InventoryType.CHEST_1_ROW.getSize();
-            int endSlot = InventoryType.CHEST_3_ROW.getSize() - 1;
+            dataLayout.blank(SLOTS);
             Iterator<Player> iterator = survivorTeam.getPlayers().iterator();
+            int index = 0;
 
-            while (startSlot < endSlot && iterator.hasNext()) {
+            while (index < SLOTS.length && iterator.hasNext()) {
                 Player player = iterator.next();
+                ResolvableProfile profile = player.getSkin() != null
+                        ? new ResolvableProfile(player.getSkin())
+                        : new ResolvableProfile(new GameProfile(player.getUuid(), player.getUsername()));
                 dataLayout.setItem(
-                        startSlot,
+                        SLOTS[index],
                         ItemStack.builder(Material.PLAYER_HEAD)
-                                .set(DataComponents.PROFILE, new ResolvableProfile(player.getSkin()))
+                                .customName(Component.text(player.getUsername()))
+                                .set(DataComponents.PROFILE, profile)
                                 .set(TARGET_TAG, player.getUuid())
                                 .lore(LORE_LINES)
                                 .build(),
                         this::handleClick
                 );
 
-                startSlot++;
+                index++;
             }
 
             return dataLayout;

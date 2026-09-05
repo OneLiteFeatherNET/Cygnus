@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.spectator;
 
+import net.kyori.adventure.text.Component;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.item.ItemStack;
@@ -73,6 +75,26 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         inventory.handleClick(spectator, 10, null, headStack, _ -> {});
 
         assertTrue(teleportedTo.isEmpty());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testOpenPopulatesPlayerHeadsEvenWhenSkinIsNull(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player spectator = env.createPlayer(instance);
+        Player survivor = env.createPlayer(instance);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        survivorTeam.addPlayer(survivor);
+
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, (_, _) -> {});
+        inventory.open(spectator);
+        env.tick();
+
+        ItemStack item = inventory.getInventory().getItemStack(9);
+        assertEquals(Material.PLAYER_HEAD, item.material());
+        assertEquals(survivor.getUuid(), item.getTag(SpectatorInventory.TARGET_TAG));
+        assertEquals(Component.text(survivor.getUsername()), item.get(DataComponents.CUSTOM_NAME));
 
         env.destroyInstance(instance, true);
     }

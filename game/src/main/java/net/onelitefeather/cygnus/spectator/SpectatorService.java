@@ -108,4 +108,11 @@ public final class SpectatorService {
     public boolean isSpectator(Player player) {
         return TeamHelper.isSpectatorTeam(player);
     }
+
+    /**
+     * Invalidates the spectator inventory's data layout.
+     */
+    public void updateInventory() {
+        this.spectatorInventory.invalidateDataLayout();
+    }
 }

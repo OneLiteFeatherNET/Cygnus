@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.listener;
 
+import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.Phase;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
@@ -26,14 +27,16 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
     private final Team survivorTeam;
     private final Team slenderTeam;
     private final JumpScareManager jumpscareManager;
+    private final VoidConsumer inventoryUpdater;
 
-    public PlayerDeathListener(Supplier<Phase> phaseSupplier, TeamService teamService, JumpScareManager jumpscareManager) {
+    public PlayerDeathListener(Supplier<Phase> phaseSupplier, TeamService teamService, JumpScareManager jumpscareManager, VoidConsumer inventoryUpdater) {
         this.phaseSupplier = phaseSupplier;
         this.survivorTeam = teamService.getTeam(GameConfig.SURVIVOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
         this.slenderTeam = teamService.getTeam(GameConfig.SLENDER_KEY)
                 .orElseThrow(() -> new IllegalStateException("Slender team not found"));
         this.jumpscareManager = jumpscareManager;
+        this.inventoryUpdater = inventoryUpdater;
     }
 
     @Override
@@ -62,6 +65,7 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
         survivorTeam.removePlayer(player);
         player.removeTag(Tags.TEAM_KEY);
         EventDispatcher.call(new SpectatorAddEvent(player));
+        this.inventoryUpdater.apply();
         Phase currentPhase = this.phaseSupplier.get();
         //TODO: Should be tested
         if (!(currentPhase instanceof GamePhase gamePhase) || !survivorTeam.isEmpty()) return;

@@ -178,7 +178,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(GameMapLoadedEvent.class, new GameMapLoadedListener());
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier));
-        PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.gameConfig.minPlayers());
+        PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.spectatorService::updateInventory, this.gameConfig.minPlayers());
         manager.addListener(PlayerDisconnectEvent.class, quitListener);
         manager.addListener(AsyncPlayerConfigurationEvent.class,
                 new PlayerLoginListener(
@@ -206,7 +206,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(GameFinishEvent.class, new GameFinishListener());
         handler.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider));
         handler.addListener(PageSpawnEvent.class, new PageSpawnListener(this.pageProvider, this.mapProvider.getActiveInstance()));
-        handler.addListener(PlayerDeathEvent.class, new PlayerDeathListener(phaseSupplier, this.teamService, this.jumpscareManager));
+        handler.addListener(PlayerDeathEvent.class, new PlayerDeathListener(
+                phaseSupplier, this.teamService, this.jumpscareManager, this.spectatorService::updateInventory
+        ));
         handler.addListener(PlayerEntityInteractEvent.class, new PlayerPageInteractListener(this.pageProvider));
         handler.addListener(PageExpiredEvent.class, new GamePageListener(this.pageProvider));
         handler.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));

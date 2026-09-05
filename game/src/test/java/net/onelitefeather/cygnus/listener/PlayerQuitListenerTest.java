@@ -70,7 +70,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
-        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {}, 2);
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicBoolean finishFired = new AtomicBoolean(false);
@@ -99,7 +99,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
-        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {}, 2);
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
@@ -131,7 +131,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivor2.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
-        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {}, 2);
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<SlenderReviveEvent> reviveEvent = new AtomicReference<>();
@@ -161,7 +161,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
-        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), 2);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {}, 2);
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
