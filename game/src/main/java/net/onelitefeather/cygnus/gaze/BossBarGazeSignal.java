@@ -45,7 +45,7 @@ import org.jetbrains.annotations.Nullable;
  * shared bar would send every survivor the same level.</p>
  *
  * @author TheMeinerLP
- * @version 4.0.0
+ * @version 4.1.0
  * @since 2.7.3
  */
 public final class BossBarGazeSignal implements GazeSink {
@@ -80,10 +80,18 @@ public final class BossBarGazeSignal implements GazeSink {
      * @return the component to put on the wire
      */
     static Component signalFor(int level) {
-        int encoded = level == SlenderGaze.NONE ? 0 : Math.clamp(level + 1, 0, 4);
+        // No gaze, no glyph. Sending the reserved colour with a level of zero is not the same as
+        // sending nothing: the pack recognises a signal by its colour range alone, and #FE0000 is
+        // inside it, so the shader would keep expanding the quad across the whole screen for as
+        // long as a survivor is tracked. An empty component produces no geometry at all, so there
+        // is no vertex to recognise.
+        if (level == SlenderGaze.NONE) {
+            return Component.empty();
+        }
+
         return Component.text(SIGNAL_GLYPH)
                 .font(SIGNAL_FONT)
-                .color(TextColor.color(SIGNAL_BASE + encoded))
+                .color(TextColor.color(SIGNAL_BASE + Math.clamp(level + 1, 1, 4)))
                 .shadowColor(ShadowColor.none());
     }
 

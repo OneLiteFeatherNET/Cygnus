@@ -39,7 +39,7 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
         BossBar bar = signal.barOf(survivor);
         assertNotNull(bar);
         assertEquals(BossBarGazeSignal.CARRIER_COLOR, bar.color(), "the pack hides exactly this colour");
-        assertEquals(BossBarGazeSignal.SIGNAL_BASE, colourOf(bar), "nothing is signalled before a level arrives");
+        assertEquals(-1, colourOf(bar), "an empty title carries no colour, so the shader sees no signal at all");
     }
 
     @Test
@@ -57,7 +57,8 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
                 "the strongest level must not wrap - that was the bug in the first encoding");
 
         signal.level(survivor, SlenderGaze.NONE);
-        assertEquals(BossBarGazeSignal.SIGNAL_BASE, colourOf(signal.barOf(survivor)));
+        assertEquals(-1, colourOf(signal.barOf(survivor)),
+                "the reserved colour with level zero still reads as a signal to the pack");
     }
 
     @Test
@@ -90,7 +91,7 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
 
         assertNotSame(signal.barOf(first), signal.barOf(second));
         assertEquals(BossBarGazeSignal.SIGNAL_BASE + 4, colourOf(signal.barOf(first)));
-        assertEquals(BossBarGazeSignal.SIGNAL_BASE, colourOf(signal.barOf(second)),
+        assertEquals(-1, colourOf(signal.barOf(second)),
                 "a shared bar would broadcast one survivor's gaze to everyone");
     }
 
@@ -130,7 +131,7 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
                 "the world tint needs the bit, the veil alone is not the effect");
 
         signal.level(survivor, SlenderGaze.NONE);
-        assertEquals(BossBarGazeSignal.SIGNAL_BASE, colourOf(signal.barOf(survivor)));
+        assertEquals(-1, colourOf(signal.barOf(survivor)));
         assertFalse(signal.barOf(survivor).hasFlag(BossBar.Flag.DARKEN_SCREEN));
     }
 
