@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.listener;
 import net.kyori.adventure.key.Key;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.aves.util.Players;
+import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.Phase;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
@@ -46,8 +47,8 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
     private final Supplier<Phase> phaseSupplier;
     private final TeamService teamService;
     private final StaminaService staminaService;
+    private final VoidConsumer inventoryUpdater;
     private final int maxReviveCount;
-    private final int minPlayers;
     private int currentReviveCount = 0;
 
     /**
@@ -62,13 +63,14 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
             Supplier<Phase> phaseSupplier,
             TeamService teamService,
             StaminaService staminaService,
+            VoidConsumer inventoryUpdater,
             int minPlayers
     ) {
         this.phaseSupplier = phaseSupplier;
         this.teamService = teamService;
         this.staminaService = staminaService;
-        this.minPlayers = minPlayers;
-        this.maxReviveCount = this.minPlayers - 1;
+        this.maxReviveCount = minPlayers -1;
+        this.inventoryUpdater = inventoryUpdater;
     }
 
     @Override
@@ -166,6 +168,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
      * @param gamePhase    the active game phase
      */
     private void handleSurvivorQuit(Team survivorTeam, GamePhase gamePhase) {
+        this.inventoryUpdater.apply();
         if (!survivorTeam.getPlayers().isEmpty()) return;
         Team slenderTeam = teamService.getTeam(SLENDER_KEY)
                 .orElseThrow(() -> new IllegalStateException("Slender team not found"));
