@@ -33,12 +33,8 @@ import java.net.URI;
  * @param glitchCloseRange      the distance in blocks at which the tearing is at its worst
  * @param glitchViewAngle       how far off the centre of their view he may stand and still count
  *                              as seen, in degrees
- * @param slenderStaticEnabled  whether the slender hears static as his pages are collected
- * @param slenderStaticSound    the sound the static is built from
- * @param slenderStaticQuietInterval   the seconds between two bursts while no page has been found
- * @param slenderStaticFranticInterval the seconds between two bursts once every page is gone
- * @param slenderStaticMinVolume       how loud the static is while no page has been found
- * @param slenderStaticMaxVolume       how loud the static is once every page is gone
+ * @param pageGlitchEnabled     whether the slender's screen tears as his pages are collected
+ * @param pageGlitchPulseSeconds how long a single find holds the glitch above the round's level
  * @author theEvilReaper
  * @version 1.4.0
  * @since 1.0.0
@@ -64,12 +60,8 @@ public record GameConfigImpl(
         int glitchRange,
         int glitchCloseRange,
         int glitchViewAngle,
-        boolean slenderStaticEnabled,
-        Key slenderStaticSound,
-        int slenderStaticQuietInterval,
-        int slenderStaticFranticInterval,
-        float slenderStaticMinVolume,
-        float slenderStaticMaxVolume
+        boolean pageGlitchEnabled,
+        int pageGlitchPulseSeconds
 ) implements GameConfig {
 
 }

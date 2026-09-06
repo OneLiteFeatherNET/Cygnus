@@ -149,38 +149,21 @@ survivorTeamSize=12
 # means he triggers the effect while barely in frame.
 #glitchViewAngle=30
 
-# --- The slender's static -----------------------------------------------------
-# The survivors watch their page counter go up; the slender has none and only
-# learns the score when the round ends. The static is that counter told as sound:
-# a hiss that sits closer together and louder the fewer pages are left, plus a
-# burst of its own the moment a page goes. Only he hears it, and it carries no
-# direction - neither side may place the other by it.
-
-# Whether the slender hears the static at all.
-#slenderStaticEnabled=true
-
-# The sound the static is built from.
+# --- The slender's page glitch -----------------------------------------------
+# The survivors watch their page counter climb; the slender has none and only
+# learns the score when the round ends. The glitch is that counter, told as his
+# own picture coming apart: a baseline that climbs a level at a time as the pages
+# disappear, and a harder pulse the moment one goes.
 #
-# Ships in the Cygnus resource pack as three takes of tape hiss the client picks
-# between. Unlike the other sound settings, a key that names no vanilla sound is
-# not replaced by a default here but sent to the client as named, which is what
-# lets a pack sound be used at all.
-#
-# A server that hands out no pack, or an older one, hears nothing under this key.
-# weather.rain is the closest vanilla stand-in if that is the situation.
-#slenderStaticSound=cygnus:vhs_static
+# It rides the same channel as the gaze glitch, so the resource pack draws it and
+# the cygnus.overlays gate switches it off along with the other full-screen
+# effects. Unlike the survivors' version it never darkens the world - that would
+# take the sight the slender hunts with.
 
-# Seconds between two bursts while no page has been found. Between 1 and 120.
-#slenderStaticQuietInterval=12
+# Whether the slender's screen tears as his pages are collected.
+#pageGlitchEnabled=true
 
-# Seconds between two bursts once every page is gone. At least 1 and below
-# slenderStaticQuietInterval - the gap shrinks from the one towards the other as
-# the pages disappear, so a configuration where they meet or cross is rejected.
-#slenderStaticFranticInterval=3
-
-# How loud the static is while no page has been found. Between 0 and 1.
-#slenderStaticMinVolume=0.15
-
-# How loud it is once every page is gone. Between 0 and 1 and not below
-# slenderStaticMinVolume.
-#slenderStaticMaxVolume=0.8
+# How long a single find holds the glitch one level above where the round stands,
+# in seconds. Between 1 and 30. Past that a find late in the round would still be
+# on screen when the next one lands, and the pulse stops reading as an event.
+#pageGlitchPulseSeconds=3

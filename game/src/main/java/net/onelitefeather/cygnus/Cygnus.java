@@ -44,7 +44,7 @@ import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.blood.BloodSplatterService;
 import net.onelitefeather.cygnus.damage.DamageSoundService;
-import net.onelitefeather.cygnus.noise.SlenderStaticService;
+import net.onelitefeather.cygnus.glitch.PageGlitchService;
 import net.onelitefeather.cygnus.command.GlitchCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -133,7 +133,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final DamageSoundService damageSoundService;
     private final TunnelVisionRenderer tunnelVisionRenderer;
     private final TunnelVisionService tunnelVisionService;
-    private final SlenderStaticService slenderStaticService;
+    private final PageGlitchService pageGlitchService;
 
     public Cygnus() {
         Path path = ServiceBootstrap.resolveWorkingDirectory();
@@ -188,8 +188,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 bound -> ThreadLocalRandom.current().nextInt(bound)
         );
         this.damageSoundService = new DamageSoundService(this.gameConfig, System::currentTimeMillis);
-        this.slenderStaticService = new SlenderStaticService(
+        // The gaze's signal, shared rather than a second one: a player has one carrier, and two
+        // would draw two full-screen quads over each other. Which of the two services addresses a
+        // player follows their team, and a hand-over moves them from one to the other.
+        this.pageGlitchService = new PageGlitchService(
                 this.gameConfig,
+                this.gazeSignal,
                 () -> TeamHelper.slenderOf(this.teamService));
         this.tunnelVisionRenderer = new OverlayTunnelVisionRenderer(this.screenOverlay);
         this.tunnelVisionService = new TunnelVisionService(this.tunnelVisionRenderer, player -> StaminaHelper.remainingShare(this.staminaService, player));
@@ -269,9 +273,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // Not part of registerOverlayListeners: the sound is the feedback a hit owes the player
         // either way, and it needs neither the resource pack nor the overlay gate to be heard.
         this.damageSoundService.registerListener(handler);
-        // Outside registerOverlayListeners for the same reason as the damage sound: the static is
-        // heard, not drawn, so neither the resource pack nor the overlay gate has a say in it.
-        this.slenderStaticService.registerListener(handler);
         this.registerOverlayListeners(handler);
     }
 
@@ -291,6 +292,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.slenderGazeService.registerListener(handler, () -> TeamHelper.survivorsOf(this.teamService));
         this.bloodSplatterService.registerListener(handler);
         this.tunnelVisionService.registerListener(handler, () -> TeamHelper.survivorsOf(this.teamService));
+        this.pageGlitchService.registerListener(handler);
     }
 
     private void initPhases() {
