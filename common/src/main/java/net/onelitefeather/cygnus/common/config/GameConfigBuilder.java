@@ -38,6 +38,15 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     private int glitchRange = GameConfig.DEFAULT_GLITCH_RANGE;
     private int glitchCloseRange = GameConfig.DEFAULT_GLITCH_CLOSE_RANGE;
     private int glitchViewAngle = GameConfig.DEFAULT_GLITCH_VIEW_ANGLE;
+    private boolean slenderStaticEnabled;
+    private Key slenderStaticSound = GameConfig.DEFAULT_SLENDER_STATIC_SOUND;
+    // Pre-set for the same reason as the glitch distances above: build() checks the two intervals
+    // and the two volumes against each other, and a builder that was never told about the static
+    // would trip those checks on a pair of zeroes.
+    private int slenderStaticQuietInterval = GameConfig.DEFAULT_SLENDER_STATIC_QUIET_INTERVAL;
+    private int slenderStaticFranticInterval = GameConfig.DEFAULT_SLENDER_STATIC_FRANTIC_INTERVAL;
+    private float slenderStaticMinVolume = GameConfig.DEFAULT_SLENDER_STATIC_MIN_VOLUME;
+    private float slenderStaticMaxVolume = GameConfig.DEFAULT_SLENDER_STATIC_MAX_VOLUME;
 
     @Override
     public GameConfig.Builder minPlayers(int minPlayers) {
@@ -197,6 +206,67 @@ public final class GameConfigBuilder implements GameConfig.Builder {
         return this;
     }
 
+    @Override
+    public GameConfig.Builder slenderStaticEnabled(boolean slenderStaticEnabled) {
+        this.slenderStaticEnabled = slenderStaticEnabled;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder slenderStaticSound(Key slenderStaticSound) {
+        this.slenderStaticSound = slenderStaticSound;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder slenderStaticQuietInterval(int slenderStaticQuietInterval) {
+        if (slenderStaticQuietInterval < 1
+                || slenderStaticQuietInterval > GameConfig.MAX_SLENDER_STATIC_INTERVAL) {
+            throw new IllegalArgumentException(
+                    "Slender static quiet interval must be between 1 and "
+                            + GameConfig.MAX_SLENDER_STATIC_INTERVAL + " seconds");
+        }
+        this.slenderStaticQuietInterval = slenderStaticQuietInterval;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder slenderStaticFranticInterval(int slenderStaticFranticInterval) {
+        if (slenderStaticFranticInterval < 1) {
+            throw new IllegalArgumentException("Slender static frantic interval must be at least 1 second");
+        }
+        this.slenderStaticFranticInterval = slenderStaticFranticInterval;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder slenderStaticMinVolume(float slenderStaticMinVolume) {
+        this.slenderStaticMinVolume = checkVolume(slenderStaticMinVolume, "minimum");
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder slenderStaticMaxVolume(float slenderStaticMaxVolume) {
+        this.slenderStaticMaxVolume = checkVolume(slenderStaticMaxVolume, "maximum");
+        return this;
+    }
+
+    /**
+     * Checks a static volume against the range a sound can carry.
+     *
+     * @param volume the volume to check
+     * @param name   how the volume is named in the message of a failure
+     * @return the volume
+     * @throws IllegalArgumentException if the volume is outside 0 to 1
+     */
+    private static float checkVolume(float volume, String name) {
+        if (volume < 0.0F || volume > 1.0F) {
+            throw new IllegalArgumentException(
+                    "Slender static " + name + " volume must be between 0 and 1");
+        }
+        return volume;
+    }
+
     /**
      * {@inheritDoc}
      * <p>
@@ -214,6 +284,16 @@ public final class GameConfigBuilder implements GameConfig.Builder {
             throw new IllegalArgumentException(
                     "Glitch close range (" + glitchCloseRange + ") must be below the glitch range ("
                             + glitchRange + ")");
+        }
+        if (slenderStaticFranticInterval >= slenderStaticQuietInterval) {
+            throw new IllegalArgumentException(
+                    "Slender static frantic interval (" + slenderStaticFranticInterval
+                            + ") must be below the quiet interval (" + slenderStaticQuietInterval + ")");
+        }
+        if (slenderStaticMinVolume > slenderStaticMaxVolume) {
+            throw new IllegalArgumentException(
+                    "Slender static minimum volume (" + slenderStaticMinVolume
+                            + ") must not be above the maximum volume (" + slenderStaticMaxVolume + ")");
         }
         return new GameConfigImpl(
                 minPlayers,
@@ -235,7 +315,13 @@ public final class GameConfigBuilder implements GameConfig.Builder {
                 damageSound,
                 glitchRange,
                 glitchCloseRange,
-                glitchViewAngle
+                glitchViewAngle,
+                slenderStaticEnabled,
+                slenderStaticSound,
+                slenderStaticQuietInterval,
+                slenderStaticFranticInterval,
+                slenderStaticMinVolume,
+                slenderStaticMaxVolume
         );
     }
 }

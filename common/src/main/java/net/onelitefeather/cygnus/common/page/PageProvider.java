@@ -10,6 +10,7 @@ import net.minestom.server.utils.Direction;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
+import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.xerus.api.phase.GamePhase;
@@ -169,6 +170,7 @@ public final class PageProvider {
         Broadcaster.broadcast(Messages.getPageFoundComponent(player));
         int foundCount = this.currentFoundedPageCount.incrementAndGet();
         this.updatePageDisplay();
+        EventDispatcher.call(new PageFoundEvent(player, foundCount, this.maxPageAmount));
 
         if (foundCount >= maxPageAmount) {
             EventDispatcher.call(new PageDiscoveryCompletedEvent());

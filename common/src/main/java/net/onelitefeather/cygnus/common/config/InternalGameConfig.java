@@ -33,6 +33,12 @@ import java.net.URI;
  * @param glitchCloseRange      the distance in blocks at which the tearing is at its worst
  * @param glitchViewAngle       how far off the centre of their view he may stand and still count
  *                              as seen, in degrees
+ * @param slenderStaticEnabled  whether the slender hears static as his pages are collected
+ * @param slenderStaticSound    the sound the static is built from
+ * @param slenderStaticQuietInterval   the seconds between two bursts while no page has been found
+ * @param slenderStaticFranticInterval the seconds between two bursts once every page is gone
+ * @param slenderStaticMinVolume       how loud the static is while no page has been found
+ * @param slenderStaticMaxVolume       how loud the static is once every page is gone
  * @author theEvilReaper
  * @version 1.4.0
  * @since 1.0.0
@@ -57,7 +63,13 @@ record InternalGameConfig(
         Key damageSound,
         int glitchRange,
         int glitchCloseRange,
-        int glitchViewAngle
+        int glitchViewAngle,
+        boolean slenderStaticEnabled,
+        Key slenderStaticSound,
+        int slenderStaticQuietInterval,
+        int slenderStaticFranticInterval,
+        float slenderStaticMinVolume,
+        float slenderStaticMaxVolume
 ) implements GameConfig {
 
     // Sentry and the ResourcePack are opt-in: a service that says nothing about them reports to
@@ -67,6 +79,8 @@ record InternalGameConfig(
     // The damage feedback is on by default for the same reason: taking a hit in silence is a bug,
     // not a setting. The cooldown of 20 ticks lets through every second damage tick of a draining
     // slender, which is enough to notice and not enough to grate.
+    // The slender's static is on by default too: it is the only thing that tells him how far the
+    // survivors have got without putting the page counter in front of him.
     private static final GameConfig DEFAULT = new InternalGameConfig(
             2, 13, 30, 900, 1, 12, null, null, null,
             true, 20, 20, GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND,
@@ -74,7 +88,12 @@ record InternalGameConfig(
             true, 20, GameConfig.DEFAULT_DAMAGE_SOUND,
             GameConfig.DEFAULT_GLITCH_RANGE,
             GameConfig.DEFAULT_GLITCH_CLOSE_RANGE,
-            GameConfig.DEFAULT_GLITCH_VIEW_ANGLE);
+            GameConfig.DEFAULT_GLITCH_VIEW_ANGLE,
+            true, GameConfig.DEFAULT_SLENDER_STATIC_SOUND,
+            GameConfig.DEFAULT_SLENDER_STATIC_QUIET_INTERVAL,
+            GameConfig.DEFAULT_SLENDER_STATIC_FRANTIC_INTERVAL,
+            GameConfig.DEFAULT_SLENDER_STATIC_MIN_VOLUME,
+            GameConfig.DEFAULT_SLENDER_STATIC_MAX_VOLUME);
 
     /**
      * Returns the default configuration for the game.
