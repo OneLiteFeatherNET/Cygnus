@@ -4,7 +4,10 @@ import net.kyori.adventure.resource.ResourcePackStatus;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerResourcePackStatusEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.network.packet.server.common.ResourcePackPushPacket;
+import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
+import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -15,6 +18,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -53,6 +57,22 @@ class ResourcePackServiceTest extends CygnusPlayerTestBase {
 
         assertNotNull(player.getResourcePackFuture());
         assertFalse(player.getResourcePackFuture().isDone());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testPackIdIsTheIdThePackWasPushedWith(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance);
+        ResourcePackService service = createService();
+        Collector<ResourcePackPushPacket> pushes = connection.trackIncoming(ResourcePackPushPacket.class);
+
+        service.sendTo(player);
+
+        pushes.assertSingle(push -> assertEquals(service.packId(), push.id(),
+                "the id the pack is taken back by has to be the id the client filed it under"));
 
         env.destroyInstance(instance, true);
     }

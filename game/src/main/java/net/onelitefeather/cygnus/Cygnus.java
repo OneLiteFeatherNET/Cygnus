@@ -93,6 +93,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
@@ -129,7 +130,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.staminaService = new StaminaService();
         this.jumpscareManager = new JumpScareManager();
         this.gameConfig = new GameConfigReader(path).getConfig();
-        MinecraftServer.getConnectionManager().setPlayerProvider(CygnusPlayer::new);
+        this.resourcePackService = ResourcePackService.create();
+        // Every player needs the pack id so it can hand the pack back when it is kicked; see
+        // CygnusPlayer#kick. Null when the ResourcePack feature is off, which leaves the kick untouched.
+        UUID resourcePackId = this.resourcePackService.map(ResourcePackService::packId).orElse(null);
+        MinecraftServer.getConnectionManager().setPlayerProvider(
+                (connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, resourcePackId));
         this.pageProvider = new PageProvider();
         GameMapProvider gameMapProvider = new GameMapProvider(path);
         this.mapProvider = gameMapProvider;
@@ -143,7 +149,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
-        this.resourcePackService = ResourcePackService.create();
         this.screenOverlay = new EquipmentScreenOverlay();
         this.gazeSignal = new BossBarGazeSignal();
         // The service drives the signal during a round. Outside one it does not tick - it starts on

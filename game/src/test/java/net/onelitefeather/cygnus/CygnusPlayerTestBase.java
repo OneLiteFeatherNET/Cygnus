@@ -21,6 +21,6 @@ public abstract class CygnusPlayerTestBase {
 
     @BeforeAll
     static void init(Env env) {
-        env.process().connection().setPlayerProvider(CygnusPlayer::new);
+        env.process().connection().setPlayerProvider((connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, null));
     }
 }
