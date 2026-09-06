@@ -1,5 +1,8 @@
 package net.onelitefeather.cygnus.spectator;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
@@ -166,6 +169,29 @@ class SpectatorServiceTest extends CygnusPlayerTestBase {
 
         assertEquals(0.0f, player.getExp(), "a spectator must not keep the survivor stamina bar");
         assertFalse(player.hasBlockedSprinting(), "a spectator must not keep the survivor sprint cooldown");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testJoinStrikesTheTabListNameThrough(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        player.setDisplayName(Component.text(player.getUsername(), NamedTextColor.GREEN));
+
+        Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        SpectatorService service = new SpectatorService(spectatorTeam, survivorTeam);
+
+        service.join(player);
+
+        Component displayName = player.getDisplayName();
+        assertNotNull(displayName, "a spectator needs a display name to show up in the tab list");
+        assertEquals(
+                Component.text(player.getUsername(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH),
+                displayName,
+                "a spectator must be struck through in gray instead of keeping the green survivor name"
+        );
 
         env.destroyInstance(instance, true);
     }

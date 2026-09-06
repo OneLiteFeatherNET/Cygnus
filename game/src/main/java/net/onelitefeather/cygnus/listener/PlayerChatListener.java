@@ -25,7 +25,7 @@ import java.util.function.Consumer;
  * there and no additional phase guard is needed.
  *
  * @author TheMeinerLP
- * @version 2.0.0
+ * @version 2.1.0
  * @since 1.0.0
  **/
 public final class PlayerChatListener implements Consumer<PlayerChatEvent> {
@@ -58,8 +58,19 @@ public final class PlayerChatListener implements Consumer<PlayerChatEvent> {
         this.spectatorTeam.sendMessage(event.getFormattedMessage());
     }
 
+    /**
+     * Builds the chat line for the given event.
+     * <p>
+     * The line is assembled below an empty root instead of below the display name: a child inherits every
+     * style its parent does not override, and the spectator display name is struck through, which would
+     * otherwise strike through the separator, the prefix and the message text as well.
+     *
+     * @param event the chat event to format
+     * @return the formatted chat line
+     */
     private Component setLobbyLayout(PlayerChatEvent event) {
-        return event.getPlayer().getDisplayName()
+        return Component.empty()
+                .append(event.getPlayer().getDisplayName())
                 .append(Component.space())
                 .append(MESSAGE_PREFIX)
                 .append(Component.space())
