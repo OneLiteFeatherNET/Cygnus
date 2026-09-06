@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.13.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.12.1...v2.13.0) (2026-09-06)
+
+
+### Features
+
+* **page:** make pages visible in the dark ([#245](https://github.com/OneLiteFeatherNET/Cygnus/issues/245)) ([6bba23a](https://github.com/OneLiteFeatherNET/Cygnus/commit/6bba23a481a5ffafb9cb711cffdf3fd24f162b17))
+
 ## [2.12.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.12.0...v2.12.1) (2026-09-06)
 
 
