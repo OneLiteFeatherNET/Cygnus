@@ -98,4 +98,50 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
 
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    void testOpenPicksUpSurvivorsThatJoinedAfterTheInventoryWasBuilt(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player spectator = env.createPlayer(instance);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+
+        // The production instance is built at server start, when nobody is on the survivor team yet.
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, (_, _) -> {});
+        env.tick();
+
+        Player survivor = env.createPlayer(instance);
+        survivorTeam.addPlayer(survivor);
+
+        inventory.open(spectator);
+        env.tick();
+
+        ItemStack item = inventory.getInventory().getItemStack(9);
+        assertEquals(Material.PLAYER_HEAD, item.material());
+        assertEquals(survivor.getUuid(), item.getTag(SpectatorInventory.TARGET_TAG));
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testOpenDropsHeadsOfPlayersThatLeftTheSurvivorTeam(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player spectator = env.createPlayer(instance);
+        Player survivor = env.createPlayer(instance);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        survivorTeam.addPlayer(survivor);
+
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, (_, _) -> {});
+        inventory.open(spectator);
+        env.tick();
+        assertEquals(Material.PLAYER_HEAD, inventory.getInventory().getItemStack(9).material());
+
+        survivorTeam.removePlayer(survivor);
+
+        inventory.open(spectator);
+        env.tick();
+
+        assertTrue(inventory.getInventory().getItemStack(9).isAir(), "a player who left the round must not stay listed");
+
+        env.destroyInstance(instance, true);
+    }
 }

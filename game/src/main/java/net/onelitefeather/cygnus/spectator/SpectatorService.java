@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
  * the spectate-overview GUI, and leaving spectator mode.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.0
  */
 public final class SpectatorService {
@@ -110,9 +110,9 @@ public final class SpectatorService {
     }
 
     /**
-     * Invalidates the spectator inventory's data layout.
+     * Rebuilds the spectator inventory so its head list matches the players still in the round.
      */
     public void updateInventory() {
-        this.spectatorInventory.invalidateDataLayout();
+        this.spectatorInventory.refresh();
     }
 }
