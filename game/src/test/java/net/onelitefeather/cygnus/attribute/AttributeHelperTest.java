@@ -49,7 +49,24 @@ class AttributeHelperTest {
         float healthOnTop = 20.0f;
         AttributeHelper.updateHealthScale(player, healthOnTop);
 
-        assertEquals(40.0, player.getAttribute(Attribute.MAX_HEALTH).getBaseValue());
+        assertEquals(20.0, player.getAttribute(Attribute.MAX_HEALTH).getBaseValue(), 0.0001);
+        assertEquals(40.0, player.getAttribute(Attribute.MAX_HEALTH).getValue(), 0.0001);
+        assertEquals(40.0f, player.getHealth(), 0.0001f);
+
+        AttributeHelper.removeHealthScale(player);
+        assertEquals(20.0, player.getAttribute(Attribute.MAX_HEALTH).getValue(), 0.0001);
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testHealthScaleUpdateIsIdempotent(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        AttributeHelper.updateHealthScale(player, 20.0f);
+        AttributeHelper.updateHealthScale(player, 20.0f);
+
+        assertEquals(40.0, player.getAttribute(Attribute.MAX_HEALTH).getValue(), 0.0001);
         env.destroyInstance(instance, true);
     }
 
