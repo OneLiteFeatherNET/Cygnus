@@ -11,7 +11,6 @@ import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
-import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;

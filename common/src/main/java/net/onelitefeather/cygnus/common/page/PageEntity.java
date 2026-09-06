@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.common.page;
 
-import net.kyori.adventure.text.Component;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
@@ -11,7 +10,6 @@ import net.minestom.server.entity.metadata.other.InteractionMeta;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.item.ItemStack;
-import net.minestom.server.item.Material;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
