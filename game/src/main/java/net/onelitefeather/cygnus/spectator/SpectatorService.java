@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.spectator;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
@@ -25,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
  * the spectate-overview GUI, and leaving spectator mode.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.7.0
  */
 public final class SpectatorService {
@@ -73,8 +74,23 @@ public final class SpectatorService {
         spectatorTeam.addPlayer(player);
         clearStaminaHud(player);
         Items.setSpectatorLayout(player);
+        markAsSpectator(player);
         player.updateViewableRule(VisibilityRules.spectatorRule());
         VisibilityRules.refresh(player);
+    }
+
+    /**
+     * Strikes the name of the given player through in the tab list.
+     * <p>
+     * A spectator keeps the display name they carried into the round, so the tab list still shows them in
+     * the green of a living survivor. The strike through plus the gray of the spectator team marks them as
+     * out of the round at a glance, which is the only signal the tab list can give: a spectator is invisible
+     * for everybody still playing, so their entry is the only place they show up at all.
+     *
+     * @param player the player who just became a spectator
+     */
+    private static void markAsSpectator(Player player) {
+        player.setDisplayName(Component.text(player.getUsername(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH));
     }
 
     /**

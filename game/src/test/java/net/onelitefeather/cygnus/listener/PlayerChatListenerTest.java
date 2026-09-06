@@ -2,6 +2,8 @@ package net.onelitefeather.cygnus.listener;
 
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerChatEvent;
 import net.minestom.server.instance.Instance;
@@ -28,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * a spectator talks to spectators only.
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.0
  */
 class PlayerChatListenerTest extends CygnusPlayerTestBase {
@@ -60,6 +62,39 @@ class PlayerChatListenerTest extends CygnusPlayerTestBase {
     @Test
     void testSpectatorMessageWithoutAnyActivePhaseOnlyReachesSpectators(@NotNull Env env) {
         assertSpectatorChatStaysIsolated(env);
+    }
+
+    /**
+     * A spectator carries a struck through display name so the tab list marks them as out of the round.
+     * The chat line must not inherit that decoration, otherwise every message a spectator writes is
+     * struck through from the name to the last character.
+     */
+    @Test
+    void testSpectatorMessageIsNotStruckThroughBehindTheName(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player spectator = env.createPlayer(instance);
+
+        Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
+        joinSpectatorTeam(spectatorTeam, spectator);
+        spectator.setDisplayName(Component.text(spectator.getUsername(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH));
+
+        PlayerChatEvent event = new PlayerChatEvent(spectator, List.of(spectator), "hi");
+        new PlayerChatListener(spectatorTeam).accept(event);
+
+        Component formatted = event.getFormattedMessage();
+        assertEquals(
+                TextDecoration.State.NOT_SET,
+                formatted.decoration(TextDecoration.STRIKETHROUGH),
+                "the strike through must not sit on the root, every child would inherit it"
+        );
+        List<Component> children = formatted.children();
+        assertEquals(
+                TextDecoration.State.NOT_SET,
+                children.get(children.size() - 1).decoration(TextDecoration.STRIKETHROUGH),
+                "the written message must stay readable"
+        );
+
+        env.destroyInstance(instance, true);
     }
 
     @Test
