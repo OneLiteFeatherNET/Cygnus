@@ -5,6 +5,19 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.12.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.11.0...v2.12.0) (2026-09-06)
+
+
+### Features
+
+* **damage:** play a hurt sound to the player who was hit ([#240](https://github.com/OneLiteFeatherNET/Cygnus/issues/240)) ([d0b4fea](https://github.com/OneLiteFeatherNET/Cygnus/commit/d0b4fea9af0b9a566e9f7188ed5c7392beed8d82))
+* **gaze:** trigger the glitch only when the slender is looked at up close ([#242](https://github.com/OneLiteFeatherNET/Cygnus/issues/242)) ([7b7e570](https://github.com/OneLiteFeatherNET/Cygnus/commit/7b7e570e4629ea8cca373fa08c691b72d4c7776f))
+
+
+### Bug Fixes
+
+* **page:** remove custom page property ([46ac3a8](https://github.com/OneLiteFeatherNET/Cygnus/commit/46ac3a856a596341d2303812a3a07c0a8a301c21))
+
 ## [2.11.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.10.1...v2.11.0) (2026-09-06)
 
 
