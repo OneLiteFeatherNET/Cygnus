@@ -88,39 +88,20 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     Key DEFAULT_DAMAGE_SOUND = Key.key("entity.player.hurt");
 
     /**
-     * The static the slender hears while the survivors take his pages away.
+     * The {@link #pageGlitchPulseSeconds()} a configuration gets when it says nothing.
      * <p>
-     * A resource pack sound rather than a vanilla one: three 2.2 second takes of tape hiss the
-     * client picks between, high-passed at 520 Hz so the effect's own pitch drop to 0.7 leaves
-     * it hissing rather than humming. Nothing in vanilla comes close - rain is the nearest, and
-     * it reads as weather.
-     * </p>
-     * <p>
-     * A server running without the Cygnus pack therefore hears nothing here. That is the right
-     * way round: the static is a horror cue, and half of one played through the wrong sample is
-     * worse than none.
+     * Long enough that a find registers as its own event on screen, short enough that the slender
+     * is not looking through it while he chases somebody.
      * </p>
      */
-    Key DEFAULT_SLENDER_STATIC_SOUND = Key.key("cygnus", "vhs_static");
-
-    /** The {@link #slenderStaticQuietInterval()} a configuration gets when it says nothing. */
-    int DEFAULT_SLENDER_STATIC_QUIET_INTERVAL = 12;
-
-    /** The {@link #slenderStaticFranticInterval()} a configuration gets when it says nothing. */
-    int DEFAULT_SLENDER_STATIC_FRANTIC_INTERVAL = 3;
+    int DEFAULT_PAGE_GLITCH_PULSE_SECONDS = 3;
 
     /**
-     * The longest {@link #slenderStaticQuietInterval()} a configuration may ask for. Past this a
-     * round could end before the slender has heard the static twice, which makes it noise rather
-     * than a clock.
+     * The longest {@link #pageGlitchPulseSeconds()} a configuration may ask for. Past this a find
+     * late in the round would still be on his screen when the next one lands, and the pulse stops
+     * being a pulse.
      */
-    int MAX_SLENDER_STATIC_INTERVAL = 120;
-
-    /** The {@link #slenderStaticMinVolume()} a configuration gets when it says nothing. */
-    float DEFAULT_SLENDER_STATIC_MIN_VOLUME = 0.15F;
-
-    /** The {@link #slenderStaticMaxVolume()} a configuration gets when it says nothing. */
-    float DEFAULT_SLENDER_STATIC_MAX_VOLUME = 0.8F;
+    int MAX_PAGE_GLITCH_PULSE_SECONDS = 30;
 
     /**
      * The largest {@link #glitchRange()} a configuration may ask for. Beyond this the slender would
@@ -334,60 +315,24 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     Key damageSound();
 
     /**
-     * Returns whether the slender hears static as the survivors collect his pages.
-     *
-     * @return {@code true} while the static is on
-     * @since 2.14.0
-     */
-    boolean slenderStaticEnabled();
-
-    /**
-     * Returns the sound the static is built from.
+     * Returns whether the slender's own screen tears as the survivors collect his pages.
      * <p>
-     * The key is not resolved against the sound registry here: a resource pack sound is a perfectly
-     * good answer and would not be found in it. It is sent as named.
+     * The effect rides the same channel as the gaze glitch and is therefore drawn by the resource
+     * pack, which is why it is gated by the overlays as well as by this setting.
      * </p>
      *
-     * @return the sound key, never {@code null}
+     * @return {@code true} while the page glitch is on
      * @since 2.14.0
      */
-    Key slenderStaticSound();
+    boolean pageGlitchEnabled();
 
     /**
-     * Returns how many seconds lie between two bursts while no page has been found.
+     * Returns how long a single find holds the glitch one level above where the round stands.
      *
-     * @return the interval in seconds, at most {@link #MAX_SLENDER_STATIC_INTERVAL}
+     * @return the pulse in seconds, at most {@link #MAX_PAGE_GLITCH_PULSE_SECONDS}
      * @since 2.14.0
      */
-    int slenderStaticQuietInterval();
-
-    /**
-     * Returns how many seconds lie between two bursts once every page is gone.
-     * <p>
-     * The gap shrinks from {@link #slenderStaticQuietInterval()} towards this value as the pages
-     * disappear, which is what tells the slender how late in the round he is.
-     * </p>
-     *
-     * @return the interval in seconds, below {@link #slenderStaticQuietInterval()}
-     * @since 2.14.0
-     */
-    int slenderStaticFranticInterval();
-
-    /**
-     * Returns how loud the static is while no page has been found.
-     *
-     * @return the volume, between 0 and {@link #slenderStaticMaxVolume()}
-     * @since 2.14.0
-     */
-    float slenderStaticMinVolume();
-
-    /**
-     * Returns how loud the static is once every page is gone.
-     *
-     * @return the volume, at most 1
-     * @since 2.14.0
-     */
-    float slenderStaticMaxVolume();
+    int pageGlitchPulseSeconds();
 
     /**
      * Returns how close the slender has to be before the sight of him tears a survivor's view.
@@ -596,63 +541,24 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
         Builder damageSound(Key damageSound);
 
         /**
-         * Sets whether the slender hears static as the survivors collect his pages.
+         * Sets whether the slender's own screen tears as the survivors collect his pages.
          *
-         * @param slenderStaticEnabled {@code true} to keep the static on
+         * @param pageGlitchEnabled {@code true} to keep the page glitch on
          * @return the builder instance
          * @since 2.14.0
          */
-        Builder slenderStaticEnabled(boolean slenderStaticEnabled);
+        Builder pageGlitchEnabled(boolean pageGlitchEnabled);
 
         /**
-         * Sets the sound the static is built from.
+         * Sets how long a single find holds the glitch above where the round stands.
          *
-         * @param slenderStaticSound the sound key
+         * @param pageGlitchPulseSeconds the pulse in seconds
          * @return the builder instance
+         * @throws IllegalArgumentException if the pulse is below 1 or above
+         *                                  {@link GameConfig#MAX_PAGE_GLITCH_PULSE_SECONDS}
          * @since 2.14.0
          */
-        Builder slenderStaticSound(Key slenderStaticSound);
-
-        /**
-         * Sets how many seconds lie between two bursts while no page has been found.
-         *
-         * @param slenderStaticQuietInterval the interval in seconds
-         * @return the builder instance
-         * @throws IllegalArgumentException if the interval is below 1 or above
-         *                                  {@link GameConfig#MAX_SLENDER_STATIC_INTERVAL}
-         * @since 2.14.0
-         */
-        Builder slenderStaticQuietInterval(int slenderStaticQuietInterval);
-
-        /**
-         * Sets how many seconds lie between two bursts once every page is gone.
-         *
-         * @param slenderStaticFranticInterval the interval in seconds
-         * @return the builder instance
-         * @throws IllegalArgumentException if the interval is below 1
-         * @since 2.14.0
-         */
-        Builder slenderStaticFranticInterval(int slenderStaticFranticInterval);
-
-        /**
-         * Sets how loud the static is while no page has been found.
-         *
-         * @param slenderStaticMinVolume the volume
-         * @return the builder instance
-         * @throws IllegalArgumentException if the volume is below 0 or above 1
-         * @since 2.14.0
-         */
-        Builder slenderStaticMinVolume(float slenderStaticMinVolume);
-
-        /**
-         * Sets how loud the static is once every page is gone.
-         *
-         * @param slenderStaticMaxVolume the volume
-         * @return the builder instance
-         * @throws IllegalArgumentException if the volume is below 0 or above 1
-         * @since 2.14.0
-         */
-        Builder slenderStaticMaxVolume(float slenderStaticMaxVolume);
+        Builder pageGlitchPulseSeconds(int pageGlitchPulseSeconds);
 
         /**
          * Sets how close the slender has to be before the sight of him tears a survivor's view.

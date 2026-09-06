@@ -8,6 +8,7 @@ import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.utils.PlayerState;
 import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.jetbrains.annotations.Nullable;
@@ -83,6 +84,10 @@ public final class SlenderGazeService {
             }
         });
         node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
+        // A survivor promoted to slender when the old one quits is alive, so neither of the two
+        // listeners above covers him. Left tracked, he would be measured against himself: distance
+        // zero, which reads as the worst level, for the rest of the round.
+        node.addListener(SlenderReviveEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
         node.addListener(GameFinishEvent.class, event -> {
             this.cleanUp();

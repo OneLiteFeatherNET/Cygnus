@@ -10,6 +10,7 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -270,6 +271,23 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         public void level(Player survivor, int level) {
             this.levels.add(level);
         }
+    }
+
+    @Test
+    @DisplayName("A survivor promoted to slender stops being tracked")
+    void aPromotedSurvivorIsDropped(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
+        Player slender = connect(env, instance, new Pos(0, 40, 5));
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender);
+        service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
+        EventDispatcher.call(new GameStartEvent());
+
+        EventDispatcher.call(new SlenderReviveEvent(survivor));
+        service.tick();
+
+        assertEquals(SlenderGaze.NONE, service.levelOf(survivor),
+                "the new slender would otherwise measure himself, land at distance zero and sit at the worst level for the rest of the round");
     }
 
     /**
