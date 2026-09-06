@@ -5,6 +5,15 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.12.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.12.0...v2.12.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* **page:** double active page count ([9b36883](https://github.com/OneLiteFeatherNET/Cygnus/commit/9b36883475c5e329e1b7805a28017bfbe38c0dde))
+* **page:** make the proximity chime audible across its own range ([#243](https://github.com/OneLiteFeatherNET/Cygnus/issues/243)) ([2e018e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/2e018e5ee188099a97197fe3860e2e6d9ebe1fe2))
+* **spectator:** disable profile set ([c189760](https://github.com/OneLiteFeatherNET/Cygnus/commit/c18976054d99f2ec4a1ad550ce9f62e092382b24))
+
 ## [2.12.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.11.0...v2.12.0) (2026-09-06)
 
 
