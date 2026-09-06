@@ -22,16 +22,17 @@ import java.time.Duration;
  * Warns every joining player about the flashing and flickering the game uses, before they can run
  * into it.
  *
- * <p>The warning arrives as a notice dialog: it states what the game does to the screen and carries
- * a single button to take note of it. Nothing is asked of the player and nothing is withheld from
- * them - a player who would rather not read it presses the button and plays. That is the point of a
- * notice rather than a confirmation: there is no second answer for them to give.</p>
+ * <p>The warning states what the game does to the screen and leaves the player two ways out. Taking
+ * note of it plays the warning back as a title, so it stays on screen for a moment after the dialog
+ * is gone, along with a sound to draw attention to it. Declining it disconnects the player, which
+ * behind a proxy hands them back to the network lobby. That is what makes the choice a real one: a
+ * warning whose only answer is "understood" asks a question it will not accept an answer to.</p>
  *
- * <p>Pressing the button plays the warning back as a title, so it is also on screen for a moment
- * after the dialog is gone, along with a sound to draw attention to it.</p>
+ * <p>Escape stays disabled, so the two buttons are the only ways out and neither is reached by
+ * accident.</p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.11.0
  */
 public final class EpilepsyDisclaimer {
@@ -42,21 +43,31 @@ public final class EpilepsyDisclaimer {
      */
     static final Key ACKNOWLEDGE_KEY = Key.key("cygnus", "disclaimer/epilepsy/acknowledged");
 
+    /**
+     * The id the leave button sends back. Answering with it takes the player off the service instead
+     * of into the round.
+     */
+    static final Key DECLINE_KEY = Key.key("cygnus", "disclaimer/epilepsy/declined");
+
     private static final Key DIALOG_KEY = Key.key("cygnus", "dialog/epilepsy_disclaimer");
 
     private static final Component DIALOG_TITLE = Messages.withMini("<red><bold>Photosensitivity warning");
     private static final Component DIALOG_BODY = Messages.withMini(
-            "<gray>This game flashes, flickers and distorts the screen. The effects grow stronger the "
-                    + "closer <color:#5A5A5A>Slenderman</color> <gray>gets, and they are at their strongest "
+            "<white>This game flashes, flickers and distorts the screen. The effects grow stronger the "
+                    + "closer <gray>Slenderman</gray> <white>gets, and they are at their strongest "
                     + "when he catches you.");
     private static final Component DIALOG_ADVICE = Messages.withMini(
-            "<gray>If you are sensitive to flashing images, please do not play - and stop playing if you "
+            "<white>If you are sensitive to flashing images, please do not play. Stop playing if you "
                     + "start to feel unwell.");
-    private static final Component BUTTON_LABEL = Messages.withMini("<green>I understand");
-    private static final Component BUTTON_TOOLTIP = Messages.withMini("<gray>Takes note of the warning and starts the round.");
+    private static final Component ACCEPT_LABEL = Messages.withMini("<green>I understand");
+    private static final Component ACCEPT_TOOLTIP = Messages.withMini("<white>Takes note of the warning and lets you play.");
+    private static final Component DECLINE_LABEL = Messages.withMini("<red>Leave");
+    private static final Component DECLINE_TOOLTIP = Messages.withMini("<white>Sends you back to the lobby without playing.");
+
+    private static final Component LEAVE_MESSAGE = Messages.withMini("<white>You declined the photosensitivity warning.");
 
     private static final Component TITLE = Messages.withMini("<red><bold>⚠ Flashing lights");
-    private static final Component SUBTITLE = Messages.withMini("<gray>Stop playing if you start to feel unwell.");
+    private static final Component SUBTITLE = Messages.withMini("<white>Stop playing if you start to feel unwell.");
     private static final Title REMINDER = Title.title(TITLE, SUBTITLE, Title.Times.times(
             Duration.ofMillis(500), Duration.ofSeconds(4), Duration.ofSeconds(1)));
 
@@ -73,7 +84,7 @@ public final class EpilepsyDisclaimer {
     }
 
     private static DialogTemplate buildDialog() {
-        return DialogType.notice(DIALOG_KEY)
+        return DialogType.confirm(DIALOG_KEY)
                 .meta(meta -> meta
                         .title(DIALOG_TITLE)
                         // A warning the player can dismiss with a keypress before reading it is not a
@@ -83,10 +94,14 @@ public final class EpilepsyDisclaimer {
                         .messageBody(body -> body.contents(DIALOG_BODY))
                         .emptyMessage()
                         .messageBody(body -> body.contents(DIALOG_ADVICE)))
-                .actionButton(button -> button
-                        .label(BUTTON_LABEL)
-                        .tooltip(BUTTON_TOOLTIP)
+                .yesButton(button -> button
+                        .label(ACCEPT_LABEL)
+                        .tooltip(ACCEPT_TOOLTIP)
                         .action(new DialogAction.Custom(ACKNOWLEDGE_KEY, null)))
+                .noButton(button -> button
+                        .label(DECLINE_LABEL)
+                        .tooltip(DECLINE_TOOLTIP)
+                        .action(new DialogAction.Custom(DECLINE_KEY, null)))
                 .build();
     }
 
@@ -113,15 +128,21 @@ public final class EpilepsyDisclaimer {
     }
 
     /**
-     * Plays the warning back as a title once the player pressed the dialog's button. Clicks carrying
-     * any other id belong to another dialog and are left alone.
+     * Answers the button the player pressed. Taking note of the warning plays it back as a title;
+     * declining it disconnects the player, which behind a proxy puts them back in the network lobby.
+     * Clicks carrying any other id belong to another dialog and are left alone.
      *
      * @param event the click the client sent back
      */
     void handleClick(PlayerCustomClickEvent event) {
-        if (!ACKNOWLEDGE_KEY.equals(event.getKey())) return;
         Player player = event.getPlayer();
-        player.showTitle(REMINDER);
-        player.playSound(REMINDER_SOUND);
+        if (ACKNOWLEDGE_KEY.equals(event.getKey())) {
+            player.showTitle(REMINDER);
+            player.playSound(REMINDER_SOUND);
+            return;
+        }
+        if (DECLINE_KEY.equals(event.getKey())) {
+            player.kick(LEAVE_MESSAGE);
+        }
     }
 }
