@@ -54,6 +54,35 @@ class AttributeHelperTest {
     }
 
     @Test
+    void testSpeedScaleUpdate(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.065);
+
+        AttributeHelper.updateSpeedScale(player, 0.01);
+
+        assertEquals(0.065, player.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue(), 0.0001);
+        assertEquals(0.075, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
+
+        AttributeHelper.removeSpeedScale(player);
+        assertEquals(0.065, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testSpeedScaleUpdateIsIdempotent(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.065);
+
+        AttributeHelper.updateSpeedScale(player, 0.01);
+        AttributeHelper.updateSpeedScale(player, 0.01);
+
+        assertEquals(0.075, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
     void testSlenderDrainingSpeedModifier(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);

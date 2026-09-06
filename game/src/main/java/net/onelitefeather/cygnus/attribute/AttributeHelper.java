@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.attribute;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
+import net.minestom.server.entity.attribute.AttributeInstance;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
 
@@ -17,6 +18,7 @@ import net.minestom.server.entity.attribute.AttributeOperation;
 public final class AttributeHelper {
 
     public static final Key SLENDER_DRAINING_SPEED_KEY = Key.key("cygnus", "slender_draining");
+    public static final Key SPEED_SCALING_KEY = Key.key("cygnus", "speed_scaling");
 
     private static final AttributeModifier SLENDER_DRAINING_SPEED_MODIFIER = new AttributeModifier(
                     SLENDER_DRAINING_SPEED_KEY,
@@ -84,6 +86,27 @@ public final class AttributeHelper {
         float healthScale = (float) (player.getAttribute(Attribute.MAX_HEALTH).getBaseValue() + scale);
         player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(healthScale);
         player.setHealth(healthScale);
+    }
+
+    /**
+     * Applies the player-count-based speed scaling bonus to the player as a modifier on top of the base movement speed.
+     *
+     * @param player the player to apply the speed scaling to
+     * @param bonus  the additional speed to grant
+     */
+    public static void updateSpeedScale(Player player, double bonus) {
+        AttributeInstance attribute = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        attribute.removeModifier(SPEED_SCALING_KEY);
+        attribute.addModifier(new AttributeModifier(SPEED_SCALING_KEY, bonus, AttributeOperation.ADD_VALUE));
+    }
+
+    /**
+     * Removes the speed scaling bonus from the player.
+     *
+     * @param player the player to remove the speed scaling from
+     */
+    public static void removeSpeedScale(Player player) {
+        player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(SPEED_SCALING_KEY);
     }
 
     /**

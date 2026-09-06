@@ -8,6 +8,7 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageCalculation;
 import net.onelitefeather.cygnus.common.util.HealthScalingCalculation;
+import net.onelitefeather.cygnus.common.util.SpeedScalingCalculation;
 import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.function.Consumer;
@@ -31,9 +32,11 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
         pageCounter.accept(pageCount);
 
         float adjustedHealth = 0;
+        double adjustedSpeed = 0;
 
         if (pageCount <= GameConfig.MIN_PAGE_COUNT) {
             adjustedHealth = HealthScalingCalculation.getAdditionalHealth(pageCount);
+            adjustedSpeed = SpeedScalingCalculation.getAdditionalSpeed(pageCount);
         }
 
         for (Player player : connectionManager.getOnlinePlayers()) {
@@ -42,6 +45,9 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
             AttributeHelper.decreaseSpeed(player);
             if (adjustedHealth != 0) {
                 AttributeHelper.updateHealthScale(player, adjustedHealth);
+            }
+            if (adjustedSpeed != 0) {
+                AttributeHelper.updateSpeedScale(player, adjustedSpeed);
             }
         }
     }
