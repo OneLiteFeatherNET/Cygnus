@@ -28,6 +28,9 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     private int pageProximityRange;
     private int pageProximityInterval;
     private Key pageProximitySound = GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND;
+    private boolean damageSoundEnabled;
+    private int damageSoundCooldown;
+    private Key damageSound = GameConfig.DEFAULT_DAMAGE_SOUND;
 
     @Override
     public GameConfig.Builder minPlayers(int minPlayers) {
@@ -126,6 +129,27 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     }
 
     @Override
+    public GameConfig.Builder damageSoundEnabled(boolean damageSoundEnabled) {
+        this.damageSoundEnabled = damageSoundEnabled;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder damageSoundCooldown(int damageSoundCooldown) {
+        if (damageSoundCooldown < 1) {
+            throw new IllegalArgumentException("Damage sound cooldown must be at least 1 tick");
+        }
+        this.damageSoundCooldown = damageSoundCooldown;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder damageSound(Key damageSound) {
+        this.damageSound = damageSound;
+        return this;
+    }
+
+    @Override
     public GameConfig build() {
         return new GameConfigImpl(
                 minPlayers,
@@ -140,7 +164,10 @@ public final class GameConfigBuilder implements GameConfig.Builder {
                 pageProximityEnabled,
                 pageProximityRange,
                 pageProximityInterval,
-                pageProximitySound
+                pageProximitySound,
+                damageSoundEnabled,
+                damageSoundCooldown,
+                damageSound
         );
     }
 }

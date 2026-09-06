@@ -79,3 +79,27 @@ survivorTeamSize=12
 # The sound played. A key that names no sound the server knows falls back to the
 # default, so the hint never goes silent because of a typo.
 #pageProximitySound=block.amethyst_block.chime
+
+# --- Damage sound ----------------------------------------------------------
+
+# Whether a player hears a sound when they take damage. Cygnus takes health off a
+# survivor directly, which skips Minecraft's own hurt sound entirely, so without
+# this a hit lands in silence.
+#
+# The sound plays on the hit player's own entity: only their client receives it,
+# and it carries no direction. Where the hit came from is what the blood splatter
+# is for. The slender never hears it - he is the only source of damage and would
+# otherwise gain a second way to locate the survivor in front of him.
+#damageSoundEnabled=true
+
+# Ticks before the sound is played to the same player again. At least 1; 20 ticks
+# is one second.
+#
+# A draining slender damages everyone around him twice a second, so this is what
+# keeps continuous damage from turning into continuous noise. At the default of
+# 20, every second damage tick is heard.
+#damageSoundCooldown=20
+
+# The sound played. A key that names no sound the server knows falls back to the
+# default, so a hit never goes silent because of a typo.
+#damageSound=entity.player.hurt
