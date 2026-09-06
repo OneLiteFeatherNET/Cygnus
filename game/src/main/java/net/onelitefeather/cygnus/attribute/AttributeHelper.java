@@ -19,6 +19,7 @@ public final class AttributeHelper {
 
     public static final Key SLENDER_DRAINING_SPEED_KEY = Key.key("cygnus", "slender_draining");
     public static final Key SPEED_SCALING_KEY = Key.key("cygnus", "speed_scaling");
+    public static final Key HEALTH_SCALING_KEY = Key.key("cygnus", "health_scaling");
 
     private static final AttributeModifier SLENDER_DRAINING_SPEED_MODIFIER = new AttributeModifier(
                     SLENDER_DRAINING_SPEED_KEY,
@@ -77,15 +78,26 @@ public final class AttributeHelper {
     }
 
     /**
-     * Updates the health scale for the player.
+     * Applies the player-count-based health scaling bonus to the player as a modifier on top of the base max health,
+     * then heals the player to the resulting max health.
      *
      * @param player the player to update the health scale
-     * @param scale  the scale to set
+     * @param scale  the additional max health to grant
      */
     public static void updateHealthScale(Player player, float scale) {
-        float healthScale = (float) (player.getAttribute(Attribute.MAX_HEALTH).getBaseValue() + scale);
-        player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(healthScale);
-        player.setHealth(healthScale);
+        AttributeInstance attribute = player.getAttribute(Attribute.MAX_HEALTH);
+        attribute.removeModifier(HEALTH_SCALING_KEY);
+        attribute.addModifier(new AttributeModifier(HEALTH_SCALING_KEY, scale, AttributeOperation.ADD_VALUE));
+        player.setHealth((float) attribute.getValue());
+    }
+
+    /**
+     * Removes the health scaling bonus from the player.
+     *
+     * @param player the player to remove the health scaling from
+     */
+    public static void removeHealthScale(Player player) {
+        player.getAttribute(Attribute.MAX_HEALTH).removeModifier(HEALTH_SCALING_KEY);
     }
 
     /**
