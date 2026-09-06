@@ -148,3 +148,36 @@ survivorTeamSize=12
 # be in the middle of the screen, not at its edge. Widening this past roughly 50
 # means he triggers the effect while barely in frame.
 #glitchViewAngle=30
+
+# --- The slender's static -----------------------------------------------------
+# The survivors watch their page counter go up; the slender has none and only
+# learns the score when the round ends. The static is that counter told as sound:
+# a hiss that sits closer together and louder the fewer pages are left, plus a
+# burst of its own the moment a page goes. Only he hears it, and it carries no
+# direction - neither side may place the other by it.
+
+# Whether the slender hears the static at all.
+#slenderStaticEnabled=true
+
+# The sound the static is built from.
+#
+# Rain is the closest vanilla comes to the hiss of a worn tape. A real VHS noise
+# belongs in the resource pack; once it is there, point this at that key - unlike
+# the other sound settings, a key that names no vanilla sound is not replaced by
+# a default here but sent to the client as named.
+#slenderStaticSound=weather.rain
+
+# Seconds between two bursts while no page has been found. Between 1 and 120.
+#slenderStaticQuietInterval=12
+
+# Seconds between two bursts once every page is gone. At least 1 and below
+# slenderStaticQuietInterval - the gap shrinks from the one towards the other as
+# the pages disappear, so a configuration where they meet or cross is rejected.
+#slenderStaticFranticInterval=3
+
+# How loud the static is while no page has been found. Between 0 and 1.
+#slenderStaticMinVolume=0.15
+
+# How loud it is once every page is gone. Between 0 and 1 and not below
+# slenderStaticMinVolume.
+#slenderStaticMaxVolume=0.8

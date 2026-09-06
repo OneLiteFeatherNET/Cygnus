@@ -8,6 +8,7 @@ import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
+import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -210,6 +211,63 @@ class PageProviderTest {
 
         assertEquals(List.of(new Pos(10, 64, 20)), positions,
                 "an expired page is invisible to the player and must not be announced by a sound");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testEveryFindFiresAnEventCarryingTheRunningCount(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        int pageCount = 3;
+
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(
+                IntStream.range(0, pageCount)
+                        .mapToObj(i -> new PageResource(new Pos(i, 0, 0), Direction.NORTH))
+                        .collect(Collectors.toSet())
+        );
+        pageProvider.setMaxPageAmount(pageCount);
+
+        List<PageEntity> entities = IntStream.range(0, pageCount)
+                .mapToObj(i -> new PageEntity(instance, Pos.ZERO, i + 1))
+                .toList();
+        seedActivePages(pageProvider, entities.toArray(new PageEntity[0]));
+
+        Player player = env.createPlayer(instance);
+
+        List<PageFoundEvent> events = Collections.synchronizedList(new ArrayList<>());
+        env.process().eventHandler().addListener(PageFoundEvent.class, events::add);
+
+        for (PageEntity entity : entities) {
+            pageProvider.triggerPageFound(player, entity.getHitBoxUUID());
+        }
+
+        assertEquals(List.of(1, 2, 3), events.stream().map(PageFoundEvent::foundCount).toList(),
+                "each find has to report how many pages are gone by now, not just that one was found");
+        assertEquals(pageCount, events.getFirst().maxPages());
+        assertSame(player, events.getFirst().finder());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAClaimOnAnUnknownPageFiresNoEvent(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
+        pageProvider.setMaxPageAmount(2);
+
+        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        seedActivePages(pageProvider, pageEntity);
+
+        Player player = env.createPlayer(instance);
+
+        AtomicInteger events = new AtomicInteger();
+        env.process().eventHandler().addListener(PageFoundEvent.class, event -> events.incrementAndGet());
+
+        pageProvider.triggerPageFound(player, UUID.randomUUID());
+
+        assertEquals(0, events.get(), "a claim that finds nothing must not raise the tension");
 
         env.destroyInstance(instance, true);
     }

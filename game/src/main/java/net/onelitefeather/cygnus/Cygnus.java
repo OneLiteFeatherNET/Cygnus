@@ -44,6 +44,7 @@ import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.blood.BloodSplatterService;
 import net.onelitefeather.cygnus.damage.DamageSoundService;
+import net.onelitefeather.cygnus.noise.SlenderStaticService;
 import net.onelitefeather.cygnus.command.GlitchCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -132,6 +133,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final DamageSoundService damageSoundService;
     private final TunnelVisionRenderer tunnelVisionRenderer;
     private final TunnelVisionService tunnelVisionService;
+    private final SlenderStaticService slenderStaticService;
 
     public Cygnus() {
         Path path = ServiceBootstrap.resolveWorkingDirectory();
@@ -186,6 +188,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 bound -> ThreadLocalRandom.current().nextInt(bound)
         );
         this.damageSoundService = new DamageSoundService(this.gameConfig, System::currentTimeMillis);
+        this.slenderStaticService = new SlenderStaticService(
+                this.gameConfig,
+                () -> TeamHelper.slenderOf(this.teamService));
         this.tunnelVisionRenderer = new OverlayTunnelVisionRenderer(this.screenOverlay);
         this.tunnelVisionService = new TunnelVisionService(this.tunnelVisionRenderer, player -> StaminaHelper.remainingShare(this.staminaService, player));
         this.initPhases();
@@ -264,6 +269,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // Not part of registerOverlayListeners: the sound is the feedback a hit owes the player
         // either way, and it needs neither the resource pack nor the overlay gate to be heard.
         this.damageSoundService.registerListener(handler);
+        // Outside registerOverlayListeners for the same reason as the damage sound: the static is
+        // heard, not drawn, so neither the resource pack nor the overlay gate has a say in it.
+        this.slenderStaticService.registerListener(handler);
         this.registerOverlayListeners(handler);
     }
 

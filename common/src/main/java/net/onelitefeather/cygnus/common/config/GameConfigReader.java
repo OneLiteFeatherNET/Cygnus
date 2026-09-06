@@ -40,6 +40,12 @@ import java.util.regex.Pattern;
  *     <li>glitchRange</li>
  *     <li>glitchCloseRange</li>
  *     <li>glitchViewAngle</li>
+ *     <li>slenderStaticEnabled</li>
+ *     <li>slenderStaticSound</li>
+ *     <li>slenderStaticQuietInterval</li>
+ *     <li>slenderStaticFranticInterval</li>
+ *     <li>slenderStaticMinVolume</li>
+ *     <li>slenderStaticMaxVolume</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
@@ -59,6 +65,7 @@ public final class GameConfigReader {
     private static final Pattern SHA1_PATTERN = Pattern.compile("[0-9a-fA-F]{40}");
     private static final String PAGE_PROXIMITY_SOUND_KEY = "pageProximitySound";
     private static final String DAMAGE_SOUND_KEY = "damageSound";
+    private static final String SLENDER_STATIC_SOUND_KEY = "slenderStaticSound";
 
     private final Path path;
 
@@ -120,7 +127,13 @@ public final class GameConfigReader {
                 .damageSound(getSound(properties, DAMAGE_SOUND_KEY, internal.damageSound()))
                 .glitchRange(getInt(properties, "glitchRange", internal.glitchRange()))
                 .glitchCloseRange(getInt(properties, "glitchCloseRange", internal.glitchCloseRange()))
-                .glitchViewAngle(getInt(properties, "glitchViewAngle", internal.glitchViewAngle()));
+                .glitchViewAngle(getInt(properties, "glitchViewAngle", internal.glitchViewAngle()))
+                .slenderStaticEnabled(getBoolean(properties, "slenderStaticEnabled", internal.slenderStaticEnabled()))
+                .slenderStaticSound(getSound(properties, SLENDER_STATIC_SOUND_KEY, internal.slenderStaticSound()))
+                .slenderStaticQuietInterval(getInt(properties, "slenderStaticQuietInterval", internal.slenderStaticQuietInterval()))
+                .slenderStaticFranticInterval(getInt(properties, "slenderStaticFranticInterval", internal.slenderStaticFranticInterval()))
+                .slenderStaticMinVolume(getFloat(properties, "slenderStaticMinVolume", internal.slenderStaticMinVolume()))
+                .slenderStaticMaxVolume(getFloat(properties, "slenderStaticMaxVolume", internal.slenderStaticMaxVolume()));
 
         return configBuilder.build();
     }

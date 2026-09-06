@@ -88,6 +88,35 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     Key DEFAULT_DAMAGE_SOUND = Key.key("entity.player.hurt");
 
     /**
+     * The static the slender hears while the survivors take his pages away.
+     * <p>
+     * Rain, because it is the closest vanilla comes to the hiss of a worn tape or a tuned-out
+     * television. A real VHS noise belongs in the resource pack; once it is there, pointing
+     * {@code slenderStaticSound} at that key is all this needs.
+     * </p>
+     */
+    Key DEFAULT_SLENDER_STATIC_SOUND = Key.key("weather.rain");
+
+    /** The {@link #slenderStaticQuietInterval()} a configuration gets when it says nothing. */
+    int DEFAULT_SLENDER_STATIC_QUIET_INTERVAL = 12;
+
+    /** The {@link #slenderStaticFranticInterval()} a configuration gets when it says nothing. */
+    int DEFAULT_SLENDER_STATIC_FRANTIC_INTERVAL = 3;
+
+    /**
+     * The longest {@link #slenderStaticQuietInterval()} a configuration may ask for. Past this a
+     * round could end before the slender has heard the static twice, which makes it noise rather
+     * than a clock.
+     */
+    int MAX_SLENDER_STATIC_INTERVAL = 120;
+
+    /** The {@link #slenderStaticMinVolume()} a configuration gets when it says nothing. */
+    float DEFAULT_SLENDER_STATIC_MIN_VOLUME = 0.15F;
+
+    /** The {@link #slenderStaticMaxVolume()} a configuration gets when it says nothing. */
+    float DEFAULT_SLENDER_STATIC_MAX_VOLUME = 0.8F;
+
+    /**
      * The largest {@link #glitchRange()} a configuration may ask for. Beyond this the slender would
      * tear a survivor's view apart from across the map, which is the behaviour this range exists to
      * end.
@@ -299,6 +328,62 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     Key damageSound();
 
     /**
+     * Returns whether the slender hears static as the survivors collect his pages.
+     *
+     * @return {@code true} while the static is on
+     * @since 2.14.0
+     */
+    boolean slenderStaticEnabled();
+
+    /**
+     * Returns the sound the static is built from.
+     * <p>
+     * The key is not resolved against the sound registry here: a resource pack sound is a perfectly
+     * good answer and would not be found in it. It is sent as named.
+     * </p>
+     *
+     * @return the sound key, never {@code null}
+     * @since 2.14.0
+     */
+    Key slenderStaticSound();
+
+    /**
+     * Returns how many seconds lie between two bursts while no page has been found.
+     *
+     * @return the interval in seconds, at most {@link #MAX_SLENDER_STATIC_INTERVAL}
+     * @since 2.14.0
+     */
+    int slenderStaticQuietInterval();
+
+    /**
+     * Returns how many seconds lie between two bursts once every page is gone.
+     * <p>
+     * The gap shrinks from {@link #slenderStaticQuietInterval()} towards this value as the pages
+     * disappear, which is what tells the slender how late in the round he is.
+     * </p>
+     *
+     * @return the interval in seconds, below {@link #slenderStaticQuietInterval()}
+     * @since 2.14.0
+     */
+    int slenderStaticFranticInterval();
+
+    /**
+     * Returns how loud the static is while no page has been found.
+     *
+     * @return the volume, between 0 and {@link #slenderStaticMaxVolume()}
+     * @since 2.14.0
+     */
+    float slenderStaticMinVolume();
+
+    /**
+     * Returns how loud the static is once every page is gone.
+     *
+     * @return the volume, at most 1
+     * @since 2.14.0
+     */
+    float slenderStaticMaxVolume();
+
+    /**
      * Returns how close the slender has to be before the sight of him tears a survivor's view.
      * <p>
      * This is the outer edge of the effect, not the point where it is strongest: at exactly this
@@ -503,6 +588,65 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @since 2.13.0
          */
         Builder damageSound(Key damageSound);
+
+        /**
+         * Sets whether the slender hears static as the survivors collect his pages.
+         *
+         * @param slenderStaticEnabled {@code true} to keep the static on
+         * @return the builder instance
+         * @since 2.14.0
+         */
+        Builder slenderStaticEnabled(boolean slenderStaticEnabled);
+
+        /**
+         * Sets the sound the static is built from.
+         *
+         * @param slenderStaticSound the sound key
+         * @return the builder instance
+         * @since 2.14.0
+         */
+        Builder slenderStaticSound(Key slenderStaticSound);
+
+        /**
+         * Sets how many seconds lie between two bursts while no page has been found.
+         *
+         * @param slenderStaticQuietInterval the interval in seconds
+         * @return the builder instance
+         * @throws IllegalArgumentException if the interval is below 1 or above
+         *                                  {@link GameConfig#MAX_SLENDER_STATIC_INTERVAL}
+         * @since 2.14.0
+         */
+        Builder slenderStaticQuietInterval(int slenderStaticQuietInterval);
+
+        /**
+         * Sets how many seconds lie between two bursts once every page is gone.
+         *
+         * @param slenderStaticFranticInterval the interval in seconds
+         * @return the builder instance
+         * @throws IllegalArgumentException if the interval is below 1
+         * @since 2.14.0
+         */
+        Builder slenderStaticFranticInterval(int slenderStaticFranticInterval);
+
+        /**
+         * Sets how loud the static is while no page has been found.
+         *
+         * @param slenderStaticMinVolume the volume
+         * @return the builder instance
+         * @throws IllegalArgumentException if the volume is below 0 or above 1
+         * @since 2.14.0
+         */
+        Builder slenderStaticMinVolume(float slenderStaticMinVolume);
+
+        /**
+         * Sets how loud the static is once every page is gone.
+         *
+         * @param slenderStaticMaxVolume the volume
+         * @return the builder instance
+         * @throws IllegalArgumentException if the volume is below 0 or above 1
+         * @since 2.14.0
+         */
+        Builder slenderStaticMaxVolume(float slenderStaticMaxVolume);
 
         /**
          * Sets how close the slender has to be before the sight of him tears a survivor's view.
