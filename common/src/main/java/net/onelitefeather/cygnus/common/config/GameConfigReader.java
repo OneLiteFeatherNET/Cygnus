@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
  *     <li>pageProximityRange</li>
  *     <li>pageProximityInterval</li>
  *     <li>pageProximitySound</li>
+ *     <li>pageProximityVolumeFactor</li>
  *     <li>damageSoundEnabled</li>
  *     <li>damageSoundCooldown</li>
  *     <li>damageSound</li>
@@ -113,6 +114,7 @@ public final class GameConfigReader {
                 .pageProximityRange(getInt(properties, "pageProximityRange", internal.pageProximityRange()))
                 .pageProximityInterval(getInt(properties, "pageProximityInterval", internal.pageProximityInterval()))
                 .pageProximitySound(getSound(properties, PAGE_PROXIMITY_SOUND_KEY, internal.pageProximitySound()))
+                .pageProximityVolumeFactor(getFloat(properties, "pageProximityVolumeFactor", internal.pageProximityVolumeFactor()))
                 .damageSoundEnabled(getBoolean(properties, "damageSoundEnabled", internal.damageSoundEnabled()))
                 .damageSoundCooldown(getInt(properties, "damageSoundCooldown", internal.damageSoundCooldown()))
                 .damageSound(getSound(properties, DAMAGE_SOUND_KEY, internal.damageSound()))
@@ -132,6 +134,28 @@ public final class GameConfigReader {
             return Integer.parseInt(value.trim());
         } catch (NumberFormatException exception) {
             CONFIG_LOGGER.warn("Failed to parse integer config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Reads a decimal from the properties. Follows {@link #getInt} in falling back rather than
+     * failing: a value the operator cannot have meant is not worth taking the service down for.
+     *
+     * @param properties   the loaded properties
+     * @param key          the key to read
+     * @param defaultValue the value to use when the key is absent or unreadable
+     * @return the parsed value
+     */
+    private float getFloat(Properties properties, String key, float defaultValue) {
+        String value = properties.getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Float.parseFloat(value.trim());
+        } catch (NumberFormatException exception) {
+            CONFIG_LOGGER.warn("Failed to parse decimal config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
             return defaultValue;
         }
     }

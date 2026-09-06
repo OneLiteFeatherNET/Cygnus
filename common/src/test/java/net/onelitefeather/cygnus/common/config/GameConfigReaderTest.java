@@ -290,4 +290,36 @@ class GameConfigReaderTest {
         assertEquals(GameConfig.DEFAULT_GLITCH_RANGE, config.glitchRange());
         assertEquals(6, config.glitchCloseRange());
     }
+
+    @Test
+    void testThePageProximityVolumeFactorDefaultsWhenNothingIsConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(GameConfig.DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR, config.pageProximityVolumeFactor());
+    }
+
+    @Test
+    void testThePageProximityVolumeFactorIsReadWhenItIsConfigured(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageProximityVolumeFactor=3.5
+                """);
+
+        assertEquals(3.5F, new GameConfigReader(tempDir).getConfig().pageProximityVolumeFactor());
+    }
+
+    /**
+     * Decimals fall back like every other number rather than failing the start - and here the
+     * fallback matters twice over, since a zero would be rejected by the builder outright.
+     */
+    @Test
+    void testAnUnreadableVolumeFactorFallsBackToTheDefault(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageProximityVolumeFactor=loud
+                """);
+
+        assertEquals(GameConfig.DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR,
+                new GameConfigReader(tempDir).getConfig().pageProximityVolumeFactor());
+    }
 }

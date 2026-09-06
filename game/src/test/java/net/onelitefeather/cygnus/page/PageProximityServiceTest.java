@@ -77,10 +77,47 @@ class PageProximityServiceTest {
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
-        service(config(range), player, new Pos(0, 64, 1)).tick();
+        // Factor 1 on purpose: this case is about the derivation from the range alone.
+        service(config(range, 1.0F), player, new Pos(0, 64, 1)).tick();
 
         sounds.assertSingle(packet -> assertEquals(expectedVolume, packet.volume(), 0.001F,
                 "a client only hears a sound 16 * volume blocks away, so the volume has to cover the range"));
+
+        env.destroyInstance(instance, true);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"20, 1.0, 1.25", "20, 2.0, 2.5", "20, 4.0, 5.0", "8, 2.0, 2.0"})
+    void testTheVolumeFactorStretchesTheFalloff(int range, float factor, float expectedVolume, @NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance, PLAYER_POS);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        service(config(range, factor), player, new Pos(0, 64, 1)).tick();
+
+        sounds.assertSingle(packet -> assertEquals(expectedVolume, packet.volume(), 0.001F,
+                "the factor has to reach the played sound, not just be stored"));
+
+        env.destroyInstance(instance, true);
+    }
+
+    /**
+     * The shipped default has to stretch the falloff, not merely cover the range. A factor of 1
+     * would put the chime's own silence at the range's edge, which is the bug this guards.
+     */
+    @Test
+    void testTheDefaultFactorPlaysLouderThanTheRangeAloneWouldNeed(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance, PLAYER_POS);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        service(config(20), player, new Pos(0, 64, 1)).tick();
+
+        float rangeAlone = 20 / 16.0F;
+        sounds.assertSingle(packet -> assertTrue(packet.volume() > rangeAlone,
+                "the default has to reach past the range, got " + packet.volume()));
 
         env.destroyInstance(instance, true);
     }
@@ -148,12 +185,23 @@ class PageProximityServiceTest {
         env.destroyInstance(instance, true);
     }
 
+    /** A configuration on the shipped volume factor. */
     private static GameConfig config(int range) {
         return GameConfig.builder()
                 .pageProximityEnabled(true)
                 .pageProximityRange(range)
                 .pageProximityInterval(20)
                 .pageProximitySound(GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND)
+                .build();
+    }
+
+    private static GameConfig config(int range, float volumeFactor) {
+        return GameConfig.builder()
+                .pageProximityEnabled(true)
+                .pageProximityRange(range)
+                .pageProximityInterval(20)
+                .pageProximitySound(GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND)
+                .pageProximityVolumeFactor(volumeFactor)
                 .build();
     }
 

@@ -24,6 +24,7 @@ import java.net.URI;
  * @param pageProximityRange    how far away a page may be and still be heard, in blocks
  * @param pageProximityInterval the number of ticks between two proximity sounds
  * @param pageProximitySound    the sound played while a page is nearby
+ * @param pageProximityVolumeFactor how far past the range the chime's falloff is stretched
  * @param damageSoundEnabled     whether a player hears a sound when they take damage
  * @param damageSoundCooldown    the number of ticks before the damage sound is played again
  * @param damageSound            the sound played to a player who was just hit
@@ -50,6 +51,7 @@ record InternalGameConfig(
         int pageProximityRange,
         int pageProximityInterval,
         Key pageProximitySound,
+        float pageProximityVolumeFactor,
         boolean damageSoundEnabled,
         int damageSoundCooldown,
         Key damageSound,
@@ -68,6 +70,7 @@ record InternalGameConfig(
     private static final GameConfig DEFAULT = new InternalGameConfig(
             2, 13, 30, 900, 1, 12, null, null, null,
             true, 20, 20, GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND,
+            GameConfig.DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR,
             true, 20, GameConfig.DEFAULT_DAMAGE_SOUND,
             GameConfig.DEFAULT_GLITCH_RANGE,
             GameConfig.DEFAULT_GLITCH_CLOSE_RANGE,
