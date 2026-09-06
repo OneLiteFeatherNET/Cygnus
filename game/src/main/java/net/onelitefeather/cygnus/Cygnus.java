@@ -72,6 +72,7 @@ import net.onelitefeather.cygnus.listener.page.PlayerPageInteractListener;
 import net.onelitefeather.cygnus.listener.game.PlayerStartSprintingListener;
 import net.onelitefeather.cygnus.listener.game.PlayerStopSprintingListener;
 import net.onelitefeather.cygnus.listener.game.SlenderItemListener;
+import net.onelitefeather.cygnus.monitoring.SentrySupport;
 import net.onelitefeather.cygnus.movement.CygnusEntityActionListener;
 import net.onelitefeather.cygnus.movement.PlayerStartSprintingEvent;
 import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
@@ -130,7 +131,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.staminaService = new StaminaService();
         this.jumpscareManager = new JumpScareManager();
         this.gameConfig = new GameConfigReader(path).getConfig();
-        this.resourcePackService = ResourcePackService.create();
+        // Set up as early as possible so anything that goes wrong while the rest of the game is
+        // being wired up is already covered. Stays off entirely when no DSN is configured.
+        SentrySupport.init(this.gameConfig.sentryDsn());
+        this.resourcePackService = ResourcePackService.create(this.gameConfig);
         // Every player needs the pack id so it can hand the pack back when it is kicked; see
         // CygnusPlayer#kick. Null when the ResourcePack feature is off, which leaves the kick untouched.
         UUID resourcePackId = this.resourcePackService.map(ResourcePackService::packId).orElse(null);

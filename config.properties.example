@@ -1,0 +1,58 @@
+# Cygnus game configuration.
+#
+# Copy this file to the working directory of the service as "config.properties".
+# That is the directory named by -Dservice.working.dir (CloudNet sets it per
+# service), or the directory the process was started in. Without the file, and
+# for every entry left out of it, the defaults below are used.
+#
+# A value that cannot be parsed as a number is logged and replaced by the default.
+# A value outside the ranges noted below is rejected outright and the service
+# refuses to start.
+
+# --- Players ---------------------------------------------------------------
+
+# Players needed before the lobby countdown starts.
+minPlayers=2
+
+# Players allowed on the service. Everyone beyond this is kicked on login.
+maxPlayers=13
+
+# --- Timing (seconds) ------------------------------------------------------
+
+# Lobby countdown. Has to be greater than 11, the point at which the countdown
+# can no longer be shortened by a force start.
+lobbyTime=30
+
+# Length of a round. When it runs out, the round ends.
+gameTime=900
+
+# --- Teams -----------------------------------------------------------------
+
+# Players hunting. At least 1.
+slenderTeamSize=1
+
+# Players being hunted. At least slenderTeamSize + 1.
+survivorTeamSize=12
+
+# --- Sentry ----------------------------------------------------------------
+
+# DSN of the Sentry project errors are reported to. Leave it out to keep error
+# reporting off entirely: no client is created and nothing is sent anywhere.
+#sentryDsn=https://publickey@sentry.example.com/1
+
+# --- ResourcePack ----------------------------------------------------------
+
+# Location the client downloads the pack from. Leave it out to disable the
+# ResourcePack feature. With it set, the pack is mandatory: a client that
+# declines it or fails to load it is kicked.
+#resourcePackUrl=https://cdn.example.com/cygnus.zip
+
+# SHA-1 checksum of the pack behind resourcePackUrl, 40 hexadecimal characters.
+#
+# State it in production. It is what lets a client reuse the pack it already has
+# instead of downloading it again on every join.
+#
+# Leaving it out is a test-only convenience: the server then downloads the pack
+# once on the first join and hashes it itself, which delays that join and costs
+# the download on every restart.
+#resourcePackSha1=0000000000000000000000000000000000000000

@@ -9,12 +9,22 @@ import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterEach;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,23 +36,34 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ResourcePackServiceTest extends CygnusPlayerTestBase {
 
-    @AfterEach
-    void clearSystemProperties() {
-        System.clearProperty("resourcepack.url");
-        System.clearProperty("resourcepack.hash");
+    private static final URI PACK_URL = URI.create("https://example.com/pack.zip");
+    private static final String PACK_HASH = "a".repeat(40);
+
+    private static GameConfig config(@Nullable URI url, @Nullable String sha1) {
+        return GameConfig.builder()
+                .minPlayers(2)
+                .maxPlayers(10)
+                .lobbyTime(30)
+                .gameTime(600)
+                .resourcePackUrl(url)
+                .resourcePackSha1(sha1)
+                .build();
     }
 
     private ResourcePackService createService() {
-        System.setProperty("resourcepack.url", "https://example.com/pack.zip");
-        System.setProperty("resourcepack.hash", "a".repeat(40));
-        Optional<ResourcePackService> service = ResourcePackService.create();
+        Optional<ResourcePackService> service = ResourcePackService.create(config(PACK_URL, PACK_HASH));
         assertTrue(service.isPresent());
         return service.get();
     }
 
     @Test
-    void testCreateReturnsEmptyWhenPropertiesAreAbsent() {
-        assertTrue(ResourcePackService.create().isEmpty());
+    void testCreateReturnsEmptyWhenNoUrlIsConfigured() {
+        assertTrue(ResourcePackService.create(config(null, null)).isEmpty());
+    }
+
+    @Test
+    void testCreateReturnsAServiceWhenOnlyTheUrlIsConfigured() {
+        assertTrue(ResourcePackService.create(config(PACK_URL, null)).isPresent());
     }
 
     @Test
@@ -77,6 +98,58 @@ class ResourcePackServiceTest extends CygnusPlayerTestBase {
         env.destroyInstance(instance, true);
     }
 
+    @Test
+    void testConfiguredHashIsPushedAsIs(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance);
+        ResourcePackService service = createService();
+        Collector<ResourcePackPushPacket> pushes = connection.trackIncoming(ResourcePackPushPacket.class);
+
+        service.sendTo(player);
+
+        pushes.assertSingle(push -> assertEquals(PACK_HASH, push.hash()));
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testMissingHashIsComputedFromThePack(@NotNull Env env, @TempDir Path tempDir)
+            throws IOException, NoSuchAlgorithmException {
+        Path pack = tempDir.resolve("pack.zip");
+        Files.writeString(pack, "cygnus test pack");
+
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance);
+        ResourcePackService service = ResourcePackService.create(config(pack.toUri(), null)).orElseThrow();
+        Collector<ResourcePackPushPacket> pushes = connection.trackIncoming(ResourcePackPushPacket.class);
+
+        service.sendTo(player);
+
+        pushes.assertSingle(push -> assertEquals(sha1Of(pack), push.hash(),
+                "a pack without a configured checksum has to be hashed by the server"));
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAnUnreachablePackIsNotPushed(@NotNull Env env, @TempDir Path tempDir) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        ResourcePackService service = ResourcePackService
+                .create(config(tempDir.resolve("missing.zip").toUri(), null))
+                .orElseThrow();
+
+        service.sendTo(player);
+
+        assertNull(player.getResourcePackFuture(),
+                "a pack that cannot be hashed must not be pushed, and must not kick the player");
+        assertTrue(player.isOnline());
+
+        env.destroyInstance(instance, true);
+    }
+
     @ParameterizedTest
     @EnumSource(value = ResourcePackStatus.class, names = {"DECLINED", "FAILED_DOWNLOAD", "INVALID_URL", "FAILED_RELOAD", "DISCARDED"})
     void testHandleStatusKicksOnTriggerStatuses(ResourcePackStatus status, @NotNull Env env) {
@@ -103,5 +176,14 @@ class ResourcePackServiceTest extends CygnusPlayerTestBase {
         assertTrue(player.isOnline(), "Did not expect a kick for status " + status);
 
         env.destroyInstance(instance, true);
+    }
+
+    private static String sha1Of(Path file) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            return HexFormat.of().formatHex(digest.digest(Files.readAllBytes(file)));
+        } catch (IOException | NoSuchAlgorithmException exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 }

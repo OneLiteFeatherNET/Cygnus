@@ -26,6 +26,9 @@ dependencies {
     implementation(platform(libs.minestom.extensions.bom))
     implementation(libs.minestom.extensions)
 
+    // Crash reporting. Only ever set up when a DSN is configured, see SentrySupport.
+    implementation(libs.sentry)
+
     // LuckPerms; guava used to arrive transitively through CloudNet, so bundle it explicitly now.
     implementation(libs.guava)
     compileOnly(libs.luckperms.api) {

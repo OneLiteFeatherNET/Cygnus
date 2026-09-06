@@ -1,5 +1,17 @@
 package net.onelitefeather.cygnus.common.config;
 
+import org.jetbrains.annotations.Nullable;
+
+import java.net.URI;
+
+/**
+ * The {@link GameConfigBuilder} is the implementation of the {@link GameConfig.Builder} interface.
+ * It collects the values for a game configuration and creates a {@link GameConfigImpl} from them.
+ *
+ * @author theEvilReaper
+ * @version 1.1.0
+ * @since 1.0.0
+ */
 public final class GameConfigBuilder implements GameConfig.Builder {
 
     private int minPlayers;
@@ -8,6 +20,9 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     private int maxGameTime;
     private int slenderTeamSize;
     private int survivorTeamSize;
+    private @Nullable String sentryDsn;
+    private @Nullable URI resourcePackUrl;
+    private @Nullable String resourcePackSha1;
 
     @Override
     public GameConfig.Builder minPlayers(int minPlayers) {
@@ -57,7 +72,35 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     }
 
     @Override
+    public GameConfig.Builder sentryDsn(@Nullable String sentryDsn) {
+        this.sentryDsn = sentryDsn;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder resourcePackUrl(@Nullable URI resourcePackUrl) {
+        this.resourcePackUrl = resourcePackUrl;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder resourcePackSha1(@Nullable String resourcePackSha1) {
+        this.resourcePackSha1 = resourcePackSha1;
+        return this;
+    }
+
+    @Override
     public GameConfig build() {
-        return new GameConfigImpl(minPlayers, maxPlayers, lobbyTime, maxGameTime, slenderTeamSize, survivorTeamSize);
+        return new GameConfigImpl(
+                minPlayers,
+                maxPlayers,
+                lobbyTime,
+                maxGameTime,
+                slenderTeamSize,
+                survivorTeamSize,
+                sentryDsn,
+                resourcePackUrl,
+                resourcePackSha1
+        );
     }
 }

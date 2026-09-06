@@ -1,7 +1,10 @@
 package net.onelitefeather.cygnus.common.config;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,5 +53,73 @@ class GameConfigReaderTest {
         assertEquals(15, config.maxPlayers());
         // "lobbyTime" was invalid, should fall back to default (30)
         assertEquals(30, config.lobbyTime());
+    }
+
+    @Test
+    void testOptionalValuesAreAbsentWhenTheyAreNotConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertNull(config.sentryDsn());
+        assertNull(config.resourcePackUrl());
+        assertNull(config.resourcePackSha1());
+    }
+
+    @Test
+    void testOptionalValuesAreReadWhenTheyAreConfigured(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                sentryDsn=https://key@sentry.example.com/1
+                resourcePackUrl=https://example.com/pack.zip
+                resourcePackSha1=%s
+                """.formatted("a".repeat(40)));
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals("https://key@sentry.example.com/1", config.sentryDsn());
+        assertEquals(URI.create("https://example.com/pack.zip"), config.resourcePackUrl());
+        assertEquals("a".repeat(40), config.resourcePackSha1());
+    }
+
+    @Test
+    void testBlankOptionalValuesCountAsAbsent(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                sentryDsn=
+                resourcePackUrl=   
+                resourcePackSha1=
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertNull(config.sentryDsn());
+        assertNull(config.resourcePackUrl());
+        assertNull(config.resourcePackSha1());
+    }
+
+    @Test
+    void testAMalformedResourcePackUrlDisablesTheFeature(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                resourcePackUrl=http://[::1
+                resourcePackSha1=%s
+                """.formatted("a".repeat(40)));
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertNull(config.resourcePackUrl());
+    }
+
+    @Test
+    void testAMalformedChecksumIsDroppedSoItGetsComputed(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                resourcePackUrl=https://example.com/pack.zip
+                resourcePackSha1=not-a-checksum
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(URI.create("https://example.com/pack.zip"), config.resourcePackUrl());
+        assertNull(config.resourcePackSha1());
     }
 }
