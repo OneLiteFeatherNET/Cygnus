@@ -9,6 +9,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
 import net.onelitefeather.cygnus.player.listener.SpectatorAddListener;
 import net.onelitefeather.cygnus.player.listener.SpectatorItemListener;
@@ -24,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
  * the spectate-overview GUI, and leaving spectator mode.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.0
  */
 public final class SpectatorService {
@@ -56,17 +57,41 @@ public final class SpectatorService {
      * spectators see each other. Because {@link VisibilityRules#spectatorRule()} tests the viewer, the rules
      * of all other players have to be re-evaluated as well so already present spectators pull the new one
      * into their viewer set.
+     * <p>
+     * {@link Player#setAllowFlying(boolean)} has to be set next to {@link Player#setFlying(boolean)}:
+     * {@link Player#setGameMode(GameMode)} resets the flight permission to the one of the mode, and
+     * {@code SURVIVAL} does not allow flying. The abilities packet then only carries the flying flag, so the
+     * client drops flight the moment the spectator touches the ground and refuses to take off again.
      *
      * @param player the player to convert
      */
     public void join(Player player) {
         player.setGameMode(GameMode.SURVIVAL);
+        player.setAllowFlying(true);
         player.setFlying(true);
         player.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
         spectatorTeam.addPlayer(player);
+        clearStaminaHud(player);
         Items.setSpectatorLayout(player);
         player.updateViewableRule(VisibilityRules.spectatorRule());
         VisibilityRules.refresh(player);
+    }
+
+    /**
+     * Drops the stamina display a survivor carries into spectator mode.
+     * <p>
+     * The stamina bar is drawn on the experience bar and can leave the player sprint blocked, both of which
+     * survive the switch to spectator mode. The bar itself stops ticking because the player is taken out of
+     * the {@link net.onelitefeather.cygnus.stamina.StaminaService} when they leave the round, so nothing
+     * writes these values again afterwards.
+     *
+     * @param player the player who just became a spectator
+     */
+    private static void clearStaminaHud(Player player) {
+        player.setExp(0.0f);
+        if (player instanceof CygnusPlayer cygnusPlayer) {
+            cygnusPlayer.setBlockedSprinting(false);
+        }
     }
 
     /**

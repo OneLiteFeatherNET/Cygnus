@@ -11,13 +11,17 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
+import net.onelitefeather.cygnus.stamina.StaminaService;
  import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerDeathListenerTest extends CygnusPlayerTestBase {
@@ -36,7 +40,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(player);
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
 
         env.listen(SpectatorAddEvent.class)
                 .followup(event -> assertEquals(player, event.getPlayer()));
@@ -60,7 +64,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(player);
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
 
         listener.accept(new PlayerDeathEvent(player, null, null));
 
@@ -86,7 +90,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         slenderTeam.addPlayer(slender);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
 
         listener.accept(new PlayerDeathEvent(survivor, null, null));
 
@@ -115,7 +119,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         Pos mapSpawn = new Pos(0, 100, 0);
         player.setRespawnPoint(mapSpawn);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
         listener.accept(new PlayerDeathEvent(player, null, null));
 
         assertNotEquals(mapSpawn.blockY(), player.getRespawnPoint().blockY(),
@@ -123,6 +127,32 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         assertEquals(deathPos.blockX(), player.getRespawnPoint().blockX());
         assertEquals(deathPos.blockY(), player.getRespawnPoint().blockY());
         assertEquals(deathPos.blockZ(), player.getRespawnPoint().blockZ());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testDyingSurvivorLosesTheirStaminaBar(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
+
+        TeamService teamService = TeamService.of();
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        teamService.add(slenderTeam);
+        teamService.add(survivorTeam);
+
+        survivorTeam.addPlayer(player);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        StaminaService staminaService = new StaminaService();
+        staminaService.createStaminaBars(Set.of(player));
+        staminaService.start();
+
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), staminaService, () -> {});
+        listener.accept(new PlayerDeathEvent(player, null, null));
+
+        assertNull(staminaService.getFoodBar(player), "a player who left the round must not keep a ticking stamina bar");
 
         env.destroyInstance(instance, true);
     }

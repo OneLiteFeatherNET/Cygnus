@@ -211,7 +211,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider));
         handler.addListener(PageSpawnEvent.class, new PageSpawnListener(this.pageProvider, this.mapProvider.getActiveInstance()));
         handler.addListener(PlayerDeathEvent.class, new PlayerDeathListener(
-                phaseSupplier, this.teamService, this.jumpscareManager, this.spectatorService::updateInventory
+                phaseSupplier, this.teamService, this.jumpscareManager, this.staminaService, this.spectatorService::updateInventory
         ));
         handler.addListener(PlayerEntityInteractEvent.class, new PlayerPageInteractListener(this.pageProvider));
         handler.addListener(PageExpiredEvent.class, new GamePageListener(this.pageProvider));
