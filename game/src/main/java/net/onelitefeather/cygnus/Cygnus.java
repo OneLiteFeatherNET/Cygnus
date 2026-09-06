@@ -137,10 +137,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getConnectionManager().setPlayerProvider(
                 (connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, resourcePackId));
         this.pageProvider = new PageProvider();
-        GameMapProvider gameMapProvider = new GameMapProvider(path);
-        this.mapProvider = gameMapProvider;
+        this.mapProvider = new GameMapProvider(path);
         // Falco keeps its region files open, so the loaders have to be released on shutdown
-        MinecraftServer.getSchedulerManager().buildShutdownTask(gameMapProvider::close);
+        MinecraftServer.getSchedulerManager().buildShutdownTask(this.mapProvider::close);
         this.view = new GameViewImpl();
         this.createTeams(this.gameConfig, this.teamService);
         Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
