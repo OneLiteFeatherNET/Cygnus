@@ -79,6 +79,19 @@ survivorTeamSize=12
 # The sound played. A key that names no sound the server knows falls back to the
 # default, so the hint never goes silent because of a typo.
 #pageProximitySound=block.amethyst_block.chime
+# How far past pageProximityRange the chime's falloff is stretched. Between 1 and
+# 8.
+#
+# Minecraft fades a sound to nothing at 16 * volume blocks, so a volume derived to
+# reach exactly the range leaves the chime silent at the range's own edge - which
+# is where the hint is meant to start being useful. This stretches the falloff
+# past the range; what a player actually hears does not get wider, because the
+# server drops pages outside the range before playing anything.
+#
+# 1 is the old behaviour. 2 leaves roughly half the volume at the edge of the
+# range. Going much higher flattens the falloff until every page sounds equally
+# close, which takes away the distance cue the 3D position is there for.
+#pageProximityVolumeFactor=2.0
 
 # --- Damage sound ----------------------------------------------------------
 

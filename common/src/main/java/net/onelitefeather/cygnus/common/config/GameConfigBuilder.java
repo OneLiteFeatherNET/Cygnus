@@ -28,6 +28,7 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     private int pageProximityRange;
     private int pageProximityInterval;
     private Key pageProximitySound = GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND;
+    private float pageProximityVolumeFactor = GameConfig.DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR;
     private boolean damageSoundEnabled;
     private int damageSoundCooldown;
     private Key damageSound = GameConfig.DEFAULT_DAMAGE_SOUND;
@@ -135,6 +136,18 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     }
 
     @Override
+    public GameConfig.Builder pageProximityVolumeFactor(float pageProximityVolumeFactor) {
+        if (pageProximityVolumeFactor < 1.0F
+                || pageProximityVolumeFactor > GameConfig.MAX_PAGE_PROXIMITY_VOLUME_FACTOR) {
+            throw new IllegalArgumentException(
+                    "Page proximity volume factor must be between 1 and "
+                            + GameConfig.MAX_PAGE_PROXIMITY_VOLUME_FACTOR);
+        }
+        this.pageProximityVolumeFactor = pageProximityVolumeFactor;
+        return this;
+    }
+
+    @Override
     public GameConfig.Builder damageSoundEnabled(boolean damageSoundEnabled) {
         this.damageSoundEnabled = damageSoundEnabled;
         return this;
@@ -216,6 +229,7 @@ public final class GameConfigBuilder implements GameConfig.Builder {
                 pageProximityRange,
                 pageProximityInterval,
                 pageProximitySound,
+                pageProximityVolumeFactor,
                 damageSoundEnabled,
                 damageSoundCooldown,
                 damageSound,

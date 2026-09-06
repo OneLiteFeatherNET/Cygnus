@@ -20,10 +20,17 @@ import java.util.function.Supplier;
  *
  * <p>The sound is emitted at the page's own position, so the client places it in 3D: a player hears
  * which direction a page is in and roughly how far off it is, without the server ever telling them
- * where it is. Minecraft carries a sound {@code 16 * volume} blocks, which is why the volume is
- * derived from the configured range instead of being configured on its own - and why the service
- * still clips on the range itself, since a range below 16 blocks would otherwise stay audible past
- * it.</p>
+ * where it is.</p>
+ *
+ * <p>Minecraft carries a sound {@code 16 * volume} blocks and fades it to nothing at that distance,
+ * so the volume has to follow the configured range rather than being an independent setting. The
+ * service clips on the range itself as well, because a range below 16 blocks would otherwise stay
+ * audible past it.</p>
+ *
+ * <p>That clipping is also what makes the volume free to exceed what the range needs, and
+ * {@code pageProximityVolumeFactor} does exactly that. It has to: a volume derived to reach exactly
+ * the range puts the chime's own silence at the range's edge, which is where the hint is supposed
+ * to start being useful.</p>
  *
  * <p>Usage:</p>
  * <pre>{@code
@@ -35,7 +42,7 @@ import java.util.function.Supplier;
  * }</pre>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.12.0
  */
 public final class PageProximityService {
@@ -79,7 +86,7 @@ public final class PageProximityService {
         this.sound = Sound.sound(
                 resolveSound(config.pageProximitySound()),
                 Sound.Source.MASTER,
-                volumeFor(config.pageProximityRange()),
+                volumeFor(config.pageProximityRange(), config.pageProximityVolumeFactor()),
                 PITCH
         );
     }
@@ -134,15 +141,27 @@ public final class PageProximityService {
     }
 
     /**
-     * Derives the volume that carries the chime across the whole configured range. Anything below
-     * the vanilla range of 16 blocks is played at volume 1 - a lower volume would only make the
-     * sound quieter, not shorter-ranged, and the range is enforced by {@link #tick()} anyway.
+     * Derives the volume that carries the chime across the configured range, with the falloff
+     * stretched past it.
+     * <p>
+     * Deriving the volume to reach exactly the range made the chime inaudible at the range's own
+     * edge: Minecraft fades a sound to nothing at {@code 16 * volume} blocks, so a page at the far
+     * end of the range arrived at zero volume - silent precisely where the hint was meant to start
+     * being useful. The factor stretches the falloff beyond the range without widening what a
+     * player actually hears, because {@link #tick()} drops pages outside the range before playing
+     * anything.
+     * </p>
+     * <p>
+     * Anything below the vanilla range of 16 blocks is still floored at volume 1 before the factor
+     * applies - a volume below 1 would only make the sound quieter, not shorter-ranged.
+     * </p>
      *
-     * @param range the configured range in blocks
+     * @param range  the configured range in blocks
+     * @param factor how far past the range to stretch the falloff
      * @return the volume to play the chime at
      */
-    private static float volumeFor(int range) {
-        return Math.max(1.0F, range / VANILLA_SOUND_RANGE);
+    private static float volumeFor(int range, float factor) {
+        return Math.max(1.0F, range / VANILLA_SOUND_RANGE) * factor;
     }
 
     /**

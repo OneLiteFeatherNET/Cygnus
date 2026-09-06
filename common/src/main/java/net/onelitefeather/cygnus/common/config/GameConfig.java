@@ -56,6 +56,28 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     int MAX_PAGE_PROXIMITY_RANGE = 64;
 
     /**
+     * The {@link #pageProximityVolumeFactor()} a configuration gets when it says nothing.
+     * <p>
+     * A factor of 1 makes the chime reach exactly to {@link #pageProximityRange()} and no further,
+     * which means it fades to silence precisely where the hint is supposed to start being useful.
+     * Doubling that leaves roughly half the volume at the edge of the range while the service still
+     * clips on the range itself.
+     * </p>
+     */
+    float DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR = 2.0F;
+
+    /**
+     * The largest {@link #pageProximityVolumeFactor()} a configuration may ask for.
+     * <p>
+     * The ceiling is not about loudness - Minecraft caps a sound's amplitude at the source
+     * regardless of volume - but about the falloff. The flatter it gets, the more evenly loud the
+     * chime is across the whole range, until a player can no longer tell a page two blocks away
+     * from one at the edge. Past 8 that distance cue is gone.
+     * </p>
+     */
+    float MAX_PAGE_PROXIMITY_VOLUME_FACTOR = 8.0F;
+
+    /**
      * The sound played to a player who was just hit.
      * <p>
      * The vanilla hurt sound, because that is exactly what is missing: Cygnus applies damage by
@@ -227,6 +249,21 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
      * @since 2.12.0
      */
     Key pageProximitySound();
+
+    /**
+     * Returns how far past {@link #pageProximityRange()} the chime's falloff is stretched.
+     * <p>
+     * Minecraft carries a sound {@code 16 * volume} blocks and fades it to nothing at that
+     * distance, so a volume derived to reach exactly the configured range leaves the chime
+     * inaudible at the range's edge. This factor stretches the falloff beyond it; the audible
+     * distance is unaffected, because the service drops pages outside the range before playing
+     * anything.
+     * </p>
+     *
+     * @return the factor, between 1 and {@link #MAX_PAGE_PROXIMITY_VOLUME_FACTOR}
+     * @since 2.12.1
+     */
+    float pageProximityVolumeFactor();
 
     /**
      * Returns whether a player hears a sound when they take damage.
@@ -427,6 +464,17 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @since 2.12.0
          */
         Builder pageProximitySound(Key pageProximitySound);
+
+        /**
+         * Sets how far past the range the chime's falloff is stretched.
+         *
+         * @param pageProximityVolumeFactor the factor
+         * @return the builder instance
+         * @throws IllegalArgumentException if the factor is below 1 or above
+         *                                  {@link GameConfig#MAX_PAGE_PROXIMITY_VOLUME_FACTOR}
+         * @since 2.12.1
+         */
+        Builder pageProximityVolumeFactor(float pageProximityVolumeFactor);
 
         /**
          * Sets whether a player hears a sound when they take damage.

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameConfigTest {
 
@@ -135,5 +136,37 @@ class GameConfigTest {
         assertEquals(GameConfig.DEFAULT_GLITCH_RANGE, config.glitchRange());
         assertEquals(GameConfig.DEFAULT_GLITCH_CLOSE_RANGE, config.glitchCloseRange());
         assertEquals(GameConfig.DEFAULT_GLITCH_VIEW_ANGLE, config.glitchViewAngle());
+    }
+
+    @Test
+    void testPageProximityVolumeFactorRejectsValuesOutsideTheAllowedRange() {
+        GameConfig.Builder builder = GameConfig.builder();
+
+        String expected = "Page proximity volume factor must be between 1 and "
+                + GameConfig.MAX_PAGE_PROXIMITY_VOLUME_FACTOR;
+        assertEquals(expected, assertThrows(IllegalArgumentException.class,
+                () -> builder.pageProximityVolumeFactor(0.5F)).getMessage());
+        assertEquals(expected, assertThrows(IllegalArgumentException.class,
+                () -> builder.pageProximityVolumeFactor(GameConfig.MAX_PAGE_PROXIMITY_VOLUME_FACTOR + 1)).getMessage());
+    }
+
+    @Test
+    void testPageProximityVolumeFactorReachesTheBuiltConfiguration() {
+        GameConfig config = GameConfig.builder().lobbyTime(12).pageProximityVolumeFactor(3.5F).build();
+
+        assertEquals(3.5F, config.pageProximityVolumeFactor());
+    }
+
+    /**
+     * A factor of 1 is the behaviour that left the chime silent at the range's edge, so the shipped
+     * default has to be above it.
+     */
+    @Test
+    void testTheDefaultVolumeFactorStretchesPastTheRange() {
+        GameConfig config = GameConfig.builder().lobbyTime(12).build();
+
+        assertEquals(GameConfig.DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR, config.pageProximityVolumeFactor());
+        assertTrue(GameConfig.DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR > 1.0F,
+                "a factor of 1 puts the chime's silence exactly at the range's edge");
     }
 }
