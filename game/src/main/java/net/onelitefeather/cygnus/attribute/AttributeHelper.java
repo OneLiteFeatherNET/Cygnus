@@ -20,6 +20,9 @@ public final class AttributeHelper {
     public static final Key SLENDER_DRAINING_SPEED_KEY = Key.key("cygnus", "slender_draining");
     public static final Key SPEED_SCALING_KEY = Key.key("cygnus", "speed_scaling");
     public static final Key HEALTH_SCALING_KEY = Key.key("cygnus", "health_scaling");
+    public static final Key GAME_SPEED_KEY = Key.key("cygnus", "game_speed");
+    public static final Key GAME_JUMP_STRENGTH_KEY = Key.key("cygnus", "game_jump_strength");
+    public static final Key GAME_STEP_HEIGHT_KEY = Key.key("cygnus", "game_step_height");
 
     private static final AttributeModifier SLENDER_DRAINING_SPEED_MODIFIER = new AttributeModifier(
                     SLENDER_DRAINING_SPEED_KEY,
@@ -36,6 +39,24 @@ public final class AttributeHelper {
     private static final double DEFAULT_MOVE_SPEED = 0.1;
     private static final double GAME_MOVE_SPEED = 0.065;
 
+    private static final AttributeModifier GAME_JUMP_STRENGTH_MODIFIER = new AttributeModifier(
+            GAME_JUMP_STRENGTH_KEY,
+            GAME_JUMP_STRENGTH - DEFAULT_JUMP_STRENGTH,
+            AttributeOperation.ADD_VALUE
+    );
+
+    private static final AttributeModifier GAME_STEP_HEIGHT_MODIFIER = new AttributeModifier(
+            GAME_STEP_HEIGHT_KEY,
+            GAME_STEP_HEIGHT - DEFAULT_STEP_HEIGHT,
+            AttributeOperation.ADD_VALUE
+    );
+
+    private static final AttributeModifier GAME_SPEED_MODIFIER = new AttributeModifier(
+            GAME_SPEED_KEY,
+            GAME_MOVE_SPEED - DEFAULT_MOVE_SPEED,
+            AttributeOperation.ADD_VALUE
+    );
+
 
     /**
      * Adjusts the step height and jump strength for the player.
@@ -44,8 +65,13 @@ public final class AttributeHelper {
      * @param player the player to adjust
      */
     public static void adjustStepHeightAndJump(Player player) {
-        player.getAttribute(Attribute.JUMP_STRENGTH).setBaseValue(GAME_JUMP_STRENGTH);
-        player.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(GAME_STEP_HEIGHT);
+        AttributeInstance jumpStrength = player.getAttribute(Attribute.JUMP_STRENGTH);
+        jumpStrength.removeModifier(GAME_JUMP_STRENGTH_KEY);
+        jumpStrength.addModifier(GAME_JUMP_STRENGTH_MODIFIER);
+
+        AttributeInstance stepHeight = player.getAttribute(Attribute.STEP_HEIGHT);
+        stepHeight.removeModifier(GAME_STEP_HEIGHT_KEY);
+        stepHeight.addModifier(GAME_STEP_HEIGHT_MODIFIER);
     }
 
     /**
@@ -55,17 +81,19 @@ public final class AttributeHelper {
      * @param player the player to reset
      */
     public static void resetAttributeAdjustments(Player player) {
-        player.getAttribute(Attribute.JUMP_STRENGTH).setBaseValue(DEFAULT_JUMP_STRENGTH);
-        player.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(DEFAULT_STEP_HEIGHT);
+        player.getAttribute(Attribute.JUMP_STRENGTH).removeModifier(GAME_JUMP_STRENGTH_KEY);
+        player.getAttribute(Attribute.STEP_HEIGHT).removeModifier(GAME_STEP_HEIGHT_KEY);
     }
 
     /**
-     * Increases the player's speed to the game value.
+     * Decreases the player's speed to the game value.
      *
-     * @param player the player to increase the speed
+     * @param player the player to decrease the speed
      */
     public static void decreaseSpeed(Player player) {
-        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(GAME_MOVE_SPEED);
+        AttributeInstance attribute = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        attribute.removeModifier(GAME_SPEED_KEY);
+        attribute.addModifier(GAME_SPEED_MODIFIER);
     }
 
     /**
@@ -74,7 +102,7 @@ public final class AttributeHelper {
      * @param player the player to reset
      */
     public static void resetSpeed(Player player) {
-        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(DEFAULT_MOVE_SPEED);
+        player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(GAME_SPEED_KEY);
     }
 
     /**
