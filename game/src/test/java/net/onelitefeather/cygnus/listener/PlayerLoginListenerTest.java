@@ -12,9 +12,9 @@ import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,12 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerLoginListenerTest extends CygnusPlayerTestBase {
-
-    @AfterEach
-    void clearSystemProperties() {
-        System.clearProperty("resourcepack.url");
-        System.clearProperty("resourcepack.hash");
-    }
 
     private static GameConfig lobbyConfig() {
         return GameConfig.builder().lobbyTime(30).minPlayers(2).gameTime(600).maxPlayers(10).build();
@@ -83,9 +77,15 @@ class PlayerLoginListenerTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
-        System.setProperty("resourcepack.url", "https://example.com/pack.zip");
-        System.setProperty("resourcepack.hash", "a".repeat(40));
-        Optional<ResourcePackService> resourcePackService = ResourcePackService.create();
+        GameConfig packConfig = GameConfig.builder()
+                .lobbyTime(30)
+                .minPlayers(2)
+                .gameTime(600)
+                .maxPlayers(10)
+                .resourcePackUrl(URI.create("https://example.com/pack.zip"))
+                .resourcePackSha1("a".repeat(40))
+                .build();
+        Optional<ResourcePackService> resourcePackService = ResourcePackService.create(packConfig);
         assertTrue(resourcePackService.isPresent());
 
         PlayerLoginListener listener = new PlayerLoginListener(() -> instance, 10, () -> new LobbyPhase(lobbyConfig()), resourcePackService);

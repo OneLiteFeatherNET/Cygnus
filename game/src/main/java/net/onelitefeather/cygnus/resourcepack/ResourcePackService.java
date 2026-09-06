@@ -9,22 +9,32 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerResourcePackStatusEvent;
 import net.onelitefeather.cygnus.common.Messages;
+import net.onelitefeather.cygnus.common.config.GameConfig;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Sends a mandatory ResourcePack to players and kicks them if the client declines it or reports
- * a failure. Inactive unless {@link ResourcePackProperties#resolve()} finds both the
- * {@code resourcepack.url} and {@code resourcepack.hash} system properties set.
+ * a failure. Inactive unless {@link GameConfig#resourcePackUrl()} is configured.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class ResourcePackService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ResourcePackService.class);
 
     // DISCARDED is included because Minestom's own Player#onResourcePackStatus kicks on it anyway
     // once required(true) is set (DISCARDED is not an 'intermediate' ResourcePackStatus) — listing it
@@ -42,29 +52,56 @@ public final class ResourcePackService {
     private static final Component KICK_MESSAGE =
             Messages.withMini("<red>You must accept the ResourcePack to play on this server!");
 
-    private final ResourcePackInfo packInfo;
+    // Downloading the pack to hash it happens on the configuration thread of the joining player,
+    // so it must not be able to hang that join forever.
+    private static final long HASH_TIMEOUT_SECONDS = 30;
 
-    private ResourcePackService(ResourcePackProperties properties) {
-        this.packInfo = ResourcePackInfo.resourcePackInfo(UUID.randomUUID(), properties.url(), properties.hash());
+    private final UUID packId;
+    private final URI url;
+    private @Nullable CompletableFuture<ResourcePackInfo> packInfo;
+
+    private ResourcePackService(URI url, @Nullable String hash) {
+        this.packId = UUID.randomUUID();
+        this.url = url;
+        // Without a configured checksum there is nothing to build the info from yet; it is computed
+        // from the pack itself when the first player needs it (see #packInfoFuture()).
+        this.packInfo = hash == null
+                ? null
+                : CompletableFuture.completedFuture(ResourcePackInfo.resourcePackInfo(this.packId, url, hash));
     }
 
     /**
-     * Creates a new {@link ResourcePackService} from the resolved {@link ResourcePackProperties}.
+     * Creates a new {@link ResourcePackService} from the game configuration.
      *
+     * @param config the configuration holding the ResourcePack URL and, optionally, its checksum
      * @return the service, or empty if the feature is disabled
      */
-    public static Optional<ResourcePackService> create() {
-        return ResourcePackProperties.resolve().map(ResourcePackService::new);
+    public static Optional<ResourcePackService> create(GameConfig config) {
+        URI url = config.resourcePackUrl();
+        if (url == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new ResourcePackService(url, config.resourcePackSha1()));
     }
 
     /**
      * Sends the configured, mandatory ResourcePack request to the given player.
+     * <p>
+     * If the checksum has to be computed first, this waits for that computation - the caller is
+     * the joining player's configuration thread, which is meant to be blocked on. A pack that
+     * cannot be hashed is not pushed at all; the player joins without it rather than being kicked
+     * for something the server got wrong.
+     * </p>
      *
      * @param player the player to send the request to
      */
     public void sendTo(Player player) {
+        ResourcePackInfo info = resolvePackInfo();
+        if (info == null) {
+            return;
+        }
         ResourcePackRequest request = ResourcePackRequest.resourcePackRequest()
-                .packs(packInfo)
+                .packs(info)
                 .required(true)
                 .prompt(PROMPT)
                 .build();
@@ -85,7 +122,7 @@ public final class ResourcePackService {
      * @since 2.11.0
      */
     public UUID packId() {
-        return packInfo.id();
+        return packId;
     }
 
     /**
@@ -100,6 +137,56 @@ public final class ResourcePackService {
     void handleStatus(PlayerResourcePackStatusEvent event) {
         if (KICK_STATUSES.contains(event.getStatus())) {
             event.getPlayer().kick(KICK_MESSAGE);
+        }
+    }
+
+    /**
+     * Waits for the pack info to become available.
+     *
+     * @return the info to push, or {@code null} if the checksum could not be computed
+     */
+    private @Nullable ResourcePackInfo resolvePackInfo() {
+        CompletableFuture<ResourcePackInfo> future = packInfoFuture();
+        try {
+            return future.get(HASH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            LOGGER.warn("Interrupted while computing the SHA-1 of '{}'. Not pushing the ResourcePack", url);
+            return null;
+        } catch (ExecutionException | TimeoutException exception) {
+            LOGGER.warn("Failed to compute the SHA-1 of '{}'. Not pushing the ResourcePack", url, exception);
+            // A failed download is worth retrying on the next join. A timeout is not: that
+            // computation is still running and will complete the very future kept here.
+            forgetFailedComputation(future);
+            return null;
+        }
+    }
+
+    /**
+     * Returns the pack info, starting its computation on first use if no checksum was configured.
+     *
+     * @return the future carrying the pack info
+     */
+    private synchronized CompletableFuture<ResourcePackInfo> packInfoFuture() {
+        if (packInfo == null) {
+            LOGGER.warn("No ResourcePack checksum configured - computing the SHA-1 of '{}' once. " +
+                    "This is meant for test setups; a production setup should state the checksum", url);
+            packInfo = ResourcePackInfo.resourcePackInfo()
+                    .id(packId)
+                    .uri(url)
+                    .computeHashAndBuild();
+        }
+        return packInfo;
+    }
+
+    /**
+     * Drops a computation that failed, so the next join starts a fresh one.
+     *
+     * @param failed the future that was waited on
+     */
+    private synchronized void forgetFailedComputation(CompletableFuture<ResourcePackInfo> failed) {
+        if (packInfo == failed && failed.isCompletedExceptionally()) {
+            packInfo = null;
         }
     }
 }
