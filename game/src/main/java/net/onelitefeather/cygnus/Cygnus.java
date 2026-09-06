@@ -56,6 +56,7 @@ import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.disclaimer.EpilepsyDisclaimer;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.gaze.BossBarGazeSignal;
+import net.onelitefeather.cygnus.gaze.SlenderGaze;
 import net.onelitefeather.cygnus.gaze.SlenderGazeService;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
@@ -174,7 +175,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // The service drives the signal during a round. Outside one it does not tick - it starts on
         // GameStartEvent - so /glitch keeps working in the lobby for judging a level by hand.
         this.slenderGazeService = new SlenderGazeService(
-                this.gazeSignal, () -> TeamHelper.slenderOf(this.teamService));
+                this.gazeSignal,
+                new SlenderGaze(
+                        this.gameConfig.glitchRange(),
+                        this.gameConfig.glitchCloseRange(),
+                        this.gameConfig.glitchViewAngle()),
+                () -> TeamHelper.slenderOf(this.teamService));
         this.bloodSplatterService = new BloodSplatterService(
                 this.screenOverlay,
                 bound -> ThreadLocalRandom.current().nextInt(bound)

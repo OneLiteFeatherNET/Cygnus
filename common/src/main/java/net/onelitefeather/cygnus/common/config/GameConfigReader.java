@@ -36,13 +36,16 @@ import java.util.regex.Pattern;
  *     <li>damageSoundEnabled</li>
  *     <li>damageSoundCooldown</li>
  *     <li>damageSound</li>
+ *     <li>glitchRange</li>
+ *     <li>glitchCloseRange</li>
+ *     <li>glitchViewAngle</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
  * The default values are defined in the {@link InternalGameConfig} class.
  *
  * @author theEvilReaper
- * @version 1.3.0
+ * @version 1.4.0
  * @see GameConfig
  * @since 1.0.0
  */
@@ -112,7 +115,10 @@ public final class GameConfigReader {
                 .pageProximitySound(getSound(properties, PAGE_PROXIMITY_SOUND_KEY, internal.pageProximitySound()))
                 .damageSoundEnabled(getBoolean(properties, "damageSoundEnabled", internal.damageSoundEnabled()))
                 .damageSoundCooldown(getInt(properties, "damageSoundCooldown", internal.damageSoundCooldown()))
-                .damageSound(getSound(properties, DAMAGE_SOUND_KEY, internal.damageSound()));
+                .damageSound(getSound(properties, DAMAGE_SOUND_KEY, internal.damageSound()))
+                .glitchRange(getInt(properties, "glitchRange", internal.glitchRange()))
+                .glitchCloseRange(getInt(properties, "glitchCloseRange", internal.glitchCloseRange()))
+                .glitchViewAngle(getInt(properties, "glitchViewAngle", internal.glitchViewAngle()));
 
         return configBuilder.build();
     }

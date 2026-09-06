@@ -13,7 +13,7 @@ import java.net.URI;
  * Each static value indicates that it is a constant value and should not be changed.
  *
  * @author theEvilReaper
- * @version 1.4.0
+ * @version 1.5.0
  * @since 1.0.0
  */
 public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
@@ -64,6 +64,38 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
      * </p>
      */
     Key DEFAULT_DAMAGE_SOUND = Key.key("entity.player.hurt");
+
+    /**
+     * The largest {@link #glitchRange()} a configuration may ask for. Beyond this the slender would
+     * tear a survivor's view apart from across the map, which is the behaviour this range exists to
+     * end.
+     */
+    int MAX_GLITCH_RANGE = 64;
+
+    /**
+     * The widest {@link #glitchViewAngle()} a configuration may ask for. At 90 degrees and beyond
+     * the cone stops being a cone: everything not strictly behind the survivor would count as seen,
+     * and the effect would no longer be about looking at him.
+     */
+    int MAX_GLITCH_VIEW_ANGLE = 89;
+
+    /**
+     * The {@link #glitchRange()} a configuration gets when it says nothing. Twelve blocks is close
+     * enough that the slender is a present threat when the tearing starts - the 32 this used to be
+     * kept him inside the range for most of a round, so the effect was near enough permanent and
+     * stopped reading as a warning.
+     */
+    int DEFAULT_GLITCH_RANGE = 12;
+
+    /** The {@link #glitchCloseRange()} a configuration gets when it says nothing. */
+    int DEFAULT_GLITCH_CLOSE_RANGE = 4;
+
+    /**
+     * The {@link #glitchViewAngle()} a configuration gets when it says nothing. Narrower than the
+     * client's field of view on purpose: the cone this replaces spanned roughly 113 degrees and
+     * fired while he stood at the very edge of the screen, which is not the same as being looked at.
+     */
+    int DEFAULT_GLITCH_VIEW_ANGLE = 30;
 
     /**
      * Creates a new {@link Builder} which can be used to create a new game configuration.
@@ -230,6 +262,46 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     Key damageSound();
 
     /**
+     * Returns how close the slender has to be before the sight of him tears a survivor's view.
+     * <p>
+     * This is the outer edge of the effect, not the point where it is strongest: at exactly this
+     * distance a survivor gets the weakest level, and it grows the nearer he comes until
+     * {@link #glitchCloseRange()} is reached. Beyond it there is nothing at all - no veil, and no
+     * darkening of the world.
+     * </p>
+     *
+     * @return the range in blocks, at most {@link #MAX_GLITCH_RANGE}
+     * @since 2.13.0
+     */
+    int glitchRange();
+
+    /**
+     * Returns the distance at which the tearing is at its worst.
+     * <p>
+     * Always smaller than {@link #glitchRange()} - the two mark the ends of the same slope, and a
+     * configuration where they meet or cross is rejected outright.
+     * </p>
+     *
+     * @return the distance in blocks, at least 1 and below {@link #glitchRange()}
+     * @since 2.13.0
+     */
+    int glitchCloseRange();
+
+    /**
+     * Returns how far off the centre of their view the slender may stand and still count as seen.
+     * <p>
+     * Given in degrees around the survivor's line of sight, so a value of 30 means he has to be
+     * within 30 degrees of where they are actually looking. This is deliberately narrower than the
+     * client's field of view: standing at the very edge of the screen is not the same as being
+     * looked at.
+     * </p>
+     *
+     * @return the half-angle in degrees, between 1 and {@link #MAX_GLITCH_VIEW_ANGLE}
+     * @since 2.13.0
+     */
+    int glitchViewAngle();
+
+    /**
      * The {@link Builder} interface is used to create a new game configuration.
      * It provides methods to set the values for the configuration.
      *
@@ -383,6 +455,38 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @since 2.13.0
          */
         Builder damageSound(Key damageSound);
+
+        /**
+         * Sets how close the slender has to be before the sight of him tears a survivor's view.
+         *
+         * @param glitchRange the range in blocks
+         * @return the builder instance
+         * @throws IllegalArgumentException if the range is below 1 or above
+         *                                  {@link GameConfig#MAX_GLITCH_RANGE}
+         * @since 2.13.0
+         */
+        Builder glitchRange(int glitchRange);
+
+        /**
+         * Sets the distance at which the tearing is at its worst.
+         *
+         * @param glitchCloseRange the distance in blocks
+         * @return the builder instance
+         * @throws IllegalArgumentException if the distance is below 1
+         * @since 2.13.0
+         */
+        Builder glitchCloseRange(int glitchCloseRange);
+
+        /**
+         * Sets how far off the centre of their view the slender may stand and still count as seen.
+         *
+         * @param glitchViewAngle the half-angle in degrees
+         * @return the builder instance
+         * @throws IllegalArgumentException if the angle is below 1 or above
+         *                                  {@link GameConfig#MAX_GLITCH_VIEW_ANGLE}
+         * @since 2.13.0
+         */
+        Builder glitchViewAngle(int glitchViewAngle);
 
         /**
          * Builds the game configuration.

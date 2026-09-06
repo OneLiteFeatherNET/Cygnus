@@ -246,4 +246,48 @@ class GameConfigReaderTest {
 
         assertThrows(IllegalArgumentException.class, reader::getConfig);
     }
+
+    @Test
+    void testGlitchDefaultsWhenNothingIsConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(GameConfig.DEFAULT_GLITCH_RANGE, config.glitchRange());
+        assertEquals(GameConfig.DEFAULT_GLITCH_CLOSE_RANGE, config.glitchCloseRange());
+        assertEquals(GameConfig.DEFAULT_GLITCH_VIEW_ANGLE, config.glitchViewAngle());
+    }
+
+    @Test
+    void testGlitchValuesAreReadWhenTheyAreConfigured(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                glitchRange=20
+                glitchCloseRange=6
+                glitchViewAngle=45
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(20, config.glitchRange());
+        assertEquals(6, config.glitchCloseRange());
+        assertEquals(45, config.glitchViewAngle());
+    }
+
+    /**
+     * An unreadable number falls back to its default the same way every other integer entry does.
+     * That matters more here than elsewhere: falling back to zero would put the close range at or
+     * above the range and take the whole service down over one typo.
+     */
+    @Test
+    void testAnUnreadableGlitchValueFallsBackToTheDefault(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                glitchRange=not-a-number
+                glitchCloseRange=6
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(GameConfig.DEFAULT_GLITCH_RANGE, config.glitchRange());
+        assertEquals(6, config.glitchCloseRange());
+    }
 }

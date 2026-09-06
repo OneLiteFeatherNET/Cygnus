@@ -10,9 +10,15 @@ import net.minestom.server.coordinate.Vec;
  * all, however close he is. Only once he is inside their field of view does the picture start to
  * come apart, and it gets worse the nearer he is.
  * </p>
+ * <p>
+ * The three thresholds used to be constants. They are instance state now because they are the part
+ * of the effect that has to be judged in the game rather than reasoned about - how near is near
+ * enough, and how far off the centre of the screen still counts as looking at him. Reading them
+ * from the configuration means answering that costs a restart instead of a rebuild.
+ * </p>
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @version 2.0.0
  * @since 2.7.0
  */
 public final class SlenderGaze {
@@ -23,22 +29,33 @@ public final class SlenderGaze {
     /** How many degrees of tearing there are between just visible and right in front. */
     public static final int LEVELS = 4;
 
-    /** Beyond this distance he is too far away to unsettle anything. */
-    private static final double RANGE = 32.0D;
-
-    /** The distance at which the tearing is at its worst. */
-    private static final double CLOSE = 6.0D;
-
-    /**
-     * How far off the view direction he may stand and still count as seen. Roughly the horizontal
-     * field of view of a default client — the effect belongs on the screen he is on.
-     */
-    private static final double FIELD_OF_VIEW = 0.55D;
-
     /** Below this distance the direction to him carries no meaning any more. */
     private static final double DISTANCE_EPSILON = 1.0E-6D;
 
-    private SlenderGaze() {
+    private final double range;
+    private final double close;
+    private final double fieldOfView;
+
+    /**
+     * Creates a gaze with the given thresholds.
+     *
+     * @param range     how close he has to be before anything happens, in blocks
+     * @param close     the distance at which the tearing is at its worst, in blocks
+     * @param viewAngle how far off the centre of the survivor's view he may stand and still count
+     *                  as seen, in degrees
+     * @throws IllegalArgumentException if {@code close} is not below {@code range}, which would
+     *                                  make the slope between them run backwards or divide by zero
+     */
+    public SlenderGaze(int range, int close, int viewAngle) {
+        if (close >= range) {
+            throw new IllegalArgumentException(
+                    "The close range (" + close + ") must be below the range (" + range + ")");
+        }
+        this.range = range;
+        this.close = close;
+        // Stored as the cosine because that is what the dot product below compares against. The
+        // configuration speaks in degrees instead: 0.87 tells an operator nothing, 30 does.
+        this.fieldOfView = Math.cos(Math.toRadians(viewAngle));
     }
 
     /**
@@ -48,9 +65,9 @@ public final class SlenderGaze {
      * @param slender  the slender's position
      * @return a level between {@code 0} and {@code LEVELS - 1}, or {@link #NONE}
      */
-    public static int levelOf(Pos survivor, Pos slender) {
+    public int levelOf(Pos survivor, Pos slender) {
         double distance = survivor.distance(slender);
-        if (distance > RANGE) return NONE;
+        if (distance > this.range) return NONE;
         if (distance < DISTANCE_EPSILON) return LEVELS - 1;
 
         Vec towardsSlender = new Vec(
@@ -59,9 +76,9 @@ public final class SlenderGaze {
                 slender.z() - survivor.z()
         ).div(distance);
 
-        if (survivor.direction().dot(towardsSlender) < FIELD_OF_VIEW) return NONE;
+        if (survivor.direction().dot(towardsSlender) < this.fieldOfView) return NONE;
 
-        double nearness = (RANGE - distance) / (RANGE - CLOSE);
+        double nearness = (this.range - distance) / (this.range - this.close);
         double clamped = Math.clamp(nearness, 0.0D, 1.0D);
         return (int) Math.round(clamped * (LEVELS - 1));
     }
