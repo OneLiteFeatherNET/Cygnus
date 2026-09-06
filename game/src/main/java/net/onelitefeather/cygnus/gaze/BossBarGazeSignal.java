@@ -73,6 +73,9 @@ public final class BossBarGazeSignal implements GazeSink {
      */
     private final PlayerState<BossBar> bars = new PlayerState<>();
 
+    /** Who may have the world darkened along with their veil. */
+    private final PlayerState<Boolean> worldTints = new PlayerState<>();
+
     /**
      * Builds the component that carries a level.
      *
@@ -100,10 +103,19 @@ public final class BossBarGazeSignal implements GazeSink {
      */
     @Override
     public void attach(Player survivor) {
+        this.attach(survivor, true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void attach(Player player, boolean worldTint) {
         BossBar bar = BossBar.bossBar(
                 signalFor(SlenderGaze.NONE), 1f, CARRIER_COLOR, BossBar.Overlay.PROGRESS);
-        this.bars.put(survivor, bar);
-        survivor.showBossBar(bar);
+        this.bars.put(player, bar);
+        this.worldTints.put(player, worldTint);
+        player.showBossBar(bar);
     }
 
     /**
@@ -112,6 +124,7 @@ public final class BossBarGazeSignal implements GazeSink {
     @Override
     public void detach(Player survivor) {
         BossBar bar = this.bars.remove(survivor);
+        this.worldTints.remove(survivor);
         if (bar == null) return;
         survivor.hideBossBar(bar);
     }
@@ -132,6 +145,11 @@ public final class BossBarGazeSignal implements GazeSink {
         // sees it, so a hue rotation there tints everything. The text shader runs in a different
         // pass and cannot tell the lightmap anything, which is why the level has to travel twice.
         bar.name(signalFor(level));
+
+        if (!Boolean.TRUE.equals(this.worldTints.get(survivor))) {
+            // Attached without the world tint: the veil above is the whole effect for this player.
+            return;
+        }
 
         if (level == SlenderGaze.NONE) {
             bar.removeFlag(BossBar.Flag.DARKEN_SCREEN);
