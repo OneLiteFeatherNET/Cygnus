@@ -195,6 +195,25 @@ class PageProviderTest {
         env.destroyInstance(instance, true);
     }
 
+    @Test
+    void testInteractablePagePositionsOnlyListsCollectiblePages(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
+
+        PageEntity collectible = new PageEntity(instance, new Pos(10, 64, 20), 1);
+        PageEntity expired = new PageEntity(instance, new Pos(-5, 64, 7), 2);
+        expired.disableInteraction();
+        seedActivePages(pageProvider, collectible, expired);
+
+        List<Pos> positions = pageProvider.interactablePagePositions();
+
+        assertEquals(List.of(new Pos(10, 64, 20)), positions,
+                "an expired page is invisible to the player and must not be announced by a sound");
+
+        env.destroyInstance(instance, true);
+    }
+
     private static String plainStatus(PageProvider pageProvider) {
         return PlainTextComponentSerializer.plainText().serialize(pageProvider.getPageStatus());
     }

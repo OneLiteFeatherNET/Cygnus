@@ -56,3 +56,26 @@ survivorTeamSize=12
 # once on the first join and hashes it itself, which delays that join and costs
 # the download on every restart.
 #resourcePackSha1=0000000000000000000000000000000000000000
+
+# --- Page proximity hint ---------------------------------------------------
+
+# Whether survivors hear a chime coming from pages that are close by. The sound is
+# played at the page's own position, so the client places it in 3D: a player hears
+# which direction a page is in without ever being told where it is. The slender
+# never hears it.
+#pageProximityEnabled=true
+
+# How far away a page may be and still be heard, in blocks. Between 1 and 64; a
+# value outside that range is rejected and the service refuses to start.
+#
+# The value doubles as the volume: a client carries a sound 16 * volume blocks, so
+# a range beyond 16 needs a louder sound to reach that far. The server clips on the
+# range itself either way.
+#pageProximityRange=20
+
+# Ticks between two chimes. At least 1. 20 ticks is one second.
+#pageProximityInterval=20
+
+# The sound played. A key that names no sound the server knows falls back to the
+# default, so the hint never goes silent because of a typo.
+#pageProximitySound=block.amethyst_block.chime

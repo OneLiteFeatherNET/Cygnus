@@ -37,4 +37,22 @@ class PageEntityTest {
         pageEntity.remove();
         env.destroyInstance(instance);
     }
+
+    @Test
+    void testInteractionStateFollowsEnableAndDisable(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+
+        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+
+        assertTrue(pageEntity.isInteractable(), "a freshly spawned page must be collectible");
+
+        pageEntity.disableInteraction();
+        assertFalse(pageEntity.isInteractable(), "a page whose TTL ran out must not count as collectible");
+
+        pageEntity.enableInteraction();
+        assertTrue(pageEntity.isInteractable(), "a page put back into play must count as collectible again");
+
+        pageEntity.remove();
+        env.destroyInstance(instance);
+    }
 }

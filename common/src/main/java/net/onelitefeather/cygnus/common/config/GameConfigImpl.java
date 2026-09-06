@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.common.config;
 
+import net.kyori.adventure.key.Key;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
@@ -19,8 +20,12 @@ import java.net.URI;
  * @param resourcePackUrl   the location the client downloads the ResourcePack from, or {@code null}
  *                          to keep the ResourcePack feature off
  * @param resourcePackSha1  the checksum of the ResourcePack, or {@code null} to have it computed
+ * @param pageProximityEnabled  whether survivors hear a sound while a page is nearby
+ * @param pageProximityRange    how far away a page may be and still be heard, in blocks
+ * @param pageProximityInterval the number of ticks between two proximity sounds
+ * @param pageProximitySound    the sound played while a page is nearby
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public record GameConfigImpl(
@@ -32,7 +37,11 @@ public record GameConfigImpl(
         int survivorTeamSize,
         @Nullable String sentryDsn,
         @Nullable URI resourcePackUrl,
-        @Nullable String resourcePackSha1
+        @Nullable String resourcePackSha1,
+        boolean pageProximityEnabled,
+        int pageProximityRange,
+        int pageProximityInterval,
+        Key pageProximitySound
 ) implements GameConfig {
 
 }

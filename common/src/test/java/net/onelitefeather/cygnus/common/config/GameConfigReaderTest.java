@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.common.config;
 
+import net.kyori.adventure.key.Key;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -121,5 +122,68 @@ class GameConfigReaderTest {
 
         assertEquals(URI.create("https://example.com/pack.zip"), config.resourcePackUrl());
         assertNull(config.resourcePackSha1());
+    }
+
+    @Test
+    void testPageProximityDefaultsWhenNothingIsConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertTrue(config.pageProximityEnabled());
+        assertEquals(20, config.pageProximityRange());
+        assertEquals(20, config.pageProximityInterval());
+        assertEquals(GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND, config.pageProximitySound());
+    }
+
+    @Test
+    void testPageProximityValuesAreReadWhenTheyAreConfigured(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageProximityRange=32
+                pageProximityInterval=40
+                pageProximitySound=block.note_block.chime
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertTrue(config.pageProximityEnabled());
+        assertEquals(32, config.pageProximityRange());
+        assertEquals(40, config.pageProximityInterval());
+        assertEquals(Key.key("block.note_block.chime"), config.pageProximitySound());
+    }
+
+    @Test
+    void testPageProximityCanBeTurnedOff(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageProximityEnabled=false
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertFalse(config.pageProximityEnabled());
+    }
+
+    @Test
+    void testAMalformedSoundKeyFallsBackToTheDefault(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageProximitySound=NOT A KEY
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND, config.pageProximitySound());
+    }
+
+    @Test
+    void testARangeBeyondTheMaximumIsRejected(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageProximityRange=%d
+                """.formatted(GameConfig.MAX_PAGE_PROXIMITY_RANGE + 1));
+
+        GameConfigReader reader = new GameConfigReader(tempDir);
+
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
     }
 }

@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
  * The entity consists of a visual display and an interaction hitbox to improve pickup detection.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  */
 @SuppressWarnings("java:S3252")
@@ -41,6 +41,7 @@ public final class PageEntity extends Entity implements PageCreator {
     private int currentTickTime;
     private long nextTick;
     private boolean send;
+    private boolean interactable = true;
 
     /**
      * Constructs a new {@link PageEntity}.
@@ -95,6 +96,7 @@ public final class PageEntity extends Entity implements PageCreator {
 
         this.currentTickTime = 0;
         this.nextTick = System.currentTimeMillis() + ADDITION_TIME;
+        this.interactable = false;
     }
 
     /**
@@ -120,6 +122,7 @@ public final class PageEntity extends Entity implements PageCreator {
         interactionMeta.setInvisible(false);
         this.ttlTime = Helper.calculateOffsetTime(GameConfig.PAGE_TTL_TIME);
         this.send = false;
+        this.interactable = true;
     }
 
     @Override
@@ -174,6 +177,21 @@ public final class PageEntity extends Entity implements PageCreator {
     @Override
     public int hashCode() {
         return super.hashCode();
+    }
+
+    /**
+     * Returns whether the page can currently be collected.
+     * <p>
+     * A page that ran out of TTL is hidden and stops responding to interaction until it is put back
+     * into play. Anything that points a player at pages - the proximity sound, for one - has to skip
+     * those, because from the player's side they are not there.
+     * </p>
+     *
+     * @return {@code true} while the page is visible and collectible
+     * @since 2.12.0
+     */
+    public boolean isInteractable() {
+        return this.interactable;
     }
 
     /**
