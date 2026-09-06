@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.metadata.display.ItemDisplayMeta;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
@@ -51,6 +52,20 @@ class PageEntityTest {
 
         pageEntity.enableInteraction();
         assertTrue(pageEntity.isInteractable(), "a page put back into play must count as collectible again");
+
+        pageEntity.remove();
+        env.destroyInstance(instance);
+    }
+
+    @Test
+    void testPageIsLitIndependentlyFromTheEnvironment(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+
+        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) pageEntity.getEntityMeta();
+
+        assertEquals(15, itemDisplayMeta.getBlockLight(), "a page must be lit at full block light to stay visible in the dark");
+        assertEquals(0, itemDisplayMeta.getSkyLight(), "the sky light must stay at zero so the brightness does not follow the time of day");
 
         pageEntity.remove();
         env.destroyInstance(instance);

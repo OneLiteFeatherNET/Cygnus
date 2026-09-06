@@ -22,9 +22,16 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Represents a collectible page entity that can be picked up by a player.
  * The entity consists of a visual display and an interaction hitbox to improve pickup detection.
+ * <p>
+ * The display is lit at full block light instead of following the light level of the block it
+ * stands in. Maps are dark by design, and a page rendered at the ambient light level is close to
+ * invisible in the rooms players spend most of their time in. The override only brightens the page
+ * itself - the room around it stays as dark as it was, and the page is still hidden behind walls.
+ * The sky light stays at zero so the brightness does not drift with the time of day.
+ * </p>
  *
  * @author theEvilReaper
- * @version 1.3.0
+ * @version 1.4.0
  * @since 1.0.0
  */
 @SuppressWarnings("java:S3252")
@@ -32,6 +39,8 @@ public final class PageEntity extends Entity implements PageCreator {
 
     private static final Vec HALF_BLOCK = new Vec(0, 0.5, 0);
     private static final long ADDITION_TIME = 1000L;
+    private static final int PAGE_BLOCK_LIGHT = 15;
+    private static final int PAGE_SKY_LIGHT = 0;
     private final Entity hitBox;
     private ItemStack pageItem;
     private int ttlTime;
@@ -61,6 +70,7 @@ public final class PageEntity extends Entity implements PageCreator {
         itemDisplayMeta.setBillboardRenderConstraints(AbstractDisplayMeta.BillboardConstraints.FIXED);
         itemDisplayMeta.setWidth(0.1f);
         itemDisplayMeta.setHeight(0.1f);
+        itemDisplayMeta.setBrightness(PAGE_BLOCK_LIGHT, PAGE_SKY_LIGHT);
 
         this.calculateNextTick();
         this.setAutoViewable(true);
