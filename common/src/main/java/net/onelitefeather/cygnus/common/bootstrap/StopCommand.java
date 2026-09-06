@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.common.bootstrap;
 
 import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.util.TriState;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.command.CommandSender;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.entity.Player;
@@ -12,7 +11,7 @@ import net.minestom.server.entity.Player;
  * players holding {@value #PERMISSION}, since a service should not be stoppable by regular players.
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.6.7
  **/
 public final class StopCommand extends Command {
@@ -25,10 +24,9 @@ public final class StopCommand extends Command {
     public StopCommand() {
         super("stop");
         setCondition((sender, commandString) -> !(sender instanceof Player) || hasStopPermission(sender));
-        setDefaultExecutor((sender, context) -> Thread.ofPlatform().name("cygnus-shutdown").start(() -> {
-            MinecraftServer.stopCleanly();
-            System.exit(0);
-        }));
+        // ServiceShutdown moves the work off this thread: stopping the server tears down the very
+        // console reader that carried CloudNet's 'stop' line here.
+        setDefaultExecutor((sender, context) -> ServiceShutdown.request());
     }
 
     /**
