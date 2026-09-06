@@ -17,6 +17,7 @@ import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
+import net.onelitefeather.cygnus.stamina.StaminaService;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -27,15 +28,23 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
     private final Team survivorTeam;
     private final Team slenderTeam;
     private final JumpScareManager jumpscareManager;
+    private final StaminaService staminaService;
     private final VoidConsumer inventoryUpdater;
 
-    public PlayerDeathListener(Supplier<Phase> phaseSupplier, TeamService teamService, JumpScareManager jumpscareManager, VoidConsumer inventoryUpdater) {
+    public PlayerDeathListener(
+            Supplier<Phase> phaseSupplier,
+            TeamService teamService,
+            JumpScareManager jumpscareManager,
+            StaminaService staminaService,
+            VoidConsumer inventoryUpdater
+    ) {
         this.phaseSupplier = phaseSupplier;
         this.survivorTeam = teamService.getTeam(GameConfig.SURVIVOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
         this.slenderTeam = teamService.getTeam(GameConfig.SLENDER_KEY)
                 .orElseThrow(() -> new IllegalStateException("Slender team not found"));
         this.jumpscareManager = jumpscareManager;
+        this.staminaService = staminaService;
         this.inventoryUpdater = inventoryUpdater;
     }
 
@@ -63,6 +72,10 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
 
         event.setChatMessage(Messages.getDeathComponent(player));
         survivorTeam.removePlayer(player);
+        // Hands the stamina bar back, like the quit and the revive path do. Left running it keeps
+        // draining the experience bar of somebody who is a spectator by now and can leave them
+        // sprint blocked, so the spectator carries a survivor HUD around.
+        this.staminaService.removePlayer(player);
         player.removeTag(Tags.TEAM_KEY);
         EventDispatcher.call(new SpectatorAddEvent(player));
         this.inventoryUpdater.apply();

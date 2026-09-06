@@ -9,6 +9,7 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.theevilreaper.xerus.api.team.Team;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -129,6 +130,42 @@ class SpectatorServiceTest extends CygnusPlayerTestBase {
         service.openOverview(player);
 
         assertNotNull(player.getOpenInventory());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testJoinKeepsTheSpectatorAbleToFlyAfterTouchingTheGround(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        SpectatorService service = new SpectatorService(spectatorTeam, survivorTeam);
+
+        service.join(player);
+
+        assertTrue(player.isFlying(), "a spectator starts in the air");
+        assertTrue(player.isAllowFlying(), "without the flight permission the client drops flight on landing and cannot take off again");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testJoinClearsTheStaminaHudOfTheFormerSurvivor(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
+        player.setExp(0.5f);
+        player.setBlockedSprinting(true);
+
+        Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        SpectatorService service = new SpectatorService(spectatorTeam, survivorTeam);
+
+        service.join(player);
+
+        assertEquals(0.0f, player.getExp(), "a spectator must not keep the survivor stamina bar");
+        assertFalse(player.hasBlockedSprinting(), "a spectator must not keep the survivor sprint cooldown");
 
         env.destroyInstance(instance, true);
     }
