@@ -19,8 +19,25 @@ class AttributeHelperTest {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         AttributeHelper.adjustStepHeightAndJump(player);
-        assertEquals(0.0, player.getAttribute(Attribute.JUMP_STRENGTH).getBaseValue());
-        assertEquals(1.0, player.getAttribute(Attribute.STEP_HEIGHT).getBaseValue());
+
+        assertEquals(0.42, player.getAttribute(Attribute.JUMP_STRENGTH).getBaseValue(), 0.0001);
+        assertEquals(0.0, player.getAttribute(Attribute.JUMP_STRENGTH).getValue(), 0.0001);
+
+        assertEquals(0.6, player.getAttribute(Attribute.STEP_HEIGHT).getBaseValue(), 0.0001);
+        assertEquals(1.0, player.getAttribute(Attribute.STEP_HEIGHT).getValue(), 0.0001);
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAttributeAdjustmentIsIdempotent(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        AttributeHelper.adjustStepHeightAndJump(player);
+        AttributeHelper.adjustStepHeightAndJump(player);
+
+        assertEquals(0.0, player.getAttribute(Attribute.JUMP_STRENGTH).getValue(), 0.0001);
+        assertEquals(1.0, player.getAttribute(Attribute.STEP_HEIGHT).getValue(), 0.0001);
         env.destroyInstance(instance, true);
     }
 
@@ -30,12 +47,12 @@ class AttributeHelperTest {
         Player player = env.createPlayer(instance);
 
         AttributeHelper.adjustStepHeightAndJump(player);
-        assertEquals(0.0, player.getAttribute(Attribute.JUMP_STRENGTH).getBaseValue());
-        assertEquals(1.0, player.getAttribute(Attribute. STEP_HEIGHT).getBaseValue());
+        assertEquals(0.0, player.getAttribute(Attribute.JUMP_STRENGTH).getValue(), 0.0001);
+        assertEquals(1.0, player.getAttribute(Attribute.STEP_HEIGHT).getValue(), 0.0001);
 
         AttributeHelper.resetAttributeAdjustments(player);
-        assertEquals(0.42, player.getAttribute(Attribute.JUMP_STRENGTH).getBaseValue());
-        assertEquals(0.6, player.getAttribute(Attribute. STEP_HEIGHT).getBaseValue());
+        assertEquals(0.42, player.getAttribute(Attribute.JUMP_STRENGTH).getValue(), 0.0001);
+        assertEquals(0.6, player.getAttribute(Attribute.STEP_HEIGHT).getValue(), 0.0001);
         env.destroyInstance(instance, true);
     }
 
@@ -71,14 +88,30 @@ class AttributeHelperTest {
     }
 
     @Test
+    void testDecreaseAndResetSpeed(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
+
+        AttributeHelper.decreaseSpeed(player);
+        assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue(), 0.0001);
+        assertEquals(0.065, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
+
+        AttributeHelper.resetSpeed(player);
+        assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
     void testSpeedScaleUpdate(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
-        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.065);
+        AttributeHelper.decreaseSpeed(player);
 
         AttributeHelper.updateSpeedScale(player, 0.01);
 
-        assertEquals(0.065, player.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue(), 0.0001);
+        assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue(), 0.0001);
         assertEquals(0.075, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
 
         AttributeHelper.removeSpeedScale(player);
@@ -90,7 +123,7 @@ class AttributeHelperTest {
     void testSpeedScaleUpdateIsIdempotent(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
-        player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.065);
+        AttributeHelper.decreaseSpeed(player);
 
         AttributeHelper.updateSpeedScale(player, 0.01);
         AttributeHelper.updateSpeedScale(player, 0.01);
