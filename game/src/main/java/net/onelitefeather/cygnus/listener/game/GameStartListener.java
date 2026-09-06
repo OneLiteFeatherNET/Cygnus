@@ -9,6 +9,7 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
@@ -26,12 +27,14 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
     private final AmbientProvider ambientProvider;
     private final StaminaService staminaService;
     private final PageProvider pageProvider;
+    private final PageProximityService pageProximityService;
 
-    public GameStartListener(TeamService teamService, AmbientProvider ambientProvider, StaminaService staminaService, PageProvider pageProvider) {
+    public GameStartListener(TeamService teamService, AmbientProvider ambientProvider, StaminaService staminaService, PageProvider pageProvider, PageProximityService pageProximityService) {
         this.teamService = teamService;
         this.ambientProvider = ambientProvider;
         this.staminaService = staminaService;
         this.pageProvider = pageProvider;
+        this.pageProximityService = pageProximityService;
     }
 
     @Override
@@ -71,6 +74,8 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
         this.staminaService.start();
         EventDispatcher.call(new PageSpawnEvent());
         this.ambientProvider.startTask();
+        // Started after the pages exist: PageSpawnEvent above is what fills the active page map.
+        this.pageProximityService.startTask();
         TeamHelper.updateTabList(this.teamService);
     }
 }

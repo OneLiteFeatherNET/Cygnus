@@ -41,6 +41,7 @@ import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
+import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.blood.BloodSplatterService;
 import net.onelitefeather.cygnus.command.GlitchCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
@@ -102,7 +103,7 @@ import java.util.function.Supplier;
 
 /**
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -113,6 +114,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final AmbientProvider ambientProvider;
     private final StaminaService staminaService;
     private final PageProvider pageProvider;
+    private final PageProximityService pageProximityService;
     private final GameView view;
     private final GameMapProvider mapProvider;
     private final GameConfig gameConfig;
@@ -154,6 +156,13 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
         this.ambientProvider = new AmbientProvider(survivorTeam);
+        // Only survivors get the hint: the slender hearing it would turn every page into a place to
+        // camp at, which is the opposite of what the hint is for.
+        this.pageProximityService = new PageProximityService(
+                this.gameConfig,
+                survivorTeam::getPlayers,
+                this.pageProvider::interactablePagePositions
+        );
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
@@ -224,7 +233,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         SlenderBarTrigger trigger = new SlenderBarTrigger(this.staminaService::getSlenderBar);
         handler.addListener(PlayerUseItemEvent.class, new SlenderItemListener(trigger));
         handler.addListener(GameFinishEvent.class, new GameFinishListener());
-        handler.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider));
+        handler.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider, this.pageProximityService));
         handler.addListener(PageSpawnEvent.class, new PageSpawnListener(this.pageProvider, this.mapProvider.getActiveInstance()));
         handler.addListener(PlayerDeathEvent.class, new PlayerDeathListener(
                 phaseSupplier, this.teamService, this.jumpscareManager, this.staminaService, this.spectatorService::updateInventory
@@ -289,6 +298,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.pageProvider.cleanUp();
         this.staminaService.cleanUp();
         this.ambientProvider.stopTask();
+        this.pageProximityService.stopTask();
         this.jumpscareManager.cleanUp();
         this.teamService.getTeam(GameConfig.SLENDER_KEY)
                 .ifPresent(slenderTeam -> slenderTeam.getPlayers()

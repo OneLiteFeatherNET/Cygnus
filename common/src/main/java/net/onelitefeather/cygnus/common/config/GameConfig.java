@@ -43,6 +43,19 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     int MIN_PAGE_COUNT = 8;
 
     /**
+     * The sound played to a survivor while a page is within {@link #pageProximityRange()}.
+     * The amethyst chime is a soft, bell-less shimmer that reads as "something is here" without
+     * sounding like an alarm.
+     */
+    Key DEFAULT_PAGE_PROXIMITY_SOUND = Key.key("block.amethyst_block.chime");
+
+    /**
+     * The largest {@link #pageProximityRange()} a configuration may ask for. Beyond this a single
+     * page would be audible across a good part of the map, which stops being a hint.
+     */
+    int MAX_PAGE_PROXIMITY_RANGE = 64;
+
+    /**
      * Creates a new {@link Builder} which can be used to create a new game configuration.
      *
      * @return the builder instance
@@ -132,6 +145,48 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     String resourcePackSha1();
 
     /**
+     * Returns whether survivors hear a sound while a page is nearby.
+     *
+     * @return {@code true} while the proximity hint is on
+     * @since 2.12.0
+     */
+    boolean pageProximityEnabled();
+
+    /**
+     * Returns how far away a page may be and still be heard, in blocks.
+     * <p>
+     * The value doubles as the volume the sound is played at: Minecraft carries a sound
+     * {@code 16 * volume} blocks, so a range beyond 16 blocks needs a volume above 1 to reach that
+     * far, and the server clips anything past the range itself.
+     * </p>
+     *
+     * @return the range in blocks, at most {@link #MAX_PAGE_PROXIMITY_RANGE}
+     * @since 2.12.0
+     */
+    int pageProximityRange();
+
+    /**
+     * Returns the number of ticks between two proximity sounds.
+     *
+     * @return the interval in ticks, at least 1
+     * @since 2.12.0
+     */
+    int pageProximityInterval();
+
+    /**
+     * Returns the sound played while a page is nearby.
+     * <p>
+     * The key is not resolved against the sound registry here - a key that names no known sound is
+     * only noticed when the sound is first played, and the proximity hint falls back to
+     * {@link #DEFAULT_PAGE_PROXIMITY_SOUND} then.
+     * </p>
+     *
+     * @return the sound key, never {@code null}
+     * @since 2.12.0
+     */
+    Key pageProximitySound();
+
+    /**
      * The {@link Builder} interface is used to create a new game configuration.
      * It provides methods to set the values for the configuration.
      *
@@ -218,6 +273,45 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @since 2.11.0
          */
         Builder resourcePackSha1(@Nullable String resourcePackSha1);
+
+        /**
+         * Sets whether survivors hear a sound while a page is nearby.
+         *
+         * @param pageProximityEnabled {@code true} to keep the proximity hint on
+         * @return the builder instance
+         * @since 2.12.0
+         */
+        Builder pageProximityEnabled(boolean pageProximityEnabled);
+
+        /**
+         * Sets how far away a page may be and still be heard, in blocks.
+         *
+         * @param pageProximityRange the range in blocks
+         * @return the builder instance
+         * @throws IllegalArgumentException if the range is below 1 or above
+         *                                  {@link GameConfig#MAX_PAGE_PROXIMITY_RANGE}
+         * @since 2.12.0
+         */
+        Builder pageProximityRange(int pageProximityRange);
+
+        /**
+         * Sets the number of ticks between two proximity sounds.
+         *
+         * @param pageProximityInterval the interval in ticks
+         * @return the builder instance
+         * @throws IllegalArgumentException if the interval is below 1
+         * @since 2.12.0
+         */
+        Builder pageProximityInterval(int pageProximityInterval);
+
+        /**
+         * Sets the sound played while a page is nearby.
+         *
+         * @param pageProximitySound the sound key
+         * @return the builder instance
+         * @since 2.12.0
+         */
+        Builder pageProximitySound(Key pageProximitySound);
 
         /**
          * Builds the game configuration.

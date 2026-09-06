@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.common.config;
 
+import net.kyori.adventure.key.Key;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
@@ -9,7 +10,7 @@ import java.net.URI;
  * It collects the values for a game configuration and creates a {@link GameConfigImpl} from them.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class GameConfigBuilder implements GameConfig.Builder {
@@ -23,6 +24,10 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     private @Nullable String sentryDsn;
     private @Nullable URI resourcePackUrl;
     private @Nullable String resourcePackSha1;
+    private boolean pageProximityEnabled;
+    private int pageProximityRange;
+    private int pageProximityInterval;
+    private Key pageProximitySound = GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND;
 
     @Override
     public GameConfig.Builder minPlayers(int minPlayers) {
@@ -90,6 +95,37 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     }
 
     @Override
+    public GameConfig.Builder pageProximityEnabled(boolean pageProximityEnabled) {
+        this.pageProximityEnabled = pageProximityEnabled;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder pageProximityRange(int pageProximityRange) {
+        if (pageProximityRange < 1 || pageProximityRange > GameConfig.MAX_PAGE_PROXIMITY_RANGE) {
+            throw new IllegalArgumentException(
+                    "Page proximity range must be between 1 and " + GameConfig.MAX_PAGE_PROXIMITY_RANGE);
+        }
+        this.pageProximityRange = pageProximityRange;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder pageProximityInterval(int pageProximityInterval) {
+        if (pageProximityInterval < 1) {
+            throw new IllegalArgumentException("Page proximity interval must be at least 1 tick");
+        }
+        this.pageProximityInterval = pageProximityInterval;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder pageProximitySound(Key pageProximitySound) {
+        this.pageProximitySound = pageProximitySound;
+        return this;
+    }
+
+    @Override
     public GameConfig build() {
         return new GameConfigImpl(
                 minPlayers,
@@ -100,7 +136,11 @@ public final class GameConfigBuilder implements GameConfig.Builder {
                 survivorTeamSize,
                 sentryDsn,
                 resourcePackUrl,
-                resourcePackSha1
+                resourcePackSha1,
+                pageProximityEnabled,
+                pageProximityRange,
+                pageProximityInterval,
+                pageProximitySound
         );
     }
 }

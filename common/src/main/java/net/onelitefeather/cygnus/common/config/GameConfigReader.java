@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.common.config;
 
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.key.InvalidKeyException;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,13 +29,17 @@ import java.util.regex.Pattern;
  *     <li>sentryDsn</li>
  *     <li>resourcePackUrl</li>
  *     <li>resourcePackSha1</li>
+ *     <li>pageProximityEnabled</li>
+ *     <li>pageProximityRange</li>
+ *     <li>pageProximityInterval</li>
+ *     <li>pageProximitySound</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
  * The default values are defined in the {@link InternalGameConfig} class.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @see GameConfig
  * @since 1.0.0
  */
@@ -44,6 +50,7 @@ public final class GameConfigReader {
     private static final String RESOURCE_PACK_URL_KEY = "resourcePackUrl";
     private static final String RESOURCE_PACK_SHA1_KEY = "resourcePackSha1";
     private static final Pattern SHA1_PATTERN = Pattern.compile("[0-9a-fA-F]{40}");
+    private static final String PAGE_PROXIMITY_SOUND_KEY = "pageProximitySound";
 
     private final Path path;
 
@@ -94,7 +101,11 @@ public final class GameConfigReader {
                 .slenderTeamSize(getInt(properties, "slenderTeamSize", internal.slenderTeamSize()))
                 .sentryDsn(getString(properties, SENTRY_DSN_KEY))
                 .resourcePackUrl(getResourcePackUrl(properties))
-                .resourcePackSha1(getResourcePackSha1(properties));
+                .resourcePackSha1(getResourcePackSha1(properties))
+                .pageProximityEnabled(getBoolean(properties, "pageProximityEnabled", internal.pageProximityEnabled()))
+                .pageProximityRange(getInt(properties, "pageProximityRange", internal.pageProximityRange()))
+                .pageProximityInterval(getInt(properties, "pageProximityInterval", internal.pageProximityInterval()))
+                .pageProximitySound(getPageProximitySound(properties, internal.pageProximitySound()));
 
         return configBuilder.build();
     }
@@ -108,6 +119,52 @@ public final class GameConfigReader {
             return Integer.parseInt(value.trim());
         } catch (NumberFormatException exception) {
             CONFIG_LOGGER.warn("Failed to parse integer config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Reads a flag from the properties. Anything other than {@code true} or {@code false} is not a
+     * decision the operator made on purpose, so it falls back to the default instead of silently
+     * counting as {@code false} the way {@link Boolean#parseBoolean(String)} would.
+     *
+     * @param properties   the loaded properties
+     * @param key          the key to read
+     * @param defaultValue the value to use when the key is absent or unreadable
+     * @return the parsed flag
+     */
+    private boolean getBoolean(Properties properties, String key, boolean defaultValue) {
+        String value = getString(properties, key);
+        if (value == null) {
+            return defaultValue;
+        }
+        if ("true".equalsIgnoreCase(value)) {
+            return true;
+        }
+        if ("false".equalsIgnoreCase(value)) {
+            return false;
+        }
+        CONFIG_LOGGER.warn("Failed to parse boolean config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
+        return defaultValue;
+    }
+
+    /**
+     * Reads the sound played while a page is nearby. Only the key syntax is checked here - whether
+     * the key names a sound the client knows is not something this reader can answer.
+     *
+     * @param properties   the loaded properties
+     * @param defaultValue the sound to use when the key is absent or malformed
+     * @return the parsed sound key
+     */
+    private Key getPageProximitySound(Properties properties, Key defaultValue) {
+        String value = getString(properties, PAGE_PROXIMITY_SOUND_KEY);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Key.key(value);
+        } catch (InvalidKeyException exception) {
+            CONFIG_LOGGER.warn("'{}' is not a valid sound key: '{}'. Falling back to default: {}", PAGE_PROXIMITY_SOUND_KEY, value, defaultValue, exception);
             return defaultValue;
         }
     }

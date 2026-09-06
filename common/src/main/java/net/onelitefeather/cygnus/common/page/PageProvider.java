@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.common.page;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
@@ -34,7 +35,7 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_ACTIVE_PAGE
  * Handles the logic to manage and spawn pages during the {@link GamePhase}.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -178,6 +179,26 @@ public final class PageProvider {
         // legitimately re-claims it and double-credits the find.
         updatePageData(pageEntity);
         return true;
+    }
+
+    /**
+     * Returns the positions of every page a player could currently walk up to and collect.
+     * <p>
+     * Pages that ran out of TTL are left out: they are invisible and do not respond to interaction,
+     * so pointing a player at one would be a lie.
+     * </p>
+     *
+     * @return the positions of the collectible pages, in no particular order
+     * @since 2.12.0
+     */
+    public List<Pos> interactablePagePositions() {
+        List<Pos> positions = new ArrayList<>(this.activePages.size());
+        for (PageEntity entity : this.activePages.values()) {
+            if (entity.isInteractable()) {
+                positions.add(entity.getPosition());
+            }
+        }
+        return positions;
     }
 
     private void updatePageData(PageEntity entity) {
