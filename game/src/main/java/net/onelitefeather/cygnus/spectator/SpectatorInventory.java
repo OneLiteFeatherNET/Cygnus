@@ -71,7 +71,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
                         SLOTS[index],
                         ItemStack.builder(Material.PLAYER_HEAD)
                                 .customName(Component.text(player.getUsername()))
-                                .set(DataComponents.PROFILE, profile)
+                                //.set(DataComponents.PROFILE, profile)
                                 .set(TARGET_TAG, player.getUuid())
                                 .lore(LORE_LINES)
                                 .build(),
