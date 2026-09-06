@@ -8,6 +8,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerUseItemEvent;
+import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
@@ -26,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  * the spectate-overview GUI, and leaving spectator mode.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.7.0
  */
 public final class SpectatorService {
@@ -63,6 +64,10 @@ public final class SpectatorService {
      * {@link Player#setGameMode(GameMode)} resets the flight permission to the one of the mode, and
      * {@code SURVIVAL} does not allow flying. The abilities packet then only carries the flying flag, so the
      * client drops flight the moment the spectator touches the ground and refuses to take off again.
+     * <p>
+     * {@link AttributeHelper#resetAll(Player)} hands the round attributes back. A spectator is out of the
+     * game, so none of the values the round balances on apply to them any more: they would otherwise keep
+     * the lowered survivor speed and the pinned jump strength for the rest of the session.
      *
      * @param player the player to convert
      */
@@ -73,6 +78,7 @@ public final class SpectatorService {
         player.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
         spectatorTeam.addPlayer(player);
         clearStaminaHud(player);
+        AttributeHelper.resetAll(player);
         Items.setSpectatorLayout(player);
         markAsSpectator(player);
         player.updateViewableRule(VisibilityRules.spectatorRule());

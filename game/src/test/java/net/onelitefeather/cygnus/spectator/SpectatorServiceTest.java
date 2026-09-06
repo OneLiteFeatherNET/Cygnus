@@ -5,11 +5,13 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
+import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.item.Material;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
+import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
@@ -192,6 +194,29 @@ class SpectatorServiceTest extends CygnusPlayerTestBase {
                 displayName,
                 "a spectator must be struck through in gray instead of keeping the green survivor name"
         );
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testJoinHandsTheRoundAttributesBack(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        AttributeHelper.adjustStepHeightAndJump(player);
+        AttributeHelper.decreaseSpeed(player);
+        AttributeHelper.updateSpeedScale(player, 0.02);
+        AttributeHelper.updateHealthScale(player, 6.0f);
+
+        Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        SpectatorService service = new SpectatorService(spectatorTeam, survivorTeam);
+
+        service.join(player);
+
+        assertEquals(0.42, player.getAttribute(Attribute.JUMP_STRENGTH).getValue(), 0.0001, "a spectator must be able to jump again");
+        assertEquals(0.6, player.getAttribute(Attribute.STEP_HEIGHT).getValue(), 0.0001);
+        assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001, "a spectator must not keep the lowered survivor speed");
+        assertEquals(20.0, player.getAttribute(Attribute.MAX_HEALTH).getValue(), 0.0001);
 
         env.destroyInstance(instance, true);
     }

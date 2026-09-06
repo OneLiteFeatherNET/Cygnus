@@ -11,7 +11,7 @@ import net.minestom.server.entity.attribute.AttributeOperation;
  * The {@link AttributeHelper} class provides utility methods to adjust the player's attributes.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @SuppressWarnings("java:S3252")
@@ -167,6 +167,30 @@ public final class AttributeHelper {
      */
     public static void removeSlenderDrainingSpeed(Player player) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(SLENDER_DRAINING_SPEED_KEY);
+    }
+
+    /**
+     * Removes every modifier this class applies, putting the player back on the vanilla values.
+     * <p>
+     * A round leaves its modifiers on the player: the jump strength is pinned to zero, the step height is
+     * raised, the movement speed is lowered and both scaling bonuses sit on top of it. Nothing takes them
+     * off again while the player stays connected, so somebody who is out of the round keeps walking at
+     * survivor speed and cannot jump. Removing the health scaling can lower the maximum below the current
+     * health, so the health is clamped afterwards.
+     *
+     * @param player the player to reset
+     */
+    public static void resetAll(Player player) {
+        resetAttributeAdjustments(player);
+        resetSpeed(player);
+        removeSpeedScale(player);
+        removeSlenderDrainingSpeed(player);
+        removeHealthScale(player);
+
+        float maxHealth = (float) player.getAttribute(Attribute.MAX_HEALTH).getValue();
+        if (player.getHealth() > maxHealth) {
+            player.setHealth(maxHealth);
+        }
     }
 
     private AttributeHelper() {
