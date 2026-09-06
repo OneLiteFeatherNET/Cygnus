@@ -145,4 +145,38 @@ class AttributeHelperTest {
         assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.001);
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    void testResetAllRemovesEveryModifierTheRoundApplied(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        AttributeHelper.adjustStepHeightAndJump(player);
+        AttributeHelper.decreaseSpeed(player);
+        AttributeHelper.updateSpeedScale(player, 0.02);
+        AttributeHelper.updateHealthScale(player, 6.0f);
+        AttributeHelper.applySlenderDrainingSpeed(player);
+
+        AttributeHelper.resetAll(player);
+
+        assertEquals(0.42, player.getAttribute(Attribute.JUMP_STRENGTH).getValue(), 0.0001);
+        assertEquals(0.6, player.getAttribute(Attribute.STEP_HEIGHT).getValue(), 0.0001);
+        assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
+        assertEquals(20.0, player.getAttribute(Attribute.MAX_HEALTH).getValue(), 0.0001);
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testResetAllClampsTheHealthToTheLoweredMaximum(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        AttributeHelper.updateHealthScale(player, 6.0f);
+        assertEquals(26.0f, player.getHealth(), 0.0001f);
+
+        AttributeHelper.resetAll(player);
+
+        assertEquals(20.0f, player.getHealth(), 0.0001f, "the bonus health must not survive the removal of the modifier");
+        env.destroyInstance(instance, true);
+    }
 }

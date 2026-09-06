@@ -40,6 +40,8 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
         }
 
         for (Player player : connectionManager.getOnlinePlayers()) {
+            // A spectator is not part of the round, so none of the round attributes belong on them.
+            if (TeamHelper.isSpectatorTeam(player)) continue;
             AttributeHelper.adjustStepHeightAndJump(player);
             if (TeamHelper.isSlenderTeam(player)) continue;
             AttributeHelper.decreaseSpeed(player);
