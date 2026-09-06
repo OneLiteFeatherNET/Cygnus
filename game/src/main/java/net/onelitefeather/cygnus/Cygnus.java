@@ -51,6 +51,7 @@ import net.onelitefeather.cygnus.common.config.GameConfigReader;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
+import net.onelitefeather.cygnus.disclaimer.EpilepsyDisclaimer;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.gaze.BossBarGazeSignal;
 import net.onelitefeather.cygnus.gaze.SlenderGazeService;
@@ -119,6 +120,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final SpectatorService spectatorService;
     private final Optional<ResourcePackService> resourcePackService;
     private final ScoreboardDisplay scoreboardDisplay;
+    private final EpilepsyDisclaimer epilepsyDisclaimer;
     private final ScreenOverlay screenOverlay;
     private final SlenderGazeService slenderGazeService;
     private final BossBarGazeSignal gazeSignal;
@@ -155,6 +157,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
+        this.epilepsyDisclaimer = new EpilepsyDisclaimer();
         this.screenOverlay = new EquipmentScreenOverlay();
         this.gazeSignal = new BossBarGazeSignal();
         // The service drives the signal during a round. Outside one it does not tick - it starts on
@@ -200,6 +203,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 )
         );
         this.resourcePackService.ifPresent(service -> service.registerListener(manager));
+        this.epilepsyDisclaimer.registerListener(manager);
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener(spectatorTeam));
