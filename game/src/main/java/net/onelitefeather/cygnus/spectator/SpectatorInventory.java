@@ -23,6 +23,13 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+/**
+ * The overview a spectator uses to jump to a player who is still in the round.
+ *
+ * @author theEvilReaper
+ * @version 1.1.0
+ * @since 2.7.0
+ */
 public class SpectatorInventory extends GlobalInventoryBuilder {
 
     private static final ItemStack DECORATION_PANE = ItemStack.builder(Material.BLACK_STAINED_GLASS_PANE)
@@ -114,10 +121,29 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
 
     /**
      * Opens the inventory for a specific {@link Player}.
+     * <p>
+     * Refreshes first, so the spectator always sees the survivors that are alive right now.
      *
      * @param player who should get it
      */
     public void open(Player player) {
+        this.refresh();
         player.openInventory(getInventory());
+    }
+
+    /**
+     * Marks both layouts as stale so the next inventory update rebuilds the head list from the survivor team.
+     * <p>
+     * Invalidating the data layout alone is not enough for two reasons. The inventory is built once, at
+     * server start, when the survivor team is still empty, and {@code invalidateDataLayout} only clears the
+     * valid flag while nobody is looking at the inventory - the following {@code getInventory} then skips the
+     * rebuild, because it only retrieves a data layout while it is applying the design layout as well. The
+     * head list therefore stayed at the empty one from server start for the whole round. Invalidating the
+     * design layout too is also what clears the inventory: a data layout can only write items, so the head of
+     * a player who left the round would otherwise stay in place.
+     */
+    public void refresh() {
+        this.invalidateLayout();
+        this.invalidateDataLayout();
     }
 }
