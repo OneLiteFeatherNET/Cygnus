@@ -10,6 +10,7 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.gaze.BossBarGazeSignal;
 import net.onelitefeather.cygnus.gaze.SlenderGaze;
 import net.onelitefeather.cygnus.gaze.SlenderGazeService;
+import net.onelitefeather.cygnus.glitch.PageGlitchService;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
@@ -20,7 +21,7 @@ import net.theevilreaper.xerus.api.team.TeamService;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Wires the full-screen effects: the slender gaze, the blood splatter and the tunnel vision.
+ * Wires the full-screen effects: the slender gaze, the page glitch, the blood splatter and the tunnel vision.
  * <p>
  * The effects are drawn as {@code camera_overlay} textures and are gated by
  * {@link OverlayProperties} alone - deliberately not by whether this server hands out a resource
@@ -34,6 +35,7 @@ public final class OverlayModule implements GameFeature {
 
     private final BossBarGazeSignal gazeSignal;
     private final SlenderGazeService slenderGazeService;
+    private final PageGlitchService pageGlitchService;
     private final BloodSplatterService bloodSplatterService;
     private final TunnelVisionService tunnelVisionService;
 
@@ -41,10 +43,11 @@ public final class OverlayModule implements GameFeature {
      * Builds the effects.
      *
      * @param glitch         the thresholds of the slender gaze
+     * @param pageGlitch     how the slender's own screen tears as pages are found
      * @param teamService    the teams of the round
      * @param staminaService the stamina the tunnel vision follows
      */
-    public OverlayModule(GameConfig.Glitch glitch, TeamService teamService, StaminaService staminaService) {
+    public OverlayModule(GameConfig.Glitch glitch, GameConfig.PageGlitch pageGlitch, TeamService teamService, StaminaService staminaService) {
         ScreenOverlay screenOverlay = new EquipmentScreenOverlay();
         this.gazeSignal = new BossBarGazeSignal();
         this.slenderGazeService = new SlenderGazeService(
@@ -55,6 +58,13 @@ public final class OverlayModule implements GameFeature {
                         glitch.viewAngle()),
                 () -> TeamHelper.slenderOf(teamService),
                 () -> TeamHelper.survivorsOf(teamService));
+        // The gaze's signal, shared rather than a second one: a player has one carrier, and two
+        // would draw two full-screen quads over each other. Which of the two services addresses a
+        // player follows their team, and a hand-over moves them from one to the other.
+        this.pageGlitchService = new PageGlitchService(
+                pageGlitch,
+                this.gazeSignal,
+                () -> TeamHelper.slenderOf(teamService));
         this.bloodSplatterService = new BloodSplatterService(
                 screenOverlay,
                 bound -> ThreadLocalRandom.current().nextInt(bound)
@@ -81,6 +91,7 @@ public final class OverlayModule implements GameFeature {
      */
     private void registerListeners() {
         this.node.addChild(this.slenderGazeService.node());
+        this.node.addChild(this.pageGlitchService.node());
         this.node.addChild(this.bloodSplatterService.node());
         this.node.addChild(this.tunnelVisionService.node());
     }

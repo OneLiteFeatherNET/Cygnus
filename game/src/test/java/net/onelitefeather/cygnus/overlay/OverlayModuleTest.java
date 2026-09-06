@@ -29,7 +29,7 @@ class OverlayModuleTest {
     }
 
     private static OverlayModule module() {
-        return new OverlayModule(GameConfig.Glitch.DEFAULT, TeamService.of(), new StaminaService());
+        return new OverlayModule(GameConfig.Glitch.DEFAULT, GameConfig.PageGlitch.DEFAULT, TeamService.of(), new StaminaService());
     }
 
     @Test
@@ -55,6 +55,6 @@ class OverlayModuleTest {
         EventNode<Event> moduleNode = root.getChildren().iterator().next();
         Set<String> effects = moduleNode.getChildren().stream().map(EventNode::getName).collect(Collectors.toSet());
         assertEquals("overlay", moduleNode.getName());
-        assertEquals(Set.of("slender-gaze", "blood-splatter", "tunnel-vision"), effects);
+        assertEquals(Set.of("slender-gaze", "page-glitch", "blood-splatter", "tunnel-vision"), effects);
     }
 }

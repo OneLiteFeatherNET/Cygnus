@@ -43,7 +43,6 @@ import net.onelitefeather.cygnus.adrenaline.AdrenalineService;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.damage.DamageSoundService;
-import net.onelitefeather.cygnus.noise.SlenderStaticService;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
@@ -174,11 +173,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 // Not part of the OverlayModule: the sound is the feedback a hit owes the player
                 // either way, and it needs neither the resource pack nor the overlay gate to be heard.
                 new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
-                // Outside the OverlayModule for the same reason as the damage sound: the static is
-                // heard, not drawn, so neither the resource pack nor the overlay gate has a say in it.
-                new SlenderStaticService(
-                        this.gameConfig.slenderStatic(),
-                        () -> TeamHelper.slenderOf(this.teamService)),
                 new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
                         sanityService, sanityService, this.jumpscareManager, this.staminaService),
                 sanityService,
@@ -186,7 +180,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         this.gameConfig.adrenaline(),
                         () -> TeamHelper.survivorsOf(this.teamService),
                         System::currentTimeMillis),
-                new OverlayModule(this.gameConfig.glitch(), this.teamService, this.staminaService)
+                new OverlayModule(this.gameConfig.glitch(), this.gameConfig.pageGlitch(), this.teamService, this.staminaService)
         )).toList();
         this.initPhases();
         this.initCommands();

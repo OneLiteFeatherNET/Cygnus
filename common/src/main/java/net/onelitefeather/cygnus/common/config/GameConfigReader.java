@@ -40,12 +40,8 @@ import java.util.regex.Pattern;
  *     <li>glitchCloseRange</li>
  *     <li>glitchViewAngle</li>
  *     <li>lobbyAtmosphereShare</li>
- *     <li>slenderStaticEnabled</li>
- *     <li>slenderStaticSound</li>
- *     <li>slenderStaticQuietInterval</li>
- *     <li>slenderStaticFranticInterval</li>
- *     <li>slenderStaticMinVolume</li>
- *     <li>slenderStaticMaxVolume</li>
+ *     <li>pageGlitchEnabled</li>
+ *     <li>pageGlitchPulseSeconds</li>
  *     <li>creek.* (see {@link CreekConfig})</li>
  *     <li>sanity.* (see {@link SanityConfig})</li>
  *     <li>stamina.* (see {@link StaminaConfig})</li>
@@ -69,7 +65,6 @@ public final class GameConfigReader {
     private static final Pattern SHA1_PATTERN = Pattern.compile("[0-9a-fA-F]{40}");
     private static final String PAGE_PROXIMITY_SOUND_KEY = "pageProximitySound";
     private static final String DAMAGE_SOUND_KEY = "damageSound";
-    private static final String SLENDER_STATIC_SOUND_KEY = "slenderStaticSound";
     private static final String CREEK_PREFIX = "creek.";
     private static final String SANITY_PREFIX = "sanity.";
     private static final String STAMINA_PREFIX = "stamina.";
@@ -117,7 +112,7 @@ public final class GameConfigReader {
         GameConfig.PageProximity proximity = GameConfig.PageProximity.DEFAULT;
         GameConfig.DamageSound damage = GameConfig.DamageSound.DEFAULT;
         GameConfig.Glitch glitch = GameConfig.Glitch.DEFAULT;
-        GameConfig.SlenderStatic slenderStatic = GameConfig.SlenderStatic.DEFAULT;
+        GameConfig.PageGlitch pageGlitch = GameConfig.PageGlitch.DEFAULT;
         return new GameConfig(
                 new GameConfig.Round(
                         getInt(properties, "minPlayers", round.minPlayers()),
@@ -147,13 +142,9 @@ public final class GameConfigReader {
                         getInt(properties, "glitchCloseRange", glitch.closeRange()),
                         getInt(properties, "glitchViewAngle", glitch.viewAngle())
                 ),
-                new GameConfig.SlenderStatic(
-                        getBoolean(properties, "slenderStaticEnabled", slenderStatic.enabled()),
-                        getSound(properties, SLENDER_STATIC_SOUND_KEY, slenderStatic.sound()),
-                        getInt(properties, "slenderStaticQuietInterval", slenderStatic.quietInterval()),
-                        getInt(properties, "slenderStaticFranticInterval", slenderStatic.franticInterval()),
-                        getFloat(properties, "slenderStaticMinVolume", slenderStatic.minVolume()),
-                        getFloat(properties, "slenderStaticMaxVolume", slenderStatic.maxVolume())
+                new GameConfig.PageGlitch(
+                        getBoolean(properties, "pageGlitchEnabled", pageGlitch.enabled()),
+                        getInt(properties, "pageGlitchPulseSeconds", pageGlitch.pulseSeconds())
                 ),
                 getCreek(properties),
                 getSanity(properties),

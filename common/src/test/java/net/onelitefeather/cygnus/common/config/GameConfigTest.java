@@ -40,7 +40,7 @@ class GameConfigTest {
         GameConfig defaults = GameConfig.DEFAULT;
         assertRejected("Lobby atmosphere share must be between 0 and 1", () -> new GameConfig(
                 defaults.round(), defaults.teams(), null, defaults.resourcePack(), defaults.pageProximity(),
-                defaults.damageSound(), defaults.glitch(), defaults.slenderStatic(), defaults.creek(),
+                defaults.damageSound(), defaults.glitch(), defaults.pageGlitch(), defaults.creek(),
                 defaults.sanity(), defaults.stamina(), defaults.adrenaline(), 1.5F));
     }
 
