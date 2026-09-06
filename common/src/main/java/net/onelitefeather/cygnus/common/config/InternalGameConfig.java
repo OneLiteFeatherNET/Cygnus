@@ -27,8 +27,13 @@ import java.net.URI;
  * @param damageSoundEnabled     whether a player hears a sound when they take damage
  * @param damageSoundCooldown    the number of ticks before the damage sound is played again
  * @param damageSound            the sound played to a player who was just hit
+ * @param glitchRange           how close the slender has to be before the sight of him tears a
+ *                              survivor's view, in blocks
+ * @param glitchCloseRange      the distance in blocks at which the tearing is at its worst
+ * @param glitchViewAngle       how far off the centre of their view he may stand and still count
+ *                              as seen, in degrees
  * @author theEvilReaper
- * @version 1.3.0
+ * @version 1.4.0
  * @since 1.0.0
  */
 record InternalGameConfig(
@@ -47,7 +52,10 @@ record InternalGameConfig(
         Key pageProximitySound,
         boolean damageSoundEnabled,
         int damageSoundCooldown,
-        Key damageSound
+        Key damageSound,
+        int glitchRange,
+        int glitchCloseRange,
+        int glitchViewAngle
 ) implements GameConfig {
 
     // Sentry and the ResourcePack are opt-in: a service that says nothing about them reports to
@@ -60,7 +68,10 @@ record InternalGameConfig(
     private static final GameConfig DEFAULT = new InternalGameConfig(
             2, 13, 30, 900, 1, 12, null, null, null,
             true, 20, 20, GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND,
-            true, 20, GameConfig.DEFAULT_DAMAGE_SOUND);
+            true, 20, GameConfig.DEFAULT_DAMAGE_SOUND,
+            GameConfig.DEFAULT_GLITCH_RANGE,
+            GameConfig.DEFAULT_GLITCH_CLOSE_RANGE,
+            GameConfig.DEFAULT_GLITCH_VIEW_ANGLE);
 
     /**
      * Returns the default configuration for the game.

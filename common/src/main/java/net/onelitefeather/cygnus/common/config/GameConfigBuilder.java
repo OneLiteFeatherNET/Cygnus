@@ -31,6 +31,12 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     private boolean damageSoundEnabled;
     private int damageSoundCooldown;
     private Key damageSound = GameConfig.DEFAULT_DAMAGE_SOUND;
+    // Pre-set rather than left at zero, the way pageProximitySound above is. build() checks the
+    // two distances against each other, and a builder used directly - as the tests do - would trip
+    // that check on 0 >= 0 without ever having said anything about the gaze.
+    private int glitchRange = GameConfig.DEFAULT_GLITCH_RANGE;
+    private int glitchCloseRange = GameConfig.DEFAULT_GLITCH_CLOSE_RANGE;
+    private int glitchViewAngle = GameConfig.DEFAULT_GLITCH_VIEW_ANGLE;
 
     @Override
     public GameConfig.Builder minPlayers(int minPlayers) {
@@ -150,7 +156,52 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     }
 
     @Override
+    public GameConfig.Builder glitchRange(int glitchRange) {
+        if (glitchRange < 1 || glitchRange > GameConfig.MAX_GLITCH_RANGE) {
+            throw new IllegalArgumentException(
+                    "Glitch range must be between 1 and " + GameConfig.MAX_GLITCH_RANGE);
+        }
+        this.glitchRange = glitchRange;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder glitchCloseRange(int glitchCloseRange) {
+        if (glitchCloseRange < 1) {
+            throw new IllegalArgumentException("Glitch close range must be at least 1 block");
+        }
+        this.glitchCloseRange = glitchCloseRange;
+        return this;
+    }
+
+    @Override
+    public GameConfig.Builder glitchViewAngle(int glitchViewAngle) {
+        if (glitchViewAngle < 1 || glitchViewAngle > GameConfig.MAX_GLITCH_VIEW_ANGLE) {
+            throw new IllegalArgumentException(
+                    "Glitch view angle must be between 1 and " + GameConfig.MAX_GLITCH_VIEW_ANGLE + " degrees");
+        }
+        this.glitchViewAngle = glitchViewAngle;
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The two glitch distances are checked against each other here rather than in their setters.
+     * Each one alone is a valid number; only together do they say whether the slope they describe
+     * runs the right way, and a setter cannot know that - it would depend on which of the two was
+     * called first.
+     * </p>
+     *
+     * @throws IllegalArgumentException if the close range is not below the range
+     */
+    @Override
     public GameConfig build() {
+        if (glitchCloseRange >= glitchRange) {
+            throw new IllegalArgumentException(
+                    "Glitch close range (" + glitchCloseRange + ") must be below the glitch range ("
+                            + glitchRange + ")");
+        }
         return new GameConfigImpl(
                 minPlayers,
                 maxPlayers,
@@ -167,7 +218,10 @@ public final class GameConfigBuilder implements GameConfig.Builder {
                 pageProximitySound,
                 damageSoundEnabled,
                 damageSoundCooldown,
-                damageSound
+                damageSound,
+                glitchRange,
+                glitchCloseRange,
+                glitchViewAngle
         );
     }
 }

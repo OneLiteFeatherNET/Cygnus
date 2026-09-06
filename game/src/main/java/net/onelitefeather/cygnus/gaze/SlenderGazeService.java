@@ -31,7 +31,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author TheMeinerLP
- * @version 3.0.0
+ * @version 3.1.0
  * @since 2.7.0
  */
 public final class SlenderGazeService {
@@ -42,6 +42,7 @@ public final class SlenderGazeService {
     static final int TICK_MILLIS = 100;
 
     private final GazeSink sink;
+    private final SlenderGaze gaze;
     private final Supplier<@Nullable Player> slender;
     private final PlayerState<Tracked> survivors = new PlayerState<>();
     private final RepeatingTask task = new RepeatingTask(this::tick);
@@ -51,10 +52,12 @@ public final class SlenderGazeService {
      *
      * @param sink    where a survivor's level is signalled to, {@link GazeSink#NONE} to work the
      *                levels out without sending them anywhere
+     * @param gaze    the thresholds the levels are worked out from
      * @param slender supplies the current slender, or {@code null} while there is none
      */
-    public SlenderGazeService(GazeSink sink, Supplier<@Nullable Player> slender) {
+    public SlenderGazeService(GazeSink sink, SlenderGaze gaze, Supplier<@Nullable Player> slender) {
         this.sink = sink;
+        this.gaze = gaze;
         this.slender = slender;
     }
 
@@ -178,7 +181,7 @@ public final class SlenderGazeService {
         Instance instance = slender.getInstance();
         if (instance == null || !instance.equals(survivor.getInstance())) return SlenderGaze.NONE;
 
-        return SlenderGaze.levelOf(survivor.getPosition(), slender.getPosition());
+        return this.gaze.levelOf(survivor.getPosition(), slender.getPosition());
     }
 
     /**

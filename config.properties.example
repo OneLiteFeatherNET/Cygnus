@@ -103,3 +103,35 @@ survivorTeamSize=12
 # The sound played. A key that names no sound the server knows falls back to the
 # default, so a hit never goes silent because of a typo.
 #damageSound=entity.player.hurt
+
+# --- Slender gaze ("glitch") -----------------------------------------------
+
+# How badly the sight of the slender tears a survivor's view apart is decided per
+# player, from their own position and where they are looking. Standing behind a
+# survivor does nothing at all, however close he is.
+#
+# These three values are meant to be tuned against the resource pack. Note that a
+# pack shipping a pinned test level overrides the whole decoding client-side - if
+# the effect shows up regardless of what is set here, the pack is the place to
+# look, not this file.
+
+# How close he has to be before anything happens, in blocks. Between 1 and 64; a
+# value outside that range is rejected and the service refuses to start.
+#
+# This is the outer edge, not the strongest point: at exactly this distance a
+# survivor gets the weakest of the four levels, and it grows the nearer he comes.
+# Beyond it there is nothing - no veil, and no darkening of the world.
+#glitchRange=12
+
+# The distance at which the tearing reaches its worst, in blocks. At least 1 and
+# below glitchRange - a configuration where the two meet or cross is rejected,
+# because the slope between them would run backwards or divide by zero.
+#glitchCloseRange=4
+
+# How far off the centre of their view he may stand and still count as seen, in
+# degrees. Between 1 and 89.
+#
+# Deliberately narrower than the client's field of view: at 30 degrees he has to
+# be in the middle of the screen, not at its edge. Widening this past roughly 50
+# means he triggers the effect while barely in frame.
+#glitchViewAngle=30

@@ -28,10 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * pack's job.</p>
  *
  * @author TheMeinerLP
- * @version 3.0.0
+ * @version 3.1.0
  * @since 2.7.0
  */
 class SlenderGazeServiceTest extends CygnusPlayerTestBase {
+
+    /** The shipped defaults: 12 blocks of reach, worst at 4, within 30 degrees of the view. */
+    private static final SlenderGaze GAZE = new SlenderGaze(12, 4, 30);
 
     @Test
     @DisplayName("Seeing the slender reports a level")
@@ -39,7 +42,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender);
         service.track(survivor);
 
         service.tick();
@@ -53,7 +56,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, -5));
-        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender);
         service.track(survivor);
 
         service.tick();
@@ -67,7 +70,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender);
         service.track(survivor);
         service.tick();
 
@@ -82,12 +85,13 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     void nearerMeansAHigherLevel(Env env) {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
-        Player slender = connect(env, instance, new Pos(0, 40, 25));
-        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
+        Player slender = connect(env, instance, new Pos(0, 40, 11));
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender);
         service.track(survivor);
 
         service.tick();
         int far = service.levelOf(survivor);
+        assertTrue(far >= 0, "he has to be inside the range to begin with, or this proves nothing");
 
         slender.teleport(new Pos(0, 40, 5));
         service.tick();
@@ -99,7 +103,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     @DisplayName("Without a slender nothing happens at all")
     void withoutASlenderNothingHappens(Env env) {
         Player survivor = connect(env, env.createFlatInstance(), new Pos(0, 40, 0, 0, 0));
-        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> null);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> null);
         service.track(survivor);
 
         service.tick();
@@ -113,7 +117,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender);
         service.track(survivor);
         service.tick();
 
@@ -130,7 +134,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player first = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player second = connect(env, instance, new Pos(4, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender);
         service.track(first);
         service.track(second);
         service.tick();
@@ -150,7 +154,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
 
         EventDispatcher.call(new GameStartEvent());
@@ -165,7 +169,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
         service.track(survivor);
         service.tick();
@@ -182,7 +186,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, () -> slender);
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender);
         service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
         service.track(survivor);
         service.tick();
@@ -199,7 +203,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(sink, () -> slender);
+        SlenderGazeService service = new SlenderGazeService(sink, GAZE, () -> slender);
         service.track(survivor);
 
         service.tick();
@@ -218,7 +222,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
-        SlenderGazeService service = new SlenderGazeService(sink, () -> slender);
+        SlenderGazeService service = new SlenderGazeService(sink, GAZE, () -> slender);
         service.track(survivor);
         service.tick();
 
@@ -233,7 +237,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
     void trackAndRemoveReachTheSink(Env env) {
         RecordingSink sink = new RecordingSink();
         Player survivor = connect(env, env.createFlatInstance(), new Pos(0, 40, 0, 0, 0));
-        SlenderGazeService service = new SlenderGazeService(sink, () -> null);
+        SlenderGazeService service = new SlenderGazeService(sink, GAZE, () -> null);
 
         service.track(survivor);
         assertEquals(1, sink.attached);

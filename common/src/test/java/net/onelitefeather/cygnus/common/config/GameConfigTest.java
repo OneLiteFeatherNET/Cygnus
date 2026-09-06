@@ -65,4 +65,75 @@ class GameConfigTest {
         assertEquals(2, config.survivorTeamSize());
     }
 
+
+    @Test
+    void testGlitchRangeRejectsValuesOutsideTheAllowedRange() {
+        GameConfig.Builder builder = GameConfig.builder();
+
+        String expected = "Glitch range must be between 1 and " + GameConfig.MAX_GLITCH_RANGE;
+        assertEquals(expected, assertThrows(IllegalArgumentException.class, () -> builder.glitchRange(0)).getMessage());
+        assertEquals(expected, assertThrows(IllegalArgumentException.class,
+                () -> builder.glitchRange(GameConfig.MAX_GLITCH_RANGE + 1)).getMessage());
+    }
+
+    @Test
+    void testGlitchCloseRangeRejectsValuesBelowOne() {
+        GameConfig.Builder builder = GameConfig.builder();
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> builder.glitchCloseRange(0));
+        assertEquals("Glitch close range must be at least 1 block", exception.getMessage());
+    }
+
+    @Test
+    void testGlitchViewAngleRejectsValuesOutsideTheAllowedRange() {
+        GameConfig.Builder builder = GameConfig.builder();
+
+        String expected = "Glitch view angle must be between 1 and " + GameConfig.MAX_GLITCH_VIEW_ANGLE + " degrees";
+        assertEquals(expected, assertThrows(IllegalArgumentException.class, () -> builder.glitchViewAngle(0)).getMessage());
+        assertEquals(expected, assertThrows(IllegalArgumentException.class,
+                () -> builder.glitchViewAngle(GameConfig.MAX_GLITCH_VIEW_ANGLE + 1)).getMessage());
+    }
+
+    /**
+     * Each of the two distances is a valid number on its own, so neither setter can reject this
+     * pairing - only {@code build()} sees both. Without the check the slope between them would
+     * divide by zero or run backwards.
+     */
+    @Test
+    void testGlitchCloseRangeMustStayBelowTheGlitchRange() {
+        GameConfig.Builder equal = GameConfig.builder().glitchRange(12).glitchCloseRange(12);
+        assertEquals("Glitch close range (12) must be below the glitch range (12)",
+                assertThrows(IllegalArgumentException.class, equal::build).getMessage());
+
+        GameConfig.Builder crossed = GameConfig.builder().glitchRange(8).glitchCloseRange(16);
+        assertEquals("Glitch close range (16) must be below the glitch range (8)",
+                assertThrows(IllegalArgumentException.class, crossed::build).getMessage());
+    }
+
+    @Test
+    void testGlitchValuesReachTheBuiltConfiguration() {
+        GameConfig config = GameConfig.builder()
+                .lobbyTime(12)
+                .glitchRange(20)
+                .glitchCloseRange(6)
+                .glitchViewAngle(45)
+                .build();
+
+        assertEquals(20, config.glitchRange());
+        assertEquals(6, config.glitchCloseRange());
+        assertEquals(45, config.glitchViewAngle());
+    }
+
+    /**
+     * A builder that says nothing about the gaze still has to produce a usable configuration -
+     * otherwise every caller would be forced to set three values it has no opinion on.
+     */
+    @Test
+    void testGlitchDefaultsApplyWhenTheBuilderSaysNothing() {
+        GameConfig config = GameConfig.builder().lobbyTime(12).build();
+
+        assertEquals(GameConfig.DEFAULT_GLITCH_RANGE, config.glitchRange());
+        assertEquals(GameConfig.DEFAULT_GLITCH_CLOSE_RANGE, config.glitchCloseRange());
+        assertEquals(GameConfig.DEFAULT_GLITCH_VIEW_ANGLE, config.glitchViewAngle());
+    }
 }
