@@ -1,12 +1,15 @@
 package net.onelitefeather.cygnus.common.config;
 
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 /**
  * The {@link GameConfigReader} can be used to parse a properties file and create a new {@link GameConfig} instance.
@@ -21,19 +24,27 @@ import java.util.Properties;
  *     <li>gameTime</li>
  *     <li>survivorTeamSize</li>
  *     <li>slenderTeamSize</li>
+ *     <li>sentryDsn</li>
+ *     <li>resourcePackUrl</li>
+ *     <li>resourcePackSha1</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
  * The default values are defined in the {@link InternalGameConfig} class.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @see GameConfig
  * @since 1.0.0
  */
 public final class GameConfigReader {
 
     private static final Logger CONFIG_LOGGER = LoggerFactory.getLogger(GameConfigReader.class);
+    private static final String SENTRY_DSN_KEY = "sentryDsn";
+    private static final String RESOURCE_PACK_URL_KEY = "resourcePackUrl";
+    private static final String RESOURCE_PACK_SHA1_KEY = "resourcePackSha1";
+    private static final Pattern SHA1_PATTERN = Pattern.compile("[0-9a-fA-F]{40}");
+
     private final Path path;
 
     /**
@@ -80,7 +91,10 @@ public final class GameConfigReader {
                 .lobbyTime(getInt(properties, "lobbyTime", internal.lobbyTime()))
                 .gameTime(getInt(properties, "gameTime", internal.gameTime()))
                 .survivorTeamSize(getInt(properties, "survivorTeamSize", internal.survivorTeamSize()))
-                .slenderTeamSize(getInt(properties, "slenderTeamSize", internal.slenderTeamSize()));
+                .slenderTeamSize(getInt(properties, "slenderTeamSize", internal.slenderTeamSize()))
+                .sentryDsn(getString(properties, SENTRY_DSN_KEY))
+                .resourcePackUrl(getResourcePackUrl(properties))
+                .resourcePackSha1(getResourcePackSha1(properties));
 
         return configBuilder.build();
     }
@@ -96,5 +110,60 @@ public final class GameConfigReader {
             CONFIG_LOGGER.warn("Failed to parse integer config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
             return defaultValue;
         }
+    }
+
+    /**
+     * Reads a trimmed value from the properties.
+     *
+     * @param properties the loaded properties
+     * @param key        the key to read
+     * @return the value, or {@code null} if the key is absent or holds nothing but whitespace
+     */
+    private @Nullable String getString(Properties properties, String key) {
+        String value = properties.getProperty(key);
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    /**
+     * Reads the ResourcePack location. A value that is not a valid URI turns the feature off
+     * instead of failing the start - a broken pack URL is not worth taking the service down for.
+     *
+     * @param properties the loaded properties
+     * @return the parsed URL, or {@code null} if it is absent or unusable
+     */
+    private @Nullable URI getResourcePackUrl(Properties properties) {
+        String value = getString(properties, RESOURCE_PACK_URL_KEY);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return URI.create(value);
+        } catch (IllegalArgumentException exception) {
+            CONFIG_LOGGER.warn("'{}' is not a valid URI: '{}'. Disabling the ResourcePack feature", RESOURCE_PACK_URL_KEY, value, exception);
+            return null;
+        }
+    }
+
+    /**
+     * Reads the ResourcePack checksum. Anything that is not 40 hexadecimal characters is not a
+     * SHA-1 and is dropped, which leaves the checksum to be computed from the pack at runtime.
+     *
+     * @param properties the loaded properties
+     * @return the checksum, or {@code null} if it is absent or malformed
+     */
+    private @Nullable String getResourcePackSha1(Properties properties) {
+        String value = getString(properties, RESOURCE_PACK_SHA1_KEY);
+        if (value == null) {
+            return null;
+        }
+        if (!SHA1_PATTERN.matcher(value).matches()) {
+            CONFIG_LOGGER.warn("'{}' is not a SHA-1 checksum: '{}'. It will be computed from the pack instead", RESOURCE_PACK_SHA1_KEY, value);
+            return null;
+        }
+        return value;
     }
 }
