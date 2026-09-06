@@ -87,6 +87,7 @@ import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionService;
+import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
@@ -117,6 +118,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final JumpScareManager jumpscareManager;
     private final SpectatorService spectatorService;
     private final Optional<ResourcePackService> resourcePackService;
+    private final ScoreboardDisplay scoreboardDisplay;
     private final ScreenOverlay screenOverlay;
     private final SlenderGazeService slenderGazeService;
     private final BossBarGazeSignal gazeSignal;
@@ -146,6 +148,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getSchedulerManager().buildShutdownTask(this.mapProvider::close);
         this.view = new GameViewImpl();
         this.createTeams(this.gameConfig, this.teamService);
+        this.scoreboardDisplay = new ScoreboardDisplay(this.teamService.getTeams());
         Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
         this.ambientProvider = new AmbientProvider(survivorTeam);
@@ -201,7 +204,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener(spectatorTeam));
         manager.addListener(GameMapLoadEvent.class, _ -> this.mapProvider.loadGameMap());
-        manager.addListener(GamePrepareEvent.class, _ -> StaminaHelper.initStaminaObjects(this.teamService, this.staminaService));
+        manager.addListener(GamePrepareEvent.class, _ -> {
+            // The roles are handed out inside initStaminaObjects; the name tag teams can only mirror
+            // them afterwards.
+            StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
+            this.scoreboardDisplay.sync(this.teamService);
+        });
         registerCancelListener(manager);
     }
 
@@ -222,6 +230,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
         handler.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
         handler.addListener(SlenderReviveEvent.class, new SlenderReviveListener(this.mapProvider::getGameMap, this.staminaService, this.teamService));
+        handler.addListener(SlenderReviveEvent.class, _ -> this.scoreboardDisplay.sync(this.teamService));
         handler.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider::setMaxPageAmount));
         handler.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
         handler.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
