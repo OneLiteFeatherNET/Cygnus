@@ -90,12 +90,18 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     /**
      * The static the slender hears while the survivors take his pages away.
      * <p>
-     * Rain, because it is the closest vanilla comes to the hiss of a worn tape or a tuned-out
-     * television. A real VHS noise belongs in the resource pack; once it is there, pointing
-     * {@code slenderStaticSound} at that key is all this needs.
+     * A resource pack sound rather than a vanilla one: three 2.2 second takes of tape hiss the
+     * client picks between, high-passed at 520 Hz so the effect's own pitch drop to 0.7 leaves
+     * it hissing rather than humming. Nothing in vanilla comes close - rain is the nearest, and
+     * it reads as weather.
+     * </p>
+     * <p>
+     * A server running without the Cygnus pack therefore hears nothing here. That is the right
+     * way round: the static is a horror cue, and half of one played through the wrong sample is
+     * worse than none.
      * </p>
      */
-    Key DEFAULT_SLENDER_STATIC_SOUND = Key.key("weather.rain");
+    Key DEFAULT_SLENDER_STATIC_SOUND = Key.key("cygnus", "vhs_static");
 
     /** The {@link #slenderStaticQuietInterval()} a configuration gets when it says nothing. */
     int DEFAULT_SLENDER_STATIC_QUIET_INTERVAL = 12;

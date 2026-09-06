@@ -161,11 +161,14 @@ survivorTeamSize=12
 
 # The sound the static is built from.
 #
-# Rain is the closest vanilla comes to the hiss of a worn tape. A real VHS noise
-# belongs in the resource pack; once it is there, point this at that key - unlike
-# the other sound settings, a key that names no vanilla sound is not replaced by
-# a default here but sent to the client as named.
-#slenderStaticSound=weather.rain
+# Ships in the Cygnus resource pack as three takes of tape hiss the client picks
+# between. Unlike the other sound settings, a key that names no vanilla sound is
+# not replaced by a default here but sent to the client as named, which is what
+# lets a pack sound be used at all.
+#
+# A server that hands out no pack, or an older one, hears nothing under this key.
+# weather.rain is the closest vanilla stand-in if that is the situation.
+#slenderStaticSound=cygnus:vhs_static
 
 # Seconds between two bursts while no page has been found. Between 1 and 120.
 #slenderStaticQuietInterval=12
