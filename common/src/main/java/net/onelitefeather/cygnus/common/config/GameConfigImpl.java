@@ -12,7 +12,7 @@ import java.net.URI;
  * @param minPlayers        the minimum number of players required to start a game
  * @param maxPlayers        the maximum number of players allowed in the game
  * @param lobbyTime         the time in seconds before the game starts
- * @param gameTime          the maximum duration of a game in minutes
+ * @param gameTime          the maximum duration of a game in seconds
  * @param slenderTeamSize   the size of the slender team
  * @param survivorTeamSize  the size of the survivor team
  * @param sentryDsn         the DSN to report errors to, or {@code null} to keep Sentry off
