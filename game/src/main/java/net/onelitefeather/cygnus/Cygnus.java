@@ -43,6 +43,7 @@ import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.blood.BloodSplatterService;
+import net.onelitefeather.cygnus.damage.DamageSoundService;
 import net.onelitefeather.cygnus.command.GlitchCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -127,6 +128,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final SlenderGazeService slenderGazeService;
     private final BossBarGazeSignal gazeSignal;
     private final BloodSplatterService bloodSplatterService;
+    private final DamageSoundService damageSoundService;
     private final TunnelVisionRenderer tunnelVisionRenderer;
     private final TunnelVisionService tunnelVisionService;
 
@@ -177,6 +179,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 this.screenOverlay,
                 bound -> ThreadLocalRandom.current().nextInt(bound)
         );
+        this.damageSoundService = new DamageSoundService(this.gameConfig, System::currentTimeMillis);
         this.tunnelVisionRenderer = new OverlayTunnelVisionRenderer(this.screenOverlay);
         this.tunnelVisionService = new TunnelVisionService(this.tunnelVisionRenderer, player -> StaminaHelper.remainingShare(this.staminaService, player));
         this.initPhases();
@@ -252,6 +255,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientSettingsPacket.class, CygnusSettingsListener::listener);
 
         spectatorService.registerListener(handler);
+        // Not part of registerOverlayListeners: the sound is the feedback a hit owes the player
+        // either way, and it needs neither the resource pack nor the overlay gate to be heard.
+        this.damageSoundService.registerListener(handler);
         this.registerOverlayListeners(handler);
     }
 

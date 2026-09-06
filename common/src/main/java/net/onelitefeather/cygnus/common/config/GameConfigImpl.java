@@ -24,8 +24,11 @@ import java.net.URI;
  * @param pageProximityRange    how far away a page may be and still be heard, in blocks
  * @param pageProximityInterval the number of ticks between two proximity sounds
  * @param pageProximitySound    the sound played while a page is nearby
+ * @param damageSoundEnabled     whether a player hears a sound when they take damage
+ * @param damageSoundCooldown    the number of ticks before the damage sound is played again
+ * @param damageSound            the sound played to a player who was just hit
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  */
 public record GameConfigImpl(
@@ -41,7 +44,10 @@ public record GameConfigImpl(
         boolean pageProximityEnabled,
         int pageProximityRange,
         int pageProximityInterval,
-        Key pageProximitySound
+        Key pageProximitySound,
+        boolean damageSoundEnabled,
+        int damageSoundCooldown,
+        Key damageSound
 ) implements GameConfig {
 
 }

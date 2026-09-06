@@ -13,7 +13,7 @@ import java.net.URI;
  * Each static value indicates that it is a constant value and should not be changed.
  *
  * @author theEvilReaper
- * @version 1.3.0
+ * @version 1.4.0
  * @since 1.0.0
  */
 public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
@@ -54,6 +54,16 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
      * page would be audible across a good part of the map, which stops being a hint.
      */
     int MAX_PAGE_PROXIMITY_RANGE = 64;
+
+    /**
+     * The sound played to a player who was just hit.
+     * <p>
+     * The vanilla hurt sound, because that is exactly what is missing: Cygnus applies damage by
+     * setting health directly, which never runs Minestom's damage pipeline and therefore never
+     * plays the sound a client would otherwise hear.
+     * </p>
+     */
+    Key DEFAULT_DAMAGE_SOUND = Key.key("entity.player.hurt");
 
     /**
      * Creates a new {@link Builder} which can be used to create a new game configuration.
@@ -187,6 +197,39 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     Key pageProximitySound();
 
     /**
+     * Returns whether a player hears a sound when they take damage.
+     *
+     * @return {@code true} while the damage feedback is on
+     * @since 2.13.0
+     */
+    boolean damageSoundEnabled();
+
+    /**
+     * Returns how many ticks have to pass before a player hears the damage sound again.
+     * <p>
+     * The slender damages everyone around him twice a second for as long as he drains, so without
+     * a cooldown a survivor standing next to him would hear the sound at that rate.
+     * </p>
+     *
+     * @return the cooldown in ticks, at least 1
+     * @since 2.13.0
+     */
+    int damageSoundCooldown();
+
+    /**
+     * Returns the sound played to a player who was just hit.
+     * <p>
+     * The key is not resolved against the sound registry here - a key that names no known sound is
+     * only noticed when the sound is first played, and the feedback falls back to
+     * {@link #DEFAULT_DAMAGE_SOUND} then.
+     * </p>
+     *
+     * @return the sound key, never {@code null}
+     * @since 2.13.0
+     */
+    Key damageSound();
+
+    /**
      * The {@link Builder} interface is used to create a new game configuration.
      * It provides methods to set the values for the configuration.
      *
@@ -312,6 +355,34 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @since 2.12.0
          */
         Builder pageProximitySound(Key pageProximitySound);
+
+        /**
+         * Sets whether a player hears a sound when they take damage.
+         *
+         * @param damageSoundEnabled {@code true} to keep the damage feedback on
+         * @return the builder instance
+         * @since 2.13.0
+         */
+        Builder damageSoundEnabled(boolean damageSoundEnabled);
+
+        /**
+         * Sets how many ticks have to pass before a player hears the damage sound again.
+         *
+         * @param damageSoundCooldown the cooldown in ticks
+         * @return the builder instance
+         * @throws IllegalArgumentException if the cooldown is below 1
+         * @since 2.13.0
+         */
+        Builder damageSoundCooldown(int damageSoundCooldown);
+
+        /**
+         * Sets the sound played to a player who was just hit.
+         *
+         * @param damageSound the sound key
+         * @return the builder instance
+         * @since 2.13.0
+         */
+        Builder damageSound(Key damageSound);
 
         /**
          * Builds the game configuration.

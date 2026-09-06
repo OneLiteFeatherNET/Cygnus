@@ -186,4 +186,64 @@ class GameConfigReaderTest {
 
         assertThrows(IllegalArgumentException.class, reader::getConfig);
     }
+
+    @Test
+    void testDamageSoundDefaultsWhenNothingIsConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertTrue(config.damageSoundEnabled());
+        assertEquals(20, config.damageSoundCooldown());
+        assertEquals(GameConfig.DEFAULT_DAMAGE_SOUND, config.damageSound());
+    }
+
+    @Test
+    void testDamageSoundValuesAreReadWhenTheyAreConfigured(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                damageSoundCooldown=30
+                damageSound=entity.player.big_fall
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertTrue(config.damageSoundEnabled());
+        assertEquals(30, config.damageSoundCooldown());
+        assertEquals(Key.key("entity.player.big_fall"), config.damageSound());
+    }
+
+    @Test
+    void testDamageSoundCanBeTurnedOff(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                damageSoundEnabled=false
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertFalse(config.damageSoundEnabled());
+    }
+
+    @Test
+    void testAMalformedDamageSoundKeyFallsBackToTheDefault(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                damageSound=NOT A KEY
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(GameConfig.DEFAULT_DAMAGE_SOUND, config.damageSound());
+    }
+
+    @Test
+    void testADamageSoundCooldownBelowOneTickIsRejected(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                damageSoundCooldown=0
+                """);
+
+        GameConfigReader reader = new GameConfigReader(tempDir);
+
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
+    }
 }

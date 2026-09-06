@@ -40,6 +40,16 @@ class GameConfigTest {
     }
 
     @Test
+    void testInvalidDamageSoundCooldownUsage() {
+        GameConfig.Builder builder = GameConfig.builder();
+        assertNotNull(builder);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> builder.damageSoundCooldown(0));
+        assertNotNull(exception);
+        assertEquals("Damage sound cooldown must be at least 1 tick", exception.getMessage());
+    }
+
+    @Test
     void testBuilderUsage() {
         GameConfig.Builder builder = GameConfig.builder();
         assertNotNull(builder);

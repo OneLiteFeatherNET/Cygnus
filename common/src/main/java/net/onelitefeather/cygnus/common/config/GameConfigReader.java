@@ -33,13 +33,16 @@ import java.util.regex.Pattern;
  *     <li>pageProximityRange</li>
  *     <li>pageProximityInterval</li>
  *     <li>pageProximitySound</li>
+ *     <li>damageSoundEnabled</li>
+ *     <li>damageSoundCooldown</li>
+ *     <li>damageSound</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
  * The default values are defined in the {@link InternalGameConfig} class.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @see GameConfig
  * @since 1.0.0
  */
@@ -51,6 +54,7 @@ public final class GameConfigReader {
     private static final String RESOURCE_PACK_SHA1_KEY = "resourcePackSha1";
     private static final Pattern SHA1_PATTERN = Pattern.compile("[0-9a-fA-F]{40}");
     private static final String PAGE_PROXIMITY_SOUND_KEY = "pageProximitySound";
+    private static final String DAMAGE_SOUND_KEY = "damageSound";
 
     private final Path path;
 
@@ -105,7 +109,10 @@ public final class GameConfigReader {
                 .pageProximityEnabled(getBoolean(properties, "pageProximityEnabled", internal.pageProximityEnabled()))
                 .pageProximityRange(getInt(properties, "pageProximityRange", internal.pageProximityRange()))
                 .pageProximityInterval(getInt(properties, "pageProximityInterval", internal.pageProximityInterval()))
-                .pageProximitySound(getPageProximitySound(properties, internal.pageProximitySound()));
+                .pageProximitySound(getSound(properties, PAGE_PROXIMITY_SOUND_KEY, internal.pageProximitySound()))
+                .damageSoundEnabled(getBoolean(properties, "damageSoundEnabled", internal.damageSoundEnabled()))
+                .damageSoundCooldown(getInt(properties, "damageSoundCooldown", internal.damageSoundCooldown()))
+                .damageSound(getSound(properties, DAMAGE_SOUND_KEY, internal.damageSound()));
 
         return configBuilder.build();
     }
@@ -149,22 +156,23 @@ public final class GameConfigReader {
     }
 
     /**
-     * Reads the sound played while a page is nearby. Only the key syntax is checked here - whether
-     * the key names a sound the client knows is not something this reader can answer.
+     * Reads a sound key from the properties. Only the key syntax is checked here - whether the key
+     * names a sound the client knows is not something this reader can answer.
      *
      * @param properties   the loaded properties
+     * @param key          the key to read
      * @param defaultValue the sound to use when the key is absent or malformed
      * @return the parsed sound key
      */
-    private Key getPageProximitySound(Properties properties, Key defaultValue) {
-        String value = getString(properties, PAGE_PROXIMITY_SOUND_KEY);
+    private Key getSound(Properties properties, String key, Key defaultValue) {
+        String value = getString(properties, key);
         if (value == null) {
             return defaultValue;
         }
         try {
             return Key.key(value);
         } catch (InvalidKeyException exception) {
-            CONFIG_LOGGER.warn("'{}' is not a valid sound key: '{}'. Falling back to default: {}", PAGE_PROXIMITY_SOUND_KEY, value, defaultValue, exception);
+            CONFIG_LOGGER.warn("'{}' is not a valid sound key: '{}'. Falling back to default: {}", key, value, defaultValue, exception);
             return defaultValue;
         }
     }
