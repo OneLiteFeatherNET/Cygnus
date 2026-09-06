@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.13.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.13.0...v2.13.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* **spectator:** strike the spectator name through in the tab list ([#247](https://github.com/OneLiteFeatherNET/Cygnus/issues/247)) ([5e149e4](https://github.com/OneLiteFeatherNET/Cygnus/commit/5e149e4c02fe8963447a15ad89cbd997e7924e2e))
+
 ## [2.13.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.12.1...v2.13.0) (2026-09-06)
 
 
