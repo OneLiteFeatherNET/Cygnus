@@ -5,11 +5,8 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.util.ClearSystemProperty;
-import org.junit.jupiter.api.util.SetSystemProperty;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,32 +15,10 @@ class PageCreatorTest {
 
     private final PageCreator pageCreator = new PageCreator() {};
 
-    @AfterEach
-    @ClearSystemProperty(key = "cygnus.custom_pages")
-    void tearDown() {
-        // Nothing to do here
-    }
-
     @Test
-    @SetSystemProperty(key = "cygnus.custom_pages", value = "false")
-    void testDefaultPageCreation(Env ignored) {
-        boolean useCustomPage = Boolean.parseBoolean(System.getProperty("cygnus.custom_pages"));
-        ItemStack page = pageCreator.createPageItem(useCustomPage, 5);
-
-        assertEquals(Material.PAPER, page.material());
-
-        assertTrue(page.has(DataComponents.ITEM_MODEL));
-        String model = page.get(DataComponents.ITEM_MODEL);
-        assertEquals("minecraft:paper", model);
-    }
-
-    @Test
-    @SetSystemProperty(key = "cygnus.custom_pages", value = "true")
     void testCustomPageCreation(Env ignored) {
-        boolean useCustomPage = Boolean.parseBoolean(System.getProperty("cygnus.custom_pages"));
-
         for (int i = 0; i < 100; i++) {
-            ItemStack page = pageCreator.createPageItem(useCustomPage, 5);
+            ItemStack page = pageCreator.createPageItem(5);
 
             assertEquals(Material.PAPER, page.material());
             assertTrue(page.has(DataComponents.ITEM_MODEL));

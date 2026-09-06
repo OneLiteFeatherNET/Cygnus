@@ -30,7 +30,6 @@ import java.util.concurrent.CompletableFuture;
 @SuppressWarnings("java:S3252")
 public final class PageEntity extends Entity implements PageCreator {
 
-    private static final boolean CUSTOM_PAGES = Boolean.parseBoolean(System.getProperty("cygnus.custom_pages", "false"));
     private static final Vec HALF_BLOCK = new Vec(0, 0.5, 0);
     private static final long ADDITION_TIME = 1000L;
     private final Entity hitBox;
@@ -52,7 +51,7 @@ public final class PageEntity extends Entity implements PageCreator {
         super(EntityType.ITEM_DISPLAY);
         this.setInstance(instance, spawnPos);
         this.hitBox = new Entity(EntityType.INTERACTION);
-        this.pageItem = createPageItem(CUSTOM_PAGES, pageCount);
+        this.pageItem = createPageItem(pageCount);
         this.ttlTime = Helper.calculateOffsetTime(GameConfig.PAGE_TTL_TIME);
 
         ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) this.getEntityMeta();
@@ -103,7 +102,7 @@ public final class PageEntity extends Entity implements PageCreator {
      * @param pageCount the current page count
      */
     public void updateItemStack(int pageCount) {
-        this.pageItem = createPageItem(CUSTOM_PAGES, pageCount);
+        this.pageItem = createPageItem(pageCount);
     }
 
     /**

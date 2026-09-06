@@ -35,13 +35,9 @@ public interface PageCreator {
      * @param pageCount the number displayed on the page
      * @return the created page item
      */
-    default ItemStack createPageItem(boolean customPage, int pageCount) {
+    default ItemStack createPageItem(int pageCount) {
         ItemStack.Builder builder = ItemStack.builder(Material.PAPER)
                 .customName(Component.text("Page: " + pageCount));
-
-        if (!customPage) {
-            return builder.build();
-        }
 
         int randomPage = ThreadLocalRandom.current().nextInt(1, MAX_CUSTOM_PAGE_ID + 1);
 
