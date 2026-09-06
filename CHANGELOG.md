@@ -5,6 +5,25 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.11.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.10.1...v2.11.0) (2026-09-06)
+
+
+### Features
+
+* **ambient:** randomize blackout effect ([#238](https://github.com/OneLiteFeatherNET/Cygnus/issues/238)) ([3c92149](https://github.com/OneLiteFeatherNET/Cygnus/commit/3c921492579187eae227917ecc1420bda1abee2b))
+* **config:** configure Sentry and the ResourcePack through config.properties ([#234](https://github.com/OneLiteFeatherNET/Cygnus/issues/234)) ([6d0e9ad](https://github.com/OneLiteFeatherNET/Cygnus/commit/6d0e9adc144cf9158b62c1ebce374905ea72d262))
+* **disclaimer:** warn about flashing before the round starts ([#228](https://github.com/OneLiteFeatherNET/Cygnus/issues/228)) ([8119542](https://github.com/OneLiteFeatherNET/Cygnus/commit/8119542de5fbf7c6d0374b78e95093df7b3d2705))
+* **page:** play a 3D chime from pages that are nearby ([#239](https://github.com/OneLiteFeatherNET/Cygnus/issues/239)) ([ad40df4](https://github.com/OneLiteFeatherNET/Cygnus/commit/ad40df4eac04cad637ee3b6d4380ee4da0da133c))
+* **speed:** add speed scaling calculation ([#233](https://github.com/OneLiteFeatherNET/Cygnus/issues/233)) ([aca2b9d](https://github.com/OneLiteFeatherNET/Cygnus/commit/aca2b9df7092da835f33a54c75a5d60835564bd0))
+
+
+### Bug Fixes
+
+* **bootstrap:** end the process when a round is over ([#237](https://github.com/OneLiteFeatherNET/Cygnus/issues/237)) ([22ca04d](https://github.com/OneLiteFeatherNET/Cygnus/commit/22ca04df2b4cdc40513a620a6ed78974478d85e1))
+* **scoreboard:** keep the slender from reading survivor name tags ([#230](https://github.com/OneLiteFeatherNET/Cygnus/issues/230)) ([3ff744c](https://github.com/OneLiteFeatherNET/Cygnus/commit/3ff744c87b8fa2e6bce4bff0a606c8b09b89ff95))
+* **spectator:** keep the flight ability and drop the survivor stamina ([#231](https://github.com/OneLiteFeatherNET/Cygnus/issues/231)) ([99acdc9](https://github.com/OneLiteFeatherNET/Cygnus/commit/99acdc9c8454263db4d3aa3dd95ce221aeceef74))
+* **team:** change name tag visibility to HIDE_FOR_OTHER_TEAMS ([72d5a8d](https://github.com/OneLiteFeatherNET/Cygnus/commit/72d5a8dbe4f6479096987267fb9a6ee08aeaea6c))
+
 ## [2.10.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.10.0...v2.10.1) (2026-09-06)
 
 
