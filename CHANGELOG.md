@@ -5,6 +5,18 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.14.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.13.1...v2.14.0) (2026-09-06)
+
+
+### Features
+
+* **slender:** let him hear the pages going ([#252](https://github.com/OneLiteFeatherNET/Cygnus/issues/252)) ([655e1c4](https://github.com/OneLiteFeatherNET/Cygnus/commit/655e1c4a3f0537b17e8086264a7bc8f2733f40b6))
+
+
+### Bug Fixes
+
+* **player:** drop the fake world border from tickHeartbeat() ([#250](https://github.com/OneLiteFeatherNET/Cygnus/issues/250)) ([51c0690](https://github.com/OneLiteFeatherNET/Cygnus/commit/51c06900acd990b53bc49242a90a89d8be9ac154))
+
 ## [2.13.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.13.0...v2.13.1) (2026-09-06)
 
 
