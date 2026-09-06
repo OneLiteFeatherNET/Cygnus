@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.player;
 
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
@@ -11,7 +12,9 @@ import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.common.player.InstanceSwitchChunkPlayer;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @SuppressWarnings("java:S3252")
@@ -37,6 +40,8 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private static final int MAX_INTERVAL_TICKS = 36;   // Every 1.8s (slow, subtle pulse at start)
     private static final int MIN_INTERVAL_TICKS = 12;   // Every 0.6s (fast & tense without sound overlapping)
 
+    private final @Nullable UUID resourcePackId;
+
     private boolean blockedSprinting;
     private int heartbeatTicks;
     private boolean heartbeatActive;
@@ -45,14 +50,48 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private int kills;
     private boolean death;
 
-    public CygnusPlayer(PlayerConnection playerConnection, GameProfile gameProfile) {
+    /**
+     * Creates a new player.
+     *
+     * @param playerConnection the connection the player is created for
+     * @param gameProfile      the profile the player logged in with
+     * @param resourcePackId   the id of the ResourcePack this service pushes, or {@code null} when
+     *                         the ResourcePack feature is disabled
+     */
+    public CygnusPlayer(PlayerConnection playerConnection, GameProfile gameProfile, @Nullable UUID resourcePackId) {
         super(playerConnection, gameProfile);
+        this.resourcePackId = resourcePackId;
         this.blockedSprinting = false;
         this.heartbeatTicks = 0;
         this.heartbeatActive = false;
         this.pageFounds = 0;
         this.kills = 0;
         this.death = false;
+    }
+
+    /**
+     * Takes this service's ResourcePack off the client, then disconnects the player.
+     *
+     * <p>A client drops a pushed pack only when told to. On a bare connection that happens
+     * implicitly - leaving the server ends the connection the pack hangs on - but behind a proxy the
+     * connection survives: a kick makes the proxy move the player to another backend, and the pack
+     * stays applied in the network lobby. So the pop has to be sent, and it has to be sent from
+     * here: by the time {@code PlayerDisconnectEvent} fires, the disconnect packet is already queued
+     * ahead of anything a listener could still send, and the client acts on the first of the two it
+     * reads.</p>
+     *
+     * <p>The pop cannot be sent on the other exit either - a proxy switching backends closes this
+     * connection without warning, leaving no moment to send anything. Only the lobby can clear the
+     * pack for a player who leaves that way.</p>
+     *
+     * @param component the kick message
+     */
+    @Override
+    public void kick(Component component) {
+        if (this.resourcePackId != null) {
+            removeResourcePacks(this.resourcePackId);
+        }
+        super.kick(component);
     }
 
     /**

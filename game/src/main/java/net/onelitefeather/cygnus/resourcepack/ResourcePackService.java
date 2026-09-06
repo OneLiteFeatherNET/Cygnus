@@ -21,7 +21,7 @@ import java.util.UUID;
  * {@code resourcepack.url} and {@code resourcepack.hash} system properties set.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  */
 public final class ResourcePackService {
@@ -69,6 +69,23 @@ public final class ResourcePackService {
                 .prompt(PROMPT)
                 .build();
         player.sendResourcePacks(request);
+    }
+
+    /**
+     * Returns the id the pushed pack is keyed by on the client.
+     *
+     * <p>A client keeps the packs a server pushed in a stack keyed by this id, and it only drops one
+     * when a {@code ResourcePackPopPacket} names that id. Behind a proxy the connection outlives this
+     * service - the player is moved to another backend, not disconnected - so nothing clears the
+     * stack on its own and the pack has to be popped explicitly. See
+     * {@link net.onelitefeather.cygnus.player.CygnusPlayer#kick(net.kyori.adventure.text.Component)},
+     * which is where that happens.</p>
+     *
+     * @return the id of the pack this service pushes
+     * @since 2.11.0
+     */
+    public UUID packId() {
+        return packInfo.id();
     }
 
     /**

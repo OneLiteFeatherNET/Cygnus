@@ -19,7 +19,7 @@ class StaminaFactoryTest extends CygnusPlayerTestBase {
 
     @BeforeAll
     static void setup(@NotNull Env env) {
-        env.process().connection().setPlayerProvider(CygnusPlayer::new);
+        env.process().connection().setPlayerProvider((connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, null));
         instance = env.createFlatInstance();
         player = env.createPlayer(instance);
     }
