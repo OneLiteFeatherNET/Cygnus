@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.attribute;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
+import net.minestom.server.entity.attribute.AttributeInstance;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
 
@@ -84,6 +85,17 @@ public final class AttributeHelper {
         float healthScale = (float) (player.getAttribute(Attribute.MAX_HEALTH).getBaseValue() + scale);
         player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(healthScale);
         player.setHealth(healthScale);
+    }
+
+    /**
+     * Updates the movement speed scale for the player.
+     *
+     * @param player the player to update the speed scale
+     * @param bonus  the additional speed to add on top of the current base value
+     */
+    public static void updateSpeedScale(Player player, double bonus) {
+        AttributeInstance attribute = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        attribute.setBaseValue(attribute.getBaseValue() + bonus);
     }
 
     /**
