@@ -7,7 +7,6 @@ import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.network.packet.server.play.EntityAttributesPacket;
-import net.minestom.server.network.packet.server.play.InitializeWorldBorderPacket;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.sound.SoundEvent;
@@ -19,16 +18,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @SuppressWarnings("java:S3252")
 public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
-
-    static final int PORTAL_TELEPORT_BOUNDARY = 29_999_984;
-
-    /**
-     * Radius (in blocks) of the virtual, per-player world border used to fake the heartbeat
-     * vignette. It is centered on the player every tick, so the real client-side distance to
-     * its edge is always exactly this value, independent of the instance's actual world border.
-     */
-    static final double FAKE_BORDER_RADIUS = 50.0;
-    static final double FAKE_BORDER_DIAMETER = FAKE_BORDER_RADIUS * 2.0;
 
     static final AttributeModifier SPEED_MODIFIER_SPRINTING =
             new AttributeModifier(Key.key("cygnus","sprinting"), 0.25, AttributeOperation.ADD_MULTIPLIED_TOTAL);
@@ -197,7 +186,7 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     }
 
     /**
-     * Updates the heartbeat sound and red border vignette effect on player tick.
+     * Updates the heartbeat sound on player tick.
      */
     public void tickHeartbeat() {
         float health = getHealth();
@@ -212,18 +201,6 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
         heartbeatActive = true;
 
         float intensity = Math.clamp(1.0f - (health / HEALTH_THRESHOLD), 0.0f, 1.0f);
-
-        // Non-linear visual curve makes the red border vignette stronger earlier and very intense at low HP
-        float visualIntensity = (float) Math.pow(intensity, 0.6);
-        float clampedIntensity = Math.min(visualIntensity, 0.995f);
-        int warningBlocks = (int) (FAKE_BORDER_RADIUS / (1.0f - clampedIntensity));
-
-        var position = getPosition();
-        sendPacket(new InitializeWorldBorderPacket(
-                position.x(), position.z(),
-                FAKE_BORDER_DIAMETER, FAKE_BORDER_DIAMETER, 0L,
-                PORTAL_TELEPORT_BOUNDARY, 0, warningBlocks
-        ));
 
         float intervalFactor = (float) Math.pow(intensity, 0.85);
         int targetInterval = (int) (MAX_INTERVAL_TICKS - (intervalFactor * (MAX_INTERVAL_TICKS - MIN_INTERVAL_TICKS)));
@@ -253,9 +230,6 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private void resetHeartbeat() {
         heartbeatActive = false;
         heartbeatTicks = 0;
-        // Restores the real (instance-wide) world border after the per-tick fake one used for
-        // the vignette, so the client stops seeing the small virtual border we sent it.
-        sendPacket(getInstance().createInitializeWorldBorderPacket());
     }
 
     /**
