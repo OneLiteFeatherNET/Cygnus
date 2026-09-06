@@ -34,7 +34,7 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
 
     Key SPECTATOR_KEY = Key.key("cygnus", "spectator");
 
-    int MIN_ACTIVE_PAGE_COUNT = 4;
+    int MIN_ACTIVE_PAGE_COUNT = 4 * 2;
 
     int PAGE_TTL_TIME = 60;
 
