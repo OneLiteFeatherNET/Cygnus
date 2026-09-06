@@ -39,7 +39,7 @@ public final class ScoreboardDisplay {
 
             TeamBuilder sbTeamBuilder = teamManager
                     .createBuilder(teamName)
-                    .nameTagVisibility(TeamsPacket.NameTagVisibility.NEVER)
+                    .nameTagVisibility(TeamsPacket.NameTagVisibility.HIDE_FOR_OTHER_TEAMS)
                     .collisionRule(TeamsPacket.CollisionRule.NEVER)
                     // temp fix
                     .teamColor(TeamColor.fromName(colorData.name()));
