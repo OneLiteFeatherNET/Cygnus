@@ -246,6 +246,37 @@ class GameConfigReaderTest {
     }
 
     @Test
+    void testLobbyAtmosphereShareDefaultsWhenNothingIsConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE, config.lobbyAtmosphereShare());
+    }
+
+    @Test
+    void testLobbyAtmosphereShareIsReadWhenItIsConfigured(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                lobbyAtmosphereShare=0.6
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(0.6F, config.lobbyAtmosphereShare());
+    }
+
+    @Test
+    void testALobbyAtmosphereShareOutsideItsRangeIsRejected(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                lobbyAtmosphereShare=1.5
+                """);
+
+        GameConfigReader reader = new GameConfigReader(tempDir);
+
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
+    }
+
+    @Test
     void testDamageSoundDefaultsWhenNothingIsConfigured() {
         GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
 

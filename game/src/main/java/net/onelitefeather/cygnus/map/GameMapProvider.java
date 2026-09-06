@@ -7,7 +7,11 @@ import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.world.DimensionType;
+import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.dimension.BlendedAtmosphere;
+import net.onelitefeather.cygnus.common.dimension.DimensionAtmosphere;
 import net.onelitefeather.cygnus.common.dimension.DimensionFactory;
+import net.onelitefeather.cygnus.common.dimension.StaticDimensionPreset;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.filter.MapFilters;
@@ -38,12 +42,24 @@ public final class GameMapProvider extends AbstractMapProvider {
     private final List<FalcoAnvilLoader> chunkLoaders;
     private final MapEntry gameEntry;
     private final RegistryKey<DimensionType> gameDimension;
+    private final RegistryKey<DimensionType> lobbyDimension;
     private @Nullable InstanceContainer gameInstance;
     private @Nullable GameMap gameMap;
     private @Nullable InstanceContainer previousInstance;
     private boolean releasePending;
 
     public GameMapProvider(Path path) {
+        this(path, GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE);
+    }
+
+    /**
+     * Creates a provider for the maps below the given path.
+     *
+     * @param path                 the directory holding {@code game/maps}
+     * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the game map's
+     *                             own, between 0 and 1
+     */
+    public GameMapProvider(Path path, float lobbyAtmosphereShare) {
         super(GsonHelper.FILE_HANDLER, MapFilters::filterMapsForGame);
         this.loadMapEntries(path.resolve("game").resolve("maps"));
         this.chunkLoaders = new ArrayList<>();
@@ -51,12 +67,50 @@ public final class GameMapProvider extends AbstractMapProvider {
             throw new IllegalStateException("No maps found in the given path");
         }
 
-        this.loadLobbyMap();
+        // The game map is read before the lobby is loaded, which is the reverse of what this used
+        // to do: the lobby's own dimension is derived from the game map's atmosphere, so the map
+        // has to be known before the instance it is derived for can be created.
         this.gameEntry = this.mapEntries.stream()
                 .filter(entry -> !entry.getDirectoryRoot().toString().equalsIgnoreCase("lobby"))
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("No game map found"));
-        this.gameDimension = registerDimension(readGameMap());
+        GameMap map = readGameMap();
+        this.gameDimension = registerDimension(map);
+        this.lobbyDimension = registerLobbyDimension(map, lobbyAtmosphereShare);
+        this.loadLobbyMap();
+    }
+
+    /**
+     * Registers the weakened version of the game map's atmosphere the lobby waits in.
+     *
+     * <p>A player who walks straight from a vanilla sky into a map that closes in at forty blocks
+     * meets the whole atmosphere at once, at the same moment the round starts. Giving the lobby the
+     * map's own colours and haze, held at a distance, turns that into a build-up: the start of the
+     * round reads as the world tightening rather than as a cut.</p>
+     *
+     * <p>Registered here for the same reason as the game's own dimension: registry data only
+     * reaches a client during its configuration phase, and a dimension registered after a player
+     * has logged in is a dimension that player cannot be put into.</p>
+     *
+     * @param map   the loaded game map
+     * @param share how far to take the lobby towards the map's atmosphere
+     * @return the key of the registered dimension, or {@link DimensionType#OVERWORLD} if the map
+     *         declares no atmosphere or the share is zero
+     */
+    private RegistryKey<DimensionType> registerLobbyDimension(GameMap map, float share) {
+        MapAtmosphere atmosphere = map.getAtmosphere();
+        if (atmosphere == null || share <= 0f) {
+            return DimensionType.OVERWORLD;
+        }
+
+        DimensionAtmosphere weakened = BlendedAtmosphere.between(StaticDimensionPreset.BRIGHT, atmosphere, share);
+        Key key = Key.key(DIMENSION_NAMESPACE, "map/" + toKeyValue(map.name()) + "/lobby");
+        LOGGER.info(
+                "Registered lobby dimension {} at {} of map {}: fog {} from {} to {} blocks",
+                key, share, map.name(), weakened.fogColor(),
+                weakened.fogStartDistance(), weakened.fogEndDistance()
+        );
+        return DimensionFactory.create(key, weakened);
     }
 
     /**
@@ -194,7 +248,7 @@ public final class GameMapProvider extends AbstractMapProvider {
 
         this.activeMap = this.fileHandler.load(lobbyEntry.getMapFile(), BaseMap.class)
                 .orElseThrow(() -> new IllegalStateException("Failed to load LobbyMap from file: " + lobbyEntry.getMapFile()));
-        InstanceContainer instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer();
+        InstanceContainer instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer(this.lobbyDimension);
         this.registerFalcoInstance(instanceContainer, lobbyEntry);
         this.activeInstance = instanceContainer;
         return this.activeMap;

@@ -33,6 +33,7 @@ import java.net.URI;
  * @param glitchCloseRange      the distance in blocks at which the tearing is at its worst
  * @param glitchViewAngle       how far off the centre of their view he may stand and still count
  *                              as seen, in degrees
+ * @param lobbyAtmosphereShare  how far the lobby's atmosphere is taken towards the map's own
  * @param slenderStaticEnabled  whether the slender hears static as his pages are collected
  * @param slenderStaticSound    the sound the static is built from
  * @param slenderStaticQuietInterval   the seconds between two bursts while no page has been found
@@ -69,7 +70,8 @@ record InternalGameConfig(
         int slenderStaticQuietInterval,
         int slenderStaticFranticInterval,
         float slenderStaticMinVolume,
-        float slenderStaticMaxVolume
+        float slenderStaticMaxVolume,
+        float lobbyAtmosphereShare
 ) implements GameConfig {
 
     // Sentry and the ResourcePack are opt-in: a service that says nothing about them reports to
@@ -93,7 +95,8 @@ record InternalGameConfig(
             GameConfig.DEFAULT_SLENDER_STATIC_QUIET_INTERVAL,
             GameConfig.DEFAULT_SLENDER_STATIC_FRANTIC_INTERVAL,
             GameConfig.DEFAULT_SLENDER_STATIC_MIN_VOLUME,
-            GameConfig.DEFAULT_SLENDER_STATIC_MAX_VOLUME);
+            GameConfig.DEFAULT_SLENDER_STATIC_MAX_VOLUME,
+            GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE);
 
     /**
      * Returns the default configuration for the game.

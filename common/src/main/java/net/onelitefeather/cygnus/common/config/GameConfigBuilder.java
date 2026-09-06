@@ -38,6 +38,7 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     private int glitchRange = GameConfig.DEFAULT_GLITCH_RANGE;
     private int glitchCloseRange = GameConfig.DEFAULT_GLITCH_CLOSE_RANGE;
     private int glitchViewAngle = GameConfig.DEFAULT_GLITCH_VIEW_ANGLE;
+    private float lobbyAtmosphereShare = GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE;
     private boolean slenderStaticEnabled;
     private Key slenderStaticSound = GameConfig.DEFAULT_SLENDER_STATIC_SOUND;
     // Pre-set for the same reason as the glitch distances above: build() checks the two intervals
@@ -207,6 +208,15 @@ public final class GameConfigBuilder implements GameConfig.Builder {
     }
 
     @Override
+    public GameConfig.Builder lobbyAtmosphereShare(float lobbyAtmosphereShare) {
+        if (lobbyAtmosphereShare < 0.0F || lobbyAtmosphereShare > 1.0F) {
+            throw new IllegalArgumentException("Lobby atmosphere share must be between 0 and 1");
+        }
+        this.lobbyAtmosphereShare = lobbyAtmosphereShare;
+        return this;
+    }
+
+    @Override
     public GameConfig.Builder slenderStaticEnabled(boolean slenderStaticEnabled) {
         this.slenderStaticEnabled = slenderStaticEnabled;
         return this;
@@ -321,7 +331,8 @@ public final class GameConfigBuilder implements GameConfig.Builder {
                 slenderStaticQuietInterval,
                 slenderStaticFranticInterval,
                 slenderStaticMinVolume,
-                slenderStaticMaxVolume
+                slenderStaticMaxVolume,
+                lobbyAtmosphereShare
         );
     }
 }

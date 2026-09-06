@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
  *     <li>glitchRange</li>
  *     <li>glitchCloseRange</li>
  *     <li>glitchViewAngle</li>
+ *     <li>lobbyAtmosphereShare</li>
  *     <li>slenderStaticEnabled</li>
  *     <li>slenderStaticSound</li>
  *     <li>slenderStaticQuietInterval</li>
@@ -133,7 +134,8 @@ public final class GameConfigReader {
                 .slenderStaticQuietInterval(getInt(properties, "slenderStaticQuietInterval", internal.slenderStaticQuietInterval()))
                 .slenderStaticFranticInterval(getInt(properties, "slenderStaticFranticInterval", internal.slenderStaticFranticInterval()))
                 .slenderStaticMinVolume(getFloat(properties, "slenderStaticMinVolume", internal.slenderStaticMinVolume()))
-                .slenderStaticMaxVolume(getFloat(properties, "slenderStaticMaxVolume", internal.slenderStaticMaxVolume()));
+                .slenderStaticMaxVolume(getFloat(properties, "slenderStaticMaxVolume", internal.slenderStaticMaxVolume()))
+                .lobbyAtmosphereShare(getFloat(properties, "lobbyAtmosphereShare", internal.lobbyAtmosphereShare()));
 
         return configBuilder.build();
     }

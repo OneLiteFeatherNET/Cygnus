@@ -88,6 +88,15 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
     Key DEFAULT_DAMAGE_SOUND = Key.key("entity.player.hurt");
 
     /**
+     * The {@link #lobbyAtmosphereShare()} a configuration gets when it says nothing.
+     * <p>
+     * Enough of the map's own haze and colour to be recognised in the distance, far enough from it
+     * that the lobby still reads as the lit room players wait in rather than as the map itself.
+     * </p>
+     */
+    float DEFAULT_LOBBY_ATMOSPHERE_SHARE = 0.3F;
+
+    /**
      * The static the slender hears while the survivors take his pages away.
      * <p>
      * A resource pack sound rather than a vanilla one: three 2.2 second takes of tape hiss the
@@ -332,6 +341,20 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
      * @since 2.13.0
      */
     Key damageSound();
+
+    /**
+     * Returns how far the lobby's atmosphere is taken from the open end towards the game map's own.
+     * <p>
+     * {@code 0} leaves the lobby on the vanilla overworld, which is where it was. {@code 1} gives it
+     * exactly the map's atmosphere, which makes the start of a round invisible - the point of the
+     * setting is the distance between the two, so that walking into the round reads as the world
+     * closing in rather than as a cut.
+     * </p>
+     *
+     * @return the share, between 0 and 1
+     * @since 2.14.0
+     */
+    float lobbyAtmosphereShare();
 
     /**
      * Returns whether the slender hears static as the survivors collect his pages.
@@ -594,6 +617,16 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
          * @since 2.13.0
          */
         Builder damageSound(Key damageSound);
+
+        /**
+         * Sets how far the lobby's atmosphere is taken towards the game map's own.
+         *
+         * @param lobbyAtmosphereShare the share
+         * @return the builder instance
+         * @throws IllegalArgumentException if the share is below 0 or above 1
+         * @since 2.14.0
+         */
+        Builder lobbyAtmosphereShare(float lobbyAtmosphereShare);
 
         /**
          * Sets whether the slender hears static as the survivors collect his pages.

@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.map;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.world.DimensionType;
+import net.minestom.server.world.attribute.EnvironmentAttribute;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
@@ -114,6 +115,67 @@ class GameMapProviderIntegrationTest {
 
         provider.close();
         env.destroyInstance(gameInstance, true);
+    }
+
+    @Test
+    void testLobbyRunsOnAWeakenedVersionOfTheMapsDimension(Env env, @TempDir Path root) throws IOException {
+        GameMapProvider provider = createProvider(root, MapAtmosphere.from(StaticDimensionPreset.DENSE_FOG));
+
+        InstanceContainer lobbyInstance = (InstanceContainer) provider.getActiveInstance().get();
+
+        assertNotSame(DimensionType.OVERWORLD, lobbyInstance.getDimensionType());
+        assertEquals(
+                "map/" + ARENA_NAME + "/lobby", lobbyInstance.getDimensionType().key().value(),
+                "the lobby gets a dimension of its own, derived from the map players are waiting for"
+        );
+
+        provider.close();
+        env.destroyInstance(lobbyInstance, true);
+    }
+
+    @Test
+    void testTheLobbySeesFurtherThanTheMapItself(Env env, @TempDir Path root) throws IOException {
+        MapAtmosphere atmosphere = MapAtmosphere.from(StaticDimensionPreset.DENSE_FOG);
+        GameMapProvider provider = createProvider(root, atmosphere);
+        InstanceContainer lobbyInstance = (InstanceContainer) provider.getActiveInstance().get();
+        provider.loadGameMap();
+        provider.switchToGameMap();
+        InstanceContainer gameInstance = (InstanceContainer) provider.getActiveInstance().get();
+
+        float lobbyFogEnd = fogEndOf(lobbyInstance.getCachedDimensionType());
+        float gameFogEnd = fogEndOf(gameInstance.getCachedDimensionType());
+
+        assertTrue(lobbyFogEnd > gameFogEnd,
+                "the lobby has to be the weaker version: " + lobbyFogEnd + " is not further than " + gameFogEnd);
+        assertTrue(lobbyFogEnd < StaticDimensionPreset.BRIGHT.fogEndDistance(),
+                "and it still has to carry the map's haze rather than being wide open");
+
+        provider.close();
+        env.destroyInstance(gameInstance, true);
+    }
+
+    @Test
+    void testLobbyStaysOnOverworldWithoutAnAtmosphere(Env env, @TempDir Path root) throws IOException {
+        GameMapProvider provider = createProvider(root, null);
+
+        InstanceContainer lobbyInstance = (InstanceContainer) provider.getActiveInstance().get();
+
+        assertEquals(DimensionType.OVERWORLD, lobbyInstance.getDimensionType(),
+                "a map that declares no atmosphere has nothing to prepare players for");
+
+        provider.close();
+        env.destroyInstance(lobbyInstance, true);
+    }
+
+    /**
+     * Reads the fog end distance back out of a registered dimension.
+     *
+     * @param dimension the dimension to read
+     * @return the distance at which its fog is fully opaque
+     */
+    private static float fogEndOf(DimensionType dimension) {
+        Object argument = dimension.attributes().entries().get(EnvironmentAttribute.FOG_END_DISTANCE).argument();
+        return ((Number) argument).floatValue();
     }
 
     /**
