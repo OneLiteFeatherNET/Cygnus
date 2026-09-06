@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.xerus)
     implementation(libs.falco.anvil)
     implementation(libs.adventure)
+    implementation(libs.pica)
 
     // CloudNet is provided by the CloudNet wrapper at runtime and its bridge is loaded as a
     // Minestom extension (separate classloader, see the :bridge module), so :game neither
@@ -44,6 +45,7 @@ dependencies {
 
     testImplementation(libs.minestom)
     testImplementation(libs.adventure)
+    testImplementation(libs.pica)
     testImplementation(libs.cyano)
     testImplementation(libs.aves)
     testImplementation(libs.xerus)
