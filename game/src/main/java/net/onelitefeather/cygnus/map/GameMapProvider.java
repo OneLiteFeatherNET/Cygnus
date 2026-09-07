@@ -67,17 +67,21 @@ public final class GameMapProvider extends AbstractMapProvider {
             throw new IllegalStateException("No maps found in the given path");
         }
 
-        // The game map is read before the lobby is loaded, which is the reverse of what this used
-        // to do: the lobby's own dimension is derived from the game map's atmosphere, so the map
-        // has to be known before the instance it is derived for can be created.
+        // The lobby is taken out of the running first and the game map picked from what is left.
+        // The filter below cannot do that on its own: getDirectoryRoot() is a whole path, so it
+        // never equals "lobby" and the check passes everything through. That was harmless while
+        // loadLobbyMap() ran first and removed the entry, and stops being harmless the moment the
+        // order changes - which it has to here, because the lobby's dimension is derived from the
+        // game map's atmosphere and the map must be known before the lobby instance is created.
+        MapEntry lobbyEntry = this.takeLobbyEntry();
         this.gameEntry = this.mapEntries.stream()
-                .filter(entry -> !entry.getDirectoryRoot().toString().equalsIgnoreCase("lobby"))
+                .filter(entry -> !isLobby(entry))
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("No game map found"));
         GameMap map = readGameMap();
         this.gameDimension = registerDimension(map);
         this.lobbyDimension = registerLobbyDimension(map, lobbyAtmosphereShare);
-        this.loadLobbyMap();
+        this.loadLobbyMap(lobbyEntry);
     }
 
     /**
@@ -236,15 +240,39 @@ public final class GameMapProvider extends AbstractMapProvider {
         });
     }
 
-    private BaseMap loadLobbyMap() {
-        MapEntry lobbyEntry = this.mapEntries.stream().filter(mapEntry -> mapEntry.getDirectoryRoot().toString().contains("lobby")).findAny()
+    /**
+     * Takes the lobby out of the loaded entries, so what is left is the pool a game map is picked
+     * from.
+     *
+     * @return the lobby's entry
+     * @throws IllegalStateException if there is no lobby among the entries
+     */
+    private MapEntry takeLobbyEntry() {
+        MapEntry lobbyEntry = this.mapEntries.stream()
+                .filter(GameMapProvider::isLobby)
+                .findAny()
                 .orElseThrow(() -> new IllegalStateException("No lobby map found in the given path"));
+        this.mapEntries.remove(lobbyEntry);
+        return lobbyEntry;
+    }
 
+    /**
+     * Answers whether an entry is the lobby, by the name of its own directory rather than by the
+     * path leading to it - a temporary directory or a checkout below a folder called {@code lobby}
+     * would otherwise make every map the lobby.
+     *
+     * @param entry the entry to look at
+     * @return {@code true} if the entry is the lobby
+     */
+    private static boolean isLobby(MapEntry entry) {
+        Path directory = entry.getDirectoryRoot().getFileName();
+        return directory != null && directory.toString().equalsIgnoreCase("lobby");
+    }
+
+    private BaseMap loadLobbyMap(MapEntry lobbyEntry) {
         if (!lobbyEntry.hasMapFile()) {
             throw new IllegalStateException("Lobby map doesn't contains a map file");
         }
-
-        this.mapEntries.remove(lobbyEntry);
 
         this.activeMap = this.fileHandler.load(lobbyEntry.getMapFile(), BaseMap.class)
                 .orElseThrow(() -> new IllegalStateException("Failed to load LobbyMap from file: " + lobbyEntry.getMapFile()));

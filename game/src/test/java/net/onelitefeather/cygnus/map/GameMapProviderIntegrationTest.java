@@ -118,6 +118,20 @@ class GameMapProviderIntegrationTest {
     }
 
     @Test
+    void testTheGameMapIsTheArenaAndNeverTheLobby(Env env, @TempDir Path root) throws IOException {
+        GameMapProvider provider = createProvider(root, MapAtmosphere.from(StaticDimensionPreset.DENSE_FOG));
+
+        provider.loadGameMap();
+
+        assertEquals(ARENA_NAME, provider.getGameMap().name(),
+                "the lobby entry has to be out of the running before a game map is picked out of what is left");
+
+        InstanceContainer lobbyInstance = (InstanceContainer) provider.getActiveInstance().get();
+        provider.close();
+        env.destroyInstance(lobbyInstance, true);
+    }
+
+    @Test
     void testLobbyRunsOnAWeakenedVersionOfTheMapsDimension(Env env, @TempDir Path root) throws IOException {
         GameMapProvider provider = createProvider(root, MapAtmosphere.from(StaticDimensionPreset.DENSE_FOG));
 
