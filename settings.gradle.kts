@@ -42,7 +42,7 @@ dependencyResolutionManagement {
             version("cyclonedx", "3.4.1")
             version("pica", "0.1.3")
             version("slf4j", "2.0.19")
-            version("luckperms", "5.5")
+            version("luckperms", "6.0.1")
             version("luckperms-minestom-loader", "5.6-SNAPSHOT")
             version("guava", "33.7.1-jre")
             version("falco", "2.1.0")
