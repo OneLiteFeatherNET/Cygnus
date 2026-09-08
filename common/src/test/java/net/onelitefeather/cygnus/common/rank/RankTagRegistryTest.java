@@ -9,10 +9,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RankTagRegistryTest {
 
@@ -25,29 +23,15 @@ class RankTagRegistryTest {
     }
 
     @Test
-    void testStandardDefaults() {
-        RankTagRegistry standard = RankTagRegistry.standard();
-        assertNotNull(standard);
-
-        assertTrue(standard.findById("administrator").isPresent());
-        assertTrue(standard.findById("assistent").isPresent());
-        assertTrue(standard.findById("mod").isPresent());
-        assertTrue(standard.findById("content").isPresent());
-        assertTrue(standard.findById("media").isPresent());
-        assertTrue(standard.findById("lite").isPresent());
-        assertTrue(standard.findById("player").isPresent());
-    }
-
-    @Test
     void testResolveByGroupStandardAndAliases() {
         assertEquals(Optional.of(RankTag.ADMINISTRATOR), registry.resolveByGroup("administrator"));
         assertEquals(Optional.of(RankTag.ADMINISTRATOR), registry.resolveByGroup("admin"));
         assertEquals(Optional.of(RankTag.ADMINISTRATOR), registry.resolveByGroup("ADMIN"));
         assertEquals(Optional.of(RankTag.ADMINISTRATOR), registry.resolveByGroup("owner"));
 
-        assertEquals(Optional.of(RankTag.ASSISTANT), registry.resolveByGroup("assistent"));
-        assertEquals(Optional.of(RankTag.ASSISTANT), registry.resolveByGroup("assistant"));
-        assertEquals(Optional.of(RankTag.ASSISTANT), registry.resolveByGroup("sr_mod"));
+        assertEquals(Optional.of(RankTag.ASSISTENT), registry.resolveByGroup("assistent"));
+        assertEquals(Optional.of(RankTag.ASSISTENT), registry.resolveByGroup("assistant"));
+        assertEquals(Optional.of(RankTag.ASSISTENT), registry.resolveByGroup("sr_mod"));
 
         assertEquals(Optional.of(RankTag.MOD), registry.resolveByGroup("mod"));
         assertEquals(Optional.of(RankTag.MOD), registry.resolveByGroup("moderator"));

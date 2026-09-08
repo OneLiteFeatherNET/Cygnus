@@ -30,8 +30,13 @@ public record RankTag(
      */
     public static final Key DEFAULT_FONT = Key.key("olf", "rank_tags");
 
+    /**
+     * The Minecraft default font key used to reset typography after custom font glyphs.
+     */
+    public static final Key DEFAULT_MINECRAFT_FONT = Key.key("minecraft", "default");
+
     public static final RankTag ADMINISTRATOR = new RankTag("administrator", "󰆐", DEFAULT_FONT, 100);
-    public static final RankTag ASSISTANT = new RankTag("assistent", "󲆛", DEFAULT_FONT, 90);
+    public static final RankTag ASSISTENT = new RankTag("assistent", "󲆛", DEFAULT_FONT, 90);
     public static final RankTag MOD = new RankTag("mod", "󱆛", DEFAULT_FONT, 80);
     public static final RankTag CONTENT = new RankTag("content", "󲆐", DEFAULT_FONT, 70);
     public static final RankTag MEDIA = new RankTag("media", "󲆕", DEFAULT_FONT, 60);
@@ -70,5 +75,28 @@ public record RankTag(
     @Override
     public int compareTo(RankTag other) {
         return Integer.compare(other.priority, this.priority);
+    }
+
+    /**
+     * Formats a component by prepending this rank tag and explicitly resetting the font for subsequent text.
+     *
+     * @param trailing the trailing component to append after the tag
+     * @return the combined component with the trailing font explicitly reset to default
+     */
+    public Component format(Component trailing) {
+        return Component.empty()
+                .append(this.asComponent)
+                .append(Component.space().font(DEFAULT_MINECRAFT_FONT))
+                .append(trailing.font(DEFAULT_MINECRAFT_FONT));
+    }
+
+    /**
+     * Formats a text string by prepending this rank tag and explicitly resetting the font for subsequent text.
+     *
+     * @param text the text to append after the tag
+     * @return the combined component with default font
+     */
+    public Component format(String text) {
+        return format(Component.text(text));
     }
 }

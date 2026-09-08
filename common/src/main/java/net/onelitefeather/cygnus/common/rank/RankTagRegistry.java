@@ -54,7 +54,7 @@ public final class RankTagRegistry {
      */
     public void registerDefaults() {
         register(RankTag.ADMINISTRATOR, "administrator", "admin", "owner");
-        register(RankTag.ASSISTANT, "assistent", "assistant", "sr_mod", "srmod");
+        register(RankTag.ASSISTENT, "assistent", "assistant", "sr_mod", "srmod");
         register(RankTag.MOD, "mod", "moderator");
         register(RankTag.CONTENT, "content", "developer", "dev", "builder");
         register(RankTag.MEDIA, "media", "creator", "youtube", "twitch");
