@@ -184,3 +184,18 @@ survivorTeamSize=12
 # How loud it is once every page is gone. Between 0 and 1 and not below
 # slenderStaticMinVolume.
 #slenderStaticMaxVolume=0.8
+
+# --- The lobby's atmosphere ---------------------------------------------------
+# How far the lobby is taken from an open, well-lit sky towards the atmosphere of
+# the map players are waiting for. Between 0 and 1.
+#
+# The point is the distance between the two. At 0 the lobby stays on the vanilla
+# overworld, which is where it was, and the round starts as a cut: a player walks
+# from a clear sky into fog that closes in at forty blocks, in the same moment the
+# game begins. At 1 the lobby is the map exactly, and the start becomes invisible.
+# In between, the lobby carries the map's own colours and haze at a distance the
+# player can still see across, so the start reads as the world tightening.
+#
+# A map that declares no atmosphere has nothing to prepare anyone for; its lobby
+# stays on the overworld regardless of this value.
+#lobbyAtmosphereShare=0.3

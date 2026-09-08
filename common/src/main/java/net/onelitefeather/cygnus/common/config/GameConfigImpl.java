@@ -33,6 +33,7 @@ import java.net.URI;
  * @param glitchCloseRange      the distance in blocks at which the tearing is at its worst
  * @param glitchViewAngle       how far off the centre of their view he may stand and still count
  *                              as seen, in degrees
+ * @param lobbyAtmosphereShare  how far the lobby's atmosphere is taken towards the map's own
  * @param slenderStaticEnabled  whether the slender hears static as his pages are collected
  * @param slenderStaticSound    the sound the static is built from
  * @param slenderStaticQuietInterval   the seconds between two bursts while no page has been found
@@ -69,7 +70,8 @@ public record GameConfigImpl(
         int slenderStaticQuietInterval,
         int slenderStaticFranticInterval,
         float slenderStaticMinVolume,
-        float slenderStaticMaxVolume
+        float slenderStaticMaxVolume,
+        float lobbyAtmosphereShare
 ) implements GameConfig {
 
 }
