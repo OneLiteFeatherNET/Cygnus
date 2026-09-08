@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.listener;
 
+import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.theevilreaper.xerus.api.phase.Phase;
