@@ -10,6 +10,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.rank.RankTag;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
 import net.onelitefeather.cygnus.player.listener.SpectatorAddListener;
@@ -90,7 +91,12 @@ public final class SpectatorService {
      * @param player the player who just became a spectator
      */
     private static void markAsSpectator(Player player) {
-        player.setDisplayName(Component.text(player.getUsername(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH));
+        RankTag tag = player.getTag(Tags.ACTIVE_RANK_TAG);
+        Component nameComponent = Component.text(player.getUsername(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH);
+        Component displayName = tag != null
+                ? tag.asComponent().append(Component.space()).append(nameComponent)
+                : nameComponent;
+        player.setDisplayName(displayName);
     }
 
     /**

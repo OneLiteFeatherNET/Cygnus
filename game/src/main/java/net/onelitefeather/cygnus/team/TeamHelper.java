@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.rank.RankTag;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -162,13 +163,19 @@ public final class TeamHelper {
         }
 
         slenderTeam.getPlayers().forEach(player -> {
-            Component slenderDisplayName = Component.text("⛧ ", NamedTextColor.RED)
+            RankTag tag = player.getTag(Tags.ACTIVE_RANK_TAG);
+            Component tagPart = tag != null ? tag.asComponent().append(Component.space()) : Component.empty();
+            Component slenderDisplayName = tagPart
+                    .append(Component.text("⛧ ", NamedTextColor.RED))
                     .append(Component.text(player.getUsername(), NamedTextColor.GRAY));
             player.setDisplayName(slenderDisplayName);
         });
 
         survivorTeam.getPlayers().forEach(player -> {
-            Component survivorDisplayName = Component.text(player.getUsername(), NamedTextColor.GREEN);
+            RankTag tag = player.getTag(Tags.ACTIVE_RANK_TAG);
+            Component survivorDisplayName = tag != null
+                    ? tag.asComponent().append(Component.space()).append(Component.text(player.getUsername(), NamedTextColor.GREEN))
+                    : Component.text(player.getUsername(), NamedTextColor.GREEN);
             player.setDisplayName(survivorDisplayName);
         });
     }
