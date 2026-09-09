@@ -47,7 +47,7 @@ dependencyResolutionManagement {
             version("guava", "33.7.1-jre")
             version("falco", "2.1.0")
             version("minestom-extensions", "2.2.0")
-            version("sentry", "8.55.0")
+            version("sentry", "8.56.0")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("slf4j.api", "org.slf4j", "slf4j-api").versionRef("slf4j")
