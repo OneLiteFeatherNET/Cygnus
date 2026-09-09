@@ -89,10 +89,6 @@ public final class PageProvider {
 
         while (counter < activePageCount && !this.globalCache.isEmpty()) {
             var page = this.globalCache.poll();
-            if (page == null) {
-                break;
-            }
-
             if (candidateHashes.add(page.hashCode())) {
                 Direction direction = page.face();
                 var position = Helper.updatePosition(page.position().asPos(), direction);
