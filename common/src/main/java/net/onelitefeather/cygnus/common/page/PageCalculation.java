@@ -30,7 +30,16 @@ public final class PageCalculation {
     private static final int PAGE_COUNT_JITTER_MAX = 2;
 
     private static final int PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING = 8;
-    private static final int ACTIVE_PAGE_COUNT_MULTIPLIER = 1;
+
+    /**
+     * How many extra survivors above {@value #PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING} it takes for
+     * {@link #calculateActivePageAmount()} to add one more page.
+     * <p>
+     * Playtesting a steeper step (one active page per extra survivor) reached 16 concurrently
+     * active pages, which felt like clutter; this keeps the top of the range below 10.
+     * </p>
+     */
+    private static final int ACTIVE_PAGE_COUNT_STEP_SIZE = 3;
 
     /**
      * Calculates the number of pages to allocate for the dynamic page system.
@@ -59,19 +68,20 @@ public final class PageCalculation {
      * This stays below {@link #calculatePageAmount()} on purpose: it governs how many pages exist
      * in the world at the same time, not the total pool a round draws from. If the number of online
      * players (excluding one) is less than {@value #PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING},
-     * {@link GameConfig#MIN_ACTIVE_PAGE_COUNT} is returned. Otherwise, the count is determined by
-     * multiplying the adjusted player count by {@value #ACTIVE_PAGE_COUNT_MULTIPLIER}.
+     * {@link GameConfig#MIN_ACTIVE_PAGE_COUNT} is returned. Otherwise, one page is added for every
+     * {@value #ACTIVE_PAGE_COUNT_STEP_SIZE} survivors past that threshold, so the count stays flat
+     * for most of the range and only rises near the top of a full lobby.
      *
      * @return the number of pages to keep active at once, at least {@link GameConfig#MIN_ACTIVE_PAGE_COUNT}
      */
     public static int calculateActivePageAmount() {
         int currentPlayers = MinecraftServer.getConnectionManager().getOnlinePlayers().size();
+        int survivors = currentPlayers - 1;
 
-        if (currentPlayers - 1 < PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING) {
+        if (survivors < PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING) {
             return GameConfig.MIN_ACTIVE_PAGE_COUNT;
-        } else {
-            return (currentPlayers - 1) * ACTIVE_PAGE_COUNT_MULTIPLIER;
         }
+        return GameConfig.MIN_ACTIVE_PAGE_COUNT + (survivors - PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING) / ACTIVE_PAGE_COUNT_STEP_SIZE;
     }
 
     private PageCalculation() {
