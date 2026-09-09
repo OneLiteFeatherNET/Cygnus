@@ -96,7 +96,6 @@ import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
-import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Optional;

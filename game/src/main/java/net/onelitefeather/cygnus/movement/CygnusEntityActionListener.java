@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.movement;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
-import net.minestom.server.event.player.PlayerStartFlyingWithElytraEvent;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 
 /**

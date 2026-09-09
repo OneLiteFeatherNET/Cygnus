@@ -19,7 +19,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -114,8 +113,7 @@ class ResourcePackServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    void testMissingHashIsComputedFromThePack(@NotNull Env env, @TempDir Path tempDir)
-            throws IOException, NoSuchAlgorithmException {
+    void testMissingHashIsComputedFromThePack(@NotNull Env env, @TempDir Path tempDir) throws IOException {
         Path pack = tempDir.resolve("pack.zip");
         Files.writeString(pack, "cygnus test pack");
 

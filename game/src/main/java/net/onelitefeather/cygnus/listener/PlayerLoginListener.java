@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.listener;
 
 import net.theevilreaper.xerus.api.phase.Phase;
-import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.instance.Instance;

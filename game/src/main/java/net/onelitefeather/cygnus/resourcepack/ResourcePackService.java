@@ -149,7 +149,7 @@ public final class ResourcePackService {
         CompletableFuture<ResourcePackInfo> future = packInfoFuture();
         try {
             return future.get(HASH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch (InterruptedException exception) {
+        } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
             LOGGER.warn("Interrupted while computing the SHA-1 of '{}'. Not pushing the ResourcePack", url);
             return null;
