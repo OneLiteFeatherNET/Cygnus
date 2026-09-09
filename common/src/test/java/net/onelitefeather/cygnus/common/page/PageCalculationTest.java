@@ -40,4 +40,32 @@ class PageCalculationTest {
 
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    void testActivePageCalculationWithoutScaling(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+
+        for (int i = 0; i < 3; i++) {
+            env.createPlayer(instance);
+        }
+
+        int activePageCount = PageCalculation.calculateActivePageAmount();
+        assertEquals(GameConfig.MIN_ACTIVE_PAGE_COUNT, activePageCount);
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testActivePageCalculationWithScaling(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+
+        for (int i = 0; i < 13; i++) {
+            env.createPlayer(instance);
+        }
+
+        int activePageCount = PageCalculation.calculateActivePageAmount();
+        assertEquals(12, activePageCount);
+
+        env.destroyInstance(instance, true);
+    }
 }
