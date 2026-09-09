@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.common.page;
 import net.minestom.server.MinecraftServer;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * Utility class for calculating the number of pages allocated for the dynamic page system.
  * The page count is based on the number of current online players.
@@ -17,6 +19,16 @@ public final class PageCalculation {
     private static final int PLAYER_SIZE_FOR_DYNAMIC_PAGE_ALLOCATION = 4;
     private static final int PAGE_COUNT_MULTIPLIER = 2;
 
+    /**
+     * The largest amount {@link #calculatePageAmount()} may add on top of the base amount, so the
+     * total can't be worked out in advance from the player count alone.
+     * <p>
+     * Not exposed through {@link GameConfig}: unlike the other page settings, this one is
+     * deliberately not something a server operator should be able to turn off or tune.
+     * </p>
+     */
+    private static final int PAGE_COUNT_JITTER_MAX = 2;
+
     private static final int PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING = 8;
     private static final int ACTIVE_PAGE_COUNT_MULTIPLIER = 1;
 
@@ -24,19 +36,21 @@ public final class PageCalculation {
      * Calculates the number of pages to allocate for the dynamic page system.
      * <p>
      * If the number of online players (excluding one) is less than {@value #PLAYER_SIZE_FOR_DYNAMIC_PAGE_ALLOCATION},
-     * {@link GameConfig#MIN_PAGE_COUNT} is returned. Otherwise, the page count is determined by
-     * multiplying the adjusted player count by {@value #PAGE_COUNT_MULTIPLIER}.
+     * the base amount is {@link GameConfig#MIN_PAGE_COUNT}. Otherwise, it is the adjusted player
+     * count multiplied by {@value #PAGE_COUNT_MULTIPLIER}. A random amount between 0 and
+     * {@value #PAGE_COUNT_JITTER_MAX} is then added on top, re-rolled every call, so the total
+     * can't be derived from the player count alone.
      *
      * @return the number of pages to allocate, at least {@link GameConfig#MIN_PAGE_COUNT}
      */
     public static int calculatePageAmount() {
         int currentPlayers = MinecraftServer.getConnectionManager().getOnlinePlayers().size();
 
-        if (currentPlayers - 1 < PLAYER_SIZE_FOR_DYNAMIC_PAGE_ALLOCATION) {
-            return GameConfig.MIN_PAGE_COUNT;
-        } else {
-            return (currentPlayers - 1) * PAGE_COUNT_MULTIPLIER;
-        }
+        int baseAmount = currentPlayers - 1 < PLAYER_SIZE_FOR_DYNAMIC_PAGE_ALLOCATION
+                ? GameConfig.MIN_PAGE_COUNT
+                : (currentPlayers - 1) * PAGE_COUNT_MULTIPLIER;
+
+        return baseAmount + ThreadLocalRandom.current().nextInt(PAGE_COUNT_JITTER_MAX + 1);
     }
 
     /**
