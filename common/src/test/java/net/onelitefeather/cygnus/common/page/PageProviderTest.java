@@ -272,6 +272,54 @@ class PageProviderTest {
         env.destroyInstance(instance, true);
     }
 
+    @Test
+    void testCollectStartPagesUsesTheGivenActivePageCount(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        int activePageCount = 12;
+
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(
+                IntStream.range(0, activePageCount)
+                        .mapToObj(i -> new PageResource(new Pos(i, 0, 0), Direction.NORTH))
+                        .collect(Collectors.toSet())
+        );
+
+        pageProvider.collectStartPages(instance, activePageCount);
+
+        assertEquals(activePageCount, activePageCount(pageProvider),
+                "collectStartPages must collect exactly the requested active page count");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testCollectStartPagesRejectsAnActivePageCountAboveTheAvailableData(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(
+                IntStream.range(0, 8)
+                        .mapToObj(i -> new PageResource(new Pos(i, 0, 0), Direction.NORTH))
+                        .collect(Collectors.toSet())
+        );
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> pageProvider.collectStartPages(instance, 12)
+        );
+        assertEquals("Not enough pages to start the game", exception.getMessage());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static int activePageCount(PageProvider pageProvider) throws ReflectiveOperationException {
+        Field field = PageProvider.class.getDeclaredField("activePages");
+        field.setAccessible(true);
+        Map<UUID, ?> activePages = (Map<UUID, ?>) field.get(pageProvider);
+        return activePages.size();
+    }
+
     private static String plainStatus(PageProvider pageProvider) {
         return PlainTextComponentSerializer.plainText().serialize(pageProvider.getPageStatus());
     }
