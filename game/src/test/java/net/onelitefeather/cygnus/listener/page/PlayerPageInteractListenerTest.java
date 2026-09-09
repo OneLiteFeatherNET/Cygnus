@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -122,8 +122,8 @@ class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
         pageProvider.setMaxPageAmount(4);
 
         // Create 4 page entities at their wall-adjusted positions
-        Map<Direction, PageEntity> entitiesByDir = new HashMap<>();
-        Map<Direction, Entity> targetsByDir = new HashMap<>();
+        Map<Direction, PageEntity> entitiesByDir = new EnumMap<>(Direction.class);
+        Map<Direction, Entity> targetsByDir = new EnumMap<>(Direction.class);
 
         int count = 1;
         for (Direction direction : directions) {
@@ -148,7 +148,7 @@ class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
         assertEquals(-90.0f, eastPos.yaw());
         assertEquals(90.0f, westPos.yaw(), "West side must have yaw 90");
 
-        assertEquals(Set.of(northPos, southPos, eastPos, westPos).size(), 4, "All 4 page positions must be distinct");
+        assertEquals(4, Set.of(northPos, southPos, eastPos, westPos).size(), "All 4 page positions must be distinct");
 
         PlayerPageInteractListener listener = new PlayerPageInteractListener(pageProvider);
 
