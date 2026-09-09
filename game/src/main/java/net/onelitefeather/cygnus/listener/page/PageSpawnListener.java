@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.listener.page;
 
 import net.minestom.server.instance.Instance;
+import net.onelitefeather.cygnus.common.page.PageCalculation;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
 
@@ -30,7 +31,7 @@ public final class PageSpawnListener implements Consumer<PageSpawnEvent> {
         if (activeInstance == null) {
             throw new IllegalStateException("Active instance not available for page collection");
         }
-        this.pageProvider.collectStartPages(activeInstance);
+        this.pageProvider.collectStartPages(activeInstance, PageCalculation.calculateActivePageAmount());
         this.pageProvider.spawn();
     }
 }
