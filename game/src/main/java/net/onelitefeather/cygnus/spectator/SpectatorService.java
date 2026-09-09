@@ -18,6 +18,7 @@ import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.Team;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -152,8 +153,17 @@ public final class SpectatorService {
 
     /**
      * Invalidates the spectator inventory's data layout.
+     * <p>
+     * {@link net.theevilreaper.aves.inventory.GlobalInventoryBuilder#invalidateLayout()} is called
+     * as well: while the overview is already open, its {@code applyDataLayout()} only ever writes
+     * non-air stacks into the live inventory, so a survivor removed from the data layout (e.g. one
+     * who just died) would otherwise keep their stale entry forever. {@code invalidateLayout()}
+     * clears the whole inventory before the data layout is reapplied, which removes it correctly.
+     * </p>
      */
     public void updateInventory() {
+        LoggerFactory.getLogger(SpectatorService.class).info("Updating inventory");
         this.spectatorInventory.invalidateDataLayout();
+        this.spectatorInventory.invalidateLayout();
     }
 }

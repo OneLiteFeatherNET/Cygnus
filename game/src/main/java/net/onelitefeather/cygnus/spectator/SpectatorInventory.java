@@ -8,6 +8,7 @@ import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.inventory.click.Click;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.minestom.server.item.component.TooltipDisplay;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.ResolvableProfile;
 import net.minestom.server.tag.Tag;
@@ -17,8 +18,10 @@ import net.theevilreaper.aves.inventory.layout.InventoryLayout;
 import net.theevilreaper.aves.inventory.util.LayoutCalculator;
 import net.theevilreaper.xerus.api.team.Team;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -27,6 +30,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
 
     private static final ItemStack DECORATION_PANE = ItemStack.builder(Material.BLACK_STAINED_GLASS_PANE)
             .customName(Component.empty())
+            .set(DataComponents.TOOLTIP_DISPLAY, new TooltipDisplay(true, Set.of()))
             .build();
     static final Tag<UUID> TARGET_TAG = Tag.UUID("target");
 
@@ -48,6 +52,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
     public SpectatorInventory(Team survivorTeam, BiConsumer<Player, Player> teleportCallback) {
         super(Component.text("Spectate"), InventoryType.CHEST_4_ROW);
         this.teleportCallback = teleportCallback;
+        System.out.println("Slots:" + Arrays.toString(SLOTS));
 
         InventoryLayout layout = InventoryLayout.fromType(getType());
         layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), DECORATION_PANE);
@@ -61,15 +66,17 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
             dataLayout.blank(SLOTS);
             Iterator<Player> iterator = survivorTeam.getPlayers().iterator();
             int index = 0;
+            LOGGER.warn("Called with size of " + survivorTeam.getPlayers().size());
 
             while (index < SLOTS.length && iterator.hasNext()) {
+                LOGGER.debug("WAAAAAA");
                 Player player = iterator.next();
                 ResolvableProfile profile = player.getSkin() != null
                         ? new ResolvableProfile(player.getSkin())
                         : new ResolvableProfile(new GameProfile(player.getUuid(), player.getUsername()));
                 dataLayout.setItem(
                         SLOTS[index],
-                        ItemStack.builder(Material.PLAYER_HEAD)
+                        ItemStack.builder(Material.OAK_DOOR)
                                 .customName(Component.text(player.getUsername()))
                                 //.set(DataComponents.PROFILE, profile)
                                 .set(TARGET_TAG, player.getUuid())
@@ -84,6 +91,8 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
             return dataLayout;
         });
 
+        this.invalidateLayout();
+        this.invalidateDataLayout();
         this.register();
     }
 
