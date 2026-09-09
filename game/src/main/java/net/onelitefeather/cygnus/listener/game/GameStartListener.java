@@ -1,8 +1,10 @@
 package net.onelitefeather.cygnus.listener.game;
 
 import net.kyori.adventure.text.Component;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
+import net.minestom.server.timer.TaskSchedule;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
@@ -19,9 +21,12 @@ import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 public final class GameStartListener implements Consumer<GameStartEvent> {
+
+    private static final int TICKS_PER_SECOND = 20;
 
     private final TeamService teamService;
     private final AmbientProvider ambientProvider;
@@ -72,10 +77,23 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
 
     private void startGlobalMechanics() {
         this.staminaService.start();
-        EventDispatcher.call(new PageSpawnEvent());
         this.ambientProvider.startTask();
-        // Started after the pages exist: PageSpawnEvent above is what fills the active page map.
-        this.pageProximityService.startTask();
+        // Delayed so survivors get a moment to move away from the spawn point before the first
+        // pages appear, instead of one being reachable the instant the round starts. The proximity
+        // task starts alongside it, in the same task, since it depends on pages already existing.
+        // Jittered so the moment doesn't land on the exact same tick every round.
+        MinecraftServer.getSchedulerManager().buildTask(() -> {
+            EventDispatcher.call(new PageSpawnEvent());
+            this.pageProximityService.startTask();
+        }).delay(TaskSchedule.tick(randomizedSpawnDelayTicks())).schedule();
         TeamHelper.updateTabList(this.teamService);
+    }
+
+    private int randomizedSpawnDelayTicks() {
+        int baseTicks = GameConfig.PAGE_SPAWN_DELAY * TICKS_PER_SECOND;
+        int jitterTicks = GameConfig.PAGE_SPAWN_DELAY_JITTER * TICKS_PER_SECOND;
+        ThreadLocalRandom current = ThreadLocalRandom.current();
+        int offset = current.nextInt(2 * jitterTicks + 1) - jitterTicks;
+        return baseTicks + offset;
     }
 }

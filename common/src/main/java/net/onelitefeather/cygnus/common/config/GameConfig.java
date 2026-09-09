@@ -36,6 +36,29 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
 
     int MIN_ACTIVE_PAGE_COUNT = 4 * 2;
 
+    /**
+     * How many seconds after a round starts before the first pages spawn.
+     * <p>
+     * Spawning immediately at {@code GameStartEvent} let survivors grab a page before they had even
+     * moved from the spawn point. The delay gives them time to spread across the map first.
+     * </p>
+     *
+     * @since 2.15.0
+     */
+    int PAGE_SPAWN_DELAY = 10;
+
+    /**
+     * How many seconds {@link #PAGE_SPAWN_DELAY} may randomly shift up or down, re-rolled every
+     * round.
+     * <p>
+     * Without this the delay lands on the exact same tick every round, which players learn and
+     * plan around; the jitter keeps the moment the first pages appear unpredictable.
+     * </p>
+     *
+     * @since 2.15.0
+     */
+    int PAGE_SPAWN_DELAY_JITTER = 2;
+
     int PAGE_TTL_TIME = 60;
 
     int FORCE_START_TIME = 11;

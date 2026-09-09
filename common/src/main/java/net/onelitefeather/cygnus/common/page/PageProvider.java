@@ -30,8 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_ACTIVE_PAGE_COUNT;
-
 /**
  * Handles the logic to manage and spawn pages during the {@link GamePhase}.
  *
@@ -77,18 +75,20 @@ public final class PageProvider {
         this.globalCache.addAll(shuffled);
     }
 
-    public void collectStartPages(Instance instance) {
-        Check.argCondition(this.globalCache.size() < MIN_ACTIVE_PAGE_COUNT, "Not enough pages to start the game");
+    /**
+     * Collects the pages that should be active in the world when a round starts.
+     *
+     * @param instance        the instance to spawn the pages in
+     * @param activePageCount how many pages to keep concurrently active, e.g. from {@link PageCalculation#calculateActivePageAmount()}
+     */
+    public void collectStartPages(Instance instance, int activePageCount) {
+        Check.argCondition(this.globalCache.size() < activePageCount, "Not enough pages to start the game");
         var counter = 0;
 
         Set<Integer> candidateHashes = new HashSet<>();
 
-        while (counter < MIN_ACTIVE_PAGE_COUNT && !this.globalCache.isEmpty()) {
+        while (counter < activePageCount && !this.globalCache.isEmpty()) {
             var page = this.globalCache.poll();
-            if (page == null) {
-                break;
-            }
-
             if (candidateHashes.add(page.hashCode())) {
                 Direction direction = page.face();
                 var position = Helper.updatePosition(page.position().asPos(), direction);
