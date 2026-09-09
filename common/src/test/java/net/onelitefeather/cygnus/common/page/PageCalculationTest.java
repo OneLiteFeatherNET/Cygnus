@@ -91,6 +91,21 @@ class PageCalculationTest {
     }
 
     @Test
+    void testActivePageCalculationStaysFlatUntilNearTheTopOfTheRange(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+
+        for (int i = 0; i < 11; i++) {
+            env.createPlayer(instance);
+        }
+
+        int activePageCount = PageCalculation.calculateActivePageAmount();
+        assertEquals(GameConfig.MIN_ACTIVE_PAGE_COUNT, activePageCount,
+                "the active page count must still be at the minimum just below the top of the range");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
     void testActivePageCalculationWithScaling(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
 
@@ -99,7 +114,8 @@ class PageCalculationTest {
         }
 
         int activePageCount = PageCalculation.calculateActivePageAmount();
-        assertEquals(12, activePageCount);
+        assertEquals(9, activePageCount,
+                "the active page count at the top of the range must stay below 10");
 
         env.destroyInstance(instance, true);
     }
