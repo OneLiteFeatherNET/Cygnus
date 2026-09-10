@@ -4,6 +4,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
+import net.minestom.server.entity.Player;
 import net.minestom.server.entity.PlayerHand;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.instance.Instance;
@@ -17,6 +18,7 @@ import net.onelitefeather.cygnus.common.page.PageFactory;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.util.Helper;
+import net.onelitefeather.cygnus.page.PageGazeService;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -24,11 +26,14 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
 
@@ -53,6 +58,71 @@ class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
         listener.accept(new PlayerEntityInteractEvent(player, target, PlayerHand.MAIN, Vec.ZERO));
 
         assertEquals(1, player.getPageFounds(), "Counter must increment upon successfully finding a page");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testPagePickupClearsGaze(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
+        pageProvider.setMaxPageAmount(1);
+
+        PageEntity pageEntity = PageFactory.createPage(instance, Pos.ZERO, Direction.NORTH, 1);
+        UUID hitBoxUuid = pageEntity.getHitBoxUUID();
+        seedActivePage(pageProvider, pageEntity);
+
+        Entity target = new Entity(EntityType.INTERACTION);
+        target.setTag(Tags.PAGE_TAG, hitBoxUuid);
+
+        PageGazeService gazeService = new PageGazeService(List::of, List::of);
+        Field activeGazeField = PageGazeService.class.getDeclaredField("activeGaze");
+        activeGazeField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Map<Player, UUID> activeGaze = (Map<Player, UUID>) activeGazeField.get(gazeService);
+        activeGaze.put(player, pageEntity.getUuid());
+
+        assertTrue(gazeService.isGazing(player), "Player must initially be marked as gazing");
+
+        PlayerPageInteractListener listener = new PlayerPageInteractListener(pageProvider, gazeService);
+        listener.accept(new PlayerEntityInteractEvent(player, target, PlayerHand.MAIN, Vec.ZERO));
+
+        assertEquals(1, player.getPageFounds(), "Counter must increment upon successfully finding a page");
+        assertFalse(gazeService.isGazing(player), "Active gaze must be cleared when player picks up the page");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testInvalidPageDoesNotClearGaze(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
+        pageProvider.setMaxPageAmount(1);
+
+        Entity target = new Entity(EntityType.INTERACTION);
+        target.setTag(Tags.PAGE_TAG, UUID.randomUUID());
+
+        PageGazeService gazeService = new PageGazeService(List::of, List::of);
+        Field activeGazeField = PageGazeService.class.getDeclaredField("activeGaze");
+        activeGazeField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Map<Player, UUID> activeGaze = (Map<Player, UUID>) activeGazeField.get(gazeService);
+        UUID dummyId = UUID.randomUUID();
+        activeGaze.put(player, dummyId);
+
+        PlayerPageInteractListener listener = new PlayerPageInteractListener(pageProvider, gazeService);
+        listener.accept(new PlayerEntityInteractEvent(player, target, PlayerHand.MAIN, Vec.ZERO));
+
+        assertEquals(0, player.getPageFounds());
+        assertTrue(gazeService.isGazing(player), "Gaze state must remain when interaction was invalid");
 
         env.destroyInstance(instance, true);
     }

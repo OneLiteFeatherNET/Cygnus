@@ -9,6 +9,7 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.page.PageGazeService;
 import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
@@ -18,6 +19,7 @@ import net.onelitefeather.cygnus.utils.Items;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -28,13 +30,19 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
     private final StaminaService staminaService;
     private final PageProvider pageProvider;
     private final PageProximityService pageProximityService;
+    private final PageGazeService pageGazeService;
 
     public GameStartListener(TeamService teamService, AmbientProvider ambientProvider, StaminaService staminaService, PageProvider pageProvider, PageProximityService pageProximityService) {
+        this(teamService, ambientProvider, staminaService, pageProvider, pageProximityService, null);
+    }
+
+    public GameStartListener(TeamService teamService, AmbientProvider ambientProvider, StaminaService staminaService, PageProvider pageProvider, PageProximityService pageProximityService, @Nullable PageGazeService pageGazeService) {
         this.teamService = teamService;
         this.ambientProvider = ambientProvider;
         this.staminaService = staminaService;
         this.pageProvider = pageProvider;
         this.pageProximityService = pageProximityService;
+        this.pageGazeService = pageGazeService;
     }
 
     @Override
@@ -76,6 +84,9 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
         this.ambientProvider.startTask();
         // Started after the pages exist: PageSpawnEvent above is what fills the active page map.
         this.pageProximityService.startTask();
+        if (this.pageGazeService != null) {
+            this.pageGazeService.startTask();
+        }
         TeamHelper.updateTabList(this.teamService);
     }
 }
