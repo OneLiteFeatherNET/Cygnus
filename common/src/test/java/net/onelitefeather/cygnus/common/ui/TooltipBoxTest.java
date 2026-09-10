@@ -126,7 +126,8 @@ class TooltipBoxTest {
     void testCrosshairOffset() {
         Component line = Component.text("Test"); // In compact 6px font: T(5)+e(5)+s(5)+t(3) = 18px
         int textWidth = 18;
-        int boxWidth = TooltipBox.CAP_WIDTH + textWidth + TooltipBox.CAP_WIDTH; // 4 + 18 + 4 = 26
+        int middleTiles = TooltipBox.HORIZONTAL_PADDING + textWidth + TooltipBox.HORIZONTAL_PADDING; // 4 + 18 + 4 = 26
+        int boxWidth = TooltipBox.CAP_WIDTH + middleTiles + TooltipBox.CAP_WIDTH; // 5 + 26 + 5 = 36
 
         int offset = 20;
         Component box = TooltipBox.builder()
@@ -134,7 +135,7 @@ class TooltipBoxTest {
                 .crosshairOffsetX(offset)
                 .build();
 
-        int expectedLeadingSpace = boxWidth + (2 * offset); // 26 + 40 = 66
+        int expectedLeadingSpace = boxWidth + (2 * offset); // 36 + 40 = 76
         String expectedLeading = TooltipBox.getPositiveSpace(expectedLeadingSpace);
 
         List<Component> children = box.children();
