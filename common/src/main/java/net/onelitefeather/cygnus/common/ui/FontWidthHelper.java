@@ -16,6 +16,9 @@ public final class FontWidthHelper {
     private static final int DEFAULT_CHAR_WIDTH = 6; // 5px character + 1px spacing
     private static final int[] ASCII_WIDTHS = new int[128];
 
+    private static final int DEFAULT_TOOLTIP_CHAR_WIDTH = 5;
+    private static final int[] TOOLTIP_ASCII_WIDTHS = new int[128];
+
     static {
         // Initialize all ASCII characters to default width (5px + 1px spacing = 6px)
         Arrays.fill(ASCII_WIDTHS, DEFAULT_CHAR_WIDTH);
@@ -36,6 +39,36 @@ public final class FontWidthHelper {
         ASCII_WIDTHS['t'] = 4;   // 3px + 1px spacing
         ASCII_WIDTHS['k'] = 5;   // 4px + 1px spacing
         ASCII_WIDTHS['f'] = 5;   // 4px + 1px spacing
+
+        // Specific compact tooltip font metrics (height 6, ascent 5 in 26.2)
+        Arrays.fill(TOOLTIP_ASCII_WIDTHS, DEFAULT_TOOLTIP_CHAR_WIDTH);
+        TOOLTIP_ASCII_WIDTHS[' '] = 3;
+        TOOLTIP_ASCII_WIDTHS['!'] = 2;
+        TOOLTIP_ASCII_WIDTHS['"'] = 3;
+        TOOLTIP_ASCII_WIDTHS['\''] = 2;
+        TOOLTIP_ASCII_WIDTHS['('] = 3;
+        TOOLTIP_ASCII_WIDTHS[')'] = 3;
+        TOOLTIP_ASCII_WIDTHS['*'] = 3;
+        TOOLTIP_ASCII_WIDTHS[','] = 2;
+        TOOLTIP_ASCII_WIDTHS['.'] = 2;
+        TOOLTIP_ASCII_WIDTHS[':'] = 2;
+        TOOLTIP_ASCII_WIDTHS[';'] = 2;
+        TOOLTIP_ASCII_WIDTHS['<'] = 4;
+        TOOLTIP_ASCII_WIDTHS['>'] = 4;
+        TOOLTIP_ASCII_WIDTHS['@'] = 6;
+        TOOLTIP_ASCII_WIDTHS['I'] = 3;
+        TOOLTIP_ASCII_WIDTHS['['] = 3;
+        TOOLTIP_ASCII_WIDTHS[']'] = 3;
+        TOOLTIP_ASCII_WIDTHS['`'] = 3;
+        TOOLTIP_ASCII_WIDTHS['f'] = 4;
+        TOOLTIP_ASCII_WIDTHS['i'] = 2;
+        TOOLTIP_ASCII_WIDTHS['k'] = 4;
+        TOOLTIP_ASCII_WIDTHS['l'] = 3;
+        TOOLTIP_ASCII_WIDTHS['t'] = 3;
+        TOOLTIP_ASCII_WIDTHS['{'] = 3;
+        TOOLTIP_ASCII_WIDTHS['|'] = 2;
+        TOOLTIP_ASCII_WIDTHS['}'] = 3;
+        TOOLTIP_ASCII_WIDTHS['~'] = 6;
     }
 
     private FontWidthHelper() {
@@ -120,6 +153,88 @@ public final class FontWidthHelper {
 
         for (Component child : component.children()) {
             totalWidth += computeComponentWidth(child, currentBold);
+        }
+        return totalWidth;
+    }
+
+    /**
+     * Returns the pixel width of a single character in the compact tooltip font (height 6).
+     *
+     * @param c the character
+     * @return width in pixels
+     */
+    public static int getTooltipCharWidth(char c) {
+        return getTooltipCharWidth(c, false);
+    }
+
+    /**
+     * Returns the pixel width of a single character in the compact tooltip font (height 6),
+     * taking bold styling into account (+1px if bold).
+     *
+     * @param c    the character
+     * @param bold whether bold formatting is enabled
+     * @return width in pixels
+     */
+    public static int getTooltipCharWidth(char c, boolean bold) {
+        int width = (c < 128) ? TOOLTIP_ASCII_WIDTHS[c] : DEFAULT_TOOLTIP_CHAR_WIDTH;
+        return bold ? width + 1 : width;
+    }
+
+    /**
+     * Returns the total pixel width of a plain text string in the compact tooltip font.
+     *
+     * @param text the string to measure, may be null
+     * @return total width in pixels
+     */
+    public static int getTooltipWidth(@Nullable String text) {
+        return getTooltipWidth(text, false);
+    }
+
+    /**
+     * Returns the total pixel width of a plain text string in the compact tooltip font,
+     * with an optional bold modifier.
+     *
+     * @param text the string to measure, may be null
+     * @param bold whether bold formatting is enabled
+     * @return total width in pixels
+     */
+    public static int getTooltipWidth(@Nullable String text, boolean bold) {
+        if (text == null || text.isEmpty()) {
+            return 0;
+        }
+        int total = 0;
+        for (int i = 0; i < text.length(); i++) {
+            total += getTooltipCharWidth(text.charAt(i), bold);
+        }
+        return total;
+    }
+
+    /**
+     * Traverses component children and flattens styles to compute the total pixel width
+     * in the compact tooltip font, accounting for bold text decoration inheritance.
+     *
+     * @param component the component to measure, may be null
+     * @return total width in pixels
+     */
+    public static int getTooltipWidth(@Nullable Component component) {
+        if (component == null) {
+            return 0;
+        }
+        return computeTooltipComponentWidth(component, false);
+    }
+
+    private static int computeTooltipComponentWidth(Component component, boolean parentBold) {
+        TextDecoration.State boldState = component.decoration(TextDecoration.BOLD);
+        boolean currentBold = (boldState == TextDecoration.State.TRUE)
+                || (boldState == TextDecoration.State.NOT_SET && parentBold);
+
+        int totalWidth = 0;
+        if (component instanceof TextComponent textComponent) {
+            totalWidth += getTooltipWidth(textComponent.content(), currentBold);
+        }
+
+        for (Component child : component.children()) {
+            totalWidth += computeTooltipComponentWidth(child, currentBold);
         }
         return totalWidth;
     }
