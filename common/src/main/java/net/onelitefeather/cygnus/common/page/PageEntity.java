@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
  * @since 1.0.0
  */
 @SuppressWarnings("java:S3252")
-public final class PageEntity extends Entity implements PageCreator {
+public final class PageEntity extends Entity implements PageCreator, PageProximityTarget {
 
     private static final Vec HALF_BLOCK = new Vec(0, 0.5, 0);
     private static final long ADDITION_TIME = 1000L;
@@ -242,5 +242,23 @@ public final class PageEntity extends Entity implements PageCreator {
      */
     public int getInitialBlockLight() {
         return this.initialBlockLight;
+    }
+
+    @Override
+    public UUID id() {
+        return this.getUuid();
+    }
+
+    @Override
+    public Pos position() {
+        return this.getPosition();
+    }
+
+    @Override
+    public double remainingTtlRatio() {
+        if (this.ttlTime <= 0) {
+            return 0.0;
+        }
+        return Math.clamp(1.0 - ((double) this.currentTickTime / this.ttlTime), 0.0, 1.0);
     }
 }
