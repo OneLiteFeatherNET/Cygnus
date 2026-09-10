@@ -40,6 +40,7 @@ import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
+import net.onelitefeather.cygnus.page.PageGazeService;
 import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.damage.DamageSoundService;
 import net.onelitefeather.cygnus.noise.SlenderStaticService;
@@ -111,6 +112,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final StaminaService staminaService;
     private final PageProvider pageProvider;
     private final PageProximityService pageProximityService;
+    private final PageGazeService pageGazeService;
     private final GameView view;
     private final GameMapProvider mapProvider;
     private final GameConfig gameConfig;
@@ -153,6 +155,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 this.gameConfig.pageProximity(),
                 survivorTeam::getPlayers,
                 this.pageProvider::interactablePages
+        );
+        this.pageGazeService = new PageGazeService(
+                () -> TeamHelper.survivorsOf(this.teamService),
+                this.pageProvider
         );
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
@@ -233,12 +239,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         SlenderBarTrigger trigger = new SlenderBarTrigger(this.staminaService::getSlenderBar);
         handler.addListener(PlayerUseItemEvent.class, new SlenderItemListener(trigger));
         handler.addListener(GameFinishEvent.class, new GameFinishListener());
-        handler.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider, this.pageProximityService));
+        handler.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider, this.pageProximityService, this.pageGazeService));
         handler.addListener(PageSpawnEvent.class, new PageSpawnListener(this.pageProvider, this.mapProvider.getActiveInstance()));
         handler.addListener(PlayerDeathEvent.class, new PlayerDeathListener(
                 phaseSupplier, this.teamService, this.jumpscareManager, this.staminaService, this.spectatorService::updateInventory
         ));
-        handler.addListener(PlayerEntityInteractEvent.class, new PlayerPageInteractListener(this.pageProvider));
+        handler.addListener(PlayerEntityInteractEvent.class, new PlayerPageInteractListener(this.pageProvider, this.pageGazeService));
         handler.addListener(PageExpiredEvent.class, new GamePageListener(this.pageProvider));
         handler.addListener(PlayerStartSprintingEvent.class, new PlayerStartSprintingListener(this.staminaService::getFoodBar));
         handler.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
@@ -279,6 +285,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.staminaService.cleanUp();
         this.ambientProvider.stopTask();
         this.pageProximityService.stopTask();
+        this.pageGazeService.stopTask();
         this.jumpscareManager.cleanUp();
         this.teamService.getTeam(GameConfig.SLENDER_KEY)
                 .ifPresent(slenderTeam -> slenderTeam.getPlayers().forEach(player -> {
