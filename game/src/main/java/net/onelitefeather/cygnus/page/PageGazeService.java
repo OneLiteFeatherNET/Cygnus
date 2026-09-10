@@ -42,11 +42,11 @@ public final class PageGazeService {
     public static final double MIN_GAZE_COSINE = 0.85D;
 
     /**
-     * Subtitle title animation timings (100ms fade-in, 500ms stay, 150ms fade-out).
+     * Subtitle title animation timings (100ms fade-in, 5000ms stay, 150ms fade-out).
      */
     public static final Title.Times TITLE_TIMES = Title.Times.times(
             Duration.ofMillis(100),
-            Duration.ofMillis(500),
+            Duration.ofSeconds(5),
             Duration.ofMillis(150)
     );
 
