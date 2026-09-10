@@ -149,9 +149,9 @@ class FontWidthHelperTest {
     void testTooltipFontWidth() {
         // "Test": T(5) + e(5) + s(5) + t(3) = 18
         assertEquals(18, FontWidthHelper.getTooltipWidth("Test"));
-        // "Help me": H(5) + e(5) + l(3) + p(5) + ' '(3) + m(5) + e(5) = 31
-        assertEquals(31, FontWidthHelper.getTooltipWidth("Help me"));
+        // "Help me": H(5) + e(5) + l(3) + p(5) + ' '(4) + m(5) + e(5) = 32
+        assertEquals(32, FontWidthHelper.getTooltipWidth("Help me"));
         // Component measurement
-        assertEquals(31, FontWidthHelper.getTooltipWidth(Component.text("Help me")));
+        assertEquals(32, FontWidthHelper.getTooltipWidth(Component.text("Help me")));
     }
 }

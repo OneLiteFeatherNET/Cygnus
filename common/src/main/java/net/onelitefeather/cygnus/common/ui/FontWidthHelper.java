@@ -42,7 +42,7 @@ public final class FontWidthHelper {
 
         // Specific compact tooltip font metrics (height 6, ascent 5 in 26.2)
         Arrays.fill(TOOLTIP_ASCII_WIDTHS, DEFAULT_TOOLTIP_CHAR_WIDTH);
-        TOOLTIP_ASCII_WIDTHS[' '] = 3;
+        TOOLTIP_ASCII_WIDTHS[' '] = 4;
         TOOLTIP_ASCII_WIDTHS['!'] = 2;
         TOOLTIP_ASCII_WIDTHS['"'] = 3;
         TOOLTIP_ASCII_WIDTHS['\''] = 2;
