@@ -35,58 +35,32 @@ public final class TooltipBox {
     public static final int MIN_CONTENT_WIDTH = 10;
     public static final int DEFAULT_CROSSHAIR_OFFSET = 16;
 
-    private static final int[] SPACE_VALUES = {128, 64, 32, 16, 8, 4, 2, 1};
-    private static final char[] NEGATIVE_SPACE_GLYPHS = {'\uF880', '\uF840', '\uF820', '\uF810', '\uF808', '\uF804', '\uF802', '\uF801'};
-    private static final char[] POSITIVE_SPACE_GLYPHS = {'\uF841', '\uF821', '\uF811', '\uF809', '\uF807', '\uF806', '\uF805', '\uF803'};
-
     private TooltipBox() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
     /**
-     * Decomposes a positive pixel offset into binary combinations of negative-space font glyphs.
+     * Decomposes a positive pixel offset into combinations of negative-space font glyphs
+     * using the {@code space:default} font.
      *
      * @param pixels the number of pixels to move left (cursor shift)
      * @return the string sequence of negative space characters
      */
     @NotNull
     public static String getNegativeSpace(int pixels) {
-        if (pixels <= 0) {
-            return "";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        int remaining = pixels;
-        for (int i = 0; i < SPACE_VALUES.length; i++) {
-            while (remaining >= SPACE_VALUES[i]) {
-                sb.append(NEGATIVE_SPACE_GLYPHS[i]);
-                remaining -= SPACE_VALUES[i];
-            }
-        }
-        return sb.toString();
+        return SpaceHelper.getNegative(pixels);
     }
 
     /**
-     * Decomposes a positive pixel offset into binary combinations of positive-space font glyphs.
+     * Decomposes a positive pixel offset into combinations of positive-space font glyphs
+     * using the {@code space:default} font.
      *
      * @param pixels the number of pixels to move right (cursor advance)
      * @return the string sequence of positive space characters
      */
     @NotNull
     public static String getPositiveSpace(int pixels) {
-        if (pixels <= 0) {
-            return "";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        int remaining = pixels;
-        for (int i = 0; i < SPACE_VALUES.length; i++) {
-            while (remaining >= SPACE_VALUES[i]) {
-                sb.append(POSITIVE_SPACE_GLYPHS[i]);
-                remaining -= SPACE_VALUES[i];
-            }
-        }
-        return sb.toString();
+        return SpaceHelper.getPositive(pixels);
     }
 
     /**
@@ -216,10 +190,10 @@ public final class TooltipBox {
             String leadingSpaceStr = getPositiveSpace(leadingSpace);
 
             // Minecraft font renderer adds +1px font spacing after every bitmap character.
-            // Appending \uF801 (-1px) after each glyph ensures exact 1px step per middle tile
+            // Appending \uF001 (-1px) after each glyph ensures exact 1px step per middle tile
             // (eliminating vertical striped gaps) and exact 4px step for the caps.
-            String step = MIDDLE + "\uF801";
-            String boxStr = CAP_LEFT + "\uF801" + step.repeat(textWidth) + CAP_RIGHT + "\uF801";
+            String step = MIDDLE + "\uF001";
+            String boxStr = CAP_LEFT + "\uF001" + step.repeat(textWidth) + CAP_RIGHT + "\uF001";
 
             // Shift back cursor from right edge of right cap to start of text:
             // Text starts at left cap width (4px) from the left edge of the box.
