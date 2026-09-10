@@ -212,6 +212,10 @@ class PageProviderTest {
         assertEquals(List.of(new Pos(10, 64, 20)), positions,
                 "an expired page is invisible to the player and must not be announced by a sound");
 
+        List<PageEntity> pages = pageProvider.interactablePages();
+        assertEquals(List.of(collectible), pages,
+                "an expired page must not be returned by interactablePages");
+
         env.destroyInstance(instance, true);
     }
 

@@ -203,6 +203,25 @@ public final class PageProvider {
         return positions;
     }
 
+    /**
+     * Returns every page a player could currently walk up to and collect.
+     * <p>
+     * Pages that ran out of TTL are left out: they are invisible and do not respond to interaction.
+     * </p>
+     *
+     * @return the collectible pages, in no particular order
+     * @since 2.15.0
+     */
+    public List<PageEntity> interactablePages() {
+        List<PageEntity> pages = new ArrayList<>(this.activePages.size());
+        for (PageEntity entity : this.activePages.values()) {
+            if (entity.isInteractable()) {
+                pages.add(entity);
+            }
+        }
+        return pages;
+    }
+
     private void updatePageData(PageEntity entity) {
         PageResource resource = this.globalCache.poll();
         if (resource != null) {
