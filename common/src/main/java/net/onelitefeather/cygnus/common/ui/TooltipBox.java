@@ -8,12 +8,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
- * Constructs an authentic Adventure {@link Component} that renders a modular 9-slice tooltip frame
- * and background from the {@code cygnus:tooltip} font with negative space shifting behind text content.
+ * Constructs an authentic Adventure {@link Component} that renders a modular 3-part tooltip frame
+ * and background from the {@code cygnus:tooltip} font with cursor shifts and crosshair alignment.
+ *
+ * @author theEvilReaper
+ * @version 2.0.0
+ * @since 2.15.0
  */
 public final class TooltipBox {
 
@@ -23,30 +26,25 @@ public final class TooltipBox {
     public static final Key FONT = Key.key("cygnus", "tooltip");
     public static final Key TOOLTIP_FONT = FONT;
 
-    // 9-slice glyph constants
-    public static final String CORNER_TL = "\uE100";
-    public static final String BORDER_TOP = "\uE101";
-    public static final String CORNER_TR = "\uE102";
-    public static final String BORDER_LEFT = "\uE103";
-    public static final String BG_FILL = "\uE104";
-    public static final String BORDER_RIGHT = "\uE105";
-    public static final String CORNER_BL = "\uE106";
-    public static final String BORDER_BOTTOM = "\uE107";
-    public static final String CORNER_BR = "\uE108";
+    // 3-part full-height glyph constants (height 16, ascent 11)
+    public static final String CAP_LEFT = "\uE100";
+    public static final String MIDDLE = "\uE101";
+    public static final String CAP_RIGHT = "\uE102";
 
-    public static final int DEFAULT_PADDING = 4;
+    public static final int CAP_WIDTH = 5;
     public static final int MIN_CONTENT_WIDTH = 10;
+    public static final int DEFAULT_CROSSHAIR_OFFSET = 16;
 
-    private static final int[] NEGATIVE_SPACE_VALUES = {128, 64, 32, 16, 8, 4, 2, 1};
+    private static final int[] SPACE_VALUES = {128, 64, 32, 16, 8, 4, 2, 1};
     private static final char[] NEGATIVE_SPACE_GLYPHS = {'\uF880', '\uF840', '\uF820', '\uF810', '\uF808', '\uF804', '\uF802', '\uF801'};
+    private static final char[] POSITIVE_SPACE_GLYPHS = {'\uF841', '\uF821', '\uF811', '\uF809', '\uF807', '\uF806', '\uF805', '\uF803'};
 
     private TooltipBox() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
     /**
-     * Decomposes a positive pixel offset into binary combinations of negative-space font glyphs
-     * configured in the {@code cygnus:tooltip} font.
+     * Decomposes a positive pixel offset into binary combinations of negative-space font glyphs.
      *
      * @param pixels the number of pixels to move left (cursor shift)
      * @return the string sequence of negative space characters
@@ -59,10 +57,33 @@ public final class TooltipBox {
 
         StringBuilder sb = new StringBuilder();
         int remaining = pixels;
-        for (int i = 0; i < NEGATIVE_SPACE_VALUES.length; i++) {
-            while (remaining >= NEGATIVE_SPACE_VALUES[i]) {
+        for (int i = 0; i < SPACE_VALUES.length; i++) {
+            while (remaining >= SPACE_VALUES[i]) {
                 sb.append(NEGATIVE_SPACE_GLYPHS[i]);
-                remaining -= NEGATIVE_SPACE_VALUES[i];
+                remaining -= SPACE_VALUES[i];
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Decomposes a positive pixel offset into binary combinations of positive-space font glyphs.
+     *
+     * @param pixels the number of pixels to move right (cursor advance)
+     * @return the string sequence of positive space characters
+     */
+    @NotNull
+    public static String getPositiveSpace(int pixels) {
+        if (pixels <= 0) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        int remaining = pixels;
+        for (int i = 0; i < SPACE_VALUES.length; i++) {
+            while (remaining >= SPACE_VALUES[i]) {
+                sb.append(POSITIVE_SPACE_GLYPHS[i]);
+                remaining -= SPACE_VALUES[i];
             }
         }
         return sb.toString();
@@ -79,7 +100,7 @@ public final class TooltipBox {
     }
 
     /**
-     * Convenience method to construct a tooltip box with default padding around the given lines.
+     * Convenience method to construct a tooltip box with default crosshair offset around the given lines.
      *
      * @param lines the lines of text content
      * @return the constructed component
@@ -96,7 +117,7 @@ public final class TooltipBox {
     }
 
     /**
-     * Convenience method to construct a tooltip box with default padding around the given lines.
+     * Convenience method to construct a tooltip box with default crosshair offset around the given lines.
      *
      * @param lines the lines of text content
      * @return the constructed component
@@ -107,11 +128,11 @@ public final class TooltipBox {
     }
 
     /**
-     * Builder for constructing modular 9-slice tooltip boxes.
+     * Builder for constructing 3-part tooltip boxes.
      */
     public static final class Builder {
         private final List<Component> lines = new ArrayList<>();
-        private int padding = DEFAULT_PADDING;
+        private int crosshairOffsetX = DEFAULT_CROSSHAIR_OFFSET;
 
         private Builder() {
         }
@@ -163,52 +184,61 @@ public final class TooltipBox {
         }
 
         /**
-         * Configures the horizontal padding (in pixels) between the tooltip borders and content.
+         * Configures the horizontal offset (in pixels) from the screen center / crosshair.
          *
-         * @param padding the horizontal padding in pixels (>= 0)
+         * @param offsetX horizontal pixels to shift to the right of the crosshair (>= 0)
          * @return this builder
          */
         @NotNull
-        public Builder padding(int padding) {
-            this.padding = Math.max(0, padding);
+        public Builder crosshairOffsetX(int offsetX) {
+            this.crosshairOffsetX = Math.max(0, offsetX);
             return this;
         }
 
         /**
-         * Builds the Adventure {@link Component} containing the top border, body lines
-         * with negative space cursor shifts, and bottom border.
+         * Builds the Adventure {@link Component} containing the positive centering shift,
+         * 3-part container box, negative text-alignment shift, and content.
          *
          * @return the built tooltip box component
          */
         @NotNull
         public Component build() {
-            int maxContentWidth = MIN_CONTENT_WIDTH;
-            for (Component line : this.lines) {
-                maxContentWidth = Math.max(maxContentWidth, FontWidthHelper.getWidth(line));
-            }
+            Component content = this.lines.isEmpty() ? Component.empty() : this.lines.get(0);
+            int textWidth = Math.max(MIN_CONTENT_WIDTH, FontWidthHelper.getWidth(content));
 
-            int innerWidth = maxContentWidth + (this.padding * 2);
-            int totalShift = innerWidth + 3 - this.padding;
-            String shiftStr = getNegativeSpace(totalShift);
+            // Total box width = left cap (5px) + middle repeats (textWidth px) + right cap (5px)
+            int boxWidth = CAP_WIDTH + textWidth + CAP_WIDTH;
+
+            // In Minecraft subtitle/title (centered on screen), shifting the box so its left edge starts
+            // at (center + crosshairOffsetX) requires prepending positive space S = boxWidth + 2 * crosshairOffsetX.
+            int leadingSpace = boxWidth + (2 * this.crosshairOffsetX);
+            String leadingSpaceStr = getPositiveSpace(leadingSpace);
+
+            // Box graphics: left cap + middle tile repeated for text width + right cap
+            String boxStr = CAP_LEFT + MIDDLE.repeat(textWidth) + CAP_RIGHT;
+
+            // Shift back cursor from right edge of right cap to start of text:
+            // Text starts at left cap width (5px) from the left edge of the box.
+            // Current cursor is at boxWidth (= textWidth + 10).
+            // Shift back = boxWidth - CAP_WIDTH = textWidth + 5.
+            int textShiftBack = textWidth + CAP_WIDTH;
+            String textShiftBackStr = getNegativeSpace(textShiftBack);
 
             TextComponent.Builder root = Component.text();
 
-            // Top border row
-            String topBorderStr = CORNER_TL + BORDER_TOP.repeat(innerWidth) + CORNER_TR + "\n";
-            root.append(Component.text(topBorderStr, NamedTextColor.WHITE).font(FONT));
-
-            // Line rows
-            String bgStr = BORDER_LEFT + BG_FILL.repeat(innerWidth) + BORDER_RIGHT;
-            for (Component line : this.lines) {
-                root.append(Component.text(bgStr, NamedTextColor.WHITE).font(FONT));
-                root.append(Component.text(shiftStr, NamedTextColor.WHITE).font(FONT));
-                root.append(line);
-                root.append(Component.newline());
+            // 1. Initial offset to place the box right of the crosshair
+            if (!leadingSpaceStr.isEmpty()) {
+                root.append(Component.text(leadingSpaceStr).font(FONT));
             }
 
-            // Bottom border row
-            String bottomBorderStr = CORNER_BL + BORDER_BOTTOM.repeat(innerWidth) + CORNER_BR;
-            root.append(Component.text(bottomBorderStr, NamedTextColor.WHITE).font(FONT));
+            // 2. The 3-part container box
+            root.append(Component.text(boxStr, NamedTextColor.WHITE).font(FONT));
+
+            // 3. Shift cursor back to inner text start
+            root.append(Component.text(textShiftBackStr).font(FONT));
+
+            // 4. The actual note text (renders on top of the dark container)
+            root.append(content);
 
             return root.build();
         }

@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.common.ui;
 
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.junit.jupiter.api.DisplayName;
@@ -47,8 +46,31 @@ class TooltipBoxTest {
         assertEquals(expectedGlyphs, TooltipBox.getNegativeSpace(pixels));
     }
 
+    static Stream<Arguments> positiveSpaceCases() {
+        return Stream.of(
+                Arguments.of(0, ""),
+                Arguments.of(-5, ""),
+                Arguments.of(1, "\uF803"),
+                Arguments.of(2, "\uF805"),
+                Arguments.of(3, "\uF805\uF803"),
+                Arguments.of(4, "\uF806"),
+                Arguments.of(8, "\uF807"),
+                Arguments.of(16, "\uF809"),
+                Arguments.of(32, "\uF811"),
+                Arguments.of(64, "\uF821"),
+                Arguments.of(128, "\uF841"),
+                Arguments.of(160, "\uF841\uF811")
+        );
+    }
+
+    @ParameterizedTest(name = "getPositiveSpace({0}) should return \"{1}\"")
+    @MethodSource("positiveSpaceCases")
+    void testPositiveSpaceComposition(int pixels, String expectedGlyphs) {
+        assertEquals(expectedGlyphs, TooltipBox.getPositiveSpace(pixels));
+    }
+
     @Test
-    @DisplayName("Single line TooltipBox generates valid non-empty component with all 9-slice glyphs")
+    @DisplayName("Single line TooltipBox generates valid component with 3-part container glyphs and content")
     void testSingleLineComponentBuild() {
         Component line = Component.text("Test");
         Component box = TooltipBox.builder()
@@ -62,16 +84,10 @@ class TooltipBoxTest {
         // Verify text content is embedded
         assertTrue(serialized.contains("Test"), "Box should contain the line content");
 
-        // Verify 9-slice glyphs are present
-        assertTrue(serialized.contains(TooltipBox.CORNER_TL), "Box should contain top-left corner");
-        assertTrue(serialized.contains(TooltipBox.BORDER_TOP), "Box should contain top border");
-        assertTrue(serialized.contains(TooltipBox.CORNER_TR), "Box should contain top-right corner");
-        assertTrue(serialized.contains(TooltipBox.BORDER_LEFT), "Box should contain left border");
-        assertTrue(serialized.contains(TooltipBox.BG_FILL), "Box should contain background fill");
-        assertTrue(serialized.contains(TooltipBox.BORDER_RIGHT), "Box should contain right border");
-        assertTrue(serialized.contains(TooltipBox.CORNER_BL), "Box should contain bottom-left corner");
-        assertTrue(serialized.contains(TooltipBox.BORDER_BOTTOM), "Box should contain bottom border");
-        assertTrue(serialized.contains(TooltipBox.CORNER_BR), "Box should contain bottom-right corner");
+        // Verify 3-part glyphs are present
+        assertTrue(serialized.contains(TooltipBox.CAP_LEFT), "Box should contain left cap");
+        assertTrue(serialized.contains(TooltipBox.MIDDLE), "Box should contain middle tile");
+        assertTrue(serialized.contains(TooltipBox.CAP_RIGHT), "Box should contain right cap");
     }
 
     @Test
@@ -85,102 +101,54 @@ class TooltipBoxTest {
         List<Component> children = box.children();
         assertFalse(children.isEmpty(), "Box should have child components");
 
-        // Top border
-        Component topBorder = children.get(0);
-        assertEquals(EXPECTED_FONT, topBorder.style().font(), "Top border must use tooltip font");
-        assertEquals(NamedTextColor.WHITE, topBorder.style().color(), "Top border must be white");
-        assertTrue(PLAIN.serialize(topBorder).endsWith("\n"), "Top border row must end with newline");
+        // 1. Leading space
+        Component leading = children.get(0);
+        assertEquals(EXPECTED_FONT, leading.style().font(), "Leading space must use tooltip font");
 
-        // Background row
-        Component bg = children.get(1);
-        assertEquals(EXPECTED_FONT, bg.style().font(), "Background must use tooltip font");
-        assertEquals(NamedTextColor.WHITE, bg.style().color(), "Background must be white");
+        // 2. Box graphics
+        Component boxGraphics = children.get(1);
+        assertEquals(EXPECTED_FONT, boxGraphics.style().font(), "Box graphics must use tooltip font");
+        assertEquals(NamedTextColor.WHITE, boxGraphics.style().color(), "Box graphics must be white");
 
-        // Shift component
+        // 3. Shift component
         Component shift = children.get(2);
         assertEquals(EXPECTED_FONT, shift.style().font(), "Shift must use tooltip font");
 
-        // Content component
+        // 4. Content component
         Component content = children.get(3);
         assertEquals("Hello", PLAIN.serialize(content), "Content must match input line");
-
-        // Bottom border (last child)
-        Component bottomBorder = children.get(children.size() - 1);
-        assertEquals(EXPECTED_FONT, bottomBorder.style().font(), "Bottom border must use tooltip font");
-        assertEquals(NamedTextColor.WHITE, bottomBorder.style().color(), "Bottom border must be white");
     }
 
     @Test
-    @DisplayName("Inner width and total shift adapt to custom padding")
-    void testCustomPadding() {
-        // "Test" width: T(6) + e(6) + s(6) + t(4) = 22px
-        Component line = Component.text("Test");
-        int padding = 6;
+    @DisplayName("Crosshair offset shifts leading space correctly")
+    void testCrosshairOffset() {
+        Component line = Component.text("Test"); // T(6)+e(6)+s(6)+t(4) = 22px
+        int textWidth = 22;
+        int boxWidth = TooltipBox.CAP_WIDTH + textWidth + TooltipBox.CAP_WIDTH; // 5 + 22 + 5 = 32
+
+        int offset = 20;
         Component box = TooltipBox.builder()
                 .line(line)
-                .padding(padding)
+                .crosshairOffsetX(offset)
                 .build();
 
-        int maxContentWidth = 22;
-        int expectedInnerWidth = maxContentWidth + (padding * 2); // 22 + 12 = 34
-        int expectedShift = expectedInnerWidth + 3 - padding; // 34 + 3 - 6 = 31
-
-        String expectedTopBorder = TooltipBox.CORNER_TL + TooltipBox.BORDER_TOP.repeat(expectedInnerWidth) + TooltipBox.CORNER_TR + "\n";
-        String expectedShiftGlyphs = TooltipBox.getNegativeSpace(expectedShift);
+        int expectedLeadingSpace = boxWidth + (2 * offset); // 32 + 40 = 72
+        String expectedLeading = TooltipBox.getPositiveSpace(expectedLeadingSpace);
 
         List<Component> children = box.children();
-        assertEquals(expectedTopBorder, PLAIN.serialize(children.get(0)));
-        assertEquals(expectedShiftGlyphs, PLAIN.serialize(children.get(2)));
-    }
-
-    @Test
-    @DisplayName("Multi-line tooltip sizes inner width according to the widest line")
-    void testMultiLineTooltip() {
-        Component line1 = Component.text("Short"); // S(6)+h(6)+o(6)+r(6)+t(4) = 28px
-        Component line2 = Component.text("A much longer second line"); // longer than 28px
-        int expectedMaxWidth = FontWidthHelper.getWidth(line2);
-        assertTrue(expectedMaxWidth > 28);
-
-        Component box = TooltipBox.builder()
-                .line(line1)
-                .line(line2)
-                .build();
-
-        int defaultPadding = 4;
-        int expectedInnerWidth = expectedMaxWidth + (defaultPadding * 2);
-        String expectedTop = TooltipBox.CORNER_TL + TooltipBox.BORDER_TOP.repeat(expectedInnerWidth) + TooltipBox.CORNER_TR + "\n";
-
-        assertEquals(expectedTop, PLAIN.serialize(box.children().get(0)));
+        assertEquals(expectedLeading, PLAIN.serialize(children.get(0)));
     }
 
     @Test
     @DisplayName("Convenience factory methods TooltipBox.of(...) construct identical components")
     void testConvenienceMethods() {
-        Component line1 = Component.text("Line 1");
-        Component line2 = Component.text("Line 2");
+        Component line = Component.text("Always watches, no eyes");
 
-        Component boxFromVarargs = TooltipBox.of(line1, line2);
-        Component boxFromList = TooltipBox.of(List.of(line1, line2));
-        Component boxFromBuilder = TooltipBox.builder().line(line1).line(line2).build();
+        Component boxFromVarargs = TooltipBox.of(line);
+        Component boxFromList = TooltipBox.of(List.of(line));
+        Component boxFromBuilder = TooltipBox.builder().line(line).build();
 
         assertEquals(PLAIN.serialize(boxFromBuilder), PLAIN.serialize(boxFromVarargs));
         assertEquals(PLAIN.serialize(boxFromBuilder), PLAIN.serialize(boxFromList));
-    }
-
-    @Test
-    @DisplayName("Empty lines builder falls back to minimum content width of 10px")
-    void testEmptyLinesFallback() {
-        Component box = TooltipBox.builder().build();
-        assertNotNull(box);
-
-        int minWidth = 10;
-        int expectedInnerWidth = minWidth + (4 * 2); // 18
-        String expectedTop = TooltipBox.CORNER_TL + TooltipBox.BORDER_TOP.repeat(expectedInnerWidth) + TooltipBox.CORNER_TR + "\n";
-        String expectedBottom = TooltipBox.CORNER_BL + TooltipBox.BORDER_BOTTOM.repeat(expectedInnerWidth) + TooltipBox.CORNER_BR;
-
-        List<Component> children = box.children();
-        assertEquals(2, children.size(), "Empty box should have top and bottom border rows");
-        assertEquals(expectedTop, PLAIN.serialize(children.get(0)));
-        assertEquals(expectedBottom, PLAIN.serialize(children.get(1)));
     }
 }
