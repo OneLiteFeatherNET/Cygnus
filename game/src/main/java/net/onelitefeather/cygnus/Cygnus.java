@@ -165,7 +165,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.pageProximityService = new PageProximityService(
                 this.gameConfig,
                 survivorTeam::getPlayers,
-                this.pageProvider::interactablePagePositions
+                this.pageProvider::interactablePages
         );
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
