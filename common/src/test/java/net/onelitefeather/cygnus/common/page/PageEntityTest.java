@@ -64,8 +64,35 @@ class PageEntityTest {
         PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
         ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) pageEntity.getEntityMeta();
 
-        assertEquals(15, itemDisplayMeta.getBlockLight(), "a page must be lit at full block light to stay visible in the dark");
-        assertEquals(0, itemDisplayMeta.getSkyLight(), "the sky light must stay at zero so the brightness does not follow the time of day");
+        int blockLight = itemDisplayMeta.getBlockLight();
+        assertTrue(blockLight >= PageLightUtil.DEFAULT_MIN_INITIAL_BLOCK_LIGHT
+                && blockLight <= PageLightUtil.DEFAULT_MAX_INITIAL_BLOCK_LIGHT,
+                "a page must be lit within the configured initial block light bounds");
+        assertEquals(pageEntity.getInitialBlockLight(), blockLight,
+                "the display block light must match the page's initial block light");
+        assertEquals(PageLightUtil.PAGE_SKY_LIGHT, itemDisplayMeta.getSkyLight(),
+                "the sky light must stay at zero so the brightness does not follow the time of day");
+
+        pageEntity.remove();
+        env.destroyInstance(instance);
+    }
+
+    @Test
+    void testPageBrightnessResetOnEnableInteraction(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+
+        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) pageEntity.getEntityMeta();
+
+        pageEntity.disableInteraction();
+        pageEntity.enableInteraction();
+
+        int reEnabledLight = itemDisplayMeta.getBlockLight();
+        assertTrue(reEnabledLight >= PageLightUtil.DEFAULT_MIN_INITIAL_BLOCK_LIGHT
+                && reEnabledLight <= PageLightUtil.DEFAULT_MAX_INITIAL_BLOCK_LIGHT,
+                "re-enabling a page must re-roll a valid initial block light");
+        assertEquals(pageEntity.getInitialBlockLight(), reEnabledLight,
+                "the display block light must match the newly rolled initial block light");
 
         pageEntity.remove();
         env.destroyInstance(instance);
