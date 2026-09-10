@@ -24,19 +24,19 @@ class TooltipBoxTest {
         return Stream.of(
                 Arguments.of(0, ""),
                 Arguments.of(-5, ""),
-                Arguments.of(1, "\uF801"),
-                Arguments.of(2, "\uF802"),
-                Arguments.of(3, "\uF802\uF801"),
-                Arguments.of(4, "\uF804"),
-                Arguments.of(8, "\uF808"),
-                Arguments.of(15, "\uF808\uF804\uF802\uF801"),
-                Arguments.of(16, "\uF810"),
-                Arguments.of(32, "\uF820"),
-                Arguments.of(64, "\uF840"),
-                Arguments.of(65, "\uF840\uF801"),
-                Arguments.of(128, "\uF880"),
-                Arguments.of(137, "\uF880\uF808\uF801"),
-                Arguments.of(256, "\uF880\uF880")
+                Arguments.of(1, "\uF001"),
+                Arguments.of(2, "\uF002"),
+                Arguments.of(3, "\uF003"),
+                Arguments.of(4, "\uF004"),
+                Arguments.of(8, "\uF008"),
+                Arguments.of(15, "\uF008\uF007"),
+                Arguments.of(16, "\uF009"),
+                Arguments.of(32, "\uF00A"),
+                Arguments.of(64, "\uF00B"),
+                Arguments.of(65, "\uF00B\uF001"),
+                Arguments.of(128, "\uF00C"),
+                Arguments.of(137, "\uF00C\uF008\uF001"),
+                Arguments.of(256, "\uF00D")
         );
     }
 
@@ -50,16 +50,18 @@ class TooltipBoxTest {
         return Stream.of(
                 Arguments.of(0, ""),
                 Arguments.of(-5, ""),
-                Arguments.of(1, "\uF803"),
-                Arguments.of(2, "\uF805"),
-                Arguments.of(3, "\uF805\uF803"),
-                Arguments.of(4, "\uF806"),
-                Arguments.of(8, "\uF807"),
-                Arguments.of(16, "\uF809"),
-                Arguments.of(32, "\uF811"),
-                Arguments.of(64, "\uF821"),
-                Arguments.of(128, "\uF841"),
-                Arguments.of(160, "\uF841\uF811")
+                Arguments.of(1, "\uF00F"),
+                Arguments.of(2, "\uF010"),
+                Arguments.of(3, "\uF011"),
+                Arguments.of(4, "\uF012"),
+                Arguments.of(8, "\uF016"),
+                Arguments.of(15, "\uF016\uF015"),
+                Arguments.of(16, "\uF017"),
+                Arguments.of(32, "\uF018"),
+                Arguments.of(64, "\uF019"),
+                Arguments.of(128, "\uF01A"),
+                Arguments.of(160, "\uF01A\uF018"),
+                Arguments.of(256, "\uF01B")
         );
     }
 
