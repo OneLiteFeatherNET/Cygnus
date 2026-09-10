@@ -11,14 +11,17 @@ import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.page.PageProximityTarget;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -205,9 +208,80 @@ class PageProximityServiceTest {
                 .build();
     }
 
+    @Test
+    void testPhase1SilentAboveFiftyPercentTtl(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance, PLAYER_POS);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.75);
+        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target));
+        service.tick();
+
+        sounds.assertEmpty();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testPhase2WarningChimeBetweenTwentyAndFiftyPercent(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance, PLAYER_POS);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.35);
+        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target));
+        service.tick();
+
+        sounds.assertSingle(packet -> {
+            assertEquals(PageProximityService.WARNING_PITCH, packet.pitch(), 0.001F);
+            assertEquals(SoundEvent.BLOCK_AMETHYST_BLOCK_CHIME, packet.soundEvent());
+        });
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testPhase3CriticalChimeBelowTwentyPercent(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance, PLAYER_POS);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.15);
+        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target));
+        service.tick();
+
+        sounds.assertSingle(packet -> {
+            assertEquals(PageProximityService.CRITICAL_PITCH, packet.pitch(), 0.001F);
+            float baseVolume = (20 / 16.0F) * GameConfig.DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR;
+            assertEquals(baseVolume * PageProximityService.CRITICAL_VOLUME_MULTIPLIER, packet.volume(), 0.001F);
+        });
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testChimeIntervalThrottling(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance, PLAYER_POS);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.35);
+        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target));
+
+        service.tick(); // First tick: triggers chime
+        service.tick(); // Immediate next tick (5 ticks later): throttled by 60-tick warning interval!
+
+        assertEquals(1, sounds.collect().size(), "second tick within interval must be throttled");
+        env.destroyInstance(instance, true);
+    }
+
     private static PageProximityService service(GameConfig config, Player player, Pos... pages) {
         Collection<Player> listeners = List.of(player);
-        List<Pos> positions = List.of(pages);
-        return new PageProximityService(config, () -> listeners, () -> positions);
+        List<PageProximityTarget> targets = Arrays.stream(pages)
+                .map(pos -> PageProximityTarget.of(UUID.nameUUIDFromBytes(pos.toString().getBytes()), pos, 0.35))
+                .toList();
+        return new PageProximityService(config, () -> listeners, () -> targets);
     }
 }
