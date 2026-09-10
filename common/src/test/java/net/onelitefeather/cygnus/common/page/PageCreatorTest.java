@@ -32,15 +32,13 @@ class PageCreatorTest {
     }
 
     @Test
-    void testPageCarriesEnchantmentGlint(Env ignored) {
+    void testPageDoesNotCarryEnchantmentGlint(Env ignored) {
         ItemStack page = pageCreator.createPageItem(5);
 
-        Boolean glint = page.get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
-
-        assertNotNull(glint, "a page must carry an explicit glint override so it stands out in the dark");
-        assertTrue(glint, "the glint override must be enabled");
+        assertFalse(page.has(DataComponents.ENCHANTMENT_GLINT_OVERRIDE),
+                "a page must not carry a glint override so lighting is handled solely by block light");
         EnchantmentList enchantments = page.get(DataComponents.ENCHANTMENTS);
 
-        assertTrue(enchantments == null || enchantments.enchantments().isEmpty(), "the glint must not come from a real enchantment");
+        assertTrue(enchantments == null || enchantments.enchantments().isEmpty(), "the page must not have enchantments");
     }
 }

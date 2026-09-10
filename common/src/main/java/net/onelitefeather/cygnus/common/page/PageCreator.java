@@ -29,14 +29,7 @@ public interface PageCreator {
     /**
      * Creates a page item with the given page number.
      * <p>
-     * If custom pages are enabled, one of the available page models is chosen
-     * randomly. Otherwise, the returned item only contains its display name.
-     * </p>
-     * <p>
-     * Every page carries an enchantment glint override. The glint is what makes a page readable as
-     * an item at all in the unlit parts of a map - without it a page blends into the wall it hangs
-     * on. The override is used instead of a real enchantment so the item stays free of an
-     * enchantment tooltip once a player picks it up.
+     * One of the available page models is chosen randomly.
      * </p>
      *
      * @param pageCount the number displayed on the page
@@ -50,7 +43,6 @@ public interface PageCreator {
 
         return builder
                 .set(DataComponents.ITEM_MODEL, Key.key("cygnus", "page_" + randomPage).asString())
-                .set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true)
                 .build();
     }
 }

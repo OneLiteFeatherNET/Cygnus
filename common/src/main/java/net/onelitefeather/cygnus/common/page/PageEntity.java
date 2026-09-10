@@ -39,8 +39,6 @@ public final class PageEntity extends Entity implements PageCreator {
 
     private static final Vec HALF_BLOCK = new Vec(0, 0.5, 0);
     private static final long ADDITION_TIME = 1000L;
-    private static final int PAGE_BLOCK_LIGHT = 15;
-    private static final int PAGE_SKY_LIGHT = 0;
     private final Entity hitBox;
     private ItemStack pageItem;
     private int ttlTime;
@@ -48,6 +46,7 @@ public final class PageEntity extends Entity implements PageCreator {
     private long nextTick;
     private boolean send;
     private boolean interactable = true;
+    private int initialBlockLight;
 
     /**
      * Constructs a new {@link PageEntity}.
@@ -62,6 +61,7 @@ public final class PageEntity extends Entity implements PageCreator {
         this.hitBox = new Entity(EntityType.INTERACTION);
         this.pageItem = createPageItem(pageCount);
         this.ttlTime = Helper.calculateOffsetTime(GameConfig.PAGE_TTL_TIME);
+        this.initialBlockLight = PageLightUtil.randomInitialBlockLight();
 
         ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) this.getEntityMeta();
         itemDisplayMeta.setItemStack(this.pageItem);
@@ -70,7 +70,7 @@ public final class PageEntity extends Entity implements PageCreator {
         itemDisplayMeta.setBillboardRenderConstraints(AbstractDisplayMeta.BillboardConstraints.FIXED);
         itemDisplayMeta.setWidth(0.1f);
         itemDisplayMeta.setHeight(0.1f);
-        itemDisplayMeta.setBrightness(PAGE_BLOCK_LIGHT, PAGE_SKY_LIGHT);
+        itemDisplayMeta.setBrightness(this.initialBlockLight, PageLightUtil.PAGE_SKY_LIGHT);
 
         this.calculateNextTick();
         this.setAutoViewable(true);
@@ -120,9 +120,12 @@ public final class PageEntity extends Entity implements PageCreator {
      * The interaction is only enabled for a specific time.
      */
     public void enableInteraction() {
+        this.initialBlockLight = PageLightUtil.randomInitialBlockLight();
+
         ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) this.getEntityMeta();
         itemDisplayMeta.setItemStack(this.pageItem);
         itemDisplayMeta.setInvisible(false);
+        itemDisplayMeta.setBrightness(this.initialBlockLight, PageLightUtil.PAGE_SKY_LIGHT);
 
         InteractionMeta interactionMeta = (InteractionMeta) this.hitBox.getEntityMeta();
         interactionMeta.setResponse(true);
@@ -153,12 +156,25 @@ public final class PageEntity extends Entity implements PageCreator {
         if (System.currentTimeMillis() >= nextTick) {
             ++currentTickTime;
             this.calculateNextTick();
+            this.updateBrightness();
         }
 
         if (currentTickTime >= ttlTime) {
             this.disableInteraction();
             send = true;
             EventDispatcher.call(new PageExpiredEvent(this));
+        }
+    }
+
+    /**
+     * Updates the brightness of the page based on the elapsed time-to-live.
+     */
+    private void updateBrightness() {
+        ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) this.getEntityMeta();
+        int targetLight = PageLightUtil.calculateBlockLight(this.initialBlockLight, this.currentTickTime, this.ttlTime);
+
+        if (itemDisplayMeta.getBlockLight() != targetLight) {
+            itemDisplayMeta.setBrightness(targetLight, PageLightUtil.PAGE_SKY_LIGHT);
         }
     }
 
@@ -217,5 +233,14 @@ public final class PageEntity extends Entity implements PageCreator {
      */
     public UUID getHitBoxUUID() {
         return this.hitBox.getUuid();
+    }
+
+    /**
+     * Returns the initial block light this page was spawned or re-enabled with.
+     *
+     * @return the initial block light
+     */
+    public int getInitialBlockLight() {
+        return this.initialBlockLight;
     }
 }
