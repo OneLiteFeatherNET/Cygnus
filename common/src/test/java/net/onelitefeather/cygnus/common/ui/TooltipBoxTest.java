@@ -122,9 +122,9 @@ class TooltipBoxTest {
     @Test
     @DisplayName("Crosshair offset shifts leading space correctly")
     void testCrosshairOffset() {
-        Component line = Component.text("Test"); // T(6)+e(6)+s(6)+t(4) = 22px
-        int textWidth = 22;
-        int boxWidth = TooltipBox.CAP_WIDTH + textWidth + TooltipBox.CAP_WIDTH; // 5 + 22 + 5 = 32
+        Component line = Component.text("Test"); // In compact 6px font: T(5)+e(5)+s(5)+t(3) = 18px
+        int textWidth = 18;
+        int boxWidth = TooltipBox.CAP_WIDTH + textWidth + TooltipBox.CAP_WIDTH; // 4 + 18 + 4 = 26
 
         int offset = 20;
         Component box = TooltipBox.builder()
@@ -132,7 +132,7 @@ class TooltipBoxTest {
                 .crosshairOffsetX(offset)
                 .build();
 
-        int expectedLeadingSpace = boxWidth + (2 * offset); // 32 + 40 = 72
+        int expectedLeadingSpace = boxWidth + (2 * offset); // 26 + 40 = 66
         String expectedLeading = TooltipBox.getPositiveSpace(expectedLeadingSpace);
 
         List<Component> children = box.children();

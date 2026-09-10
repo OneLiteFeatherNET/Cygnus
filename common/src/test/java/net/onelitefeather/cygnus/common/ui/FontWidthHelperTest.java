@@ -143,4 +143,15 @@ class FontWidthHelperTest {
                 .append(Component.text("!").decoration(TextDecoration.BOLD, TextDecoration.State.FALSE));
         assertEquals(12, FontWidthHelper.getWidth(root));
     }
+
+    @Test
+    @DisplayName("Tooltip font width calculation for 6px compact font")
+    void testTooltipFontWidth() {
+        // "Test": T(5) + e(5) + s(5) + t(3) = 18
+        assertEquals(18, FontWidthHelper.getTooltipWidth("Test"));
+        // "Help me": H(5) + e(5) + l(3) + p(5) + ' '(3) + m(5) + e(5) = 31
+        assertEquals(31, FontWidthHelper.getTooltipWidth("Help me"));
+        // Component measurement
+        assertEquals(31, FontWidthHelper.getTooltipWidth(Component.text("Help me")));
+    }
 }

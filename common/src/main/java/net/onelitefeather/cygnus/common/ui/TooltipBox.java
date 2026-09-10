@@ -31,7 +31,7 @@ public final class TooltipBox {
     public static final String MIDDLE = "\uE101";
     public static final String CAP_RIGHT = "\uE102";
 
-    public static final int CAP_WIDTH = 5;
+    public static final int CAP_WIDTH = 4;
     public static final int MIN_CONTENT_WIDTH = 10;
     public static final int DEFAULT_CROSSHAIR_OFFSET = 16;
 
@@ -204,9 +204,10 @@ public final class TooltipBox {
         @NotNull
         public Component build() {
             Component content = this.lines.isEmpty() ? Component.empty() : this.lines.get(0);
-            int textWidth = Math.max(MIN_CONTENT_WIDTH, FontWidthHelper.getWidth(content));
+            Component styledContent = content.font() == null ? content.font(FONT) : content;
+            int textWidth = Math.max(MIN_CONTENT_WIDTH, FontWidthHelper.getTooltipWidth(styledContent));
 
-            // Total box width = left cap (5px) + middle repeats (textWidth px) + right cap (5px)
+            // Total box width = left cap (4px) + middle repeats (textWidth px) + right cap (4px)
             int boxWidth = CAP_WIDTH + textWidth + CAP_WIDTH;
 
             // In Minecraft subtitle/title (centered on screen), shifting the box so its left edge starts
@@ -216,18 +217,18 @@ public final class TooltipBox {
 
             // Minecraft font renderer adds +1px font spacing after every bitmap character.
             // Appending \uF801 (-1px) after each glyph ensures exact 1px step per middle tile
-            // (eliminating vertical striped gaps) and exact 5px step for the caps.
+            // (eliminating vertical striped gaps) and exact 4px step for the caps.
             String step = MIDDLE + "\uF801";
             String boxStr = CAP_LEFT + "\uF801" + step.repeat(textWidth) + CAP_RIGHT + "\uF801";
 
             // Shift back cursor from right edge of right cap to start of text:
-            // Text starts at left cap width (5px) from the left edge of the box.
-            // Total box width is boxWidth (= textWidth + 10).
-            // Shift back = boxWidth - CAP_WIDTH = textWidth + 5.
+            // Text starts at left cap width (4px) from the left edge of the box.
+            // Total box width is boxWidth (= textWidth + 8).
+            // Shift back = boxWidth - CAP_WIDTH = textWidth + 4.
             int textShiftBack = textWidth + CAP_WIDTH;
             String textShiftBackStr = getNegativeSpace(textShiftBack);
 
-            TextComponent.Builder root = Component.text();
+            TextComponent.Builder root = Component.text().font(FONT);
 
             // 1. Initial offset to place the box right of the crosshair
             if (!leadingSpaceStr.isEmpty()) {
@@ -241,7 +242,7 @@ public final class TooltipBox {
             root.append(Component.text(textShiftBackStr).font(FONT));
 
             // 4. The actual note text (renders on top of the dark container)
-            root.append(content);
+            root.append(styledContent);
 
             // 5. Compensate final cursor to reach the full boxWidth for exact centering
             root.append(Component.text(getPositiveSpace(CAP_WIDTH)).font(FONT));
