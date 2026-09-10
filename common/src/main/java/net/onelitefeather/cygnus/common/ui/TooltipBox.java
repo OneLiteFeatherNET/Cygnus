@@ -15,7 +15,7 @@ import java.util.List;
  * and background from the {@code cygnus:tooltip} font with cursor shifts and crosshair alignment.
  *
  * @author theEvilReaper
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2.15.0
  */
 public final class TooltipBox {
@@ -214,12 +214,15 @@ public final class TooltipBox {
             int leadingSpace = boxWidth + (2 * this.crosshairOffsetX);
             String leadingSpaceStr = getPositiveSpace(leadingSpace);
 
-            // Box graphics: left cap + middle tile repeated for text width + right cap
-            String boxStr = CAP_LEFT + MIDDLE.repeat(textWidth) + CAP_RIGHT;
+            // Minecraft font renderer adds +1px font spacing after every bitmap character.
+            // Appending \uF801 (-1px) after each glyph ensures exact 1px step per middle tile
+            // (eliminating vertical striped gaps) and exact 5px step for the caps.
+            String step = MIDDLE + "\uF801";
+            String boxStr = CAP_LEFT + "\uF801" + step.repeat(textWidth) + CAP_RIGHT + "\uF801";
 
             // Shift back cursor from right edge of right cap to start of text:
             // Text starts at left cap width (5px) from the left edge of the box.
-            // Current cursor is at boxWidth (= textWidth + 10).
+            // Total box width is boxWidth (= textWidth + 10).
             // Shift back = boxWidth - CAP_WIDTH = textWidth + 5.
             int textShiftBack = textWidth + CAP_WIDTH;
             String textShiftBackStr = getNegativeSpace(textShiftBack);
@@ -231,7 +234,7 @@ public final class TooltipBox {
                 root.append(Component.text(leadingSpaceStr).font(FONT));
             }
 
-            // 2. The 3-part container box
+            // 2. The 3-part container box (with -1px spacer per tile for seamless fill and exact pixel width)
             root.append(Component.text(boxStr, NamedTextColor.WHITE).font(FONT));
 
             // 3. Shift cursor back to inner text start
@@ -239,6 +242,9 @@ public final class TooltipBox {
 
             // 4. The actual note text (renders on top of the dark container)
             root.append(content);
+
+            // 5. Compensate final cursor to reach the full boxWidth for exact centering
+            root.append(Component.text(getPositiveSpace(CAP_WIDTH)).font(FONT));
 
             return root.build();
         }
