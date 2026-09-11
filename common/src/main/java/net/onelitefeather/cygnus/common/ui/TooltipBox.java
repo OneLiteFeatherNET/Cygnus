@@ -52,7 +52,7 @@ public final class TooltipBox {
     public static final int RIBBON_WIDTH = 4;
     public static final int RIBBON_GAP = 3;
     public static final int INNER_LEFT_PADDING = 3;
-    public static final int INNER_RIGHT_PADDING = 4;
+    public static final int INNER_RIGHT_PADDING = 2;
     public static final int TEXT_LEFT_INDENT = INNER_LEFT_PADDING + RIBBON_WIDTH + RIBBON_GAP; // 10px
 
     public static final int HORIZONTAL_PADDING = 4;

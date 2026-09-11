@@ -63,7 +63,7 @@ public final class FontWidthHelper {
         TOOLTIP_ASCII_WIDTHS['f'] = 4;
         TOOLTIP_ASCII_WIDTHS['i'] = 2;
         TOOLTIP_ASCII_WIDTHS['k'] = 4;
-        TOOLTIP_ASCII_WIDTHS['l'] = 2;
+        TOOLTIP_ASCII_WIDTHS['l'] = 3;
         TOOLTIP_ASCII_WIDTHS['t'] = 3;
         TOOLTIP_ASCII_WIDTHS['{'] = 3;
         TOOLTIP_ASCII_WIDTHS['|'] = 2;

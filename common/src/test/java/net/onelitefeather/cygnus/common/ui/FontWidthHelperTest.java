@@ -149,22 +149,22 @@ class FontWidthHelperTest {
     void testTooltipFontWidth() {
         // "Test": T(5) + e(5) + s(5) + t(3) = 18
         assertEquals(18, FontWidthHelper.getTooltipWidth("Test"));
-        // "Help me": H(5) + e(5) + l(2) + p(5) + ' '(4) + m(5) + e(5) = 31
-        assertEquals(31, FontWidthHelper.getTooltipWidth("Help me"));
+        // "Help me": H(5) + e(5) + l(3) + p(5) + ' '(4) + m(5) + e(5) = 32
+        assertEquals(32, FontWidthHelper.getTooltipWidth("Help me"));
         // Component measurement
-        assertEquals(31, FontWidthHelper.getTooltipWidth(Component.text("Help me")));
+        assertEquals(32, FontWidthHelper.getTooltipWidth(Component.text("Help me")));
     }
 
     @Test
     @DisplayName("Multi-line string returns max line width")
     void testMultiLineStringWidth() {
-        // Line 1: "Always watches," -> A(5)+l(2)+w(5)+a(5)+y(5)+s(5)+' '(4)+w(5)+a(5)+t(3)+c(5)+h(5)+e(5)+s(5)+,(2) = 66
+        // Line 1: "Always watches," -> A(5)+l(3)+w(5)+a(5)+y(5)+s(5)+' '(4)+w(5)+a(5)+t(3)+c(5)+h(5)+e(5)+s(5)+,(2) = 67
         // Line 2: "no eyes" -> n(5)+o(5)+' '(4)+e(5)+y(5)+e(5)+s(5) = 34
         String multiLine = "Always watches,\nno eyes";
-        assertEquals(66, FontWidthHelper.getMaxTooltipLineWidth(multiLine));
+        assertEquals(67, FontWidthHelper.getMaxTooltipLineWidth(multiLine));
 
         // Single line fallback
-        assertEquals(31, FontWidthHelper.getMaxTooltipLineWidth("Help me"));
+        assertEquals(32, FontWidthHelper.getMaxTooltipLineWidth("Help me"));
         assertEquals(0, FontWidthHelper.getMaxTooltipLineWidth((String) null));
         assertEquals(0, FontWidthHelper.getMaxTooltipLineWidth(""));
     }
@@ -173,7 +173,7 @@ class FontWidthHelperTest {
     @DisplayName("Multi-line Component returns max line width")
     void testMultiLineComponentWidth() {
         Component comp = Component.text("Always watches,\nno eyes");
-        assertEquals(66, FontWidthHelper.getMaxTooltipLineWidth(comp));
+        assertEquals(67, FontWidthHelper.getMaxTooltipLineWidth(comp));
         assertEquals(0, FontWidthHelper.getMaxTooltipLineWidth((Component) null));
     }
 }
