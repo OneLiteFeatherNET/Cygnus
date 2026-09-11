@@ -27,12 +27,12 @@ class PageNoteTest {
     @Test
     void testMappingsForKnownModelIds(Env ignored) {
         String[] expectedNotes = {
-                "Always watches, no eyes",
-                "Don't look or it takes you",
+                "Always watches,\nno eyes",
+                "Don't look\nor it takes you",
                 "Can't run",
                 "Leave me alone",
                 "Help me",
-                "No no no no..."
+                "No no no\nno..."
         };
 
         for (int id = 1; id <= 6; id++) {
@@ -44,6 +44,20 @@ class PageNoteTest {
                     "Note for model ID " + id + " should be italic");
             assertEquals(expectedNotes[id - 1], PLAIN.serialize(note),
                     "Note text for model ID " + id + " should match expected");
+        }
+    }
+
+    @Test
+    void testPrebuiltTooltipComponent(Env ignored) {
+        for (PageNote note : PageNote.values()) {
+            Component tooltip = note.getTooltipComponent();
+            assertNotNull(tooltip, "Pre-built tooltip component must not be null");
+            assertFalse(PLAIN.serialize(tooltip).isEmpty());
+        }
+
+        for (int id = 1; id <= 6; id++) {
+            Optional<Component> tooltipOpt = PageNote.tooltipForCustomModel(id);
+            assertTrue(tooltipOpt.isPresent());
         }
     }
 

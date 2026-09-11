@@ -230,10 +230,9 @@ public final class PageGazeService {
             UUID currentUuid = bestPage.getUuid();
             UUID previousUuid = this.activeGaze.get(player);
             if (!currentUuid.equals(previousUuid)) {
-                Optional<Component> note = PageNote.forItem(bestPage.getPageItem());
-                if (note.isPresent()) {
-                    Component tooltipComponent = TooltipBox.of(note.get());
-                    player.showTitle(Title.title(Component.empty(), tooltipComponent, TITLE_TIMES));
+                Optional<Component> tooltip = PageNote.tooltipForItem(bestPage.getPageItem());
+                if (tooltip.isPresent()) {
+                    player.showTitle(Title.title(Component.empty(), tooltip.get(), TITLE_TIMES));
                     this.activeGaze.put(player, currentUuid);
                 } else {
                     if (previousUuid != null) {
