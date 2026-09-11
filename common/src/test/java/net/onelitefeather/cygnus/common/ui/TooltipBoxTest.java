@@ -72,24 +72,29 @@ class TooltipBoxTest {
     }
 
     @Test
-    @DisplayName("Single line TooltipBox generates valid component with 3-part container glyphs and content")
-    void testSingleLineComponentBuild() {
-        Component line = Component.text("Test");
-        Component box = TooltipBox.builder()
-                .line(line)
-                .build();
+    @DisplayName("Single line TooltipBox includes ribbon glyph and correct layout")
+    void testSingleLineWithRibbon() {
+        Component box = TooltipBox.of(Component.text("Help me"));
+        String plain = PLAIN.serialize(box);
+        assertTrue(plain.contains(TooltipBox.RIBBON), "Must contain ribbon glyph");
+        assertTrue(plain.contains("Help me"), "Must contain note text");
+        assertTrue(plain.contains(TooltipBox.TOP_LEFT), "Must contain top left cap");
+        assertTrue(plain.contains(TooltipBox.TOP_RIGHT), "Must contain top right cap");
+        assertTrue(plain.contains(TooltipBox.ROW_LEFT), "Must contain row left cap");
+        assertTrue(plain.contains(TooltipBox.ROW_RIGHT), "Must contain row right cap");
+        assertTrue(plain.contains(TooltipBox.BOTTOM_LEFT), "Must contain bottom left cap");
+        assertTrue(plain.contains(TooltipBox.BOTTOM_RIGHT), "Must contain bottom right cap");
+    }
 
-        assertNotNull(box);
-        String serialized = PLAIN.serialize(box);
-        assertFalse(serialized.isEmpty());
-
-        // Verify text content is embedded
-        assertTrue(serialized.contains("Test"), "Box should contain the line content");
-
-        // Verify 3-part glyphs are present
-        assertTrue(serialized.contains(TooltipBox.CAP_LEFT), "Box should contain left cap");
-        assertTrue(serialized.contains(TooltipBox.MIDDLE), "Box should contain middle tile");
-        assertTrue(serialized.contains(TooltipBox.CAP_RIGHT), "Box should contain right cap");
+    @Test
+    @DisplayName("Multi-line string with newline builds multi-line components")
+    void testMultiLineBoxBuild() {
+        Component box = TooltipBox.of(Component.text("Always watches,\nno eyes"));
+        String plain = PLAIN.serialize(box);
+        assertTrue(plain.contains(TooltipBox.RIBBON), "Must contain ribbon glyph");
+        assertTrue(plain.contains("Always watches,"), "Must contain line 1");
+        assertTrue(plain.contains("no eyes"), "Must contain line 2");
+        assertFalse(plain.contains("\n"), "Rendered component should not contain raw newline");
     }
 
     @Test
@@ -107,18 +112,15 @@ class TooltipBoxTest {
         Component leading = children.get(0);
         assertEquals(EXPECTED_FONT, leading.style().font(), "Leading space must use tooltip font");
 
-        // 2. Box graphics
-        Component boxGraphics = children.get(1);
-        assertEquals(EXPECTED_FONT, boxGraphics.style().font(), "Box graphics must use tooltip font");
-        assertEquals(NamedTextColor.WHITE, boxGraphics.style().color(), "Box graphics must be white");
+        // 2. Header Band
+        Component header = children.get(1);
+        assertEquals(EXPECTED_FONT, header.style().font(), "Header must use tooltip font");
+        assertEquals(NamedTextColor.WHITE, header.style().color(), "Header graphics must be white");
 
-        // 3. Shift component
-        Component shift = children.get(2);
-        assertEquals(EXPECTED_FONT, shift.style().font(), "Shift must use tooltip font");
-
-        // 4. Content component
-        Component content = children.get(3);
-        assertEquals("Hello", PLAIN.serialize(content), "Content must match input line");
+        // Ribbon and note text should be present in the box
+        String plain = PLAIN.serialize(box);
+        assertTrue(plain.contains(TooltipBox.RIBBON));
+        assertTrue(plain.contains("Hello"));
     }
 
     @Test
@@ -126,8 +128,9 @@ class TooltipBoxTest {
     void testCrosshairOffset() {
         Component line = Component.text("Test"); // In compact 6px font: T(5)+e(5)+s(5)+t(3) = 18px
         int textWidth = 18;
-        int middleTiles = TooltipBox.HORIZONTAL_PADDING + textWidth + TooltipBox.HORIZONTAL_PADDING; // 4 + 18 + 4 = 26
-        int boxWidth = TooltipBox.CAP_WIDTH + middleTiles + TooltipBox.CAP_WIDTH; // 5 + 26 + 5 = 36
+        int contentWidth = TooltipBox.TEXT_LEFT_INDENT + textWidth; // 10 + 18 = 28
+        int middleTiles = Math.max(TooltipBox.MIN_CONTENT_WIDTH, contentWidth + TooltipBox.INNER_RIGHT_PADDING); // 28 + 4 = 32
+        int boxWidth = TooltipBox.CAP_WIDTH + middleTiles + TooltipBox.CAP_WIDTH; // 5 + 32 + 5 = 42
 
         int offset = 20;
         Component box = TooltipBox.builder()
@@ -135,7 +138,7 @@ class TooltipBoxTest {
                 .crosshairOffsetX(offset)
                 .build();
 
-        int expectedLeadingSpace = boxWidth + (2 * offset); // 36 + 40 = 76
+        int expectedLeadingSpace = boxWidth + (2 * offset); // 42 + 40 = 82
         String expectedLeading = TooltipBox.getPositiveSpace(expectedLeadingSpace);
 
         List<Component> children = box.children();
