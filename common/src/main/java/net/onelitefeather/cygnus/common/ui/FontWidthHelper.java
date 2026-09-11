@@ -238,4 +238,63 @@ public final class FontWidthHelper {
         }
         return totalWidth;
     }
+
+    /**
+     * Returns the maximum pixel width across lines separated by '\n' in the compact tooltip font.
+     *
+     * @param text the multi-line text to measure, may be null
+     * @return maximum line width in pixels
+     */
+    public static int getMaxTooltipLineWidth(@Nullable String text) {
+        if (text == null || text.isEmpty()) {
+            return 0;
+        }
+        int maxWidth = 0;
+        String[] lines = text.split("\n", -1);
+        for (String line : lines) {
+            maxWidth = Math.max(maxWidth, getTooltipWidth(line));
+        }
+        return maxWidth;
+    }
+
+    /**
+     * Traverses component children and flattens styles to compute the maximum line width
+     * across '\n'-separated lines in the compact tooltip font.
+     *
+     * @param component the component to measure, may be null
+     * @return maximum line width in pixels
+     */
+    public static int getMaxTooltipLineWidth(@Nullable Component component) {
+        if (component == null) {
+            return 0;
+        }
+        // Extract flat plain text or measure line-by-line
+        // For text components in Cygnus, notes are simple strings or simple component trees
+        int[] lineAcc = new int[]{0};
+        int[] maxAcc = new int[]{0};
+        computeComponentMaxLineWidth(component, false, lineAcc, maxAcc);
+        return Math.max(maxAcc[0], lineAcc[0]);
+    }
+
+    private static void computeComponentMaxLineWidth(Component component, boolean parentBold, int[] lineAcc, int[] maxAcc) {
+        TextDecoration.State boldState = component.decoration(TextDecoration.BOLD);
+        boolean currentBold = (boldState == TextDecoration.State.TRUE)
+                || (boldState == TextDecoration.State.NOT_SET && parentBold);
+
+        if (component instanceof TextComponent textComponent) {
+            String content = textComponent.content();
+            String[] parts = content.split("\n", -1);
+            for (int i = 0; i < parts.length; i++) {
+                if (i > 0) {
+                    maxAcc[0] = Math.max(maxAcc[0], lineAcc[0]);
+                    lineAcc[0] = 0;
+                }
+                lineAcc[0] += getTooltipWidth(parts[i], currentBold);
+            }
+        }
+
+        for (Component child : component.children()) {
+            computeComponentMaxLineWidth(child, currentBold, lineAcc, maxAcc);
+        }
+    }
 }
