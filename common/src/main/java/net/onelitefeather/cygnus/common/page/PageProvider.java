@@ -79,19 +79,15 @@ public final class PageProvider {
 
     public void collectStartPages(Instance instance) {
         Check.argCondition(this.globalCache.size() < MIN_ACTIVE_PAGE_COUNT, "Not enough pages to start the game");
-        var counter = 0;
+        int counter = 0;
 
         Set<Integer> candidateHashes = new HashSet<>();
 
         while (counter < MIN_ACTIVE_PAGE_COUNT && !this.globalCache.isEmpty()) {
-            var page = this.globalCache.poll();
-            if (page == null) {
-                break;
-            }
-
+            PageResource page = this.globalCache.poll();
             if (candidateHashes.add(page.hashCode())) {
                 Direction direction = page.face();
-                var position = Helper.updatePosition(page.position().asPos(), direction);
+                Pos position = Helper.updatePosition(page.position().asPos(), direction);
                 PageEntity entity = PageFactory.createPage(instance, position, direction, this.currentPageCount.getAndIncrement());
                 this.activePages.put(entity.getHitBoxUUID(), entity);
                 counter++;
@@ -201,6 +197,22 @@ public final class PageProvider {
             }
         }
         return positions;
+    }
+
+    /**
+     * Returns the list of every page entity a player could currently walk up to and collect.
+     *
+     * @return the list of collectible page entities
+     * @since 2.15.0
+     */
+    public List<PageEntity> interactablePages() {
+        List<PageEntity> pages = new ArrayList<>(this.activePages.size());
+        for (PageEntity entity : this.activePages.values()) {
+            if (entity.isInteractable()) {
+                pages.add(entity);
+            }
+        }
+        return pages;
     }
 
     private void updatePageData(PageEntity entity) {

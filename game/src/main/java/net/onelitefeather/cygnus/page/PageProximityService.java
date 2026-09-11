@@ -7,42 +7,33 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.utils.time.TimeUnit;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.page.PageProximityTarget;
 import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
  * Plays a chime from every page that is close enough to a survivor to be worth looking for.
- *
- * <p>The sound is emitted at the page's own position, so the client places it in 3D: a player hears
- * which direction a page is in and roughly how far off it is, without the server ever telling them
- * where it is.</p>
- *
- * <p>Minecraft carries a sound {@code 16 * volume} blocks and fades it to nothing at that distance,
- * so the volume has to follow the configured range rather than being an independent setting. The
- * service clips on the range itself as well, because a range below 16 blocks would otherwise stay
- * audible past it.</p>
- *
- * <p>That clipping is also what makes the volume free to exceed what the range needs, and
- * {@code pageProximityVolumeFactor} does exactly that. It has to: a volume derived to reach exactly
- * the range puts the chime's own silence at the range's edge, which is where the hint is supposed
- * to start being useful.</p>
- *
- * <p>Usage:</p>
- * <pre>{@code
- * PageProximityService service = new PageProximityService(
- *         config, survivorTeam::getPlayers, pageProvider::interactablePagePositions);
- * service.startTask();
- * // ...
- * service.stopTask();
- * }</pre>
+ * <p>
+ * The chime dynamic is tied to the remaining TTL of the page:
+ * <ul>
+ *     <li>Phase 1 (TTL &gt; 50%): Silent, survivors must spot the page visually.</li>
+ *     <li>Phase 2 (20% &lt; TTL &le; 50%): Warning chime every 3 seconds (60 ticks) with standard pitch.</li>
+ *     <li>Phase 3 (TTL &le; 20%): Critical rapid chime every 1 second (20 ticks) with lower pitch and quieter volume.</li>
+ * </ul>
+ * </p>
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @author theEvilReaper
+ * @version 1.2.0
  * @since 2.12.0
  */
 public final class PageProximityService {
@@ -54,41 +45,50 @@ public final class PageProximityService {
      */
     private static final float VANILLA_SOUND_RANGE = 16.0F;
 
-    /**
-     * The pitch stays fixed: the distance is already carried by the 3D position and the falloff, and
-     * a second signal on top of that reads as a different sound rather than as a closer one.
-     */
-    private static final float PITCH = 1.0F;
+    public static final double SILENT_TTL_THRESHOLD = 0.50;
+    public static final double CRITICAL_TTL_THRESHOLD = 0.20;
+
+    public static final int WARNING_INTERVAL_TICKS = 60;
+    public static final int CRITICAL_INTERVAL_TICKS = 20;
+
+    public static final float WARNING_PITCH = 1.0F;
+    public static final float CRITICAL_PITCH = 0.75F;
+    public static final float CRITICAL_VOLUME_MULTIPLIER = 0.75F;
+
+    public static final int SERVICE_TICK_RATE = 5;
 
     private final RepeatingTask task = new RepeatingTask(this::tick);
     private final GameConfig config;
     private final Supplier<Collection<Player>> listeners;
-    private final Supplier<List<Pos>> pagePositions;
-    private final Sound sound;
+    private final Supplier<? extends Collection<? extends PageProximityTarget>> pageSupplier;
+    private final Sound warningSound;
+    private final Sound criticalSound;
     private final double rangeSquared;
+    private final Map<UUID, Long> nextChimeTicks = new HashMap<>();
+    private long currentTick;
 
     /**
      * Creates a new instance of the {@link PageProximityService}.
      *
-     * @param config        the configuration holding range, interval and sound
-     * @param listeners     supplies the players the hint is played to
-     * @param pagePositions supplies the positions of the pages that can currently be collected
+     * @param config       the configuration holding range and sound
+     * @param listeners    supplies the players the hint is played to
+     * @param pageSupplier supplies the proximity page targets that can currently be collected
      */
     public PageProximityService(
             GameConfig config,
             Supplier<Collection<Player>> listeners,
-            Supplier<List<Pos>> pagePositions
+            Supplier<? extends Collection<? extends PageProximityTarget>> pageSupplier
     ) {
         this.config = config;
         this.listeners = listeners;
-        this.pagePositions = pagePositions;
+        this.pageSupplier = pageSupplier;
         this.rangeSquared = (double) config.pageProximityRange() * config.pageProximityRange();
-        this.sound = Sound.sound(
-                resolveSound(config.pageProximitySound()),
-                Sound.Source.MASTER,
-                volumeFor(config.pageProximityRange(), config.pageProximityVolumeFactor()),
-                PITCH
-        );
+
+        SoundEvent soundEvent = resolveSound(config.pageProximitySound());
+        float baseVolume = volumeFor(config.pageProximityRange(), config.pageProximityVolumeFactor());
+
+        this.warningSound = Sound.sound(soundEvent, Sound.Source.MASTER, baseVolume, WARNING_PITCH);
+        this.criticalSound = Sound.sound(soundEvent, Sound.Source.MASTER, baseVolume * CRITICAL_VOLUME_MULTIPLIER, CRITICAL_PITCH);
     }
 
     /**
@@ -100,7 +100,7 @@ public final class PageProximityService {
             LOGGER.debug("The page proximity hint is turned off, no task is scheduled");
             return;
         }
-        this.task.start(this.config.pageProximityInterval(), TimeUnit.SERVER_TICK);
+        this.task.start(SERVICE_TICK_RATE, TimeUnit.SERVER_TICK);
     }
 
     /**
@@ -118,26 +118,50 @@ public final class PageProximityService {
     }
 
     /**
-     * Plays the chime from every collectible page that is within range of a listener.
+     * Plays the chime from every collectible page that is within range of a listener and eligible to chime.
      */
     void tick() {
         if (!this.config.pageProximityEnabled()) {
             return;
         }
 
-        List<Pos> pages = this.pagePositions.get();
+        Collection<? extends PageProximityTarget> pages = this.pageSupplier.get();
         if (pages.isEmpty()) {
+            this.nextChimeTicks.clear();
             return;
         }
 
-        for (Player player : this.listeners.get()) {
-            Pos playerPosition = player.getPosition();
-            for (Pos page : pages) {
-                if (playerPosition.distanceSquared(page) <= this.rangeSquared) {
-                    player.playSound(this.sound, page.x(), page.y(), page.z());
+        this.currentTick += SERVICE_TICK_RATE;
+
+        Set<UUID> currentIds = new HashSet<>();
+        Collection<Player> currentListeners = this.listeners.get();
+
+        for (PageProximityTarget page : pages) {
+            currentIds.add(page.id());
+            double ratio = page.remainingTtlRatio();
+
+            if (ratio > SILENT_TTL_THRESHOLD) {
+                // Phase 1: Silent
+                continue;
+            }
+
+            boolean isCritical = ratio <= CRITICAL_TTL_THRESHOLD;
+            int interval = isCritical ? CRITICAL_INTERVAL_TICKS : WARNING_INTERVAL_TICKS;
+            Sound soundToPlay = isCritical ? this.criticalSound : this.warningSound;
+
+            long nextChime = this.nextChimeTicks.getOrDefault(page.id(), 0L);
+            if (this.currentTick >= nextChime) {
+                Pos pagePos = page.position();
+                for (Player player : currentListeners) {
+                    if (player.getPosition().distanceSquared(pagePos) <= this.rangeSquared) {
+                        player.playSound(soundToPlay, pagePos.x(), pagePos.y(), pagePos.z());
+                    }
                 }
+                this.nextChimeTicks.put(page.id(), this.currentTick + interval);
             }
         }
+
+        this.nextChimeTicks.keySet().retainAll(currentIds);
     }
 
     /**
