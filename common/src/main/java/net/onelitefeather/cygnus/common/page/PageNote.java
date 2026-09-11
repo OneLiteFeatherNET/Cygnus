@@ -22,23 +22,25 @@ import java.util.regex.Pattern;
  */
 public enum PageNote {
 
-    ALWAYS_WATCHES(1, "Always watches, no eyes"),
-    DONT_LOOK(2, "Don't look or it takes you"),
+    ALWAYS_WATCHES(1, "Always watches,\nno eyes"),
+    DONT_LOOK(2, "Don't look\nor it takes you"),
     CANT_RUN(3, "Can't run"),
     LEAVE_ME_ALONE(4, "Leave me alone"),
     HELP_ME(5, "Help me"),
-    NO_NO_NO(6, "No no no no...");
+    NO_NO_NO(6, "No no no\nno...");
 
     private static final Pattern PAGE_MODEL_PATTERN = Pattern.compile("^(?:[a-z0-9_.-]+:)?page_(\\d+)$");
 
     private final int modelId;
     private final String text;
     private final Component component;
+    private final Component tooltipComponent;
 
     PageNote(int modelId, String text) {
         this.modelId = modelId;
         this.text = text;
         this.component = Component.text(text, NamedTextColor.GRAY, TextDecoration.ITALIC);
+        this.tooltipComponent = net.onelitefeather.cygnus.common.ui.TooltipBox.of(this.component);
     }
 
     /**
@@ -64,8 +66,17 @@ public enum PageNote {
      *
      * @return the note component
      */
-    public Component getComponent() {
-        return component;
+     public Component getComponent() {
+         return component;
+     }
+
+    /**
+     * Returns the pre-built, ready-to-display tooltip component built at startup.
+     *
+     * @return the tooltip box component
+     */
+    public Component getTooltipComponent() {
+        return tooltipComponent;
     }
 
     /**
@@ -92,6 +103,17 @@ public enum PageNote {
     @Contract(pure = true)
     public static Optional<Component> forCustomModel(int modelId) {
         return fromModelId(modelId).map(PageNote::getComponent);
+    }
+
+    /**
+     * Returns the pre-built tooltip box component for the specified custom model ID.
+     *
+     * @param modelId the model ID (e.g. 1 to 6)
+     * @return an {@link Optional} containing the pre-built tooltip component, or empty if unknown
+     */
+    @Contract(pure = true)
+    public static Optional<Component> tooltipForCustomModel(int modelId) {
+        return fromModelId(modelId).map(PageNote::getTooltipComponent);
     }
 
     /**
@@ -134,6 +156,20 @@ public enum PageNote {
             return Optional.empty();
         }
         return forCustomModel(modelId.getAsInt());
+    }
+
+    /**
+     * Resolves the pre-built tooltip box component for the given {@link ItemStack} if it represents a custom page model.
+     *
+     * @param itemStack the item stack to resolve the tooltip for
+     * @return an {@link Optional} containing the pre-built tooltip component, or empty if not a custom page model item
+     */
+    public static Optional<Component> tooltipForItem(@Nullable ItemStack itemStack) {
+        OptionalInt modelId = extractModelId(itemStack);
+        if (modelId.isEmpty()) {
+            return Optional.empty();
+        }
+        return tooltipForCustomModel(modelId.getAsInt());
     }
 
     /**
