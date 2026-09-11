@@ -9,7 +9,6 @@ import net.minestom.server.utils.time.TimeUnit;
 import net.onelitefeather.cygnus.common.page.PageEntity;
 import net.onelitefeather.cygnus.common.page.PageNote;
 import net.onelitefeather.cygnus.common.page.PageProvider;
-import net.onelitefeather.cygnus.common.ui.TooltipBox;
 import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.jetbrains.annotations.Nullable;
 

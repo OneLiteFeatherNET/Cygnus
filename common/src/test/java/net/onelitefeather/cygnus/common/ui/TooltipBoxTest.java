@@ -129,8 +129,8 @@ class TooltipBoxTest {
         Component line = Component.text("Test"); // In compact 6px font: T(5)+e(5)+s(5)+t(3) = 18px
         int textWidth = 18;
         int contentWidth = TooltipBox.TEXT_LEFT_INDENT + textWidth; // 10 + 18 = 28
-        int middleTiles = Math.max(TooltipBox.MIN_CONTENT_WIDTH, contentWidth + TooltipBox.INNER_RIGHT_PADDING); // 28 + 4 = 32
-        int boxWidth = TooltipBox.CAP_WIDTH + middleTiles + TooltipBox.CAP_WIDTH; // 5 + 32 + 5 = 42
+        int middleTiles = Math.max(TooltipBox.MIN_CONTENT_WIDTH, contentWidth + TooltipBox.INNER_RIGHT_PADDING); // 28 + 2 = 30
+        int boxWidth = TooltipBox.CAP_WIDTH + middleTiles + TooltipBox.CAP_WIDTH; // 5 + 30 + 5 = 40
 
         int offset = 20;
         Component box = TooltipBox.builder()
@@ -138,7 +138,7 @@ class TooltipBoxTest {
                 .crosshairOffsetX(offset)
                 .build();
 
-        int expectedLeadingSpace = boxWidth + (2 * offset); // 42 + 40 = 82
+        int expectedLeadingSpace = boxWidth + (2 * offset); // 40 + 40 = 80
         String expectedLeading = TooltipBox.getPositiveSpace(expectedLeadingSpace);
 
         List<Component> children = box.children();
