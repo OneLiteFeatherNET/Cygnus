@@ -5,9 +5,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.item.ItemStack;
+import net.onelitefeather.cygnus.common.ui.TooltipBox;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.regex.Matcher;
@@ -36,11 +38,16 @@ public enum PageNote {
     private final Component component;
     private final Component tooltipComponent;
 
-    PageNote(int modelId, String text) {
+    PageNote(int modelId, String defaultText) {
         this.modelId = modelId;
-        this.text = text;
-        this.component = Component.text(text, NamedTextColor.GRAY, TextDecoration.ITALIC);
-        this.tooltipComponent = net.onelitefeather.cygnus.common.ui.TooltipBox.of(this.component);
+        String resolvedText = Holder.LOADED_TEXTS.getOrDefault(modelId, defaultText);
+        this.text = resolvedText;
+        this.component = Component.text(resolvedText, NamedTextColor.GRAY, TextDecoration.ITALIC);
+        this.tooltipComponent = TooltipBox.of(this.component);
+    }
+
+    private static final class Holder {
+        private static final Map<Integer, String> LOADED_TEXTS = PageNoteLoader.loadBundledNotes();
     }
 
     /**

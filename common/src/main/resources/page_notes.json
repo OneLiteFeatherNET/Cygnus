@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "name": "ALWAYS_WATCHES",
+    "text": "Always watches,\nno eyes"
+  },
+  {
+    "id": 2,
+    "name": "DONT_LOOK",
+    "text": "Don't look\nor it takes you"
+  },
+  {
+    "id": 3,
+    "name": "CANT_RUN",
+    "text": "Can't run"
+  },
+  {
+    "id": 4,
+    "name": "LEAVE_ME_ALONE",
+    "text": "Leave me alone"
+  },
+  {
+    "id": 5,
+    "name": "HELP_ME",
+    "text": "Help me"
+  },
+  {
+    "id": 6,
+    "name": "NO_NO_NO",
+    "text": "No no no\nno..."
+  }
+]
