@@ -4,6 +4,7 @@ import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.resource.ResourcePackStatus;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -50,7 +51,7 @@ public final class ResourcePackService {
     private static final Component PROMPT =
             Messages.withMini("<gray>This server requires you to accept a custom <yellow>ResourcePack</yellow> to play.");
     private static final Component KICK_MESSAGE =
-            Messages.withMini("<red>You must accept the ResourcePack to play on this server!");
+            Component.text("You must accept the ResourcePack to play on this server!", NamedTextColor.RED);
 
     // Downloading the pack to hash it happens on the configuration thread of the joining player,
     // so it must not be able to hang that join forever.
