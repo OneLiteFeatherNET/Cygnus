@@ -2,11 +2,17 @@ package net.onelitefeather.cygnus.listener;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerChatEvent;
+import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.rank.RankTag;
+import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.team.TeamHelper;
+import net.theevilreaper.xerus.api.phase.Phase;
 import net.theevilreaper.xerus.api.team.Team;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Formats every chat message and enforces the spectator chat isolation.
@@ -25,7 +31,8 @@ import java.util.function.Consumer;
  * there and no additional phase guard is needed.
  *
  * @author TheMeinerLP
- * @version 2.1.0
+ * @author theEvilReaper
+ * @version 2.2.0
  * @since 1.0.0
  **/
 public final class PlayerChatListener implements Consumer<PlayerChatEvent> {
@@ -33,20 +40,36 @@ public final class PlayerChatListener implements Consumer<PlayerChatEvent> {
     private static final Component MESSAGE_PREFIX = Component.text("≫", NamedTextColor.YELLOW);
 
     private final Team spectatorTeam;
+    private final Supplier<Phase> phaseSupplier;
 
     /**
      * Creates a new instance of the {@link PlayerChatListener}.
      *
      * @param spectatorTeam the team which receives the messages written by a spectator
+     * @param phaseSupplier supplier providing the currently active phase
+     */
+    public PlayerChatListener(Team spectatorTeam, Supplier<Phase> phaseSupplier) {
+        this.spectatorTeam = spectatorTeam;
+        this.phaseSupplier = phaseSupplier;
+    }
+
+    /**
+     * Creates a new instance of the {@link PlayerChatListener} without phase supplier.
+     *
+     * @param spectatorTeam the team which receives the messages written by a spectator
      */
     public PlayerChatListener(Team spectatorTeam) {
-        this.spectatorTeam = spectatorTeam;
+        this(spectatorTeam, () -> null);
     }
 
     @Override
     public void accept(PlayerChatEvent event) {
-        //TODO: Improve chat during each phase
-        event.setFormattedMessage(this.setLobbyLayout(event));
+        Phase phase = this.phaseSupplier.get();
+        if (phase instanceof GamePhase) {
+            event.setFormattedMessage(this.setGameLayout(event));
+        } else {
+            event.setFormattedMessage(this.setLobbyLayout(event));
+        }
 
         if (!TeamHelper.isSpectatorTeam(event.getPlayer())) return;
 
@@ -59,22 +82,58 @@ public final class PlayerChatListener implements Consumer<PlayerChatEvent> {
     }
 
     /**
-     * Builds the chat line for the given event.
-     * <p>
-     * The line is assembled below an empty root instead of below the display name: a child inherits every
-     * style its parent does not override, and the spectator display name is struck through, which would
-     * otherwise strike through the separator, the prefix and the message text as well.
+     * Builds the chat line during the lobby and restart phases.
      *
      * @param event the chat event to format
      * @return the formatted chat line
      */
     private Component setLobbyLayout(PlayerChatEvent event) {
+        Player player = event.getPlayer();
+        Component displayName = player.getDisplayName() != null
+                ? player.getDisplayName()
+                : Component.text(player.getUsername());
+
         return Component.empty()
-                .append(event.getPlayer().getDisplayName())
+                .append(displayName)
                 .append(Component.space())
                 .append(MESSAGE_PREFIX)
                 .append(Component.space())
-                .append(Component.text(event.getRawMessage(), NamedTextColor.GRAY)
-                );
+                .append(Component.text(event.getRawMessage(), NamedTextColor.GRAY));
+    }
+
+    /**
+     * Builds the chat line during active gameplay.
+     *
+     * @param event the chat event to format
+     * @return the formatted chat line
+     */
+    private Component setGameLayout(PlayerChatEvent event) {
+        Player player = event.getPlayer();
+
+        if (TeamHelper.isSpectatorTeam(player)) {
+            RankTag tag = player.getTag(Tags.ACTIVE_RANK_TAG);
+            Component tagComponent = tag != null ? tag.asComponent().append(Component.space()) : Component.empty();
+
+            return Component.empty()
+                    //TODO: Replace the [SPEC prefix in a later spec
+                    .append(Component.text("[SPEC] ", NamedTextColor.DARK_GRAY))
+                    .append(tagComponent)
+                    .append(Component.text(player.getUsername(), NamedTextColor.GRAY))
+                    .append(Component.space())
+                    .append(MESSAGE_PREFIX)
+                    .append(Component.space())
+                    .append(Component.text(event.getRawMessage(), NamedTextColor.DARK_GRAY));
+        }
+
+        Component displayName = player.getDisplayName() != null
+                ? player.getDisplayName()
+                : Component.text(player.getUsername(), NamedTextColor.GREEN);
+
+        return Component.empty()
+                .append(displayName)
+                .append(Component.space())
+                .append(MESSAGE_PREFIX)
+                .append(Component.space())
+                .append(Component.text(event.getRawMessage(), NamedTextColor.GRAY));
     }
 }

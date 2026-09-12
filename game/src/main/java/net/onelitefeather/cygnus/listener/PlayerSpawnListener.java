@@ -1,13 +1,15 @@
 package net.onelitefeather.cygnus.listener;
 
+import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.theevilreaper.xerus.api.phase.Phase;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.Player;
-import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.rank.RankTag;
+import net.onelitefeather.cygnus.common.rank.RankTagRegistry;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 
 import java.util.function.Consumer;
@@ -33,7 +35,13 @@ public final class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
         if (!event.isFirstSpawn()) return;
 
         Player player = event.getPlayer();
-        player.setDisplayName(Component.text(player.getUsername()));
+        RankTag rankTag = player.getTag(Tags.ACTIVE_RANK_TAG);
+        if (rankTag == null) {
+            rankTag = RankTagRegistry.standard().resolvePrimary(player);
+            player.setTag(Tags.ACTIVE_RANK_TAG, rankTag);
+        }
+
+        player.setDisplayName(rankTag.asComponent().append(Component.space()).append(Component.text(player.getUsername())));
 
         if (phaseSupplier.get() instanceof LobbyPhase lobbyPhase) {
             Broadcaster.broadcast(Messages.getJoinMessage(player));

@@ -16,6 +16,7 @@ import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.rank.RankTag;
 import net.theevilreaper.xerus.api.team.Team;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -93,6 +95,25 @@ class PlayerChatListenerTest extends CygnusPlayerTestBase {
                 children.get(children.size() - 1).decoration(TextDecoration.STRIKETHROUGH),
                 "the written message must stay readable"
         );
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testLobbyChatLayoutWithRankTag(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        player.setTag(Tags.ACTIVE_RANK_TAG, RankTag.ADMINISTRATOR);
+        player.setDisplayName(RankTag.ADMINISTRATOR.format(player.getUsername()));
+
+        Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
+        PlayerChatEvent event = new PlayerChatEvent(player, List.of(player), "hello lobby");
+        new PlayerChatListener(spectatorTeam).accept(event);
+
+        Component formatted = event.getFormattedMessage();
+        assertNotNull(formatted);
+        List<Component> children = formatted.children();
+        assertTrue(children.size() >= 4);
 
         env.destroyInstance(instance, true);
     }
