@@ -5,6 +5,15 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.15.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.14.0...v2.15.0) (2026-09-12)
+
+
+### Features
+
+* **lobby:** wait in a weakened version of the map's atmosphere ([#254](https://github.com/OneLiteFeatherNET/Cygnus/issues/254)) ([22511cf](https://github.com/OneLiteFeatherNET/Cygnus/commit/22511cf749fa11b820ddb7b8ad42291d902e3bf0))
+* **page:** add block light calculation ([#259](https://github.com/OneLiteFeatherNET/Cygnus/issues/259)) ([3b00389](https://github.com/OneLiteFeatherNET/Cygnus/commit/3b00389db5cc93ce039a2d863573cea42d6129ef))
+* **page:** make proximity more randomized ([#260](https://github.com/OneLiteFeatherNET/Cygnus/issues/260)) ([139b327](https://github.com/OneLiteFeatherNET/Cygnus/commit/139b327fcda90b681a692783923fd301266f3d2e))
+
 ## [2.14.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.13.1...v2.14.0) (2026-09-06)
 
 

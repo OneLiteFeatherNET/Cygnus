@@ -3,4 +3,4 @@ plugins {
 }
 
 group = "net.onelitefeather"
-version = "2.14.0" // x-release-please-version
+version = "2.15.0" // x-release-please-version
