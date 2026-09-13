@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.common.player;
 
 import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.pointer.Pointers;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.util.TriState;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
@@ -11,6 +12,7 @@ import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.onelitefeather.cygnus.common.permission.LuckPermsSupport;
 import net.onelitefeather.cygnus.common.permission.TriStates;
+import net.onelitefeather.cygnus.common.rank.RankTag;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -74,5 +76,29 @@ public abstract class PermissionAwarePlayer extends Player implements Permission
         }
         QueryOptions queryOptions = LuckPermsProvider.get().getContextManager().getQueryOptions(this);
         return TriStates.fromLuckPerms(user.getCachedData().getPermissionData(queryOptions).checkPermission(permission));
+    }
+
+    /**
+     * Resolves this player's name tag icon from their LuckPerms primary group.
+     *
+     * @return the matching {@link RankTag}, or {@link RankTag#PLAYER} when LuckPerms is absent, this
+     * player has no LuckPerms user data, or their primary group names no known rank
+     */
+    public RankTag rankTag() {
+        if (!LuckPermsSupport.isPresent()) {
+            return RankTag.PLAYER;
+        }
+        User user = LuckPermsProvider.get().getUserManager().getUser(getUuid());
+        if (user == null) {
+            return RankTag.PLAYER;
+        }
+        return RankTag.fromGroup(user.getPrimaryGroup()).orElse(RankTag.PLAYER);
+    }
+
+    /**
+     * Sets this player's display name to their username prefixed with {@link #rankTag()}.
+     */
+    public void applyRankTagDisplayName() {
+        setDisplayName(rankTag().prefix(Component.text(getUsername())));
     }
 }
