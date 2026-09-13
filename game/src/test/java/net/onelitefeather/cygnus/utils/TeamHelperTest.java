@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.utils;
 
+import net.onelitefeather.cygnus.team.RoleIcon;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
@@ -171,13 +172,17 @@ class TeamHelperTest {
 
         Component displayName = player.getDisplayName();
         assertNotNull(displayName);
-        assertTrue(PlainTextComponentSerializer.plainText().serialize(displayName).contains("⛧"));
+        assertEquals(RoleIcon.SLENDER.glyph().style().font(), displayName.style().font());
+        assertTrue(PlainTextComponentSerializer.plainText().serialize(displayName).endsWith(player.getUsername()));
 
         survivorTeam.getPlayers().forEach(survivor -> {
             Component survivorDisplayName = survivor.getDisplayName();
             assertNotNull(survivorDisplayName);
-            assertTrue(survivorDisplayName.hasStyling());
-            assertEquals(NamedTextColor.GREEN, survivorDisplayName.style().color());
+            assertEquals(RoleIcon.SURVIVOR.glyph().style().font(), survivorDisplayName.style().font());
+
+            Component nameComponent = survivorDisplayName.children().get(1);
+            assertTrue(nameComponent.hasStyling());
+            assertEquals(NamedTextColor.GREEN, nameComponent.style().color());
         });
 
         survivorTeam.removePlayers(survivors, Entity::remove);

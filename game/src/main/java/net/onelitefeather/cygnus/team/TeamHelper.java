@@ -162,13 +162,12 @@ public final class TeamHelper {
         }
 
         slenderTeam.getPlayers().forEach(player -> {
-            Component slenderDisplayName = Component.text("⛧ ", NamedTextColor.RED)
-                    .append(Component.text(player.getUsername(), NamedTextColor.GRAY));
+            Component slenderDisplayName = RoleIcon.SLENDER.prefix(Component.text(player.getUsername(), NamedTextColor.GRAY));
             player.setDisplayName(slenderDisplayName);
         });
 
         survivorTeam.getPlayers().forEach(player -> {
-            Component survivorDisplayName = Component.text(player.getUsername(), NamedTextColor.GREEN);
+            Component survivorDisplayName = RoleIcon.SURVIVOR.prefix(Component.text(player.getUsername(), NamedTextColor.GREEN));
             player.setDisplayName(survivorDisplayName);
         });
     }
