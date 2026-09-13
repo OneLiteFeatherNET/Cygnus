@@ -4,6 +4,7 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.ShadowColor;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -19,7 +20,7 @@ import java.util.Optional;
  *
  * @author theEvilReaper
  * @version 1.0.0
- * @since 1.0.0
+ * @since 2.15.0
  */
 public enum RankTag {
 
@@ -88,10 +89,8 @@ public enum RankTag {
      * @param group the LuckPerms group id, or {@code null}
      * @return the matching tag, or empty when the group is {@code null} or names no known rank
      */
-    public static Optional<RankTag> fromGroup(String group) {
-        if (group == null) {
-            return Optional.empty();
-        }
+    public static Optional<RankTag> fromGroup(@Nullable String group) {
+        if (group == null) return Optional.empty();
         try {
             return Optional.of(RankTag.valueOf(group.toUpperCase(Locale.ROOT)));
         } catch (IllegalArgumentException exception) {
