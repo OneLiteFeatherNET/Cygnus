@@ -8,6 +8,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.player.PermissionAwarePlayer;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 
 import java.util.function.Consumer;
@@ -36,6 +37,9 @@ public final class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
         player.setDisplayName(Component.text(player.getUsername()));
 
         if (phaseSupplier.get() instanceof LobbyPhase lobbyPhase) {
+            if (player instanceof PermissionAwarePlayer permissionAwarePlayer) {
+                permissionAwarePlayer.applyRankTagDisplayName();
+            }
             Broadcaster.broadcast(Messages.getJoinMessage(player));
             this.spawnSupplier.accept(player);
             lobbyPhase.setLevel(player);
