@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.common.rank;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.ShadowColor;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -12,7 +13,8 @@ import java.util.Optional;
  * <p>
  * The glyph is rendered {@link NamedTextColor#WHITE} because the pack's icons are full-color bitmaps
  * rather than the grayscale masks vanilla glyphs use - any other color would tint the artwork instead
- * of leaving it as designed.
+ * of leaving it as designed. The client's default drop shadow is disabled for the same reason: it is
+ * meant for flat glyph masks and just muddies a full-color bitmap.
  * </p>
  *
  * @author theEvilReaper
@@ -32,7 +34,9 @@ public enum RankTag {
     private final Component glyph;
 
     RankTag(int codepoint) {
-        this.glyph = Component.text(new String(Character.toChars(codepoint)), NamedTextColor.WHITE).font(rankFont());
+        this.glyph = Component.text(new String(Character.toChars(codepoint)), NamedTextColor.WHITE)
+                .font(rankFont())
+                .shadowColor(ShadowColor.none());
     }
 
     /**
