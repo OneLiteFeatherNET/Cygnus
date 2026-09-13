@@ -13,6 +13,7 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.team.RoleIcon;
 import net.theevilreaper.xerus.api.team.Team;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -188,9 +189,9 @@ class SpectatorServiceTest extends CygnusPlayerTestBase {
         Component displayName = player.getDisplayName();
         assertNotNull(displayName, "a spectator needs a display name to show up in the tab list");
         assertEquals(
-                Component.text(player.getUsername(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH),
+                RoleIcon.SPECTATOR.prefix(Component.text(player.getUsername(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH)),
                 displayName,
-                "a spectator must be struck through in gray instead of keeping the green survivor name"
+                "a spectator must show the spectator icon and be struck through in gray instead of keeping the green survivor name"
         );
 
         env.destroyInstance(instance, true);

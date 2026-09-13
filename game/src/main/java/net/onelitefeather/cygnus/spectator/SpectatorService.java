@@ -14,6 +14,7 @@ import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
 import net.onelitefeather.cygnus.player.listener.SpectatorAddListener;
 import net.onelitefeather.cygnus.player.listener.SpectatorItemListener;
+import net.onelitefeather.cygnus.team.RoleIcon;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
@@ -90,7 +91,8 @@ public final class SpectatorService {
      * @param player the player who just became a spectator
      */
     private static void markAsSpectator(Player player) {
-        player.setDisplayName(Component.text(player.getUsername(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH));
+        Component name = Component.text(player.getUsername(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH);
+        player.setDisplayName(RoleIcon.SPECTATOR.prefix(name));
     }
 
     /**
