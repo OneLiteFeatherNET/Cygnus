@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.spectator;
 
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.Player;
 import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.inventory.click.Click;
@@ -70,7 +71,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
                         SLOTS[index],
                         ItemStack.builder(Material.PLAYER_HEAD)
                                 .customName(Component.text(player.getUsername()))
-                                //.set(DataComponents.PROFILE, profile)
+                                .set(DataComponents.PROFILE, profile)
                                 .set(TARGET_TAG, player.getUuid())
                                 .lore(LORE_LINES)
                                 .build(),
