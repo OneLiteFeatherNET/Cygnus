@@ -64,11 +64,21 @@ public enum RoleIcon {
 
     /**
      * Prepends this role's icon and a space in front of the given name.
+     * <p>
+     * The icon has to be appended as a child of a plain, font-less root rather than used as the root
+     * itself: Adventure components inherit style from their parent, so a root carrying
+     * {@code font(cygnus:icons)} would leak that font onto the space and name appended after it,
+     * which has no letter glyphs and renders them as missing-character boxes in the client.
+     * </p>
      *
      * @param name the name component to prefix
      * @return the icon followed by a space and the given name
      */
     public Component prefix(Component name) {
-        return glyph.appendSpace().append(name);
+        return Component.text()
+                .append(glyph)
+                .appendSpace()
+                .append(name)
+                .build();
     }
 }

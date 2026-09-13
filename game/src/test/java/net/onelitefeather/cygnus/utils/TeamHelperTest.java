@@ -34,6 +34,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -172,15 +173,17 @@ class TeamHelperTest {
 
         Component displayName = player.getDisplayName();
         assertNotNull(displayName);
-        assertEquals(RoleIcon.SLENDER.glyph().style().font(), displayName.style().font());
+        assertNull(displayName.style().font(), "the icon font must not leak onto the whole name, or the client shows missing-glyph boxes");
+        assertEquals(RoleIcon.SLENDER.glyph(), displayName.children().get(0));
         assertTrue(PlainTextComponentSerializer.plainText().serialize(displayName).endsWith(player.getUsername()));
 
         survivorTeam.getPlayers().forEach(survivor -> {
             Component survivorDisplayName = survivor.getDisplayName();
             assertNotNull(survivorDisplayName);
-            assertEquals(RoleIcon.SURVIVOR.glyph().style().font(), survivorDisplayName.style().font());
+            assertNull(survivorDisplayName.style().font(), "the icon font must not leak onto the whole name, or the client shows missing-glyph boxes");
+            assertEquals(RoleIcon.SURVIVOR.glyph(), survivorDisplayName.children().get(0));
 
-            Component nameComponent = survivorDisplayName.children().get(1);
+            Component nameComponent = survivorDisplayName.children().get(2);
             assertTrue(nameComponent.hasStyling());
             assertEquals(NamedTextColor.GREEN, nameComponent.style().color());
         });

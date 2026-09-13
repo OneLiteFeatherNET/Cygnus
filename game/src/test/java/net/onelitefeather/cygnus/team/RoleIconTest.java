@@ -8,6 +8,7 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RoleIconTest {
@@ -34,10 +35,11 @@ class RoleIconTest {
         Component name = Component.text("theEvilReaper", NamedTextColor.GREEN);
         Component prefixed = RoleIcon.SURVIVOR.prefix(name);
 
-        assertEquals(ICON_FONT, prefixed.style().font());
-        assertEquals(2, prefixed.children().size());
-        assertEquals(Component.space(), prefixed.children().get(0));
-        assertEquals(name, prefixed.children().get(1));
+        assertNull(prefixed.style().font(), "the icon font must not leak onto the space and name, or the client shows missing-glyph boxes for them");
+        assertEquals(3, prefixed.children().size());
+        assertEquals(RoleIcon.SURVIVOR.glyph(), prefixed.children().get(0));
+        assertEquals(Component.space(), prefixed.children().get(1));
+        assertEquals(name, prefixed.children().get(2));
 
         String plainText = PlainTextComponentSerializer.plainText().serialize(prefixed);
         assertTrue(plainText.endsWith(" theEvilReaper"));
