@@ -8,6 +8,7 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.rank.RankTag;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
@@ -41,7 +42,8 @@ class PlayerSpawnListenerTest extends CygnusPlayerTestBase {
         listener.accept(firstSpawn);
 
         assertTrue(spawned.get(), "Spawn supplier must be called on first spawn in lobby");
-        assertEquals(Component.text(player.getUsername()), player.getDisplayName());
+        assertEquals(RankTag.PLAYER.prefix(Component.text(player.getUsername())), player.getDisplayName(),
+                "the lobby must show the player's rank tag (LuckPerms is absent in tests, so it falls back to RankTag.PLAYER)");
 
         env.destroyInstance(instance, true);
     }

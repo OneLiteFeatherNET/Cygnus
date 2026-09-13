@@ -8,6 +8,7 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceShutdown;
+import net.onelitefeather.cygnus.common.player.PermissionAwarePlayer;
 
 import java.time.temporal.ChronoUnit;
 
@@ -32,6 +33,33 @@ public final class RestartPhase extends TimedPhase {
         this.setEndTicks(-1);
     }
 
+    /**
+     * Re-applies every online player's rank tag to their tab list name.
+     * <p>
+     * The round overwrote it with a {@link net.onelitefeather.cygnus.team.RoleIcon} (Slender/Survivor)
+     * or a struck-through spectator name; the restart lobby shows rank instead of round role again.
+     * </p>
+     */
+    @Override
+    public void onStart() {
+        super.onStart();
+        resetDisplayNames();
+    }
+
+    /**
+     * Sets every online player's display name back to their rank tag.
+     * <p>
+     * Package-private so it can be exercised directly in tests without going through {@link #onStart()},
+     * which also schedules the phase's repeating update task.
+     * </p>
+     */
+    void resetDisplayNames() {
+        for (Player player : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
+            if (player instanceof PermissionAwarePlayer permissionAwarePlayer) {
+                permissionAwarePlayer.applyRankTagDisplayName();
+            }
+        }
+    }
 
     /**
      * Ends the process once the countdown has run out.
