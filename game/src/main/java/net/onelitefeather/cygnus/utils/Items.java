@@ -39,7 +39,7 @@ public final class Items {
                 .build()
         );
 
-        SPECTATOR_LAYOUT.set(5, ItemStack.builder(Material.OAK_DOOR)
+        SPECTATOR_LAYOUT.set(6, ItemStack.builder(Material.OAK_DOOR)
                 .customName(Component.text("Leave", NamedTextColor.RED))
                 .set(Tags.ITEM_TAG, LEAVE_ITEM)
                 .build()
