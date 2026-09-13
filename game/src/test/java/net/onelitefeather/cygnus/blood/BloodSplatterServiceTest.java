@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -100,7 +101,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new PlayerDamagedEvent(player, new Pos(0, 40, 6), 1.0F));
 
         assertNull(overlay.of(player, OverlayLayer.TUNNEL_VISION), "only the blood layer belongs to this service");
-        assertTrue(overlay.of(player, OverlayLayer.BLOOD) != null, "a hit has to show blood");
+        assertNotNull(overlay.of(player, OverlayLayer.BLOOD), "a hit has to show blood");
     }
 
     @Test

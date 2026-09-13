@@ -147,7 +147,7 @@ public final class GameConfigReader {
         }
         try {
             return Integer.parseInt(value.trim());
-        } catch (NumberFormatException exception) {
+        } catch (NumberFormatException _) {
             CONFIG_LOGGER.warn("Failed to parse integer config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
             return defaultValue;
         }
@@ -169,7 +169,7 @@ public final class GameConfigReader {
         }
         try {
             return Float.parseFloat(value.trim());
-        } catch (NumberFormatException exception) {
+        } catch (NumberFormatException _) {
             CONFIG_LOGGER.warn("Failed to parse decimal config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
             return defaultValue;
         }

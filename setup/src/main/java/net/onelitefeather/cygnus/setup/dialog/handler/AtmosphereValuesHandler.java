@@ -13,6 +13,7 @@ import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.setup.atmosphere.AtmospherePreviewService;
 import net.onelitefeather.cygnus.setup.data.GameData;
+import net.onelitefeather.cygnus.setup.data.InstanceSetupData.InventoryTarget;
 import net.onelitefeather.cygnus.setup.dialog.AtmosphereDialogs;
 import net.onelitefeather.guira.SetupDataService;
 import org.jetbrains.annotations.Nullable;
@@ -60,7 +61,7 @@ public final class AtmosphereValuesHandler implements DialogHandler {
             MapAtmosphere atmosphere = read(payload, previous);
 
             builder.setAtmosphere(atmosphere);
-            gameData.triggerUpdate(GameData.InventoryTarget.GENERAL);
+            gameData.triggerUpdate(InventoryTarget.GENERAL);
 
             this.previewService.preview(player, atmosphere, gameData.getMapEntry().getDirectoryRoot());
             AtmosphereDialogs.openConfirmDialog(player);
@@ -115,7 +116,7 @@ public final class AtmosphereValuesHandler implements DialogHandler {
     private static float parse(String raw, float defaultValue) {
         try {
             return Float.parseFloat(raw.trim());
-        } catch (NumberFormatException exception) {
+        } catch (NumberFormatException _) {
             return defaultValue;
         }
     }
@@ -139,7 +140,7 @@ public final class AtmosphereValuesHandler implements DialogHandler {
 
         try {
             return new Color(Integer.parseInt(hex, 16));
-        } catch (NumberFormatException exception) {
+        } catch (NumberFormatException _) {
             return fallback;
         }
     }

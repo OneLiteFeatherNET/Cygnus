@@ -1,7 +1,5 @@
 package net.onelitefeather.cygnus.common.page;
 
-import net.onelitefeather.cygnus.common.config.GameConfig;
-
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
