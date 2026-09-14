@@ -40,7 +40,8 @@ class SpectatorServiceTest extends CygnusPlayerTestBase {
         assertTrue(spectatorTeam.getPlayers().contains(player));
         assertEquals(GameConfig.SPECTATOR_KEY, player.getTag(Tags.TEAM_KEY));
         assertEquals(Material.COMPASS, player.getInventory().getItemStack(2).material());
-        assertEquals(Material.OAK_DOOR, player.getInventory().getItemStack(5).material());
+        assertEquals(Material.OAK_DOOR, player.getInventory().getItemStack(6).material());
+        assertEquals(Material.OAK_DOOR, player.getInventory().getItemStack(6).material());
 
         env.destroyInstance(instance, true);
     }
