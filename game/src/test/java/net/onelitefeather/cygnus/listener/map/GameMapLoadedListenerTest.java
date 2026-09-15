@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GameMapLoadedListenerTest extends CygnusPlayerTestBase {
 
+    private static final String MAP_BADGE = new String(Character.toChars(0xF0021));
+
     @Test
     void testBroadcastsMapAnnouncementToOnlinePlayers(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
@@ -45,7 +47,7 @@ class GameMapLoadedListenerTest extends CygnusPlayerTestBase {
         List<SystemChatPacket> received = packets.collect();
         assertEquals(1, received.size(), "Player should have received exactly one map announcement message.");
         assertEquals(
-                "\n──────────────────────\nNow playing: Granskoga\nBuilt by: Alice, Bob\n──────────────────────\n",
+                "\n──────────────────────\n" + MAP_BADGE + " Now playing: Granskoga\nBuilt by: Alice, Bob\n──────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(received.getFirst().message())
         );
 
@@ -77,7 +79,7 @@ class GameMapLoadedListenerTest extends CygnusPlayerTestBase {
         List<SystemChatPacket> received = packets.collect();
         assertEquals(1, received.size(), "Player should have received exactly one map announcement message.");
         assertEquals(
-                "\n──────────────────────\nNow playing: Granskoga\n──────────────────────\n",
+                "\n──────────────────────\n" + MAP_BADGE + " Now playing: Granskoga\n──────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(received.getFirst().message())
         );
 

@@ -10,12 +10,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MessagesTest {
 
+    private static final String MAP_BADGE = new String(Character.toChars(0xF0021));
+
     @Test
     void testMapAnnouncementWithBuilders() {
         Component message = Messages.getMapAnnouncementMessage("Granskoga", List.of("Alice", "Bob"));
 
         assertEquals(
-                "\n──────────────────────\nNow playing: Granskoga\nBuilt by: Alice, Bob\n──────────────────────\n",
+                "\n──────────────────────\n" + MAP_BADGE + " Now playing: Granskoga\nBuilt by: Alice, Bob\n──────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(message)
         );
     }
@@ -25,7 +27,7 @@ class MessagesTest {
         Component message = Messages.getMapAnnouncementMessage("Granskoga", null);
 
         assertEquals(
-                "\n──────────────────────\nNow playing: Granskoga\n──────────────────────\n",
+                "\n──────────────────────\n" + MAP_BADGE + " Now playing: Granskoga\n──────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(message)
         );
     }
@@ -35,7 +37,7 @@ class MessagesTest {
         Component message = Messages.getMapAnnouncementMessage("Granskoga", List.of());
 
         assertEquals(
-                "\n──────────────────────\nNow playing: Granskoga\n──────────────────────\n",
+                "\n──────────────────────\n" + MAP_BADGE + " Now playing: Granskoga\n──────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(message)
         );
     }
@@ -48,7 +50,7 @@ class MessagesTest {
         );
 
         assertEquals(
-                "\n───────────────────────────────────────\nNow playing: Very Long Map Name Example\nBuilt by: Alice, Bob, Charlie, Dave\n───────────────────────────────────────\n",
+                "\n───────────────────────────────────────\n" + MAP_BADGE + " Now playing: Very Long Map Name Example\nBuilt by: Alice, Bob, Charlie, Dave\n───────────────────────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(message)
         );
     }

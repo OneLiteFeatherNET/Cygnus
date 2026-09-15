@@ -7,6 +7,7 @@ import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.tag.ChatTag;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,7 +22,9 @@ public final class Messages {
 
     private static final String SECONDARY_COLOR = "#249D9F";
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
-    private static final Component PREFIX;
+    // Wrapped in a font-less root rather than used as the glyph itself: PREFIX.append(...) below adds
+    // children to this component, and a root carrying font(cygnus:tags) would leak it onto them.
+    private static final Component PREFIX = Component.text().append(ChatTag.SLENDER.glyph()).build();
     public static final Component ALREADY_FORCE_STARTED;
     public static final Component PHASE_NOT_RUNNING;
     public static final Component PHASE_FORCE_STARTED;
@@ -46,7 +49,6 @@ public final class Messages {
 
     static {
         int forceStartTime = GameConfig.FORCE_START_TIME - 1;
-        PREFIX = MINI_MESSAGE.deserialize("<gradient:#ff5555:#00:#ff5555:#ff0d00:#00:0.4>Slender </gradient><color:#cc0000>⛧</color>");
         ALREADY_FORCE_STARTED = withPrefix(Component.text("The game has already been force started!", NamedTextColor.RED));
         PHASE_NOT_RUNNING = withPrefix(Component.text("The lobby countdown is not running!", NamedTextColor.RED));
         PHASE_FORCE_STARTED = withMiniPrefix("<gray>The timer has been set to <color:#09ff00><seconds></color> seconds!",
@@ -280,8 +282,8 @@ public final class Messages {
 
         Component message = Component.newline().append(separator)
                 .append(Component.newline())
-                .append(Component.text("Now playing: ", NamedTextColor.GRAY))
-                .append(Component.text(mapName, NamedTextColor.GOLD))
+                .append(ChatTag.MAP.prefix(Component.text("Now playing: ", NamedTextColor.GRAY)
+                        .append(Component.text(mapName, NamedTextColor.GOLD))))
                 .append(Component.newline());
 
         if (hasBuilders) {
