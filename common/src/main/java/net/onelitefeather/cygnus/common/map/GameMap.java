@@ -20,7 +20,10 @@ import java.util.Set;
 public final class GameMap extends BaseMap {
 
     private final Pos slenderSpawn;
-    private final Set<PageResource> pageFaces;
+    // transient: pageFaces now lives in a sibling pages.json (see PageFacesFile), not inline in
+    // map.json. GameMapAdapter still reads it from here if an old file inlines it, since that
+    // deserializer reads fields manually rather than through Gson's reflective path.
+    private final transient Set<PageResource> pageFaces;
     private final Set<Pos> survivorSpawns;
     private final @Nullable MapAtmosphere atmosphere;
 
