@@ -1,15 +1,19 @@
 package net.onelitefeather.cygnus.common.map.adapter;
 
 import net.minestom.server.color.Color;
+import net.minestom.server.coordinate.Vec;
+import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.dimension.StaticDimensionPreset;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -127,5 +131,29 @@ class GameMapAdapterTest {
         GameMap parsed = GsonHelper.GSON.fromJson(GsonHelper.GSON.toJson(map), GameMap.class);
 
         assertEquals(atmosphere, parsed.getAtmosphere());
+    }
+
+    @Test
+    void omitsPageFacesFromTheSerializedJson() {
+        PageResource page = new PageResource(new Vec(1, 2, 3), net.minestom.server.utils.Direction.NORTH);
+        GameMap map = new GameMap("Forest", null, null, Set.of(page), Set.of(), List.of(), null);
+
+        String json = GsonHelper.GSON.toJson(map);
+
+        assertFalse(json.contains("pageFaces"));
+    }
+
+    @Test
+    void stillReadsPageFacesInlinedByAnOldMapFile() {
+        String json = """
+                {
+                  "name": "Forest",
+                  "pageFaces": [ { "face": "NORTH", "position": { "x": 1.0, "y": 2.0, "z": 3.0 } } ]
+                }
+                """;
+
+        GameMap gameMap = GsonHelper.GSON.fromJson(json, GameMap.class);
+
+        assertEquals(Set.of(new PageResource(new Vec(1, 2, 3), Direction.NORTH)), gameMap.getPageFaces());
     }
 }

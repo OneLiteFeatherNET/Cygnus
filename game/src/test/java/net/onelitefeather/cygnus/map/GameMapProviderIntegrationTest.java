@@ -192,6 +192,25 @@ class GameMapProviderIntegrationTest {
         return ((Number) argument).floatValue();
     }
 
+    @Test
+    void loadsPageFacesFromTheSiblingPagesJson(Env env, @TempDir Path root) throws IOException {
+        GameMapProvider provider = createProvider(root);
+        Path pagesFile = root.resolve("game").resolve("maps").resolve(ARENA_NAME).resolve("pages.json");
+        Files.writeString(
+                pagesFile,
+                "[ { \"face\": \"NORTH\", \"position\": { \"x\": 1.0, \"y\": 2.0, \"z\": 3.0 } } ]",
+                StandardCharsets.UTF_8
+        );
+
+        provider.loadGameMap();
+
+        assertEquals(1, provider.getGameMap().getPageFaces().size());
+
+        InstanceContainer gameInstance = (InstanceContainer) provider.getActiveInstance().get();
+        provider.close();
+        env.destroyInstance(gameInstance, true);
+    }
+
     /**
      * Creates a map directory layout the provider accepts and returns a provider reading it.
      *

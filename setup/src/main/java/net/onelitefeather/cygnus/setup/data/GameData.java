@@ -20,6 +20,7 @@ import net.onelitefeather.cygnus.setup.inventory.view.SurvivorViewInventory;
 import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
+import net.onelitefeather.cygnus.common.page.PageFacesFile;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.setup.player.SetupPlayer;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
@@ -309,7 +310,9 @@ public class GameData extends InstanceSetupData {
         if (!this.mapEntry.hasMapFile()) {
             this.mapEntry.createFile();
         }
-        GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), this.gameMapBuilder.build());
+        GameMap map = this.gameMapBuilder.build();
+        PageFacesFile.save(mapEntry.getMapFile(), map.getPageFaces());
+        GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), map);
     }
 
     @Override
@@ -340,6 +343,7 @@ public class GameData extends InstanceSetupData {
         Optional<GameMap> mapData =
                 this.mapEntry.hasMapFile()
                         ? GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), GameMap.class)
+                                .map(map -> PageFacesFile.loadInto(mapEntry.getMapFile(), map))
                         : Optional.empty();
 
         this.gameMapBuilder = mapData
