@@ -15,6 +15,7 @@ import net.onelitefeather.cygnus.common.dimension.StaticDimensionPreset;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.filter.MapFilters;
+import net.onelitefeather.cygnus.common.page.PageFacesFile;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
@@ -159,12 +160,16 @@ public final class GameMapProvider extends AbstractMapProvider {
     /**
      * Reads the game map from its map file.
      *
+     * <p>This also merges in the page faces from the sibling {@code pages.json}, if one exists, via
+     * {@link PageFacesFile#loadInto(Path, GameMap)}.</p>
+     *
      * @return the loaded game map
      * @throws IllegalStateException if the file cannot be read
      */
     private GameMap readGameMap() {
-        return this.fileHandler.load(this.gameEntry.getMapFile(), GameMap.class)
+        GameMap map = this.fileHandler.load(this.gameEntry.getMapFile(), GameMap.class)
                 .orElseThrow(() -> new IllegalStateException("Failed to load GameMap from file: " + this.gameEntry.getMapFile()));
+        return PageFacesFile.loadInto(this.gameEntry.getMapFile(), map);
     }
 
     public void loadGameMap() {

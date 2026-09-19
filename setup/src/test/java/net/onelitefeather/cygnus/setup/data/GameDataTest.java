@@ -8,11 +8,17 @@ import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.theevilreaper.aves.map.MapEntry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -107,6 +113,43 @@ class GameDataTest {
         gameData.handleDataContextDelete(MapDataCategory.SURVIVOR, playerPos);
         GameMap mapAfterDelete = (GameMap) gameData.getMapBuilder().build();
         assertEquals(0, mapAfterDelete.getSurvivorSpawns().size());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void saveWritesPageFacesToTheSiblingFileAndLeavesThemOutOfMapJson(Env env, @TempDir Path root) throws IOException {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        MapEntry mapEntry = MapEntry.of(root);
+
+        GameData gameData = new GameData(player, mapEntry);
+        gameData.addPage(Vec.ZERO, Direction.NORTH);
+        gameData.save();
+
+        String mapJson = Files.readString(root.resolve("map.json"), StandardCharsets.UTF_8);
+        assertFalse(mapJson.contains("pageFaces"));
+        assertTrue(Files.exists(root.resolve("pages.json")));
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void loadDataReadsPageFacesBackFromTheSiblingFile(Env env, @TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
+        Files.writeString(
+                root.resolve("pages.json"),
+                "[ { \"face\": \"NORTH\", \"position\": { \"x\": 1.0, \"y\": 2.0, \"z\": 3.0 } } ]",
+                StandardCharsets.UTF_8
+        );
+        MapEntry mapEntry = MapEntry.of(root);
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        GameData gameData = new GameData(player, mapEntry);
+
+        GameMapBuilder builder = (GameMapBuilder) gameData.getMapBuilder();
+        assertEquals(1, builder.getPageFaces().size());
 
         env.destroyInstance(instance, true);
     }
