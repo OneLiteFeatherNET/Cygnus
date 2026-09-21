@@ -12,6 +12,8 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @version 3.1.0
  * @since 2.7.0
  */
+@Execution(ExecutionMode.SAME_THREAD)
 class SlenderGazeServiceTest extends CygnusPlayerTestBase {
 
     /** The shipped defaults: 12 blocks of reach, worst at 4, within 30 degrees of the view. */

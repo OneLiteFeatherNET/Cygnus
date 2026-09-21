@@ -10,6 +10,8 @@ import net.onelitefeather.cygnus.common.dimension.StaticDimensionPreset;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @version 1.0.0
  * @since 2.7.3
  */
+@Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(MicrotusExtension.class)
 class AtmospherePreviewServiceTest {
 
