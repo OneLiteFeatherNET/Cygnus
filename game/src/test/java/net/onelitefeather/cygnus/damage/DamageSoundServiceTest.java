@@ -16,6 +16,8 @@ import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -28,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @version 1.0.0
  * @since 2.13.0
  */
+@Execution(ExecutionMode.SAME_THREAD)
 class DamageSoundServiceTest extends CygnusPlayerTestBase {
 
     /** Where the hit came from. The service must not care - only the victim does. */
