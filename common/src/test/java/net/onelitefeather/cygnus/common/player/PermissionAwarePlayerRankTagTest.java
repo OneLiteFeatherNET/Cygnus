@@ -11,6 +11,8 @@ import net.onelitefeather.cygnus.common.rank.RankTag;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -23,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(MicrotusExtension.class)
 class PermissionAwarePlayerRankTagTest {
 
