@@ -1,46 +1,45 @@
 package net.onelitefeather.cygnus.common.config;
 
 /**
- * Tunes the creek, the figure that walks the map next to the slender.
+ * Settings for the creek, the second figure next to the slender.
  * <p>
- * Every number his behavior depends on lives here, so distances and timings can be tuned in a
- * playtest without touching the code. The compact constructor rejects combinations that would
- * break the behavior outright rather than merely make it feel off. a stalk band that runs
- * backwards, or a hiding place inside the cone that counts as being seen the moment he gets there.
+ * All numbers that control the creek's behavior live here, so they can be tuned in a playtest
+ * without changing code. The constructor rejects combinations that would break the behavior,
+ * for example a stalk distance range that runs backwards, or a hiding spot inside the view cone.
  * </p>
  *
- * @param enabled                whether the creek takes part in a round at all
- * @param activeWithLastSurvivor whether he keeps going once only one survivor is left
- * @param sightRange             how far away a survivor can notice him, in blocks
- * @param sightViewAngle         how far off the center of a survivor's view he may stand and still
- *                               count as seen, in degrees
- * @param wanderPauseMillis      how long he stands still when someone spots him while wandering
- * @param wanderSpeed            his movement speed while wandering, in blocks per tick
- * @param huntSpeed              his movement speed while hunting, in blocks per tick; a walking
- *                               survivor covers about 0.216, so this has to stay above that
- * @param stalkThreshold         the dread at which he picks a survivor to stalk
+ * @param enabled                whether the creek takes part in a round
+ * @param activeWithLastSurvivor whether the creek keeps going when only one survivor is left
+ * @param sightRange             how far away a survivor can notice the creek, in blocks
+ * @param sightViewAngle         the maximum angle from a survivor's view center at which the
+ *                               creek counts as seen, in degrees
+ * @param wanderPauseMillis      how long the creek stops when spotted while wandering
+ * @param wanderSpeed            movement speed while wandering, in blocks per tick
+ * @param huntSpeed              movement speed while hunting, in blocks per tick; must be above
+ *                               a walking survivor's 0.216
+ * @param stalkThreshold         the dread at which the creek starts stalking a survivor
  * @param huntThreshold          the dread at which a stalk turns into a hunt
- * @param stalkMinDistance       the closest he stands to the survivor he stalks, in blocks
- * @param stalkMaxDistance       the farthest he stands from the survivor he stalks, in blocks
- * @param stalkMinAngle          the smallest angle off the survivor's view he places himself at
- * @param stalkMaxAngle          the largest angle off the survivor's view he places himself at
- * @param stalkRevealMillis      how long he lets himself be seen before he moves on
- * @param stalkMinSeconds        the shortest a stalk lasts
- * @param stalkMaxSeconds        the longest a stalk lasts
- * @param huntMaxSeconds         the longest a hunt lasts before he gives up
- * @param catchDistance          how close he has to come to catch a survivor, in blocks
- * @param vanishMinSeconds       the shortest he stays away, reached at full dread
- * @param vanishMaxSeconds       the longest he stays away, reached at no dread
- * @param respawnMinDistance     how far from every survivor he reappears, in blocks
- * @param personalSpace          how close he lets a survivor come outside a hunt, in blocks
- * @param stuckMillis            how long he may make no progress before he takes a shortcut
- * @param dreadPageWeight        the share of the dread that comes from the pages found
- * @param dreadTimeWeight        the share of the dread that comes from the elapsed round time
- * @param dreadIsolationWeight   the share of the dread that comes from being alone
- * @param isolationRadius        how far the nearest other survivor has to be to count as alone
- * @param betrayalCatchCount     from which catch on he always gives a survivor away
- * @param betrayalChance         the chance he gives a survivor away before that
- * @param betrayalGlowSeconds    how long the slender sees a betrayed survivor glow
+ * @param stalkMinDistance       minimum distance to the stalked survivor, in blocks
+ * @param stalkMaxDistance       maximum distance to the stalked survivor, in blocks
+ * @param stalkMinAngle          minimum angle from the stalked survivor's view direction, in degrees
+ * @param stalkMaxAngle          maximum angle from the stalked survivor's view direction, in degrees
+ * @param stalkRevealMillis      how long the creek stays visible before it teleports away
+ * @param stalkMinSeconds        minimum length of a stalk
+ * @param stalkMaxSeconds        maximum length of a stalk
+ * @param huntMaxSeconds         maximum length of a hunt
+ * @param catchDistance          distance at which the creek catches a survivor, in blocks
+ * @param vanishMinSeconds       shortest vanish time, used at full dread
+ * @param vanishMaxSeconds       longest vanish time, used at no dread
+ * @param respawnMinDistance     minimum distance to every survivor when reappearing, in blocks
+ * @param personalSpace          how close a survivor may come outside a hunt, in blocks
+ * @param stuckMillis            how long the creek may make no progress before taking a shortcut
+ * @param dreadPageWeight        dread share from found pages
+ * @param dreadTimeWeight        dread share from elapsed round time
+ * @param dreadIsolationWeight   dread share from being alone
+ * @param isolationRadius        distance to the nearest survivor at which someone counts as alone
+ * @param betrayalCatchCount     from this catch on, a survivor is always revealed to the slender
+ * @param betrayalChance         chance of a reveal on earlier catches
+ * @param betrayalGlowSeconds    how long a revealed survivor glows for the slender
  * @param slownessSeconds        how long a caught survivor is slowed
  * @author theEvilReaper
  * @version 1.0.0
@@ -81,7 +80,7 @@ public record CreekConfig(
 ) {
 
     /**
-     * The values from the design: on, and tuned for a round of about fifteen minutes.
+     * The default settings: enabled, and tuned for a round of about fifteen minutes.
      */
     public static final CreekConfig DEFAULT = new CreekConfig(
             true, true,
@@ -96,9 +95,9 @@ public record CreekConfig(
     );
 
     /**
-     * Rejects values that would break the creek's behavior.
+     * Checks the values.
      *
-     * @throws IllegalArgumentException if a value is out of range or two values do not fit together
+     * @throws IllegalArgumentException if a value is out of range or two values contradict each other
      */
     public CreekConfig {
         atLeast("sightRange", sightRange, 1);
@@ -112,7 +111,7 @@ public record CreekConfig(
         atLeast("personalSpace", personalSpace, 1);
         below("personalSpace", personalSpace, "stalkMinDistance", stalkMinDistance);
         below("stalkMinDistance", stalkMinDistance, "stalkMaxDistance", stalkMaxDistance);
-        // A hiding place inside the cone would count as being seen the moment he got there.
+        // A hiding spot inside the view cone would count as seen right away.
         below("sightViewAngle", sightViewAngle, "stalkMinAngle", stalkMinAngle);
         below("stalkMinAngle", stalkMinAngle, "stalkMaxAngle", stalkMaxAngle);
         between("stalkMaxAngle", stalkMaxAngle, 1, 180);

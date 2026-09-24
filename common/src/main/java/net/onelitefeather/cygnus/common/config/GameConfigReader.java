@@ -189,8 +189,8 @@ public final class GameConfigReader {
     }
 
     /**
-     * Reads a decimal from the properties with double precision. The creek's speeds and weights
-     * are compared against each other, and a float's rounding would let 0.6 read as 0.6000000238.
+     * Reads a decimal with double precision. The creek's values are compared with each other,
+     * and float rounding would turn 0.6 into 0.6000000238.
      *
      * @param properties   the loaded properties
      * @param key          the key to read
@@ -211,12 +211,11 @@ public final class GameConfigReader {
     }
 
     /**
-     * Reads the creek settings, every key prefixed with {@value #CREEK_PREFIX}.
+     * Reads the creek settings. All keys start with {@value #CREEK_PREFIX}.
      * <p>
-     * The values are checked against each other only once all of them are read, so a combination
-     * that does not fit together cannot be patched per key. It falls back to the defaults as a
-     * whole instead: a creek running half on the operator's values and half on ours would be
-     * harder to reason about than one running entirely on ours.
+     * The values are checked together after reading. If they contradict each other, all creek
+     * settings fall back to the defaults, not just the broken key. A mix of custom and default
+     * values would be hard to reason about.
      * </p>
      *
      * @param properties the loaded properties

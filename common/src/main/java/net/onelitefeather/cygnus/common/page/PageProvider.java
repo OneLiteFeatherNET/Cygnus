@@ -210,7 +210,7 @@ public final class PageProvider {
     }
 
     /**
-     * Returns how many pages the survivors have found so far this round.
+     * Returns the number of pages found in this round.
      *
      * @return the number of found pages, never negative
      */
