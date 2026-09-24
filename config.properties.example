@@ -196,3 +196,23 @@ survivorTeamSize=12
 # A map that declares no atmosphere has nothing to prepare anyone for; its lobby
 # stays on the overworld regardless of this value.
 #lobbyAtmosphereShare=0.3
+
+# --- The creek --------------------------------------------------------------
+# A second figure next to the slender, walked by the server. He wanders the map,
+# stalks a single survivor late in the round, hunts them once the dread is high
+# enough and punishes a catch - rarely by giving the survivor away to the slender.
+# Every key below maps to a field of CreekConfig; values that do not fit
+# together make the whole creek section fall back to its defaults.
+#creek.enabled=true
+#creek.activeWithLastSurvivor=true
+#creek.stalkThreshold=0.25
+#creek.huntThreshold=0.6
+#creek.stalkMinDistance=20
+#creek.stalkMaxDistance=35
+#creek.catchDistance=1.5
+# Speeds are in blocks per tick. A walking survivor covers about 0.216, so the
+# hunt speed has to stay above that or a hunted survivor simply walks away.
+#creek.wanderSpeed=0.07
+#creek.huntSpeed=0.25
+#creek.betrayalCatchCount=2
+#creek.betrayalChance=0.15
