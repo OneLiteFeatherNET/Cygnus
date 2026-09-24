@@ -39,6 +39,7 @@ import net.minestom.server.entity.EntityType;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.page.PageProximityService;
@@ -46,13 +47,16 @@ import net.onelitefeather.cygnus.blood.BloodSplatterService;
 import net.onelitefeather.cygnus.damage.DamageSoundService;
 import net.onelitefeather.cygnus.noise.SlenderStaticService;
 import net.onelitefeather.cygnus.command.GlitchCommand;
+import net.onelitefeather.cygnus.command.CreekCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
+import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
+import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.disclaimer.EpilepsyDisclaimer;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
@@ -88,6 +92,14 @@ import net.onelitefeather.cygnus.phase.WaitingPhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
+import net.onelitefeather.cygnus.creek.consequence.CatchEffects;
+import net.onelitefeather.cygnus.creek.body.CreakingBody;
+import net.onelitefeather.cygnus.creek.consequence.GlowReveal;
+import net.onelitefeather.cygnus.creek.dread.PageProgressDread;
+import net.onelitefeather.cygnus.creek.RoundClock;
+import net.onelitefeather.cygnus.creek.consequence.StagedCatchConsequence;
+import net.onelitefeather.cygnus.creek.debug.CreekDebug;
+import net.onelitefeather.cygnus.creek.CreekService;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionRenderer;
@@ -101,6 +113,9 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.function.Supplier;
 
 /**
@@ -133,6 +148,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final TunnelVisionRenderer tunnelVisionRenderer;
     private final TunnelVisionService tunnelVisionService;
     private final SlenderStaticService slenderStaticService;
+    private final CreekService creekService;
+    private final CreekDebug creekDebug;
 
     public Cygnus() {
         Path path = ServiceBootstrap.resolveWorkingDirectory();
@@ -192,6 +209,34 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 () -> TeamHelper.slenderOf(this.teamService));
         this.tunnelVisionRenderer = new OverlayTunnelVisionRenderer(this.screenOverlay);
         this.tunnelVisionService = new TunnelVisionService(this.tunnelVisionRenderer, player -> StaminaHelper.remainingShare(this.staminaService, player));
+        CreekConfig creekConfig = this.gameConfig.creek();
+        this.creekDebug = new CreekDebug();
+        // One clock for the service and the dread: the service starts it, the dread reads it.
+        RoundClock roundClock = new RoundClock(System::currentTimeMillis);
+        // Every step and every catch runs on the scheduler thread, but Random is thread-safe
+        // anyway, which keeps a stray call from elsewhere harmless.
+        Random creekRandom = new Random();
+        this.creekService = new CreekService(
+                creekConfig,
+                () -> TeamHelper.survivorsOf(this.teamService),
+                this.mapProvider.getActiveInstance(),
+                this::creekRoutePoints,
+                CreakingBody::spawn,
+                new PageProgressDread(
+                        this.pageProvider::foundPageCount,
+                        this.pageProvider::getMaxPageAmount,
+                        roundClock::elapsedMillis,
+                        this.gameConfig.gameTime(),
+                        creekConfig),
+                new StagedCatchConsequence(
+                        new CatchEffects(this.jumpscareManager::force, this.staminaService::getFoodBar, creekConfig.slownessSeconds()),
+                        new GlowReveal(creekConfig.betrayalGlowSeconds()),
+                        () -> TeamHelper.slenderOf(this.teamService),
+                        creekConfig,
+                        creekRandom),
+                roundClock,
+                creekRandom,
+                this.creekDebug);
         this.initPhases();
         this.initCommands();
         this.initListener();
@@ -203,6 +248,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
         manager.register(new GlitchCommand(this.gazeSignal));
+        manager.register(new CreekCommand(this.creekDebug));
     }
 
 
@@ -271,6 +317,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // Outside registerOverlayListeners for the same reason as the damage sound: the static is
         // heard, not drawn, so neither the resource pack nor the overlay gate has a say in it.
         this.slenderStaticService.registerListener(handler);
+        // Outside registerOverlayListeners too: the creek is an entity in the world that the
+        // client draws like any other, not a camera overlay.
+        if (this.gameConfig.creek().enabled()) {
+            this.creekService.registerListener(handler);
+        }
         this.registerOverlayListeners(handler);
     }
 
@@ -311,6 +362,21 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.round().gameTime(), this.jumpscareManager));
         this.linearPhaseSeries.add(new RestartPhase());
+    }
+
+    /**
+     * Collects the points the creek wanders between: where the pages are right now, and where
+     * the survivors started.
+     *
+     * @return the points, possibly empty
+     */
+    private List<Pos> creekRoutePoints() {
+        List<Pos> points = new ArrayList<>(this.pageProvider.interactablePagePositions());
+        GameMap map = this.mapProvider.getGameMap();
+        if (map != null) {
+            points.addAll(map.getSurvivorSpawns());
+        }
+        return points;
     }
 
     private void finishGame() {
