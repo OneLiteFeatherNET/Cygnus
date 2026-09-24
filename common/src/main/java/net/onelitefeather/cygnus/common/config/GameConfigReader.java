@@ -46,6 +46,7 @@ import java.util.regex.Pattern;
  *     <li>slenderStaticFranticInterval</li>
  *     <li>slenderStaticMinVolume</li>
  *     <li>slenderStaticMaxVolume</li>
+ *     <li>creek.* (see {@link CreekConfig})</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
@@ -66,6 +67,7 @@ public final class GameConfigReader {
     private static final String PAGE_PROXIMITY_SOUND_KEY = "pageProximitySound";
     private static final String DAMAGE_SOUND_KEY = "damageSound";
     private static final String SLENDER_STATIC_SOUND_KEY = "slenderStaticSound";
+    private static final String CREEK_PREFIX = "creek.";
 
     private final Path path;
 
@@ -183,6 +185,82 @@ public final class GameConfigReader {
         } catch (NumberFormatException _) {
             CONFIG_LOGGER.warn("Failed to parse decimal config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
             return defaultValue;
+        }
+    }
+
+    /**
+     * Reads a decimal from the properties with double precision. The creek's speeds and weights
+     * are compared against each other, and a float's rounding would let 0.6 read as 0.6000000238.
+     *
+     * @param properties   the loaded properties
+     * @param key          the key to read
+     * @param defaultValue the value to use when the key is absent or unreadable
+     * @return the parsed value
+     */
+    private double getDouble(Properties properties, String key, double defaultValue) {
+        String value = properties.getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Double.parseDouble(value.trim());
+        } catch (NumberFormatException _) {
+            CONFIG_LOGGER.warn("Failed to parse decimal config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Reads the creek settings, every key prefixed with {@value #CREEK_PREFIX}.
+     * <p>
+     * The values are checked against each other only once all of them are read, so a combination
+     * that does not fit together cannot be patched per key. It falls back to the defaults as a
+     * whole instead: a creek running half on the operator's values and half on ours would be
+     * harder to reason about than one running entirely on ours.
+     * </p>
+     *
+     * @param properties the loaded properties
+     * @return the creek settings, never {@code null}
+     */
+    private CreekConfig getCreek(Properties properties) {
+        CreekConfig d = CreekConfig.DEFAULT;
+        try {
+            return new CreekConfig(
+                    getBoolean(properties, CREEK_PREFIX + "enabled", d.enabled()),
+                    getBoolean(properties, CREEK_PREFIX + "activeWithLastSurvivor", d.activeWithLastSurvivor()),
+                    getInt(properties, CREEK_PREFIX + "sightRange", d.sightRange()),
+                    getInt(properties, CREEK_PREFIX + "sightViewAngle", d.sightViewAngle()),
+                    getInt(properties, CREEK_PREFIX + "wanderPauseMillis", d.wanderPauseMillis()),
+                    getDouble(properties, CREEK_PREFIX + "wanderSpeed", d.wanderSpeed()),
+                    getDouble(properties, CREEK_PREFIX + "huntSpeed", d.huntSpeed()),
+                    getDouble(properties, CREEK_PREFIX + "stalkThreshold", d.stalkThreshold()),
+                    getDouble(properties, CREEK_PREFIX + "huntThreshold", d.huntThreshold()),
+                    getInt(properties, CREEK_PREFIX + "stalkMinDistance", d.stalkMinDistance()),
+                    getInt(properties, CREEK_PREFIX + "stalkMaxDistance", d.stalkMaxDistance()),
+                    getInt(properties, CREEK_PREFIX + "stalkMinAngle", d.stalkMinAngle()),
+                    getInt(properties, CREEK_PREFIX + "stalkMaxAngle", d.stalkMaxAngle()),
+                    getInt(properties, CREEK_PREFIX + "stalkRevealMillis", d.stalkRevealMillis()),
+                    getInt(properties, CREEK_PREFIX + "stalkMinSeconds", d.stalkMinSeconds()),
+                    getInt(properties, CREEK_PREFIX + "stalkMaxSeconds", d.stalkMaxSeconds()),
+                    getInt(properties, CREEK_PREFIX + "huntMaxSeconds", d.huntMaxSeconds()),
+                    getDouble(properties, CREEK_PREFIX + "catchDistance", d.catchDistance()),
+                    getInt(properties, CREEK_PREFIX + "vanishMinSeconds", d.vanishMinSeconds()),
+                    getInt(properties, CREEK_PREFIX + "vanishMaxSeconds", d.vanishMaxSeconds()),
+                    getInt(properties, CREEK_PREFIX + "respawnMinDistance", d.respawnMinDistance()),
+                    getInt(properties, CREEK_PREFIX + "personalSpace", d.personalSpace()),
+                    getInt(properties, CREEK_PREFIX + "stuckMillis", d.stuckMillis()),
+                    getDouble(properties, CREEK_PREFIX + "dreadPageWeight", d.dreadPageWeight()),
+                    getDouble(properties, CREEK_PREFIX + "dreadTimeWeight", d.dreadTimeWeight()),
+                    getDouble(properties, CREEK_PREFIX + "dreadIsolationWeight", d.dreadIsolationWeight()),
+                    getInt(properties, CREEK_PREFIX + "isolationRadius", d.isolationRadius()),
+                    getInt(properties, CREEK_PREFIX + "betrayalCatchCount", d.betrayalCatchCount()),
+                    getDouble(properties, CREEK_PREFIX + "betrayalChance", d.betrayalChance()),
+                    getInt(properties, CREEK_PREFIX + "betrayalGlowSeconds", d.betrayalGlowSeconds()),
+                    getInt(properties, CREEK_PREFIX + "slownessSeconds", d.slownessSeconds())
+            );
+        } catch (IllegalArgumentException exception) {
+            CONFIG_LOGGER.warn("The creek settings do not fit together: {}. Falling back to the creek defaults", exception.getMessage());
+            return d;
         }
     }
 

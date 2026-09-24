@@ -355,4 +355,39 @@ class GameConfigReaderTest {
         assertEquals(GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR,
                 new GameConfigReader(tempDir).getConfig().pageProximity().volumeFactor());
     }
+
+    @Test
+    void testCreekDefaultsWhenNotConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(CreekConfig.DEFAULT, config.creek());
+    }
+
+    @Test
+    void testCreekValuesAreRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.enabled=false
+                creek.huntThreshold=0.7
+                creek.stalkMaxDistance=40
+                """);
+
+        CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
+
+        assertFalse(creek.enabled());
+        assertEquals(0.7D, creek.huntThreshold(), 1.0E-9);
+        assertEquals(40, creek.stalkMaxDistance());
+        assertEquals(CreekConfig.DEFAULT.stalkMinDistance(), creek.stalkMinDistance());
+    }
+
+    @Test
+    void testCreekFallsBackWhenValuesDoNotFit(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.enabled=false
+                creek.stalkThreshold=0.9
+                """);
+
+        assertEquals(CreekConfig.DEFAULT, new GameConfigReader(tempDir).getConfig().creek());
+    }
 }

@@ -53,16 +53,12 @@ public record GameConfig(
      * Spawning immediately at {@code GameStartEvent} let survivors grab a page before they had even
      * moved from the spawn point. The delay gives them time to spread across the map first.
      * </p>
-     *
-     * @since 2.15.0
      */
     public static final int PAGE_SPAWN_DELAY = 10;
 
     /**
      * How many seconds {@link #PAGE_SPAWN_DELAY} may randomly shift up or down, re-rolled every
      * round, so the moment the first pages appear stays unpredictable.
-     *
-     * @since 2.15.0
      */
     public static final int PAGE_SPAWN_DELAY_JITTER = 2;
 
@@ -72,16 +68,12 @@ public record GameConfig(
      * The page then has to come back on the spot it was found on. Without the delay it would be
      * collectible again right away, letting a survivor pick up page after page on the same spot.
      * </p>
-     *
-     * @since 2.15.0
      */
     public static final int PAGE_RESPAWN_DELAY = 15;
 
     /**
      * How many seconds {@link #PAGE_RESPAWN_DELAY} may randomly shift up or down, re-rolled for every
      * hidden page, so waiting next to the spot does not pay off.
-     *
-     * @since 2.15.0
      */
     public static final int PAGE_RESPAWN_DELAY_JITTER = 5;
 
@@ -139,6 +131,13 @@ public record GameConfig(
             }
         }
     }
+
+    /**
+     * Returns the settings of the creek, the figure that walks the map next to the slender.
+     *
+     * @return the creek settings, never {@code null}
+     */
+    CreekConfig creek();
 
     /**
      * The sizes of the teams.
