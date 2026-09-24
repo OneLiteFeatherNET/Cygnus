@@ -7,7 +7,7 @@ import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 /**
  * @author theEvilReaper
  * @version 1.0.0
- * @since
+ * @since 1.0.0
  **/
 public final class CygnusEntityActionListener {
 
@@ -19,31 +19,12 @@ public final class CygnusEntityActionListener {
             case START_SPRINTING -> {
                 var sprintEvent = new PlayerStartSprintingEvent(player);
                 EventDispatcher.call(sprintEvent);
-                if (sprintEvent.isCancelled()) {
-                    setSprinting(player, false);
-                    return;
-                }
-                setSprinting(player, true);
+                player.setSprinting(!sprintEvent.isCancelled());
             }
             case STOP_SPRINTING -> {
                 EventDispatcher.call(new PlayerStopSprintingEvent(player));
-                setSprinting(player, false);
+                player.setSprinting(false);
             }
-
-            // TODO do remaining actions
         }
-    }
-
-    private static void setSprinting(Player player, boolean sprinting) {
-        player.setSprinting(sprinting);
-       /* AttributeInstance attribute = player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
-        attribute.removeModifier(SPEED_MODIFIER_SPRINTING);
-        if (sprinting) {
-            attribute.addModifier(SPEED_MODIFIER_SPRINTING);
-            return;
-        }*/
-        //TODO: Fix this
-        // var propertiesPacket = new EntityAttributesPacket(player.getEntityId(), new ArrayList<>(Collections.singletonList(attribute)));
-//        player.sendPacketToViewersAndSelf(propertiesPacket);
     }
 }
