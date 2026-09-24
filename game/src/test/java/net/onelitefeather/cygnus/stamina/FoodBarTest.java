@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Verifies the stamina share other systems read off the survivor's bar.
@@ -28,5 +29,22 @@ class FoodBarTest extends CygnusPlayerTestBase {
         FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina((CygnusPlayer) player);
 
         assertEquals(1.0f, bar.remainingShare(), 1.0E-6f);
+    }
+
+    @Test
+    @DisplayName("Draining empties the bar and leaves it to regenerate")
+    void drainEmptiesTheBar(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina((CygnusPlayer) player);
+
+        bar.drain();
+
+        assertEquals(0.0f, bar.remainingShare(), 1.0E-6f);
+        assertFalse(bar.canConsume(), "an empty bar must not allow sprinting again straight away");
+
+        bar.consume();
+
+        assertEquals(1.0f / 20, bar.remainingShare(), 1.0E-6f);
     }
 }
