@@ -359,4 +359,23 @@ class PageProviderTest {
             executor.shutdown();
         }
     }
+
+    @Test
+    void testFoundPageCount(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
+        pageProvider.setMaxPageAmount(2);
+
+        assertEquals(0, pageProvider.foundPageCount());
+
+        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        seedActivePages(pageProvider, pageEntity);
+        Player player = env.createPlayer(instance);
+
+        pageProvider.triggerPageFound(player, pageEntity.getHitBoxUUID());
+
+        assertEquals(1, pageProvider.foundPageCount());
+        env.destroyInstance(instance, true);
+    }
 }

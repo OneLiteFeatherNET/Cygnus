@@ -210,6 +210,15 @@ public final class PageProvider {
     }
 
     /**
+     * Returns how many pages the survivors have found so far this round.
+     *
+     * @return the number of found pages, never negative
+     */
+    public int foundPageCount() {
+        return this.currentFoundedPageCount.get();
+    }
+
+    /**
      * Returns the max page amount.
      *
      * @return max page amount
