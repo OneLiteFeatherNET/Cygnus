@@ -7,6 +7,7 @@ import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Messages;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.theevilreaper.aves.util.Broadcaster;
@@ -23,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -121,9 +123,10 @@ public final class PageProvider {
     }
 
     public boolean triggerPageFound(Player player, UUID uuid) {
-        PageEntity page = this.activePages.remove(uuid);
-        if (page == null) {
-            LOGGER.debug("Page {} was already claimed when {} interacted, ignoring", uuid, player.getUsername());
+        PageEntity page = this.activePages.get(uuid);
+        // A hidden page still has a hit box, so a click on it must not count
+        if (page == null || !page.isInteractable() || !this.activePages.remove(uuid, page)) {
+            LOGGER.debug("Page {} was already claimed or is hidden when {} interacted, ignoring", uuid, player.getUsername());
             return false;
         }
         player.getInventory().addItemStack(page.getPageItem());
@@ -145,7 +148,7 @@ public final class PageProvider {
 
     /**
      * Moves a page that was taken out of play to a free spot and puts it back into play.
-     * Without a free spot the page stays where it is.
+     * Without a free spot the page stays where it is; a found page is hidden for a while first.
      *
      * @param page          the page to move
      * @param returnOldSpot whether the spot the page leaves goes back into the pool
@@ -155,15 +158,25 @@ public final class PageProvider {
         // Polled first, so the page can't draw its own spot again; queued last, so the spot only
         // comes back once every other one had its turn.
         PageResource newSpot = this.freeSpots.poll();
-        if (newSpot != null) {
-            page.moveTo(newSpot);
-            if (returnOldSpot) {
-                this.freeSpots.add(oldSpot);
+        if (newSpot == null && !returnOldSpot) {
+            // Found with nowhere else to go: the spot has to be reused, but not right away
+            page.hideFor(respawnDelay());
+        } else {
+            if (newSpot != null) {
+                page.moveTo(newSpot);
+                if (returnOldSpot) {
+                    this.freeSpots.add(oldSpot);
+                }
             }
+            // Shows the current item and restarts the TTL: on its spot the page counts as a fresh one
+            page.enableInteraction();
         }
-        // Shows the current item and restarts the TTL: on its spot the page counts as a fresh one
-        page.enableInteraction();
         this.activePages.put(page.getHitBoxUUID(), page);
+    }
+
+    private static int respawnDelay() {
+        int jitter = GameConfig.PAGE_RESPAWN_DELAY_JITTER;
+        return GameConfig.PAGE_RESPAWN_DELAY + ThreadLocalRandom.current().nextInt(-jitter, jitter + 1);
     }
 
     /**

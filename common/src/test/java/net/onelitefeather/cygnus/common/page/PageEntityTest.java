@@ -14,6 +14,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.lang.reflect.Field;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MicrotusExtension.class)
@@ -109,6 +111,28 @@ class PageEntityTest {
 
         pageEntity.place(instance).join();
         assertEquals(instance, pageEntity.getInstance());
+
+        pageEntity.remove();
+        env.destroyInstance(instance);
+    }
+
+    @Test
+    void testAHiddenPageComesBackOnceItsDelayIsOver(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        PageEntity pageEntity = placedPage(instance);
+        Field tickTime = PageEntity.class.getDeclaredField("currentTickTime");
+        tickTime.setAccessible(true);
+
+        pageEntity.hideFor(3);
+        assertFalse(pageEntity.isInteractable());
+
+        tickTime.setInt(pageEntity, 2);
+        pageEntity.tick(0);
+        assertFalse(pageEntity.isInteractable(), "the page must stay hidden until its delay is over");
+
+        tickTime.setInt(pageEntity, 3);
+        pageEntity.tick(0);
+        assertTrue(pageEntity.isInteractable(), "the page must come back once its delay is over");
 
         pageEntity.remove();
         env.destroyInstance(instance);

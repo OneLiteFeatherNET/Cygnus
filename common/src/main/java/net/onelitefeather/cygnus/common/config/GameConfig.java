@@ -59,6 +59,25 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
      */
     int PAGE_SPAWN_DELAY_JITTER = 2;
 
+    /**
+     * How many seconds a found page stays hidden when there is no free spot left to move it to.
+     * <p>
+     * The page then has to come back on the spot it was found on. Without the delay it would be
+     * collectible again right away, letting a survivor pick up page after page on the same spot.
+     * </p>
+     *
+     * @since 2.15.0
+     */
+    int PAGE_RESPAWN_DELAY = 15;
+
+    /**
+     * How many seconds {@link #PAGE_RESPAWN_DELAY} may randomly shift up or down, re-rolled for every
+     * hidden page, so waiting next to the spot does not pay off.
+     *
+     * @since 2.15.0
+     */
+    int PAGE_RESPAWN_DELAY_JITTER = 5;
+
     int PAGE_TTL_TIME = 60;
 
     int FORCE_START_TIME = 11;

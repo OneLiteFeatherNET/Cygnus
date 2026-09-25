@@ -312,6 +312,25 @@ class PageProviderTest {
     }
 
     @Test
+    void testAFoundPageWithoutAFreeSpotIsHiddenBeforeItComesBack(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        // No spare spot: the found page has nowhere else to go
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT);
+        Player player = env.createPlayer(instance);
+
+        PageEntity page = pageProvider.interactablePages().getFirst();
+        Pos foundAt = page.getPosition();
+        assertTrue(pageProvider.triggerPageFound(player, page.getHitBoxUUID()));
+
+        assertEquals(foundAt, page.getPosition(), "without a free spot the page has to stay where it was found");
+        assertFalse(page.isInteractable(), "the page must not be collectible again right away");
+        assertFalse(pageProvider.interactablePages().contains(page));
+        assertFalse(pageProvider.triggerPageFound(player, page.getHitBoxUUID()), "a click on the hidden page must not count");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
     void testAnExpiredPageIsNotCountedAsFound(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);

@@ -106,6 +106,16 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
     }
 
     /**
+     * Takes the page out of play for the given time. It comes back on its current spot afterwards.
+     *
+     * @param seconds how long the page stays hidden
+     */
+    void hideFor(int seconds) {
+        this.disableInteraction();
+        this.ttlTime = seconds;
+    }
+
+    /**
      * Updates the item stack for the page.
      *
      * @param pageCount the current page count
@@ -161,6 +171,11 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
         }
 
         if (currentTickTime >= ttlTime) {
+            // A page is only out of play while it waits to come back, see hideFor
+            if (!this.interactable) {
+                this.enableInteraction();
+                return;
+            }
             this.disableInteraction();
             send = true;
             EventDispatcher.call(new PageExpiredEvent(this));
