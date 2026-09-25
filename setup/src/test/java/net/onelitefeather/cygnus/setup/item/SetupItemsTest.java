@@ -67,4 +67,31 @@ class SetupItemsTest {
         assertNotEquals(Material.AIR, itemStack.material());
         assertEquals(itemId, itemStack.getTag(Tags.ITEM_TAG).byteValue());
     }
+
+    @Test
+    void testCreekRouteOverviewItemSet(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        SetupItems.setCreekRouteOverviewItems(player);
+        assertItem(player, 0, SetupItemId.CREEK_NEW);
+        assertItem(player, 4, SetupItemId.CREEK_LIST);
+        assertItem(player, 8, SetupItemId.CREEK_LEAVE);
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testCreekRouteEditItemSet(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        SetupItems.setCreekRouteEditItems(player);
+        assertItem(player, 0, SetupItemId.CREEK_UNDO);
+        assertItem(player, 2, SetupItemId.CREEK_PAUSE);
+        assertItem(player, 6, SetupItemId.CREEK_FINISH);
+        assertItem(player, 8, SetupItemId.CREEK_LEAVE);
+
+        env.destroyInstance(instance, true);
+    }
 }

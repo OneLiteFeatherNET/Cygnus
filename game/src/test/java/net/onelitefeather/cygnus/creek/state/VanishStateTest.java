@@ -97,7 +97,7 @@ class VanishStateTest {
     @DisplayName("On a route it comes back far away, not next to where it vanished")
     void comesBackAnywhereOnTheRoute() {
         // the route runs right past the survivor at the origin and ends far behind them
-        RouteProvider route = new PathRoute(CreekPaths.of(List.of(new CreekRoute("Weg", List.of(
+        RouteProvider route = new PathRoute(CreekPaths.of(List.of(CreekRoute.ofPositions("Weg", List.of(
                 new Vec(0, 40, 10), new Vec(0, 40, 5), new Vec(0, 40, -5), new Vec(0, 40, -40)))), 3.0D));
         route.next(new Pos(0, 40, 5), _ -> true, new java.util.Random(1));
         RecordingBody body = new RecordingBody(new Pos(0, 40, 5));

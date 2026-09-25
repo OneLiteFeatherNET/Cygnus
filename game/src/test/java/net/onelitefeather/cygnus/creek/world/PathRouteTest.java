@@ -3,9 +3,11 @@ package net.onelitefeather.cygnus.creek.world;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
+import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -18,10 +20,10 @@ class PathRouteTest {
 
     private static final Predicate<Pos> ANYWHERE = _ -> true;
 
-    private static final CreekRoute A = new CreekRoute("A",
+    private static final CreekRoute A = CreekRoute.ofPositions("A",
             List.of(new Vec(0, 40, 0), new Vec(10, 40, 0), new Vec(20, 40, 0)));
     /** Starts 2 blocks after the end of A, so the two are linked. */
-    private static final CreekRoute B = new CreekRoute("B",
+    private static final CreekRoute B = CreekRoute.ofPositions("B",
             List.of(new Vec(22, 40, 0), new Vec(22, 40, 10)));
 
     private static PathRoute route(CreekRoute... routes) {
@@ -48,8 +50,19 @@ class PathRouteTest {
         };
     }
 
-    private static Pos next(PathRoute route, Pos current, RandomGenerator random) {
+    private static RouteStep step(PathRoute route, Pos current, RandomGenerator random) {
         return route.next(current, ANYWHERE, random).orElseThrow();
+    }
+
+    private static Pos next(PathRoute route, Pos current, RandomGenerator random) {
+        return step(route, current, random).target();
+    }
+
+    private static CreekRoute paused(String name, int startPause, int endPause, Vec... positions) {
+        List<CreekWaypoint> points = new ArrayList<>(CreekRoute.ofPositions(name, List.of(positions)).points());
+        points.set(0, points.getFirst().withPause(startPause));
+        points.set(points.size() - 1, points.getLast().withPause(endPause));
+        return new CreekRoute(name, points);
     }
 
     @Test
@@ -122,7 +135,7 @@ class PathRouteTest {
         PathRoute route = route(A);
         Pos at = next(route, new Pos(10, 40, 0), fixed(0));
 
-        Optional<Pos> next = route.next(at, point -> point.x() < 15, fixed(0));
+        Optional<Pos> next = route.next(at, point -> point.x() < 15, fixed(0)).map(RouteStep::target);
 
         assertEquals(Optional.of(new Pos(0, 40, 0)), next);
     }
@@ -151,5 +164,50 @@ class PathRouteTest {
     void emptyDescriptionBeforeJoining() {
         assertEquals("", route(A).describe());
         assertEquals(5, route(A, B).points().size());
+    }
+
+    @Test
+    @DisplayName("Reaching an end in walking direction carries its pause")
+    void endsInWalkingDirectionPause() {
+        PathRoute route = route(paused("A", 1000, 2000, new Vec(0, 40, 0), new Vec(10, 40, 0), new Vec(20, 40, 0)));
+
+        assertEquals(0, step(route, new Pos(0, 40, 0), fixed(0)).pauseMillis(), "it walks away from the start");
+        assertEquals(0, step(route, new Pos(0, 40, 0), fixed(0)).pauseMillis());
+        RouteStep end = step(route, new Pos(10, 40, 0), fixed(0));
+        assertEquals(new RouteStep(new Pos(20, 40, 0), 2000), end);
+        assertEquals(0, step(route, end.target(), fixed(0)).pauseMillis());
+        assertEquals(new RouteStep(new Pos(0, 40, 0), 1000), step(route, new Pos(10, 40, 0), fixed(0)));
+    }
+
+    @Test
+    @DisplayName("The start of a linked route is no second stop")
+    void noPauseAtTheSteppingStone() {
+        PathRoute route = route(
+                paused("A", 0, 2000, new Vec(0, 40, 0), new Vec(10, 40, 0), new Vec(20, 40, 0)),
+                paused("B", 3000, 0, new Vec(22, 40, 0), new Vec(22, 40, 10)));
+        next(route, new Pos(10, 40, 0), fixed(0));
+
+        assertEquals(2000, step(route, new Pos(10, 40, 0), fixed(0)).pauseMillis());
+        assertEquals(new RouteStep(new Pos(22, 40, 0), 0), step(route, new Pos(20, 40, 0), fixed(0)));
+    }
+
+    @Test
+    @DisplayName("Rejoining at an end does not stop there")
+    void noPauseWhenRejoiningAtAnEnd() {
+        PathRoute route = route(paused("A", 1000, 2000, new Vec(0, 40, 0), new Vec(10, 40, 0), new Vec(20, 40, 0)));
+
+        assertEquals(new RouteStep(new Pos(20, 40, 0), 0), step(route, new Pos(21, 40, 0), fixed(0)));
+    }
+
+    @Test
+    @DisplayName("A point in the middle keeps its pause")
+    void middlePointKeepsItsPause() {
+        PathRoute route = route(new CreekRoute("M", List.of(
+                CreekWaypoint.of(new Vec(0, 40, 0)),
+                CreekWaypoint.of(new Vec(10, 40, 0)).withPause(1500),
+                CreekWaypoint.of(new Vec(20, 40, 0)))));
+        next(route, new Pos(0, 40, 0), fixed(0));
+
+        assertEquals(new RouteStep(new Pos(10, 40, 0), 1500), step(route, new Pos(0, 40, 0), fixed(0)));
     }
 }
