@@ -29,7 +29,8 @@ public final class SetupItems {
     private static final HotBarLayout gameSetupLayout;
     private static final HotBarLayout pageLayout;
     private static final HotBarLayout survivorSpawnLayout;
-    private static final HotBarLayout creekRouteLayout;
+    private static final HotBarLayout creekRouteOverviewLayout;
+    private static final HotBarLayout creekRouteEditLayout;
 
     static {
         DECORATION_PANE = ItemStack.builder(Material.BLACK_STAINED_GLASS_PANE)
@@ -105,31 +106,49 @@ public final class SetupItems {
                 .build()
         );
 
-        creekRouteLayout = new HotBarLayout();
-        creekRouteLayout.set(1, ItemStack.builder(Material.NAME_TAG)
+        ItemStack leaveCreekMode = ItemStack.builder(Material.BARRIER)
+                .customName(Component.text("Leave mode", NamedTextColor.RED))
+                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Exit the current mode", NamedTextColor.WHITE))))
+                .set(Tags.ITEM_TAG, SetupItemId.CREEK_LEAVE)
+                .build();
+
+        creekRouteOverviewLayout = new HotBarLayout();
+        creekRouteOverviewLayout.set(0, ItemStack.builder(Material.NAME_TAG)
                 .customName(Component.text("New route", NamedTextColor.GREEN))
                 .lore(getLore(SPACE_SEPARATOR.append(Component.text("Create a route and name it", NamedTextColor.WHITE))))
                 .set(Tags.ITEM_TAG, SetupItemId.CREEK_NEW)
                 .build()
         );
-        creekRouteLayout.set(3, ItemStack.builder(Material.FEATHER)
-                .customName(Component.text("Remove last point", NamedTextColor.YELLOW))
-                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Undo the last point of the active route", NamedTextColor.WHITE))))
-                .set(Tags.ITEM_TAG, SetupItemId.CREEK_UNDO)
-                .build()
-        );
-        creekRouteLayout.set(5, ItemStack.builder(Material.LEAD)
+        creekRouteOverviewLayout.set(4, ItemStack.builder(Material.LEAD)
                 .customName(Component.text("Routes", NamedTextColor.AQUA))
-                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Select or delete a route", NamedTextColor.WHITE))))
+                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Edit or delete a route", NamedTextColor.WHITE))))
                 .set(Tags.ITEM_TAG, SetupItemId.CREEK_LIST)
                 .build()
         );
-        creekRouteLayout.set(7, ItemStack.builder(Material.BARRIER)
-                .customName(Component.text("Leave mode", NamedTextColor.RED))
-                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Exit the current mode", NamedTextColor.WHITE))))
-                .set(Tags.ITEM_TAG, SetupItemId.CREEK_LEAVE)
+        creekRouteOverviewLayout.set(8, leaveCreekMode);
+
+        creekRouteEditLayout = new HotBarLayout();
+        creekRouteEditLayout.set(0, ItemStack.builder(Material.FEATHER)
+                .customName(Component.text("Remove last point", NamedTextColor.YELLOW))
+                .lore(getLore(
+                        SPACE_SEPARATOR.append(Component.text("Undo the last point of the route", NamedTextColor.WHITE)),
+                        SPACE_SEPARATOR.append(Component.text("Break a block to add or remove a point", NamedTextColor.WHITE))))
+                .set(Tags.ITEM_TAG, SetupItemId.CREEK_UNDO)
                 .build()
         );
+        creekRouteEditLayout.set(2, ItemStack.builder(Material.CLOCK)
+                .customName(Component.text("Pauses", NamedTextColor.GOLD))
+                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Set how long the creek waits at the ends", NamedTextColor.WHITE))))
+                .set(Tags.ITEM_TAG, SetupItemId.CREEK_PAUSE)
+                .build()
+        );
+        creekRouteEditLayout.set(6, ItemStack.builder(Material.EMERALD)
+                .customName(Component.text("Finish route", NamedTextColor.GREEN))
+                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Stop editing and go back to the routes", NamedTextColor.WHITE))))
+                .set(Tags.ITEM_TAG, SetupItemId.CREEK_FINISH)
+                .build()
+        );
+        creekRouteEditLayout.set(8, leaveCreekMode);
 
         pageLayout = new HotBarLayout();
         pageLayout.set(2, ItemStack.builder(Material.COMPASS)
@@ -236,12 +255,22 @@ public final class SetupItems {
     }
 
     /**
-     * Sets the items for the creek route setup.
+     * Sets the items for the creek route setup while no route is being edited.
      *
      * @param player the player
      */
-    public static void setCreekRouteItems(Player player) {
-        creekRouteLayout.apply(player);
+    public static void setCreekRouteOverviewItems(Player player) {
+        creekRouteOverviewLayout.apply(player);
+        player.setHeldItemSlot(DEFAULT);
+    }
+
+    /**
+     * Sets the items for editing a creek route.
+     *
+     * @param player the player
+     */
+    public static void setCreekRouteEditItems(Player player) {
+        creekRouteEditLayout.apply(player);
         player.setHeldItemSlot(DEFAULT);
     }
 }

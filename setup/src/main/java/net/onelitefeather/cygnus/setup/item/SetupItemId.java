@@ -23,6 +23,8 @@ public final class SetupItemId {
     public static final byte CREEK_UNDO     = (byte) 0x0B;
     public static final byte CREEK_LIST     = (byte) 0x0C;
     public static final byte CREEK_LEAVE    = (byte) 0x0D;
+    public static final byte CREEK_PAUSE    = (byte) 0x0E;
+    public static final byte CREEK_FINISH   = (byte) 0x0F;
 
     private SetupItemId() {
         // Nothing to do here
