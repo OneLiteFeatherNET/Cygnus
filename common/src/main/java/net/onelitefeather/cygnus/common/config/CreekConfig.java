@@ -41,6 +41,7 @@ package net.onelitefeather.cygnus.common.config;
  * @param betrayalChance         chance of a reveal on earlier catches
  * @param betrayalGlowSeconds    how long a revealed survivor glows for the slender
  * @param slownessSeconds        how long a caught survivor is slowed
+ * @param routeLinkDistance      how close two route ends have to be to count as linked, in blocks
  * @author theEvilReaper
  * @version 1.0.0
  * @since 2.15.0
@@ -76,7 +77,8 @@ public record CreekConfig(
         int betrayalCatchCount,
         double betrayalChance,
         int betrayalGlowSeconds,
-        int slownessSeconds
+        int slownessSeconds,
+        double routeLinkDistance
 ) {
 
     /**
@@ -91,7 +93,8 @@ public record CreekConfig(
             30, 1.5D,
             20, 40, 30, 15, 3000,
             0.6D, 0.3D, 0.1D, 25,
-            2, 0.15D, 6, 4
+            2, 0.15D, 6, 4,
+            3.0D
     );
 
     /**
@@ -132,6 +135,7 @@ public record CreekConfig(
         between("betrayalChance", betrayalChance, 0.0D, 1.0D);
         atLeast("betrayalGlowSeconds", betrayalGlowSeconds, 1);
         atLeast("slownessSeconds", slownessSeconds, 0);
+        positive("routeLinkDistance", routeLinkDistance);
     }
 
     private static void atLeast(String name, double value, double minimum) {

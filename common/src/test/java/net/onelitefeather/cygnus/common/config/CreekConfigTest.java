@@ -27,6 +27,23 @@ class CreekConfigTest {
         assertEquals(15, config.personalSpace());
         assertEquals(2, config.betrayalCatchCount());
         assertEquals(0.15D, config.betrayalChance());
+        assertEquals(3.0D, config.routeLinkDistance());
+    }
+
+    @Test
+    @DisplayName("The link distance has to be above 0")
+    void linkDistanceAboveZero() {
+        CreekConfig config = CreekConfig.DEFAULT;
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new CreekConfig(
+                config.enabled(), config.activeWithLastSurvivor(), config.sightRange(), config.sightViewAngle(),
+                config.wanderPauseMillis(), config.wanderSpeed(), config.huntSpeed(), config.stalkThreshold(), config.huntThreshold(),
+                config.stalkMinDistance(), config.stalkMaxDistance(), config.stalkMinAngle(), config.stalkMaxAngle(),
+                config.stalkRevealMillis(), config.stalkMinSeconds(), config.stalkMaxSeconds(), config.huntMaxSeconds(),
+                config.catchDistance(), config.vanishMinSeconds(), config.vanishMaxSeconds(), config.respawnMinDistance(),
+                config.personalSpace(), config.stuckMillis(), config.dreadPageWeight(), config.dreadTimeWeight(),
+                config.dreadIsolationWeight(), config.isolationRadius(), config.betrayalCatchCount(),
+                config.betrayalChance(), config.betrayalGlowSeconds(), config.slownessSeconds(), 0.0D));
+        assertTrue(exception.getMessage().contains("routeLinkDistance"));
     }
 
     @Test
@@ -64,7 +81,7 @@ class CreekConfigTest {
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
                 personalSpace, d.stuckMillis(), d.dreadPageWeight(), d.dreadTimeWeight(),
                 d.dreadIsolationWeight(), d.isolationRadius(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds());
+                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance());
     }
 
     @Test
