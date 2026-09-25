@@ -132,7 +132,7 @@ class PageProximityServiceTest {
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
-        GameConfig.PageProximity config = new GameConfig.PageProximity(false, 20, 20, GameConfig.PageProximity.DEFAULT_SOUND, GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
+        GameConfig.PageProximity config = new GameConfig.PageProximity(false, 20, GameConfig.PageProximity.DEFAULT_SOUND, GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
         PageProximityService service = service(config, player, new Pos(0, 64, 1));
 
         service.startTask();
@@ -152,7 +152,7 @@ class PageProximityServiceTest {
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
-        GameConfig.PageProximity config = new GameConfig.PageProximity(true, 20, 20, Key.key("cygnus", "no_such_sound"), GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
+        GameConfig.PageProximity config = new GameConfig.PageProximity(true, 20, Key.key("cygnus", "no_such_sound"), GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
 
         service(config, player, new Pos(0, 64, 1)).tick();
 
@@ -180,11 +180,11 @@ class PageProximityServiceTest {
 
     /** A configuration on the shipped volume factor. */
     private static GameConfig.PageProximity config(int range) {
-        return new GameConfig.PageProximity(true, range, 20, GameConfig.PageProximity.DEFAULT_SOUND, GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
+        return new GameConfig.PageProximity(true, range, GameConfig.PageProximity.DEFAULT_SOUND, GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
     }
 
     private static GameConfig.PageProximity config(int range, float volumeFactor) {
-        return new GameConfig.PageProximity(true, range, 20, GameConfig.PageProximity.DEFAULT_SOUND, volumeFactor);
+        return new GameConfig.PageProximity(true, range, GameConfig.PageProximity.DEFAULT_SOUND, volumeFactor);
     }
 
     @Test

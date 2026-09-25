@@ -129,7 +129,6 @@ class GameConfigReaderTest {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
                 pageProximityRange=32
-                pageProximityInterval=40
                 pageProximitySound=block.note_block.chime
                 """);
 
@@ -137,7 +136,6 @@ class GameConfigReaderTest {
 
         assertTrue(config.pageProximity().enabled());
         assertEquals(32, config.pageProximity().range());
-        assertEquals(40, config.pageProximity().interval());
         assertEquals(Key.key("block.note_block.chime"), config.pageProximity().sound());
     }
 

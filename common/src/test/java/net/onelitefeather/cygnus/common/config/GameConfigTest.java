@@ -90,7 +90,7 @@ class GameConfigTest {
     }
 
     private static GameConfig.PageProximity proximityWithFactor(float volumeFactor) {
-        return new GameConfig.PageProximity(true, 20, 20, GameConfig.PageProximity.DEFAULT_SOUND, volumeFactor);
+        return new GameConfig.PageProximity(true, 20, GameConfig.PageProximity.DEFAULT_SOUND, volumeFactor);
     }
 
     private static void assertRejected(String message, Executable creation) {
