@@ -363,7 +363,7 @@ class PageProviderTest {
                         .collect(Collectors.toSet())
         );
         pageProvider.setMaxPageAmount(100);
-        pageProvider.collectStartPages(instance);
+        pageProvider.collectStartPages(instance, spotCount);
         pageProvider.spawn();
         return pageProvider;
     }
