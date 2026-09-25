@@ -35,7 +35,6 @@ public final class WaitingPhase extends TimedPhase {
     @Override
     public void onStart() {
         super.onStart();
-        EventDispatcher.call(new GamePreLaunchEvent());
         this.instanceSwitch.apply();
     }
 
@@ -47,6 +46,8 @@ public final class WaitingPhase extends TimedPhase {
     @Override
     public void onUpdate() {
         if (getCurrentTicks() == 1) {
+            // Right before the end, so the page counts are based on the players that actually start
+            EventDispatcher.call(new GamePreLaunchEvent());
             this.teleportLogic.apply();
         }
     }

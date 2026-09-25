@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.listener.page;
 
 import net.minestom.server.instance.Instance;
-import net.onelitefeather.cygnus.common.page.PageCalculation;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
 
@@ -9,7 +8,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Collects the start pages for the active instance and spawns them once the game has started.
+ * Places the start pages into the active instance once the game has started. The pages are
+ * collected beforehand, see {@code GamePreLaunchListener}.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -29,9 +29,8 @@ public final class PageSpawnListener implements Consumer<PageSpawnEvent> {
     public void accept(PageSpawnEvent event) {
         Instance activeInstance = this.activeInstanceSupplier.get();
         if (activeInstance == null) {
-            throw new IllegalStateException("Active instance not available for page collection");
+            throw new IllegalStateException("Active instance not available for page spawning");
         }
-        this.pageProvider.collectStartPages(PageCalculation.calculateActivePageAmount());
         this.pageProvider.spawn(activeInstance);
     }
 }
