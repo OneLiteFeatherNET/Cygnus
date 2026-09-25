@@ -39,7 +39,6 @@ import net.minestom.server.entity.EntityType;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
-import net.minestom.server.coordinate.Pos;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.page.PageProximityService;
@@ -114,7 +113,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
@@ -221,7 +219,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 creekConfig,
                 () -> TeamHelper.survivorsOf(this.teamService),
                 this.mapProvider.getActiveInstance(),
-                this::creekRoutePoints,
                 this::creekRoutes,
                 CreakingBody::spawn,
                 new PageProgressDread(
@@ -364,22 +361,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.round().gameTime(), this.jumpscareManager));
         this.linearPhaseSeries.add(new RestartPhase());
-    }
-
-    /**
-     * Collects the points the creek wanders between: where the pages are right now, and where
-     * the survivors started.
-     *
-     * @return the points, possibly empty
-     */
-    private List<Pos> creekRoutePoints() {
-        List<Pos> points = new ArrayList<>();
-        this.pageProvider.interactablePages().forEach(page -> points.add(page.getPosition()));
-        GameMap map = this.mapProvider.getGameMap();
-        if (map != null) {
-            points.addAll(map.getSurvivorSpawns());
-        }
-        return points;
     }
 
     /**
