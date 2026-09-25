@@ -353,10 +353,13 @@ class PageProviderTest {
     }
 
     private static PageProvider spawnedProvider(Instance instance, int spotCount) {
+        // All spots share one chunk, loaded up front: placing or teleporting a page into a chunk that
+        // isn't loaded yet only completes asynchronously, and the assertions would race it.
+        instance.loadChunk(0, 0).join();
         PageProvider pageProvider = new PageProvider();
         pageProvider.loadPageData(
                 IntStream.range(0, spotCount)
-                        .mapToObj(i -> new PageResource(new Pos(i * 10, 40, 0), Direction.NORTH))
+                        .mapToObj(i -> new PageResource(new Pos(i, 40, 0), Direction.NORTH))
                         .collect(Collectors.toSet())
         );
         pageProvider.setMaxPageAmount(100);
