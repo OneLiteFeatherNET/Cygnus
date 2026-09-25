@@ -1,11 +1,14 @@
 package net.onelitefeather.cygnus.map;
 
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.world.DimensionType;
 import net.minestom.server.world.attribute.EnvironmentAttribute;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.common.creek.CreekRoute;
+import net.onelitefeather.cygnus.common.creek.CreekRoutesFile;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.dimension.StaticDimensionPreset;
 import net.onelitefeather.cygnus.common.map.GameMap;
@@ -206,6 +209,21 @@ class GameMapProviderIntegrationTest {
 
         assertEquals(1, provider.getGameMap().getPageFaces().size());
 
+        InstanceContainer gameInstance = (InstanceContainer) provider.getActiveInstance().get();
+        provider.close();
+        env.destroyInstance(gameInstance, true);
+    }
+
+    @Test
+    void testGameMapCarriesTheCreekRoutes(Env env, @TempDir Path root) throws IOException {
+        GameMapProvider provider = createProvider(root);
+        Path mapFile = root.resolve("game").resolve("maps").resolve(ARENA_NAME).resolve("map.json");
+        CreekRoute route = new CreekRoute("Waldweg", List.of(new Vec(0, 80, 0), new Vec(5, 80, 0)));
+        CreekRoutesFile.save(mapFile, List.of(route));
+
+        provider.loadGameMap();
+
+        assertEquals(List.of(route), provider.getGameMap().getCreekRoutes());
         InstanceContainer gameInstance = (InstanceContainer) provider.getActiveInstance().get();
         provider.close();
         env.destroyInstance(gameInstance, true);
