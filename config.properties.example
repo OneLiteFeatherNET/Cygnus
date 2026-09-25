@@ -201,6 +201,8 @@ survivorTeamSize=12
 # A second figure next to the slender, walked by the server. He wanders the map,
 # stalks a single survivor late in the round, hunts them once the dread is high
 # enough and punishes a catch - rarely by giving the survivor away to the slender.
+# The creek only takes part on maps whose creek.json holds at least one usable
+# route; everywhere else it stays away, even with creek.enabled=true.
 # Every key below maps to a field of CreekConfig. An unreadable value falls back
 # to its default; values that contradict each other are rejected.
 #creek.enabled=true
@@ -219,3 +221,10 @@ survivorTeamSize=12
 # How close the ends of two routes in creek.json have to be (in blocks) for the
 # creek to switch from one route to the other.
 #creek.routeLinkDistance=3.0
+# After reaching a waypoint the creek sometimes stops for a moment. The chance is
+# between 0 and 1 (0 turns it off); the stop lasts between min and max milliseconds.
+# A pause set on the route end in creek.json and a random stop do not add up: the
+# longer one wins.
+#creek.randomStopChance=0.15
+#creek.randomStopMinMillis=1500
+#creek.randomStopMaxMillis=4000
