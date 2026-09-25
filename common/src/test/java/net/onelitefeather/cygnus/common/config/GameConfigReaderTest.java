@@ -370,6 +370,7 @@ class GameConfigReaderTest {
                 creek.enabled=false
                 creek.huntThreshold=0.7
                 creek.stalkMaxDistance=40
+                creek.routeLinkDistance=4.5
                 """);
 
         CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
@@ -378,6 +379,7 @@ class GameConfigReaderTest {
         assertEquals(0.7D, creek.huntThreshold(), 1.0E-9);
         assertEquals(40, creek.stalkMaxDistance());
         assertEquals(CreekConfig.DEFAULT.stalkMinDistance(), creek.stalkMinDistance());
+        assertEquals(4.5D, creek.routeLinkDistance(), 1.0E-9);
     }
 
     @Test

@@ -255,7 +255,8 @@ public final class GameConfigReader {
                 getInt(properties, CREEK_PREFIX + "betrayalCatchCount", d.betrayalCatchCount()),
                 getDouble(properties, CREEK_PREFIX + "betrayalChance", d.betrayalChance()),
                 getInt(properties, CREEK_PREFIX + "betrayalGlowSeconds", d.betrayalGlowSeconds()),
-                getInt(properties, CREEK_PREFIX + "slownessSeconds", d.slownessSeconds())
+                getInt(properties, CREEK_PREFIX + "slownessSeconds", d.slownessSeconds()),
+                getDouble(properties, CREEK_PREFIX + "routeLinkDistance", d.routeLinkDistance())
         );
     }
 
