@@ -1,6 +1,11 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
+import net.onelitefeather.cygnus.common.creek.CreekRoute;
+import net.onelitefeather.cygnus.creek.world.CreekPaths;
+import net.onelitefeather.cygnus.creek.world.PathRoute;
+import net.onelitefeather.cygnus.creek.world.RouteProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -86,5 +91,20 @@ class VanishStateTest {
 
         assertTrue(state.isForever());
         assertSame(state, state.tick(Contexts.context(Long.MAX_VALUE - 1, body, Contexts.route(BEHIND), new ArrayList<>(), WATCHER)));
+    }
+
+    @Test
+    @DisplayName("On a route it comes back far away, not next to where it vanished")
+    void comesBackAnywhereOnTheRoute() {
+        // the route runs right past the survivor at the origin and ends far behind them
+        RouteProvider route = new PathRoute(CreekPaths.of(List.of(new CreekRoute("Weg", List.of(
+                new Vec(0, 40, 10), new Vec(0, 40, 5), new Vec(0, 40, -5), new Vec(0, 40, -40)))), 3.0D));
+        route.next(new Pos(0, 40, 5), _ -> true, new java.util.Random(1));
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 5));
+
+        CreekState next = new VanishState(0L).tick(Contexts.context(0L, body, route, new ArrayList<>(), WATCHER));
+
+        assertInstanceOf(WanderState.class, next);
+        assertEquals(List.of(new Pos(0, 40, -40)), body.teleports);
     }
 }

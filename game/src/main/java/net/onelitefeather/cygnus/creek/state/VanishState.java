@@ -85,14 +85,15 @@ public final class VanishState implements CreekState {
 
         List<Pos> observers = ctx.observerEyes();
         double distance = ctx.config().respawnMinDistance();
-        Optional<Pos> spot = ctx.route()
-                .next(ctx.body().position(),
-                        point -> ctx.spots().hiddenSpotAt(point, observers, distance).isPresent(),
-                        ctx.random())
-                .flatMap(point -> ctx.spots().hiddenSpotAt(point, observers, distance));
-        if (spot.isEmpty()) return this;
+        // Any point of the route will do. Asking the route for its next point would only offer the
+        // neighbours of where the creek vanished, which is often right next to a survivor.
+        List<Pos> spots = ctx.route().points().stream()
+                .map(point -> ctx.spots().hiddenSpotAt(point, observers, distance))
+                .flatMap(Optional::stream)
+                .toList();
+        if (spots.isEmpty()) return this;
 
-        ctx.body().teleport(spot.get());
+        ctx.body().teleport(spots.get(ctx.random().nextInt(spots.size())));
         return new WanderState(ctx.now());
     }
 }
