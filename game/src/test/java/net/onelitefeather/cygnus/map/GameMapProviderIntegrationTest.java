@@ -218,7 +218,7 @@ class GameMapProviderIntegrationTest {
     void testGameMapCarriesTheCreekRoutes(Env env, @TempDir Path root) throws IOException {
         GameMapProvider provider = createProvider(root);
         Path mapFile = root.resolve("game").resolve("maps").resolve(ARENA_NAME).resolve("map.json");
-        CreekRoute route = new CreekRoute("Waldweg", List.of(new Vec(0, 80, 0), new Vec(5, 80, 0)));
+        CreekRoute route = CreekRoute.ofPositions("Waldweg", List.of(new Vec(0, 80, 0), new Vec(5, 80, 0)));
         CreekRoutesFile.save(mapFile, List.of(route));
 
         provider.loadGameMap();

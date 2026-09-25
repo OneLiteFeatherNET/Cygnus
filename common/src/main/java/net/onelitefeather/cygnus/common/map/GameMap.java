@@ -132,6 +132,16 @@ public final class GameMap extends BaseMap {
     }
 
     /**
+     * Returns a copy of this map with other page faces.
+     *
+     * @param pageFaces the new page faces
+     * @return the copy
+     */
+    public GameMap withPageFaces(Set<PageResource> pageFaces) {
+        return new GameMap(name(), spawn(), slenderSpawn, pageFaces, survivorSpawns, builders(), atmosphere, creekRoutes);
+    }
+
+    /**
      * Returns a copy of this map with other creek routes.
      *
      * @param creekRoutes the new routes

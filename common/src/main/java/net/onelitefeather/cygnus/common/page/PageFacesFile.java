@@ -97,15 +97,6 @@ public final class PageFacesFile {
         Set<PageResource> merged = new HashSet<>(map.getPageFaces());
         merged.addAll(load(mapFile));
 
-        return new GameMap(
-                map.name(),
-                map.spawn(),
-                map.getSlenderSpawn(),
-                merged,
-                map.getSurvivorSpawns(),
-                map.builders(),
-                map.getAtmosphere(),
-                map.getCreekRoutes()
-        );
+        return map.withPageFaces(merged);
     }
 }

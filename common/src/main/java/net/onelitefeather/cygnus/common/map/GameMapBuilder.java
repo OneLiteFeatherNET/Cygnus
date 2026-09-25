@@ -4,6 +4,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
+import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.theevilreaper.aves.map.BaseMapBuilder;
@@ -24,7 +25,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
     private @Nullable MapAtmosphere atmosphere;
     private final Set<PageResource> pageFaces;
     private final Set<Pos> survivorSpawns;
-    private final Map<String, List<Vec>> creekRoutes;
+    private final Map<String, List<CreekWaypoint>> creekRoutes;
 
     /**
      * Creates a new instance of the builder class
@@ -212,29 +213,87 @@ public final class GameMapBuilder extends BaseMapBuilder {
     }
 
     /**
-     * Appends a point to a creek route.
+     * Appends a point to a creek route. Once the route has an end, its pause moves to the new end.
      *
      * @param name  the route's name
      * @param point the new last point
      * @return {@code false} if there was no such route
      */
     public boolean addCreekPoint(String name, Vec point) {
-        List<Vec> points = this.creekRoutes.get(name);
+        List<CreekWaypoint> points = this.creekRoutes.get(name);
         if (points == null) return false;
-        points.add(point);
+        CreekWaypoint added = CreekWaypoint.of(point);
+        if (points.size() >= CreekRoute.MIN_POINTS) {
+            CreekWaypoint oldEnd = points.getLast();
+            points.set(points.size() - 1, oldEnd.withPause(0));
+            added = added.withPause(oldEnd.pauseMillis());
+        }
+        points.add(added);
         return true;
     }
 
     /**
-     * Removes the last point of a creek route.
+     * Removes the last point of a creek route. If the route still has an end, the pause moves to it.
      *
      * @param name the route's name
      * @return {@code false} if there was no such route or it had no points
      */
     public boolean removeLastCreekPoint(String name) {
-        List<Vec> points = this.creekRoutes.get(name);
+        List<CreekWaypoint> points = this.creekRoutes.get(name);
         if (points == null || points.isEmpty()) return false;
-        points.removeLast();
+        CreekWaypoint removed = points.removeLast();
+        if (points.size() >= CreekRoute.MIN_POINTS) {
+            int lastIndex = points.size() - 1;
+            points.set(lastIndex, points.get(lastIndex).withPause(removed.pauseMillis()));
+        }
+        return true;
+    }
+
+    /**
+     * Removes the point of a creek route that sits at the given position. If several do, the one
+     * added last goes. The pauses of the start and the end stay with the new start and end.
+     *
+     * @param name  the route's name
+     * @param point the position of the point to remove
+     * @return the number of the removed point, counting from 1, or {@code -1} if there was none
+     */
+    public int removeCreekPoint(String name, Vec point) {
+        List<CreekWaypoint> points = this.creekRoutes.get(name);
+        if (points == null) return -1;
+        int index = -1;
+        for (int i = points.size() - 1; i >= 0; i--) {
+            if (points.get(i).position().equals(point)) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0) return -1;
+        if (index == points.size() - 1) {
+            this.removeLastCreekPoint(name);
+            return index + 1;
+        }
+        CreekWaypoint removed = points.remove(index);
+        if (index == 0) {
+            points.set(0, points.getFirst().withPause(removed.pauseMillis()));
+        }
+        return index + 1;
+    }
+
+    /**
+     * Sets how long the creek waits at the start or the end of a route.
+     *
+     * @param name    the route's name
+     * @param atStart {@code true} for the first point, {@code false} for the last
+     * @param millis  the pause, in milliseconds
+     * @return {@code false} without such a route, with a negative pause, without a point at the
+     * start, or with fewer than two points for the end
+     */
+    public boolean setCreekEndPause(String name, boolean atStart, int millis) {
+        List<CreekWaypoint> points = this.creekRoutes.get(name);
+        if (points == null || millis < 0) return false;
+        if (atStart ? points.isEmpty() : points.size() < CreekRoute.MIN_POINTS) return false;
+        int index = atStart ? 0 : points.size() - 1;
+        points.set(index, points.get(index).withPause(millis));
         return true;
     }
 
@@ -244,7 +303,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
      * @param name the route's name
      * @return the points, empty if there is no such route
      */
-    public List<Vec> getCreekRoutePoints(String name) {
+    public List<CreekWaypoint> getCreekRoutePoints(String name) {
         return List.copyOf(this.creekRoutes.getOrDefault(name, List.of()));
     }
 
