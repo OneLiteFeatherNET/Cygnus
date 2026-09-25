@@ -256,7 +256,10 @@ public final class GameConfigReader {
                 getDouble(properties, CREEK_PREFIX + "betrayalChance", d.betrayalChance()),
                 getInt(properties, CREEK_PREFIX + "betrayalGlowSeconds", d.betrayalGlowSeconds()),
                 getInt(properties, CREEK_PREFIX + "slownessSeconds", d.slownessSeconds()),
-                getDouble(properties, CREEK_PREFIX + "routeLinkDistance", d.routeLinkDistance())
+                getDouble(properties, CREEK_PREFIX + "routeLinkDistance", d.routeLinkDistance()),
+                getDouble(properties, CREEK_PREFIX + "randomStopChance", d.randomStopChance()),
+                getInt(properties, CREEK_PREFIX + "randomStopMinMillis", d.randomStopMinMillis()),
+                getInt(properties, CREEK_PREFIX + "randomStopMaxMillis", d.randomStopMaxMillis())
         );
     }
 
