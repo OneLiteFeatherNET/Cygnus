@@ -5,6 +5,32 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.15.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.14.0...v2.15.0) (2026-09-25)
+
+
+### Features
+
+* **chat:** add tag usage ([#266](https://github.com/OneLiteFeatherNET/Cygnus/issues/266)) ([e0a8746](https://github.com/OneLiteFeatherNET/Cygnus/commit/e0a8746c2903c96526687d45f9a1d6f4f14f3d5b))
+* **lobby:** wait in a weakened version of the map's atmosphere ([#254](https://github.com/OneLiteFeatherNET/Cygnus/issues/254)) ([22511cf](https://github.com/OneLiteFeatherNET/Cygnus/commit/22511cf749fa11b820ddb7b8ad42291d902e3bf0))
+* **page:** add block light calculation ([#259](https://github.com/OneLiteFeatherNET/Cygnus/issues/259)) ([3b00389](https://github.com/OneLiteFeatherNET/Cygnus/commit/3b00389db5cc93ce039a2d863573cea42d6129ef))
+* **page:** make page amount calculation more dynamic ([#257](https://github.com/OneLiteFeatherNET/Cygnus/issues/257)) ([c8774be](https://github.com/OneLiteFeatherNET/Cygnus/commit/c8774be8ba2cf929d6113f6760c0fa3b5a4b64ee))
+* **page:** make proximity more randomized ([#260](https://github.com/OneLiteFeatherNET/Cygnus/issues/260)) ([139b327](https://github.com/OneLiteFeatherNET/Cygnus/commit/139b327fcda90b681a692783923fd301266f3d2e))
+* **page:** outsource page data into a own file ([#268](https://github.com/OneLiteFeatherNET/Cygnus/issues/268)) ([1bcbcdf](https://github.com/OneLiteFeatherNET/Cygnus/commit/1bcbcdf6bea833e818479e9dc79694ee380fbd60))
+* **role:** add icons for roles ([#263](https://github.com/OneLiteFeatherNET/Cygnus/issues/263)) ([5b7304c](https://github.com/OneLiteFeatherNET/Cygnus/commit/5b7304c2cba185243ff0f08bbb0f2e82c6ed96c7))
+* **tab:** add rank tags ([#264](https://github.com/OneLiteFeatherNET/Cygnus/issues/264)) ([3c92876](https://github.com/OneLiteFeatherNET/Cygnus/commit/3c9287637989af5424c00a4074e9c4499cfa56ef))
+
+
+### Bug Fixes
+
+* **deps:** update dependency io.sentry:sentry to v8.56.0 ([#258](https://github.com/OneLiteFeatherNET/Cygnus/issues/258)) ([b8cb330](https://github.com/OneLiteFeatherNET/Cygnus/commit/b8cb33033d9624a4c33d08bf9246c1a992543457))
+* **deps:** update dependency io.sentry:sentry to v8.57.0 ([#267](https://github.com/OneLiteFeatherNET/Cygnus/issues/267)) ([acf70e7](https://github.com/OneLiteFeatherNET/Cygnus/commit/acf70e7292016be791d84c95486463b3fd84b853))
+* **deps:** update dependency io.sentry:sentry to v8.58.0 ([#271](https://github.com/OneLiteFeatherNET/Cygnus/issues/271)) ([4ae05d5](https://github.com/OneLiteFeatherNET/Cygnus/commit/4ae05d595e0a34643357fc8e061104ad0548ef79))
+* **deps:** update dependency net.onelitefeather:aonyx-bom to v0.8.7 ([#265](https://github.com/OneLiteFeatherNET/Cygnus/issues/265)) ([457fd9c](https://github.com/OneLiteFeatherNET/Cygnus/commit/457fd9c775cb471a8a70c39b5c1e393db56f7437))
+* **deps:** update dependency net.onelitefeather:falco-bom to v3 ([#262](https://github.com/OneLiteFeatherNET/Cygnus/issues/262)) ([7b0eee6](https://github.com/OneLiteFeatherNET/Cygnus/commit/7b0eee67f077cf318e24c9eb6c0a9cb420f2f2ea))
+* **deps:** update slf4j to v2.0.20 ([#270](https://github.com/OneLiteFeatherNET/Cygnus/issues/270)) ([fb90405](https://github.com/OneLiteFeatherNET/Cygnus/commit/fb90405c435d68d7579eebe97ac20c2a275e22b7))
+* **page:** push pages back when they expire or are not found ([#273](https://github.com/OneLiteFeatherNET/Cygnus/issues/273)) ([eceb68c](https://github.com/OneLiteFeatherNET/Cygnus/commit/eceb68c728f89ff72e6930ce6873c7c18c94f382))
+* **spectator:** update slot assertion ([4b4934e](https://github.com/OneLiteFeatherNET/Cygnus/commit/4b4934ef92a0cf4f0553b2c6eda3d80b06925557))
+
 ## [2.14.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.13.1...v2.14.0) (2026-09-06)
 
 
