@@ -24,7 +24,7 @@ class SpeedScalingCalculationTest {
             env.createPlayer(instance);
         }
 
-        double additionalSpeed = SpeedScalingCalculation.getAdditionalSpeed(count);
+        double additionalSpeed = SpeedScalingCalculation.getAdditionalSpeed();
         assertNotEquals(0.0D, additionalSpeed);
         assertTrue(additionalSpeed <= 0.01D);
 
@@ -32,7 +32,14 @@ class SpeedScalingCalculationTest {
     }
 
     @Test
-    void testZeroSpeedScaling() {
-        assertEquals(0.0D, SpeedScalingCalculation.getAdditionalSpeed(12));
+    void testZeroSpeedScalingFromFourSurvivors(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        for (int i = 0; i < 5; i++) {
+            env.createPlayer(instance);
+        }
+
+        assertEquals(0.0D, SpeedScalingCalculation.getAdditionalSpeed());
+
+        env.destroyInstance(instance, true);
     }
 }

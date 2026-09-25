@@ -12,9 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.lang.reflect.Field;
-import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -34,37 +31,28 @@ class PageSpawnListenerTest {
                 IllegalStateException.class,
                 () -> listener.accept(event)
         );
-        assertEquals("Active instance not available for page collection", exception.getMessage());
+        assertEquals("Active instance not available for page spawning", exception.getMessage());
     }
 
     @Test
-    void acceptCollectsThePagesForTheActiveInstanceBeforeSpawning(@NotNull Env env) throws Exception {
+    void acceptPlacesTheCollectedPagesIntoTheActiveInstance(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
+        instance.loadChunk(0, 0).join();
 
         PageProvider pageProvider = new PageProvider();
         pageProvider.loadPageData(
                 IntStream.range(0, MIN_ACTIVE_PAGE_COUNT)
-                        .mapToObj(i -> new PageResource(new Pos(i, 0, 0), Direction.NORTH))
+                        .mapToObj(i -> new PageResource(new Pos(i, 40, 0), Direction.NORTH))
                         .collect(Collectors.toSet())
         );
+        pageProvider.collectStartPages(MIN_ACTIVE_PAGE_COUNT);
 
-        PageSpawnListener listener = new PageSpawnListener(pageProvider, () -> instance);
+        new PageSpawnListener(pageProvider, () -> instance).accept(new PageSpawnEvent());
 
-        assertEquals(0, activePageCount(pageProvider), "no pages should exist before the event is handled");
-
-        assertDoesNotThrow(() -> listener.accept(new PageSpawnEvent()));
-
-        assertEquals(MIN_ACTIVE_PAGE_COUNT, activePageCount(pageProvider),
-                "collectStartPages must have run so spawn() has something to spawn");
+        assertEquals(MIN_ACTIVE_PAGE_COUNT, pageProvider.interactablePages().size());
+        assertTrue(pageProvider.interactablePages().stream().allMatch(page -> page.getInstance() == instance),
+                "every collected page must be placed into the active instance");
 
         env.destroyInstance(instance, true);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static int activePageCount(PageProvider pageProvider) throws ReflectiveOperationException {
-        Field field = PageProvider.class.getDeclaredField("activePages");
-        field.setAccessible(true);
-        Map<UUID, ?> activePages = (Map<UUID, ?>) field.get(pageProvider);
-        return activePages.size();
     }
 }

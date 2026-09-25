@@ -16,7 +16,6 @@ import net.onelitefeather.cygnus.common.page.PageEntity;
 import net.onelitefeather.cygnus.common.page.PageFactory;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.PageResource;
-import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -42,7 +41,8 @@ class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
         pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
         pageProvider.setMaxPageAmount(1);
 
-        PageEntity pageEntity = PageFactory.createPage(instance, Pos.ZERO, Direction.NORTH, 1);
+        PageEntity pageEntity = PageFactory.createPage(new PageResource(Pos.ZERO, Direction.NORTH), 1);
+        pageEntity.place(instance).join();
         UUID hitBoxUuid = pageEntity.getHitBoxUUID();
         seedActivePage(pageProvider, pageEntity);
 
@@ -88,7 +88,8 @@ class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
         pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
         pageProvider.setMaxPageAmount(1);
 
-        PageEntity pageEntity = PageFactory.createPage(instance, Pos.ZERO, Direction.NORTH, 1);
+        PageEntity pageEntity = PageFactory.createPage(new PageResource(Pos.ZERO, Direction.NORTH), 1);
+        pageEntity.place(instance).join();
         UUID hitBoxUuid = pageEntity.getHitBoxUUID();
         seedActivePage(pageProvider, pageEntity);
 
@@ -127,8 +128,8 @@ class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
 
         int count = 1;
         for (Direction direction : directions) {
-            Pos pagePos = Helper.updatePosition(blockPos, direction);
-            PageEntity entity = PageFactory.createPage(instance, pagePos, direction, count++);
+            PageEntity entity = PageFactory.createPage(new PageResource(blockPos, direction), count++);
+            entity.place(instance).join();
             entitiesByDir.put(direction, entity);
             seedActivePage(pageProvider, entity);
 

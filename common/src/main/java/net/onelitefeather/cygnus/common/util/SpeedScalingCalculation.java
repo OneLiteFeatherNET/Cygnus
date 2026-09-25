@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.common.util;
 
 import net.minestom.server.MinecraftServer;
-import net.onelitefeather.cygnus.common.config.GameConfig;
 
 /**
  * This class is responsible for calculating the additional movement speed that should be given to the player based on the number of players online.
@@ -18,12 +17,12 @@ public final class SpeedScalingCalculation {
     /**
      * Calculates the additional movement speed that should be given to the player based on the number of players online.
      *
-     * @param pageCount the number of pages for the game
+     * From four survivors on there is no bonus.
+     *
      * @return the additional movement speed that should be given to the player
      */
-    public static double getAdditionalSpeed(int pageCount) {
-        if (pageCount > GameConfig.MIN_PAGE_COUNT) return 0.0;
-        int playerCount = Math.min(MinecraftServer.getConnectionManager().getOnlinePlayerCount() - 1, 4);
+    public static double getAdditionalSpeed() {
+        int playerCount = Math.clamp(MinecraftServer.getConnectionManager().getOnlinePlayerCount() - 1, 0, 4);
         return MAX_SPEED_BONUS * (1.0 - (double) playerCount / 4);
     }
 

@@ -4,24 +4,23 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.ConnectionManager;
 import net.onelitefeather.cygnus.attribute.AttributeHelper;
-import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageCalculation;
+import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.util.HealthScalingCalculation;
 import net.onelitefeather.cygnus.common.util.SpeedScalingCalculation;
 import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.function.Consumer;
-import java.util.function.IntConsumer;
 
 @SuppressWarnings("java:S3252")
 public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
 
     private final ConnectionManager connectionManager;
-    private final IntConsumer pageCounter;
+    private final PageProvider pageProvider;
 
-    public GamePreLaunchListener(IntConsumer pageCounter) {
-        this.pageCounter = pageCounter;
+    public GamePreLaunchListener(PageProvider pageProvider) {
+        this.pageProvider = pageProvider;
         this.connectionManager = MinecraftServer.getConnectionManager();
     }
 
@@ -29,15 +28,13 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
     public void accept(GamePreLaunchEvent event) {
         int pageCount = PageCalculation.calculatePageAmount();
         if (pageCount == 0) throw new UnsupportedOperationException("No pages found");
-        pageCounter.accept(pageCount);
+        this.pageProvider.setMaxPageAmount(pageCount);
+        // Only picked here, placed into the world once the round starts
+        this.pageProvider.collectStartPages(PageCalculation.calculateActivePageAmount());
 
-        float adjustedHealth = 0;
-        double adjustedSpeed = 0;
-
-        if (pageCount <= GameConfig.MIN_PAGE_COUNT) {
-            adjustedHealth = HealthScalingCalculation.getAdditionalHealth(pageCount);
-            adjustedSpeed = SpeedScalingCalculation.getAdditionalSpeed(pageCount);
-        }
+        // Based on the players, not on the page count: the page count carries a random jitter
+        float adjustedHealth = HealthScalingCalculation.getAdditionalHealth();
+        double adjustedSpeed = SpeedScalingCalculation.getAdditionalSpeed();
 
         for (Player player : connectionManager.getOnlinePlayers()) {
             AttributeHelper.adjustStepHeightAndJump(player);
