@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.common.map;
 
+import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.theevilreaper.aves.map.BaseMap;
 import net.minestom.server.coordinate.Pos;
@@ -26,6 +27,8 @@ public final class GameMap extends BaseMap {
     private final transient Set<PageResource> pageFaces;
     private final Set<Pos> survivorSpawns;
     private final @Nullable MapAtmosphere atmosphere;
+    // transient like pageFaces: the routes live in a sibling creek.json (see CreekRoutesFile)
+    private final transient List<CreekRoute> creekRoutes;
 
     /**
      * Creates a new instance from the {@link GameMap} with the given values.
@@ -47,11 +50,37 @@ public final class GameMap extends BaseMap {
             List<String> builders,
             @Nullable MapAtmosphere atmosphere
     ) {
+        this(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders, atmosphere, List.of());
+    }
+
+    /**
+     * Creates a map that also carries creek routes.
+     *
+     * @param name           the name of the map
+     * @param spawn          the spawn position for the players
+     * @param slenderSpawn   the spawn position for the slender
+     * @param pageFaces      the faces for the pages
+     * @param survivorSpawns the spawn positions for the survivors
+     * @param builders       the builders for the map
+     * @param atmosphere     the fog and sky look of the map, or {@code null} for the overworld default
+     * @param creekRoutes    the routes the creek walks along
+     */
+    public GameMap(
+            String name,
+            Pos spawn,
+            Pos slenderSpawn,
+            Set<PageResource> pageFaces,
+            Set<Pos> survivorSpawns,
+            List<String> builders,
+            @Nullable MapAtmosphere atmosphere,
+            List<CreekRoute> creekRoutes
+    ) {
         super(name, spawn, builders);
         this.slenderSpawn = slenderSpawn;
         this.pageFaces = Set.copyOf(pageFaces);
         this.survivorSpawns = Set.copyOf(survivorSpawns);
         this.atmosphere = atmosphere;
+        this.creekRoutes = List.copyOf(creekRoutes);
     }
 
     /**
@@ -91,5 +120,24 @@ public final class GameMap extends BaseMap {
      */
     public @Nullable MapAtmosphere getAtmosphere() {
         return atmosphere;
+    }
+
+    /**
+     * Returns the routes the creek walks along.
+     *
+     * @return the routes, empty if the map has none
+     */
+    public List<CreekRoute> getCreekRoutes() {
+        return creekRoutes;
+    }
+
+    /**
+     * Returns a copy of this map with other creek routes.
+     *
+     * @param creekRoutes the new routes
+     * @return the copy
+     */
+    public GameMap withCreekRoutes(List<CreekRoute> creekRoutes) {
+        return new GameMap(name(), spawn(), slenderSpawn, pageFaces, survivorSpawns, builders(), atmosphere, creekRoutes);
     }
 }

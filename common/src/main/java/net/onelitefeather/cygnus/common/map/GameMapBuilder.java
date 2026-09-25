@@ -3,13 +3,18 @@ package net.onelitefeather.cygnus.common.map;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
+import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -19,6 +24,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
     private @Nullable MapAtmosphere atmosphere;
     private final Set<PageResource> pageFaces;
     private final Set<Pos> survivorSpawns;
+    private final Map<String, List<Vec>> creekRoutes;
 
     /**
      * Creates a new instance of the builder class
@@ -31,6 +37,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
                         .thenComparingInt(Pos::blockY)
                         .thenComparingInt(Pos::blockZ)
         );
+        this.creekRoutes = new LinkedHashMap<>();
     }
 
     /**
@@ -49,6 +56,8 @@ public final class GameMapBuilder extends BaseMapBuilder {
         this.survivorSpawns.addAll(gameMap.getSurvivorSpawns());
         this.pageFaces = new HashSet<>(gameMap.getPageFaces());
         this.atmosphere = gameMap.getAtmosphere();
+        this.creekRoutes = new LinkedHashMap<>();
+        gameMap.getCreekRoutes().forEach(route -> this.creekRoutes.put(route.name(), new ArrayList<>(route.points())));
     }
 
     /**
@@ -91,7 +100,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
      */
     @Override
     public GameMap build() {
-        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders, atmosphere);
+        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders, atmosphere, getCreekRoutes());
     }
 
     /**
@@ -167,5 +176,86 @@ public final class GameMapBuilder extends BaseMapBuilder {
      */
     public @Nullable MapAtmosphere getAtmosphere() {
         return atmosphere;
+    }
+
+    /**
+     * Adds an empty creek route.
+     *
+     * @param name the route's name
+     * @return {@code false} if the name is empty or already taken
+     */
+    public boolean addCreekRoute(String name) {
+        String trimmed = name.trim();
+        if (trimmed.isEmpty() || this.creekRoutes.containsKey(trimmed)) return false;
+        this.creekRoutes.put(trimmed, new ArrayList<>());
+        return true;
+    }
+
+    /**
+     * Removes a creek route.
+     *
+     * @param name the route's name
+     * @return {@code false} if there was no such route
+     */
+    public boolean removeCreekRoute(String name) {
+        return this.creekRoutes.remove(name) != null;
+    }
+
+    /**
+     * Returns whether a creek route with this name exists.
+     *
+     * @param name the route's name
+     * @return {@code true} if it exists
+     */
+    public boolean hasCreekRoute(String name) {
+        return this.creekRoutes.containsKey(name);
+    }
+
+    /**
+     * Appends a point to a creek route.
+     *
+     * @param name  the route's name
+     * @param point the new last point
+     * @return {@code false} if there was no such route
+     */
+    public boolean addCreekPoint(String name, Vec point) {
+        List<Vec> points = this.creekRoutes.get(name);
+        if (points == null) return false;
+        points.add(point);
+        return true;
+    }
+
+    /**
+     * Removes the last point of a creek route.
+     *
+     * @param name the route's name
+     * @return {@code false} if there was no such route or it had no points
+     */
+    public boolean removeLastCreekPoint(String name) {
+        List<Vec> points = this.creekRoutes.get(name);
+        if (points == null || points.isEmpty()) return false;
+        points.removeLast();
+        return true;
+    }
+
+    /**
+     * Returns the points of a creek route.
+     *
+     * @param name the route's name
+     * @return the points, empty if there is no such route
+     */
+    public List<Vec> getCreekRoutePoints(String name) {
+        return List.copyOf(this.creekRoutes.getOrDefault(name, List.of()));
+    }
+
+    /**
+     * Returns all creek routes in the order they were added.
+     *
+     * @return the routes
+     */
+    public List<CreekRoute> getCreekRoutes() {
+        return this.creekRoutes.entrySet().stream()
+                .map(entry -> new CreekRoute(entry.getKey(), entry.getValue()))
+                .toList();
     }
 }
