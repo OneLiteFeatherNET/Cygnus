@@ -43,7 +43,6 @@ public record GameConfig(
     public static final Key SLENDER_KEY = Key.key("cygnus", "slender");
     public static final String SURVIVOR_TEAM_NAME = "Survivor";
     public static final Key SURVIVOR_KEY = Key.key("cygnus", "survivor");
-    public static final String SPECTATOR_TEAM_NAME = "Spectator";
     public static final Key SPECTATOR_KEY = Key.key("cygnus", "spectator");
 
     public static final int MIN_ACTIVE_PAGE_COUNT = 4 * 2;
@@ -181,14 +180,13 @@ public record GameConfig(
      *
      * @param enabled      whether the hint is played at all
      * @param range        how far away a page may be and still be heard, in blocks
-     * @param interval     the number of ticks between two sounds, at least 1
      * @param sound        the sound; a key naming no known sound falls back to {@link #DEFAULT_SOUND}
      *                     when it is first played
      * @param volumeFactor how far past the range the falloff is stretched. Minecraft fades a sound to
      *                     nothing at {@code 16 * volume} blocks, so a volume that reaches exactly the
      *                     range would be silent at its edge.
      */
-    public record PageProximity(boolean enabled, int range, int interval, Key sound, float volumeFactor) {
+    public record PageProximity(boolean enabled, int range, Key sound, float volumeFactor) {
 
         /** A soft, bell-less shimmer that reads as "something is here" without sounding like an alarm. */
         public static final Key DEFAULT_SOUND = Key.key("block.amethyst_block.chime");
@@ -205,14 +203,11 @@ public record GameConfig(
          */
         public static final float MAX_VOLUME_FACTOR = 8.0F;
 
-        public static final PageProximity DEFAULT = new PageProximity(true, 20, 20, DEFAULT_SOUND, DEFAULT_VOLUME_FACTOR);
+        public static final PageProximity DEFAULT = new PageProximity(true, 20, DEFAULT_SOUND, DEFAULT_VOLUME_FACTOR);
 
         public PageProximity {
             if (range < 1 || range > MAX_RANGE) {
                 throw new IllegalArgumentException("Page proximity range must be between 1 and " + MAX_RANGE);
-            }
-            if (interval < 1) {
-                throw new IllegalArgumentException("Page proximity interval must be at least 1 tick");
             }
             if (volumeFactor < 1.0F || volumeFactor > MAX_VOLUME_FACTOR) {
                 throw new IllegalArgumentException("Page proximity volume factor must be between 1 and " + MAX_VOLUME_FACTOR);

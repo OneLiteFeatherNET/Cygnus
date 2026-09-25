@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
  *     <li>resourcePackSha1</li>
  *     <li>pageProximityEnabled</li>
  *     <li>pageProximityRange</li>
- *     <li>pageProximityInterval</li>
  *     <li>pageProximitySound</li>
  *     <li>pageProximityVolumeFactor</li>
  *     <li>damageSoundEnabled</li>
@@ -127,7 +126,6 @@ public final class GameConfigReader {
                 new GameConfig.PageProximity(
                         getBoolean(properties, "pageProximityEnabled", proximity.enabled()),
                         getInt(properties, "pageProximityRange", proximity.range()),
-                        getInt(properties, "pageProximityInterval", proximity.interval()),
                         getSound(properties, PAGE_PROXIMITY_SOUND_KEY, proximity.sound()),
                         getFloat(properties, "pageProximityVolumeFactor", proximity.volumeFactor())
                 ),
