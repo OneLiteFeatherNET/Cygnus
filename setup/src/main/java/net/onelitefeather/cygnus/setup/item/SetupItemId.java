@@ -18,6 +18,11 @@ public final class SetupItemId {
     public static final byte SURVIVOR       = (byte) 0x06;
     public static final byte SPAWNS         = (byte) 0x07;
     public static final byte LEAVE_MODE     = (byte) 0x08;
+    public static final byte CREEK_ROUTES   = (byte) 0x09;
+    public static final byte CREEK_NEW      = (byte) 0x0A;
+    public static final byte CREEK_UNDO     = (byte) 0x0B;
+    public static final byte CREEK_LIST     = (byte) 0x0C;
+    public static final byte CREEK_LEAVE    = (byte) 0x0D;
 
     private SetupItemId() {
         // Nothing to do here
