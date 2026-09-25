@@ -106,8 +106,26 @@ public final class CreekDebug {
      * @return the line
      */
     public static Component line(CreekState state, Pos creek, List<SurvivorView> views, Function<UUID, String> names) {
+        return line(state, creek, views, names, "");
+    }
+
+    /**
+     * Builds the debug line for one step, including where the creek is on its route.
+     *
+     * @param state the creek's state
+     * @param creek the creek's position
+     * @param views the survivors in that step
+     * @param names turns a player id into a name
+     * @param route the route description, or an empty string without a route
+     * @return the line
+     */
+    public static Component line(CreekState state, Pos creek, List<SurvivorView> views, Function<UUID, String> names,
+                                 String route) {
         TextComponent.Builder builder = Component.text();
         builder.append(Component.text(label(state), NamedTextColor.RED));
+        if (!route.isEmpty()) {
+            builder.append(Component.text(" · " + route, NamedTextColor.AQUA));
+        }
 
         target(state).ifPresent(id -> {
             builder.append(Component.text(" → " + names.apply(id), NamedTextColor.GOLD));

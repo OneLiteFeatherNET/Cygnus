@@ -68,4 +68,22 @@ class CreekDebugTest {
         assertFalse(debug.toggle(STEVE));
         assertFalse(debug.hasWatchers());
     }
+
+    @Test
+    @DisplayName("The route description follows the label")
+    void routeIsShown() {
+        List<SurvivorView> views = List.of(new SurvivorView(STEVE, new Pos(0, 40, 30), 0.1D, false));
+
+        Component line = CreekDebug.line(new WanderState(0L), Pos.ZERO, views, NAMES::get, "Waldweg Nord 3/7 →");
+
+        assertEquals("WANDER · Waldweg Nord 3/7 → · Steve 0.10", plain(line));
+    }
+
+    @Test
+    @DisplayName("Without a route description the line is unchanged")
+    void emptyRouteAddsNothing() {
+        List<SurvivorView> views = List.of(new SurvivorView(STEVE, new Pos(0, 40, 30), 0.1D, false));
+
+        assertEquals("WANDER · Steve 0.10", plain(CreekDebug.line(new WanderState(0L), Pos.ZERO, views, NAMES::get, "")));
+    }
 }

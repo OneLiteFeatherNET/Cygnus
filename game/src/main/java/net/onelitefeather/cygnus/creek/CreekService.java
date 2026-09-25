@@ -6,16 +6,20 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.VanishState;
+import net.onelitefeather.cygnus.creek.world.CreekPaths;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.Ground;
 import net.onelitefeather.cygnus.creek.world.InstanceGround;
+import net.onelitefeather.cygnus.creek.world.PathRoute;
 import net.onelitefeather.cygnus.creek.world.RandomPointRoute;
+import net.onelitefeather.cygnus.creek.world.RouteProvider;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
@@ -63,7 +67,9 @@ public final class CreekService {
     private final CreekSight sight;
     private final Ground ground;
     private final SpotFinder spots;
-    private final RandomPointRoute route;
+    private final Supplier<List<CreekRoute>> routes;
+    private final RandomPointRoute fallback;
+    private RouteProvider route;
     private final RepeatingTask task = new RepeatingTask(this::tick);
     private volatile @Nullable Creek creek;
 
@@ -74,6 +80,7 @@ public final class CreekService {
      * @param survivors   supplies the survivors of the round
      * @param instance    supplies the instance of the round, or {@code null} while there is none
      * @param routePoints supplies the waypoints
+     * @param routes      supplies the creek routes of the current map
      * @param bodies      spawns the creek's body
      * @param dread       rates the survivors
      * @param consequence what happens on a catch
@@ -83,6 +90,7 @@ public final class CreekService {
      */
     public CreekService(CreekConfig config, Supplier<Set<Player>> survivors,
                           Supplier<? extends @Nullable Instance> instance, Supplier<List<Pos>> routePoints,
+                          Supplier<List<CreekRoute>> routes,
                           BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread,
                           CatchConsequence consequence, RoundClock clock, RandomGenerator random,
                           CreekDebug debug) {
@@ -98,7 +106,9 @@ public final class CreekService {
         this.sight = new CreekSight(config.sightRange(), config.sightViewAngle());
         this.ground = new InstanceGround(instance);
         this.spots = new SpotFinder(this.sight, this.ground);
-        this.route = new RandomPointRoute(routePoints);
+        this.routes = routes;
+        this.fallback = new RandomPointRoute(routePoints);
+        this.route = this.fallback;
     }
 
     /**
@@ -118,9 +128,11 @@ public final class CreekService {
         if (this.creek != null) return;
 
         Instance world = this.instance.get();
+        CreekPaths paths = CreekPaths.of(this.routes.get(), this.config.routeLinkDistance());
+        this.route = paths.isEmpty() ? this.fallback : new PathRoute(paths);
         List<Pos> points = this.route.points();
         if (world == null || points.isEmpty()) {
-            LOGGER.warn("The map offers no page positions or spawns to walk between, so the creek stays away this round");
+            LOGGER.warn("The map offers no creek routes, page positions or spawns to walk between, so the creek stays away this round");
             return;
         }
 
@@ -145,7 +157,8 @@ public final class CreekService {
         Set<Player> players = this.survivors.get();
         current.tick(players, this.clock.now());
         if (this.debug.hasWatchers()) {
-            this.debug.show(CreekDebug.line(current.state(), current.body().position(), current.lastViews(), id -> nameOf(players, id)));
+            this.debug.show(CreekDebug.line(current.state(), current.body().position(), current.lastViews(),
+                    id -> nameOf(players, id), this.route.describe()));
         }
     }
 
@@ -171,5 +184,9 @@ public final class CreekService {
 
     @Nullable Creek creek() {
         return this.creek;
+    }
+
+    RouteProvider route() {
+        return this.route;
     }
 }
