@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerLoginListenerTest extends CygnusPlayerTestBase {
 
-    private static GameConfig lobbyConfig() {
-        return GameConfig.builder().lobbyTime(30).minPlayers(2).gameTime(600).maxPlayers(10).build();
+    private static GameConfig.Round lobbyConfig() {
+        return new GameConfig.Round(2, 10, 30, 600);
     }
 
     @Test
@@ -77,14 +77,7 @@ class PlayerLoginListenerTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
-        GameConfig packConfig = GameConfig.builder()
-                .lobbyTime(30)
-                .minPlayers(2)
-                .gameTime(600)
-                .maxPlayers(10)
-                .resourcePackUrl(URI.create("https://example.com/pack.zip"))
-                .resourcePackSha1("a".repeat(40))
-                .build();
+        GameConfig.ResourcePack packConfig = new GameConfig.ResourcePack(URI.create("https://example.com/pack.zip"), "a".repeat(40));
         Optional<ResourcePackService> resourcePackService = ResourcePackService.create(packConfig);
         assertTrue(resourcePackService.isPresent());
 

@@ -27,12 +27,7 @@ class LobbyPhaseCountdownSoundIntegrationTest extends CygnusPlayerTestBase {
     void testLobbyPhasePlaysCountdownSoundAtTenSeconds(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
 
-        GameConfig config = GameConfig.builder()
-                .lobbyTime(30)
-                .minPlayers(1)
-                .gameTime(600)
-                .maxPlayers(10)
-                .build();
+        GameConfig.Round config = new GameConfig.Round(1, 10, 30, 600);
 
         LobbyPhase lobbyPhase = new LobbyPhase(config, () -> instance);
 
@@ -52,12 +47,7 @@ class LobbyPhaseCountdownSoundIntegrationTest extends CygnusPlayerTestBase {
     void testLobbyPhasePlaysNoCountdownSoundOutsideMarks(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
 
-        GameConfig config = GameConfig.builder()
-                .lobbyTime(30)
-                .minPlayers(1)
-                .gameTime(600)
-                .maxPlayers(10)
-                .build();
+        GameConfig.Round config = new GameConfig.Round(1, 10, 30, 600);
 
         LobbyPhase lobbyPhase = new LobbyPhase(config, () -> instance);
 

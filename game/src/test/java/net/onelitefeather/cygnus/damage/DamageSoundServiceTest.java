@@ -69,7 +69,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         bystanderConnection.connect(instance);
         Collector<EntitySoundEffectPacket> bystanderSounds =
                 bystanderConnection.trackIncoming(EntitySoundEffectPacket.class);
-        DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DEFAULT_DAMAGE_SOUND), new AtomicLong());
+        DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), new AtomicLong());
         service.registerListener(env.process().eventHandler());
 
         EventDispatcher.call(new PlayerDamagedEvent(victim, SOURCE, 1.0F));
@@ -86,7 +86,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         AtomicLong clock = new AtomicLong();
-        DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DEFAULT_DAMAGE_SOUND), clock);
+        DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), clock);
         service.play(player);
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
 
@@ -105,7 +105,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         AtomicLong clock = new AtomicLong();
-        DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DEFAULT_DAMAGE_SOUND), clock);
+        DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), clock);
         service.play(player);
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
 
@@ -125,7 +125,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         Player first = firstConnection.connect(instance);
         TestConnection secondConnection = env.createConnection();
         Player second = secondConnection.connect(instance);
-        DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DEFAULT_DAMAGE_SOUND), new AtomicLong());
+        DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), new AtomicLong());
         service.play(first);
         Collector<EntitySoundEffectPacket> secondSounds = secondConnection.trackIncoming(EntitySoundEffectPacket.class);
 
@@ -143,7 +143,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
-        DamageSoundService service = service(config(false, COOLDOWN_TICKS, GameConfig.DEFAULT_DAMAGE_SOUND), new AtomicLong());
+        DamageSoundService service = service(config(false, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), new AtomicLong());
         service.registerListener(env.process().eventHandler());
 
         EventDispatcher.call(new PlayerDamagedEvent(player, SOURCE, 1.0F));
@@ -176,7 +176,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
-        DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DEFAULT_DAMAGE_SOUND), new AtomicLong());
+        DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), new AtomicLong());
         service.play(player);
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
 
@@ -196,7 +196,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
      * @param clock  the milliseconds the service reads the current time from
      * @return the service under test
      */
-    private static DamageSoundService service(GameConfig config, AtomicLong clock) {
+    private static DamageSoundService service(GameConfig.DamageSound config, AtomicLong clock) {
         return new DamageSoundService(config, clock::get);
     }
 
@@ -208,11 +208,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
      * @param sound    the sound key to play
      * @return the configuration
      */
-    private static GameConfig config(boolean enabled, int cooldown, Key sound) {
-        return GameConfig.builder()
-                .damageSoundEnabled(enabled)
-                .damageSoundCooldown(cooldown)
-                .damageSound(sound)
-                .build();
+    private static GameConfig.DamageSound config(boolean enabled, int cooldown, Key sound) {
+        return new GameConfig.DamageSound(enabled, cooldown, sound);
     }
 }

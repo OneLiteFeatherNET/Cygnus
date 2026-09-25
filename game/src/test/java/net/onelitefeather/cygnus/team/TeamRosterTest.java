@@ -51,7 +51,7 @@ class TeamRosterTest {
         TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {
         };
-        teamCreator.createTeams(gameConfig, teamService);
+        teamCreator.createTeams(gameConfig.teams(), teamService);
         return teamService;
     }
 

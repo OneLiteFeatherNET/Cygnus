@@ -47,22 +47,22 @@ public final class LobbyPhase extends TimedPhase {
     /**
      * Constructs a new LobbyPhase.
      *
-     * @param gameConfig the configuration settings for the game
+     * @param round the configured player limits and timings
      */
-    public LobbyPhase(GameConfig gameConfig) {
-        this(gameConfig, () -> null);
+    public LobbyPhase(GameConfig.Round round) {
+        this(round, () -> null);
     }
 
     /**
      * Constructs a new LobbyPhase with an instance supplier for time transitions.
      *
-     * @param gameConfig       the configuration settings for the game
+     * @param round            the configured player limits and timings
      * @param instanceSupplier supplier for the active instance
      */
-    public LobbyPhase(GameConfig gameConfig, Supplier<Instance> instanceSupplier) {
+    public LobbyPhase(GameConfig.Round round, Supplier<Instance> instanceSupplier) {
         super("Lobby", ChronoUnit.SECONDS, 1);
-        this.lobbyTime = gameConfig.lobbyTime();
-        this.minPlayers = gameConfig.minPlayers();
+        this.lobbyTime = round.lobbyTime();
+        this.minPlayers = round.minPlayers();
         this.setPaused(true);
         this.setCurrentTicks(lobbyTime);
         this.setTickDirection(TickDirection.DOWN);

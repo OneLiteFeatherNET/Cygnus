@@ -144,7 +144,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // Set up as early as possible so anything that goes wrong while the rest of the game is
         // being wired up is already covered. Stays off entirely when no DSN is configured.
         SentrySupport.init(this.gameConfig.sentryDsn());
-        this.resourcePackService = ResourcePackService.create(this.gameConfig);
+        this.resourcePackService = ResourcePackService.create(this.gameConfig.resourcePack());
         // Every player needs the pack id so it can hand the pack back when it is kicked; see
         // CygnusPlayer#kick. Null when the ResourcePack feature is off, which leaves the kick untouched.
         UUID resourcePackId = this.resourcePackService.map(ResourcePackService::packId).orElse(null);
@@ -155,7 +155,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // Falco keeps its region files open, so the loaders have to be released on shutdown
         MinecraftServer.getSchedulerManager().buildShutdownTask(this.mapProvider::close);
         this.view = new GameViewImpl();
-        this.createTeams(this.gameConfig, this.teamService);
+        this.createTeams(this.gameConfig.teams(), this.teamService);
         this.scoreboardDisplay = new ScoreboardDisplay(this.teamService.getTeams());
         Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
@@ -163,7 +163,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // Only survivors get the hint: the slender hearing it would turn every page into a place to
         // camp at, which is the opposite of what the hint is for.
         this.pageProximityService = new PageProximityService(
-                this.gameConfig,
+                this.gameConfig.pageProximity(),
                 survivorTeam::getPlayers,
                 this.pageProvider::interactablePages
         );
@@ -178,17 +178,17 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.slenderGazeService = new SlenderGazeService(
                 this.gazeSignal,
                 new SlenderGaze(
-                        this.gameConfig.glitchRange(),
-                        this.gameConfig.glitchCloseRange(),
-                        this.gameConfig.glitchViewAngle()),
+                        this.gameConfig.glitch().range(),
+                        this.gameConfig.glitch().closeRange(),
+                        this.gameConfig.glitch().viewAngle()),
                 () -> TeamHelper.slenderOf(this.teamService));
         this.bloodSplatterService = new BloodSplatterService(
                 this.screenOverlay,
                 bound -> ThreadLocalRandom.current().nextInt(bound)
         );
-        this.damageSoundService = new DamageSoundService(this.gameConfig, System::currentTimeMillis);
+        this.damageSoundService = new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis);
         this.slenderStaticService = new SlenderStaticService(
-                this.gameConfig,
+                this.gameConfig.slenderStatic(),
                 () -> TeamHelper.slenderOf(this.teamService));
         this.tunnelVisionRenderer = new OverlayTunnelVisionRenderer(this.screenOverlay);
         this.tunnelVisionService = new TunnelVisionService(this.tunnelVisionRenderer, player -> StaminaHelper.remainingShare(this.staminaService, player));
@@ -214,12 +214,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(GameMapLoadedEvent.class, new GameMapLoadedListener());
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier));
-        PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.spectatorService::updateInventory, this.gameConfig.minPlayers());
+        PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.spectatorService::updateInventory, this.gameConfig.round().minPlayers());
         manager.addListener(PlayerDisconnectEvent.class, quitListener);
         manager.addListener(AsyncPlayerConfigurationEvent.class,
                 new PlayerLoginListener(
                         this.mapProvider.getActiveInstance(),
-                        this.gameConfig.maxPlayers(),
+                        this.gameConfig.round().maxPlayers(),
                         linearPhaseSeries::getCurrentPhase,
                         this.resourcePackService
                 )
@@ -306,10 +306,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             );
             MinecraftServer.getSchedulerManager().scheduleNextTick(this.mapProvider::releasePreviousInstance);
         };
-        LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig, this.mapProvider.getActiveInstance());
+        LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig.round(), this.mapProvider.getActiveInstance());
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
-        this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.gameTime(), this.jumpscareManager));
+        this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.round().gameTime(), this.jumpscareManager));
         this.linearPhaseSeries.add(new RestartPhase());
     }
 

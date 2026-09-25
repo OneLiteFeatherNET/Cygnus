@@ -23,22 +23,22 @@ public interface TeamCreator {
     /**
      * Creates the teams for the game.
      *
-     * @param gameConfig  the configuration to get some values from it
+     * @param teams       the configured team sizes
      * @param teamService the service to add the teams
      */
-    default void createTeams(GameConfig gameConfig, TeamService teamService) {
-        Team slenderTeam = Team.of(SLENDER_KEY, gameConfig.slenderTeamSize());
+    default void createTeams(GameConfig.Teams teams, TeamService teamService) {
+        Team slenderTeam = Team.of(SLENDER_KEY, teams.slenderSize());
         slenderTeam.add(ColorComponent.class, new ColorComponent(ColorData.BLACK));
         slenderTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SLENDER_TEAM_NAME));
 
         teamService.add(slenderTeam);
 
-        Team survivorTeam = Team.of(SURVIVOR_KEY, gameConfig.survivorTeamSize());
+        Team survivorTeam = Team.of(SURVIVOR_KEY, teams.survivorSize());
         survivorTeam.add(ColorComponent.class, new ColorComponent(ColorData.GREEN));
         survivorTeam.add(TeamNameComponent.class, new TeamNameComponent(GameConfig.SURVIVOR_TEAM_NAME));
         teamService.add(survivorTeam);
 
-        Team spectatorTeam = Team.of(SPECTATOR_KEY, gameConfig.survivorTeamSize() + 1);
+        Team spectatorTeam = Team.of(SPECTATOR_KEY, teams.survivorSize() + 1);
         spectatorTeam.add(ColorComponent.class, new ColorComponent(ColorData.GRAY));
         teamService.add(spectatorTeam);
     }

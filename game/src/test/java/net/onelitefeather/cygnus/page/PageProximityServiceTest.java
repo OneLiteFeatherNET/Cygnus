@@ -132,12 +132,7 @@ class PageProximityServiceTest {
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
-        GameConfig config = GameConfig.builder()
-                .pageProximityEnabled(false)
-                .pageProximityRange(20)
-                .pageProximityInterval(20)
-                .pageProximitySound(GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND)
-                .build();
+        GameConfig.PageProximity config = new GameConfig.PageProximity(false, 20, GameConfig.PageProximity.DEFAULT_SOUND, GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
         PageProximityService service = service(config, player, new Pos(0, 64, 1));
 
         service.startTask();
@@ -157,12 +152,7 @@ class PageProximityServiceTest {
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
-        GameConfig config = GameConfig.builder()
-                .pageProximityEnabled(true)
-                .pageProximityRange(20)
-                .pageProximityInterval(20)
-                .pageProximitySound(Key.key("cygnus", "no_such_sound"))
-                .build();
+        GameConfig.PageProximity config = new GameConfig.PageProximity(true, 20, Key.key("cygnus", "no_such_sound"), GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
 
         service(config, player, new Pos(0, 64, 1)).tick();
 
@@ -189,23 +179,12 @@ class PageProximityServiceTest {
     }
 
     /** A configuration on the shipped volume factor. */
-    private static GameConfig config(int range) {
-        return GameConfig.builder()
-                .pageProximityEnabled(true)
-                .pageProximityRange(range)
-                .pageProximityInterval(20)
-                .pageProximitySound(GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND)
-                .build();
+    private static GameConfig.PageProximity config(int range) {
+        return new GameConfig.PageProximity(true, range, GameConfig.PageProximity.DEFAULT_SOUND, GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
     }
 
-    private static GameConfig config(int range, float volumeFactor) {
-        return GameConfig.builder()
-                .pageProximityEnabled(true)
-                .pageProximityRange(range)
-                .pageProximityInterval(20)
-                .pageProximitySound(GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND)
-                .pageProximityVolumeFactor(volumeFactor)
-                .build();
+    private static GameConfig.PageProximity config(int range, float volumeFactor) {
+        return new GameConfig.PageProximity(true, range, GameConfig.PageProximity.DEFAULT_SOUND, volumeFactor);
     }
 
     @Test
@@ -254,7 +233,7 @@ class PageProximityServiceTest {
 
         sounds.assertSingle(packet -> {
             assertEquals(PageProximityService.CRITICAL_PITCH, packet.pitch(), 0.001F);
-            float baseVolume = (20 / 16.0F) * GameConfig.DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR;
+            float baseVolume = (20 / 16.0F) * GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR;
             assertEquals(baseVolume * PageProximityService.CRITICAL_VOLUME_MULTIPLIER, packet.volume(), 0.001F);
         });
         env.destroyInstance(instance, true);
@@ -277,7 +256,7 @@ class PageProximityServiceTest {
         env.destroyInstance(instance, true);
     }
 
-    private static PageProximityService service(GameConfig config, Player player, Pos... pages) {
+    private static PageProximityService service(GameConfig.PageProximity config, Player player, Pos... pages) {
         Collection<Player> listeners = List.of(player);
         List<PageProximityTarget> targets = Arrays.stream(pages)
                 .map(pos -> PageProximityTarget.of(UUID.nameUUIDFromBytes(pos.toString().getBytes()), pos, 0.35))

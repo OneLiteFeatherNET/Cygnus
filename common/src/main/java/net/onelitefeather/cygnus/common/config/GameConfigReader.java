@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
  *     <li>resourcePackSha1</li>
  *     <li>pageProximityEnabled</li>
  *     <li>pageProximityRange</li>
- *     <li>pageProximityInterval</li>
  *     <li>pageProximitySound</li>
  *     <li>pageProximityVolumeFactor</li>
  *     <li>damageSoundEnabled</li>
@@ -50,7 +49,7 @@ import java.util.regex.Pattern;
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
- * The default values are defined in the {@link InternalGameConfig} class.
+ * The default values are defined in {@link GameConfig#DEFAULT}.
  *
  * @author theEvilReaper
  * @version 1.4.0
@@ -89,55 +88,67 @@ public final class GameConfigReader {
     public GameConfig getConfig() {
         if (!Files.exists(path)) {
             CONFIG_LOGGER.warn("No config file found. Using default values");
-            return InternalGameConfig.defaultConfig();
+            return GameConfig.DEFAULT;
         }
 
         Properties properties = new Properties();
-
         try (InputStream stream = Files.newInputStream(path)) {
             properties.load(stream);
         } catch (Exception exception) {
             CONFIG_LOGGER.error("Failed to load config file", exception);
-            return InternalGameConfig.defaultConfig();
+            return GameConfig.DEFAULT;
         }
 
         if (properties.isEmpty()) {
             CONFIG_LOGGER.warn("Found config file but it is empty. Falling back to default values");
-            return InternalGameConfig.defaultConfig();
+            return GameConfig.DEFAULT;
         }
 
-        GameConfig internal = InternalGameConfig.defaultConfig();
-        GameConfig.Builder configBuilder = GameConfig.builder();
-
-        configBuilder.minPlayers(getInt(properties, "minPlayers", internal.minPlayers()))
-                .maxPlayers(getInt(properties, "maxPlayers", internal.maxPlayers()))
-                .lobbyTime(getInt(properties, "lobbyTime", internal.lobbyTime()))
-                .gameTime(getInt(properties, "gameTime", internal.gameTime()))
-                .survivorTeamSize(getInt(properties, "survivorTeamSize", internal.survivorTeamSize()))
-                .slenderTeamSize(getInt(properties, "slenderTeamSize", internal.slenderTeamSize()))
-                .sentryDsn(getString(properties, SENTRY_DSN_KEY))
-                .resourcePackUrl(getResourcePackUrl(properties))
-                .resourcePackSha1(getResourcePackSha1(properties))
-                .pageProximityEnabled(getBoolean(properties, "pageProximityEnabled", internal.pageProximityEnabled()))
-                .pageProximityRange(getInt(properties, "pageProximityRange", internal.pageProximityRange()))
-                .pageProximityInterval(getInt(properties, "pageProximityInterval", internal.pageProximityInterval()))
-                .pageProximitySound(getSound(properties, PAGE_PROXIMITY_SOUND_KEY, internal.pageProximitySound()))
-                .pageProximityVolumeFactor(getFloat(properties, "pageProximityVolumeFactor", internal.pageProximityVolumeFactor()))
-                .damageSoundEnabled(getBoolean(properties, "damageSoundEnabled", internal.damageSoundEnabled()))
-                .damageSoundCooldown(getInt(properties, "damageSoundCooldown", internal.damageSoundCooldown()))
-                .damageSound(getSound(properties, DAMAGE_SOUND_KEY, internal.damageSound()))
-                .glitchRange(getInt(properties, "glitchRange", internal.glitchRange()))
-                .glitchCloseRange(getInt(properties, "glitchCloseRange", internal.glitchCloseRange()))
-                .glitchViewAngle(getInt(properties, "glitchViewAngle", internal.glitchViewAngle()))
-                .slenderStaticEnabled(getBoolean(properties, "slenderStaticEnabled", internal.slenderStaticEnabled()))
-                .slenderStaticSound(getSound(properties, SLENDER_STATIC_SOUND_KEY, internal.slenderStaticSound()))
-                .slenderStaticQuietInterval(getInt(properties, "slenderStaticQuietInterval", internal.slenderStaticQuietInterval()))
-                .slenderStaticFranticInterval(getInt(properties, "slenderStaticFranticInterval", internal.slenderStaticFranticInterval()))
-                .slenderStaticMinVolume(getFloat(properties, "slenderStaticMinVolume", internal.slenderStaticMinVolume()))
-                .slenderStaticMaxVolume(getFloat(properties, "slenderStaticMaxVolume", internal.slenderStaticMaxVolume()))
-                .lobbyAtmosphereShare(getFloat(properties, "lobbyAtmosphereShare", internal.lobbyAtmosphereShare()));
-
-        return configBuilder.build();
+        GameConfig.Round round = GameConfig.Round.DEFAULT;
+        GameConfig.Teams teams = GameConfig.Teams.DEFAULT;
+        GameConfig.PageProximity proximity = GameConfig.PageProximity.DEFAULT;
+        GameConfig.DamageSound damage = GameConfig.DamageSound.DEFAULT;
+        GameConfig.Glitch glitch = GameConfig.Glitch.DEFAULT;
+        GameConfig.SlenderStatic slenderStatic = GameConfig.SlenderStatic.DEFAULT;
+        return new GameConfig(
+                new GameConfig.Round(
+                        getInt(properties, "minPlayers", round.minPlayers()),
+                        getInt(properties, "maxPlayers", round.maxPlayers()),
+                        getInt(properties, "lobbyTime", round.lobbyTime()),
+                        getInt(properties, "gameTime", round.gameTime())
+                ),
+                new GameConfig.Teams(
+                        getInt(properties, "slenderTeamSize", teams.slenderSize()),
+                        getInt(properties, "survivorTeamSize", teams.survivorSize())
+                ),
+                getString(properties, SENTRY_DSN_KEY),
+                new GameConfig.ResourcePack(getResourcePackUrl(properties), getResourcePackSha1(properties)),
+                new GameConfig.PageProximity(
+                        getBoolean(properties, "pageProximityEnabled", proximity.enabled()),
+                        getInt(properties, "pageProximityRange", proximity.range()),
+                        getSound(properties, PAGE_PROXIMITY_SOUND_KEY, proximity.sound()),
+                        getFloat(properties, "pageProximityVolumeFactor", proximity.volumeFactor())
+                ),
+                new GameConfig.DamageSound(
+                        getBoolean(properties, "damageSoundEnabled", damage.enabled()),
+                        getInt(properties, "damageSoundCooldown", damage.cooldown()),
+                        getSound(properties, DAMAGE_SOUND_KEY, damage.sound())
+                ),
+                new GameConfig.Glitch(
+                        getInt(properties, "glitchRange", glitch.range()),
+                        getInt(properties, "glitchCloseRange", glitch.closeRange()),
+                        getInt(properties, "glitchViewAngle", glitch.viewAngle())
+                ),
+                new GameConfig.SlenderStatic(
+                        getBoolean(properties, "slenderStaticEnabled", slenderStatic.enabled()),
+                        getSound(properties, SLENDER_STATIC_SOUND_KEY, slenderStatic.sound()),
+                        getInt(properties, "slenderStaticQuietInterval", slenderStatic.quietInterval()),
+                        getInt(properties, "slenderStaticFranticInterval", slenderStatic.franticInterval()),
+                        getFloat(properties, "slenderStaticMinVolume", slenderStatic.minVolume()),
+                        getFloat(properties, "slenderStaticMaxVolume", slenderStatic.maxVolume())
+                ),
+                getFloat(properties, "lobbyAtmosphereShare", GameConfig.DEFAULT.lobbyAtmosphereShare())
+        );
     }
 
     private int getInt(Properties properties, String key, int defaultValue) {

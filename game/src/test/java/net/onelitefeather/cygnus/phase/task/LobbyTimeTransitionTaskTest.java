@@ -74,12 +74,7 @@ class LobbyTimeTransitionTaskTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         instance.setTime(1000L);
 
-        GameConfig config = GameConfig.builder()
-                .lobbyTime(30)
-                .minPlayers(1)
-                .gameTime(600)
-                .maxPlayers(10)
-                .build();
+        GameConfig.Round config = new GameConfig.Round(1, 10, 30, 600);
 
         LobbyPhase lobbyPhase = new LobbyPhase(config, () -> instance);
         lobbyPhase.setCurrentTicks(10);

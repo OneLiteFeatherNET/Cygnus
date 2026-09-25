@@ -38,15 +38,8 @@ class ResourcePackServiceTest extends CygnusPlayerTestBase {
     private static final URI PACK_URL = URI.create("https://example.com/pack.zip");
     private static final String PACK_HASH = "a".repeat(40);
 
-    private static GameConfig config(@Nullable URI url, @Nullable String sha1) {
-        return GameConfig.builder()
-                .minPlayers(2)
-                .maxPlayers(10)
-                .lobbyTime(30)
-                .gameTime(600)
-                .resourcePackUrl(url)
-                .resourcePackSha1(sha1)
-                .build();
+    private static GameConfig.ResourcePack config(@Nullable URI url, @Nullable String sha1) {
+        return new GameConfig.ResourcePack(url, sha1);
     }
 
     private ResourcePackService createService() {

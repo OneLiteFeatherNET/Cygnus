@@ -110,7 +110,7 @@ class TeamHelperTest {
         TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {
         };
-        teamCreator.createTeams(gameConfig, teamService);
+        teamCreator.createTeams(gameConfig.teams(), teamService);
         Pos slenderSpawn = new Pos(10, 10, 10);
         GameMap gameMap = new GameMap("Test", Pos.ZERO, slenderSpawn, Set.of(), Set.of(), List.of(), null);
         assertNotNull(gameMap);
@@ -140,7 +140,7 @@ class TeamHelperTest {
         TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {
         };
-        teamCreator.createTeams(gameConfig, teamService);
+        teamCreator.createTeams(gameConfig.teams(), teamService);
 
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
@@ -155,7 +155,7 @@ class TeamHelperTest {
         TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {
         };
-        teamCreator.createTeams(gameConfig, teamService);
+        teamCreator.createTeams(gameConfig.teams(), teamService);
 
         Set<Player> survivors = new HashSet<>();
 

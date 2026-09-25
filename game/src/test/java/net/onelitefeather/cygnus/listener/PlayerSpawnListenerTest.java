@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerSpawnListenerTest extends CygnusPlayerTestBase {
 
-    private static GameConfig lobbyConfig() {
-        return GameConfig.builder().lobbyTime(30).minPlayers(2).gameTime(600).maxPlayers(10).build();
+    private static GameConfig.Round lobbyConfig() {
+        return new GameConfig.Round(2, 10, 30, 600);
     }
 
     @Test

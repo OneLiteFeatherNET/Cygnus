@@ -73,9 +73,6 @@ survivorTeamSize=12
 # range itself either way.
 #pageProximityRange=20
 
-# Ticks between two chimes. At least 1. 20 ticks is one second.
-#pageProximityInterval=20
-
 # The sound played. A key that names no sound the server knows falls back to the
 # default, so the hint never goes silent because of a typo.
 #pageProximitySound=block.amethyst_block.chime

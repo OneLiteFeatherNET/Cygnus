@@ -18,7 +18,7 @@ class TeamCreatorTest {
         TeamService teamService = TeamService.of();
 
         TeamCreator teamCreator = new TeamCreator() {};
-        teamCreator.createTeams(gameConfig, teamService);
+        teamCreator.createTeams(gameConfig.teams(), teamService);
 
         for (int i = 0; i < teamService.getTeams().size(); i++) {
             assertNotNull(teamService.getTeams().get(i));

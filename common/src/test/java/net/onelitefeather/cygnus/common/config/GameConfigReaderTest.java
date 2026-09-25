@@ -22,19 +22,10 @@ class GameConfigReaderTest {
             fail("Config file not found");
         }
 
-        GameConfigReader gameConfigReader = new GameConfigReader(origin);
-        assertNotNull(gameConfigReader);
+        GameConfig gameConfig = new GameConfigReader(origin).getConfig();
 
-        GameConfig gameConfig = gameConfigReader.getConfig();
-        assertNotNull(gameConfig);
-        assertInstanceOf(GameConfig.class, gameConfig);
-
-        assertEquals(4, gameConfig.minPlayers());
-        assertEquals(10, gameConfig.maxPlayers());
-        assertEquals(30, gameConfig.lobbyTime());
-        assertEquals(300, gameConfig.gameTime());
-        assertEquals(1, gameConfig.slenderTeamSize());
-        assertEquals(12, gameConfig.survivorTeamSize());
+        assertEquals(new GameConfig.Round(4, 10, 30, 300), gameConfig.round());
+        assertEquals(new GameConfig.Teams(1, 12), gameConfig.teams());
     }
 
     @Test
@@ -49,20 +40,29 @@ class GameConfigReaderTest {
 
         assertNotNull(config);
         // "minPlayers" was invalid, should fall back to default (2)
-        assertEquals(2, config.minPlayers());
+        assertEquals(2, config.round().minPlayers());
         // "maxPlayers" was valid, should parse correctly (15)
-        assertEquals(15, config.maxPlayers());
+        assertEquals(15, config.round().maxPlayers());
         // "lobbyTime" was invalid, should fall back to default (30)
-        assertEquals(30, config.lobbyTime());
+        assertEquals(30, config.round().lobbyTime());
     }
 
     @Test
-    void testOptionalValuesAreAbsentWhenTheyAreNotConfigured() {
+    void testGroupsMissingFromTheFileKeepTheirDefaults() {
         GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
 
         assertNull(config.sentryDsn());
-        assertNull(config.resourcePackUrl());
-        assertNull(config.resourcePackSha1());
+        assertEquals(GameConfig.ResourcePack.NONE, config.resourcePack());
+        assertEquals(GameConfig.PageProximity.DEFAULT, config.pageProximity());
+        assertEquals(GameConfig.DamageSound.DEFAULT, config.damageSound());
+        assertEquals(GameConfig.Glitch.DEFAULT, config.glitch());
+        assertEquals(GameConfig.SlenderStatic.DEFAULT, config.slenderStatic());
+        assertEquals(GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE, config.lobbyAtmosphereShare());
+    }
+
+    @Test
+    void testAMissingFileGivesTheDefaultConfig() {
+        assertSame(GameConfig.DEFAULT, new GameConfigReader(Paths.get("")).getConfig());
     }
 
     @Test
@@ -77,8 +77,8 @@ class GameConfigReaderTest {
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
         assertEquals("https://key@sentry.example.com/1", config.sentryDsn());
-        assertEquals(URI.create("https://example.com/pack.zip"), config.resourcePackUrl());
-        assertEquals("a".repeat(40), config.resourcePackSha1());
+        assertEquals(URI.create("https://example.com/pack.zip"), config.resourcePack().url());
+        assertEquals("a".repeat(40), config.resourcePack().sha1());
     }
 
     @Test
@@ -93,8 +93,8 @@ class GameConfigReaderTest {
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
         assertNull(config.sentryDsn());
-        assertNull(config.resourcePackUrl());
-        assertNull(config.resourcePackSha1());
+        assertNull(config.resourcePack().url());
+        assertNull(config.resourcePack().sha1());
     }
 
     @Test
@@ -107,7 +107,7 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertNull(config.resourcePackUrl());
+        assertNull(config.resourcePack().url());
     }
 
     @Test
@@ -120,18 +120,8 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertEquals(URI.create("https://example.com/pack.zip"), config.resourcePackUrl());
-        assertNull(config.resourcePackSha1());
-    }
-
-    @Test
-    void testPageProximityDefaultsWhenNothingIsConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertTrue(config.pageProximityEnabled());
-        assertEquals(20, config.pageProximityRange());
-        assertEquals(20, config.pageProximityInterval());
-        assertEquals(GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND, config.pageProximitySound());
+        assertEquals(URI.create("https://example.com/pack.zip"), config.resourcePack().url());
+        assertNull(config.resourcePack().sha1());
     }
 
     @Test
@@ -139,16 +129,14 @@ class GameConfigReaderTest {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
                 pageProximityRange=32
-                pageProximityInterval=40
                 pageProximitySound=block.note_block.chime
                 """);
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertTrue(config.pageProximityEnabled());
-        assertEquals(32, config.pageProximityRange());
-        assertEquals(40, config.pageProximityInterval());
-        assertEquals(Key.key("block.note_block.chime"), config.pageProximitySound());
+        assertTrue(config.pageProximity().enabled());
+        assertEquals(32, config.pageProximity().range());
+        assertEquals(Key.key("block.note_block.chime"), config.pageProximity().sound());
     }
 
     @Test
@@ -160,7 +148,7 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertFalse(config.pageProximityEnabled());
+        assertFalse(config.pageProximity().enabled());
     }
 
     @Test
@@ -172,7 +160,7 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertEquals(GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND, config.pageProximitySound());
+        assertEquals(GameConfig.PageProximity.DEFAULT_SOUND, config.pageProximity().sound());
     }
 
     @Test
@@ -180,23 +168,11 @@ class GameConfigReaderTest {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
                 pageProximityRange=%d
-                """.formatted(GameConfig.MAX_PAGE_PROXIMITY_RANGE + 1));
+                """.formatted(GameConfig.PageProximity.MAX_RANGE + 1));
 
         GameConfigReader reader = new GameConfigReader(tempDir);
 
         assertThrows(IllegalArgumentException.class, reader::getConfig);
-    }
-
-    @Test
-    void testSlenderStaticDefaultsWhenNothingIsConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertTrue(config.slenderStaticEnabled());
-        assertEquals(GameConfig.DEFAULT_SLENDER_STATIC_SOUND, config.slenderStaticSound());
-        assertEquals(GameConfig.DEFAULT_SLENDER_STATIC_QUIET_INTERVAL, config.slenderStaticQuietInterval());
-        assertEquals(GameConfig.DEFAULT_SLENDER_STATIC_FRANTIC_INTERVAL, config.slenderStaticFranticInterval());
-        assertEquals(GameConfig.DEFAULT_SLENDER_STATIC_MIN_VOLUME, config.slenderStaticMinVolume());
-        assertEquals(GameConfig.DEFAULT_SLENDER_STATIC_MAX_VOLUME, config.slenderStaticMaxVolume());
     }
 
     @Test
@@ -212,12 +188,12 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertEquals(Key.key("cygnus", "vhs_static"), config.slenderStaticSound(),
+        assertEquals(Key.key("cygnus", "vhs_static"), config.slenderStatic().sound(),
                 "a resource pack sound has to survive the reader, it is the point of the setting");
-        assertEquals(20, config.slenderStaticQuietInterval());
-        assertEquals(2, config.slenderStaticFranticInterval());
-        assertEquals(0.1F, config.slenderStaticMinVolume());
-        assertEquals(1.0F, config.slenderStaticMaxVolume());
+        assertEquals(20, config.slenderStatic().quietInterval());
+        assertEquals(2, config.slenderStatic().franticInterval());
+        assertEquals(0.1F, config.slenderStatic().minVolume());
+        assertEquals(1.0F, config.slenderStatic().maxVolume());
     }
 
     @Test
@@ -229,7 +205,7 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertFalse(config.slenderStaticEnabled());
+        assertFalse(config.slenderStatic().enabled());
     }
 
     @Test
@@ -243,13 +219,6 @@ class GameConfigReaderTest {
         GameConfigReader reader = new GameConfigReader(tempDir);
 
         assertThrows(IllegalArgumentException.class, reader::getConfig);
-    }
-
-    @Test
-    void testLobbyAtmosphereShareDefaultsWhenNothingIsConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE, config.lobbyAtmosphereShare());
     }
 
     @Test
@@ -277,15 +246,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testDamageSoundDefaultsWhenNothingIsConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertTrue(config.damageSoundEnabled());
-        assertEquals(20, config.damageSoundCooldown());
-        assertEquals(GameConfig.DEFAULT_DAMAGE_SOUND, config.damageSound());
-    }
-
-    @Test
     void testDamageSoundValuesAreReadWhenTheyAreConfigured(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
@@ -295,9 +255,9 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertTrue(config.damageSoundEnabled());
-        assertEquals(30, config.damageSoundCooldown());
-        assertEquals(Key.key("entity.player.big_fall"), config.damageSound());
+        assertTrue(config.damageSound().enabled());
+        assertEquals(30, config.damageSound().cooldown());
+        assertEquals(Key.key("entity.player.big_fall"), config.damageSound().sound());
     }
 
     @Test
@@ -309,7 +269,7 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertFalse(config.damageSoundEnabled());
+        assertFalse(config.damageSound().enabled());
     }
 
     @Test
@@ -321,7 +281,7 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertEquals(GameConfig.DEFAULT_DAMAGE_SOUND, config.damageSound());
+        assertEquals(GameConfig.DamageSound.DEFAULT_SOUND, config.damageSound().sound());
     }
 
     @Test
@@ -337,15 +297,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testGlitchDefaultsWhenNothingIsConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(GameConfig.DEFAULT_GLITCH_RANGE, config.glitchRange());
-        assertEquals(GameConfig.DEFAULT_GLITCH_CLOSE_RANGE, config.glitchCloseRange());
-        assertEquals(GameConfig.DEFAULT_GLITCH_VIEW_ANGLE, config.glitchViewAngle());
-    }
-
-    @Test
     void testGlitchValuesAreReadWhenTheyAreConfigured(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
@@ -356,9 +307,9 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertEquals(20, config.glitchRange());
-        assertEquals(6, config.glitchCloseRange());
-        assertEquals(45, config.glitchViewAngle());
+        assertEquals(20, config.glitch().range());
+        assertEquals(6, config.glitch().closeRange());
+        assertEquals(45, config.glitch().viewAngle());
     }
 
     /**
@@ -376,15 +327,8 @@ class GameConfigReaderTest {
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertEquals(GameConfig.DEFAULT_GLITCH_RANGE, config.glitchRange());
-        assertEquals(6, config.glitchCloseRange());
-    }
-
-    @Test
-    void testThePageProximityVolumeFactorDefaultsWhenNothingIsConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(GameConfig.DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR, config.pageProximityVolumeFactor());
+        assertEquals(GameConfig.Glitch.DEFAULT.range(), config.glitch().range());
+        assertEquals(6, config.glitch().closeRange());
     }
 
     @Test
@@ -394,7 +338,7 @@ class GameConfigReaderTest {
                 pageProximityVolumeFactor=3.5
                 """);
 
-        assertEquals(3.5F, new GameConfigReader(tempDir).getConfig().pageProximityVolumeFactor());
+        assertEquals(3.5F, new GameConfigReader(tempDir).getConfig().pageProximity().volumeFactor());
     }
 
     /**
@@ -408,7 +352,7 @@ class GameConfigReaderTest {
                 pageProximityVolumeFactor=loud
                 """);
 
-        assertEquals(GameConfig.DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR,
-                new GameConfigReader(tempDir).getConfig().pageProximityVolumeFactor());
+        assertEquals(GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR,
+                new GameConfigReader(tempDir).getConfig().pageProximity().volumeFactor());
     }
 }

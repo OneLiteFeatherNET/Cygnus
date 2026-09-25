@@ -83,7 +83,7 @@ class GameStartListenerTest extends CygnusPlayerTestBase {
         GameConfig gameConfig = new GameConfigReader(Paths.get("")).getConfig();
         TeamService teamService = TeamService.of();
         TeamCreator teamCreator = new TeamCreator() {};
-        teamCreator.createTeams(gameConfig, teamService);
+        teamCreator.createTeams(gameConfig.teams(), teamService);
 
         Team slenderTeam = teamService.getTeam(GameConfig.SLENDER_KEY).orElseThrow();
         Team survivorTeam = teamService.getTeam(GameConfig.SURVIVOR_KEY).orElseThrow();
@@ -94,7 +94,7 @@ class GameStartListenerTest extends CygnusPlayerTestBase {
         StaminaService staminaService = new StaminaService();
         PageProvider pageProvider = new PageProvider();
         PageProximityService pageProximityService = new PageProximityService(
-                gameConfig,
+                gameConfig.pageProximity(),
                 survivorTeam::getPlayers,
                 List::of
         );
