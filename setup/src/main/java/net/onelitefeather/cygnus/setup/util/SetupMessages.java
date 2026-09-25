@@ -35,18 +35,11 @@ public final class SetupMessages {
     public static final Component SURVIVOR_MODE_ENABLED;
     public static final Component SURVIVOR_MODE_DISABLED;
     public static final Component DUPLICATE_PAGE;
-    public static final Component CREEK_MODE_ENABLED = Messages.withPrefix(
-            Component.text("The creek route mode has been", NamedTextColor.GRAY)
-                    .append(Component.space())
-                    .append(Component.text("enabled", NamedTextColor.GREEN)));
-    public static final Component CREEK_MODE_DISABLED = Messages.withPrefix(
-            Component.text("The creek route mode has been", NamedTextColor.GRAY)
-                    .append(Component.space())
-                    .append(Component.text("disabled", NamedTextColor.RED)));
-    public static final Component NO_ACTIVE_CREEK_ROUTE = Messages.withPrefix(
-            Component.text("Create or select a creek route first", NamedTextColor.RED));
-    public static final Component NO_CREEK_POINT_TO_REMOVE = Messages.withPrefix(
-            Component.text("The active creek route has no point to remove", NamedTextColor.RED));
+    public static final Component CREEK_MODE_ENABLED;
+    public static final Component CREEK_MODE_DISABLED;
+    public static final Component NO_ACTIVE_CREEK_ROUTE;
+    public static final Component NO_CREEK_POINT_TO_REMOVE;
+    public static final Component SELECT_CLICK;
 
     static {
         SPACE_SEPARATOR = Component.text("» ", NamedTextColor.GRAY);
@@ -61,6 +54,16 @@ public final class SetupMessages {
                 .append(Component.text("->", NamedTextColor.GRAY))
                 .append(Component.space())
                 .append(Component.text("teleport", NamedTextColor.GREEN));
+
+        SELECT_CLICK = NO_SPACE_SEPARATOR
+                .append(Component.space())
+                .append(Component.text("Left", NamedTextColor.GREEN))
+                .append(Component.space())
+                .append(Component.text("click", NamedTextColor.GRAY))
+                .append(Component.space())
+                .append(Component.text("->", NamedTextColor.GRAY))
+                .append(Component.space())
+                .append(Component.text("edit", NamedTextColor.GREEN));
 
         DELETE_CLICK = NO_SPACE_SEPARATOR
                 .append(Component.space())
@@ -101,6 +104,22 @@ public final class SetupMessages {
         DUPLICATE_PAGE = Messages.withPrefix(
                 Component.text("A page with this direction already exists at this position", NamedTextColor.RED)
         );
+        CREEK_MODE_ENABLED = Messages.withPrefix(
+                Component.text("The creek route mode has been", NamedTextColor.GRAY)
+                        .append(Component.space())
+                        .append(Component.text("enabled", NamedTextColor.GREEN))
+        );
+        CREEK_MODE_DISABLED = Messages.withPrefix(
+                Component.text("The creek route mode has been", NamedTextColor.GRAY)
+                        .append(Component.space())
+                        .append(Component.text("disabled", NamedTextColor.RED))
+        );
+        NO_ACTIVE_CREEK_ROUTE = Messages.withPrefix(
+                Component.text("Create or select a creek route first", NamedTextColor.RED)
+        );
+        NO_CREEK_POINT_TO_REMOVE = Messages.withPrefix(
+                Component.text("The active creek route has no point to remove", NamedTextColor.RED)
+        );
     }
 
     private SetupMessages() {
@@ -134,73 +153,84 @@ public final class SetupMessages {
     }
 
     /**
-     * Creates the message shown after a creek route was created.
+     * Creates a new {@link Component} instance which confirms that a creek route was created.
      *
-     * @param name the route's name
+     * @param name of the created route
      * @return the created component
      */
-    public static Component getCreekRouteCreated(String name) {
-        return Messages.withPrefix(Component.text("Created creek route ", NamedTextColor.GRAY)
-                .append(Component.text(name, NamedTextColor.GREEN)));
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getCreekRouteCreated(@NotNull String name) {
+        return Messages.withMiniPrefix("<gray>Created creek route <gold><name>", nameTag(name));
     }
 
     /**
-     * Creates the message shown when a creek route name is already taken.
+     * Creates a new {@link Component} instance which informs the player that the route name is taken.
      *
-     * @param name the route's name
+     * @param name which is already taken
      * @return the created component
      */
-    public static Component getDuplicateCreekRoute(String name) {
-        return Messages.withPrefix(Component.text("A creek route named ", NamedTextColor.RED)
-                .append(Component.text(name, NamedTextColor.GOLD))
-                .append(Component.text(" already exists", NamedTextColor.RED)));
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getDuplicateCreekRoute(@NotNull String name) {
+        return Messages.withMiniPrefix("<red>A creek route with the name <gold><name> <red>already exists", nameTag(name));
     }
 
     /**
-     * Creates the message shown after a point was added to a creek route.
+     * Creates a new {@link Component} instance which confirms that a point was added to a creek route.
      *
-     * @param name  the route's name
-     * @param count the number of the new point
+     * @param name  of the route
+     * @param count of points the route has now
      * @return the created component
      */
-    public static Component getCreekPointAdded(String name, int count) {
-        return Messages.withPrefix(Component.text("Added point " + count + " to ", NamedTextColor.GRAY)
-                .append(Component.text(name, NamedTextColor.GREEN)));
+    @Contract(value = "_, _ -> new", pure = true)
+    public static @NotNull Component getCreekPointAdded(@NotNull String name, int count) {
+        return Messages.withMiniPrefix("<gray>Added point <gold><count> <gray>to <gold><name>",
+                nameTag(name), countTag(count));
     }
 
     /**
-     * Creates the message shown after the last point of a creek route was removed.
+     * Creates a new {@link Component} instance which confirms that the last point of a creek route was removed.
      *
-     * @param name  the route's name
-     * @param count the number of points left
+     * @param name  of the route
+     * @param count of points the route has left
      * @return the created component
      */
-    public static Component getCreekPointRemoved(String name, int count) {
-        return Messages.withPrefix(Component.text("Removed a point, ", NamedTextColor.GRAY)
-                .append(Component.text(name, NamedTextColor.GREEN))
-                .append(Component.text(" now has " + count, NamedTextColor.GRAY)));
+    @Contract(value = "_, _ -> new", pure = true)
+    public static @NotNull Component getCreekPointRemoved(@NotNull String name, int count) {
+        return Messages.withMiniPrefix("<gray>Removed the last point of <gold><name> <gray>(<gold><count> <gray>left)",
+                nameTag(name), countTag(count));
     }
 
     /**
-     * Creates the message shown after a creek route was selected.
+     * Creates a new {@link Component} instance which confirms that a creek route is now being edited.
      *
-     * @param name the route's name
+     * @param name of the selected route
      * @return the created component
      */
-    public static Component getCreekRouteSelected(String name) {
-        return Messages.withPrefix(Component.text("Now editing creek route ", NamedTextColor.GRAY)
-                .append(Component.text(name, NamedTextColor.GREEN)));
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getCreekRouteSelected(@NotNull String name) {
+        return Messages.withMiniPrefix("<gray>Now editing creek route <gold><name>", nameTag(name));
     }
 
     /**
-     * Creates the message shown after a creek route was deleted.
+     * Creates a new {@link Component} instance which confirms that a creek route was deleted.
      *
-     * @param name the route's name
+     * @param name of the deleted route
      * @return the created component
      */
-    public static Component getCreekRouteDeleted(String name) {
-        return Messages.withPrefix(Component.text("Deleted creek route ", NamedTextColor.GRAY)
-                .append(Component.text(name, NamedTextColor.RED)));
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getCreekRouteDeleted(@NotNull String name) {
+        return Messages.withMiniPrefix("<gray>Deleted creek route <gold><name>", nameTag(name));
+    }
+
+    /**
+     * Route names come from player input, so they are inserted as plain text instead of being parsed.
+     */
+    private static TagResolver nameTag(String name) {
+        return TagResolver.builder().tag("name", Tag.inserting(Component.text(name))).build();
+    }
+
+    private static TagResolver countTag(int count) {
+        return TagResolver.builder().tag("count", Tag.inserting(Component.text(count))).build();
     }
 
     /**
