@@ -119,21 +119,21 @@ public final class CreekRoutePreview {
             this.hide();
             return;
         }
-        List<CreekRoute> current = this.routes.get();
+        List<CreekRoute> routes = this.routes.get();
         String activeName = this.active.get();
-        for (CreekRoute route : current) {
+        for (CreekRoute route : routes) {
             boolean isActive = route.name().equals(activeName);
-            Particle point = isActive ? Particle.FLAME : Particle.END_ROD;
-            Particle path = isActive ? Particle.CRIT : Particle.ELECTRIC_SPARK;
+            Particle pointParticle = isActive ? Particle.FLAME : Particle.END_ROD;
+            Particle lineParticle = isActive ? Particle.CRIT : Particle.ELECTRIC_SPARK;
             List<Vec> points = route.points();
             for (int i = 0; i < points.size(); i++) {
-                this.particle(point, points.get(i));
+                this.particle(pointParticle, points.get(i));
                 if (i + 1 < points.size()) {
-                    line(points.get(i), points.get(i + 1), LINE_STEP).forEach(spot -> this.particle(path, spot));
+                    line(points.get(i), points.get(i + 1), LINE_STEP).forEach(spot -> this.particle(lineParticle, spot));
                 }
             }
         }
-        linkedEnds(current, this.linkDistance).forEach(end -> this.particle(Particle.HAPPY_VILLAGER, end.add(0, 0.5, 0)));
+        linkedEnds(routes, this.linkDistance).forEach(end -> this.particle(Particle.HAPPY_VILLAGER, end.add(0, 0.5, 0)));
     }
 
     private void particle(Particle particle, Vec spot) {

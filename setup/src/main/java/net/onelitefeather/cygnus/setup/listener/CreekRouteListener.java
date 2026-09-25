@@ -8,6 +8,7 @@ import net.onelitefeather.cygnus.setup.data.GameData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.onelitefeather.guira.SetupDataService;
+import net.onelitefeather.guira.data.SetupData;
 
 import java.util.function.Consumer;
 
@@ -20,26 +21,34 @@ import java.util.function.Consumer;
  */
 public final class CreekRouteListener implements Consumer<PlayerBlockBreakEvent> {
 
-    private final SetupDataService dataService;
+    private final SetupDataService setupService;
 
-    public CreekRouteListener(SetupDataService dataService) {
-        this.dataService = dataService;
+    public CreekRouteListener(SetupDataService setupService) {
+        this.setupService = setupService;
     }
 
     @Override
     public void accept(PlayerBlockBreakEvent event) {
-        Player player = event.getPlayer();
-        if (!player.hasTag(SetupTags.SETUP_ID_TAG)) return;
-        if (!(this.dataService.get(player.getUuid()).orElse(null) instanceof GameData gameData)) return;
-        if (!gameData.hasCreekRouteMode()) return;
         event.setCancelled(true);
 
-        String active = gameData.activeCreekRoute();
-        if (active == null || !gameData.addCreekPoint(pointOnTop(event.getBlockPosition()))) {
+        Player player = event.getPlayer();
+
+        if (!player.hasTag(SetupTags.SETUP_ID_TAG)) return;
+
+        SetupData setupData = this.setupService.get(player.getUuid()).orElse(null);
+
+        if (setupData == null) return;
+
+        if (!(setupData instanceof GameData gameData) || !gameData.hasCreekRouteMode()) return;
+
+        String activeRoute = gameData.activeCreekRoute();
+        if (activeRoute == null) {
             player.sendMessage(SetupMessages.NO_ACTIVE_CREEK_ROUTE);
             return;
         }
-        player.sendMessage(SetupMessages.getCreekPointAdded(active, gameData.activeCreekPointCount()));
+
+        gameData.addCreekPoint(pointOnTop(event.getBlockPosition()));
+        player.sendMessage(SetupMessages.getCreekPointAdded(activeRoute, gameData.activeCreekPointCount()));
     }
 
     /**

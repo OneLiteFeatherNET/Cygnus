@@ -44,24 +44,24 @@ public final class PathRoute implements RouteProvider {
 
     @Override
     public Optional<Pos> next(Pos current, Predicate<Pos> allowed, RandomGenerator random) {
-        Cursor at = this.cursor;
-        if (at == null || current.distance(this.point(at)) > REJOIN_DISTANCE) {
+        Cursor last = this.cursor;
+        if (last == null || current.distance(this.point(last)) > REJOIN_DISTANCE) {
             return this.rejoin(current, allowed, random);
         }
-        Cursor ahead = this.advance(at, random);
+        Cursor ahead = this.advance(last, random);
         if (allowed.test(this.point(ahead))) return this.moveTo(ahead);
 
-        Cursor back = this.behind(at);
+        Cursor back = this.behind(last);
         if (back != null && allowed.test(this.point(back))) return this.moveTo(back);
         return Optional.empty();
     }
 
     @Override
     public String describe() {
-        Cursor at = this.cursor;
-        if (at == null) return "";
-        return this.paths.route(at.route()).name() + " " + (at.index() + 1) + "/" + this.paths.pointCount(at.route())
-                + " " + (at.direction() > 0 ? "→" : "←");
+        Cursor last = this.cursor;
+        if (last == null) return "";
+        return this.paths.route(last.route()).name() + " " + (last.index() + 1) + "/" + this.paths.pointCount(last.route())
+                + " " + (last.direction() > 0 ? "→" : "←");
     }
 
     private Optional<Pos> rejoin(Pos current, Predicate<Pos> allowed, RandomGenerator random) {
@@ -80,23 +80,23 @@ public final class PathRoute implements RouteProvider {
         }
         if (best == null) return Optional.empty();
 
-        int last = this.paths.pointCount(best.route()) - 1;
+        int lastIndex = this.paths.pointCount(best.route()) - 1;
         // at an end there is only one way into the route
-        int direction = best.index() == 0 ? 1 : best.index() == last ? -1 : (random.nextBoolean() ? 1 : -1);
+        int direction = best.index() == 0 ? 1 : best.index() == lastIndex ? -1 : (random.nextBoolean() ? 1 : -1);
         return this.moveTo(new Cursor(best.route(), best.index(), direction));
     }
 
-    private Cursor advance(Cursor at, RandomGenerator random) {
-        int nextIndex = at.index() + at.direction();
-        if (nextIndex >= 0 && nextIndex < this.paths.pointCount(at.route())) {
-            return new Cursor(at.route(), nextIndex, at.direction());
+    private Cursor advance(Cursor from, RandomGenerator random) {
+        int nextIndex = from.index() + from.direction();
+        if (nextIndex >= 0 && nextIndex < this.paths.pointCount(from.route())) {
+            return new Cursor(from.route(), nextIndex, from.direction());
         }
         // walking backwards ends at the start, walking forwards at the end
-        List<CreekPaths.End> links = this.paths.links(new CreekPaths.End(at.route(), at.direction() < 0));
+        List<CreekPaths.End> links = this.paths.links(new CreekPaths.End(from.route(), from.direction() < 0));
         int choice = random.nextInt(links.size() + 1);
         if (choice == links.size()) {
-            Cursor back = this.behind(at);
-            return back != null ? back : at;
+            Cursor back = this.behind(from);
+            return back != null ? back : from;
         }
         CreekPaths.End link = links.get(choice);
         return link.atStart()
@@ -104,11 +104,11 @@ public final class PathRoute implements RouteProvider {
                 : new Cursor(link.route(), this.paths.pointCount(link.route()) - 1, -1);
     }
 
-    private @Nullable Cursor behind(Cursor at) {
-        int direction = -at.direction();
-        int index = at.index() + direction;
-        if (index < 0 || index >= this.paths.pointCount(at.route())) return null;
-        return new Cursor(at.route(), index, direction);
+    private @Nullable Cursor behind(Cursor from) {
+        int direction = -from.direction();
+        int index = from.index() + direction;
+        if (index < 0 || index >= this.paths.pointCount(from.route())) return null;
+        return new Cursor(from.route(), index, direction);
     }
 
     private Optional<Pos> moveTo(Cursor next) {
@@ -116,8 +116,8 @@ public final class PathRoute implements RouteProvider {
         return Optional.of(this.point(next));
     }
 
-    private Pos point(Cursor at) {
-        return this.paths.point(at.route(), at.index());
+    private Pos point(Cursor cursor) {
+        return this.paths.point(cursor.route(), cursor.index());
     }
 
     /**

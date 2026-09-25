@@ -49,15 +49,15 @@ public final class CreekPaths {
      * @return the paths
      */
     public static CreekPaths of(List<CreekRoute> routes, double linkDistance) {
-        List<CreekRoute> copy = List.copyOf(routes);
+        List<CreekRoute> frozenRoutes = List.copyOf(routes);
         Map<End, List<End>> links = new HashMap<>();
-        for (int a = 0; a < copy.size(); a++) {
-            for (int b = a + 1; b < copy.size(); b++) {
-                for (boolean aStart : BOTH_ENDS) {
-                    for (boolean bStart : BOTH_ENDS) {
-                        End first = new End(a, aStart);
-                        End second = new End(b, bStart);
-                        if (position(copy, first).distance(position(copy, second)) <= linkDistance) {
+        for (int firstRoute = 0; firstRoute < frozenRoutes.size(); firstRoute++) {
+            for (int secondRoute = firstRoute + 1; secondRoute < frozenRoutes.size(); secondRoute++) {
+                for (boolean firstAtStart : BOTH_ENDS) {
+                    for (boolean secondAtStart : BOTH_ENDS) {
+                        End first = new End(firstRoute, firstAtStart);
+                        End second = new End(secondRoute, secondAtStart);
+                        if (position(frozenRoutes, first).distance(position(frozenRoutes, second)) <= linkDistance) {
                             links.computeIfAbsent(first, _ -> new ArrayList<>()).add(second);
                             links.computeIfAbsent(second, _ -> new ArrayList<>()).add(first);
                         }
@@ -65,7 +65,7 @@ public final class CreekPaths {
                 }
             }
         }
-        return new CreekPaths(copy, links);
+        return new CreekPaths(frozenRoutes, links);
     }
 
     /**
