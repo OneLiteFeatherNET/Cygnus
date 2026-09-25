@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.creek.state;
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
+import net.onelitefeather.cygnus.creek.world.RouteStep;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
@@ -16,6 +17,8 @@ import java.util.UUID;
  * <p>
  * When someone looks at it, it stops for a moment and looks back. When a survivor's dread is
  * high enough, it switches to stalking them.
+ * After reaching a waypoint it may rest there: for the pause the route sets, or for a random stop,
+ * whichever is longer.
  * </p>
  *
  * @author theEvilReaper
@@ -34,6 +37,8 @@ public final class WanderState implements CreekState {
     private @Nullable Pos goal;
     private boolean watched;
     private long pausedUntil;
+    private int goalPauseMillis;
+    private long restingUntil;
     private Pos progressAt = Pos.ZERO;
     private long progressSince;
     private Set<UUID> shownTo = Set.of();
@@ -77,10 +82,25 @@ public final class WanderState implements CreekState {
             return this;
         }
 
+        if (ctx.now() < this.restingUntil) {
+            body.stop();
+            return this;
+        }
+        if (this.hasArrived(here)) {
+            long rest = this.restMillis(ctx);
+            this.goal = null;
+            if (rest > 0) {
+                this.restingUntil = ctx.now() + rest;
+                body.stop();
+                return this;
+            }
+        }
+
         if (this.needsNewGoal(ctx, here)) {
-            this.goal = ctx.route()
-                    .next(here, point -> ctx.farFromAll(point, config.personalSpace()), ctx.random())
-                    .orElse(null);
+            Optional<RouteStep> step = ctx.route()
+                    .next(here, point -> ctx.farFromAll(point, config.personalSpace()), ctx.random());
+            this.goal = step.map(RouteStep::target).orElse(null);
+            this.goalPauseMillis = step.map(RouteStep::pauseMillis).orElse(0);
             this.markProgress(ctx.now(), here);
         }
         if (this.goal == null) {
@@ -107,6 +127,24 @@ public final class WanderState implements CreekState {
         ctx.body().lookAt(watcher.eyes());
         this.goal = null;
         return true;
+    }
+
+    private boolean hasArrived(Pos here) {
+        return this.goal != null && here.distance(this.goal) < ARRIVED;
+    }
+
+    /**
+     * Works out how long to rest at the point just reached: its pause, or a random stop if that
+     * is longer.
+     */
+    private long restMillis(CreekContext ctx) {
+        CreekConfig config = ctx.config();
+        int rest = this.goalPauseMillis;
+        if (config.randomStopChance() > 0.0D && ctx.random().nextDouble() < config.randomStopChance()) {
+            int spread = config.randomStopMaxMillis() - config.randomStopMinMillis();
+            rest = Math.max(rest, config.randomStopMinMillis() + ctx.random().nextInt(spread + 1));
+        }
+        return rest;
     }
 
     private boolean needsNewGoal(CreekContext ctx, Pos here) {

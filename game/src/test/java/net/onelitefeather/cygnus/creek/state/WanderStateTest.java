@@ -1,7 +1,9 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
+import net.onelitefeather.cygnus.creek.world.RouteStep;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -87,7 +89,7 @@ class WanderStateTest {
     void picksAnotherPointWhenStuck() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
         AtomicInteger calls = new AtomicInteger();
-        RouteProvider cycling = (_, _, _) -> Optional.of(calls.getAndIncrement() % 2 == 0 ? A : B);
+        RouteProvider cycling = (_, _, _) -> Optional.of(new RouteStep(calls.getAndIncrement() % 2 == 0 ? A : B, 0));
         WanderState state = new WanderState(Long.MAX_VALUE);
         state.enter(Contexts.context(0L, body, cycling, new ArrayList<>(), far(FIRST, 0.0D, false)));
 
@@ -177,5 +179,120 @@ class WanderStateTest {
         state.tick(Contexts.context(100L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.0D, false)));
 
         assertEquals(Set.of(FIRST), body.viewers, "a survivor turned slender or spectator must lose sight of him");
+    }
+
+    /** Hands out A, then B, then A again, each with the given pause. */
+    private static RouteProvider alternating(int pauseMillis) {
+        AtomicInteger calls = new AtomicInteger();
+        return (_, _, _) -> Optional.of(new RouteStep(calls.getAndIncrement() % 2 == 0 ? A : B, pauseMillis));
+    }
+
+    private static CreekContext at(long now, RecordingBody body, RouteProvider route, CreekConfig config,
+                                   SurvivorView... survivors) {
+        return Contexts.context(now, body, route, config,
+                survivors.length == 0 ? new SurvivorView[]{far(FIRST, 0.0D, false)} : survivors);
+    }
+
+    @Test
+    @DisplayName("Arriving at a point with a pause, it rests there")
+    void restsAtAPointWithAPause() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = alternating(2000);
+        WanderState state = new WanderState(Long.MAX_VALUE);
+        state.enter(at(0L, body, route, Contexts.CONFIG));
+        state.tick(at(0L, body, route, Contexts.CONFIG));
+        assertEquals(A, body.goal);
+
+        body.position = A;
+        state.tick(at(100L, body, route, Contexts.CONFIG));
+        assertNull(body.goal);
+        state.tick(at(2099L, body, route, Contexts.CONFIG));
+        assertNull(body.goal);
+
+        state.tick(at(2100L, body, route, Contexts.CONFIG));
+        assertEquals(B, body.goal);
+    }
+
+    @Test
+    @DisplayName("Getting stuck is no reason to rest")
+    void noRestWhenStuck() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = alternating(5000);
+        WanderState state = new WanderState(Long.MAX_VALUE);
+        state.enter(at(0L, body, route, Contexts.CONFIG));
+        state.tick(at(0L, body, route, Contexts.CONFIG));
+
+        state.tick(at(3000L, body, route, Contexts.CONFIG));
+
+        assertEquals(B, body.goal);
+    }
+
+    @Test
+    @DisplayName("A random stop holds it at a point without a pause")
+    void randomStop() {
+        CreekConfig config = Contexts.randomStops(1.0D, 1000, 1000);
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = alternating(0);
+        WanderState state = new WanderState(Long.MAX_VALUE);
+        state.enter(at(0L, body, route, config));
+        state.tick(at(0L, body, route, config));
+
+        body.position = A;
+        state.tick(at(100L, body, route, config));
+        state.tick(at(1099L, body, route, config));
+        assertNull(body.goal);
+
+        state.tick(at(1100L, body, route, config));
+        assertEquals(B, body.goal);
+    }
+
+    @Test
+    @DisplayName("Pause and random stop do not add up, the longer one wins")
+    void longerHaltWins() {
+        CreekConfig config = Contexts.randomStops(1.0D, 1000, 1000);
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = alternating(3000);
+        WanderState state = new WanderState(Long.MAX_VALUE);
+        state.enter(at(0L, body, route, config));
+        state.tick(at(0L, body, route, config));
+
+        body.position = A;
+        state.tick(at(100L, body, route, config));
+        state.tick(at(3099L, body, route, config));
+        assertNull(body.goal);
+
+        state.tick(at(3100L, body, route, config));
+        assertEquals(B, body.goal);
+    }
+
+    @Test
+    @DisplayName("Without a chance and without a pause it walks on right away")
+    void noHaltWithoutChanceOrPause() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = alternating(0);
+        WanderState state = new WanderState(Long.MAX_VALUE);
+        state.enter(at(0L, body, route, Contexts.CONFIG));
+        state.tick(at(0L, body, route, Contexts.CONFIG));
+
+        body.position = A;
+        state.tick(at(100L, body, route, Contexts.CONFIG));
+
+        assertEquals(B, body.goal);
+    }
+
+    @Test
+    @DisplayName("Resting does not keep it from stalking")
+    void stalksWhileResting() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = alternating(5000);
+        WanderState state = new WanderState(1000L);
+        state.enter(at(0L, body, route, Contexts.CONFIG));
+        state.tick(at(0L, body, route, Contexts.CONFIG));
+        body.position = A;
+        state.tick(at(100L, body, route, Contexts.CONFIG));
+
+        CreekState next = state.tick(at(1000L, body, route, Contexts.CONFIG, far(FIRST, 0.3D, false)));
+
+        assertInstanceOf(StalkState.class, next);
     }
 }
