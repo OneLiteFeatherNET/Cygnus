@@ -10,8 +10,7 @@ import java.util.random.RandomGenerator;
 /**
  * Decides where the creek walks next.
  * <p>
- * {@link PathRoute} walks the hand-placed routes of a map; {@link RandomPointRoute} falls back
- * to the map's pages and spawns.
+ * {@link PathRoute} walks the hand-placed routes of a map.
  * </p>
  *
  * @author theEvilReaper
@@ -27,9 +26,9 @@ public interface RouteProvider {
      * @param current the creek's position
      * @param allowed filters the points the creek may go to
      * @param random  the random source
-     * @return the next point, or empty if none is allowed
+     * @return the next point with its pause, or empty if none is allowed
      */
-    Optional<Pos> next(Pos current, Predicate<Pos> allowed, RandomGenerator random);
+    Optional<RouteStep> next(Pos current, Predicate<Pos> allowed, RandomGenerator random);
 
     /**
      * Returns every point this route can hand out. Used to pick a spawn or respawn spot.

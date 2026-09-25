@@ -13,7 +13,8 @@ import java.util.random.RandomGenerator;
  * <p>
  * It remembers the route, the point and the direction. At the end of a route it picks at random
  * between turning around and every route linked to that end. If the creek is far from its last
- * point, for example after a teleport, it rejoins at the nearest point.
+ * point, for example after a teleport, it rejoins at the nearest point. Each step carries the pause
+ * of its point, except for an end the creek walks away from.
  * </p>
  *
  * @author theEvilReaper
@@ -43,7 +44,7 @@ public final class PathRoute implements RouteProvider {
     }
 
     @Override
-    public Optional<Pos> next(Pos current, Predicate<Pos> allowed, RandomGenerator random) {
+    public Optional<RouteStep> next(Pos current, Predicate<Pos> allowed, RandomGenerator random) {
         Cursor last = this.cursor;
         if (last == null || current.distance(this.point(last)) > REJOIN_DISTANCE) {
             return this.rejoin(current, allowed, random);
@@ -64,7 +65,7 @@ public final class PathRoute implements RouteProvider {
                 + " " + (last.direction() > 0 ? "→" : "←");
     }
 
-    private Optional<Pos> rejoin(Pos current, Predicate<Pos> allowed, RandomGenerator random) {
+    private Optional<RouteStep> rejoin(Pos current, Predicate<Pos> allowed, RandomGenerator random) {
         Cursor best = null;
         double bestDistance = Double.MAX_VALUE;
         for (int route = 0; route < this.paths.size(); route++) {
@@ -111,9 +112,20 @@ public final class PathRoute implements RouteProvider {
         return new Cursor(from.route(), index, direction);
     }
 
-    private Optional<Pos> moveTo(Cursor next) {
+    private Optional<RouteStep> moveTo(Cursor next) {
         this.cursor = next;
-        return Optional.of(this.point(next));
+        return Optional.of(new RouteStep(this.point(next), this.pauseAt(next)));
+    }
+
+    /**
+     * An end the creek walks away from is where it starts, not where it stops.
+     */
+    private int pauseAt(Cursor cursor) {
+        int lastIndex = this.paths.pointCount(cursor.route()) - 1;
+        boolean leavingStart = cursor.index() == 0 && cursor.direction() > 0;
+        boolean leavingEnd = cursor.index() == lastIndex && cursor.direction() < 0;
+        if (leavingStart || leavingEnd) return 0;
+        return this.paths.pauseMillis(cursor.route(), cursor.index());
     }
 
     private Pos point(Cursor cursor) {
