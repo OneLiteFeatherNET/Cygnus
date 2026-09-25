@@ -49,7 +49,6 @@ public final class PageProvider {
     private final AtomicInteger currentPageCount;
     private final AtomicInteger currentFoundedPageCount;
 
-    private Component pageStatus = Component.empty();
     private int maxPageAmount;
 
     public PageProvider() {
@@ -115,7 +114,6 @@ public final class PageProvider {
      * Spawns all pages that are currently in the active page map.
      */
     public void spawn() {
-        this.updatePageDisplay();
         for (Map.Entry<UUID, PageEntity> pointPageEntityEntry : this.activePages.entrySet()) {
             pointPageEntityEntry.getValue().spawn();
         }
@@ -173,7 +171,6 @@ public final class PageProvider {
         player.getInventory().addItemStack(pageEntity.getPageItem());
         Broadcaster.broadcast(Messages.getPageFoundComponent(player));
         int foundCount = this.currentFoundedPageCount.incrementAndGet();
-        this.updatePageDisplay();
         EventDispatcher.call(new PageFoundEvent(player, foundCount, this.maxPageAmount));
 
         if (foundCount >= maxPageAmount) {
@@ -236,14 +233,6 @@ public final class PageProvider {
         this.activePages.put(entity.getHitBoxUUID(), entity);
     }
 
-    private void updatePageDisplay() {
-        this.pageStatus = Component.text(this.currentFoundedPageCount.get(), NamedTextColor.GREEN)
-                .append(Component.space())
-                .append(Component.text("/", NamedTextColor.GRAY))
-                .append(Component.space())
-                .append(Component.text(this.maxPageAmount, NamedTextColor.RED));
-    }
-
     /**
      * Returns a {@link PageEntity} that matches wit the given id
      *
@@ -260,7 +249,12 @@ public final class PageProvider {
      * @return the current page status
      */
     public Component getPageStatus() {
-        return pageStatus;
+        // Built on every call: a cached copy written by concurrent finds could end up with a stale count
+        return Component.text(this.currentFoundedPageCount.get(), NamedTextColor.GREEN)
+                .append(Component.space())
+                .append(Component.text("/", NamedTextColor.GRAY))
+                .append(Component.space())
+                .append(Component.text(this.maxPageAmount, NamedTextColor.RED));
     }
 
     /**
