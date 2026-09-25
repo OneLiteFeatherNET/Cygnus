@@ -54,6 +54,7 @@ import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.map.GameMap;
@@ -221,6 +222,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 () -> TeamHelper.survivorsOf(this.teamService),
                 this.mapProvider.getActiveInstance(),
                 this::creekRoutePoints,
+                this::creekRoutes,
                 CreakingBody::spawn,
                 new PageProgressDread(
                         this.pageProvider::foundPageCount,
@@ -378,6 +380,16 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             points.addAll(map.getSurvivorSpawns());
         }
         return points;
+    }
+
+    /**
+     * Returns the creek routes of the current map.
+     *
+     * @return the routes, empty without a map or without routes
+     */
+    private List<CreekRoute> creekRoutes() {
+        GameMap map = this.mapProvider.getGameMap();
+        return map != null ? map.getCreekRoutes() : List.of();
     }
 
     private void finishGame() {
