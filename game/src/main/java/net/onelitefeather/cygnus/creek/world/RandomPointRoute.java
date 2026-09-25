@@ -39,6 +39,7 @@ public final class RandomPointRoute implements RouteProvider {
      *
      * @return the points, possibly empty
      */
+    @Override
     public List<Pos> points() {
         return this.points.get();
     }

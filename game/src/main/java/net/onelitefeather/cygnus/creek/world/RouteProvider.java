@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.creek.world;
 
 import net.minestom.server.coordinate.Pos;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.random.RandomGenerator;
@@ -9,8 +10,8 @@ import java.util.random.RandomGenerator;
 /**
  * Decides where the creek walks next.
  * <p>
- * For now the waypoints come from the map's pages and spawns. Hand-placed waypoints from the
- * setup can be added later as another implementation.
+ * {@link PathRoute} walks the hand-placed routes of a map; {@link RandomPointRoute} falls back
+ * to the map's pages and spawns.
  * </p>
  *
  * @author theEvilReaper
@@ -29,4 +30,22 @@ public interface RouteProvider {
      * @return the next point, or empty if none is allowed
      */
     Optional<Pos> next(Pos current, Predicate<Pos> allowed, RandomGenerator random);
+
+    /**
+     * Returns every point this route can hand out. Used to pick a spawn or respawn spot.
+     *
+     * @return the points, possibly empty
+     */
+    default List<Pos> points() {
+        return List.of();
+    }
+
+    /**
+     * Describes where the creek is on this route, for the debug line.
+     *
+     * @return a short description, or an empty string if there is nothing to show
+     */
+    default String describe() {
+        return "";
+    }
 }
