@@ -216,3 +216,6 @@ survivorTeamSize=12
 #creek.huntSpeed=0.25
 #creek.betrayalCatchCount=2
 #creek.betrayalChance=0.15
+# How close the ends of two routes in creek.json have to be (in blocks) for the
+# creek to switch from one route to the other.
+#creek.routeLinkDistance=3.0
