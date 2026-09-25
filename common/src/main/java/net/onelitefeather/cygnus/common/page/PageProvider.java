@@ -49,7 +49,6 @@ public final class PageProvider {
     private final AtomicInteger currentPageCount;
     private final AtomicInteger currentFoundedPageCount;
 
-    private Component pageStatus = Component.empty();
     private int maxPageAmount;
 
     public PageProvider() {
@@ -89,6 +88,7 @@ public final class PageProvider {
                 Direction direction = page.face();
                 Pos position = Helper.updatePosition(page.position().asPos(), direction);
                 PageEntity entity = PageFactory.createPage(instance, position, direction, this.currentPageCount.getAndIncrement());
+                entity.setResource(page);
                 this.activePages.put(entity.getHitBoxUUID(), entity);
                 counter++;
                 continue;
@@ -114,7 +114,6 @@ public final class PageProvider {
      * Spawns all pages that are currently in the active page map.
      */
     public void spawn() {
-        this.updatePageDisplay();
         for (Map.Entry<UUID, PageEntity> pointPageEntityEntry : this.activePages.entrySet()) {
             pointPageEntityEntry.getValue().spawn();
         }
@@ -150,7 +149,14 @@ public final class PageProvider {
 
         PageResource newPos = this.globalCache.poll();
         if (newPos != null) {
+            PageResource expired = pageEntity.getResource();
             pageEntity.teleport(Helper.updatePosition(newPos.position().asPos(), newPos.face()));
+            pageEntity.setResource(newPos);
+            // Polled first, so the page can't draw its own spot again; queued last, so the spot only
+            // comes back once every other one had its turn. Found spots stay used up.
+            if (expired != null) {
+                this.globalCache.add(expired);
+            }
         }
         this.activePages.put(pageEntity.getHitBoxUUID(), pageEntity);
         pageEntity.enableInteraction();
@@ -165,7 +171,6 @@ public final class PageProvider {
         player.getInventory().addItemStack(pageEntity.getPageItem());
         Broadcaster.broadcast(Messages.getPageFoundComponent(player));
         int foundCount = this.currentFoundedPageCount.incrementAndGet();
-        this.updatePageDisplay();
         EventDispatcher.call(new PageFoundEvent(player, foundCount, this.maxPageAmount));
 
         if (foundCount >= maxPageAmount) {
@@ -217,19 +222,15 @@ public final class PageProvider {
 
     private void updatePageData(PageEntity entity) {
         PageResource resource = this.globalCache.poll();
+        // Cleared when nothing is left, so the found spot can never make it back into the pool
+        entity.setResource(resource);
         if (resource != null) {
             entity.teleport(Helper.updatePosition(resource.position().asPos(), resource.face()));
         }
         entity.updateItemStack(this.currentPageCount.incrementAndGet());
+        // Shows the new item and restarts the TTL: on its new spot the page counts as a fresh one
+        entity.enableInteraction();
         this.activePages.put(entity.getHitBoxUUID(), entity);
-    }
-
-    private void updatePageDisplay() {
-        this.pageStatus = Component.text(this.currentFoundedPageCount.get(), NamedTextColor.GREEN)
-                .append(Component.space())
-                .append(Component.text("/", NamedTextColor.GRAY))
-                .append(Component.space())
-                .append(Component.text(this.maxPageAmount, NamedTextColor.RED));
     }
 
     /**
@@ -248,7 +249,12 @@ public final class PageProvider {
      * @return the current page status
      */
     public Component getPageStatus() {
-        return pageStatus;
+        // Built on every call: a cached copy written by concurrent finds could end up with a stale count
+        return Component.text(this.currentFoundedPageCount.get(), NamedTextColor.GREEN)
+                .append(Component.space())
+                .append(Component.text("/", NamedTextColor.GRAY))
+                .append(Component.space())
+                .append(Component.text(this.maxPageAmount, NamedTextColor.RED));
     }
 
     /**

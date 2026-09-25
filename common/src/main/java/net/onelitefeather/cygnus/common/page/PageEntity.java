@@ -15,6 +15,7 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -47,6 +48,7 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
     private boolean send;
     private boolean interactable = true;
     private int initialBlockLight;
+    private @Nullable PageResource resource;
 
     /**
      * Constructs a new {@link PageEntity}.
@@ -131,6 +133,8 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
         interactionMeta.setResponse(true);
         interactionMeta.setInvisible(false);
         this.ttlTime = Helper.calculateOffsetTime(GameConfig.PAGE_TTL_TIME);
+        this.currentTickTime = 0;
+        this.calculateNextTick();
         this.send = false;
         this.interactable = true;
     }
@@ -233,6 +237,24 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
      */
     public UUID getHitBoxUUID() {
         return this.hitBox.getUuid();
+    }
+
+    /**
+     * Sets the {@link PageResource} the page currently stands on.
+     *
+     * @param resource the resource, or {@code null} once the page has no spot of its own
+     */
+    void setResource(@Nullable PageResource resource) {
+        this.resource = resource;
+    }
+
+    /**
+     * Returns the {@link PageResource} the page currently stands on.
+     *
+     * @return the resource, or {@code null} if none is set
+     */
+    @Nullable PageResource getResource() {
+        return this.resource;
     }
 
     /**
