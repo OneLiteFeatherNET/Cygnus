@@ -29,10 +29,21 @@ public final class Contexts {
 
     /** A route that offers the first allowed point at least a block away. */
     public static RouteProvider route(Pos... points) {
-        return (current, allowed, _) -> Arrays.stream(points)
-                .filter(point -> point.distance(current) >= 1.0D)
-                .filter(allowed)
-                .findFirst();
+        return new RouteProvider() {
+            @Override
+            public Optional<Pos> next(Pos current, java.util.function.Predicate<Pos> allowed,
+                                      java.util.random.RandomGenerator random) {
+                return Arrays.stream(points)
+                        .filter(point -> point.distance(current) >= 1.0D)
+                        .filter(allowed)
+                        .findFirst();
+            }
+
+            @Override
+            public List<Pos> points() {
+                return List.of(points);
+            }
+        };
     }
 
     private Contexts() {
