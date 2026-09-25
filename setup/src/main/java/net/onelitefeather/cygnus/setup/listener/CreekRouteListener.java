@@ -13,7 +13,8 @@ import net.onelitefeather.guira.data.SetupData;
 import java.util.function.Consumer;
 
 /**
- * Appends a point to the active creek route when a block is left-clicked in the creek route mode.
+ * Appends a point to the active creek route when a block is broken in the creek route mode, or
+ * removes the point that already sits on that block.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -47,7 +48,14 @@ public final class CreekRouteListener implements Consumer<PlayerBlockBreakEvent>
             return;
         }
 
-        gameData.addCreekPoint(pointOnTop(event.getBlockPosition()));
+        Vec point = pointOnTop(event.getBlockPosition());
+        int removed = gameData.removeCreekPointAt(point);
+        if (removed > 0) {
+            player.sendMessage(SetupMessages.getCreekPointRemovedAt(activeRoute, removed, gameData.activeCreekPointCount()));
+            return;
+        }
+
+        gameData.addCreekPoint(point);
         player.sendMessage(SetupMessages.getCreekPointAdded(activeRoute, gameData.activeCreekPointCount()));
     }
 
