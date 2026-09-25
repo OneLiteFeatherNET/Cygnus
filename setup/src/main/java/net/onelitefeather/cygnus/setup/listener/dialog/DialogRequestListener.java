@@ -22,6 +22,11 @@ public class DialogRequestListener implements Consumer<DialogRequestEvent> {
         switch (target) {
             case CREATE_NAME -> MapDialogs.openNameCreateDialog(player);
             case CREEK_ROUTE_NAME -> CreekRouteDialogs.openNameDialog(player);
+            case CREEK_ROUTE_PAUSE -> {
+                if (context instanceof DialogContext.CreekPauseContext pauseContext) {
+                    CreekRouteDialogs.openPauseDialog(player, pauseContext);
+                }
+            }
             case UPDATE_NAME -> {
                 if (context instanceof DialogContext.NameContext(String name)) {
                     MapDialogs.openNameUpdateDialog(player, name);

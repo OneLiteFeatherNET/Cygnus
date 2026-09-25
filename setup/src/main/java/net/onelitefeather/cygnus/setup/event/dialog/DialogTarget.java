@@ -16,4 +16,5 @@ public enum DialogTarget {
     ATMOSPHERE_PRESET,
     ATMOSPHERE_VALUES,
     CREEK_ROUTE_NAME,
+    CREEK_ROUTE_PAUSE,
 }
