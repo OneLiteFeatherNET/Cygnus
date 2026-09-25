@@ -1,40 +1,52 @@
 package net.onelitefeather.cygnus.common.config;
 
 import net.kyori.adventure.key.Key;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
 
 /**
- * The {@link GameConfig} interface represents the structure for a configuration which is used by the game.
- * It contains some values which can be adjusted to change specific settings for the game.
- * There are also some static values in the interface which are also used in the game.
- * Each static value indicates that it is a constant value and should not be changed.
+ * The configuration of a game, grouped by the feature each value belongs to.
+ * <p>
+ * Every group checks its own values when it is created, so a configuration read from the file, the
+ * defaults and one built in a test go through the same rules. The static values are constants of
+ * the game itself and cannot be configured.
+ * </p>
  *
+ * @param round                the player limits and timings of a round
+ * @param teams                the team sizes
+ * @param sentryDsn            the DSN Sentry reports to, or {@code null} to keep the integration off
+ * @param resourcePack         where the client gets the ResourcePack from
+ * @param pageProximity        the sound that hints at a nearby page
+ * @param damageSound          the sound a player hears when hit
+ * @param glitch               how the sight of the slender tears a survivor's view
+ * @param slenderStatic        the static the slender hears while pages are found
+ * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
+ *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
- * @version 1.5.0
+ * @version 2.0.0
  * @since 1.0.0
  */
-public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
+public record GameConfig(
+        Round round,
+        Teams teams,
+        @Nullable String sentryDsn,
+        ResourcePack resourcePack,
+        PageProximity pageProximity,
+        DamageSound damageSound,
+        Glitch glitch,
+        SlenderStatic slenderStatic,
+        float lobbyAtmosphereShare
+) {
 
-    /* The name of the Slender team.
-     */
-    String SLENDER_TEAM_NAME = "Slender";
+    public static final String SLENDER_TEAM_NAME = "Slender";
+    public static final Key SLENDER_KEY = Key.key("cygnus", "slender");
+    public static final String SURVIVOR_TEAM_NAME = "Survivor";
+    public static final Key SURVIVOR_KEY = Key.key("cygnus", "survivor");
+    public static final String SPECTATOR_TEAM_NAME = "Spectator";
+    public static final Key SPECTATOR_KEY = Key.key("cygnus", "spectator");
 
-    Key SLENDER_KEY = Key.key("cygnus", "slender");
-    /**
-     * The name of the Survivor team.
-     */
-    String SURVIVOR_TEAM_NAME = "Survivor";
-
-    Key SURVIVOR_KEY = Key.key("cygnus", "survivor");
-
-    String SPECTATOR_TEAM_NAME = "Spectator";
-
-    Key SPECTATOR_KEY = Key.key("cygnus", "spectator");
-
-    int MIN_ACTIVE_PAGE_COUNT = 4 * 2;
+    public static final int MIN_ACTIVE_PAGE_COUNT = 4 * 2;
 
     /**
      * How many seconds after a round starts before the first pages spawn.
@@ -45,19 +57,15 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
      *
      * @since 2.15.0
      */
-    int PAGE_SPAWN_DELAY = 10;
+    public static final int PAGE_SPAWN_DELAY = 10;
 
     /**
      * How many seconds {@link #PAGE_SPAWN_DELAY} may randomly shift up or down, re-rolled every
-     * round.
-     * <p>
-     * Without this the delay lands on the exact same tick every round, which players learn and
-     * plan around; the jitter keeps the moment the first pages appear unpredictable.
-     * </p>
+     * round, so the moment the first pages appear stays unpredictable.
      *
      * @since 2.15.0
      */
-    int PAGE_SPAWN_DELAY_JITTER = 2;
+    public static final int PAGE_SPAWN_DELAY_JITTER = 2;
 
     /**
      * How many seconds a found page stays hidden when there is no free spot left to move it to.
@@ -68,7 +76,7 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
      *
      * @since 2.15.0
      */
-    int PAGE_RESPAWN_DELAY = 15;
+    public static final int PAGE_RESPAWN_DELAY = 15;
 
     /**
      * How many seconds {@link #PAGE_RESPAWN_DELAY} may randomly shift up or down, re-rolled for every
@@ -76,696 +84,266 @@ public sealed interface GameConfig permits GameConfigImpl, InternalGameConfig {
      *
      * @since 2.15.0
      */
-    int PAGE_RESPAWN_DELAY_JITTER = 5;
+    public static final int PAGE_RESPAWN_DELAY_JITTER = 5;
 
-    int PAGE_TTL_TIME = 60;
-
-    int FORCE_START_TIME = 11;
-
-    int MIN_PAGE_COUNT = 8;
+    public static final int PAGE_TTL_TIME = 60;
+    public static final int FORCE_START_TIME = 11;
+    public static final int MIN_PAGE_COUNT = 8;
 
     /**
-     * The sound played to a survivor while a page is within {@link #pageProximityRange()}.
-     * The amethyst chime is a soft, bell-less shimmer that reads as "something is here" without
-     * sounding like an alarm.
+     * The {@link #lobbyAtmosphereShare()} a configuration gets when it says nothing: enough of the
+     * map's haze to be recognised in the distance, while the lobby still reads as the lit room
+     * players wait in.
      */
-    Key DEFAULT_PAGE_PROXIMITY_SOUND = Key.key("block.amethyst_block.chime");
+    public static final float DEFAULT_LOBBY_ATMOSPHERE_SHARE = 0.3F;
 
     /**
-     * The largest {@link #pageProximityRange()} a configuration may ask for. Beyond this a single
-     * page would be audible across a good part of the map, which stops being a hint.
-     */
-    int MAX_PAGE_PROXIMITY_RANGE = 64;
-
-    /**
-     * The {@link #pageProximityVolumeFactor()} a configuration gets when it says nothing.
+     * The configuration used when there is no config file, or nothing in it can be read.
      * <p>
-     * A factor of 1 makes the chime reach exactly to {@link #pageProximityRange()} and no further,
-     * which means it fades to silence precisely where the hint is supposed to start being useful.
-     * Doubling that leaves roughly half the volume at the edge of the range while the service still
-     * clips on the range itself.
+     * Sentry and the ResourcePack are opt-in, so a local run reports to nothing and pushes nothing.
+     * The hints and effects are on, since a round without them plays worse, not differently.
      * </p>
      */
-    float DEFAULT_PAGE_PROXIMITY_VOLUME_FACTOR = 2.0F;
+    public static final GameConfig DEFAULT = new GameConfig(
+            Round.DEFAULT,
+            Teams.DEFAULT,
+            null,
+            ResourcePack.NONE,
+            PageProximity.DEFAULT,
+            DamageSound.DEFAULT,
+            Glitch.DEFAULT,
+            SlenderStatic.DEFAULT,
+            DEFAULT_LOBBY_ATMOSPHERE_SHARE
+    );
 
-    /**
-     * The largest {@link #pageProximityVolumeFactor()} a configuration may ask for.
-     * <p>
-     * The ceiling is not about loudness - Minecraft caps a sound's amplitude at the source
-     * regardless of volume - but about the falloff. The flatter it gets, the more evenly loud the
-     * chime is across the whole range, until a player can no longer tell a page two blocks away
-     * from one at the edge. Past 8 that distance cue is gone.
-     * </p>
-     */
-    float MAX_PAGE_PROXIMITY_VOLUME_FACTOR = 8.0F;
-
-    /**
-     * The sound played to a player who was just hit.
-     * <p>
-     * The vanilla hurt sound, because that is exactly what is missing: Cygnus applies damage by
-     * setting health directly, which never runs Minestom's damage pipeline and therefore never
-     * plays the sound a client would otherwise hear.
-     * </p>
-     */
-    Key DEFAULT_DAMAGE_SOUND = Key.key("entity.player.hurt");
-
-    /**
-     * The {@link #lobbyAtmosphereShare()} a configuration gets when it says nothing.
-     * <p>
-     * Enough of the map's own haze and colour to be recognised in the distance, far enough from it
-     * that the lobby still reads as the lit room players wait in rather than as the map itself.
-     * </p>
-     */
-    float DEFAULT_LOBBY_ATMOSPHERE_SHARE = 0.3F;
-
-    /**
-     * The static the slender hears while the survivors take his pages away.
-     * <p>
-     * A resource pack sound rather than a vanilla one: three 2.2 second takes of tape hiss the
-     * client picks between, high-passed at 520 Hz so the effect's own pitch drop to 0.7 leaves
-     * it hissing rather than humming. Nothing in vanilla comes close - rain is the nearest, and
-     * it reads as weather.
-     * </p>
-     * <p>
-     * A server running without the Cygnus pack therefore hears nothing here. That is the right
-     * way round: the static is a horror cue, and half of one played through the wrong sample is
-     * worse than none.
-     * </p>
-     */
-    Key DEFAULT_SLENDER_STATIC_SOUND = Key.key("cygnus", "vhs_static");
-
-    /** The {@link #slenderStaticQuietInterval()} a configuration gets when it says nothing. */
-    int DEFAULT_SLENDER_STATIC_QUIET_INTERVAL = 12;
-
-    /** The {@link #slenderStaticFranticInterval()} a configuration gets when it says nothing. */
-    int DEFAULT_SLENDER_STATIC_FRANTIC_INTERVAL = 3;
-
-    /**
-     * The longest {@link #slenderStaticQuietInterval()} a configuration may ask for. Past this a
-     * round could end before the slender has heard the static twice, which makes it noise rather
-     * than a clock.
-     */
-    int MAX_SLENDER_STATIC_INTERVAL = 120;
-
-    /** The {@link #slenderStaticMinVolume()} a configuration gets when it says nothing. */
-    float DEFAULT_SLENDER_STATIC_MIN_VOLUME = 0.15F;
-
-    /** The {@link #slenderStaticMaxVolume()} a configuration gets when it says nothing. */
-    float DEFAULT_SLENDER_STATIC_MAX_VOLUME = 0.8F;
-
-    /**
-     * The largest {@link #glitchRange()} a configuration may ask for. Beyond this the slender would
-     * tear a survivor's view apart from across the map, which is the behaviour this range exists to
-     * end.
-     */
-    int MAX_GLITCH_RANGE = 64;
-
-    /**
-     * The widest {@link #glitchViewAngle()} a configuration may ask for. At 90 degrees and beyond
-     * the cone stops being a cone: everything not strictly behind the survivor would count as seen,
-     * and the effect would no longer be about looking at him.
-     */
-    int MAX_GLITCH_VIEW_ANGLE = 89;
-
-    /**
-     * The {@link #glitchRange()} a configuration gets when it says nothing. Twelve blocks is close
-     * enough that the slender is a present threat when the tearing starts - the 32 this used to be
-     * kept him inside the range for most of a round, so the effect was near enough permanent and
-     * stopped reading as a warning.
-     */
-    int DEFAULT_GLITCH_RANGE = 12;
-
-    /** The {@link #glitchCloseRange()} a configuration gets when it says nothing. */
-    int DEFAULT_GLITCH_CLOSE_RANGE = 4;
-
-    /**
-     * The {@link #glitchViewAngle()} a configuration gets when it says nothing. Narrower than the
-     * client's field of view on purpose: the cone this replaces spanned roughly 113 degrees and
-     * fired while he stood at the very edge of the screen, which is not the same as being looked at.
-     */
-    int DEFAULT_GLITCH_VIEW_ANGLE = 30;
-
-    /**
-     * Creates a new {@link Builder} which can be used to create a new game configuration.
-     *
-     * @return the builder instance
-     */
-    @Contract(pure = true)
-    static Builder builder() {
-        return new GameConfigBuilder();
+    public GameConfig {
+        if (lobbyAtmosphereShare < 0.0F || lobbyAtmosphereShare > 1.0F) {
+            throw new IllegalArgumentException("Lobby atmosphere share must be between 0 and 1");
+        }
     }
 
     /**
-     * Returns the minimum number of players required to start a game.
+     * The player limits and timings of a round.
      *
-     * @return the minimum number of players
+     * @param minPlayers the number of players needed to start the countdown
+     * @param maxPlayers the number of players allowed in a round
+     * @param lobbyTime  the countdown in seconds, longer than {@link #FORCE_START_TIME}
+     * @param gameTime   the length of a round in seconds
      */
-    int minPlayers();
+    public record Round(int minPlayers, int maxPlayers, int lobbyTime, int gameTime) {
+
+        public static final Round DEFAULT = new Round(2, 13, 30, 900);
+
+        public Round {
+            if (lobbyTime <= FORCE_START_TIME) {
+                throw new IllegalArgumentException("Lobby time must be greater than " + FORCE_START_TIME);
+            }
+        }
+    }
 
     /**
-     * Returns the maximum number of players allowed in the game.
+     * The sizes of the teams.
      *
-     * @return the maximum number of players
+     * @param slenderSize  the size of the slender team, at least 1
+     * @param survivorSize the size of the survivor team, larger than the slender team's minimum
      */
-    int maxPlayers();
+    public record Teams(int slenderSize, int survivorSize) {
+
+        private static final int MIN_SLENDER_SIZE = 1;
+
+        public static final Teams DEFAULT = new Teams(1, 12);
+
+        public Teams {
+            if (slenderSize < MIN_SLENDER_SIZE) {
+                throw new IllegalArgumentException("Slender team size must be at least " + MIN_SLENDER_SIZE);
+            }
+            if (survivorSize < MIN_SLENDER_SIZE + 1) {
+                throw new IllegalArgumentException("Survivor team size must be at least " + (MIN_SLENDER_SIZE + 1));
+            }
+        }
+    }
 
     /**
-     * Returns the lobby time in seconds.
+     * Where the client gets the ResourcePack from.
      *
-     * @return the lobby time
+     * @param url  the location of the pack, or {@code null} to keep the feature off
+     * @param sha1 the checksum the client verifies the pack against, or {@code null} to compute it
+     *             from the pack at runtime. A production setup always states it: it lets a client
+     *             reuse the pack it already has instead of downloading it on every join.
      */
-    int lobbyTime();
+    public record ResourcePack(@Nullable URI url, @Nullable String sha1) {
+
+        public static final ResourcePack NONE = new ResourcePack(null, null);
+    }
 
     /**
-     * Returns the maximum game time in seconds.
+     * The sound survivors hear while a page is nearby.
      *
-     * @return the maximum game time
+     * @param enabled      whether the hint is played at all
+     * @param range        how far away a page may be and still be heard, in blocks
+     * @param interval     the number of ticks between two sounds, at least 1
+     * @param sound        the sound; a key naming no known sound falls back to {@link #DEFAULT_SOUND}
+     *                     when it is first played
+     * @param volumeFactor how far past the range the falloff is stretched. Minecraft fades a sound to
+     *                     nothing at {@code 16 * volume} blocks, so a volume that reaches exactly the
+     *                     range would be silent at its edge.
      */
-    int gameTime();
+    public record PageProximity(boolean enabled, int range, int interval, Key sound, float volumeFactor) {
+
+        /** A soft, bell-less shimmer that reads as "something is here" without sounding like an alarm. */
+        public static final Key DEFAULT_SOUND = Key.key("block.amethyst_block.chime");
+
+        /** Beyond this a single page would be audible across a good part of the map. */
+        public static final int MAX_RANGE = 64;
+
+        /** Leaves roughly half the volume at the edge of the range. */
+        public static final float DEFAULT_VOLUME_FACTOR = 2.0F;
+
+        /**
+         * Past this the chime is evenly loud across the whole range, so a player can no longer tell a
+         * page two blocks away from one at the edge.
+         */
+        public static final float MAX_VOLUME_FACTOR = 8.0F;
+
+        public static final PageProximity DEFAULT = new PageProximity(true, 20, 20, DEFAULT_SOUND, DEFAULT_VOLUME_FACTOR);
+
+        public PageProximity {
+            if (range < 1 || range > MAX_RANGE) {
+                throw new IllegalArgumentException("Page proximity range must be between 1 and " + MAX_RANGE);
+            }
+            if (interval < 1) {
+                throw new IllegalArgumentException("Page proximity interval must be at least 1 tick");
+            }
+            if (volumeFactor < 1.0F || volumeFactor > MAX_VOLUME_FACTOR) {
+                throw new IllegalArgumentException("Page proximity volume factor must be between 1 and " + MAX_VOLUME_FACTOR);
+            }
+        }
+    }
 
     /**
-     * Returns the size of the slender team.
+     * The sound a player hears when hit.
      *
-     * @return the size of the slender team
+     * @param enabled  whether the sound is played at all
+     * @param cooldown the ticks before a player hears it again, at least 1. The slender damages
+     *                 everyone around him twice a second while he drains.
+     * @param sound    the sound; a key naming no known sound falls back to {@link #DEFAULT_SOUND}
+     *                 when it is first played
      */
-    int slenderTeamSize();
+    public record DamageSound(boolean enabled, int cooldown, Key sound) {
+
+        /**
+         * The vanilla hurt sound: Cygnus sets health directly, which never runs Minestom's damage
+         * pipeline and so never plays the sound a client would otherwise hear.
+         */
+        public static final Key DEFAULT_SOUND = Key.key("entity.player.hurt");
+
+        /** Lets through every second damage tick of a draining slender: enough to notice, not enough to grate. */
+        public static final DamageSound DEFAULT = new DamageSound(true, 20, DEFAULT_SOUND);
+
+        public DamageSound {
+            if (cooldown < 1) {
+                throw new IllegalArgumentException("Damage sound cooldown must be at least 1 tick");
+            }
+        }
+    }
 
     /**
-     * Returns the size of the survivor team.
+     * How the sight of the slender tears a survivor's view.
      *
-     * @return the size of the survivor team
+     * @param range      the outer edge of the effect in blocks; the level grows from here towards the
+     *                   close range, and beyond it there is nothing at all
+     * @param closeRange the distance at which the tearing is at its worst, below the range
+     * @param viewAngle  how far off the centre of the view the slender may stand and still count as
+     *                   seen, in degrees. Narrower than the client's field of view on purpose: the edge
+     *                   of the screen is not the same as being looked at.
      */
-    int survivorTeamSize();
+    public record Glitch(int range, int closeRange, int viewAngle) {
+
+        /** Beyond this the slender would tear a survivor's view apart from across the map. */
+        public static final int MAX_RANGE = 64;
+
+        /** At 90 degrees and beyond everything not strictly behind the survivor would count as seen. */
+        public static final int MAX_VIEW_ANGLE = 89;
+
+        /** Twelve blocks keeps the effect a warning; the 32 this used to be made it near enough permanent. */
+        public static final Glitch DEFAULT = new Glitch(12, 4, 30);
+
+        public Glitch {
+            if (range < 1 || range > MAX_RANGE) {
+                throw new IllegalArgumentException("Glitch range must be between 1 and " + MAX_RANGE);
+            }
+            if (closeRange < 1) {
+                throw new IllegalArgumentException("Glitch close range must be at least 1 block");
+            }
+            if (viewAngle < 1 || viewAngle > MAX_VIEW_ANGLE) {
+                throw new IllegalArgumentException("Glitch view angle must be between 1 and " + MAX_VIEW_ANGLE + " degrees");
+            }
+            if (closeRange >= range) {
+                throw new IllegalArgumentException(
+                        "Glitch close range (" + closeRange + ") must be below the glitch range (" + range + ")");
+            }
+        }
+    }
 
     /**
-     * Returns the DSN which points Sentry at the project the errors of this service belong to.
-     * <p>
-     * The Sentry integration is opt-in: without a DSN there is nothing to report to, so no client
-     * is set up at all. That is the expected state for local runs and tests.
-     * </p>
+     * The static the slender hears while the survivors take his pages away. It is the only thing
+     * that tells him how far they have got without putting the page counter in front of him.
      *
-     * @return the configured DSN, or {@code null} when the Sentry integration stays off
-     * @since 2.11.0
+     * @param enabled         whether the static is played at all
+     * @param sound           the sound, sent as named: a resource pack sound would not be found in the
+     *                        registry
+     * @param quietInterval   the seconds between two bursts while no page has been found
+     * @param franticInterval the seconds between two bursts once every page is gone, below the quiet
+     *                        interval
+     * @param minVolume       the volume while no page has been found
+     * @param maxVolume       the volume once every page is gone
      */
-    @Nullable
-    String sentryDsn();
-
-    /**
-     * Returns the location the client downloads the ResourcePack from.
-     *
-     * @return the configured URL, or {@code null} when the ResourcePack feature stays off
-     * @since 2.11.0
-     */
-    @Nullable
-    URI resourcePackUrl();
-
-    /**
-     * Returns the SHA-1 checksum the client verifies the downloaded ResourcePack against.
-     * <p>
-     * A production setup always states the checksum: it is what lets a client reuse the pack it
-     * already has instead of downloading it again on every join. Leaving it out is a test-only
-     * convenience - the checksum is then computed from the pack behind {@link #resourcePackUrl()}
-     * at runtime.
-     * </p>
-     *
-     * @return the configured checksum, or {@code null} when it has to be computed
-     * @since 2.11.0
-     */
-    @Nullable
-    String resourcePackSha1();
-
-    /**
-     * Returns whether survivors hear a sound while a page is nearby.
-     *
-     * @return {@code true} while the proximity hint is on
-     * @since 2.12.0
-     */
-    boolean pageProximityEnabled();
-
-    /**
-     * Returns how far away a page may be and still be heard, in blocks.
-     * <p>
-     * The value doubles as the volume the sound is played at: Minecraft carries a sound
-     * {@code 16 * volume} blocks, so a range beyond 16 blocks needs a volume above 1 to reach that
-     * far, and the server clips anything past the range itself.
-     * </p>
-     *
-     * @return the range in blocks, at most {@link #MAX_PAGE_PROXIMITY_RANGE}
-     * @since 2.12.0
-     */
-    int pageProximityRange();
-
-    /**
-     * Returns the number of ticks between two proximity sounds.
-     *
-     * @return the interval in ticks, at least 1
-     * @since 2.12.0
-     */
-    int pageProximityInterval();
-
-    /**
-     * Returns the sound played while a page is nearby.
-     * <p>
-     * The key is not resolved against the sound registry here - a key that names no known sound is
-     * only noticed when the sound is first played, and the proximity hint falls back to
-     * {@link #DEFAULT_PAGE_PROXIMITY_SOUND} then.
-     * </p>
-     *
-     * @return the sound key, never {@code null}
-     * @since 2.12.0
-     */
-    Key pageProximitySound();
-
-    /**
-     * Returns how far past {@link #pageProximityRange()} the chime's falloff is stretched.
-     * <p>
-     * Minecraft carries a sound {@code 16 * volume} blocks and fades it to nothing at that
-     * distance, so a volume derived to reach exactly the configured range leaves the chime
-     * inaudible at the range's edge. This factor stretches the falloff beyond it; the audible
-     * distance is unaffected, because the service drops pages outside the range before playing
-     * anything.
-     * </p>
-     *
-     * @return the factor, between 1 and {@link #MAX_PAGE_PROXIMITY_VOLUME_FACTOR}
-     * @since 2.12.1
-     */
-    float pageProximityVolumeFactor();
-
-    /**
-     * Returns whether a player hears a sound when they take damage.
-     *
-     * @return {@code true} while the damage feedback is on
-     * @since 2.13.0
-     */
-    boolean damageSoundEnabled();
-
-    /**
-     * Returns how many ticks have to pass before a player hears the damage sound again.
-     * <p>
-     * The slender damages everyone around him twice a second for as long as he drains, so without
-     * a cooldown a survivor standing next to him would hear the sound at that rate.
-     * </p>
-     *
-     * @return the cooldown in ticks, at least 1
-     * @since 2.13.0
-     */
-    int damageSoundCooldown();
-
-    /**
-     * Returns the sound played to a player who was just hit.
-     * <p>
-     * The key is not resolved against the sound registry here - a key that names no known sound is
-     * only noticed when the sound is first played, and the feedback falls back to
-     * {@link #DEFAULT_DAMAGE_SOUND} then.
-     * </p>
-     *
-     * @return the sound key, never {@code null}
-     * @since 2.13.0
-     */
-    Key damageSound();
-
-    /**
-     * Returns how far the lobby's atmosphere is taken from the open end towards the game map's own.
-     * <p>
-     * {@code 0} leaves the lobby on the vanilla overworld, which is where it was. {@code 1} gives it
-     * exactly the map's atmosphere, which makes the start of a round invisible - the point of the
-     * setting is the distance between the two, so that walking into the round reads as the world
-     * closing in rather than as a cut.
-     * </p>
-     *
-     * @return the share, between 0 and 1
-     * @since 2.14.0
-     */
-    float lobbyAtmosphereShare();
-
-    /**
-     * Returns whether the slender hears static as the survivors collect his pages.
-     *
-     * @return {@code true} while the static is on
-     * @since 2.14.0
-     */
-    boolean slenderStaticEnabled();
-
-    /**
-     * Returns the sound the static is built from.
-     * <p>
-     * The key is not resolved against the sound registry here: a resource pack sound is a perfectly
-     * good answer and would not be found in it. It is sent as named.
-     * </p>
-     *
-     * @return the sound key, never {@code null}
-     * @since 2.14.0
-     */
-    Key slenderStaticSound();
-
-    /**
-     * Returns how many seconds lie between two bursts while no page has been found.
-     *
-     * @return the interval in seconds, at most {@link #MAX_SLENDER_STATIC_INTERVAL}
-     * @since 2.14.0
-     */
-    int slenderStaticQuietInterval();
-
-    /**
-     * Returns how many seconds lie between two bursts once every page is gone.
-     * <p>
-     * The gap shrinks from {@link #slenderStaticQuietInterval()} towards this value as the pages
-     * disappear, which is what tells the slender how late in the round he is.
-     * </p>
-     *
-     * @return the interval in seconds, below {@link #slenderStaticQuietInterval()}
-     * @since 2.14.0
-     */
-    int slenderStaticFranticInterval();
-
-    /**
-     * Returns how loud the static is while no page has been found.
-     *
-     * @return the volume, between 0 and {@link #slenderStaticMaxVolume()}
-     * @since 2.14.0
-     */
-    float slenderStaticMinVolume();
-
-    /**
-     * Returns how loud the static is once every page is gone.
-     *
-     * @return the volume, at most 1
-     * @since 2.14.0
-     */
-    float slenderStaticMaxVolume();
-
-    /**
-     * Returns how close the slender has to be before the sight of him tears a survivor's view.
-     * <p>
-     * This is the outer edge of the effect, not the point where it is strongest: at exactly this
-     * distance a survivor gets the weakest level, and it grows the nearer he comes until
-     * {@link #glitchCloseRange()} is reached. Beyond it there is nothing at all - no veil, and no
-     * darkening of the world.
-     * </p>
-     *
-     * @return the range in blocks, at most {@link #MAX_GLITCH_RANGE}
-     * @since 2.13.0
-     */
-    int glitchRange();
-
-    /**
-     * Returns the distance at which the tearing is at its worst.
-     * <p>
-     * Always smaller than {@link #glitchRange()} - the two mark the ends of the same slope, and a
-     * configuration where they meet or cross is rejected outright.
-     * </p>
-     *
-     * @return the distance in blocks, at least 1 and below {@link #glitchRange()}
-     * @since 2.13.0
-     */
-    int glitchCloseRange();
-
-    /**
-     * Returns how far off the centre of their view the slender may stand and still count as seen.
-     * <p>
-     * Given in degrees around the survivor's line of sight, so a value of 30 means he has to be
-     * within 30 degrees of where they are actually looking. This is deliberately narrower than the
-     * client's field of view: standing at the very edge of the screen is not the same as being
-     * looked at.
-     * </p>
-     *
-     * @return the half-angle in degrees, between 1 and {@link #MAX_GLITCH_VIEW_ANGLE}
-     * @since 2.13.0
-     */
-    int glitchViewAngle();
-
-    /**
-     * The {@link Builder} interface is used to create a new game configuration.
-     * It provides methods to set the values for the configuration.
-     *
-     * @author theEvilReaper
-     * @version 1.0.0
-     * @since 1.0.0
-     */
-    sealed interface Builder permits GameConfigBuilder {
+    public record SlenderStatic(
+            boolean enabled,
+            Key sound,
+            int quietInterval,
+            int franticInterval,
+            float minVolume,
+            float maxVolume
+    ) {
 
         /**
-         * Sets the minimum number of players required to start a game.
-         *
-         * @param minPlayers the minimum number of players
-         * @return the builder instance
+         * Three takes of tape hiss from the Cygnus resource pack. A server without the pack hears
+         * nothing here, which beats half a horror cue played through the wrong sample.
          */
-        Builder minPlayers(int minPlayers);
+        public static final Key DEFAULT_SOUND = Key.key("cygnus", "vhs_static");
 
-        /**
-         * Sets the maximum number of players allowed in the game.
-         *
-         * @param maxPlayers the maximum number of players
-         * @return the builder instance
-         */
-        Builder maxPlayers(int maxPlayers);
+        /** Past this a round could end before the slender has heard the static twice. */
+        public static final int MAX_INTERVAL = 120;
 
-        /**
-         * Sets the lobby time in seconds.
-         *
-         * @param lobbyTime the lobby time
-         * @return the builder instance
-         * @throws IllegalArgumentException if the lobby time is than the {@link GameConfig#FORCE_START_TIME}
-         */
-        Builder lobbyTime(int lobbyTime);
+        public static final SlenderStatic DEFAULT = new SlenderStatic(true, DEFAULT_SOUND, 12, 3, 0.15F, 0.8F);
 
-        /**
-         * Sets the maximum game time in seconds.
-         *
-         * @param gameTime the maximum game time
-         * @return the builder instance
-         */
-        Builder gameTime(int gameTime);
+        public SlenderStatic {
+            if (quietInterval < 1 || quietInterval > MAX_INTERVAL) {
+                throw new IllegalArgumentException(
+                        "Slender static quiet interval must be between 1 and " + MAX_INTERVAL + " seconds");
+            }
+            if (franticInterval < 1) {
+                throw new IllegalArgumentException("Slender static frantic interval must be at least 1 second");
+            }
+            checkVolume(minVolume, "minimum");
+            checkVolume(maxVolume, "maximum");
+            if (franticInterval >= quietInterval) {
+                throw new IllegalArgumentException(
+                        "Slender static frantic interval (" + franticInterval
+                                + ") must be below the quiet interval (" + quietInterval + ")");
+            }
+            if (minVolume > maxVolume) {
+                throw new IllegalArgumentException(
+                        "Slender static minimum volume (" + minVolume
+                                + ") must not be above the maximum volume (" + maxVolume + ")");
+            }
+        }
 
-        /**
-         * Sets the size of the slender team.
-         *
-         * @param slenderTeamSize the size of the slender team
-         * @return the builder instance
-         * @throws IllegalArgumentException if the slender team size is smaller than 1
-         */
-        Builder slenderTeamSize(int slenderTeamSize);
-
-        /**
-         * Sets the size of the survivor team.
-         *
-         * @param survivorTeamSize the size of the survivor team
-         * @return the builder instance
-         * @throws IllegalArgumentException if the survivor team size is smaller than 1
-         */
-        Builder survivorTeamSize(int survivorTeamSize);
-
-        /**
-         * Sets the DSN which points Sentry at the project the errors of this service belong to.
-         *
-         * @param sentryDsn the DSN, or {@code null} to leave the Sentry integration off
-         * @return the builder instance
-         * @since 2.11.0
-         */
-        Builder sentryDsn(@Nullable String sentryDsn);
-
-        /**
-         * Sets the location the client downloads the ResourcePack from.
-         *
-         * @param resourcePackUrl the URL, or {@code null} to leave the ResourcePack feature off
-         * @return the builder instance
-         * @since 2.11.0
-         */
-        Builder resourcePackUrl(@Nullable URI resourcePackUrl);
-
-        /**
-         * Sets the SHA-1 checksum the client verifies the downloaded ResourcePack against.
-         *
-         * @param resourcePackSha1 the checksum, or {@code null} to have it computed at runtime
-         * @return the builder instance
-         * @since 2.11.0
-         */
-        Builder resourcePackSha1(@Nullable String resourcePackSha1);
-
-        /**
-         * Sets whether survivors hear a sound while a page is nearby.
-         *
-         * @param pageProximityEnabled {@code true} to keep the proximity hint on
-         * @return the builder instance
-         * @since 2.12.0
-         */
-        Builder pageProximityEnabled(boolean pageProximityEnabled);
-
-        /**
-         * Sets how far away a page may be and still be heard, in blocks.
-         *
-         * @param pageProximityRange the range in blocks
-         * @return the builder instance
-         * @throws IllegalArgumentException if the range is below 1 or above
-         *                                  {@link GameConfig#MAX_PAGE_PROXIMITY_RANGE}
-         * @since 2.12.0
-         */
-        Builder pageProximityRange(int pageProximityRange);
-
-        /**
-         * Sets the number of ticks between two proximity sounds.
-         *
-         * @param pageProximityInterval the interval in ticks
-         * @return the builder instance
-         * @throws IllegalArgumentException if the interval is below 1
-         * @since 2.12.0
-         */
-        Builder pageProximityInterval(int pageProximityInterval);
-
-        /**
-         * Sets the sound played while a page is nearby.
-         *
-         * @param pageProximitySound the sound key
-         * @return the builder instance
-         * @since 2.12.0
-         */
-        Builder pageProximitySound(Key pageProximitySound);
-
-        /**
-         * Sets how far past the range the chime's falloff is stretched.
-         *
-         * @param pageProximityVolumeFactor the factor
-         * @return the builder instance
-         * @throws IllegalArgumentException if the factor is below 1 or above
-         *                                  {@link GameConfig#MAX_PAGE_PROXIMITY_VOLUME_FACTOR}
-         * @since 2.12.1
-         */
-        Builder pageProximityVolumeFactor(float pageProximityVolumeFactor);
-
-        /**
-         * Sets whether a player hears a sound when they take damage.
-         *
-         * @param damageSoundEnabled {@code true} to keep the damage feedback on
-         * @return the builder instance
-         * @since 2.13.0
-         */
-        Builder damageSoundEnabled(boolean damageSoundEnabled);
-
-        /**
-         * Sets how many ticks have to pass before a player hears the damage sound again.
-         *
-         * @param damageSoundCooldown the cooldown in ticks
-         * @return the builder instance
-         * @throws IllegalArgumentException if the cooldown is below 1
-         * @since 2.13.0
-         */
-        Builder damageSoundCooldown(int damageSoundCooldown);
-
-        /**
-         * Sets the sound played to a player who was just hit.
-         *
-         * @param damageSound the sound key
-         * @return the builder instance
-         * @since 2.13.0
-         */
-        Builder damageSound(Key damageSound);
-
-        /**
-         * Sets how far the lobby's atmosphere is taken towards the game map's own.
-         *
-         * @param lobbyAtmosphereShare the share
-         * @return the builder instance
-         * @throws IllegalArgumentException if the share is below 0 or above 1
-         * @since 2.14.0
-         */
-        Builder lobbyAtmosphereShare(float lobbyAtmosphereShare);
-
-        /**
-         * Sets whether the slender hears static as the survivors collect his pages.
-         *
-         * @param slenderStaticEnabled {@code true} to keep the static on
-         * @return the builder instance
-         * @since 2.14.0
-         */
-        Builder slenderStaticEnabled(boolean slenderStaticEnabled);
-
-        /**
-         * Sets the sound the static is built from.
-         *
-         * @param slenderStaticSound the sound key
-         * @return the builder instance
-         * @since 2.14.0
-         */
-        Builder slenderStaticSound(Key slenderStaticSound);
-
-        /**
-         * Sets how many seconds lie between two bursts while no page has been found.
-         *
-         * @param slenderStaticQuietInterval the interval in seconds
-         * @return the builder instance
-         * @throws IllegalArgumentException if the interval is below 1 or above
-         *                                  {@link GameConfig#MAX_SLENDER_STATIC_INTERVAL}
-         * @since 2.14.0
-         */
-        Builder slenderStaticQuietInterval(int slenderStaticQuietInterval);
-
-        /**
-         * Sets how many seconds lie between two bursts once every page is gone.
-         *
-         * @param slenderStaticFranticInterval the interval in seconds
-         * @return the builder instance
-         * @throws IllegalArgumentException if the interval is below 1
-         * @since 2.14.0
-         */
-        Builder slenderStaticFranticInterval(int slenderStaticFranticInterval);
-
-        /**
-         * Sets how loud the static is while no page has been found.
-         *
-         * @param slenderStaticMinVolume the volume
-         * @return the builder instance
-         * @throws IllegalArgumentException if the volume is below 0 or above 1
-         * @since 2.14.0
-         */
-        Builder slenderStaticMinVolume(float slenderStaticMinVolume);
-
-        /**
-         * Sets how loud the static is once every page is gone.
-         *
-         * @param slenderStaticMaxVolume the volume
-         * @return the builder instance
-         * @throws IllegalArgumentException if the volume is below 0 or above 1
-         * @since 2.14.0
-         */
-        Builder slenderStaticMaxVolume(float slenderStaticMaxVolume);
-
-        /**
-         * Sets how close the slender has to be before the sight of him tears a survivor's view.
-         *
-         * @param glitchRange the range in blocks
-         * @return the builder instance
-         * @throws IllegalArgumentException if the range is below 1 or above
-         *                                  {@link GameConfig#MAX_GLITCH_RANGE}
-         * @since 2.13.0
-         */
-        Builder glitchRange(int glitchRange);
-
-        /**
-         * Sets the distance at which the tearing is at its worst.
-         *
-         * @param glitchCloseRange the distance in blocks
-         * @return the builder instance
-         * @throws IllegalArgumentException if the distance is below 1
-         * @since 2.13.0
-         */
-        Builder glitchCloseRange(int glitchCloseRange);
-
-        /**
-         * Sets how far off the centre of their view the slender may stand and still count as seen.
-         *
-         * @param glitchViewAngle the half-angle in degrees
-         * @return the builder instance
-         * @throws IllegalArgumentException if the angle is below 1 or above
-         *                                  {@link GameConfig#MAX_GLITCH_VIEW_ANGLE}
-         * @since 2.13.0
-         */
-        Builder glitchViewAngle(int glitchViewAngle);
-
-        /**
-         * Builds the game configuration.
-         *
-         * @return the created configuration
-         */
-        GameConfig build();
+        private static void checkVolume(float volume, String name) {
+            if (volume < 0.0F || volume > 1.0F) {
+                throw new IllegalArgumentException("Slender static " + name + " volume must be between 0 and 1");
+            }
+        }
     }
 }
