@@ -13,7 +13,6 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -21,8 +20,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -41,37 +38,121 @@ import static org.junit.jupiter.api.Assertions.*;
 class PageProviderTest {
 
     @Test
-    void testPageTwiceLoading() {
-        Set<PageResource> pageResources = Set.of(
-                new PageResource(Pos.ZERO, Direction.NORTH)
-        );
+    void testLoadingPagesTwiceIsRejected() {
         PageProvider pageProvider = new PageProvider();
-        assertNotNull(pageProvider);
+        pageProvider.loadPageData(spots(1));
 
-        pageProvider.loadPageData(pageResources);
-
+        Set<PageResource> values = spots(1);
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> pageProvider.loadPageData(pageResources)
+                () -> pageProvider.loadPageData(values)
         );
-
-        assertInstanceOf(IllegalArgumentException.class, exception);
         assertEquals("Can't load pages twice", exception.getMessage());
     }
 
     @Test
-    void testEmptyPageResourceUsage() {
+    void testLoadingNoPagesIsRejected() {
         PageProvider pageProvider = new PageProvider();
-        assertNotNull(pageProvider);
-        Set<PageResource> pageResources = Set.of();
 
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
-                () -> pageProvider.loadPageData(pageResources)
+                () -> pageProvider.loadPageData(Set.of())
         );
-
-        assertInstanceOf(IllegalStateException.class, exception);
         assertEquals("Can't load a map without any pages", exception.getMessage());
+    }
+
+    @Test
+    void testCollectStartPagesUsesTheGivenActivePageCount() {
+        int activePageCount = 12;
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(spots(activePageCount));
+
+        pageProvider.collectStartPages(activePageCount);
+
+        assertEquals(activePageCount, pageProvider.interactablePages().size(),
+                "collectStartPages must collect exactly the requested active page count");
+    }
+
+    @Test
+    void testCollectStartPagesRejectsAnActivePageCountAboveTheAvailableData() {
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(spots(8));
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> pageProvider.collectStartPages(12)
+        );
+        assertEquals("Not enough pages to start the game", exception.getMessage());
+    }
+
+    @Test
+    void testCollectedPagesOnlyAppearOnSpawn(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        instance.loadChunk(0, 0).join();
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(spots(MIN_ACTIVE_PAGE_COUNT));
+
+        pageProvider.collectStartPages(MIN_ACTIVE_PAGE_COUNT);
+        assertTrue(pageProvider.interactablePages().stream().allMatch(page -> page.getInstance() == null),
+                "collecting must not put any page into the world yet");
+
+        pageProvider.spawn(instance);
+        assertTrue(pageProvider.interactablePages().stream().allMatch(page -> page.getInstance() == instance),
+                "spawn must place every collected page");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testInteractablePagesOnlyListsCollectiblePages(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT);
+
+        PageEntity expired = pageProvider.interactablePages().getFirst();
+        expired.disableInteraction();
+
+        assertEquals(MIN_ACTIVE_PAGE_COUNT - 1, pageProvider.interactablePages().size());
+        assertFalse(pageProvider.interactablePages().contains(expired),
+                "an expired page is invisible to the player and must not be announced by a sound");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAClaimOnAnUnknownPageCountsNothing(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT);
+        Player player = env.createPlayer(instance);
+        AtomicInteger events = new AtomicInteger();
+        env.process().eventHandler().addListener(PageFoundEvent.class, event -> events.incrementAndGet());
+
+        assertFalse(pageProvider.triggerPageFound(player, UUID.randomUUID()), "a claim on a missing uuid must return false");
+        assertEquals(0, events.get(), "a claim that finds nothing must not raise the tension");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testEveryFindFiresAnEventCarryingTheRunningCount(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        int pageCount = 3;
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT);
+        pageProvider.setMaxPageAmount(pageCount);
+        Player player = env.createPlayer(instance);
+
+        List<PageFoundEvent> events = Collections.synchronizedList(new ArrayList<>());
+        env.process().eventHandler().addListener(PageFoundEvent.class, events::add);
+
+        for (PageEntity page : pageProvider.interactablePages().subList(0, pageCount)) {
+            pageProvider.triggerPageFound(player, page.getHitBoxUUID());
+        }
+
+        assertEquals(List.of(1, 2, 3), events.stream().map(PageFoundEvent::foundCount).toList(),
+                "each find has to report how many pages are gone by now, not just that one was found");
+        assertEquals(pageCount, events.getFirst().maxPages());
+        assertSame(player, events.getFirst().finder());
+
+        env.destroyInstance(instance, true);
     }
 
     /**
@@ -79,19 +160,13 @@ class PageProviderTest {
      * Before the fix, the losing call dereferenced a {@code null} {@link PageEntity} and threw an NPE;
      * it must now bail out silently and the winner's count must still be recorded correctly.
      */
-    @Disabled(value = "Check flakiness")
     @Test
     void testConcurrentDuplicateFind(@NotNull Env env) throws Exception {
         Instance instance = env.createFlatInstance();
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT);
         pageProvider.setMaxPageAmount(1);
-
-        PageEntity pageEntity = placedPage(instance, Pos.ZERO, 1);
-        UUID uuid = pageEntity.getHitBoxUUID();
-        seedActivePages(pageProvider, pageEntity);
-
         Player player = env.createPlayer(instance);
+        UUID uuid = pageProvider.interactablePages().getFirst().getHitBoxUUID();
 
         AtomicInteger completedEvents = new AtomicInteger();
         env.process().eventHandler().addListener(PageDiscoveryCompletedEvent.class, event -> completedEvents.incrementAndGet());
@@ -104,63 +179,26 @@ class PageProviderTest {
         env.destroyInstance(instance, true);
     }
 
-    @Test
-    void testTriggerPageFound(@NotNull Env env) throws Exception {
-        Instance instance = env.createFlatInstance();
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
-        pageProvider.setMaxPageAmount(1);
-
-        PageEntity pageEntity = placedPage(instance, Pos.ZERO, 1);
-        UUID uuid = pageEntity.getHitBoxUUID();
-        seedActivePages(pageProvider, pageEntity);
-
-        Player player = env.createPlayer(instance);
-
-        boolean firstClaim = pageProvider.triggerPageFound(player, uuid);
-        boolean nonExistentClaim = pageProvider.triggerPageFound(player, UUID.randomUUID());
-
-        assertTrue(firstClaim, "first claim must return true");
-        assertFalse(nonExistentClaim, "claim on missing uuid must return false");
-
-        env.destroyInstance(instance, true);
-    }
-
     /**
-     * Reproduces the lost-update race on {@code currentFoundedPageCount}: with a plain {@code int} and
-     * {@code ++}, concurrent finds of distinct pages could overwrite each other's increment and the
-     * displayed count would end up below the real number found, sometimes preventing the completion
-     * event from ever firing.
+     * Reproduces the lost-update race on the found counter: with a plain {@code int} and {@code ++},
+     * concurrent finds of distinct pages could overwrite each other's increment and the displayed
+     * count would end up below the real number found, sometimes preventing the completion event from
+     * ever firing.
      */
     @Test
     void testConcurrentDistinctFinds(@NotNull Env env) throws Exception {
         Instance instance = env.createFlatInstance();
-        int pageCount = 6;
-
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(
-                IntStream.range(0, pageCount)
-                        .mapToObj(i -> new PageResource(new Pos(i, 0, 0), Direction.NORTH))
-                        .collect(Collectors.toSet())
-        );
-        pageProvider.setMaxPageAmount(pageCount);
-
-        List<PageEntity> entities = IntStream.range(0, pageCount)
-                .mapToObj(i -> placedPage(instance, Pos.ZERO, i + 1))
-                .toList();
-        seedActivePages(pageProvider, entities.toArray(new PageEntity[0]));
-
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT);
+        pageProvider.setMaxPageAmount(MIN_ACTIVE_PAGE_COUNT);
         Player player = env.createPlayer(instance);
 
         AtomicInteger completedEvents = new AtomicInteger();
         env.process().eventHandler().addListener(PageDiscoveryCompletedEvent.class, event -> completedEvents.incrementAndGet());
 
-        runConcurrently(entities.stream()
-                .map(entity -> (Runnable) () -> pageProvider.triggerPageFound(player, entity.getHitBoxUUID()))
-                .toList());
+        runConcurrently(findTasks(pageProvider, player));
 
-        assertEquals(pageCount + " / " + pageCount, plainStatus(pageProvider),
-                "every concurrent find must be counted, a lost update would leave the status below " + pageCount);
+        assertEquals(MIN_ACTIVE_PAGE_COUNT + " / " + MIN_ACTIVE_PAGE_COUNT, plainStatus(pageProvider),
+                "every concurrent find must be counted, a lost update would leave the status below " + MIN_ACTIVE_PAGE_COUNT);
         assertEquals(1, completedEvents.get(), "the completion event must fire exactly once once all pages are found");
 
         env.destroyInstance(instance, true);
@@ -172,28 +210,12 @@ class PageProviderTest {
      * concurrently via {@code triggerPageFound}.
      */
     @Test
-    void testConcurrentCleanUp(@NotNull Env env) throws Exception {
+    void testConcurrentCleanUp(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
-        int pageCount = 6;
-
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(
-                IntStream.range(0, pageCount)
-                        .mapToObj(i -> new PageResource(new Pos(i, 0, 0), Direction.NORTH))
-                        .collect(Collectors.toSet())
-        );
-        pageProvider.setMaxPageAmount(pageCount);
-
-        List<PageEntity> entities = IntStream.range(0, pageCount)
-                .mapToObj(i -> placedPage(instance, Pos.ZERO, i + 1))
-                .toList();
-        seedActivePages(pageProvider, entities.toArray(new PageEntity[0]));
-
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT);
         Player player = env.createPlayer(instance);
 
-        List<Runnable> tasks = new ArrayList<>(entities.stream()
-                .map(entity -> (Runnable) () -> pageProvider.triggerPageFound(player, entity.getHitBoxUUID()))
-                .toList());
+        List<Runnable> tasks = new ArrayList<>(findTasks(pageProvider, player));
         tasks.add(pageProvider::cleanUp);
 
         assertDoesNotThrow(() -> runConcurrently(tasks));
@@ -202,91 +224,22 @@ class PageProviderTest {
     }
 
     @Test
-    void testInteractablePagesOnlyListsCollectiblePages(@NotNull Env env) throws Exception {
+    void testAnExpiredPageMovesOnAndHandsItsSpotBack(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
-
-        PageEntity collectible = placedPage(instance, new Pos(10, 64, 20), 1);
-        PageEntity expired = placedPage(instance, new Pos(-5, 64, 7), 2);
-        expired.disableInteraction();
-        seedActivePages(pageProvider, collectible, expired);
-
-        assertEquals(List.of(collectible), pageProvider.interactablePages(),
-                "an expired page is invisible to the player and must not be announced by a sound");
-
-        env.destroyInstance(instance, true);
-    }
-
-    @Test
-    void testEveryFindFiresAnEventCarryingTheRunningCount(@NotNull Env env) throws Exception {
-        Instance instance = env.createFlatInstance();
-        int pageCount = 3;
-
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(
-                IntStream.range(0, pageCount)
-                        .mapToObj(i -> new PageResource(new Pos(i, 0, 0), Direction.NORTH))
-                        .collect(Collectors.toSet())
-        );
-        pageProvider.setMaxPageAmount(pageCount);
-
-        List<PageEntity> entities = IntStream.range(0, pageCount)
-                .mapToObj(i -> placedPage(instance, Pos.ZERO, i + 1))
-                .toList();
-        seedActivePages(pageProvider, entities.toArray(new PageEntity[0]));
-
-        Player player = env.createPlayer(instance);
-
-        List<PageFoundEvent> events = Collections.synchronizedList(new ArrayList<>());
-        env.process().eventHandler().addListener(PageFoundEvent.class, events::add);
-
-        for (PageEntity entity : entities) {
-            pageProvider.triggerPageFound(player, entity.getHitBoxUUID());
-        }
-
-        assertEquals(List.of(1, 2, 3), events.stream().map(PageFoundEvent::foundCount).toList(),
-                "each find has to report how many pages are gone by now, not just that one was found");
-        assertEquals(pageCount, events.getFirst().maxPages());
-        assertSame(player, events.getFirst().finder());
-
-        env.destroyInstance(instance, true);
-    }
-
-    @Test
-    void testAClaimOnAnUnknownPageFiresNoEvent(@NotNull Env env) throws Exception {
-        Instance instance = env.createFlatInstance();
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
-        pageProvider.setMaxPageAmount(2);
-
-        PageEntity pageEntity = placedPage(instance, Pos.ZERO, 1);
-        seedActivePages(pageProvider, pageEntity);
-
-        Player player = env.createPlayer(instance);
-
-        AtomicInteger events = new AtomicInteger();
-        env.process().eventHandler().addListener(PageFoundEvent.class, event -> events.incrementAndGet());
-
-        pageProvider.triggerPageFound(player, UUID.randomUUID());
-
-        assertEquals(0, events.get(), "a claim that finds nothing must not raise the tension");
-
-        env.destroyInstance(instance, true);
-    }
-
-    @Test
-    void testAnExpiredPageHandsItsSpotBackToThePool(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        // One spare spot: without the expired spots coming back, the second expiry finds the pool empty.
+        // One spare spot: without the expired spots coming back, the second expiry finds the pool empty
         PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
+        AtomicInteger finds = new AtomicInteger();
+        env.process().eventHandler().addListener(PageFoundEvent.class, event -> finds.incrementAndGet());
+        String statusBefore = plainStatus(pageProvider);
 
         PageEntity page = pageProvider.interactablePages().getFirst();
         Pos startSpot = page.getPosition();
 
         pageProvider.triggerTTLHandling(page.getHitBoxUUID());
-        Pos spareSpot = page.getPosition();
-        assertNotEquals(startSpot, spareSpot, "an expired page must move to a new spot");
+        assertNotEquals(startSpot, page.getPosition(), "an expired page must move to a new spot");
+        assertTrue(page.isInteractable(), "the expired page is collectible again on its new spot");
+        assertEquals(0, finds.get(), "an expiry must not raise a find");
+        assertEquals(statusBefore, plainStatus(pageProvider), "an expiry must not change the found count");
 
         pageProvider.triggerTTLHandling(page.getHitBoxUUID());
         assertEquals(startSpot, page.getPosition(), "the spot it expired on must be back in the pool");
@@ -295,18 +248,29 @@ class PageProviderTest {
     }
 
     @Test
-    void testAFoundSpotIsNotHandedBackToThePool(@NotNull Env env) throws Exception {
+    void testAFoundPageStartsFreshOnTheSpareSpotAndUsesItsSpotUp(@NotNull Env env) throws Exception {
         Instance instance = env.createFlatInstance();
         PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
         Player player = env.createPlayer(instance);
 
         PageEntity page = pageProvider.interactablePages().getFirst();
-        assertTrue(pageProvider.triggerPageFound(player, page.getHitBoxUUID()));
-        assertTrue(globalCache(pageProvider).isEmpty(), "the find used up the spare spot");
+        Pos foundAt = page.getPosition();
+        // Almost run out on its old spot
+        Field tickTime = PageEntity.class.getDeclaredField("currentTickTime");
+        tickTime.setAccessible(true);
+        tickTime.setInt(page, GameConfig.PAGE_TTL_TIME);
 
-        // The page now stands on the former spare spot. Expiring it must not bring the found spot back.
+        assertTrue(pageProvider.triggerPageFound(player, page.getHitBoxUUID()));
+
+        Pos spareSpot = page.getPosition();
+        assertNotEquals(foundAt, spareSpot, "a found page must move to the spare spot");
+        assertEquals(1.0, page.remainingTtlRatio(), "the page must get its full time on the new spot");
+        ItemStack shown = ((ItemDisplayMeta) page.getEntityMeta()).getItemStack();
+        assertEquals(page.getPageItem(), shown, "the page on the wall must be the one the next finder gets");
+
+        // The pool is empty now. Had the found spot come back, the expiry would move the page onto it.
         pageProvider.triggerTTLHandling(page.getHitBoxUUID());
-        assertTrue(globalCache(pageProvider).isEmpty(), "a found spot must stay used up");
+        assertEquals(spareSpot, page.getPosition(), "a found spot must stay used up");
 
         env.destroyInstance(instance, true);
     }
@@ -330,149 +294,35 @@ class PageProviderTest {
         env.destroyInstance(instance, true);
     }
 
-    @Test
-    void testAnExpiredPageIsNotCountedAsFound(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
-        AtomicInteger finds = new AtomicInteger();
-        env.process().eventHandler().addListener(PageFoundEvent.class, event -> finds.incrementAndGet());
-        String statusBefore = plainStatus(pageProvider);
-
-        PageEntity page = pageProvider.interactablePages().getFirst();
-        pageProvider.triggerTTLHandling(page.getHitBoxUUID());
-
-        assertEquals(0, finds.get(), "an expiry must not raise a find");
-        assertEquals(statusBefore, plainStatus(pageProvider), "an expiry must not change the found count");
-        assertTrue(page.isInteractable(), "the expired page is collectible again on its new spot");
-
-        env.destroyInstance(instance, true);
-    }
-
-    @Test
-    void testAFoundPageStartsFreshOnItsNewSpot(@NotNull Env env) throws Exception {
-        Instance instance = env.createFlatInstance();
-        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
-        Player player = env.createPlayer(instance);
-
-        PageEntity page = pageProvider.interactablePages().getFirst();
-        // Almost run out on its old spot
-        Field tickTime = PageEntity.class.getDeclaredField("currentTickTime");
-        tickTime.setAccessible(true);
-        tickTime.setInt(page, GameConfig.PAGE_TTL_TIME);
-
-        assertTrue(pageProvider.triggerPageFound(player, page.getHitBoxUUID()));
-
-        assertEquals(1.0, page.remainingTtlRatio(), "the page must get its full time on the new spot");
-        ItemStack shown = ((ItemDisplayMeta) page.getEntityMeta()).getItemStack();
-        assertEquals(page.getPageItem(), shown, "the page on the wall must be the one the next finder gets");
-
-        env.destroyInstance(instance, true);
-    }
-
+    /**
+     * Creates a provider with {@value GameConfig#MIN_ACTIVE_PAGE_COUNT} pages placed into the instance.
+     * Every spot beyond that stays free in the pool.
+     */
     private static PageProvider spawnedProvider(Instance instance, int spotCount) {
         // All spots share one chunk, loaded up front: placing or teleporting a page into a chunk that
         // isn't loaded yet only completes asynchronously, and the assertions would race it.
         instance.loadChunk(0, 0).join();
         PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(
-                IntStream.range(0, spotCount)
-                        .mapToObj(i -> new PageResource(new Pos(i, 40, 0), Direction.NORTH))
-                        .collect(Collectors.toSet())
-        );
-        pageProvider.setMaxPageAmount(100);
+        pageProvider.loadPageData(spots(spotCount));
         pageProvider.collectStartPages(MIN_ACTIVE_PAGE_COUNT);
         pageProvider.spawn(instance);
         return pageProvider;
     }
 
-    @SuppressWarnings("unchecked")
-    private static Queue<PageResource> globalCache(PageProvider pageProvider) throws ReflectiveOperationException {
-        Field field = PageProvider.class.getDeclaredField("freeSpots");
-        field.setAccessible(true);
-        return (Queue<PageResource>) field.get(pageProvider);
+    private static Set<PageResource> spots(int count) {
+        return IntStream.range(0, count)
+                .mapToObj(i -> new PageResource(new Pos(i, 40, 0), Direction.NORTH))
+                .collect(Collectors.toSet());
     }
 
-    @Test
-    void testCollectStartPagesUsesTheGivenActivePageCount() throws Exception {
-        int activePageCount = 12;
-
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(
-                IntStream.range(0, activePageCount)
-                        .mapToObj(i -> new PageResource(new Pos(i, 0, 0), Direction.NORTH))
-                        .collect(Collectors.toSet())
-        );
-
-        pageProvider.collectStartPages(activePageCount);
-
-        assertEquals(activePageCount, activePageCount(pageProvider),
-                "collectStartPages must collect exactly the requested active page count");
-    }
-
-    @Test
-    void testCollectedPagesOnlyAppearOnSpawn(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        instance.loadChunk(0, 0).join();
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(
-                IntStream.range(0, MIN_ACTIVE_PAGE_COUNT)
-                        .mapToObj(i -> new PageResource(new Pos(i, 40, 0), Direction.NORTH))
-                        .collect(Collectors.toSet())
-        );
-
-        pageProvider.collectStartPages(MIN_ACTIVE_PAGE_COUNT);
-        assertTrue(pageProvider.interactablePages().stream().allMatch(page -> page.getInstance() == null),
-                "collecting must not put any page into the world yet");
-
-        pageProvider.spawn(instance);
-        assertTrue(pageProvider.interactablePages().stream().allMatch(page -> page.getInstance() == instance),
-                "spawn must place every collected page");
-
-        env.destroyInstance(instance, true);
-    }
-
-    @Test
-    void testCollectStartPagesRejectsAnActivePageCountAboveTheAvailableData() {
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(
-                IntStream.range(0, 8)
-                        .mapToObj(i -> new PageResource(new Pos(i, 0, 0), Direction.NORTH))
-                        .collect(Collectors.toSet())
-        );
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> pageProvider.collectStartPages(12)
-        );
-        assertEquals("Not enough pages to start the game", exception.getMessage());
-    }
-
-    @SuppressWarnings("unchecked")
-    private static int activePageCount(PageProvider pageProvider) throws ReflectiveOperationException {
-        Field field = PageProvider.class.getDeclaredField("activePages");
-        field.setAccessible(true);
-        Map<UUID, ?> activePages = (Map<UUID, ?>) field.get(pageProvider);
-        return activePages.size();
-    }
-
-    private static PageEntity placedPage(Instance instance, Pos position, int pageCount) {
-        PageEntity pageEntity = new PageEntity(new PageResource(position, Direction.NORTH), pageCount);
-        pageEntity.place(instance).join();
-        return pageEntity;
+    private static List<Runnable> findTasks(PageProvider pageProvider, Player player) {
+        return pageProvider.interactablePages().stream()
+                .map(page -> (Runnable) () -> pageProvider.triggerPageFound(player, page.getHitBoxUUID()))
+                .toList();
     }
 
     private static String plainStatus(PageProvider pageProvider) {
         return PlainTextComponentSerializer.plainText().serialize(pageProvider.getPageStatus());
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void seedActivePages(PageProvider pageProvider, PageEntity... entities) throws ReflectiveOperationException {
-        Field field = PageProvider.class.getDeclaredField("activePages");
-        field.setAccessible(true);
-        Map<UUID, PageEntity> activePages = (Map<UUID, PageEntity>) field.get(pageProvider);
-        for (PageEntity entity : entities) {
-            activePages.put(entity.getHitBoxUUID(), entity);
-        }
     }
 
     /**
