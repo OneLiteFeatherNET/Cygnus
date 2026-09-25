@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * The class contains method and static constant values to handle specific messages during the setup
@@ -40,6 +41,10 @@ public final class SetupMessages {
     public static final Component NO_ACTIVE_CREEK_ROUTE;
     public static final Component NO_CREEK_POINT_TO_REMOVE;
     public static final Component SELECT_CLICK;
+    public static final Component CREEK_PAUSE_NEEDS_POINT;
+    public static final Component CREEK_END_PAUSE_NEEDS_TWO_POINTS;
+    public static final Component CREEK_ROUTE_NOT_USABLE;
+    public static final Component CREEK_POINT_HINT;
 
     static {
         SPACE_SEPARATOR = Component.text("» ", NamedTextColor.GRAY);
@@ -119,6 +124,18 @@ public final class SetupMessages {
         );
         NO_CREEK_POINT_TO_REMOVE = Messages.withPrefix(
                 Component.text("The active creek route has no point to remove", NamedTextColor.RED)
+        );
+        CREEK_PAUSE_NEEDS_POINT = Messages.withPrefix(
+                Component.text("Add a point to the creek route before setting its pauses", NamedTextColor.RED)
+        );
+        CREEK_END_PAUSE_NEEDS_TWO_POINTS = Messages.withPrefix(
+                Component.text("The end pause needs a creek route with at least two points", NamedTextColor.RED)
+        );
+        CREEK_ROUTE_NOT_USABLE = Messages.withPrefix(
+                Component.text("The creek route needs at least two points before the game uses it", NamedTextColor.RED)
+        );
+        CREEK_POINT_HINT = Messages.withPrefix(
+                Component.text("Break a block to add a point on top of it, break it again to remove the point", NamedTextColor.GRAY)
         );
     }
 
@@ -201,6 +218,21 @@ public final class SetupMessages {
     }
 
     /**
+     * Creates a new {@link Component} instance which confirms that a certain point of a creek route was removed.
+     *
+     * @param name   of the route
+     * @param number of the removed point, counting from 1
+     * @param count  of points the route has left
+     * @return the created component
+     */
+    @Contract(value = "_, _, _ -> new", pure = true)
+    public static @NotNull Component getCreekPointRemovedAt(@NotNull String name, int number, int count) {
+        return Messages.withMiniPrefix("<gray>Removed point <gold><number> <gray>of <gold><name> <gray>(<gold><count> <gray>left)",
+                nameTag(name), countTag(count),
+                TagResolver.builder().tag("number", Tag.inserting(Component.text(number))).build());
+    }
+
+    /**
      * Creates a new {@link Component} instance which confirms that a creek route is now being edited.
      *
      * @param name of the selected route
@@ -223,6 +255,47 @@ public final class SetupMessages {
     }
 
     /**
+     * Creates a new {@link Component} instance which confirms that a creek route is no longer edited.
+     *
+     * @param name  of the route
+     * @param count of points the route has
+     * @return the created component
+     */
+    @Contract(value = "_, _ -> new", pure = true)
+    public static @NotNull Component getCreekRouteFinished(@NotNull String name, int count) {
+        return Messages.withMiniPrefix("<gray>Finished creek route <gold><name> <gray>(<gold><count> <gray>points)",
+                nameTag(name), countTag(count));
+    }
+
+    /**
+     * Creates a new {@link Component} instance which confirms the pauses of a creek route.
+     *
+     * @param name        of the route
+     * @param startMillis pause at the start, in milliseconds
+     * @param endMillis   pause at the end, in milliseconds
+     * @return the created component
+     */
+    @Contract(value = "_, _, _ -> new", pure = true)
+    public static @NotNull Component getCreekPausesSet(@NotNull String name, int startMillis, int endMillis) {
+        return Messages.withMiniPrefix(
+                "<gray>Set the pauses of <gold><name><gray>: start <gold><start> s<gray>, end <gold><end> s",
+                nameTag(name), secondsTag("start", startMillis), secondsTag("end", endMillis));
+    }
+
+    /**
+     * Creates a new {@link Component} instance which confirms the start pause of a creek route.
+     *
+     * @param name        of the route
+     * @param startMillis pause at the start, in milliseconds
+     * @return the created component
+     */
+    @Contract(value = "_, _ -> new", pure = true)
+    public static @NotNull Component getCreekStartPauseSet(@NotNull String name, int startMillis) {
+        return Messages.withMiniPrefix("<gray>Set the start pause of <gold><name> <gray>to <gold><start> s",
+                nameTag(name), secondsTag("start", startMillis));
+    }
+
+    /**
      * Route names come from player input, so they are inserted as plain text instead of being parsed.
      */
     private static TagResolver nameTag(String name) {
@@ -231,6 +304,11 @@ public final class SetupMessages {
 
     private static TagResolver countTag(int count) {
         return TagResolver.builder().tag("count", Tag.inserting(Component.text(count))).build();
+    }
+
+    private static TagResolver secondsTag(String key, int millis) {
+        String seconds = String.format(Locale.ROOT, "%.1f", millis / 1000.0D);
+        return TagResolver.builder().tag(key, Tag.inserting(Component.text(seconds))).build();
     }
 
     /**
