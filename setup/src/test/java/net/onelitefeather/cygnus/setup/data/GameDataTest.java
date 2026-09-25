@@ -7,8 +7,11 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.common.creek.CreekRoute;
+import net.onelitefeather.cygnus.common.creek.CreekRoutesFile;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
+import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.theevilreaper.aves.map.MapEntry;
 import org.junit.jupiter.api.Test;
@@ -20,10 +23,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MicrotusExtension.class)
@@ -150,6 +155,77 @@ class GameDataTest {
 
         GameMapBuilder builder = (GameMapBuilder) gameData.getMapBuilder();
         assertEquals(1, builder.getPageFaces().size());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testCreekRouteManagement(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        GameData gameData = new GameData(player, MapEntry.of(Paths.get("")));
+
+        assertFalse(gameData.addCreekPoint(Vec.ZERO), "no active route yet");
+        assertTrue(gameData.createCreekRoute("Waldweg"));
+        assertFalse(gameData.createCreekRoute("Waldweg"));
+        assertEquals("Waldweg", gameData.activeCreekRoute());
+        assertTrue(gameData.addCreekPoint(new Vec(1, 80, 1)));
+        assertTrue(gameData.addCreekPoint(new Vec(5, 80, 1)));
+        assertEquals(2, gameData.activeCreekPointCount());
+        assertTrue(gameData.removeLastCreekPoint());
+        assertEquals(1, gameData.activeCreekPointCount());
+
+        assertTrue(gameData.createCreekRoute("Lichtung"));
+        assertTrue(gameData.selectCreekRoute("Waldweg"));
+        assertFalse(gameData.selectCreekRoute("Unknown"));
+        assertTrue(gameData.deleteCreekRoute("Waldweg"));
+        assertNull(gameData.activeCreekRoute(), "deleting the active route clears the selection");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testSwapCreekRouteMode(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        GameData gameData = new GameData(player, MapEntry.of(Paths.get("")));
+
+        assertFalse(gameData.hasCreekRouteMode());
+        gameData.swapCreekRouteMode();
+        assertTrue(gameData.hasCreekRouteMode());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void saveAndLoadKeepAnUnfinishedCreekRoute(Env env, @TempDir Path root) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        MapEntry mapEntry = MapEntry.of(root);
+        GameData gameData = new GameData(player, mapEntry);
+        gameData.createCreekRoute("Stub");
+        gameData.addCreekPoint(new Vec(1, 80, 1));
+
+        gameData.save();
+        GameData reloaded = new GameData(player, mapEntry);
+
+        assertEquals(List.of(new CreekRoute("Stub", List.of(new Vec(1, 80, 1)))),
+                ((GameMapBuilder) reloaded.getMapBuilder()).getCreekRoutes());
+        assertTrue(Files.exists(CreekRoutesFile.resolve(root.resolve("map.json"))));
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testCreekRouteItemTogglesTheMode(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        GameData gameData = new GameData(player, MapEntry.of(Paths.get("")));
+
+        gameData.handleItemInteraction(player, SetupItemId.CREEK_ROUTES);
+        assertTrue(gameData.hasCreekRouteMode());
+        gameData.handleItemInteraction(player, SetupItemId.CREEK_LEAVE);
+        assertFalse(gameData.hasCreekRouteMode());
 
         env.destroyInstance(instance, true);
     }

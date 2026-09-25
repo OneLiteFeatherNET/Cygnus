@@ -7,12 +7,20 @@ import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.utils.Direction;
+import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.common.creek.CreekRoute;
+import net.onelitefeather.cygnus.common.creek.CreekRoutesFile;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
+import net.onelitefeather.cygnus.setup.creek.CreekRoutePreview;
+import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
+import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
 import net.onelitefeather.cygnus.setup.inventory.page.PageHeaderFormatter;
+import net.onelitefeather.cygnus.setup.inventory.slot.CreekRouteSlot;
 import net.onelitefeather.cygnus.setup.inventory.slot.PageSlot;
 import net.onelitefeather.cygnus.setup.inventory.view.InventoryMode;
 import net.onelitefeather.cygnus.setup.inventory.view.MapDataOverviewInventory;
@@ -31,6 +39,7 @@ import net.theevilreaper.aves.inventory.slot.ISlot;
 import net.theevilreaper.aves.inventory.util.LayoutCalculator;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,9 +50,14 @@ public class GameData extends InstanceSetupData {
     private final MapDataOverviewInventory inventory;
     private final SurvivorViewInventory survivorInventory;
     private final PageableInventory pageInventory;
+    private final PageableInventory creekRouteInventory;
+    private final List<CreekRouteSlot> creekRouteSlots;
+    private final CreekRoutePreview creekRoutePreview;
     private GameMapBuilder gameMapBuilder;
     private boolean pageMode;
     private boolean survivorMode;
+    private boolean creekRouteMode;
+    private @Nullable String activeCreekRoute;
 
     /**
      * Constructs a new GameData instance.
@@ -54,10 +68,60 @@ public class GameData extends InstanceSetupData {
     public GameData(Player player, MapEntry mapEntry) {
         super(player.getUuid(), mapEntry, BossBar.Color.RED);
         this.loadData();
-
+        this.creekRouteSlots = new ArrayList<>();
         this.inventory = new MapDataOverviewInventory(player, this.gameMapBuilder, InventoryMode.GAME);
         this.survivorInventory = new SurvivorViewInventory(player, this.gameMapBuilder);
         this.pageInventory = createPageInventory(player);
+        this.creekRouteInventory = createCreekRouteInventory(player);
+        this.creekRoutePreview = new CreekRoutePreview(player, () -> this.gameMapBuilder.getCreekRoutes(),
+                () -> this.activeCreekRoute, CreekConfig.DEFAULT.routeLinkDistance());
+        this.refreshCreekRoutes();
+    }
+
+    private PageableInventory createCreekRouteInventory(Player player) {
+        InventoryLayout layout = InventoryLayout.fromType(InventoryType.CHEST_6_ROW);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), SetupItems.DECORATION_PANE);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_6_ROW), SetupItems.DECORATION_PANE);
+        return PageableInventory.builder()
+                .titleData(TitleData.builder()
+                        .title(Component.text("Creek routes - "))
+                        .pageMapper(PageHeaderFormatter::format)
+                        .showPageNumbers(true)
+                        .build())
+                .player(player)
+                .slotRange(LayoutCalculator.quad(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_5_ROW.getSize() - 1))
+                .layout(layout)
+                .values(new ArrayList<>())
+                .build();
+    }
+
+    /**
+     * Rebuilds the route overview after routes or points changed.
+     */
+    private void refreshCreekRoutes() {
+        this.creekRouteSlots.forEach(this.creekRouteInventory::remove);
+        this.creekRouteSlots.clear();
+        for (CreekRoute route : this.gameMapBuilder.getCreekRoutes()) {
+            CreekRouteSlot slot = new CreekRouteSlot(route.name(), route.points().size(),
+                    route.name().equals(this.activeCreekRoute), this::selectFromOverview, this::deleteFromOverview);
+            this.creekRouteSlots.add(slot);
+            this.creekRouteInventory.add(slot);
+        }
+        if (this.creekRoutePreview != null && this.hasCreekRouteMode()) {
+            this.creekRoutePreview.refreshLabels();
+        }
+    }
+
+    private void selectFromOverview(Player player, String name) {
+        if (this.selectCreekRoute(name)) {
+            player.sendMessage(SetupMessages.getCreekRouteSelected(name));
+        }
+    }
+
+    private void deleteFromOverview(Player player, String name) {
+        if (this.deleteCreekRoute(name)) {
+            player.sendMessage(SetupMessages.getCreekRouteDeleted(name));
+        }
     }
 
     /**
@@ -128,6 +192,106 @@ public class GameData extends InstanceSetupData {
      */
     public void swapSurvivorMode() {
         this.survivorMode = !this.survivorMode;
+    }
+
+    /**
+     * Returns whether the creek route mode is on.
+     *
+     * @return {@code true} while routes are being edited
+     */
+    public boolean hasCreekRouteMode() {
+        return this.creekRouteMode;
+    }
+
+    /**
+     * Turns the creek route mode on or off.
+     */
+    public void swapCreekRouteMode() {
+        this.creekRouteMode = !this.creekRouteMode;
+    }
+
+    /**
+     * Creates a creek route and makes it the active one.
+     *
+     * @param name the route's name
+     * @return {@code false} if the name is empty or taken
+     */
+    public boolean createCreekRoute(String name) {
+        String trimmed = name.trim();
+        if (!this.gameMapBuilder.addCreekRoute(trimmed)) return false;
+        this.activeCreekRoute = trimmed;
+        this.refreshCreekRoutes();
+        return true;
+    }
+
+    /**
+     * Makes a creek route the active one.
+     *
+     * @param name the route's name
+     * @return {@code false} if there is no such route
+     */
+    public boolean selectCreekRoute(String name) {
+        if (!this.gameMapBuilder.hasCreekRoute(name)) return false;
+        this.activeCreekRoute = name;
+        this.refreshCreekRoutes();
+        return true;
+    }
+
+    /**
+     * Deletes a creek route.
+     *
+     * @param name the route's name
+     * @return {@code false} if there was no such route
+     */
+    public boolean deleteCreekRoute(String name) {
+        if (!this.gameMapBuilder.removeCreekRoute(name)) return false;
+        if (name.equals(this.activeCreekRoute)) this.activeCreekRoute = null;
+        this.refreshCreekRoutes();
+        return true;
+    }
+
+    /**
+     * Appends a point to the active creek route.
+     *
+     * @param point where the creek's feet stand
+     * @return {@code false} without an active route
+     */
+    public boolean addCreekPoint(Vec point) {
+        String active = this.activeCreekRoute;
+        if (active == null || !this.gameMapBuilder.addCreekPoint(active, point)) return false;
+        this.refreshCreekRoutes();
+        return true;
+    }
+
+    /**
+     * Removes the last point of the active creek route.
+     *
+     * @return {@code false} without an active route or without points
+     */
+    public boolean removeLastCreekPoint() {
+        String active = this.activeCreekRoute;
+        if (active == null || !this.gameMapBuilder.removeLastCreekPoint(active)) return false;
+        this.refreshCreekRoutes();
+        return true;
+    }
+
+    /**
+     * Returns the name of the creek route being edited.
+     *
+     * @return the name, or {@code null} if none is active
+     */
+    public @Nullable String activeCreekRoute() {
+        return this.activeCreekRoute;
+    }
+
+    /**
+     * Returns how many points the active creek route has.
+     *
+     * @return the number of points, {@code 0} without an active route
+     */
+    public int activeCreekPointCount() {
+        String active = this.activeCreekRoute;
+        return active == null ? 0 : this.gameMapBuilder.getCreekRoutePoints(active).size();
     }
 
     /**
@@ -258,6 +422,47 @@ public class GameData extends InstanceSetupData {
             return;
         }
 
+        if (SetupItemId.CREEK_ROUTES == tagValue) {
+            this.swapCreekRouteMode();
+            if (hasCreekRouteMode()) {
+                player.sendMessage(SetupMessages.CREEK_MODE_ENABLED);
+                player.sendMessage(SetupMessages.getModeInform("creek route"));
+                SetupItems.setCreekRouteItems(player);
+                this.creekRoutePreview.show();
+            } else {
+                this.creekRoutePreview.hide();
+                player.sendMessage(SetupMessages.CREEK_MODE_DISABLED);
+                SetupItems.setGameLayout(player);
+            }
+            return;
+        }
+        if (SetupItemId.CREEK_LEAVE == tagValue) {
+            if (hasCreekRouteMode()) {
+                this.swapCreekRouteMode();
+            }
+            this.creekRoutePreview.hide();
+            player.sendMessage(SetupMessages.CREEK_MODE_DISABLED);
+            SetupItems.setGameLayout(player);
+            return;
+        }
+        if (SetupItemId.CREEK_NEW == tagValue) {
+            EventDispatcher.call(new DialogRequestEvent(player, DialogTarget.CREEK_ROUTE_NAME));
+            return;
+        }
+        if (SetupItemId.CREEK_UNDO == tagValue) {
+            String active = this.activeCreekRoute;
+            if (active == null || !this.removeLastCreekPoint()) {
+                player.sendMessage(SetupMessages.NO_CREEK_POINT_TO_REMOVE);
+            } else {
+                player.sendMessage(SetupMessages.getCreekPointRemoved(active, this.activeCreekPointCount()));
+            }
+            return;
+        }
+        if (SetupItemId.CREEK_LIST == tagValue) {
+            this.creekRouteInventory.open();
+            return;
+        }
+
         super.handleItemInteraction(player, tagValue);
     }
 
@@ -312,6 +517,7 @@ public class GameData extends InstanceSetupData {
         }
         GameMap map = this.gameMapBuilder.build();
         PageFacesFile.save(mapEntry.getMapFile(), map.getPageFaces());
+        CreekRoutesFile.save(mapEntry.getMapFile(), map.getCreekRoutes());
         GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), map);
     }
 
@@ -333,6 +539,8 @@ public class GameData extends InstanceSetupData {
         this.survivorInventory.unregister();
         this.inventory.unregister();
         this.pageInventory.unregister();
+        this.creekRouteInventory.unregister();
+        this.creekRoutePreview.hide();
     }
 
     /**
@@ -344,6 +552,7 @@ public class GameData extends InstanceSetupData {
                 this.mapEntry.hasMapFile()
                         ? GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), GameMap.class)
                                 .map(map -> PageFacesFile.loadInto(mapEntry.getMapFile(), map))
+                                .map(map -> map.withCreekRoutes(CreekRoutesFile.loadUnchecked(mapEntry.getMapFile())))
                         : Optional.empty();
 
         this.gameMapBuilder = mapData
