@@ -104,7 +104,8 @@ public final class PageFacesFile {
                 merged,
                 map.getSurvivorSpawns(),
                 map.builders(),
-                map.getAtmosphere()
+                map.getAtmosphere(),
+                map.getCreekRoutes()
         );
     }
 }
