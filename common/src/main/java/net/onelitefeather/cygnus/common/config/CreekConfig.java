@@ -42,6 +42,9 @@ package net.onelitefeather.cygnus.common.config;
  * @param betrayalGlowSeconds    how long a revealed survivor glows for the slender
  * @param slownessSeconds        how long a caught survivor is slowed
  * @param routeLinkDistance      how close two route ends have to be to count as linked, in blocks
+ * @param randomStopChance       chance that the creek stops for a moment after reaching a waypoint
+ * @param randomStopMinMillis    shortest random stop, in milliseconds
+ * @param randomStopMaxMillis    longest random stop, in milliseconds
  * @author theEvilReaper
  * @version 1.0.0
  * @since 2.15.0
@@ -78,7 +81,10 @@ public record CreekConfig(
         double betrayalChance,
         int betrayalGlowSeconds,
         int slownessSeconds,
-        double routeLinkDistance
+        double routeLinkDistance,
+        double randomStopChance,
+        int randomStopMinMillis,
+        int randomStopMaxMillis
 ) {
 
     /**
@@ -94,7 +100,8 @@ public record CreekConfig(
             20, 40, 30, 15, 3000,
             0.6D, 0.3D, 0.1D, 25,
             2, 0.15D, 6, 4,
-            3.0D
+            3.0D,
+            0.15D, 1500, 4000
     );
 
     /**
@@ -136,6 +143,9 @@ public record CreekConfig(
         atLeast("betrayalGlowSeconds", betrayalGlowSeconds, 1);
         atLeast("slownessSeconds", slownessSeconds, 0);
         positive("routeLinkDistance", routeLinkDistance);
+        between("randomStopChance", randomStopChance, 0.0D, 1.0D);
+        atLeast("randomStopMinMillis", randomStopMinMillis, 0);
+        notAbove("randomStopMinMillis", randomStopMinMillis, "randomStopMaxMillis", randomStopMaxMillis);
     }
 
     private static void atLeast(String name, double value, double minimum) {

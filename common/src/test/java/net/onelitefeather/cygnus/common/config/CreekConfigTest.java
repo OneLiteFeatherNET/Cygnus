@@ -28,6 +28,9 @@ class CreekConfigTest {
         assertEquals(2, config.betrayalCatchCount());
         assertEquals(0.15D, config.betrayalChance());
         assertEquals(3.0D, config.routeLinkDistance());
+        assertEquals(0.15D, config.randomStopChance());
+        assertEquals(1500, config.randomStopMinMillis());
+        assertEquals(4000, config.randomStopMaxMillis());
     }
 
     @Test
@@ -42,7 +45,8 @@ class CreekConfigTest {
                 config.catchDistance(), config.vanishMinSeconds(), config.vanishMaxSeconds(), config.respawnMinDistance(),
                 config.personalSpace(), config.stuckMillis(), config.dreadPageWeight(), config.dreadTimeWeight(),
                 config.dreadIsolationWeight(), config.isolationRadius(), config.betrayalCatchCount(),
-                config.betrayalChance(), config.betrayalGlowSeconds(), config.slownessSeconds(), 0.0D));
+                config.betrayalChance(), config.betrayalGlowSeconds(), config.slownessSeconds(), 0.0D,
+                config.randomStopChance(), config.randomStopMinMillis(), config.randomStopMaxMillis()));
         assertTrue(exception.getMessage().contains("routeLinkDistance"));
     }
 
@@ -81,7 +85,8 @@ class CreekConfigTest {
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
                 personalSpace, d.stuckMillis(), d.dreadPageWeight(), d.dreadTimeWeight(),
                 d.dreadIsolationWeight(), d.isolationRadius(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance());
+                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
+                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis());
     }
 
     @Test
@@ -89,5 +94,30 @@ class CreekConfigTest {
     void huntIsFasterThanWalking() {
         // A walking player covers about 0.216 blocks per tick; the speed attribute is blocks per tick.
         assertTrue(CreekConfig.DEFAULT.huntSpeed() > 0.216D);
+    }
+
+    private static CreekConfig withRandomStops(double chance, int minMillis, int maxMillis) {
+        CreekConfig d = CreekConfig.DEFAULT;
+        return new CreekConfig(
+                d.enabled(), d.activeWithLastSurvivor(), d.sightRange(), d.sightViewAngle(),
+                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
+                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
+                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
+                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
+                d.personalSpace(), d.stuckMillis(), d.dreadPageWeight(), d.dreadTimeWeight(),
+                d.dreadIsolationWeight(), d.isolationRadius(), d.betrayalCatchCount(),
+                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
+                chance, minMillis, maxMillis);
+    }
+
+    @Test
+    @DisplayName("Random stops need a chance between 0 and 1 and a range that does not run backwards")
+    void randomStopsAreChecked() {
+        assertThrows(IllegalArgumentException.class, () -> withRandomStops(1.5D, 1500, 4000));
+        assertThrows(IllegalArgumentException.class, () -> withRandomStops(0.15D, -1, 4000));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> withRandomStops(0.15D, 5000, 4000));
+        assertTrue(exception.getMessage().contains("randomStopMinMillis"));
+        withRandomStops(0.0D, 0, 0);
     }
 }
