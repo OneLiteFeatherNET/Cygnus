@@ -361,19 +361,14 @@ class PageProviderTest {
     }
 
     @Test
-    void testFoundPageCount(@NotNull Env env) throws Exception {
+    void testFoundPageCount(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
-        PageProvider pageProvider = new PageProvider();
-        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
-        pageProvider.setMaxPageAmount(2);
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
+        Player player = env.createPlayer(instance);
 
         assertEquals(0, pageProvider.foundPageCount());
 
-        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
-        seedActivePages(pageProvider, pageEntity);
-        Player player = env.createPlayer(instance);
-
-        pageProvider.triggerPageFound(player, pageEntity.getHitBoxUUID());
+        pageProvider.triggerPageFound(player, pageProvider.interactablePages().getFirst().getHitBoxUUID());
 
         assertEquals(1, pageProvider.foundPageCount());
         env.destroyInstance(instance, true);

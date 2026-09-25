@@ -201,8 +201,8 @@ survivorTeamSize=12
 # A second figure next to the slender, walked by the server. He wanders the map,
 # stalks a single survivor late in the round, hunts them once the dread is high
 # enough and punishes a catch - rarely by giving the survivor away to the slender.
-# Every key below maps to a field of CreekConfig; values that do not fit
-# together make the whole creek section fall back to its defaults.
+# Every key below maps to a field of CreekConfig. An unreadable value falls back
+# to its default; values that contradict each other are rejected.
 #creek.enabled=true
 #creek.activeWithLastSurvivor=true
 #creek.stalkThreshold=0.25

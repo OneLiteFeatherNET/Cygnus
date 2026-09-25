@@ -149,6 +149,7 @@ public final class GameConfigReader {
                         getFloat(properties, "slenderStaticMinVolume", slenderStatic.minVolume()),
                         getFloat(properties, "slenderStaticMaxVolume", slenderStatic.maxVolume())
                 ),
+                getCreek(properties),
                 getFloat(properties, "lobbyAtmosphereShare", GameConfig.DEFAULT.lobbyAtmosphereShare())
         );
     }
@@ -213,54 +214,49 @@ public final class GameConfigReader {
     /**
      * Reads the creek settings. All keys start with {@value #CREEK_PREFIX}.
      * <p>
-     * The values are checked together after reading. If they contradict each other, all creek
-     * settings fall back to the defaults, not just the broken key. A mix of custom and default
-     * values would be hard to reason about.
+     * Like every other group, an unreadable value falls back to its default, while values that
+     * contradict each other are rejected by {@link CreekConfig}.
      * </p>
      *
      * @param properties the loaded properties
      * @return the creek settings, never {@code null}
+     * @throws IllegalArgumentException if the values do not fit together
      */
     private CreekConfig getCreek(Properties properties) {
         CreekConfig d = CreekConfig.DEFAULT;
-        try {
-            return new CreekConfig(
-                    getBoolean(properties, CREEK_PREFIX + "enabled", d.enabled()),
-                    getBoolean(properties, CREEK_PREFIX + "activeWithLastSurvivor", d.activeWithLastSurvivor()),
-                    getInt(properties, CREEK_PREFIX + "sightRange", d.sightRange()),
-                    getInt(properties, CREEK_PREFIX + "sightViewAngle", d.sightViewAngle()),
-                    getInt(properties, CREEK_PREFIX + "wanderPauseMillis", d.wanderPauseMillis()),
-                    getDouble(properties, CREEK_PREFIX + "wanderSpeed", d.wanderSpeed()),
-                    getDouble(properties, CREEK_PREFIX + "huntSpeed", d.huntSpeed()),
-                    getDouble(properties, CREEK_PREFIX + "stalkThreshold", d.stalkThreshold()),
-                    getDouble(properties, CREEK_PREFIX + "huntThreshold", d.huntThreshold()),
-                    getInt(properties, CREEK_PREFIX + "stalkMinDistance", d.stalkMinDistance()),
-                    getInt(properties, CREEK_PREFIX + "stalkMaxDistance", d.stalkMaxDistance()),
-                    getInt(properties, CREEK_PREFIX + "stalkMinAngle", d.stalkMinAngle()),
-                    getInt(properties, CREEK_PREFIX + "stalkMaxAngle", d.stalkMaxAngle()),
-                    getInt(properties, CREEK_PREFIX + "stalkRevealMillis", d.stalkRevealMillis()),
-                    getInt(properties, CREEK_PREFIX + "stalkMinSeconds", d.stalkMinSeconds()),
-                    getInt(properties, CREEK_PREFIX + "stalkMaxSeconds", d.stalkMaxSeconds()),
-                    getInt(properties, CREEK_PREFIX + "huntMaxSeconds", d.huntMaxSeconds()),
-                    getDouble(properties, CREEK_PREFIX + "catchDistance", d.catchDistance()),
-                    getInt(properties, CREEK_PREFIX + "vanishMinSeconds", d.vanishMinSeconds()),
-                    getInt(properties, CREEK_PREFIX + "vanishMaxSeconds", d.vanishMaxSeconds()),
-                    getInt(properties, CREEK_PREFIX + "respawnMinDistance", d.respawnMinDistance()),
-                    getInt(properties, CREEK_PREFIX + "personalSpace", d.personalSpace()),
-                    getInt(properties, CREEK_PREFIX + "stuckMillis", d.stuckMillis()),
-                    getDouble(properties, CREEK_PREFIX + "dreadPageWeight", d.dreadPageWeight()),
-                    getDouble(properties, CREEK_PREFIX + "dreadTimeWeight", d.dreadTimeWeight()),
-                    getDouble(properties, CREEK_PREFIX + "dreadIsolationWeight", d.dreadIsolationWeight()),
-                    getInt(properties, CREEK_PREFIX + "isolationRadius", d.isolationRadius()),
-                    getInt(properties, CREEK_PREFIX + "betrayalCatchCount", d.betrayalCatchCount()),
-                    getDouble(properties, CREEK_PREFIX + "betrayalChance", d.betrayalChance()),
-                    getInt(properties, CREEK_PREFIX + "betrayalGlowSeconds", d.betrayalGlowSeconds()),
-                    getInt(properties, CREEK_PREFIX + "slownessSeconds", d.slownessSeconds())
-            );
-        } catch (IllegalArgumentException exception) {
-            CONFIG_LOGGER.warn("The creek settings do not fit together: {}. Falling back to the creek defaults", exception.getMessage());
-            return d;
-        }
+        return new CreekConfig(
+                getBoolean(properties, CREEK_PREFIX + "enabled", d.enabled()),
+                getBoolean(properties, CREEK_PREFIX + "activeWithLastSurvivor", d.activeWithLastSurvivor()),
+                getInt(properties, CREEK_PREFIX + "sightRange", d.sightRange()),
+                getInt(properties, CREEK_PREFIX + "sightViewAngle", d.sightViewAngle()),
+                getInt(properties, CREEK_PREFIX + "wanderPauseMillis", d.wanderPauseMillis()),
+                getDouble(properties, CREEK_PREFIX + "wanderSpeed", d.wanderSpeed()),
+                getDouble(properties, CREEK_PREFIX + "huntSpeed", d.huntSpeed()),
+                getDouble(properties, CREEK_PREFIX + "stalkThreshold", d.stalkThreshold()),
+                getDouble(properties, CREEK_PREFIX + "huntThreshold", d.huntThreshold()),
+                getInt(properties, CREEK_PREFIX + "stalkMinDistance", d.stalkMinDistance()),
+                getInt(properties, CREEK_PREFIX + "stalkMaxDistance", d.stalkMaxDistance()),
+                getInt(properties, CREEK_PREFIX + "stalkMinAngle", d.stalkMinAngle()),
+                getInt(properties, CREEK_PREFIX + "stalkMaxAngle", d.stalkMaxAngle()),
+                getInt(properties, CREEK_PREFIX + "stalkRevealMillis", d.stalkRevealMillis()),
+                getInt(properties, CREEK_PREFIX + "stalkMinSeconds", d.stalkMinSeconds()),
+                getInt(properties, CREEK_PREFIX + "stalkMaxSeconds", d.stalkMaxSeconds()),
+                getInt(properties, CREEK_PREFIX + "huntMaxSeconds", d.huntMaxSeconds()),
+                getDouble(properties, CREEK_PREFIX + "catchDistance", d.catchDistance()),
+                getInt(properties, CREEK_PREFIX + "vanishMinSeconds", d.vanishMinSeconds()),
+                getInt(properties, CREEK_PREFIX + "vanishMaxSeconds", d.vanishMaxSeconds()),
+                getInt(properties, CREEK_PREFIX + "respawnMinDistance", d.respawnMinDistance()),
+                getInt(properties, CREEK_PREFIX + "personalSpace", d.personalSpace()),
+                getInt(properties, CREEK_PREFIX + "stuckMillis", d.stuckMillis()),
+                getDouble(properties, CREEK_PREFIX + "dreadPageWeight", d.dreadPageWeight()),
+                getDouble(properties, CREEK_PREFIX + "dreadTimeWeight", d.dreadTimeWeight()),
+                getDouble(properties, CREEK_PREFIX + "dreadIsolationWeight", d.dreadIsolationWeight()),
+                getInt(properties, CREEK_PREFIX + "isolationRadius", d.isolationRadius()),
+                getInt(properties, CREEK_PREFIX + "betrayalCatchCount", d.betrayalCatchCount()),
+                getDouble(properties, CREEK_PREFIX + "betrayalChance", d.betrayalChance()),
+                getInt(properties, CREEK_PREFIX + "betrayalGlowSeconds", d.betrayalGlowSeconds()),
+                getInt(properties, CREEK_PREFIX + "slownessSeconds", d.slownessSeconds())
+        );
     }
 
     /**

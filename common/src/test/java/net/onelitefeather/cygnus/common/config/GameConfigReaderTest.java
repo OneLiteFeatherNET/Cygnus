@@ -381,13 +381,25 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testCreekFallsBackWhenValuesDoNotFit(@TempDir Path tempDir) throws IOException {
+    void testCreekRejectsValuesThatDoNotFit(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=2
                 creek.enabled=false
                 creek.stalkThreshold=0.9
                 """);
+        GameConfigReader reader = new GameConfigReader(tempDir);
 
-        assertEquals(CreekConfig.DEFAULT, new GameConfigReader(tempDir).getConfig().creek());
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
+    }
+
+    @Test
+    void testAnUnreadableCreekValueFallsBackToTheDefault(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.huntThreshold=not-a-number
+                """);
+
+        assertEquals(CreekConfig.DEFAULT.huntThreshold(),
+                new GameConfigReader(tempDir).getConfig().creek().huntThreshold());
     }
 }

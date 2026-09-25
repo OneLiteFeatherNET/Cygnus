@@ -215,7 +215,7 @@ public final class PageProvider {
      * @return the number of found pages, never negative
      */
     public int foundPageCount() {
-        return this.currentFoundedPageCount.get();
+        return this.foundPages.get();
     }
 
     /**

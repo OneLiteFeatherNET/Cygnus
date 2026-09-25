@@ -21,6 +21,7 @@ import java.net.URI;
  * @param damageSound          the sound a player hears when hit
  * @param glitch               how the sight of the slender tears a survivor's view
  * @param slenderStatic        the static the slender hears while pages are found
+ * @param creek                the creek, the second figure next to the slender
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
@@ -36,6 +37,7 @@ public record GameConfig(
         DamageSound damageSound,
         Glitch glitch,
         SlenderStatic slenderStatic,
+        CreekConfig creek,
         float lobbyAtmosphereShare
 ) {
 
@@ -104,6 +106,7 @@ public record GameConfig(
             DamageSound.DEFAULT,
             Glitch.DEFAULT,
             SlenderStatic.DEFAULT,
+            CreekConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 
@@ -131,13 +134,6 @@ public record GameConfig(
             }
         }
     }
-
-    /**
-     * Returns the settings of the creek, the figure that walks the map next to the slender.
-     *
-     * @return the creek settings, never {@code null}
-     */
-    CreekConfig creek();
 
     /**
      * The sizes of the teams.

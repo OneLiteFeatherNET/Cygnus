@@ -101,7 +101,7 @@ public record CreekConfig(
      */
     public CreekConfig {
         atLeast("sightRange", sightRange, 1);
-        between("sightViewAngle", sightViewAngle, 1, GameConfig.MAX_GLITCH_VIEW_ANGLE);
+        between("sightViewAngle", sightViewAngle, 1, GameConfig.Glitch.MAX_VIEW_ANGLE);
         atLeast("wanderPauseMillis", wanderPauseMillis, 0);
         positive("wanderSpeed", wanderSpeed);
         positive("huntSpeed", huntSpeed);

@@ -226,7 +226,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         this.pageProvider::foundPageCount,
                         this.pageProvider::getMaxPageAmount,
                         roundClock::elapsedMillis,
-                        this.gameConfig.gameTime(),
+                        this.gameConfig.round().gameTime(),
                         creekConfig),
                 new StagedCatchConsequence(
                         new CatchEffects(this.jumpscareManager::force, this.staminaService::getFoodBar, creekConfig.slownessSeconds()),
@@ -371,7 +371,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
      * @return the points, possibly empty
      */
     private List<Pos> creekRoutePoints() {
-        List<Pos> points = new ArrayList<>(this.pageProvider.interactablePagePositions());
+        List<Pos> points = new ArrayList<>();
+        this.pageProvider.interactablePages().forEach(page -> points.add(page.getPosition()));
         GameMap map = this.mapProvider.getGameMap();
         if (map != null) {
             points.addAll(map.getSurvivorSpawns());
