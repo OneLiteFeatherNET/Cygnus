@@ -31,7 +31,7 @@ public final class PageSpawnListener implements Consumer<PageSpawnEvent> {
         if (activeInstance == null) {
             throw new IllegalStateException("Active instance not available for page collection");
         }
-        this.pageProvider.collectStartPages(activeInstance, PageCalculation.calculateActivePageAmount());
-        this.pageProvider.spawn();
+        this.pageProvider.collectStartPages(PageCalculation.calculateActivePageAmount());
+        this.pageProvider.spawn(activeInstance);
     }
 }

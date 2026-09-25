@@ -202,7 +202,7 @@ class PageProviderTest {
     }
 
     @Test
-    void testInteractablePagePositionsOnlyListsCollectiblePages(@NotNull Env env) throws Exception {
+    void testInteractablePagesOnlyListsCollectiblePages(@NotNull Env env) throws Exception {
         Instance instance = env.createFlatInstance();
         PageProvider pageProvider = new PageProvider();
         pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
@@ -212,9 +212,7 @@ class PageProviderTest {
         expired.disableInteraction();
         seedActivePages(pageProvider, collectible, expired);
 
-        List<Pos> positions = pageProvider.interactablePagePositions();
-
-        assertEquals(List.of(collectible.getPosition()), positions,
+        assertEquals(List.of(collectible), pageProvider.interactablePages(),
                 "an expired page is invisible to the player and must not be announced by a sound");
 
         env.destroyInstance(instance, true);
@@ -363,21 +361,20 @@ class PageProviderTest {
                         .collect(Collectors.toSet())
         );
         pageProvider.setMaxPageAmount(100);
-        pageProvider.collectStartPages(instance, MIN_ACTIVE_PAGE_COUNT);
-        pageProvider.spawn();
+        pageProvider.collectStartPages(MIN_ACTIVE_PAGE_COUNT);
+        pageProvider.spawn(instance);
         return pageProvider;
     }
 
     @SuppressWarnings("unchecked")
     private static Queue<PageResource> globalCache(PageProvider pageProvider) throws ReflectiveOperationException {
-        Field field = PageProvider.class.getDeclaredField("globalCache");
+        Field field = PageProvider.class.getDeclaredField("freeSpots");
         field.setAccessible(true);
         return (Queue<PageResource>) field.get(pageProvider);
     }
 
     @Test
-    void testCollectStartPagesUsesTheGivenActivePageCount(@NotNull Env env) throws Exception {
-        Instance instance = env.createFlatInstance();
+    void testCollectStartPagesUsesTheGivenActivePageCount() throws Exception {
         int activePageCount = 12;
 
         PageProvider pageProvider = new PageProvider();
@@ -387,18 +384,36 @@ class PageProviderTest {
                         .collect(Collectors.toSet())
         );
 
-        pageProvider.collectStartPages(instance, activePageCount);
+        pageProvider.collectStartPages(activePageCount);
 
         assertEquals(activePageCount, activePageCount(pageProvider),
                 "collectStartPages must collect exactly the requested active page count");
+    }
+
+    @Test
+    void testCollectedPagesOnlyAppearOnSpawn(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        instance.loadChunk(0, 0).join();
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(
+                IntStream.range(0, MIN_ACTIVE_PAGE_COUNT)
+                        .mapToObj(i -> new PageResource(new Pos(i, 40, 0), Direction.NORTH))
+                        .collect(Collectors.toSet())
+        );
+
+        pageProvider.collectStartPages(MIN_ACTIVE_PAGE_COUNT);
+        assertTrue(pageProvider.interactablePages().stream().allMatch(page -> page.getInstance() == null),
+                "collecting must not put any page into the world yet");
+
+        pageProvider.spawn(instance);
+        assertTrue(pageProvider.interactablePages().stream().allMatch(page -> page.getInstance() == instance),
+                "spawn must place every collected page");
 
         env.destroyInstance(instance, true);
     }
 
     @Test
-    void testCollectStartPagesRejectsAnActivePageCountAboveTheAvailableData(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-
+    void testCollectStartPagesRejectsAnActivePageCountAboveTheAvailableData() {
         PageProvider pageProvider = new PageProvider();
         pageProvider.loadPageData(
                 IntStream.range(0, 8)
@@ -408,11 +423,9 @@ class PageProviderTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> pageProvider.collectStartPages(instance, 12)
+                () -> pageProvider.collectStartPages(12)
         );
         assertEquals("Not enough pages to start the game", exception.getMessage());
-
-        env.destroyInstance(instance, true);
     }
 
     @SuppressWarnings("unchecked")
