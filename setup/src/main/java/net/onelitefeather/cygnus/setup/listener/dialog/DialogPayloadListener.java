@@ -6,7 +6,9 @@ import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
 import net.onelitefeather.cygnus.setup.atmosphere.AtmospherePreviewService;
 import net.onelitefeather.cygnus.setup.dialog.AtmosphereDialogs;
+import net.onelitefeather.cygnus.setup.dialog.CreekRouteDialogs;
 import net.onelitefeather.cygnus.setup.dialog.MapDialogs;
+import net.onelitefeather.cygnus.setup.dialog.handler.CreekRouteNameHandler;
 import net.onelitefeather.cygnus.setup.dialog.handler.AtmosphereAdjustHandler;
 import net.onelitefeather.cygnus.setup.dialog.handler.AtmosphereConfirmHandler;
 import net.onelitefeather.cygnus.setup.dialog.handler.AtmospherePresetHandler;
@@ -29,6 +31,7 @@ public class DialogPayloadListener implements Consumer<PlayerCustomClickEvent> {
     public DialogPayloadListener(SetupDataService dataService, AtmospherePreviewService previewService) {
         this.handlers = Map.ofEntries(
                 Map.entry(MapDialogs.MAP_KEY, new MapNameHandler(dataService)),
+                Map.entry(CreekRouteDialogs.ROUTE_NAME_KEY, new CreekRouteNameHandler(dataService)),
                 Map.entry(MapDialogs.AUTHOR_AMOUNT_KEY, new AuthorAmountHandler()),
                 Map.entry(MapDialogs.AUTHOR_INPUT_ENTRY_KEY, new AuthorInputHandler(dataService)),
                 Map.entry(MapDialogs.NON_DYNAMIC_DELETE_KEY, new NonDynamicDataHandler(dataService)),
