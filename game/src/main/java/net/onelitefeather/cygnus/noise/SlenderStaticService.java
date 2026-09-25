@@ -54,7 +54,7 @@ public final class SlenderStaticService {
     /** The pitch it has dropped to once every page is gone: a tape that has been running too long. */
     private static final float WORN_PITCH = 0.7F;
 
-    private final GameConfig config;
+    private final GameConfig.SlenderStatic config;
     private final Supplier<@Nullable Player> slender;
     private final SoundEvent sound;
     private final RepeatingTask task = new RepeatingTask(this::tick);
@@ -71,10 +71,10 @@ public final class SlenderStaticService {
      * @param config  the configuration holding the sound, the intervals and the volumes
      * @param slender supplies the current slender, or {@code null} while there is none
      */
-    public SlenderStaticService(GameConfig config, Supplier<@Nullable Player> slender) {
+    public SlenderStaticService(GameConfig.SlenderStatic config, Supplier<@Nullable Player> slender) {
         this.config = config;
         this.slender = slender;
-        this.sound = SoundEvent.of(config.slenderStaticSound(), null);
+        this.sound = SoundEvent.of(config.sound(), null);
         this.secondsUntilBurst = this.interval();
     }
 
@@ -93,7 +93,7 @@ public final class SlenderStaticService {
      * Starts the carpet from the top. Does nothing while the static is turned off.
      */
     public void start() {
-        if (!this.config.slenderStaticEnabled()) return;
+        if (!this.config.enabled()) return;
         this.reset();
         this.task.start(TICK_SECONDS, ChronoUnit.SECONDS);
     }
@@ -119,7 +119,7 @@ public final class SlenderStaticService {
      * @param event the find
      */
     void onPageFound(PageFoundEvent event) {
-        if (!this.config.slenderStaticEnabled()) return;
+        if (!this.config.enabled()) return;
         this.progress = shareOf(event.foundCount(), event.maxPages());
         // The burst restarts the gap so it does not land on top of the carpet's next beat, which
         // would read as one long noise rather than as two separate things happening.
@@ -141,7 +141,7 @@ public final class SlenderStaticService {
      * play it to.
      */
     private void play() {
-        if (!this.config.slenderStaticEnabled()) return;
+        if (!this.config.enabled()) return;
         Player currentSlender = this.slender.get();
         if (currentSlender == null) return;
         currentSlender.playSound(
@@ -163,8 +163,8 @@ public final class SlenderStaticService {
      */
     private int interval() {
         return Math.round(lerp(
-                this.config.slenderStaticQuietInterval(),
-                this.config.slenderStaticFranticInterval(),
+                this.config.quietInterval(),
+                this.config.franticInterval(),
                 this.progress));
     }
 
@@ -172,7 +172,7 @@ public final class SlenderStaticService {
      * @return the volume of a burst at the current progress
      */
     private float volume() {
-        return lerp(this.config.slenderStaticMinVolume(), this.config.slenderStaticMaxVolume(), this.progress);
+        return lerp(this.config.minVolume(), this.config.maxVolume(), this.progress);
     }
 
     /**

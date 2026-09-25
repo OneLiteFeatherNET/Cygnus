@@ -217,14 +217,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player slender = connection.connect(instance);
         Key packSound = Key.key("cygnus", "vhs_static");
-        GameConfig config = GameConfig.builder()
-                .slenderStaticEnabled(true)
-                .slenderStaticSound(packSound)
-                .slenderStaticQuietInterval(QUIET_INTERVAL)
-                .slenderStaticFranticInterval(FRANTIC_INTERVAL)
-                .slenderStaticMinVolume(MIN_VOLUME)
-                .slenderStaticMaxVolume(MAX_VOLUME)
-                .build();
+        GameConfig.SlenderStatic config = new GameConfig.SlenderStatic(true, packSound, QUIET_INTERVAL, FRANTIC_INTERVAL, MIN_VOLUME, MAX_VOLUME);
         SlenderStaticService service = service(config, () -> slender);
         service.registerListener(env.process().eventHandler());
         EventDispatcher.call(new GameStartEvent());
@@ -257,7 +250,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
      * @param slender supplies the current slender
      * @return the service under test
      */
-    private static SlenderStaticService service(GameConfig config, Supplier<Player> slender) {
+    private static SlenderStaticService service(GameConfig.SlenderStatic config, Supplier<Player> slender) {
         return new SlenderStaticService(config, slender);
     }
 
@@ -267,14 +260,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
      * @param enabled whether the static is on
      * @return the configuration
      */
-    private static GameConfig config(boolean enabled) {
-        return GameConfig.builder()
-                .slenderStaticEnabled(enabled)
-                .slenderStaticSound(Key.key("weather.rain"))
-                .slenderStaticQuietInterval(QUIET_INTERVAL)
-                .slenderStaticFranticInterval(FRANTIC_INTERVAL)
-                .slenderStaticMinVolume(MIN_VOLUME)
-                .slenderStaticMaxVolume(MAX_VOLUME)
-                .build();
+    private static GameConfig.SlenderStatic config(boolean enabled) {
+        return new GameConfig.SlenderStatic(enabled, Key.key("weather.rain"), QUIET_INTERVAL, FRANTIC_INTERVAL, MIN_VOLUME, MAX_VOLUME);
     }
 }

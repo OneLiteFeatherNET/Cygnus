@@ -31,12 +31,7 @@ class LobbyPhasePlayerThresholdIntegrationTest extends CygnusPlayerTestBase {
     void testLobbyPhaseStateTransitionsAndWaitingDisplay(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
 
-        GameConfig config = GameConfig.builder()
-                .lobbyTime(30)
-                .minPlayers(2)
-                .gameTime(600)
-                .maxPlayers(10)
-                .build();
+        GameConfig.Round config = new GameConfig.Round(2, 10, 30, 600);
 
         LobbyPhase lobbyPhase = new LobbyPhase(config);
 

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * Sends a mandatory ResourcePack to players and kicks them if the client declines it or reports
- * a failure. Inactive unless {@link GameConfig#resourcePackUrl()} is configured.
+ * a failure. Inactive unless {@link GameConfig.ResourcePack#url()} is configured.
  *
  * @author theEvilReaper
  * @version 1.2.0
@@ -77,12 +77,12 @@ public final class ResourcePackService {
      * @param config the configuration holding the ResourcePack URL and, optionally, its checksum
      * @return the service, or empty if the feature is disabled
      */
-    public static Optional<ResourcePackService> create(GameConfig config) {
-        URI url = config.resourcePackUrl();
+    public static Optional<ResourcePackService> create(GameConfig.ResourcePack config) {
+        URI url = config.url();
         if (url == null) {
             return Optional.empty();
         }
-        return Optional.of(new ResourcePackService(url, config.resourcePackSha1()));
+        return Optional.of(new ResourcePackService(url, config.sha1()));
     }
 
     /**

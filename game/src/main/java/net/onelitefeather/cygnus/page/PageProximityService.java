@@ -58,7 +58,7 @@ public final class PageProximityService {
     public static final int SERVICE_TICK_RATE = 5;
 
     private final RepeatingTask task = new RepeatingTask(this::tick);
-    private final GameConfig config;
+    private final GameConfig.PageProximity config;
     private final Supplier<Collection<Player>> listeners;
     private final Supplier<? extends Collection<? extends PageProximityTarget>> pageSupplier;
     private final Sound warningSound;
@@ -75,17 +75,17 @@ public final class PageProximityService {
      * @param pageSupplier supplies the proximity page targets that can currently be collected
      */
     public PageProximityService(
-            GameConfig config,
+            GameConfig.PageProximity config,
             Supplier<Collection<Player>> listeners,
             Supplier<? extends Collection<? extends PageProximityTarget>> pageSupplier
     ) {
         this.config = config;
         this.listeners = listeners;
         this.pageSupplier = pageSupplier;
-        this.rangeSquared = (double) config.pageProximityRange() * config.pageProximityRange();
+        this.rangeSquared = (double) config.range() * config.range();
 
-        SoundEvent soundEvent = resolveSound(config.pageProximitySound());
-        float baseVolume = volumeFor(config.pageProximityRange(), config.pageProximityVolumeFactor());
+        SoundEvent soundEvent = resolveSound(config.sound());
+        float baseVolume = volumeFor(config.range(), config.volumeFactor());
 
         this.warningSound = Sound.sound(soundEvent, Sound.Source.MASTER, baseVolume, WARNING_PITCH);
         this.criticalSound = Sound.sound(soundEvent, Sound.Source.MASTER, baseVolume * CRITICAL_VOLUME_MULTIPLIER, CRITICAL_PITCH);
@@ -96,7 +96,7 @@ public final class PageProximityService {
      * running.
      */
     public void startTask() {
-        if (!this.config.pageProximityEnabled()) {
+        if (!this.config.enabled()) {
             LOGGER.debug("The page proximity hint is turned off, no task is scheduled");
             return;
         }
@@ -121,7 +121,7 @@ public final class PageProximityService {
      * Plays the chime from every collectible page that is within range of a listener and eligible to chime.
      */
     void tick() {
-        if (!this.config.pageProximityEnabled()) {
+        if (!this.config.enabled()) {
             return;
         }
 
@@ -191,7 +191,7 @@ public final class PageProximityService {
     /**
      * Resolves the configured key against the sound registry. A key that names no known sound would
      * leave the hint silent, which is worse than ignoring the configuration, so it falls back to
-     * {@link GameConfig#DEFAULT_PAGE_PROXIMITY_SOUND}.
+     * {@link GameConfig.PageProximity#DEFAULT_SOUND}.
      *
      * @param key the configured sound key
      * @return the resolved sound
@@ -201,7 +201,7 @@ public final class PageProximityService {
         if (soundEvent != null) {
             return soundEvent;
         }
-        LOGGER.warn("'{}' names no known sound, falling back to {}", key, GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND);
-        return SoundEvent.fromKey(GameConfig.DEFAULT_PAGE_PROXIMITY_SOUND);
+        LOGGER.warn("'{}' names no known sound, falling back to {}", key, GameConfig.PageProximity.DEFAULT_SOUND);
+        return SoundEvent.fromKey(GameConfig.PageProximity.DEFAULT_SOUND);
     }
 }

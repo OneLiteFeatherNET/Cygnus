@@ -59,7 +59,7 @@ public final class DamageSoundService {
     /** @see #VOLUME */
     private static final float PITCH = 1.0F;
 
-    private final GameConfig config;
+    private final GameConfig.DamageSound config;
     private final LongSupplier clock;
     private final Sound sound;
     private final long cooldownMillis;
@@ -73,12 +73,12 @@ public final class DamageSoundService {
      * @param config the configuration holding the sound and the cooldown
      * @param clock  supplies the current time in milliseconds
      */
-    public DamageSoundService(GameConfig config, LongSupplier clock) {
+    public DamageSoundService(GameConfig.DamageSound config, LongSupplier clock) {
         this.config = config;
         this.clock = clock;
-        this.cooldownMillis = config.damageSoundCooldown() * MILLIS_PER_TICK;
+        this.cooldownMillis = config.cooldown() * MILLIS_PER_TICK;
         this.sound = Sound.sound(
-                resolveSound(config.damageSound()),
+                resolveSound(config.sound()),
                 Sound.Source.PLAYER,
                 VOLUME,
                 PITCH
@@ -102,7 +102,7 @@ public final class DamageSoundService {
      * @param player the player who was hit
      */
     void play(Player player) {
-        if (!this.config.damageSoundEnabled()) {
+        if (!this.config.enabled()) {
             return;
         }
 
@@ -131,7 +131,7 @@ public final class DamageSoundService {
     /**
      * Resolves the configured key against the sound registry. A key that names no known sound would
      * leave a hit silent again, which is the bug this service exists for, so it falls back to
-     * {@link GameConfig#DEFAULT_DAMAGE_SOUND}.
+     * {@link GameConfig.DamageSound#DEFAULT_SOUND}.
      *
      * @param key the configured sound key
      * @return the resolved sound
@@ -141,7 +141,7 @@ public final class DamageSoundService {
         if (soundEvent != null) {
             return soundEvent;
         }
-        LOGGER.warn("'{}' names no known sound, falling back to {}", key, GameConfig.DEFAULT_DAMAGE_SOUND);
-        return SoundEvent.fromKey(GameConfig.DEFAULT_DAMAGE_SOUND);
+        LOGGER.warn("'{}' names no known sound, falling back to {}", key, GameConfig.DamageSound.DEFAULT_SOUND);
+        return SoundEvent.fromKey(GameConfig.DamageSound.DEFAULT_SOUND);
     }
 }
