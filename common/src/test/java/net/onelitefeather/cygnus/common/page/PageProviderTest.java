@@ -3,10 +3,13 @@ package net.onelitefeather.cygnus.common.page;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.metadata.display.ItemDisplayMeta;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.item.ItemStack;
 import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -30,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_ACTIVE_PAGE_COUNT;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MicrotusExtension.class)
@@ -270,6 +275,101 @@ class PageProviderTest {
         assertEquals(0, events.get(), "a claim that finds nothing must not raise the tension");
 
         env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAnExpiredPageHandsItsSpotBackToThePool(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        // One spare spot: without the expired spots coming back, the second expiry finds the pool empty.
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
+
+        PageEntity page = pageProvider.interactablePages().getFirst();
+        Pos startSpot = page.getPosition();
+
+        pageProvider.triggerTTLHandling(page.getHitBoxUUID());
+        Pos spareSpot = page.getPosition();
+        assertNotEquals(startSpot, spareSpot, "an expired page must move to a new spot");
+
+        pageProvider.triggerTTLHandling(page.getHitBoxUUID());
+        assertEquals(startSpot, page.getPosition(), "the spot it expired on must be back in the pool");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAFoundSpotIsNotHandedBackToThePool(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
+        Player player = env.createPlayer(instance);
+
+        PageEntity page = pageProvider.interactablePages().getFirst();
+        assertTrue(pageProvider.triggerPageFound(player, page.getHitBoxUUID()));
+        assertTrue(globalCache(pageProvider).isEmpty(), "the find used up the spare spot");
+
+        // The page now stands on the former spare spot. Expiring it must not bring the found spot back.
+        pageProvider.triggerTTLHandling(page.getHitBoxUUID());
+        assertTrue(globalCache(pageProvider).isEmpty(), "a found spot must stay used up");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAnExpiredPageIsNotCountedAsFound(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
+        AtomicInteger finds = new AtomicInteger();
+        env.process().eventHandler().addListener(PageFoundEvent.class, event -> finds.incrementAndGet());
+        String statusBefore = plainStatus(pageProvider);
+
+        PageEntity page = pageProvider.interactablePages().getFirst();
+        pageProvider.triggerTTLHandling(page.getHitBoxUUID());
+
+        assertEquals(0, finds.get(), "an expiry must not raise a find");
+        assertEquals(statusBefore, plainStatus(pageProvider), "an expiry must not change the found count");
+        assertTrue(page.isInteractable(), "the expired page is collectible again on its new spot");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAFoundPageStartsFreshOnItsNewSpot(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
+        Player player = env.createPlayer(instance);
+
+        PageEntity page = pageProvider.interactablePages().getFirst();
+        // Almost run out on its old spot
+        Field tickTime = PageEntity.class.getDeclaredField("currentTickTime");
+        tickTime.setAccessible(true);
+        tickTime.setInt(page, GameConfig.PAGE_TTL_TIME);
+
+        assertTrue(pageProvider.triggerPageFound(player, page.getHitBoxUUID()));
+
+        assertEquals(1.0, page.remainingTtlRatio(), "the page must get its full time on the new spot");
+        ItemStack shown = ((ItemDisplayMeta) page.getEntityMeta()).getItemStack();
+        assertEquals(page.getPageItem(), shown, "the page on the wall must be the one the next finder gets");
+
+        env.destroyInstance(instance, true);
+    }
+
+    private static PageProvider spawnedProvider(Instance instance, int spotCount) {
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(
+                IntStream.range(0, spotCount)
+                        .mapToObj(i -> new PageResource(new Pos(i * 10, 40, 0), Direction.NORTH))
+                        .collect(Collectors.toSet())
+        );
+        pageProvider.setMaxPageAmount(100);
+        pageProvider.collectStartPages(instance);
+        pageProvider.spawn();
+        return pageProvider;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Queue<PageResource> globalCache(PageProvider pageProvider) throws ReflectiveOperationException {
+        Field field = PageProvider.class.getDeclaredField("globalCache");
+        field.setAccessible(true);
+        return (Queue<PageResource>) field.get(pageProvider);
     }
 
     private static String plainStatus(PageProvider pageProvider) {
