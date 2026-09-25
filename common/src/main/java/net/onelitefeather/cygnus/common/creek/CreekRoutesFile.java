@@ -137,6 +137,9 @@ public final class CreekRoutesFile {
         if (route.points().size() < CreekRoute.MIN_POINTS) {
             return "it needs at least " + CreekRoute.MIN_POINTS + " points";
         }
+        if (route.points().stream().anyMatch(point -> point.pauseMillis() < 0)) {
+            return "a point has a negative pause";
+        }
         if (names.contains(route.name())) return "another route already uses this name";
         return null;
     }

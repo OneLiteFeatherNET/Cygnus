@@ -21,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CreekRoutesFileTest {
 
-    private static final CreekRoute NORTH = new CreekRoute("Waldweg Nord",
+    private static final CreekRoute NORTH = CreekRoute.ofPositions("Waldweg Nord",
             List.of(new Vec(12.5, 80, 4.5), new Vec(20.5, 80, 9.5), new Vec(31.5, 81, 15.5)));
-    private static final CreekRoute SOUTH = new CreekRoute("Waldweg Süd",
+    private static final CreekRoute SOUTH = CreekRoute.ofPositions("Waldweg Süd",
             List.of(new Vec(0.5, 80, 0.5), new Vec(0.5, 80, 10.5)));
 
     private static Path mapFile(Path root) {
@@ -95,7 +95,7 @@ class CreekRoutesFileTest {
     @Test
     @DisplayName("The setup still gets routes that are not finished yet")
     void uncheckedLoadKeepsIncompleteRoutes(@TempDir Path root) {
-        CreekRoute stub = new CreekRoute("Stub", List.of(new Vec(0, 80, 0)));
+        CreekRoute stub = CreekRoute.ofPositions("Stub", List.of(new Vec(0, 80, 0)));
         CreekRoutesFile.save(mapFile(root), List.of(stub));
 
         assertEquals(List.of(stub), CreekRoutesFile.loadUnchecked(mapFile(root)));
@@ -114,5 +114,53 @@ class CreekRoutesFileTest {
         GameMap map = new GameMap("Forest", Pos.ZERO, Pos.ZERO, Set.of(), Set.of(), List.of(), null);
 
         assertEquals(List.of(NORTH), CreekRoutesFile.loadInto(mapFile(root), map).getCreekRoutes());
+    }
+
+    @Test
+    @DisplayName("A file written before pauses existed loads with no pauses")
+    void oldFileHasNoPauses(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("creek.json"), """
+                [ { "name": "Alt", "points": [ { "x": 0.5, "y": 80, "z": 0.5 }, { "x": 0.5, "y": 80, "z": 10.5 } ] } ]
+                """, StandardCharsets.UTF_8);
+
+        List<CreekRoute> routes = CreekRoutesFile.load(mapFile(root));
+
+        assertEquals(1, routes.size());
+        assertTrue(routes.getFirst().points().stream().allMatch(point -> point.pauseMillis() == 0));
+    }
+
+    @Test
+    @DisplayName("Pauses survive saving and loading")
+    void pausesAreKept(@TempDir Path root) {
+        CreekRoute route = new CreekRoute("Pausen", List.of(
+                CreekWaypoint.of(new Vec(0.5, 80, 0.5)).withPause(2000),
+                CreekWaypoint.of(new Vec(5.5, 80, 0.5)),
+                CreekWaypoint.of(new Vec(9.5, 80, 0.5)).withPause(4000)));
+        CreekRoutesFile.save(mapFile(root), List.of(route));
+
+        assertEquals(List.of(route), CreekRoutesFile.load(mapFile(root)));
+    }
+
+    @Test
+    @DisplayName("A route with a negative pause is skipped")
+    void negativePauseIsSkipped(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("creek.json"), """
+                [
+                  { "name": "Kaputt", "points": [ { "x": 0, "y": 80, "z": 0, "pauseMillis": -5 }, { "x": 5, "y": 80, "z": 0 } ] },
+                  { "name": "Waldweg Süd", "points": [ { "x": 0.5, "y": 80, "z": 0.5 }, { "x": 0.5, "y": 80, "z": 10.5 } ] }
+                ]
+                """, StandardCharsets.UTF_8);
+
+        assertEquals(List.of(SOUTH), CreekRoutesFile.load(mapFile(root)));
+    }
+
+    @Test
+    @DisplayName("A waypoint knows its position")
+    void waypointPosition() {
+        CreekWaypoint point = CreekWaypoint.of(new Vec(1.5, 80, -2.5));
+
+        assertEquals(new Vec(1.5, 80, -2.5), point.position());
+        assertEquals(0, point.pauseMillis());
+        assertEquals(3000, point.withPause(3000).pauseMillis());
     }
 }

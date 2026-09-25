@@ -5,6 +5,7 @@ import net.kyori.adventure.nbt.StringBinaryTag;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
 import net.onelitefeather.cygnus.setup.data.GameData;
+import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.guira.SetupDataService;
 
@@ -39,6 +40,8 @@ public final class CreekRouteNameHandler implements DialogHandler {
                 return;
             }
             player.sendMessage(SetupMessages.getCreekRouteCreated(name));
+            player.sendMessage(SetupMessages.CREEK_POINT_HINT);
+            SetupItems.setCreekRouteEditItems(player);
         });
     }
 }

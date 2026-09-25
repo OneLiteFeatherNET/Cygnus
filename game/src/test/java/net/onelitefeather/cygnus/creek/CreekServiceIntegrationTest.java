@@ -16,7 +16,6 @@ import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
 import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.PathRoute;
-import net.onelitefeather.cygnus.creek.world.RandomPointRoute;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -48,8 +47,10 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         }
     };
 
-    private CreekService service(Instance instance, Set<Player> survivors, List<Pos> points, AtomicLong clock) {
-        return new CreekService(CreekConfig.DEFAULT, () -> survivors, () -> instance, () -> points, () -> List.of(),
+    private static final CreekRoute ROUTE = CreekRoute.ofPositions("Test", List.of(new Vec(10, 40, 10), new Vec(20, 40, 10)));
+
+    private CreekService service(Instance instance, Set<Player> survivors, List<CreekRoute> routes, AtomicLong clock) {
+        return new CreekService(CreekConfig.DEFAULT, () -> survivors, () -> instance, () -> routes,
                 CreakingBody::spawn, (_, _, _) -> 0.0D, consequence, new RoundClock(clock::get), new Random(3), new CreekDebug());
     }
 
@@ -58,7 +59,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     void startsOutOfSight(Env env) {
         Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        CreekService service = service(instance, Set.of(survivor), List.of(new Pos(10, 40, 10)), new AtomicLong());
+        CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), new AtomicLong());
 
         service.start();
         service.tick();
@@ -75,7 +76,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     void stopRemovesHimAndCleansUp(Env env) {
         Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        CreekService service = service(instance, Set.of(survivor), List.of(new Pos(10, 40, 10)), new AtomicLong());
+        CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), new AtomicLong());
         service.start();
         Creek creek = service.creek();
         assertNotNull(creek);
@@ -88,8 +89,8 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("Without any point to walk between he stays away")
-    void staysAwayWithoutPoints(Env env) {
+    @DisplayName("Without a usable route the creek stays away")
+    void staysAwayWithoutRoutes(Env env) {
         Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
         CreekService service = service(instance, Set.of(survivor), List.of(), new AtomicLong());
@@ -107,7 +108,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         AtomicLong clock = new AtomicLong(1000L);
         RoundClock roundClock = new RoundClock(clock::get);
         CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(survivor), () -> instance,
-                () -> List.of(new Pos(10, 40, 10)), () -> List.of(), CreakingBody::spawn, (_, _, _) -> 0.0D, consequence, roundClock, new Random(3), new CreekDebug());
+                () -> List.of(ROUTE), CreakingBody::spawn, (_, _, _) -> 0.0D, consequence, roundClock, new Random(3), new CreekDebug());
 
         service.start();
         clock.set(4000L);
@@ -128,7 +129,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         CreekDebug debug = new CreekDebug();
         debug.toggle(watcher.getUuid());
         CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(watcher, other), () -> instance,
-                () -> List.of(new Pos(10, 40, 10)), () -> List.of(), CreakingBody::spawn, (_, _, _) -> 0.0D, consequence,
+                () -> List.of(ROUTE), CreakingBody::spawn, (_, _, _) -> 0.0D, consequence,
                 new RoundClock(new AtomicLong()::get), new Random(3), debug);
         Collector<ActionBarPacket> watched = watcherConnection.trackIncoming(ActionBarPacket.class);
         Collector<ActionBarPacket> unwatched = otherConnection.trackIncoming(ActionBarPacket.class);
@@ -146,28 +147,12 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     void routesAreUsedWhenThereAreAny(Env env) {
         Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        CreekRoute route = new CreekRoute("Weg", List.of(new Vec(10, 40, 10), new Vec(20, 40, 10)));
-        CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(survivor), () -> instance,
-                List::of, () -> List.of(route), CreakingBody::spawn, (_, _, _) -> 0.0D, consequence,
-                new RoundClock(new AtomicLong()::get), new Random(3), new CreekDebug());
+        CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), new AtomicLong());
 
         service.start();
 
         assertInstanceOf(PathRoute.class, service.route());
         assertNotNull(service.creek());
-        service.stop();
-    }
-
-    @Test
-    @DisplayName("Without valid routes the creek falls back to pages and spawns")
-    void fallsBackWithoutRoutes(Env env) {
-        Instance instance = env.createFlatInstance();
-        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        CreekService service = service(instance, Set.of(survivor), List.of(new Pos(10, 40, 10)), new AtomicLong());
-
-        service.start();
-
-        assertInstanceOf(RandomPointRoute.class, service.route());
         service.stop();
     }
 }

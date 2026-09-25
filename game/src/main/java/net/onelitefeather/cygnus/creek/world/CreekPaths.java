@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.creek.world;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
+import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -114,7 +115,18 @@ public final class CreekPaths {
      * @return the point
      */
     public Pos point(int route, int index) {
-        return toPos(this.routes.get(route).points().get(index));
+        return toPos(this.routes.get(route).points().get(index).position());
+    }
+
+    /**
+     * Returns how long the creek waits at one point of a route.
+     *
+     * @param route the route's index
+     * @param index the point's index
+     * @return the pause, in milliseconds
+     */
+    public int pauseMillis(int route, int index) {
+        return this.routes.get(route).points().get(index).pauseMillis();
     }
 
     /**
@@ -145,14 +157,14 @@ public final class CreekPaths {
     public List<Pos> allPoints() {
         List<Pos> points = new ArrayList<>();
         for (CreekRoute route : this.routes) {
-            route.points().forEach(point -> points.add(toPos(point)));
+            route.points().forEach(point -> points.add(toPos(point.position())));
         }
         return points;
     }
 
     private static Pos position(List<CreekRoute> routes, End end) {
-        List<Vec> points = routes.get(end.route()).points();
-        return toPos(end.atStart() ? points.getFirst() : points.getLast());
+        List<CreekWaypoint> points = routes.get(end.route()).points();
+        return toPos((end.atStart() ? points.getFirst() : points.getLast()).position());
     }
 
     private static Pos toPos(Vec point) {
