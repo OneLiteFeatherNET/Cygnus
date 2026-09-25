@@ -29,6 +29,7 @@ import net.onelitefeather.cygnus.setup.listener.MapSetupSelectListener;
 import net.onelitefeather.cygnus.setup.listener.PageCreationListener;
 import net.onelitefeather.cygnus.setup.listener.PlayerSpawnListener;
 import net.onelitefeather.cygnus.setup.listener.SetupItemListener;
+import net.onelitefeather.cygnus.setup.listener.CreekRouteListener;
 import net.onelitefeather.cygnus.setup.listener.SpawnCreationListener;
 import net.onelitefeather.cygnus.setup.listener.data.PlayerRemoveDataListener;
 import net.onelitefeather.cygnus.setup.listener.dialog.DialogPayloadListener;
@@ -98,6 +99,10 @@ public class SetupExtension implements ListenerHandling {
         manager.addListener(EventListener.builder(PlayerBlockBreakEvent.class)
                 .ignoreCancelled(false)
                 .handler(new SpawnCreationListener(this.dataService))
+                .build());
+        manager.addListener(EventListener.builder(PlayerBlockBreakEvent.class)
+                .ignoreCancelled(false)
+                .handler(new CreekRouteListener(this.dataService))
                 .build());
         manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceUUID));
         manager.addListener(RemoveEntityFromInstanceEvent.class, new InstanceRemoveListener(instanceUUID));
