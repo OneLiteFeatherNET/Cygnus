@@ -133,7 +133,7 @@ public final class AtmosphereDialogs extends DialogBase {
                         range.end(128f);
                         range.step(1f);
                         range.initial(atmosphere.fogStartDistance());
-                        range.labelFormat("%s: %.0f blocks");
+                        range.labelFormat("%s: %s blocks");
                     });
                     meta.range(FOG_END_INPUT, range -> {
                         range.label(Component.text("Fully fogged at"));
@@ -142,7 +142,7 @@ public final class AtmosphereDialogs extends DialogBase {
                         range.end(384f);
                         range.step(1f);
                         range.initial(atmosphere.fogEndDistance());
-                        range.labelFormat("%s: %.0f blocks");
+                        range.labelFormat("%s: %s blocks");
                     });
                     meta.range(SKY_FOG_END_INPUT, range -> {
                         range.label(Component.text("Horizon haze at"));
@@ -151,7 +151,7 @@ public final class AtmosphereDialogs extends DialogBase {
                         range.end(256f);
                         range.step(1f);
                         range.initial(atmosphere.skyFogEndDistance());
-                        range.labelFormat("%s: %.0f blocks");
+                        range.labelFormat("%s: %s blocks");
                     });
                     meta.range(SKY_LIGHT_INPUT, range -> {
                         range.label(Component.text("Sky light"));
@@ -160,7 +160,7 @@ public final class AtmosphereDialogs extends DialogBase {
                         range.end(100f);
                         range.step(1f);
                         range.initial(atmosphere.skyLightFactor() * SKY_LIGHT_SCALE);
-                        range.labelFormat("%s: %.0f");
+                        range.labelFormat("%s: %s");
                     });
 
                     meta.text(FOG_COLOR_INPUT, text -> text.label(Component.text("Fog color"))
