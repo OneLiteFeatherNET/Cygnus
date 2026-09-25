@@ -6,12 +6,10 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.utils.Direction;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
-import net.onelitefeather.cygnus.common.util.Helper;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.xerus.api.phase.GamePhase;
 import org.jetbrains.annotations.Nullable;
@@ -89,10 +87,8 @@ public final class PageProvider {
         while (counter < activePageCount && !this.globalCache.isEmpty()) {
             PageResource page = this.globalCache.poll();
             if (candidateHashes.add(page.hashCode())) {
-                Direction direction = page.face();
-                Pos position = Helper.updatePosition(page.position().asPos(), direction);
-                PageEntity entity = PageFactory.createPage(instance, position, direction, this.currentPageCount.getAndIncrement());
-                entity.setResource(page);
+                PageEntity entity = PageFactory.createPage(page, this.currentPageCount.getAndIncrement());
+                entity.place(instance);
                 this.activePages.put(entity.getHitBoxUUID(), entity);
                 counter++;
                 continue;
@@ -154,13 +150,10 @@ public final class PageProvider {
         PageResource newPos = this.globalCache.poll();
         if (newPos != null) {
             PageResource expired = pageEntity.getResource();
-            pageEntity.teleport(Helper.updatePosition(newPos.position().asPos(), newPos.face()));
-            pageEntity.setResource(newPos);
+            pageEntity.moveTo(newPos);
             // Polled first, so the page can't draw its own spot again; queued last, so the spot only
             // comes back once every other one had its turn. Found spots stay used up.
-            if (expired != null) {
-                this.globalCache.add(expired);
-            }
+            this.globalCache.add(expired);
         }
         this.activePages.put(pageEntity.getHitBoxUUID(), pageEntity);
         pageEntity.enableInteraction();
@@ -226,10 +219,8 @@ public final class PageProvider {
 
     private void updatePageData(PageEntity entity) {
         PageResource resource = this.globalCache.poll();
-        // Cleared when nothing is left, so the found spot can never make it back into the pool
-        entity.setResource(resource);
         if (resource != null) {
-            entity.teleport(Helper.updatePosition(resource.position().asPos(), resource.face()));
+            entity.moveTo(resource);
         }
         entity.updateItemStack(this.currentPageCount.incrementAndGet());
         // Shows the new item and restarts the TTL: on its new spot the page counts as a fresh one

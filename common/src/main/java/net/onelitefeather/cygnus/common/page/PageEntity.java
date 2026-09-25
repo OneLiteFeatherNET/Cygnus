@@ -15,7 +15,6 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -48,18 +47,17 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
     private boolean send;
     private boolean interactable = true;
     private int initialBlockLight;
-    private @Nullable PageResource resource;
+    private PageResource resource;
 
     /**
-     * Constructs a new {@link PageEntity}.
+     * Constructs a new {@link PageEntity}. The page is not part of any instance until {@link #place(Instance)} is called.
      *
-     * @param instance  the instance where the entity should spawn
-     * @param spawnPos  the position where the entity should spawn
+     * @param resource  the spot the page stands on
      * @param pageCount the current page count
      */
-    PageEntity(Instance instance, Pos spawnPos, int pageCount) {
+    PageEntity(PageResource resource, int pageCount) {
         super(EntityType.ITEM_DISPLAY);
-        this.setInstance(instance, spawnPos);
+        this.resource = resource;
         this.hitBox = new Entity(EntityType.INTERACTION);
         this.pageItem = createPageItem(pageCount);
         this.ttlTime = Helper.calculateOffsetTime(GameConfig.PAGE_TTL_TIME);
@@ -86,7 +84,6 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
         interactionMeta.setResponse(true);
         interactionMeta.setNotifyAboutChanges(true);
         interactionMeta.setHasGlowingEffect(true);
-        this.hitBox.setInstance(instance, spawnPos.sub(HALF_BLOCK));
         this.hitBox.setAutoViewable(true);
         this.hitBox.setTag(Tags.PAGE_TAG, this.hitBox.getUuid());
     }
@@ -240,20 +237,35 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
     }
 
     /**
-     * Sets the {@link PageResource} the page currently stands on.
+     * Places the page and its hit box into the given instance, on the spot of its resource.
      *
-     * @param resource the resource, or {@code null} once the page has no spot of its own
+     * @param instance the instance to place the page in
+     * @return a future that completes once both entities are in the instance
      */
-    void setResource(@Nullable PageResource resource) {
+    public CompletableFuture<Void> place(Instance instance) {
+        Pos position = Helper.updatePosition(this.resource.position().asPos(), this.resource.face());
+        return CompletableFuture.allOf(
+                this.hitBox.setInstance(instance, position.sub(HALF_BLOCK)),
+                this.setInstance(instance, position)
+        );
+    }
+
+    /**
+     * Moves the already placed page to the spot of the given resource.
+     *
+     * @param resource the spot to move to
+     */
+    void moveTo(PageResource resource) {
         this.resource = resource;
+        this.teleport(Helper.updatePosition(resource.position().asPos(), resource.face()));
     }
 
     /**
      * Returns the {@link PageResource} the page currently stands on.
      *
-     * @return the resource, or {@code null} if none is set
+     * @return the resource
      */
-    @Nullable PageResource getResource() {
+    PageResource getResource() {
         return this.resource;
     }
 

@@ -87,7 +87,7 @@ class PageProviderTest {
         pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
         pageProvider.setMaxPageAmount(1);
 
-        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        PageEntity pageEntity = placedPage(instance, Pos.ZERO, 1);
         UUID uuid = pageEntity.getHitBoxUUID();
         seedActivePages(pageProvider, pageEntity);
 
@@ -111,7 +111,7 @@ class PageProviderTest {
         pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
         pageProvider.setMaxPageAmount(1);
 
-        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        PageEntity pageEntity = placedPage(instance, Pos.ZERO, 1);
         UUID uuid = pageEntity.getHitBoxUUID();
         seedActivePages(pageProvider, pageEntity);
 
@@ -146,7 +146,7 @@ class PageProviderTest {
         pageProvider.setMaxPageAmount(pageCount);
 
         List<PageEntity> entities = IntStream.range(0, pageCount)
-                .mapToObj(i -> new PageEntity(instance, Pos.ZERO, i + 1))
+                .mapToObj(i -> placedPage(instance, Pos.ZERO, i + 1))
                 .toList();
         seedActivePages(pageProvider, entities.toArray(new PageEntity[0]));
 
@@ -185,7 +185,7 @@ class PageProviderTest {
         pageProvider.setMaxPageAmount(pageCount);
 
         List<PageEntity> entities = IntStream.range(0, pageCount)
-                .mapToObj(i -> new PageEntity(instance, Pos.ZERO, i + 1))
+                .mapToObj(i -> placedPage(instance, Pos.ZERO, i + 1))
                 .toList();
         seedActivePages(pageProvider, entities.toArray(new PageEntity[0]));
 
@@ -207,14 +207,14 @@ class PageProviderTest {
         PageProvider pageProvider = new PageProvider();
         pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
 
-        PageEntity collectible = new PageEntity(instance, new Pos(10, 64, 20), 1);
-        PageEntity expired = new PageEntity(instance, new Pos(-5, 64, 7), 2);
+        PageEntity collectible = placedPage(instance, new Pos(10, 64, 20), 1);
+        PageEntity expired = placedPage(instance, new Pos(-5, 64, 7), 2);
         expired.disableInteraction();
         seedActivePages(pageProvider, collectible, expired);
 
         List<Pos> positions = pageProvider.interactablePagePositions();
 
-        assertEquals(List.of(new Pos(10, 64, 20)), positions,
+        assertEquals(List.of(collectible.getPosition()), positions,
                 "an expired page is invisible to the player and must not be announced by a sound");
 
         env.destroyInstance(instance, true);
@@ -234,7 +234,7 @@ class PageProviderTest {
         pageProvider.setMaxPageAmount(pageCount);
 
         List<PageEntity> entities = IntStream.range(0, pageCount)
-                .mapToObj(i -> new PageEntity(instance, Pos.ZERO, i + 1))
+                .mapToObj(i -> placedPage(instance, Pos.ZERO, i + 1))
                 .toList();
         seedActivePages(pageProvider, entities.toArray(new PageEntity[0]));
 
@@ -262,7 +262,7 @@ class PageProviderTest {
         pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
         pageProvider.setMaxPageAmount(2);
 
-        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        PageEntity pageEntity = placedPage(instance, Pos.ZERO, 1);
         seedActivePages(pageProvider, pageEntity);
 
         Player player = env.createPlayer(instance);
@@ -363,7 +363,7 @@ class PageProviderTest {
                         .collect(Collectors.toSet())
         );
         pageProvider.setMaxPageAmount(100);
-        pageProvider.collectStartPages(instance, spotCount);
+        pageProvider.collectStartPages(instance, MIN_ACTIVE_PAGE_COUNT);
         pageProvider.spawn();
         return pageProvider;
     }
@@ -421,6 +421,12 @@ class PageProviderTest {
         field.setAccessible(true);
         Map<UUID, ?> activePages = (Map<UUID, ?>) field.get(pageProvider);
         return activePages.size();
+    }
+
+    private static PageEntity placedPage(Instance instance, Pos position, int pageCount) {
+        PageEntity pageEntity = new PageEntity(new PageResource(position, Direction.NORTH), pageCount);
+        pageEntity.place(instance).join();
+        return pageEntity;
     }
 
     private static String plainStatus(PageProvider pageProvider) {

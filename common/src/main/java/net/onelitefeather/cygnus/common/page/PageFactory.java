@@ -1,7 +1,5 @@
 package net.onelitefeather.cygnus.common.page;
 
-import net.minestom.server.coordinate.Pos;
-import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.Direction;
 import net.minestom.server.utils.validate.Check;
 import org.jetbrains.annotations.Contract;
@@ -20,21 +18,15 @@ public final class PageFactory {
 
     /**
      * Creates a new reference from a {@link PageEntity} class.
-     * @param instance the instance where the entity should be spawned
-     * @param spawnPos the position to spawn
-     * @param direction the direction for the spawning
+     * @param resource the spot the page should stand on
      * @param pageCount the current count of the page
      * @return the created entity reference
      */
-    @Contract(value = "_, _, _, _ -> new" , pure = true)
-    public static PageEntity createPage(
-            Instance instance,
-            Pos spawnPos,
-            Direction direction,
-            int pageCount
-    ) {
+    @Contract(value = "_, _ -> new" , pure = true)
+    public static PageEntity createPage(PageResource resource, int pageCount) {
+        Direction direction = resource.face();
         Check.argCondition(direction == Direction.UP || direction == Direction.DOWN, "The direction " + direction + " is not supported");
         Check.argCondition(pageCount < 1, "The page count can't be zero or negative");
-        return new PageEntity(instance, spawnPos, pageCount);
+        return new PageEntity(resource, pageCount);
     }
 }

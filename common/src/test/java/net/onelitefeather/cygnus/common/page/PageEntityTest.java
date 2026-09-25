@@ -6,8 +6,10 @@ import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.metadata.display.ItemDisplayMeta;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.common.util.Helper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,11 +23,11 @@ class PageEntityTest {
     void testPageEntityCreation(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
 
-        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        PageEntity pageEntity = placedPage(instance);
 
         assertNotNull(pageEntity);
         assertNotNull(pageEntity.getPageItem());
-        assertEquals(Pos.ZERO, pageEntity.getPosition());
+        assertEquals(Helper.updatePosition(Pos.ZERO, Direction.NORTH), pageEntity.getPosition());
         assertNotEquals(pageEntity.getUuid(), pageEntity.getHitBoxUUID());
         Component displayName = pageEntity.getPageItem().get(DataComponents.CUSTOM_NAME);
 
@@ -43,7 +45,7 @@ class PageEntityTest {
     void testInteractionStateFollowsEnableAndDisable(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
 
-        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        PageEntity pageEntity = placedPage(instance);
 
         assertTrue(pageEntity.isInteractable(), "a freshly spawned page must be collectible");
 
@@ -61,7 +63,7 @@ class PageEntityTest {
     void testPageIsLitIndependentlyFromTheEnvironment(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
 
-        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        PageEntity pageEntity = placedPage(instance);
         ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) pageEntity.getEntityMeta();
 
         int blockLight = itemDisplayMeta.getBlockLight();
@@ -81,7 +83,7 @@ class PageEntityTest {
     void testPageBrightnessResetOnEnableInteraction(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
 
-        PageEntity pageEntity = new PageEntity(instance, Pos.ZERO, 1);
+        PageEntity pageEntity = placedPage(instance);
         ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) pageEntity.getEntityMeta();
 
         pageEntity.disableInteraction();
@@ -96,5 +98,25 @@ class PageEntityTest {
 
         pageEntity.remove();
         env.destroyInstance(instance);
+    }
+
+    @Test
+    void testPageIsOnlyInTheWorldOncePlaced(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+
+        PageEntity pageEntity = new PageEntity(new PageResource(Pos.ZERO, Direction.NORTH), 1);
+        assertNull(pageEntity.getInstance(), "creating a page must not put it into the world yet");
+
+        pageEntity.place(instance).join();
+        assertEquals(instance, pageEntity.getInstance());
+
+        pageEntity.remove();
+        env.destroyInstance(instance);
+    }
+
+    private static PageEntity placedPage(Instance instance) {
+        PageEntity pageEntity = new PageEntity(new PageResource(Pos.ZERO, Direction.NORTH), 1);
+        pageEntity.place(instance).join();
+        return pageEntity;
     }
 }
