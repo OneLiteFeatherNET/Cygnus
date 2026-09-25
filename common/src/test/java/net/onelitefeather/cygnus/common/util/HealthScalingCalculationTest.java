@@ -26,7 +26,7 @@ class HealthScalingCalculationTest {
             env.createPlayer(instance);
         }
 
-        double additionalHealth = HealthScalingCalculation.getAdditionalHealth(count);
+        double additionalHealth = HealthScalingCalculation.getAdditionalHealth();
         assertNotEquals(0.0D, additionalHealth);
         assertTrue(additionalHealth <= 20.0D);
         assertEquals(0.0D, additionalHealth % 2.0D, 0.0001D, "additional health should always be a whole heart (multiple of 2 HP)");
@@ -35,8 +35,15 @@ class HealthScalingCalculationTest {
     }
 
     @Test
-    void testZeroHealthScaling() {
-        assertEquals(0.0D, HealthScalingCalculation.getAdditionalHealth(12));
+    void testZeroHealthScalingFromFourSurvivors(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        for (int i = 0; i < 5; i++) {
+            env.createPlayer(instance);
+        }
+
+        assertEquals(0.0D, HealthScalingCalculation.getAdditionalHealth());
+
+        env.destroyInstance(instance, true);
     }
 
     @Test

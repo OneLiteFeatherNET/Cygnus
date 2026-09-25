@@ -4,7 +4,6 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.ConnectionManager;
 import net.onelitefeather.cygnus.attribute.AttributeHelper;
-import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageCalculation;
 import net.onelitefeather.cygnus.common.page.PageProvider;
@@ -33,13 +32,9 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
         // Only picked here, placed into the world once the round starts
         this.pageProvider.collectStartPages(PageCalculation.calculateActivePageAmount());
 
-        float adjustedHealth = 0;
-        double adjustedSpeed = 0;
-
-        if (pageCount <= GameConfig.MIN_PAGE_COUNT) {
-            adjustedHealth = HealthScalingCalculation.getAdditionalHealth(pageCount);
-            adjustedSpeed = SpeedScalingCalculation.getAdditionalSpeed(pageCount);
-        }
+        // Based on the players, not on the page count: the page count carries a random jitter
+        float adjustedHealth = HealthScalingCalculation.getAdditionalHealth();
+        double adjustedSpeed = SpeedScalingCalculation.getAdditionalSpeed();
 
         for (Player player : connectionManager.getOnlinePlayers()) {
             AttributeHelper.adjustStepHeightAndJump(player);

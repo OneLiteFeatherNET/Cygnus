@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.common.util;
 
 import net.minestom.server.MinecraftServer;
-import net.onelitefeather.cygnus.common.config.GameConfig;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.random.RandomGenerator;
@@ -23,12 +22,12 @@ public final class HealthScalingCalculation {
     /**
      * Calculates the additional health that should be given to the player based on the number of pages they have collected.
      *
-     * @param pageCount the number of pages for the game
+     * From four survivors on there is no bonus.
+     *
      * @return the additional health that should be given to the player, always a multiple of 2 (whole hearts)
      */
-    public static float getAdditionalHealth(int pageCount) {
-        if (pageCount > GameConfig.MIN_PAGE_COUNT) return 0.0f;
-        int playerCount = Math.min(MinecraftServer.getConnectionManager().getOnlinePlayerCount() - 1, 4);
+    public static float getAdditionalHealth() {
+        int playerCount = Math.clamp(MinecraftServer.getConnectionManager().getOnlinePlayerCount() - 1, 0, 4);
         float rawBonus = MAX_HEALTH * (1.0f - (float) playerCount / 4);
         return roundToWholeHeart(rawBonus, ThreadLocalRandom.current());
     }
