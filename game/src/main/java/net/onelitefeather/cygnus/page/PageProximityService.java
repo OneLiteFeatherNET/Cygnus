@@ -29,7 +29,6 @@ import java.util.function.Supplier;
  *     <li>Phase 2 (20% &lt; TTL &le; 50%): Warning chime every 3 seconds (60 ticks) with standard pitch.</li>
  *     <li>Phase 3 (TTL &le; 20%): Critical rapid chime every 1 second (20 ticks) with lower pitch and quieter volume.</li>
  * </ul>
- * </p>
  *
  * @author TheMeinerLP
  * @author theEvilReaper

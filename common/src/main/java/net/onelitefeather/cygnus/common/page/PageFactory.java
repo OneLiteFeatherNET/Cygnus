@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Contract;
 /**
  * The factory should be used to create references from a {@link PageEntity}.
  * It's not possible to create a new instance from the entity class directly because the constructor of it is only visible to the package level.
- * @see PageEntity#PageEntity(Instance, Pos, int)
+ * @see PageEntity#PageEntity(PageResource, int)
  * @author theEvilReaper
  * @since 1.0.0
  * @version 1.0.0

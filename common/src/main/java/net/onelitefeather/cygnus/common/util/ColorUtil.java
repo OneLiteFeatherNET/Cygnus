@@ -11,8 +11,9 @@ import net.minestom.server.color.Color;
  * good together, but picking colors as variations on one hue almost always
  * does. HSL lets us say "same hue, just a bit darker" or "same hue, more
  * washed out" instead of guessing at RGB numbers by hand. That's exactly what
- * {@link SeededDimensionPreset} relies on to turn a single random seed into a
- * fog/sky/light color set that actually feels like it belongs together.
+ * {@link net.onelitefeather.cygnus.common.dimension.SeedDimensionPreset SeedDimensionPreset}
+ * relies on to turn a single random seed into a fog/sky/light color set that
+ * actually feels like it belongs together.
  * <p>
  * If you're not familiar with HSL: hue is the color itself (0 = red, 120 =
  * green, 240 = blue, and it loops back around at 360), saturation is how
