@@ -7,10 +7,10 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * The creek's appearance in the world: the entity that is drawn and moved.
+ * What the creek looks like in the world: the entity that gets drawn and moved around.
  * <p>
- * The states only use this interface. That way the vanilla creaking can later be replaced by a
- * custom model without changing the behavior.
+ * The states only ever talk to this interface. That way the vanilla creaking can later make way
+ * for a custom model without the behaviour changing at all.
  * </p>
  *
  * @author theEvilReaper
@@ -20,7 +20,7 @@ import java.util.UUID;
 public interface CreekBody {
 
     /**
-     * Returns the position of the creek's feet.
+     * Where the creek's feet are.
      *
      * @return the position
      */
@@ -30,7 +30,7 @@ public interface CreekBody {
      * Walks towards a goal.
      *
      * @param goal  where to go
-     * @param speed the movement speed, in blocks per tick
+     * @param speed how fast, in blocks per tick
      */
     void moveTo(Pos goal, double speed);
 
@@ -40,9 +40,9 @@ public interface CreekBody {
     void stop();
 
     /**
-     * Moves the creek to a position instantly.
+     * Moves the creek somewhere else in an instant.
      *
-     * @param position the new position
+     * @param position where it ends up
      */
     void teleport(Pos position);
 
@@ -54,22 +54,22 @@ public interface CreekBody {
     void lookAt(Pos point);
 
     /**
-     * Makes the creek visible to exactly these players.
+     * Lets exactly these players see the creek.
      *
-     * @param viewers the players who can see the creek; an empty set hides it from everyone
+     * @param viewers who may see it; an empty set hides it from everyone
      */
     void showTo(Set<UUID> viewers);
 
     /**
-     * Returns whether a player can currently see the creek.
+     * Tells whether a player can see the creek right now.
      *
      * @param viewer the player's id
-     * @return {@code true} if the creek is visible to that player
+     * @return {@code true} if the creek is visible to them
      */
     boolean isVisibleTo(UUID viewer);
 
     /**
-     * Switches the hunting look on or off (for the creaking: glowing eyes).
+     * Switches the hunting look on or off. For the creaking, that means glowing eyes.
      *
      * @param aggressive {@code true} for the hunting look
      */
@@ -78,19 +78,19 @@ public interface CreekBody {
     /**
      * Switches the frozen look on or off.
      *
-     * @param frozen {@code true} while a survivor looks at the creek during a hunt
+     * @param frozen {@code true} while the hunted survivor is looking at the creek
      */
     void setFrozen(boolean frozen);
 
     /**
-     * Returns the entity behind the body. Used for line-of-sight checks.
+     * The entity behind the body, needed to check who can see it.
      *
      * @return the entity
      */
     Entity entity();
 
     /**
-     * Removes the creek from the world.
+     * Takes the creek out of the world.
      */
     void remove();
 }

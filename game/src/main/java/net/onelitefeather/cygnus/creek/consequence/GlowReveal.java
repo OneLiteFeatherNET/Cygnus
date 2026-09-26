@@ -20,10 +20,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Makes a survivor glow for a few seconds, visible only to the slender.
+ * Lets a survivor glow for a few seconds, but only in the slender's eyes.
  * <p>
- * Glowing is a metadata flag, and Minestom sends metadata to all viewers. So the flag is never
- * set on the survivor. Instead, a packet with the flag is sent to the slender only.
+ * Glowing is a metadata flag, and Minestom sends metadata to everyone who can see the player. So
+ * the flag is never set on the survivor itself. Instead, only the slender gets a packet with it.
  * </p>
  *
  * @author theEvilReaper
@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class GlowReveal implements SlenderReveal {
 
-    /** How often the glow packet is resent, in ticks. */
+    /** How often the glow packet goes out again, in ticks. */
     static final int RESEND_TICKS = 5;
 
     /** The glowing bit in the entity flags. */
@@ -46,7 +46,7 @@ public final class GlowReveal implements SlenderReveal {
     private final Set<Reveal> running = ConcurrentHashMap.newKeySet();
 
     /**
-     * Creates the reveal.
+     * Sets up the reveal.
      *
      * @param seconds how long the glow lasts
      */
@@ -58,7 +58,7 @@ public final class GlowReveal implements SlenderReveal {
     public void reveal(Player survivor, Player slender) {
         Pos where = survivor.getPosition();
         slender.playSound(Sound.sound(SLENDER_SOUND, Sound.Source.HOSTILE, 1.0F, 0.5F), where.x(), where.y(), where.z());
-        // Warn the survivor too. Being revealed without any hint would feel unfair.
+        // Let the survivor know too. Being given away without any hint would feel unfair.
         survivor.playSound(Sound.sound(SURVIVOR_SOUND, Sound.Source.HOSTILE, 1.0F, 0.8F));
         survivor.sendMessage(WARNING);
 
@@ -78,8 +78,8 @@ public final class GlowReveal implements SlenderReveal {
             this.end(reveal);
             return;
         }
-        // Any metadata change of the survivor (sprinting, sneaking) sends the real flags to the
-        // slender and removes the glow. Resending it keeps that gap short.
+        // Whenever the survivor's metadata changes (sprinting, sneaking), the slender gets the real
+        // flags and the glow is gone. Sending it again keeps that gap short.
         reveal.slender.sendPacket(flagsPacket(reveal.survivor, true));
     }
 
@@ -99,10 +99,10 @@ public final class GlowReveal implements SlenderReveal {
     }
 
     /**
-     * Builds a packet with the survivor's current entity flags and the glow bit set or cleared.
+     * Builds a packet with the survivor's current entity flags, with the glow bit set or cleared.
      * <p>
-     * The flags are always included. Otherwise the client would keep the last value it got,
-     * which after a reveal is the glow.
+     * The flags always go along. Otherwise the client would hold on to the last value it got, which
+     * after a reveal is the glow.
      * </p>
      */
     static EntityMetaDataPacket flagsPacket(Player survivor, boolean glowing) {

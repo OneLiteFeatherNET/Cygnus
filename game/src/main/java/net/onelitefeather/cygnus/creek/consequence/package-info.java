@@ -1,5 +1,5 @@
 /**
- * What happens when the creek catches a survivor.
+ * What happens to a survivor the creek catches or picks out.
  */
 @NotNullByDefault
 package net.onelitefeather.cygnus.creek.consequence;
