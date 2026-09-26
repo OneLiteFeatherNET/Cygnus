@@ -68,7 +68,7 @@ public class GameData extends InstanceSetupData {
      * @param mapEntry the map entry associated with this game data
      */
     public GameData(Player player, MapEntry mapEntry) {
-        super(player.getUuid(), mapEntry, BossBar.Color.RED);
+        super(player, mapEntry, BossBar.Color.RED);
         this.loadData();
         this.creekRouteSlots = new ArrayList<>();
         this.inventory = new MapDataOverviewInventory(player, this.gameMapBuilder, InventoryMode.GAME);
@@ -592,7 +592,6 @@ public class GameData extends InstanceSetupData {
             this.gameMapBuilder.removeSurvivorSpawn(pos);
             this.triggerUpdate(InventoryTarget.SURVIVOR);
         } else if (category == MapDataCategory.PAGE) {
-            Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(this.uuid);
             PageResource pageResource = null;
             if (player instanceof SetupPlayer setupPlayer) {
                 pageResource = setupPlayer.getPageResource();
@@ -633,6 +632,7 @@ public class GameData extends InstanceSetupData {
     @Override
     public void reset() {
         super.reset();
+        this.bossBar.removeViewer(player);
         this.survivorInventory.unregister();
         this.inventory.unregister();
         this.pageInventory.unregister();

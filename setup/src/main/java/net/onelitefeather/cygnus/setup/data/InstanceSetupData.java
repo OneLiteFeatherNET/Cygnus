@@ -34,7 +34,7 @@ public abstract class InstanceSetupData implements SetupData {
 
     protected static final Pos SPAWN_POINT = new Pos(0, 100, 0);
 
-    protected UUID uuid;
+    protected Player player;
     protected MapEntry mapEntry;
     protected @Nullable InstanceContainer instance;
     protected @Nullable FalcoAnvilLoader chunkLoader;
@@ -44,12 +44,12 @@ public abstract class InstanceSetupData implements SetupData {
     /**
      * Creates a new setup data container.
      *
-     * @param uuid     unique identifier of this setup session
+     * @param player   who owns the setup
      * @param mapEntry map entry associated with the setup
      * @param color    boss bar color used for setup feedback
      */
-    protected InstanceSetupData(UUID uuid, MapEntry mapEntry, BossBar.Color color) {
-        this.uuid = uuid;
+    protected InstanceSetupData(Player player, MapEntry mapEntry, BossBar.Color color) {
+        this.player = player;
         this.mapEntry = mapEntry;
         this.bossBar = BossBar.bossBar(Component.empty(), 1, color, BossBar.Overlay.PROGRESS);
     }
@@ -170,7 +170,7 @@ public abstract class InstanceSetupData implements SetupData {
      */
     @Override
     public UUID getId() {
-        return this.uuid;
+        return this.player.getUuid();
     }
 
     /**
