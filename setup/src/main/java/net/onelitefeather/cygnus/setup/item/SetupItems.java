@@ -61,13 +61,13 @@ public final class SetupItems {
         lobbySetupLayout.set(6, saveItem);
 
         gameSetupLayout = new HotBarLayout();
-        gameSetupLayout.set(1, ItemStack.builder(Material.COMPASS)
+        gameSetupLayout.set(0, ItemStack.builder(Material.COMPASS)
                 .customName(Component.text("Data", NamedTextColor.AQUA))
                 .lore(getLore(SPACE_SEPARATOR.append(Component.text("View basic map data", NamedTextColor.WHITE))))
                 .set(Tags.ITEM_TAG, SetupItemId.DATA)
                 .build()
         );
-        gameSetupLayout.set(3, ItemStack.builder(Material.PAPER)
+        gameSetupLayout.set(1, ItemStack.builder(Material.PAPER)
                 .customName(Component.text("Page", NamedTextColor.AQUA))
                 .lore(
                         getLore(
@@ -82,7 +82,7 @@ public final class SetupItems {
                 .build()
         );
 
-        gameSetupLayout.set(5, ItemStack.builder(Material.MINECART)
+        gameSetupLayout.set(4, ItemStack.builder(Material.MINECART)
                 .customName(Component.text("Survivor", NamedTextColor.GREEN))
                 .lore(
                         getLore(
@@ -95,8 +95,7 @@ public final class SetupItems {
                 .set(Tags.ITEM_TAG, SetupItemId.SURVIVOR)
                 .build()
         );
-        gameSetupLayout.set(7, saveItem);
-        gameSetupLayout.set(6, ItemStack.builder(Material.LEAD)
+        gameSetupLayout.set(7, ItemStack.builder(Material.LEAD)
                 .customName(Component.text("Creek routes", NamedTextColor.DARK_GREEN))
                 .lore(getLore(SPACE_SEPARATOR
                         .append(Component.text("Switch to the ", NamedTextColor.WHITE))
@@ -105,6 +104,7 @@ public final class SetupItems {
                 .set(Tags.ITEM_TAG, SetupItemId.CREEK_ROUTES)
                 .build()
         );
+        gameSetupLayout.set(8, saveItem);
 
         ItemStack leaveCreekMode = ItemStack.builder(Material.BARRIER)
                 .customName(Component.text("Leave mode", NamedTextColor.RED))
