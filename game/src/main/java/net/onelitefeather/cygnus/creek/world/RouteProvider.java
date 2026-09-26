@@ -23,17 +23,17 @@ public interface RouteProvider {
     /**
      * Picks the next point.
      *
-     * @param current the creek's position
-     * @param allowed filters the points the creek may go to
+     * @param current where the creek is
+     * @param allowed which points the creek may go to
      * @param random  the random source
-     * @return the next point with its pause, or empty if none is allowed
+     * @return the next point and its pause, or empty if none is allowed
      */
     Optional<RouteStep> next(Pos current, Predicate<Pos> allowed, RandomGenerator random);
 
     /**
-     * Returns every point this route can hand out. Used to pick a spawn or respawn spot.
+     * Every point this route can hand out. Used to find a place to appear or come back.
      *
-     * @return the points, possibly empty
+     * @return the points, possibly none
      */
     default List<Pos> points() {
         return List.of();

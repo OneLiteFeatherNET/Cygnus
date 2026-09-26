@@ -22,13 +22,13 @@ public final class InstanceGround implements Ground {
     /** How many blocks below the candidate the search goes. */
     static final int SEARCH_DOWN = 8;
 
-    /** Free blocks the creek needs above its feet. A creaking is almost three blocks tall. */
+    /** How many free blocks the creek needs above its feet. A creaking is almost three blocks tall. */
     static final int HEADROOM = 3;
 
     private final Supplier<? extends @Nullable Instance> instance;
 
     /**
-     * Creates the floor search.
+     * Sets up the floor search.
      *
      * @param instance supplies the round's instance, or {@code null} while there is none
      */
