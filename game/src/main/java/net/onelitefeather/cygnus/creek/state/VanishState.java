@@ -9,7 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The creek is invisible for a while. Afterwards it reappears somewhere nobody is looking.
+ * The creek is gone for a while: at the start of a round, or for good once it sits out the rest
+ * of it. When it comes back, it turns up somewhere nobody is looking.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -20,7 +21,7 @@ public final class VanishState implements CreekState {
     private final long until;
 
     /**
-     * Creates a vanish that ends at a fixed time.
+     * Sets up a vanish that ends at a fixed time.
      *
      * @param until when the creek may come back, in milliseconds
      */
@@ -29,17 +30,7 @@ public final class VanishState implements CreekState {
     }
 
     /**
-     * Starts a vanish. The higher the dread of the survivors, the shorter it is.
-     *
-     * @param ctx the current step
-     * @return the state
-     */
-    public static VanishState after(CreekContext ctx) {
-        return new VanishState(ctx.now() + cooldownMillis(ctx.config(), ctx.highestDread()));
-    }
-
-    /**
-     * Starts a vanish that never ends. Used when the creek should sit out the rest of the round.
+     * A vanish that never ends, for when the creek sits out the rest of the round.
      *
      * @return the state
      */
@@ -48,7 +39,7 @@ public final class VanishState implements CreekState {
     }
 
     /**
-     * Returns whether this vanish never ends.
+     * Tells whether this vanish never ends.
      *
      * @return {@code true} for {@link #forever()}
      */
@@ -57,14 +48,14 @@ public final class VanishState implements CreekState {
     }
 
     /**
-     * Calculates how long the creek stays away: {@code vanishMaxSeconds} at no dread,
-     * {@code vanishMinSeconds} at full dread.
+     * How long a breather lasts: {@code vanishMaxSeconds} for a calm survivor, down to
+     * {@code vanishMinSeconds} for one who is scared to death. Used for the pause after a variant.
      *
      * @param config the settings
-     * @param dread  the highest dread among the survivors
-     * @return the cooldown in milliseconds
+     * @param dread  the survivor's dread
+     * @return the breather in milliseconds
      */
-    static long cooldownMillis(CreekConfig config, double dread) {
+    public static long cooldownMillis(CreekConfig config, double dread) {
         double span = config.vanishMaxSeconds() - config.vanishMinSeconds();
         double seconds = config.vanishMaxSeconds() - span * Math.clamp(dread, 0.0D, 1.0D);
         return Math.round(seconds * 1000.0D);
@@ -86,7 +77,7 @@ public final class VanishState implements CreekState {
         List<Pos> observers = ctx.observerEyes();
         double distance = ctx.config().respawnMinDistance();
         // Any point of the route will do. Asking the route for its next point would only offer the
-        // neighbours of where the creek vanished, which is often right next to a survivor.
+        // neighbours of where the creek disappeared, and that is often right next to a survivor.
         List<Pos> spots = ctx.route().points().stream()
                 .map(point -> ctx.spots().hiddenSpotAt(point, observers, distance))
                 .flatMap(Optional::stream)
@@ -94,6 +85,6 @@ public final class VanishState implements CreekState {
         if (spots.isEmpty()) return this;
 
         ctx.body().teleport(spots.get(ctx.random().nextInt(spots.size())));
-        return new WanderState(ctx.now());
+        return new PatrolState();
     }
 }
