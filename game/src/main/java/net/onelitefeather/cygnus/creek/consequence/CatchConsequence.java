@@ -3,7 +3,7 @@ package net.onelitefeather.cygnus.creek.consequence;
 import net.minestom.server.entity.Player;
 
 /**
- * What happens when the creek catches a survivor.
+ * What happens to a survivor the creek catches.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -13,14 +13,14 @@ import net.minestom.server.entity.Player;
 public interface CatchConsequence {
 
     /**
-     * Applies the consequence.
+     * Lets the catch hit the survivor.
      *
      * @param survivor the survivor who was caught
      */
     void apply(Player survivor);
 
     /**
-     * Removes any effects that are still active. Called at the end of a round.
+     * Takes back anything that is still running. Called when the round ends.
      */
     default void cleanUp() {
     }

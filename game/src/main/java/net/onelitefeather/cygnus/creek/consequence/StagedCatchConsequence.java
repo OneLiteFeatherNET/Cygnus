@@ -12,8 +12,9 @@ import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
 /**
- * Punishes every catch. Sometimes it also reveals the survivor to the slender: always from the
- * {@code betrayalCatchCount}-th catch on, and before that with a {@code betrayalChance}.
+ * Punishes every catch, and sometimes gives the survivor away to the slender as well: always
+ * from the {@code betrayalCatchCount}-th catch on, and before that with a chance of
+ * {@code betrayalChance}.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -21,7 +22,7 @@ import java.util.random.RandomGenerator;
  */
 public final class StagedCatchConsequence implements CatchConsequence {
 
-    /** How often a survivor was caught since their last reveal. */
+    /** How often a survivor has been caught since they were last given away. */
     static final Tag<Integer> CATCHES = Tag.Transient("creekCatches");
 
     private final CatchConsequence effects;
@@ -33,12 +34,12 @@ public final class StagedCatchConsequence implements CatchConsequence {
     private final Set<Player> counted = ConcurrentHashMap.newKeySet();
 
     /**
-     * Creates the consequence.
+     * Sets up the consequence.
      *
      * @param effects the punishment for every catch
-     * @param reveal  reveals a survivor to the slender
+     * @param reveal  gives a survivor away to the slender
      * @param slender supplies the slender, or {@code null} while there is none
-     * @param config  the reveal settings
+     * @param config  the settings for giving survivors away
      * @param random  the random source
      */
     public StagedCatchConsequence(CatchConsequence effects, SlenderReveal reveal, Supplier<@Nullable Player> slender,

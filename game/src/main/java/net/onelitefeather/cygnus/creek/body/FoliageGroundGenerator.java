@@ -8,11 +8,12 @@ import net.minestom.server.entity.pathfinding.generators.GroundNodeGenerator;
 import net.minestom.server.instance.block.Block;
 
 /**
- * Plans paths like {@link GroundNodeGenerator}, but also through grass, ferns and leaf litter.
+ * Plans paths like {@link GroundNodeGenerator}, but lets the creek walk through grass, ferns
+ * and leaf litter.
  * <p>
- * Minestom only lets an entity walk into a block that is air. Any plant on the ground made that
- * spot unwalkable, so the creek took detours, jumped or did not move at all. Here only solid
- * blocks and liquids stop a step.
+ * Minestom only lets an entity step into a block of pure air, so a single tuft of grass made a
+ * spot unwalkable: the creek took detours, jumped around or did not move at all. Here only solid
+ * blocks and liquids get in the way.
  * </p>
  *
  * @author theEvilReaper

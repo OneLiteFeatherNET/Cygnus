@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Rates how likely a survivor is to be stalked or hunted.
+ * Rates how likely a survivor is to be haunted.
  * <p>
- * The creek only uses this interface. A later sanity system can replace the rating without
- * changing the creek.
+ * The creek only ever asks this interface. A sanity system can take over the rating later without
+ * the creek noticing.
  * </p>
  *
  * @author theEvilReaper
@@ -23,8 +23,8 @@ public interface DreadSource {
      * Rates one survivor.
      *
      * @param survivor the survivor to rate
-     * @param position the survivor's position
-     * @param others   the positions of all other survivors
+     * @param position where the survivor is
+     * @param others   where all the other survivors are
      * @return the dread, between {@code 0} and {@code 1}
      */
     double dreadOf(UUID survivor, Pos position, List<Pos> others);

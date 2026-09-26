@@ -15,7 +15,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * The normal punishment for being caught: a jump scare, empty stamina and slowness.
+ * The usual price for being caught: a jump scare, an empty stamina bar and slowness.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -23,10 +23,10 @@ import java.util.function.Predicate;
  */
 public final class CatchEffects implements CatchConsequence {
 
-    /** Sound of the fallback scare, used when no corpse exists yet. */
+    /** The sound of the stand-in scare, for when there is no corpse to show yet. */
     static final Key SCARE_SOUND = Key.key("entity.creaking.activate");
 
-    /** Duration of the fallback scare's darkness, in ticks. */
+    /** How long the stand-in scare's darkness lasts, in ticks. */
     static final int SCARE_DARKNESS_TICKS = 40;
 
     private final Predicate<Player> jumpScare;
@@ -35,10 +35,10 @@ public final class CatchEffects implements CatchConsequence {
     private final Set<Player> slowed = ConcurrentHashMap.newKeySet();
 
     /**
-     * Creates the effects.
+     * Sets up the effects.
      *
-     * @param jumpScare       plays the jump scare and returns {@code false} if it failed
-     * @param foodBars        returns a survivor's stamina bar, or {@code null} if there is none
+     * @param jumpScare       plays the jump scare and returns {@code false} if it could not
+     * @param foodBars        returns a survivor's stamina bar, or {@code null} if they have none
      * @param slownessSeconds how long a caught survivor is slowed
      */
     public CatchEffects(Predicate<Player> jumpScare, Function<Player, @Nullable FoodBar> foodBars, int slownessSeconds) {
@@ -49,8 +49,8 @@ public final class CatchEffects implements CatchConsequence {
 
     @Override
     public void apply(Player survivor) {
-        // The jump scare needs a corpse, so it does nothing before the first death.
-        // The fallback makes sure the catch is still noticeable.
+        // The jump scare needs a corpse, so before the first death there is nothing to show.
+        // The stand-in makes sure a catch never goes unnoticed.
         if (!this.jumpScare.test(survivor)) {
             scareWithoutCorpse(survivor);
         }

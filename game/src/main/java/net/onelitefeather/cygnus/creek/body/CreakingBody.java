@@ -15,11 +15,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Shows the creek as a vanilla creaking.
+ * The creek in the world, dressed up as a vanilla creaking.
  * <p>
- * An enderman would not work: the slender player is already shown as one, so both would look
- * the same. Creakings only spawn from a creaking heart, and Cygnus has none, so the resource
- * pack can retexture them freely.
+ * An enderman was out of the question: the slender player already looks like one, and nobody could
+ * tell the two apart. Creakings only spawn from a creaking heart, and Cygnus has none, so the
+ * resource pack is free to give them a new look.
  * </p>
  *
  * @author theEvilReaper
@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class CreakingBody implements CreekBody {
 
-    /** How far the goal has to move before a new path is calculated, in blocks. */
+    /** How far the goal has to move before the creek works out a new path, in blocks. */
     static final double REPATH_DISTANCE = 1.0D;
 
     private final EntityCreature entity;
@@ -40,10 +40,10 @@ public final class CreakingBody implements CreekBody {
     }
 
     /**
-     * Spawns a creaking. Nobody can see it until {@link #showTo(Set)} is called.
+     * Puts a creaking into the world. Nobody sees it until {@link #showTo(Set)} says who may.
      *
      * @param instance the instance of the round
-     * @param position the spawn position
+     * @param position where it appears
      * @return the body
      */
     public static CreakingBody spawn(Instance instance, Pos position) {
@@ -63,12 +63,12 @@ public final class CreakingBody implements CreekBody {
     @Override
     public void moveTo(Pos goal, double speed) {
         this.entity.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(speed);
-        // A walking survivor moves a little between almost every two steps. Recalculating the
-        // path each time would be expensive, so small moves are ignored.
+        // A survivor on the move shifts a little between almost every two steps. Working out a
+        // new path every time would be expensive, so small shifts are ignored.
         Pos current = this.goal;
         if (current != null && current.distance(goal) <= REPATH_DISTANCE) return;
-        // Only remember goals the navigator accepted. A rejected goal (too close, same block,
-        // unloaded chunk) or a reached one must not block the next goal.
+        // Only remember goals the navigator took on. One it turned down (too close, same block,
+        // unloaded chunk) or one already reached must not stand in the way of the next.
         boolean started = this.entity.getNavigator().setPathTo(goal, this.arrivalDistance(), () -> this.forget(goal));
         this.goal = started ? goal : null;
     }
@@ -78,7 +78,8 @@ public final class CreakingBody implements CreekBody {
     }
 
     /**
-     * The navigator's default arrival distance: from the center of the bounding box to a corner.
+     * How close counts as arrived for Minestom's navigator: from the middle of the bounding box to
+     * one of its corners.
      */
     private double arrivalDistance() {
         BoundingBox box = this.entity.getBoundingBox();

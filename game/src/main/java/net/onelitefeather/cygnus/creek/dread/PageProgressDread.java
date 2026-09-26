@@ -9,10 +9,11 @@ import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
 
 /**
- * Rates the dread from the found pages, the elapsed time and whether a survivor is alone.
+ * Rates the dread from the pages found so far, how long the round has been going and whether a
+ * survivor is on their own.
  * <p>
- * Pages and time are the same for everyone. Being alone is what makes the difference, so the
- * creek prefers survivors who leave the group.
+ * Pages and time are the same for everyone. Being alone is what sets a survivor apart, so the
+ * creek goes for those who wander off from the group.
  * </p>
  *
  * @author theEvilReaper
@@ -28,13 +29,13 @@ public final class PageProgressDread implements DreadSource {
     private final CreekConfig config;
 
     /**
-     * Creates the rating.
+     * Sets up the rating.
      *
-     * @param foundPages      supplies the number of found pages
-     * @param maxPages        supplies the total number of pages
-     * @param elapsedMillis   supplies the elapsed round time
-     * @param gameTimeSeconds the maximum round length
-     * @param config          the weights and the isolation radius
+     * @param foundPages      supplies how many pages have been found
+     * @param maxPages        supplies how many pages there are in total
+     * @param elapsedMillis   supplies how long the round has been going
+     * @param gameTimeSeconds how long a round lasts at most
+     * @param config          the weights and how far apart counts as alone
      */
     public PageProgressDread(IntSupplier foundPages, IntSupplier maxPages, LongSupplier elapsedMillis,
                              int gameTimeSeconds, CreekConfig config) {

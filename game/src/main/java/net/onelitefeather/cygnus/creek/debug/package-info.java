@@ -1,5 +1,5 @@
 /**
- * A debug line in the action bar for playtests.
+ * A debug line in the action bar, for playtests.
  */
 @NotNullByDefault
 package net.onelitefeather.cygnus.creek.debug;

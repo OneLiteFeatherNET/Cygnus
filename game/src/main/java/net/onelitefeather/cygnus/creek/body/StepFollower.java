@@ -12,19 +12,19 @@ import net.minestom.server.utils.position.PositionUtils;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Walks the creek along a path like {@link GroundNodeFollower}, but steps up low blocks the way a
- * vanilla mob does instead of jumping onto them.
+ * Moves the creek along its path like {@link GroundNodeFollower}, but steps up low blocks the
+ * way a vanilla mob does instead of hopping onto them.
  * <p>
- * Three things differ from Minestom's follower:
+ * It differs from Minestom's follower in three ways:
  * </p>
  * <ul>
- *     <li>Each step is checked a tiny bit above the feet. Standing exactly on top of a slab,
- *     Minestom counts the next slab as a wall and the entity would stop at the block edge.</li>
- *     <li>Blocks up to {@link #STEP_HEIGHT} high, like slabs and dirt paths, are walked up. It
- *     only jumps when that does not get it any farther.</li>
- *     <li>A path point counts as reached when the creek is in its column and less than a block
- *     away. The path puts the floor of a slab one block up, so on a slab the creek
- *     never stood in the same block as the point and kept jumping at it.</li>
+ *     <li>Each step is checked a hair above the feet. Standing right on top of a slab, Minestom
+ *     treats the next slab as a wall, and the creek would get stuck at the edge.</li>
+ *     <li>Anything up to {@link #STEP_HEIGHT} high, like slabs and dirt paths, it simply walks up.
+ *     It only jumps when stepping up gets it nowhere.</li>
+ *     <li>A path point counts as reached once the creek stands in its column and less than a block
+ *     away in height. The path puts the floor of a slab a block too high, so on slabs the creek
+ *     never quite arrived and kept jumping at the point.</li>
  * </ul>
  *
  * @author theEvilReaper
@@ -33,10 +33,10 @@ import org.jetbrains.annotations.Nullable;
  */
 final class StepFollower extends GroundNodeFollower {
 
-    /** Highest block the creek walks up without jumping, in blocks. Same as a vanilla mob. */
+    /** The highest step the creek takes without jumping, in blocks. The same as a vanilla mob. */
     static final double STEP_HEIGHT = 0.6D;
 
-    /** How far ahead a blocked step is looked for before jumping, in blocks. */
+    /** How far ahead it looks for a blocked step before deciding to jump, in blocks. */
     private static final double LOOK_AHEAD = 0.3D;
 
     private final Entity entity;
@@ -54,8 +54,9 @@ final class StepFollower extends GroundNodeFollower {
         double dx = direction.x() - position.x();
         double dz = direction.z() - position.z();
 
-        // Never step past the point. Minestom slows down by the distance including height, so
-        // above a point one block lower it kept overshooting and never dropped into a narrow gap.
+        // Never overshoot the point. Minestom slows down using the distance including height, so
+        // above a point one block lower the creek kept swinging past it and never dropped into a
+        // narrow gap.
         double step = Math.min(speed, Math.hypot(dx, dz));
 
         Pos moved = this.walk(instance, position, horizontal(dx, dz, step));
@@ -71,7 +72,7 @@ final class StepFollower extends GroundNodeFollower {
         if (instance == null || point == null || !this.entity.isOnGround()) return;
         Pos position = this.entity.getPosition();
         Vec ahead = horizontal(point.x() - position.x(), point.z() - position.z(), LOOK_AHEAD);
-        // Still room to walk, or a step to walk up: no jump needed.
+        // Still room to walk, or a step it can walk up: no need to jump.
         if (!this.blocked(instance, position.add(0, Vec.EPSILON, 0), ahead)) return;
         if (!this.blocked(instance, this.lifted(instance, position), ahead)) return;
         super.jump(point, target);
