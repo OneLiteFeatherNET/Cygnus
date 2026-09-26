@@ -1,25 +1,29 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.common.creek.CreekRoute;
+import net.onelitefeather.cygnus.creek.world.CreekPaths;
+import net.onelitefeather.cygnus.creek.world.PathRoute;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
 import net.onelitefeather.cygnus.creek.world.RouteStep;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class WanderStateTest {
+class PatrolStateTest {
 
     private static final UUID FIRST = UUID.randomUUID();
     private static final UUID SECOND = UUID.randomUUID();
@@ -30,11 +34,17 @@ class WanderStateTest {
         return new SurvivorView(id, new Pos(0, 40, -60, 0, 0), dread, sees);
     }
 
+    private static SurvivorView at(UUID id, double z) {
+        return new SurvivorView(id, new Pos(0, 40, z), 0.0D, false);
+    }
+
+    // ---- walking, carried over from the wander behaviour ----
+
     @Test
     @DisplayName("Entering shows him to every survivor")
     void enterShowsHimToEveryone() {
         RecordingBody body = new RecordingBody(Pos.ZERO);
-        new WanderState(0L).enter(Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(),
+        new PatrolState().enter(Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(),
                 far(FIRST, 0.0D, false), new SurvivorView(SECOND, new Pos(40, 40, 40), 0.0D, false)));
 
         assertEquals(Set.of(FIRST, SECOND), body.viewers);
@@ -44,7 +54,7 @@ class WanderStateTest {
     @DisplayName("He walks to the next point")
     void walksToTheNextPoint() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        WanderState state = new WanderState(Long.MAX_VALUE);
+        PatrolState state = new PatrolState();
         CreekContext ctx = Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.0D, false));
         state.enter(ctx);
 
@@ -54,10 +64,10 @@ class WanderStateTest {
     }
 
     @Test
-    @DisplayName("Spotted, he stops and looks back for a moment")
+    @DisplayName("Spotted from afar, he stops and looks back for a moment")
     void pausesWhenSpotted() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        WanderState state = new WanderState(Long.MAX_VALUE);
+        PatrolState state = new PatrolState();
         SurvivorView watcher = far(FIRST, 0.0D, true);
         state.enter(Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), watcher));
 
@@ -73,15 +83,27 @@ class WanderStateTest {
     }
 
     @Test
-    @DisplayName("A survivor walking up to him makes him vanish")
-    void vanishesWhenApproached() {
+    @DisplayName("A survivor close by does not make him vanish")
+    void doesNotVanishWhenApproached() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        WanderState state = new WanderState(Long.MAX_VALUE);
-        CreekContext ctx = Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(),
-                new SurvivorView(FIRST, new Pos(0, 40, 10), 0.0D, false));
+        PatrolState state = new PatrolState();
+        CreekContext ctx = Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), at(FIRST, 10));
         state.enter(ctx);
 
-        assertInstanceOf(VanishState.class, state.tick(ctx));
+        assertSame(state, state.tick(ctx));
+        assertEquals(A, body.goal);
+    }
+
+    @Test
+    @DisplayName("A high dread does not make him stalk")
+    void neverStalks() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        CreekContext ctx = Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.9D, false));
+        state.enter(ctx);
+
+        assertSame(state, state.tick(ctx));
+        assertTrue(body.teleports.isEmpty());
     }
 
     @Test
@@ -90,7 +112,7 @@ class WanderStateTest {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
         AtomicInteger calls = new AtomicInteger();
         RouteProvider cycling = (_, _, _) -> Optional.of(new RouteStep(calls.getAndIncrement() % 2 == 0 ? A : B, 0));
-        WanderState state = new WanderState(Long.MAX_VALUE);
+        PatrolState state = new PatrolState();
         state.enter(Contexts.context(0L, body, cycling, new ArrayList<>(), far(FIRST, 0.0D, false)));
 
         state.tick(Contexts.context(0L, body, cycling, new ArrayList<>(), far(FIRST, 0.0D, false)));
@@ -107,7 +129,7 @@ class WanderStateTest {
     @DisplayName("With nowhere to go he stands still")
     void standsStillWithoutAPoint() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        WanderState state = new WanderState(Long.MAX_VALUE);
+        PatrolState state = new PatrolState();
         CreekContext ctx = Contexts.context(0L, body, Contexts.route(), new ArrayList<>(), far(FIRST, 0.0D, false));
         state.enter(ctx);
 
@@ -117,68 +139,16 @@ class WanderStateTest {
     }
 
     @Test
-    @DisplayName("Above the stalk threshold he starts stalking")
-    void startsStalking() {
-        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        WanderState state = new WanderState(0L);
-        CreekContext ctx = Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.3D, false));
-        state.enter(ctx);
-
-        CreekState next = state.tick(ctx);
-
-        assertInstanceOf(StalkState.class, next);
-        assertEquals(FIRST, ((StalkState) next).target());
-        assertEquals(1, body.teleports.size());
-    }
-
-    @Test
-    @DisplayName("Before the cooldown he keeps wandering")
-    void waitsForTheCooldown() {
-        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        WanderState state = new WanderState(5000L);
-        CreekContext ctx = Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.3D, false));
-        state.enter(ctx);
-
-        assertSame(state, state.tick(ctx));
-    }
-
-    @Test
-    @DisplayName("Calm survivors are left alone")
-    void leavesCalmSurvivorsAlone() {
-        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        WanderState state = new WanderState(0L);
-        CreekContext ctx = Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.1D, false));
-        state.enter(ctx);
-
-        assertSame(state, state.tick(ctx));
-    }
-
-    @Test
-    @DisplayName("On a tie he picks the one who strayed from the group")
-    void prefersTheLonelyOne() {
-        UUID third = UUID.randomUUID();
-        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        WanderState state = new WanderState(0L);
-        CreekContext ctx = Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(),
-                new SurvivorView(FIRST, new Pos(0, 40, -60, 0, 0), 0.3D, false),
-                new SurvivorView(SECOND, new Pos(5, 40, -60, 0, 0), 0.3D, false),
-                new SurvivorView(third, new Pos(0, 40, -160, 0, 0), 0.3D, false));
-        state.enter(ctx);
-
-        assertEquals(third, ((StalkState) state.tick(ctx)).target());
-    }
-
-    @Test
-    @DisplayName("Someone who leaves the survivors stops seeing him while he wanders")
+    @DisplayName("Someone who leaves the survivors stops seeing him")
     void dropsViewersWhoLeaveTheSurvivors() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        WanderState state = new WanderState(Long.MAX_VALUE);
+        PatrolState state = new PatrolState();
         SurvivorView second = new SurvivorView(SECOND, new Pos(40, 40, 40), 0.0D, false);
         state.enter(Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.0D, false), second));
 
         state.tick(Contexts.context(100L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.0D, false)));
 
-        assertEquals(Set.of(FIRST), body.viewers, "a survivor turned slender or spectator must lose sight of him");
+        assertEquals(Set.of(FIRST), body.viewers);
     }
 
     /** Hands out A, then B, then A again, each with the given pause. */
@@ -187,10 +157,8 @@ class WanderStateTest {
         return (_, _, _) -> Optional.of(new RouteStep(calls.getAndIncrement() % 2 == 0 ? A : B, pauseMillis));
     }
 
-    private static CreekContext at(long now, RecordingBody body, RouteProvider route, CreekConfig config,
-                                   SurvivorView... survivors) {
-        return Contexts.context(now, body, route, config,
-                survivors.length == 0 ? new SurvivorView[]{far(FIRST, 0.0D, false)} : survivors);
+    private static CreekContext at(long now, RecordingBody body, RouteProvider route, CreekConfig config) {
+        return Contexts.context(now, body, route, config, far(FIRST, 0.0D, false));
     }
 
     @Test
@@ -198,7 +166,7 @@ class WanderStateTest {
     void restsAtAPointWithAPause() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
         RouteProvider route = alternating(2000);
-        WanderState state = new WanderState(Long.MAX_VALUE);
+        PatrolState state = new PatrolState();
         state.enter(at(0L, body, route, Contexts.CONFIG));
         state.tick(at(0L, body, route, Contexts.CONFIG));
         assertEquals(A, body.goal);
@@ -218,7 +186,7 @@ class WanderStateTest {
     void noRestWhenStuck() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
         RouteProvider route = alternating(5000);
-        WanderState state = new WanderState(Long.MAX_VALUE);
+        PatrolState state = new PatrolState();
         state.enter(at(0L, body, route, Contexts.CONFIG));
         state.tick(at(0L, body, route, Contexts.CONFIG));
 
@@ -233,7 +201,7 @@ class WanderStateTest {
         CreekConfig config = Contexts.randomStops(1.0D, 1000, 1000);
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
         RouteProvider route = alternating(0);
-        WanderState state = new WanderState(Long.MAX_VALUE);
+        PatrolState state = new PatrolState();
         state.enter(at(0L, body, route, config));
         state.tick(at(0L, body, route, config));
 
@@ -252,7 +220,7 @@ class WanderStateTest {
         CreekConfig config = Contexts.randomStops(1.0D, 1000, 1000);
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
         RouteProvider route = alternating(3000);
-        WanderState state = new WanderState(Long.MAX_VALUE);
+        PatrolState state = new PatrolState();
         state.enter(at(0L, body, route, config));
         state.tick(at(0L, body, route, config));
 
@@ -270,7 +238,7 @@ class WanderStateTest {
     void noHaltWithoutChanceOrPause() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
         RouteProvider route = alternating(0);
-        WanderState state = new WanderState(Long.MAX_VALUE);
+        PatrolState state = new PatrolState();
         state.enter(at(0L, body, route, Contexts.CONFIG));
         state.tick(at(0L, body, route, Contexts.CONFIG));
 
@@ -280,19 +248,114 @@ class WanderStateTest {
         assertEquals(B, body.goal);
     }
 
+    // ---- selecting ----
+
     @Test
-    @DisplayName("Resting does not keep it from stalking")
-    void stalksWhileResting() {
+    @DisplayName("Within the radius he selects the nearest survivor and stares at them")
+    void selectsTheNearestWithinTheRadius() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        RouteProvider route = alternating(5000);
-        WanderState state = new WanderState(1000L);
-        state.enter(at(0L, body, route, Contexts.CONFIG));
-        state.tick(at(0L, body, route, Contexts.CONFIG));
-        body.position = A;
-        state.tick(at(100L, body, route, Contexts.CONFIG));
+        PatrolState state = new PatrolState();
+        List<UUID> selected = new ArrayList<>();
+        SurvivorView first = at(FIRST, 3);
+        SurvivorView second = at(SECOND, 2);
+        state.enter(Contexts.selecting(0L, body, Contexts.route(A), selected, first, second));
 
-        CreekState next = state.tick(at(1000L, body, route, Contexts.CONFIG, far(FIRST, 0.3D, false)));
+        state.tick(Contexts.selecting(0L, body, Contexts.route(A), selected, first, second));
 
-        assertInstanceOf(StalkState.class, next);
+        assertEquals(Optional.of(SECOND), state.staring());
+        assertEquals(second.eyes(), body.lookedAt);
+        assertNull(body.goal);
+        assertTrue(selected.isEmpty(), "the consequence waits for the end of the stare");
+    }
+
+    @Test
+    @DisplayName("Nobody within the radius, nobody is selected")
+    void selectsNobodyOutsideTheRadius() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        List<UUID> selected = new ArrayList<>();
+        state.enter(Contexts.selecting(0L, body, Contexts.route(A), selected, at(FIRST, 5)));
+
+        state.tick(Contexts.selecting(0L, body, Contexts.route(A), selected, at(FIRST, 5)));
+
+        assertEquals(Optional.empty(), state.staring());
+        assertEquals(A, body.goal);
+    }
+
+    @Test
+    @DisplayName("After staring for a second he applies the consequence and walks on")
+    void staresThenAppliesAndWalksOn() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        List<UUID> selected = new ArrayList<>();
+        state.enter(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        state.tick(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2)));
+
+        state.tick(Contexts.selecting(999L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        assertTrue(selected.isEmpty());
+        assertNull(body.goal);
+
+        state.tick(Contexts.selecting(1000L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        assertEquals(List.of(SECOND), selected);
+        assertEquals(A, body.goal);
+        assertEquals(Optional.empty(), state.staring());
+        assertEquals(11_000L, state.selectAllowedAt());
+    }
+
+    @Test
+    @DisplayName("During the cooldown he selects nobody")
+    void selectsNobodyDuringTheCooldown() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        List<UUID> selected = new ArrayList<>();
+        state.enter(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        state.tick(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        state.tick(Contexts.selecting(1000L, body, Contexts.route(A), selected, at(SECOND, 2)));
+
+        state.tick(Contexts.selecting(10_999L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        assertEquals(Optional.empty(), state.staring());
+        assertEquals(A, body.goal);
+
+        state.tick(Contexts.selecting(11_000L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        assertEquals(Optional.of(SECOND), state.staring());
+    }
+
+    @Test
+    @DisplayName("If the selected survivor leaves during the stare, nothing happens and no cooldown starts")
+    void dropsTheSelectionWhenTheSurvivorLeaves() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        List<UUID> selected = new ArrayList<>();
+        state.enter(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2), far(FIRST, 0.0D, false)));
+        state.tick(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2), far(FIRST, 0.0D, false)));
+
+        state.tick(Contexts.selecting(500L, body, Contexts.route(A), selected, far(FIRST, 0.0D, false)));
+        assertTrue(selected.isEmpty());
+        assertEquals(Optional.empty(), state.staring());
+
+        state.tick(Contexts.selecting(600L, body, Contexts.route(A), selected, at(SECOND, 2), far(FIRST, 0.0D, false)));
+        assertEquals(Optional.of(SECOND), state.staring());
+    }
+
+    @Test
+    @DisplayName("After looking back he walks on to the point he was heading for")
+    void keepsHisPointAfterAPause() {
+        PathRoute route = new PathRoute(CreekPaths.of(List.of(CreekRoute.ofPositions("R",
+                List.of(new Vec(0, 40, 0), new Vec(20, 40, 0), new Vec(40, 40, 0)))), 3.0D));
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        SurvivorView calm = far(FIRST, 0.0D, false);
+        state.enter(Contexts.context(0L, body, route, new ArrayList<>(), calm));
+        state.tick(Contexts.context(0L, body, route, new ArrayList<>(), calm));
+        state.tick(Contexts.context(100L, body, route, new ArrayList<>(), calm));
+        assertEquals(new Pos(20, 40, 0), body.goal);
+
+        body.position = new Pos(10, 40, 0);
+        SurvivorView watcher = far(FIRST, 0.0D, true);
+        state.tick(Contexts.context(200L, body, route, new ArrayList<>(), watcher));
+        assertNull(body.goal, "he stops to look back");
+
+        state.tick(Contexts.context(1700L, body, route, new ArrayList<>(), watcher));
+        assertEquals(new Pos(20, 40, 0), body.goal, "he goes on to the point he was heading for");
     }
 }
