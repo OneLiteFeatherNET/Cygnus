@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.creek;
 
+import net.kyori.adventure.text.Component;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
@@ -9,9 +10,11 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
+import net.onelitefeather.cygnus.creek.consequence.SelectionConsequence;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.creek.state.CreekState;
+import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.CreekPaths;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
@@ -32,15 +35,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
 /**
- * Adds the creek to a round and removes it at the end.
+ * Brings the creek into a round and takes it out again at the end.
  * <p>
- * Like {@code SlenderGazeService}, it listens for the start and end of a round itself. There is
- * no listener for deaths or disconnects: those players drop out of the survivor list on the next
- * step, so a creek whose target is gone vanishes within 100 ms anyway.
+ * Like {@code SlenderGazeService}, it listens for the start and end of a round on its own. It does
+ * not need to hear about deaths or disconnects: those players are simply missing from the
+ * survivors on the next step, so a variant whose target is gone ends within 100 ms anyway.
  * </p>
  *
  * @author theEvilReaper
@@ -51,7 +55,7 @@ public final class CreekService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CreekService.class);
 
-    /** Time between two steps, in milliseconds. */
+    /** How long one step lasts, in milliseconds. */
     static final int TICK_MILLIS = 100;
 
     private final CreekConfig config;
@@ -68,18 +72,20 @@ public final class CreekService {
     private final SpotFinder spots;
     private final Supplier<List<CreekRoute>> routes;
     private volatile @Nullable RouteProvider route;
+    private volatile @Nullable SelectionConsequence selection;
     private final RepeatingTask task = new RepeatingTask(this::tick);
     private volatile @Nullable Creek creek;
+    private volatile @Nullable CreekVariants variants;
 
     /**
-     * Creates the service.
+     * Sets up the service.
      *
      * @param config      the settings
      * @param survivors   supplies the survivors of the round
      * @param instance    supplies the instance of the round, or {@code null} while there is none
-     * @param routes      supplies the creek routes of the current map; without one the creek stays away
-     * @param bodies      spawns the creek's body
-     * @param dread       rates the survivors
+     * @param routes      supplies the creek routes of the current map; without any, the creek stays away
+     * @param bodies      puts a creek body into the world
+     * @param dread       rates how scared each survivor is
      * @param consequence what happens on a catch
      * @param clock       the round's clock
      * @param random      the random source
@@ -106,9 +112,9 @@ public final class CreekService {
     }
 
     /**
-     * Registers the listeners for the start and end of a round.
+     * Listens for the start and end of a round.
      *
-     * @param node the node to register on
+     * @param node the node to listen on
      */
     public void registerListener(EventNode<Event> node) {
         node.addListener(GameStartEvent.class, _ -> this.start());
@@ -116,7 +122,7 @@ public final class CreekService {
     }
 
     /**
-     * Spawns the creek (invisible at first) and starts the step task.
+     * Puts the creek into the world, hidden at first, and starts stepping it.
      */
     void start() {
         if (this.creek != null) return;
@@ -129,31 +135,50 @@ public final class CreekService {
         }
         PathRoute pathRoute = new PathRoute(paths);
         this.route = pathRoute;
+        SelectionConsequence selection = new SelectionConsequence(pathRoute::points, this.ground, this.random);
+        this.selection = selection;
         List<Pos> points = pathRoute.points();
 
         this.clock.start();
         Pos point = points.get(this.random.nextInt(points.size()));
         CreekBody body = this.bodies.apply(world, this.ground.settle(point).orElse(point));
-        // Start invisible. The creek shows up once the survivors had time to spread out, at a
-        // spot far away from all of them.
+        // Start hidden. The creek only shows up once the survivors have had time to spread out,
+        // somewhere far away from all of them.
         CreekState initial = new VanishState(this.clock.now() + this.config.vanishMinSeconds() * 1000L);
-        this.creek = new Creek(body, this.sight, this.dread, pathRoute, this.spots, this.consequence,
+        this.creek = new Creek(body, this.sight, this.dread, pathRoute, this.spots, this.consequence, selection,
                 this.config, this.random, initial);
+        long variantsFrom = this.clock.now() + this.config.vanishMinSeconds() * 1000L;
+        this.variants = new CreekVariants(this.config, this.spots, this.random, variantsFrom,
+                (spot, state) -> new Creek(this.bodies.apply(world, spot), this.sight, this.dread, pathRoute,
+                        this.spots, this.consequence, selection, this.config, this.random, state));
         this.debug.setActive(true);
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }
 
     /**
-     * Runs one step of the creek.
+     * Runs one step: first the patrolling creek, then the variants. Survivors with a variant do not
+     * see the patrolling creek, and it does not pick them out.
      */
     void tick() {
         Creek current = this.creek;
         if (current == null) return;
         Set<Player> players = this.survivors.get();
-        current.tick(players, this.clock.now());
+        long now = this.clock.now();
+        CreekVariants currentVariants = this.variants;
+        // A haunted survivor already has a creek of their own, so the patrolling one leaves them be.
+        Set<UUID> haunted = currentVariants == null ? Set.of() : currentVariants.running().keySet();
+        current.tick(players, haunted, now);
+        if (currentVariants != null) currentVariants.tick(players, current.lastViews(), now);
         if (this.debug.hasWatchers()) {
-            this.debug.show(CreekDebug.line(current.state(), current.body().position(), current.lastViews(),
-                    id -> nameOf(players, id), describeRoute()));
+            Function<UUID, String> names = id -> nameOf(players, id);
+            List<SurvivorView> views = current.lastViews();
+            Component line = CreekDebug.line(current.state(), current.body().position(), views, names,
+                    describeRoute(), now);
+            if (currentVariants != null) {
+                List<CreekState> states = currentVariants.running().values().stream().map(Creek::state).toList();
+                line = line.append(CreekDebug.variants(states, CreekVariants.capacity(views.size()), names, now));
+            }
+            this.debug.show(line);
         }
     }
 
@@ -165,21 +190,31 @@ public final class CreekService {
     }
 
     /**
-     * Removes the creek and clears any remaining catch effects.
+     * Takes the creek and every variant out of the world and clears anything still running on the survivors.
      */
     void stop() {
         this.task.stop();
+        CreekVariants currentVariants = this.variants;
+        this.variants = null;
+        if (currentVariants != null) currentVariants.stop();
         Creek current = this.creek;
         this.creek = null;
         this.route = null;
         this.clock.reset();
         if (current != null) current.remove();
         this.consequence.cleanUp();
+        SelectionConsequence currentSelection = this.selection;
+        this.selection = null;
+        if (currentSelection != null) currentSelection.cleanUp();
         this.debug.setActive(false);
     }
 
     @Nullable Creek creek() {
         return this.creek;
+    }
+
+    @Nullable CreekVariants variants() {
+        return this.variants;
     }
 
     private String describeRoute() {

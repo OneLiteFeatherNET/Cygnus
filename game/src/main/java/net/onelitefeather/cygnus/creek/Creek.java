@@ -5,6 +5,7 @@ import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
+import net.onelitefeather.cygnus.creek.consequence.SelectionConsequence;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
 import net.onelitefeather.cygnus.creek.state.CreekState;
@@ -19,12 +20,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.random.RandomGenerator;
 
 /**
- * Connects the states to the server. Each step it turns the players into survivor snapshots and
- * runs the current state.
+ * One creek in the round: its body, what it is doing right now, and the step that moves it on.
+ * <p>
+ * The patrolling creek is one of these, and so is every variant. Each step it takes a snapshot of
+ * the survivors and lets its current state decide what happens next.
+ * </p>
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -38,6 +43,7 @@ final class Creek {
     private final RouteProvider route;
     private final SpotFinder spots;
     private final CatchConsequence consequence;
+    private final SelectionConsequence selection;
     private final CreekConfig config;
     private final RandomGenerator random;
     private CreekState state;
@@ -45,13 +51,15 @@ final class Creek {
     private boolean entered;
 
     Creek(CreekBody body, CreekSight sight, DreadSource dread, RouteProvider route, SpotFinder spots,
-            CatchConsequence consequence, CreekConfig config, RandomGenerator random, CreekState initial) {
+            CatchConsequence consequence, SelectionConsequence selection, CreekConfig config, RandomGenerator random,
+            CreekState initial) {
         this.body = body;
         this.sight = sight;
         this.dread = dread;
         this.route = route;
         this.spots = spots;
         this.consequence = consequence;
+        this.selection = selection;
         this.config = config;
         this.random = random;
         this.state = initial;
@@ -64,15 +72,36 @@ final class Creek {
      * @param now       the current time in milliseconds
      */
     void tick(Collection<Player> survivors, long now) {
+        this.tick(survivors, Set.of(), now);
+    }
+
+    /**
+     * Runs one step, leaving some survivors out of it. The patrolling creek uses this for everyone
+     * who is haunted by a variant: they do not see it, and it does not pick them out.
+     * <p>
+     * The snapshots in {@link #lastViews()} still cover every survivor.
+     * </p>
+     *
+     * @param survivors the survivors of the round
+     * @param ignored   the survivors this creek leaves alone in this step
+     * @param now       the current time in milliseconds
+     */
+    void tick(Collection<Player> survivors, Set<UUID> ignored, long now) {
         Map<UUID, Player> players = new HashMap<>();
         for (Player survivor : survivors) {
             players.put(survivor.getUuid(), survivor);
         }
         this.lastViews = this.views(survivors);
-        CreekContext ctx = new CreekContext(now, this.lastViews, this.body, this.route, this.spots,
+        List<SurvivorView> noticed = ignored.isEmpty() ? this.lastViews
+                : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
+        CreekContext ctx = new CreekContext(now, noticed, this.body, this.route, this.spots,
                 id -> {
                     Player caught = players.get(id);
                     if (caught != null) this.consequence.apply(caught);
+                },
+                id -> {
+                    Player selected = players.get(id);
+                    if (selected != null) this.selection.apply(selected, survivors);
                 },
                 this.config, this.random);
 
@@ -80,7 +109,8 @@ final class Creek {
             this.state.enter(ctx);
             this.entered = true;
         }
-        if (!this.config.activeWithLastSurvivor() && ctx.survivors().size() <= 1) {
+        // Count every survivor here: leaving the haunted ones out is not being down to the last one.
+        if (!this.config.activeWithLastSurvivor() && this.lastViews.size() <= 1) {
             if (!(this.state instanceof VanishState vanish && vanish.isForever())) {
                 this.switchTo(VanishState.forever(), ctx);
             }
@@ -92,10 +122,10 @@ final class Creek {
     }
 
     /**
-     * Creates a snapshot of every survivor for the states.
+     * Takes a snapshot of every survivor for the states.
      * <p>
-     * A survivor only counts as seeing the creek if it is visible to them. During a stalk, the
-     * other survivors cannot see it, so they must not scare it off.
+     * A survivor only counts as seeing the creek if it is shown to them at all. A variant is hidden
+     * from everyone but its target, so the others must not be able to scare it off.
      * </p>
      *
      * @param survivors the survivors of the round
@@ -117,7 +147,7 @@ final class Creek {
     }
 
     /**
-     * Returns the survivor snapshots from the last step.
+     * The survivor snapshots from the last step.
      *
      * @return the views, empty before the first step
      */
