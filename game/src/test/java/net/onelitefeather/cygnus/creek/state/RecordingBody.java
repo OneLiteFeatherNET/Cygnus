@@ -26,7 +26,7 @@ public final class RecordingBody implements CreekBody {
     @Nullable Pos lookedAt;
     boolean removed;
 
-    RecordingBody(Pos position) {
+    public RecordingBody(Pos position) {
         this.position = position;
     }
 

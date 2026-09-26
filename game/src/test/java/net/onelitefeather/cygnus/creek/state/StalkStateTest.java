@@ -41,17 +41,17 @@ class StalkStateTest {
     }
 
     @Test
-    @DisplayName("Without the target he vanishes")
+    @DisplayName("Without the target he is done")
     void vanishesWithoutTheTarget() {
         RecordingBody body = new RecordingBody(IN_THE_BAND);
-        assertInstanceOf(VanishState.class, new StalkState(TARGET, 60_000L).tick(at(0L, body)));
+        assertSame(DoneState.INSTANCE, new StalkState(TARGET, 60_000L).tick(at(0L, body)));
     }
 
     @Test
-    @DisplayName("When the time is up he vanishes")
+    @DisplayName("When the time is up he is done")
     void vanishesWhenTheTimeIsUp() {
         RecordingBody body = new RecordingBody(IN_THE_BAND);
-        assertInstanceOf(VanishState.class, new StalkState(TARGET, 1000L).tick(at(1000L, body, target(0.3D, false))));
+        assertSame(DoneState.INSTANCE, new StalkState(TARGET, 1000L).tick(at(1000L, body, target(0.3D, false))));
     }
 
     @Test
@@ -98,5 +98,51 @@ class StalkStateTest {
         assertSame(state, state.tick(at(0L, body, target(0.3D, false))));
         assertTrue(body.teleports.isEmpty());
         assertEquals(target(0.3D, false).eyes(), body.lookedAt);
+    }
+
+    private static double distanceToTarget(RecordingBody body) {
+        return body.position.distance(target(0.3D, false).position());
+    }
+
+    @Test
+    @DisplayName("Halfway through the stalk the band has shrunk to about 14 to 25 blocks")
+    void bandShrinksByHalfway() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -17));
+        StalkState state = new StalkState(TARGET, 60_000L);
+        state.enter(at(0L, body, target(0.3D, false)));
+
+        state.tick(at(30_000L, body, target(0.3D, false)));
+
+        assertTrue(body.teleports.isEmpty(), "17 blocks is inside the band halfway through");
+    }
+
+    @Test
+    @DisplayName("Late in the stalk he closes in when he is too far away")
+    void closesInLate() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -18));
+        StalkState state = new StalkState(TARGET, 60_000L);
+        state.enter(at(0L, body, target(0.3D, false)));
+
+        state.tick(at(59_000L, body, target(0.3D, false)));
+
+        assertEquals(1, body.teleports.size());
+        double distance = distanceToTarget(body);
+        assertTrue(distance >= 8.0D - 1.0E-6 && distance <= 15.5D, "distance was " + distance);
+    }
+
+    @Test
+    @DisplayName("Seen late in the stalk he comes back closer")
+    void comesBackCloserWhenSeenLate() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -12));
+        StalkState state = new StalkState(TARGET, 60_000L);
+        state.enter(at(0L, body, target(0.3D, false)));
+
+        state.tick(at(58_000L, body, target(0.3D, true)));
+        assertTrue(body.teleports.isEmpty(), "12 blocks is inside the late band");
+        state.tick(at(58_700L, body, target(0.3D, true)));
+
+        assertEquals(1, body.teleports.size());
+        double distance = distanceToTarget(body);
+        assertTrue(distance >= 8.0D - 1.0E-6 && distance <= 15.5D, "distance was " + distance);
     }
 }

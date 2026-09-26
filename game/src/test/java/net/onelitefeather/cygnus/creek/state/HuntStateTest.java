@@ -11,7 +11,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -71,7 +70,7 @@ class HuntStateTest {
         CreekState next = new HuntState(TARGET, 30_000L).tick(at(0L, body, caught, false));
 
         assertEquals(List.of(TARGET), caught);
-        assertInstanceOf(VanishState.class, next);
+        assertSame(DoneState.INSTANCE, next);
     }
 
     @Test
@@ -89,7 +88,7 @@ class HuntStateTest {
     @DisplayName("When the time is up he gives up")
     void givesUp() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 10));
-        assertInstanceOf(VanishState.class, new HuntState(TARGET, 30_000L).tick(at(30_000L, body, new ArrayList<>(), false)));
+        assertSame(DoneState.INSTANCE, new HuntState(TARGET, 30_000L).tick(at(30_000L, body, new ArrayList<>(), false)));
     }
 
     @Test

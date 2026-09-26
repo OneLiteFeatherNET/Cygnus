@@ -5,6 +5,7 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.ActionBarPacket;
+import net.minestom.server.potion.PotionEffect;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
@@ -14,6 +15,7 @@ import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
+import net.onelitefeather.cygnus.creek.state.PatrolState;
 import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.PathRoute;
 import org.junit.jupiter.api.DisplayName;
@@ -153,6 +155,112 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
 
         assertInstanceOf(PathRoute.class, service.route());
         assertNotNull(service.creek());
+        service.stop();
+    }
+
+    @Test
+    @DisplayName("After the start delay he patrols and a scared survivor gets a variant")
+    void patrolsAndStartsAVariant(Env env) {
+        Instance instance = env.createFlatInstance();
+        // Far from the route points, so the vanish finds a hidden spot to come back at.
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, -60, 0, 0));
+        Player other = env.createConnection().connect(instance, new Pos(0, 40, -160, 0, 0));
+        AtomicLong clock = new AtomicLong();
+        CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(survivor, other), () -> instance,
+                () -> List.of(ROUTE), CreakingBody::spawn,
+                (id, _, _) -> id.equals(survivor.getUuid()) ? 0.5D : 0.0D, consequence,
+                new RoundClock(clock::get), new Random(3), new CreekDebug());
+        service.start();
+
+        clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);
+        service.tick();
+        service.tick();
+
+        Creek creek = service.creek();
+        assertNotNull(creek);
+        assertInstanceOf(PatrolState.class, creek.state());
+        CreekVariants variants = service.variants();
+        assertNotNull(variants);
+        assertTrue(variants.running().containsKey(survivor.getUuid()));
+        service.stop();
+    }
+
+    @Test
+    @DisplayName("At the end every variant is removed and every consequence is cleaned up")
+    void stopRemovesVariantsAndCleansUp(Env env) {
+        Instance instance = env.createFlatInstance();
+        // Far from the route points, so the vanish finds a hidden spot to come back at.
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, -60, 0, 0));
+        Player other = env.createConnection().connect(instance, new Pos(0, 40, -160, 0, 0));
+        AtomicLong clock = new AtomicLong();
+        CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(survivor, other), () -> instance,
+                () -> List.of(ROUTE), CreakingBody::spawn,
+                (id, _, _) -> id.equals(survivor.getUuid()) ? 0.5D : 0.0D, consequence,
+                new RoundClock(clock::get), new Random(3), new CreekDebug());
+        service.start();
+        clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);
+        service.tick();
+        service.tick();
+        CreekVariants variants = service.variants();
+        assertNotNull(variants);
+        Creek variant = variants.running().get(survivor.getUuid());
+        assertNotNull(variant);
+
+        service.stop();
+
+        assertTrue(variant.body().entity().isRemoved());
+        assertNull(service.variants());
+        assertEquals(1, cleanUps.get());
+    }
+
+    @Test
+    @DisplayName("At the end no stun from the patrol is left on a survivor")
+    void stopClearsTheSelectionEffects(Env env) {
+        Instance instance = env.createFlatInstance();
+        // far from every route point: the teleport has no target, so a selection always stuns
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, -60, 0, 0));
+        AtomicLong clock = new AtomicLong();
+        CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), clock);
+        service.start();
+        clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);
+        service.tick();
+        Creek creek = service.creek();
+        assertNotNull(creek);
+        assertInstanceOf(PatrolState.class, creek.state());
+
+        creek.body().teleport(new Pos(0, 40, -58));
+        service.tick();
+        clock.addAndGet(1000L);
+        service.tick();
+        assertTrue(survivor.hasEffect(PotionEffect.SLOWNESS), "the patrol stunned the survivor");
+
+        service.stop();
+
+        assertFalse(survivor.hasEffect(PotionEffect.SLOWNESS));
+    }
+
+    @Test
+    @DisplayName("Once a survivor has a variant, the patrolling creek is hidden from them")
+    void patrolIsHiddenFromTheHaunted(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, -60, 0, 0));
+        Player other = env.createConnection().connect(instance, new Pos(0, 40, -160, 0, 0));
+        AtomicLong clock = new AtomicLong();
+        CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(survivor, other), () -> instance,
+                () -> List.of(ROUTE), CreakingBody::spawn,
+                (id, _, _) -> id.equals(survivor.getUuid()) ? 0.5D : 0.0D, consequence,
+                new RoundClock(clock::get), new Random(3), new CreekDebug());
+        service.start();
+        clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);
+        service.tick();
+        Creek creek = service.creek();
+        assertNotNull(creek);
+        assertTrue(creek.body().isVisibleTo(survivor.getUuid()), "before the variant everyone sees the patrol");
+
+        service.tick();
+
+        assertFalse(creek.body().isVisibleTo(survivor.getUuid()));
+        assertTrue(creek.body().isVisibleTo(other.getUuid()));
         service.stop();
     }
 }

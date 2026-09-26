@@ -26,12 +26,20 @@ public final class Contexts {
 
     static CreekContext context(long now, CreekBody body, RouteProvider route, List<UUID> caught,
                                   SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route, SPOTS, caught::add, CONFIG, new Random(7));
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, caught::add, _ -> {}, CONFIG,
+                new Random(7));
     }
 
     static CreekContext context(long now, CreekBody body, RouteProvider route, CreekConfig config,
                                 SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route, SPOTS, _ -> {}, config, new Random(7));
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, _ -> {}, _ -> {}, config, new Random(7));
+    }
+
+    /** A context that records every survivor the state selects. */
+    static CreekContext selecting(long now, CreekBody body, RouteProvider route, List<UUID> selected,
+                                  SurvivorView... survivors) {
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, _ -> {}, selected::add, CONFIG,
+                new Random(7));
     }
 
     /** The defaults with other random stops. */

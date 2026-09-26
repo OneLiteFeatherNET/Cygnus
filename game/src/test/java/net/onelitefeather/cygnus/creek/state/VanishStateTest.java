@@ -62,7 +62,7 @@ class VanishStateTest {
 
         CreekState next = state.tick(Contexts.context(1000L, body, Contexts.route(AHEAD, BEHIND), new ArrayList<>(), WATCHER));
 
-        assertInstanceOf(WanderState.class, next);
+        assertInstanceOf(PatrolState.class, next);
         assertEquals(List.of(BEHIND), body.teleports);
     }
 
@@ -104,7 +104,7 @@ class VanishStateTest {
 
         CreekState next = new VanishState(0L).tick(Contexts.context(0L, body, route, new ArrayList<>(), WATCHER));
 
-        assertInstanceOf(WanderState.class, next);
+        assertInstanceOf(PatrolState.class, next);
         assertEquals(List.of(new Pos(0, 40, -40)), body.teleports);
     }
 }
