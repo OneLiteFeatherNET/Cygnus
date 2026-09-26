@@ -18,17 +18,17 @@ public final class SpotFinder {
     /** How many candidate spots are tried per step. */
     static final int ATTEMPTS = 16;
 
-    /** Height of the middle of the creek's body. This is the point a survivor would see. */
+    /** How high the middle of the creek's body is. That is the part a survivor would notice. */
     public static final double BODY_CENTRE = 1.4D;
 
     private final CreekSight sight;
     private final Ground ground;
 
     /**
-     * Creates the spot finder.
+     * Sets up the spot finder.
      *
-     * @param sight  the view check a spot must pass
-     * @param ground moves candidates onto a floor
+     * @param sight  the view check a spot has to pass
+     * @param ground puts candidates onto a floor
      */
     public SpotFinder(CreekSight sight, Ground ground) {
         this.sight = sight;
@@ -38,9 +38,9 @@ public final class SpotFinder {
     /**
      * Checks that nobody would see the creek at a spot.
      *
-     * @param spot          the position of the creek's feet
-     * @param observerEyes  the eye positions of everyone who could see the creek
-     * @param personalSpace the minimum distance to every observer
+     * @param spot          where the creek's feet would be
+     * @param observerEyes  the eyes of everyone who could see the creek
+     * @param personalSpace how far away from everyone the spot has to be
      * @return {@code true} if the spot is far enough away and outside every view cone
      */
     public boolean isHidden(Pos spot, List<Pos> observerEyes, double personalSpace) {
@@ -53,11 +53,11 @@ public final class SpotFinder {
     }
 
     /**
-     * Moves a candidate onto the floor and keeps it only if nobody would see the creek there.
+     * Puts a candidate onto the floor and keeps it only if nobody would see the creek there.
      *
      * @param candidate     the spot to try
-     * @param observerEyes  the eye positions of everyone who could see the creek
-     * @param personalSpace the minimum distance to every observer
+     * @param observerEyes  the eyes of everyone who could see the creek
+     * @param personalSpace how far away from everyone the spot has to be
      * @return the hidden spot, or empty
      */
     public Optional<Pos> hiddenSpotAt(Pos candidate, List<Pos> observerEyes, double personalSpace) {
@@ -65,15 +65,15 @@ public final class SpotFinder {
     }
 
     /**
-     * Finds a hidden spot to the side of a target's view.
+     * Finds a hidden spot off to the side of someone's view.
      *
-     * @param target        the target's feet; its yaw is the view direction
-     * @param minDistance   the minimum distance to the target
-     * @param maxDistance   the maximum distance to the target
-     * @param minAngle      the minimum angle from the target's view direction, in degrees
-     * @param maxAngle      the maximum angle from the target's view direction, in degrees
-     * @param observerEyes  the eye positions of everyone who could see the creek
-     * @param personalSpace the minimum distance to every observer
+     * @param target        where the target's feet are; their yaw is where they look
+     * @param minDistance   how close to the target the spot may be at the least
+     * @param maxDistance   how far from the target the spot may be at the most
+     * @param minAngle      how far off to the side of their view it has to be at the least, in degrees
+     * @param maxAngle      how far off to the side of their view it may be at the most, in degrees
+     * @param observerEyes  the eyes of everyone who could see the creek
+     * @param personalSpace how far away from everyone the spot has to be
      * @param random        the random source
      * @return a hidden spot, or empty if no candidate worked
      */

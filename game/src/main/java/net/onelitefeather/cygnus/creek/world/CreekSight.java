@@ -8,11 +8,11 @@ import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.gaze.SlenderGaze;
 
 /**
- * Checks whether a survivor sees the creek.
+ * Works out whether a survivor can see the creek.
  * <p>
- * It uses the same view cone as {@link SlenderGaze}: within a range and an angle of the
- * survivor's view direction. On top of that it checks the line of sight, because the creek is
- * usually far away and often behind trees.
+ * It uses the same view cone as {@link SlenderGaze}: close enough, and not too far off to the side
+ * of where the survivor is looking. On top of that it checks the line of sight, because the creek
+ * is usually far away and often behind trees.
  * </p>
  *
  * @author theEvilReaper
@@ -24,21 +24,21 @@ public final class CreekSight {
     private final SlenderGaze cone;
 
     /**
-     * Creates a sight check with the given cone.
+     * Sets up the check with the given cone.
      *
-     * @param range     how far away the creek can be noticed, in blocks
-     * @param viewAngle the maximum angle from the view center, in degrees
+     * @param range     how far away the creek can still be noticed, in blocks
+     * @param viewAngle how far off to the side it can still be noticed, in degrees from the view centre
      */
     public CreekSight(int range, int viewAngle) {
-        // SlenderGaze needs a close distance below its range. Only "inside the cone or not"
-        // matters here, and zero keeps the full range.
+        // SlenderGaze wants a close distance below its range. All that matters here is "inside
+        // the cone or not", and zero keeps the whole range.
         this.cone = new SlenderGaze(range, 0, viewAngle);
     }
 
     /**
-     * Checks whether a point is inside an observer's view cone. Blocks in between are ignored.
+     * Checks whether a point is inside someone's view cone. Blocks in between do not matter here.
      *
-     * @param observer the observer's eye position, including yaw and pitch
+     * @param observer where the observer's eyes are, including where they are looking
      * @param target   the point to check
      * @return {@code true} if the point is inside the cone
      */
@@ -47,12 +47,12 @@ public final class CreekSight {
     }
 
     /**
-     * Checks whether a player sees the creek: it is inside the view cone and no block is in
-     * the way.
+     * Checks whether a player can see the creek: it is inside their view cone and no block is in the
+     * way.
      *
      * @param observer the player
      * @param creek    the creek's entity
-     * @return {@code true} if the player sees the creek
+     * @return {@code true} if the player can see the creek
      */
     public boolean sees(Player observer, Entity creek) {
         Instance instance = observer.getInstance();

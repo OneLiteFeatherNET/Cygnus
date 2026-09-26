@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The creek routes of a map, with the links between their ends worked out once.
+ * The creek routes of a map, with the links between their ends worked out once up front.
  * <p>
- * Two ends are linked when they are at most the link distance apart. The two ends of one route
+ * Two ends are linked when they are at most the link distance apart. The two ends of the same route
  * never link to each other.
  * </p>
  *
@@ -27,7 +27,7 @@ public final class CreekPaths {
      * One end of a route.
      *
      * @param route   the route's index
-     * @param atStart {@code true} for the first point, {@code false} for the last
+     * @param atStart {@code true} for its first point, {@code false} for its last
      */
     public record End(int route, boolean atStart) {
     }
@@ -43,7 +43,7 @@ public final class CreekPaths {
     }
 
     /**
-     * Builds the paths and works out the links.
+     * Takes the routes of a map and works out which ends are linked.
      *
      * @param routes       the valid routes of the map
      * @param linkDistance how close two ends have to be to count as linked, in blocks
@@ -70,7 +70,7 @@ public final class CreekPaths {
     }
 
     /**
-     * Returns whether there are no routes.
+     * Tells whether the map has no routes at all.
      *
      * @return {@code true} without routes
      */
@@ -79,7 +79,7 @@ public final class CreekPaths {
     }
 
     /**
-     * Returns the number of routes.
+     * How many routes there are.
      *
      * @return the number of routes
      */
@@ -88,7 +88,7 @@ public final class CreekPaths {
     }
 
     /**
-     * Returns a route.
+     * One of the routes.
      *
      * @param index the route's index
      * @return the route
@@ -98,7 +98,7 @@ public final class CreekPaths {
     }
 
     /**
-     * Returns how many points a route has.
+     * How many points a route has.
      *
      * @param route the route's index
      * @return the number of points
@@ -108,7 +108,7 @@ public final class CreekPaths {
     }
 
     /**
-     * Returns one point of a route.
+     * One point of a route.
      *
      * @param route the route's index
      * @param index the point's index
@@ -119,7 +119,7 @@ public final class CreekPaths {
     }
 
     /**
-     * Returns how long the creek waits at one point of a route.
+     * How long the creek rests at one point of a route.
      *
      * @param route the route's index
      * @param index the point's index
@@ -130,17 +130,17 @@ public final class CreekPaths {
     }
 
     /**
-     * Returns where an end of a route is.
+     * Where an end of a route is.
      *
      * @param end the end
-     * @return the first or last point of the route
+     * @return the route's first or last point
      */
     public Pos position(End end) {
         return position(this.routes, end);
     }
 
     /**
-     * Returns the ends linked to an end, in a fixed order.
+     * The ends linked to an end, always in the same order.
      *
      * @param end the end
      * @return the linked ends, empty if there are none
@@ -150,7 +150,7 @@ public final class CreekPaths {
     }
 
     /**
-     * Returns every point of every route.
+     * Every point of every route.
      *
      * @return the points
      */

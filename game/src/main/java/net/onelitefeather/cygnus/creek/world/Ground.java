@@ -5,7 +5,7 @@ import net.minestom.server.coordinate.Pos;
 import java.util.Optional;
 
 /**
- * Moves a candidate spot onto a floor the creek can stand on.
+ * Puts a candidate spot onto a floor the creek can stand on.
  *
  * @author theEvilReaper
  * @version 1.0.0
