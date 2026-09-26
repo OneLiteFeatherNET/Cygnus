@@ -48,6 +48,8 @@ public final class CreakingBody implements CreekBody {
      */
     public static CreakingBody spawn(Instance instance, Pos position) {
         CreakingBody body = new CreakingBody(new EntityCreature(EntityType.CREAKING));
+        body.entity.getNavigator().setNodeGenerator(FoliageGroundGenerator::new);
+        body.entity.getNavigator().setNodeFollower(() -> new StepFollower(body.entity));
         body.entity.updateViewableRule(player -> body.viewers.contains(player.getUuid()));
         body.entity.setInstance(instance, position);
         return body;

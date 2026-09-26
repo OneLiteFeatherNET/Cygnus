@@ -4,6 +4,7 @@ import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
+import net.minestom.server.instance.block.Block;
 import net.onelitefeather.cygnus.setup.data.GameData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.cygnus.setup.util.SetupTags;
@@ -48,7 +49,7 @@ public final class CreekRouteListener implements Consumer<PlayerBlockBreakEvent>
             return;
         }
 
-        Vec point = pointOnTop(event.getBlockPosition());
+        Vec point = pointOnTop(event.getBlockPosition(), event.getBlock());
         int removed = gameData.removeCreekPointAt(point);
         if (removed > 0) {
             player.sendMessage(SetupMessages.getCreekPointRemovedAt(activeRoute, removed, gameData.activeCreekPointCount()));
@@ -60,12 +61,15 @@ public final class CreekRouteListener implements Consumer<PlayerBlockBreakEvent>
     }
 
     /**
-     * Returns where the creek's feet stand on a block: in the middle, on top of it.
+     * Returns where the creek's feet stand on a block: in the middle, on top of its collision
+     * shape. A slab puts the feet half a block up, a plant without collision at its own bottom.
      *
-     * @param block the clicked block
+     * @param position the position of the clicked block
+     * @param block    the clicked block
      * @return the point
      */
-    static Vec pointOnTop(Point block) {
-        return new Vec(block.blockX() + 0.5D, block.blockY() + 1.0D, block.blockZ() + 0.5D);
+    static Vec pointOnTop(Point position, Block block) {
+        double top = block.registry().collisionShape().relativeEnd().y();
+        return new Vec(position.blockX() + 0.5D, position.blockY() + top, position.blockZ() + 0.5D);
     }
 }
