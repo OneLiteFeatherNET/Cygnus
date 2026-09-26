@@ -3,10 +3,10 @@ package net.onelitefeather.cygnus.creek;
 import java.util.function.LongSupplier;
 
 /**
- * Tracks how long the current round has been running.
+ * Keeps track of how long the current round has been going.
  * <p>
- * The service starts and resets it, and the dread rating reads it. Sharing one clock avoids a
- * dependency between the two.
+ * The service starts and resets it, and the dread rating reads it. Sharing one clock saves the two
+ * from depending on each other.
  * </p>
  *
  * @author theEvilReaper
@@ -19,7 +19,7 @@ public final class RoundClock {
     private volatile long startedAt = -1L;
 
     /**
-     * Creates the clock.
+     * Sets up the clock.
      *
      * @param clock supplies the current time in milliseconds
      */
@@ -28,7 +28,7 @@ public final class RoundClock {
     }
 
     /**
-     * Returns the current time.
+     * The current time.
      *
      * @return the time in milliseconds
      */
@@ -44,16 +44,16 @@ public final class RoundClock {
     }
 
     /**
-     * Resets the clock when the round ends.
+     * Resets the clock when the round is over.
      */
     public void reset() {
         this.startedAt = -1L;
     }
 
     /**
-     * Returns how long the round has been running.
+     * How long the round has been going.
      *
-     * @return the elapsed time in milliseconds, {@code 0} outside a round
+     * @return the time in milliseconds, {@code 0} outside a round
      */
     public long elapsedMillis() {
         long start = this.startedAt;
