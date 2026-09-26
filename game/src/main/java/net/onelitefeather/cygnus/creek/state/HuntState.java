@@ -10,9 +10,10 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * The creek chases one survivor, but only moves while that survivor is not looking at it.
+ * The creek chases one survivor, but only moves while they are not looking at it.
  * <p>
- * When the survivor looks, the creek freezes. When it gets close enough, the survivor is caught.
+ * Look at it and it freezes. Let it get close enough and you are caught. The hunt is over after a
+ * catch, when time runs out or when the survivor is gone.
  * </p>
  *
  * @author theEvilReaper
@@ -21,13 +22,13 @@ import java.util.UUID;
  */
 public final class HuntState implements CreekState {
 
-    /** Minimum distance to the target after a shortcut, in blocks. */
+    /** How close to the survivor the creek lands after a shortcut, at the least, in blocks. */
     static final double NEAR_MIN = 6.0D;
 
-    /** Maximum distance to the target after a shortcut, in blocks. */
+    /** How close to the survivor the creek lands after a shortcut, at the most, in blocks. */
     static final double NEAR_MAX = 10.0D;
 
-    /** How much closer the creek has to get to count as progress, in blocks. */
+    /** How much closer the creek has to get to count as getting anywhere, in blocks. */
     static final double PROGRESS = 0.5D;
 
     private final UUID target;
@@ -36,10 +37,10 @@ public final class HuntState implements CreekState {
     private long progressSince;
 
     /**
-     * Creates the state.
+     * Sets up the hunt.
      *
-     * @param target the hunted survivor
-     * @param endsAt when the hunt ends, in milliseconds
+     * @param target the survivor being hunted
+     * @param endsAt when the hunt is over, in milliseconds
      */
     public HuntState(UUID target, long endsAt) {
         this.target = target;
@@ -47,7 +48,7 @@ public final class HuntState implements CreekState {
     }
 
     /**
-     * Starts a hunt that ends after {@code huntMaxSeconds}.
+     * Starts a hunt that lasts {@code huntMaxSeconds}.
      *
      * @param target the survivor to hunt
      * @param ctx    the current step
@@ -58,12 +59,21 @@ public final class HuntState implements CreekState {
     }
 
     /**
-     * Returns the hunted survivor.
+     * Tells who is being hunted.
      *
      * @return the survivor's id
      */
     public UUID target() {
         return this.target;
+    }
+
+    /**
+     * Tells when the hunt is over.
+     *
+     * @return the time in milliseconds
+     */
+    public long endsAt() {
+        return this.endsAt;
     }
 
     @Override
@@ -78,7 +88,7 @@ public final class HuntState implements CreekState {
     @Override
     public CreekState tick(CreekContext ctx) {
         Optional<SurvivorView> found = ctx.survivor(this.target);
-        if (found.isEmpty() || ctx.now() >= this.endsAt) return VanishState.after(ctx);
+        if (found.isEmpty() || ctx.now() >= this.endsAt) return DoneState.INSTANCE;
 
         SurvivorView view = found.get();
         CreekConfig config = ctx.config();
@@ -95,7 +105,7 @@ public final class HuntState implements CreekState {
         double distance = body.position().distance(view.position());
         if (distance <= config.catchDistance()) {
             ctx.onCatch().accept(this.target);
-            return VanishState.after(ctx);
+            return DoneState.INSTANCE;
         }
 
         if (distance < this.bestDistance - PROGRESS) {
@@ -112,7 +122,7 @@ public final class HuntState implements CreekState {
     }
 
     /**
-     * Teleports the creek near the target, out of its view, when walking there does not work.
+     * When walking there gets the creek nowhere, it jumps close to the survivor instead, out of their view.
      */
     private void shortcut(CreekContext ctx, SurvivorView view) {
         ctx.spots()

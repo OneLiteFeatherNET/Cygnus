@@ -1,5 +1,5 @@
 /**
- * The creek's behavior, split into states: wandering, stalking, hunting and vanishing.
+ * How the creek behaves, one state at a time: patrolling, stalking, hunting, vanishing and done.
  */
 @NotNullByDefault
 package net.onelitefeather.cygnus.creek.state;

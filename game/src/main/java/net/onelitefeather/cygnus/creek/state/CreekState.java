@@ -1,7 +1,7 @@
 package net.onelitefeather.cygnus.creek.state;
 
 /**
- * One phase of the creek's behavior, such as wandering or hunting.
+ * One phase of the creek's behaviour, such as patrolling, stalking or hunting.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -10,7 +10,7 @@ package net.onelitefeather.cygnus.creek.state;
 public interface CreekState {
 
     /**
-     * Prepares the body for this state. Called once when the creek switches to it.
+     * Gets the body ready for this state. Called once, when the creek switches to it.
      *
      * @param ctx the current step
      */
@@ -20,7 +20,7 @@ public interface CreekState {
      * Runs one step.
      *
      * @param ctx the current step
-     * @return {@code this} to stay, or the next state
+     * @return {@code this} to carry on, or the state to switch to
      */
     CreekState tick(CreekContext ctx);
 }
