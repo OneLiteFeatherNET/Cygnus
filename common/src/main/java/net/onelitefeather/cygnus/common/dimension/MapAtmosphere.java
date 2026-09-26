@@ -15,7 +15,8 @@ import org.slf4j.LoggerFactory;
  * for every one of them.
  * </p>
  * <p>
- * The components are declared as {@link Color} rather than {@link RGBLike} on purpose. Gson cannot
+ * The components are declared as {@link Color} rather than
+ * {@link net.kyori.adventure.util.RGBLike RGBLike} on purpose. Gson cannot
  * deserialize an interface without being told which implementation to pick, and a map file that
  * fails to parse would take the whole service down with it.
  * </p>
