@@ -53,7 +53,7 @@ class CreekDebugTest {
 
     @Test
     @DisplayName("Patrolling there is no target, only the dread of everyone")
-    void wanderLine() {
+    void patrolLine() {
         List<SurvivorView> views = List.of(new SurvivorView(STEVE, new Pos(0, 40, 30), 0.1D, false));
 
         Component line = CreekDebug.line(new PatrolState(), Pos.ZERO, views, NAMES::get);

@@ -200,23 +200,6 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("With the last survivor and the setting off, every variant ends")
-    void endsWithTheLastSurvivor(Env env) {
-        Instance instance = env.createFlatInstance();
-        Player first = join(env, instance, 0);
-        Player second = join(env, instance, 10);
-        CreekConfig config = withoutLastSurvivor();
-        CreekVariants variants = variants(instance, config, Optional::of, 0L);
-        variants.tick(List.of(first, second), List.of(view(first, 0.5D), view(second, 0.0D)), 0L);
-        Creek variant = variants.running().get(first.getUuid());
-
-        variants.tick(List.of(first), List.of(view(first, 0.5D)), 100L);
-
-        assertTrue(variants.running().isEmpty());
-        assertTrue(variant.body().entity().isRemoved());
-    }
-
-    @Test
     @DisplayName("Stopping removes every variant")
     void stopRemovesEveryVariant(Env env) {
         Instance instance = env.createFlatInstance();
@@ -229,19 +212,5 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
 
         assertTrue(variants.running().isEmpty());
         assertTrue(variant.body().entity().isRemoved());
-    }
-
-    private static CreekConfig withoutLastSurvivor() {
-        CreekConfig d = CreekConfig.DEFAULT;
-        return new CreekConfig(
-                d.enabled(), false, d.sightRange(), d.sightViewAngle(),
-                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
-                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
-                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
-                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                d.personalSpace(), d.stuckMillis(), d.dreadPageWeight(), d.dreadTimeWeight(),
-                d.dreadIsolationWeight(), d.isolationRadius(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis());
     }
 }

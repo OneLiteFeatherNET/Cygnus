@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek;
 
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,14 @@ class CreekVariantsTest {
         assertEquals(3, CreekVariants.capacity(9));
         assertEquals(3, CreekVariants.capacity(12));
         assertEquals(3, CreekVariants.capacity(40));
+    }
+
+    @Test
+    @DisplayName("The breather after a variant shrinks as the dread grows")
+    void cooldownFollowsDread() {
+        assertEquals(40_000L, CreekVariants.cooldownMillis(CreekConfig.DEFAULT, 0.0D));
+        assertEquals(30_000L, CreekVariants.cooldownMillis(CreekConfig.DEFAULT, 0.5D));
+        assertEquals(20_000L, CreekVariants.cooldownMillis(CreekConfig.DEFAULT, 1.0D));
     }
 
     @Test

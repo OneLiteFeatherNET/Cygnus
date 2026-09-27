@@ -26,6 +26,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -71,23 +72,6 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         assertInstanceOf(VanishState.class, creek.state());
         assertFalse(creek.body().isVisibleTo(survivor.getUuid()));
         service.stop();
-    }
-
-    @Test
-    @DisplayName("At the end he is removed and every consequence is cleaned up")
-    void stopRemovesHimAndCleansUp(Env env) {
-        Instance instance = env.createFlatInstance();
-        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), new AtomicLong());
-        service.start();
-        Creek creek = service.creek();
-        assertNotNull(creek);
-
-        service.stop();
-
-        assertTrue(creek.body().entity().isRemoved());
-        assertNull(service.creek());
-        assertEquals(1, cleanUps.get());
     }
 
     @Test
@@ -159,57 +143,22 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("After the start delay he patrols and a scared survivor gets a variant")
-    void patrolsAndStartsAVariant(Env env) {
-        Instance instance = env.createFlatInstance();
-        // Far from the route points, so the vanish finds a hidden spot to come back at.
-        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, -60, 0, 0));
-        Player other = env.createConnection().connect(instance, new Pos(0, 40, -160, 0, 0));
-        AtomicLong clock = new AtomicLong();
-        CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(survivor, other), () -> instance,
-                () -> List.of(ROUTE), CreakingBody::spawn,
-                (id, _, _) -> id.equals(survivor.getUuid()) ? 0.5D : 0.0D, consequence,
-                new RoundClock(clock::get), new Random(3), new CreekDebug());
-        service.start();
-
-        clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);
-        service.tick();
-        service.tick();
-
-        Creek creek = service.creek();
+    @DisplayName("At the end he and every variant are removed and every consequence is cleaned up")
+    void stopRemovesEverythingAndCleansUp(Env env) {
+        Round round = this.roundWithVariant(env, CreekConfig.DEFAULT);
+        Creek creek = round.service().creek();
+        CreekVariants variants = round.service().variants();
         assertNotNull(creek);
-        assertInstanceOf(PatrolState.class, creek.state());
-        CreekVariants variants = service.variants();
         assertNotNull(variants);
-        assertTrue(variants.running().containsKey(survivor.getUuid()));
-        service.stop();
-    }
-
-    @Test
-    @DisplayName("At the end every variant is removed and every consequence is cleaned up")
-    void stopRemovesVariantsAndCleansUp(Env env) {
-        Instance instance = env.createFlatInstance();
-        // Far from the route points, so the vanish finds a hidden spot to come back at.
-        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, -60, 0, 0));
-        Player other = env.createConnection().connect(instance, new Pos(0, 40, -160, 0, 0));
-        AtomicLong clock = new AtomicLong();
-        CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(survivor, other), () -> instance,
-                () -> List.of(ROUTE), CreakingBody::spawn,
-                (id, _, _) -> id.equals(survivor.getUuid()) ? 0.5D : 0.0D, consequence,
-                new RoundClock(clock::get), new Random(3), new CreekDebug());
-        service.start();
-        clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);
-        service.tick();
-        service.tick();
-        CreekVariants variants = service.variants();
-        assertNotNull(variants);
-        Creek variant = variants.running().get(survivor.getUuid());
+        Creek variant = variants.running().get(round.scared().getUuid());
         assertNotNull(variant);
 
-        service.stop();
+        round.service().stop();
 
+        assertTrue(creek.body().entity().isRemoved());
         assertTrue(variant.body().entity().isRemoved());
-        assertNull(service.variants());
+        assertNull(round.service().creek());
+        assertNull(round.service().variants());
         assertEquals(1, cleanUps.get());
     }
 
@@ -240,27 +189,83 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("Once a survivor has a variant, the patrolling creek is hidden from them")
-    void patrolIsHiddenFromTheHaunted(Env env) {
+    @DisplayName("After the start delay he patrols, a scared survivor gets a variant and no longer sees the patrol")
+    void patrolsAndHidesFromTheHaunted(Env env) {
+        Round round = this.roundWithVariant(env, CreekConfig.DEFAULT);
+        Creek creek = round.service().creek();
+        CreekVariants variants = round.service().variants();
+        assertNotNull(creek);
+        assertNotNull(variants);
+        assertInstanceOf(PatrolState.class, creek.state());
+        assertTrue(variants.running().containsKey(round.scared().getUuid()));
+        assertTrue(creek.body().isVisibleTo(round.scared().getUuid()), "the variant only just started");
+
+        round.service().tick();
+
+        assertFalse(creek.body().isVisibleTo(round.scared().getUuid()));
+        assertTrue(creek.body().isVisibleTo(round.other().getUuid()));
+        round.service().stop();
+    }
+
+    @Test
+    @DisplayName("With the last survivor and the setting off, he is gone for good and every variant ends")
+    void goneForGoodWithTheLastSurvivor(Env env) {
+        Round round = this.roundWithVariant(env, withoutLastSurvivor());
+        Creek creek = round.service().creek();
+        CreekVariants variants = round.service().variants();
+        assertNotNull(creek);
+        assertNotNull(variants);
+        Creek variant = variants.running().get(round.scared().getUuid());
+        assertNotNull(variant);
+        round.service().tick();
+        assertInstanceOf(PatrolState.class, creek.state(),
+                "hiding the patrol from the haunted survivor is not being down to the last one");
+
+        round.survivors().set(Set.of(round.scared()));
+        round.service().tick();
+
+        assertInstanceOf(VanishState.class, creek.state());
+        assertTrue(((VanishState) creek.state()).isForever());
+        assertTrue(variants.running().isEmpty());
+        assertTrue(variant.body().entity().isRemoved());
+        round.service().stop();
+    }
+
+    /**
+     * A started round with two survivors far from the route, of whom only the first is scared
+     * enough for a variant. It runs one step past the start delay: the patrol is out, and the
+     * variant has just started.
+     */
+    private Round roundWithVariant(Env env, CreekConfig config) {
         Instance instance = env.createFlatInstance();
-        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, -60, 0, 0));
+        // Far from the route points, so the vanish finds a hidden spot to come back at.
+        Player scared = env.createConnection().connect(instance, new Pos(0, 40, -60, 0, 0));
         Player other = env.createConnection().connect(instance, new Pos(0, 40, -160, 0, 0));
+        AtomicReference<Set<Player>> survivors = new AtomicReference<>(Set.of(scared, other));
         AtomicLong clock = new AtomicLong();
-        CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(survivor, other), () -> instance,
-                () -> List.of(ROUTE), CreakingBody::spawn,
-                (id, _, _) -> id.equals(survivor.getUuid()) ? 0.5D : 0.0D, consequence,
+        CreekService service = new CreekService(config, survivors::get, () -> instance, () -> List.of(ROUTE),
+                CreakingBody::spawn, (id, _, _) -> id.equals(scared.getUuid()) ? 0.5D : 0.0D, consequence,
                 new RoundClock(clock::get), new Random(3), new CreekDebug());
         service.start();
         clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);
         service.tick();
-        Creek creek = service.creek();
-        assertNotNull(creek);
-        assertTrue(creek.body().isVisibleTo(survivor.getUuid()), "before the variant everyone sees the patrol");
+        return new Round(service, scared, other, survivors);
+    }
 
-        service.tick();
+    private record Round(CreekService service, Player scared, Player other, AtomicReference<Set<Player>> survivors) {
+    }
 
-        assertFalse(creek.body().isVisibleTo(survivor.getUuid()));
-        assertTrue(creek.body().isVisibleTo(other.getUuid()));
-        service.stop();
+    private static CreekConfig withoutLastSurvivor() {
+        CreekConfig d = CreekConfig.DEFAULT;
+        return new CreekConfig(
+                d.enabled(), false, d.sightRange(), d.sightViewAngle(),
+                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
+                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
+                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
+                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
+                d.personalSpace(), d.stuckMillis(), d.dreadPageWeight(), d.dreadTimeWeight(),
+                d.dreadIsolationWeight(), d.isolationRadius(), d.betrayalCatchCount(),
+                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
+                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis());
     }
 }
