@@ -150,7 +150,7 @@ public final class PatrolState implements CreekState {
         // They are most likely still looking at it. Walk on rather than stop again to look back.
         this.watched = true;
         this.markProgress(ctx.now(), body.position());
-        ctx.onSelect().accept(target);
+        ctx.actions().selected(target);
         return false;
     }
 

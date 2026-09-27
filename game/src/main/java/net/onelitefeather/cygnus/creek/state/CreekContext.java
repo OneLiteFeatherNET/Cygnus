@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.random.RandomGenerator;
 
 /**
@@ -26,8 +25,7 @@ import java.util.random.RandomGenerator;
  * @param body      the creek's body
  * @param route     decides where the creek walks next
  * @param spots     finds places where nobody can see the creek
- * @param onCatch   called with the id of a survivor the creek caught
- * @param onSelect  called with the id of a survivor the patrolling creek picked out
+ * @param actions   what the states can do to a survivor
  * @param config    the settings
  * @param random    the random source
  *
@@ -41,8 +39,7 @@ public record CreekContext(
         CreekBody body,
         RouteProvider route,
         SpotFinder spots,
-        Consumer<UUID> onCatch,
-        Consumer<UUID> onSelect,
+        CreekActions actions,
         CreekConfig config,
         RandomGenerator random
 ) {
