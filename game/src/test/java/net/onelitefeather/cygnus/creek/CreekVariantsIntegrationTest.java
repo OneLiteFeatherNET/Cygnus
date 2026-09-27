@@ -41,7 +41,7 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         public void cleanUp() {
         }
     };
-    private static final PatrolConsequence PATROL = new PatrolConsequence(List::of, Optional::of, new Random(1));
+    private static final PatrolConsequence PATROL = new PatrolConsequence(new Random(1));
 
     private static BiFunction<Pos, CreekState, Creek> spawner(Instance instance, CreekConfig config, SpotFinder spots) {
         CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, PATROL, config, new Random(3));

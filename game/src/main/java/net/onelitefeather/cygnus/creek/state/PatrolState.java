@@ -14,7 +14,7 @@ import java.util.UUID;
  * The creek on its rounds: it walks its routes, and every survivor can see it.
  * <p>
  * Come within {@link #SELECT_RADIUS} of it and it picks out whoever is closest, stares at them for a
- * second and then freezes them or sends them away. After that it simply walks on and leaves
+ * second and then freezes them or flings them away. After that it simply walks on and leaves
  * everyone alone for {@link #SELECT_COOLDOWN_MILLIS}. Spot it from farther away and it stops and
  * looks back at you for a moment. At some waypoints it rests for a while, either because the route
  * says so or just by chance; whichever takes longer wins.

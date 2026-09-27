@@ -134,7 +134,7 @@ public final class CreekService {
         // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
         CreekRound round = new CreekRound(this.sight, this.spots, this.consequence,
-                new PatrolConsequence(paths::allPoints, this.ground, this.random), this.config, this.random);
+                new PatrolConsequence(this.random), this.config, this.random);
         this.round = round;
         List<Pos> points = paths.allPoints();
 

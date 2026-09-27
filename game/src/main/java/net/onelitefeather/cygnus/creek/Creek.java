@@ -103,7 +103,7 @@ final class Creek {
         List<SurvivorView> noticed = ignored.isEmpty() ? this.lastViews
                 : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
         return new CreekContext(now, noticed, this.body, this.route, this.round.spots(),
-                new Actions(this.round, survivors, ignored),
+                new Actions(this.round, survivors, ignored, this.body.position()),
                 this.round.config(), this.round.random());
     }
 
@@ -167,8 +167,10 @@ final class Creek {
      * @param round     what the creek shares with the others of the round
      * @param survivors the survivors of the step
      * @param ignored   the survivors the creek leaves alone in the step
+     * @param creek     where the creek stands in the step
      */
-    private record Actions(CreekRound round, SurvivorSnapshot survivors, Set<UUID> ignored) implements CreekActions {
+    private record Actions(CreekRound round, SurvivorSnapshot survivors, Set<UUID> ignored, Pos creek)
+            implements CreekActions {
 
         @Override
         public void caught(UUID survivor) {
@@ -179,7 +181,7 @@ final class Creek {
         @Override
         public void selected(UUID survivor) {
             Player player = this.survivors.player(survivor);
-            if (player != null) this.round.patrol().selected(player, this.survivors.players());
+            if (player != null) this.round.patrol().selected(player, this.creek, this.survivors.players());
         }
 
         @Override
