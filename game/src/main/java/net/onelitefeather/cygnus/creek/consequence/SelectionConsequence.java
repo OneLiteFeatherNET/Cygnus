@@ -10,8 +10,6 @@ import net.onelitefeather.cygnus.creek.world.Ground;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
@@ -50,8 +48,7 @@ public final class SelectionConsequence {
     private final Supplier<List<Pos>> routePoints;
     private final Ground ground;
     private final RandomGenerator random;
-    private final Set<Player> slowed = ConcurrentHashMap.newKeySet();
-    private final Set<Player> blinded = ConcurrentHashMap.newKeySet();
+    private final TrackedEffects effects = new TrackedEffects();
 
     /**
      * Sets up the consequence for a round.
@@ -84,13 +81,11 @@ public final class SelectionConsequence {
      */
     void stun(Player selected, Collection<Player> survivors) {
         scare(selected);
-        selected.addEffect(new Potion(PotionEffect.SLOWNESS, STUN_AMPLIFIER, STUN_TICKS));
-        this.slowed.add(selected);
+        this.effects.add(selected, new Potion(PotionEffect.SLOWNESS, STUN_AMPLIFIER, STUN_TICKS));
         Pos center = selected.getPosition();
         for (Player other : survivors) {
             if (other == selected || other.getPosition().distance(center) > BLIND_RADIUS) continue;
-            other.addEffect(new Potion(PotionEffect.BLINDNESS, 0, BLIND_TICKS));
-            this.blinded.add(other);
+            this.effects.add(other, new Potion(PotionEffect.BLINDNESS, 0, BLIND_TICKS));
         }
     }
 
@@ -116,17 +111,11 @@ public final class SelectionConsequence {
     }
 
     /**
-     * Takes back every slowness and blindness handed out, so nothing lingers after the round.
+     * Takes back every slowness and blindness handed out that is still running, so nothing lingers
+     * after the round.
      */
     public void cleanUp() {
-        for (Player player : List.copyOf(this.slowed)) {
-            player.removeEffect(PotionEffect.SLOWNESS);
-        }
-        for (Player player : List.copyOf(this.blinded)) {
-            player.removeEffect(PotionEffect.BLINDNESS);
-        }
-        this.slowed.clear();
-        this.blinded.clear();
+        this.effects.removeAll();
     }
 
     private static void scare(Player player) {

@@ -8,9 +8,6 @@ import net.minestom.server.potion.PotionEffect;
 import net.onelitefeather.cygnus.stamina.FoodBar;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -32,7 +29,7 @@ public final class CatchEffects implements CatchConsequence {
     private final Predicate<Player> jumpScare;
     private final Function<Player, @Nullable FoodBar> foodBars;
     private final int slownessTicks;
-    private final Set<Player> slowed = ConcurrentHashMap.newKeySet();
+    private final TrackedEffects effects = new TrackedEffects();
 
     /**
      * Sets up the effects.
@@ -59,17 +56,13 @@ public final class CatchEffects implements CatchConsequence {
             bar.drain();
         }
         if (this.slownessTicks > 0) {
-            survivor.addEffect(new Potion(PotionEffect.SLOWNESS, 0, this.slownessTicks));
-            this.slowed.add(survivor);
+            this.effects.add(survivor, new Potion(PotionEffect.SLOWNESS, 0, this.slownessTicks));
         }
     }
 
     @Override
     public void cleanUp() {
-        for (Player player : List.copyOf(this.slowed)) {
-            player.removeEffect(PotionEffect.SLOWNESS);
-        }
-        this.slowed.clear();
+        this.effects.removeAll();
     }
 
     private static void scareWithoutCorpse(Player survivor) {
