@@ -226,6 +226,21 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("Each survivor's dread is worked out once per step, however many creeks there are")
+    void dreadOncePerStep(Env env) {
+        Round round = this.roundWithVariant(env, CreekConfig.DEFAULT);
+        CreekVariants variants = round.service().variants();
+        assertNotNull(variants);
+        assertEquals(1, variants.running().size());
+        round.dreadCalls().set(0);
+
+        round.service().tick();
+
+        assertEquals(2, round.dreadCalls().get());
+        round.service().stop();
+    }
+
+    @Test
     @DisplayName("With the last survivor and the setting off, he is gone for good and every variant ends")
     void goneForGoodWithTheLastSurvivor(Env env) {
         Round round = this.roundWithVariant(env, withoutLastSurvivor());
@@ -260,17 +275,22 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         Player scared = env.createConnection().connect(instance, new Pos(0, 40, -60, 0, 0));
         Player other = env.createConnection().connect(instance, new Pos(0, 40, -160, 0, 0));
         AtomicReference<Set<Player>> survivors = new AtomicReference<>(Set.of(scared, other));
+        AtomicInteger dreadCalls = new AtomicInteger();
         AtomicLong clock = new AtomicLong();
         CreekService service = new CreekService(config, survivors::get, () -> instance, () -> List.of(ROUTE),
-                CreakingBody::spawn, (id, _, _) -> id.equals(scared.getUuid()) ? 0.5D : 0.0D, consequence,
+                CreakingBody::spawn, (id, _, _) -> {
+                    dreadCalls.incrementAndGet();
+                    return id.equals(scared.getUuid()) ? 0.5D : 0.0D;
+                }, consequence,
                 new RoundClock(clock::get), new Random(3), new CreekDebug());
         service.start();
         clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);
         service.tick();
-        return new Round(service, scared, other, survivors);
+        return new Round(service, scared, other, survivors, dreadCalls);
     }
 
-    private record Round(CreekService service, Player scared, Player other, AtomicReference<Set<Player>> survivors) {
+    private record Round(CreekService service, Player scared, Player other, AtomicReference<Set<Player>> survivors,
+                         AtomicInteger dreadCalls) {
     }
 
     private static CreekConfig withoutLastSurvivor() {

@@ -29,4 +29,14 @@ public record SurvivorView(UUID id, Pos position, double dread, boolean seesCree
     public Pos eyes() {
         return this.position.add(0, EYE_HEIGHT, 0);
     }
+
+    /**
+     * The same snapshot, with the given answer to whether the survivor sees the creek.
+     *
+     * @param sees whether the survivor sees the creek
+     * @return this view if nothing changes, otherwise a copy
+     */
+    public SurvivorView withSeesCreek(boolean sees) {
+        return sees == this.seesCreek ? this : new SurvivorView(this.id, this.position, this.dread, sees);
+    }
 }
