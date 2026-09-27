@@ -36,10 +36,16 @@ public final class CreekPaths {
 
     private final List<CreekRoute> routes;
     private final Map<End, List<End>> links;
+    private final List<Pos> allPoints;
 
     private CreekPaths(List<CreekRoute> routes, Map<End, List<End>> links) {
         this.routes = routes;
         this.links = links;
+        List<Pos> points = new ArrayList<>();
+        for (CreekRoute route : routes) {
+            route.points().forEach(point -> points.add(toPos(point.position())));
+        }
+        this.allPoints = List.copyOf(points);
     }
 
     /**
@@ -152,14 +158,10 @@ public final class CreekPaths {
     /**
      * Every point of every route.
      *
-     * @return the points
+     * @return the points, unmodifiable
      */
     public List<Pos> allPoints() {
-        List<Pos> points = new ArrayList<>();
-        for (CreekRoute route : this.routes) {
-            route.points().forEach(point -> points.add(toPos(point.position())));
-        }
-        return points;
+        return this.allPoints;
     }
 
     private static Pos position(List<CreekRoute> routes, End end) {
