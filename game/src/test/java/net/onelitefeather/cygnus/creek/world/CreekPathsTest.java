@@ -31,10 +31,43 @@ class CreekPathsTest {
     void linksFollowTheDistance() {
         CreekPaths paths = CreekPaths.of(ROUTES, 3.0D);
 
-        assertEquals(List.of(new CreekPaths.End(1, true), new CreekPaths.End(2, true)),
-                paths.links(new CreekPaths.End(0, false)));
-        assertEquals(List.of(new CreekPaths.End(0, false)), paths.links(new CreekPaths.End(1, true)));
-        assertTrue(paths.links(new CreekPaths.End(3, true)).isEmpty());
+        assertEquals(List.of(new CreekPaths.Node(1, 0), new CreekPaths.Node(2, 0)),
+                paths.links(new CreekPaths.Node(0, 1)));
+        assertEquals(List.of(new CreekPaths.Node(0, 1)), paths.links(new CreekPaths.Node(1, 0)));
+        assertTrue(paths.links(new CreekPaths.Node(3, 0)).isEmpty());
+    }
+
+    @Test
+    @DisplayName("An end on the middle of another route is linked to that point, both ways")
+    void endOnAMiddleIsLinked() {
+        CreekPaths paths = CreekPaths.of(List.of(
+                route("X", new Vec(0, 0, 0), new Vec(10, 0, 0), new Vec(20, 0, 0)),
+                route("Y", new Vec(10, 0, 2), new Vec(10, 0, 20))), 3.0D);
+
+        assertEquals(List.of(new CreekPaths.Node(0, 1)), paths.links(new CreekPaths.Node(1, 0)));
+        assertEquals(List.of(new CreekPaths.Node(1, 0)), paths.links(new CreekPaths.Node(0, 1)));
+    }
+
+    @Test
+    @DisplayName("Two middles close together are not linked")
+    void middlesNeverLink() {
+        CreekPaths paths = CreekPaths.of(List.of(
+                route("X", new Vec(0, 0, 0), new Vec(10, 0, 0), new Vec(20, 0, 0)),
+                route("Z", new Vec(-5, 0, 1), new Vec(10, 0, 1), new Vec(25, 0, 1))), 3.0D);
+
+        assertTrue(paths.links(new CreekPaths.Node(0, 1)).isEmpty());
+        assertTrue(paths.links(new CreekPaths.Node(1, 1)).isEmpty());
+    }
+
+    @Test
+    @DisplayName("An end links to the nearest point of another route only")
+    void onlyTheNearestPoint() {
+        CreekPaths paths = CreekPaths.of(List.of(
+                route("X", new Vec(-10, 0, 0), new Vec(1, 0, 0), new Vec(2, 0, 0), new Vec(20, 0, 0)),
+                route("W", new Vec(1, 0, 1), new Vec(1, 0, 20))), 3.0D);
+
+        assertEquals(List.of(new CreekPaths.Node(0, 1)), paths.links(new CreekPaths.Node(1, 0)));
+        assertTrue(paths.links(new CreekPaths.Node(0, 2)).isEmpty(), "the second closest point stays unlinked");
     }
 
     @Test
@@ -42,17 +75,17 @@ class CreekPathsTest {
     void ownEndsNeverLink() {
         CreekPaths paths = CreekPaths.of(List.of(route("Short", new Vec(0, 0, 0), new Vec(1, 0, 0))), 3.0D);
 
-        assertTrue(paths.links(new CreekPaths.End(0, true)).isEmpty());
+        assertTrue(paths.links(new CreekPaths.Node(0, 0)).isEmpty());
     }
 
     @Test
-    @DisplayName("Points and positions come out as Pos")
-    void pointsAndPositions() {
+    @DisplayName("Points come out as Pos")
+    void pointsAsPos() {
         CreekPaths paths = CreekPaths.of(ROUTES, 3.0D);
 
         assertEquals(4, paths.size());
         assertEquals(new Pos(12, 0, 0), paths.point(1, 0));
-        assertEquals(new Pos(20, 0, 0), paths.position(new CreekPaths.End(1, false)));
+        assertEquals(new Pos(20, 0, 0), paths.point(1, 1));
         assertEquals(8, paths.allPoints().size());
         assertTrue(CreekPaths.of(List.of(), 3.0D).isEmpty());
     }

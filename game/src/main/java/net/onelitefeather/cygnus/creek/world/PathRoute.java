@@ -12,9 +12,11 @@ import java.util.random.RandomGenerator;
  * Walks the creek along the routes of a map.
  * <p>
  * It remembers the route, the point and the direction. At the end of a route it picks at random
- * between turning around and any route linked to that end. If the creek ends up far from its last
- * point, after a teleport for example, it joins back in at the nearest point. Each step brings the
- * pause of its point along, except for an end the creek is just leaving.
+ * between turning around and any route linked to that end. Where another route begins or ends in
+ * the middle of this one, it picks between walking on and turning onto that route. If the creek
+ * ends up far from its last point, after a teleport for example, it joins back in at the nearest
+ * point. Each step brings the pause of its point along, except for an end the creek is just leaving
+ * or a point it just stepped over to from another route.
  * </p>
  * <p>
  * Because it remembers where its creek is, every creek needs a walker of its own. The
@@ -79,7 +81,7 @@ public final class PathRoute implements RouteProvider {
                 double distance = point.distance(current);
                 if (distance < bestDistance) {
                     bestDistance = distance;
-                    best = new Cursor(route, index, 1);
+                    best = new Cursor(route, index, 1, false);
                 }
             }
         }
@@ -88,43 +90,67 @@ public final class PathRoute implements RouteProvider {
         int lastIndex = this.paths.pointCount(best.route()) - 1;
         // At an end there is only one way into the route.
         int direction = best.index() == 0 ? 1 : best.index() == lastIndex ? -1 : (random.nextBoolean() ? 1 : -1);
-        return this.moveTo(new Cursor(best.route(), best.index(), direction));
+        return this.moveTo(new Cursor(best.route(), best.index(), direction, false));
     }
 
+    /**
+     * Picks the next waypoint. The last choice is always to carry on the way it is going, or to
+     * turn around at the end of a route; every link from here is another choice.
+     */
     private Cursor advance(Cursor from, RandomGenerator random) {
         int nextIndex = from.index() + from.direction();
-        if (nextIndex >= 0 && nextIndex < this.paths.pointCount(from.route())) {
-            return new Cursor(from.route(), nextIndex, from.direction());
-        }
-        // Walking backwards ends at the start, walking forwards at the end.
-        List<CreekPaths.End> links = this.paths.links(new CreekPaths.End(from.route(), from.direction() < 0));
-        int choice = random.nextInt(links.size() + 1);
-        if (choice == links.size()) {
-            Cursor back = this.behind(from);
-            return back != null ? back : from;
-        }
-        CreekPaths.End link = links.get(choice);
-        return link.atStart()
-                ? new Cursor(link.route(), 0, 1)
-                : new Cursor(link.route(), this.paths.pointCount(link.route()) - 1, -1);
+        boolean atEnd = nextIndex < 0 || nextIndex >= this.paths.pointCount(from.route());
+        // An end only offers its links once the creek gets there. In the middle, a crossing offers
+        // them on the way through, unless the creek has only just come over from the other route.
+        boolean crossing = !atEnd && !from.viaLink() && this.isMiddle(from);
+        List<CreekPaths.Node> links = atEnd || crossing ? this.paths.links(this.node(from)) : List.of();
+        int choice = atEnd || !links.isEmpty() ? random.nextInt(links.size() + 1) : 0;
+        if (choice < links.size()) return this.join(links.get(choice), random);
+        if (!atEnd) return new Cursor(from.route(), nextIndex, from.direction(), false);
+        Cursor back = this.behind(from);
+        return back != null ? back : from;
+    }
+
+    /**
+     * Steps over to a linked point. At an end the creek walks into the route, in the middle it
+     * picks a way at random.
+     */
+    private Cursor join(CreekPaths.Node node, RandomGenerator random) {
+        int lastIndex = this.paths.pointCount(node.route()) - 1;
+        int direction = node.index() == 0 ? 1 : node.index() == lastIndex ? -1 : (random.nextBoolean() ? 1 : -1);
+        return new Cursor(node.route(), node.index(), direction, true);
     }
 
     private @Nullable Cursor behind(Cursor from) {
         int direction = -from.direction();
         int index = from.index() + direction;
         if (index < 0 || index >= this.paths.pointCount(from.route())) return null;
-        return new Cursor(from.route(), index, direction);
+        return new Cursor(from.route(), index, direction, false);
     }
 
     private Optional<RouteStep> moveTo(Cursor next) {
         this.cursor = next;
-        return Optional.of(new RouteStep(this.point(next), this.pauseAt(next)));
+        return Optional.of(new RouteStep(this.point(next), this.pauseAt(next), this.isDeadEnd(next)));
     }
 
     /**
-     * An end the creek walks away from is where it sets off, not where it rests.
+     * Tells whether the creek is heading for the end of a route that no other route is linked to.
+     * Walking away from an end does not count.
+     */
+    private boolean isDeadEnd(Cursor cursor) {
+        int lastIndex = this.paths.pointCount(cursor.route()) - 1;
+        boolean reachingEnd = cursor.index() == lastIndex && cursor.direction() > 0;
+        boolean reachingStart = cursor.index() == 0 && cursor.direction() < 0;
+        if (!reachingEnd && !reachingStart) return false;
+        return this.paths.links(this.node(cursor)).isEmpty();
+    }
+
+    /**
+     * An end the creek walks away from is where it sets off, not where it rests. Neither is a point
+     * it just stepped over to from another route: it is where it already was.
      */
     private int pauseAt(Cursor cursor) {
+        if (cursor.viaLink()) return 0;
         int lastIndex = this.paths.pointCount(cursor.route()) - 1;
         boolean leavingStart = cursor.index() == 0 && cursor.direction() > 0;
         boolean leavingEnd = cursor.index() == lastIndex && cursor.direction() < 0;
@@ -136,13 +162,22 @@ public final class PathRoute implements RouteProvider {
         return this.paths.point(cursor.route(), cursor.index());
     }
 
+    private CreekPaths.Node node(Cursor cursor) {
+        return new CreekPaths.Node(cursor.route(), cursor.index());
+    }
+
+    private boolean isMiddle(Cursor cursor) {
+        return cursor.index() > 0 && cursor.index() < this.paths.pointCount(cursor.route()) - 1;
+    }
+
     /**
      * Where the creek is on the routes.
      *
      * @param route     the route's index
      * @param index     the index of the waypoint it was sent to last
      * @param direction {@code 1} towards the end, {@code -1} towards the start
+     * @param viaLink   whether it just stepped over to this point from another route
      */
-    private record Cursor(int route, int index, int direction) {
+    private record Cursor(int route, int index, int direction, boolean viaLink) {
     }
 }

@@ -4,6 +4,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,10 +12,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The creek routes of a map, with the links between their ends worked out once up front.
+ * The creek routes of a map, with the links between them worked out once up front.
  * <p>
- * Two ends are linked when they are at most the link distance apart. The two ends of the same route
- * never link to each other.
+ * An end of a route is linked to the nearest point of every other route that is at most the link
+ * distance away. That point may be the other route's end, or somewhere in its middle, where the two
+ * routes cross. Links work both ways. Two points in the middle of routes never link, and the two
+ * ends of the same route never link to each other.
  * </p>
  *
  * @author theEvilReaper
@@ -24,21 +27,19 @@ import java.util.Map;
 public final class CreekPaths {
 
     /**
-     * One end of a route.
+     * One point of a route.
      *
-     * @param route   the route's index
-     * @param atStart {@code true} for its first point, {@code false} for its last
+     * @param route the route's index
+     * @param index the point's index within the route
      */
-    public record End(int route, boolean atStart) {
+    public record Node(int route, int index) {
     }
 
-    private static final boolean[] BOTH_ENDS = {true, false};
-
     private final List<CreekRoute> routes;
-    private final Map<End, List<End>> links;
+    private final Map<Node, List<Node>> links;
     private final List<Pos> allPoints;
 
-    private CreekPaths(List<CreekRoute> routes, Map<End, List<End>> links) {
+    private CreekPaths(List<CreekRoute> routes, Map<Node, List<Node>> links) {
         this.routes = routes;
         this.links = links;
         List<Pos> points = new ArrayList<>();
@@ -49,30 +50,54 @@ public final class CreekPaths {
     }
 
     /**
-     * Takes the routes of a map and works out which ends are linked.
+     * Takes the routes of a map and works out the links between them.
      *
      * @param routes       the valid routes of the map
-     * @param linkDistance how close two ends have to be to count as linked, in blocks
+     * @param linkDistance how close an end has to be to a point of another route to link to it, in blocks
      * @return the paths
      */
     public static CreekPaths of(List<CreekRoute> routes, double linkDistance) {
         List<CreekRoute> frozenRoutes = List.copyOf(routes);
-        Map<End, List<End>> links = new HashMap<>();
-        for (int firstRoute = 0; firstRoute < frozenRoutes.size(); firstRoute++) {
-            for (int secondRoute = firstRoute + 1; secondRoute < frozenRoutes.size(); secondRoute++) {
-                for (boolean firstAtStart : BOTH_ENDS) {
-                    for (boolean secondAtStart : BOTH_ENDS) {
-                        End first = new End(firstRoute, firstAtStart);
-                        End second = new End(secondRoute, secondAtStart);
-                        if (position(frozenRoutes, first).distance(position(frozenRoutes, second)) <= linkDistance) {
-                            links.computeIfAbsent(first, _ -> new ArrayList<>()).add(second);
-                            links.computeIfAbsent(second, _ -> new ArrayList<>()).add(first);
-                        }
-                    }
+        Map<Node, List<Node>> links = new HashMap<>();
+        for (int route = 0; route < frozenRoutes.size(); route++) {
+            int lastIndex = frozenRoutes.get(route).points().size() - 1;
+            for (int endIndex : new int[]{0, lastIndex}) {
+                Node end = new Node(route, endIndex);
+                for (int other = 0; other < frozenRoutes.size(); other++) {
+                    if (other == route) continue;
+                    Node nearest = nearest(frozenRoutes, other, toPos(position(frozenRoutes, end)), linkDistance);
+                    if (nearest == null) continue;
+                    link(links, end, nearest);
+                    link(links, nearest, end);
                 }
             }
         }
         return new CreekPaths(frozenRoutes, links);
+    }
+
+    /**
+     * The point of a route closest to a position, as long as it is within the distance.
+     */
+    private static @Nullable Node nearest(List<CreekRoute> routes, int route, Pos position, double distance) {
+        List<CreekWaypoint> points = routes.get(route).points();
+        Node nearest = null;
+        double best = distance;
+        for (int index = 0; index < points.size(); index++) {
+            double away = toPos(points.get(index).position()).distance(position);
+            if (away <= best) {
+                best = away;
+                nearest = new Node(route, index);
+            }
+        }
+        return nearest;
+    }
+
+    /**
+     * Adds a link once. Two ends close together are found from both sides.
+     */
+    private static void link(Map<Node, List<Node>> links, Node from, Node to) {
+        List<Node> linked = links.computeIfAbsent(from, _ -> new ArrayList<>());
+        if (!linked.contains(to)) linked.add(to);
     }
 
     /**
@@ -136,23 +161,13 @@ public final class CreekPaths {
     }
 
     /**
-     * Where an end of a route is.
+     * The points linked to a point, always in the same order.
      *
-     * @param end the end
-     * @return the route's first or last point
+     * @param node the point
+     * @return the linked points, empty if there are none
      */
-    public Pos position(End end) {
-        return position(this.routes, end);
-    }
-
-    /**
-     * The ends linked to an end, always in the same order.
-     *
-     * @param end the end
-     * @return the linked ends, empty if there are none
-     */
-    public List<End> links(End end) {
-        return List.copyOf(this.links.getOrDefault(end, List.of()));
+    public List<Node> links(Node node) {
+        return List.copyOf(this.links.getOrDefault(node, List.of()));
     }
 
     /**
@@ -164,9 +179,8 @@ public final class CreekPaths {
         return this.allPoints;
     }
 
-    private static Pos position(List<CreekRoute> routes, End end) {
-        List<CreekWaypoint> points = routes.get(end.route()).points();
-        return toPos((end.atStart() ? points.getFirst() : points.getLast()).position());
+    private static Vec position(List<CreekRoute> routes, Node node) {
+        return routes.get(node.route()).points().get(node.index()).position();
     }
 
     private static Pos toPos(Vec point) {
