@@ -16,6 +16,10 @@ import java.util.random.RandomGenerator;
  * point, after a teleport for example, it joins back in at the nearest point. Each step brings the
  * pause of its point along, except for an end the creek is just leaving.
  * </p>
+ * <p>
+ * Because it remembers where its creek is, every creek needs a walker of its own. The
+ * {@link CreekPaths} behind it can be shared.
+ * </p>
  *
  * @author theEvilReaper
  * @version 1.0.0

@@ -133,11 +133,12 @@ public final class CreekService {
             LOGGER.warn("The map has no usable creek routes, so the creek stays away this round");
             return;
         }
+        // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
         this.route = pathRoute;
-        SelectionConsequence selection = new SelectionConsequence(pathRoute::points, this.ground, this.random);
+        SelectionConsequence selection = new SelectionConsequence(paths::allPoints, this.ground, this.random);
         this.selection = selection;
-        List<Pos> points = pathRoute.points();
+        List<Pos> points = paths.allPoints();
 
         this.clock.start();
         Pos point = points.get(this.random.nextInt(points.size()));
@@ -149,8 +150,9 @@ public final class CreekService {
                 this.config, this.random, initial);
         long variantsFrom = this.clock.now() + this.config.vanishMinSeconds() * 1000L;
         this.variants = new CreekVariants(this.config, this.spots, this.random, variantsFrom,
-                (spot, state) -> new Creek(this.bodies.apply(world, spot), this.sight, this.dread, pathRoute,
-                        this.spots, this.consequence, selection, this.config, this.random, state));
+                (spot, state) -> new Creek(this.bodies.apply(world, spot), this.sight, this.dread,
+                        new PathRoute(paths), this.spots, this.consequence, selection, this.config, this.random,
+                        state));
         this.debug.setActive(true);
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }

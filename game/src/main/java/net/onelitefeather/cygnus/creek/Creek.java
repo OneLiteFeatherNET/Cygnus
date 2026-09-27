@@ -175,6 +175,10 @@ final class Creek {
         return this.body;
     }
 
+    RouteProvider route() {
+        return this.route;
+    }
+
     void remove() {
         this.body.remove();
     }
