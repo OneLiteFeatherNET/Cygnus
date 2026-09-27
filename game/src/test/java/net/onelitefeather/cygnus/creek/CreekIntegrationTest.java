@@ -39,8 +39,8 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
     private static Creek creek(CreekBody body, CreekConfig config, CreekState initial) {
         CreekSight sight = new CreekSight(config.sightRange(), config.sightViewAngle());
-        // No route points: a selection always ends in the stun.
-        PatrolConsequence patrol = new PatrolConsequence(List::of, Optional::of, new Random(3));
+        // nextBoolean() is true for -1, so a selection always ends in the stun.
+        PatrolConsequence patrol = new PatrolConsequence(() -> -1L);
         CreekRound round = new CreekRound(sight, new SpotFinder(sight, Optional::of), _ -> {}, patrol, config,
                 new Random(3));
         return new Creek(body, Contexts.route(), round, initial);

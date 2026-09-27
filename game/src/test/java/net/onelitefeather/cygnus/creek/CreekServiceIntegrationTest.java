@@ -4,6 +4,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.ActionBarPacket;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.testing.Collector;
@@ -169,8 +170,20 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     @DisplayName("At the end no stun from the patrol is left on a survivor")
     void stopClearsTheSelectionEffects(Env env) {
         Instance instance = env.createFlatInstance();
-        // far from every route point: the teleport has no target, so a selection always stuns
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, -60, 0, 0));
+        // Walled in closely on every side: there is no room to fling them, so a selection always stuns.
+        for (int i = -3; i <= 3; i++) {
+            for (int y = 40; y <= 41; y++) {
+                instance.setBlock(i, y, -63, Block.STONE);
+                instance.setBlock(i, y, -56, Block.STONE);
+            }
+        }
+        for (int z = -63; z <= -56; z++) {
+            for (int y = 40; y <= 41; y++) {
+                instance.setBlock(-3, y, z, Block.STONE);
+                instance.setBlock(3, y, z, Block.STONE);
+            }
+        }
         AtomicLong clock = new AtomicLong();
         CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), clock);
         service.start();
