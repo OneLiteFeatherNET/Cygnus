@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -204,6 +205,23 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
 
         assertFalse(creek.body().isVisibleTo(round.scared().getUuid()));
         assertTrue(creek.body().isVisibleTo(round.other().getUuid()));
+        round.service().stop();
+    }
+
+    @Test
+    @DisplayName("Every creek walks the routes with a walker of its own")
+    void everyCreekHasItsOwnWalker(Env env) {
+        Round round = this.roundWithVariant(env, CreekConfig.DEFAULT);
+        Creek creek = round.service().creek();
+        CreekVariants variants = round.service().variants();
+        assertNotNull(creek);
+        assertNotNull(variants);
+        Creek variant = variants.running().get(round.scared().getUuid());
+        assertNotNull(variant);
+
+        assertInstanceOf(PathRoute.class, variant.route());
+        assertNotSame(creek.route(), variant.route());
+        assertEquals(creek.route().points(), variant.route().points());
         round.service().stop();
     }
 
