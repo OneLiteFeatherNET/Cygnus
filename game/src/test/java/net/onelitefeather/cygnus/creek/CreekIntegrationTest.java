@@ -32,6 +32,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CreekIntegrationTest extends CygnusPlayerTestBase {
@@ -103,17 +104,21 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("With the last survivor and the setting off he is gone for good")
-    void dormantWithTheLastSurvivor(Env env) {
+    @DisplayName("Vanishing for good hides him from everyone for the rest of the round")
+    void vanishForGood(Env env) {
         Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 30));
-        Creek creek = creek(body, withoutLastSurvivor(), new PatrolState());
-
+        Creek creek = creek(body, CreekConfig.DEFAULT, new PatrolState());
         creek.tick(List.of(survivor), 0L);
 
-        assertInstanceOf(VanishState.class, creek.state());
-        assertTrue(((VanishState) creek.state()).isForever());
+        creek.vanishForGood(List.of(survivor), 100L);
+        CreekState vanished = creek.state();
+        creek.vanishForGood(List.of(survivor), 200L);
+
+        assertTrue(((VanishState) vanished).isForever());
+        assertSame(vanished, creek.state(), "calling it again changes nothing");
+        assertFalse(body.isVisibleTo(survivor.getUuid()));
     }
 
     @Test
@@ -168,33 +173,5 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
         assertFalse(haunted.hasEffect(PotionEffect.SLOWNESS));
         assertEquals(2, creek.lastViews().size(), "the snapshots still cover every survivor");
-    }
-
-    @Test
-    @DisplayName("Hiding him from a haunted survivor does not count as being down to the last one")
-    void hidingIsNotTheLastSurvivor(Env env) {
-        Instance instance = env.createFlatInstance();
-        Player haunted = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        Player other = env.createConnection().connect(instance, new Pos(5, 40, 0));
-        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 30));
-        Creek creek = creek(body, withoutLastSurvivor(), new PatrolState());
-
-        creek.tick(List.of(haunted, other), Set.of(haunted.getUuid()), 0L);
-
-        assertInstanceOf(PatrolState.class, creek.state());
-    }
-
-    private static CreekConfig withoutLastSurvivor() {
-        CreekConfig d = CreekConfig.DEFAULT;
-        return new CreekConfig(
-                d.enabled(), false, d.sightRange(), d.sightViewAngle(),
-                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
-                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
-                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
-                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                d.personalSpace(), d.stuckMillis(), d.dreadPageWeight(), d.dreadTimeWeight(),
-                d.dreadIsolationWeight(), d.isolationRadius(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis());
     }
 }

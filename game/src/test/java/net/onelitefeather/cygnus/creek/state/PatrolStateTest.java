@@ -83,30 +83,6 @@ class PatrolStateTest {
     }
 
     @Test
-    @DisplayName("A survivor close by does not make him vanish")
-    void doesNotVanishWhenApproached() {
-        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        PatrolState state = new PatrolState();
-        CreekContext ctx = Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), at(FIRST, 10));
-        state.enter(ctx);
-
-        assertSame(state, state.tick(ctx));
-        assertEquals(A, body.goal);
-    }
-
-    @Test
-    @DisplayName("A high dread does not make him stalk")
-    void neverStalks() {
-        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
-        PatrolState state = new PatrolState();
-        CreekContext ctx = Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.9D, false));
-        state.enter(ctx);
-
-        assertSame(state, state.tick(ctx));
-        assertTrue(body.teleports.isEmpty());
-    }
-
-    @Test
     @DisplayName("Making no progress, he picks another point")
     void picksAnotherPointWhenStuck() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));

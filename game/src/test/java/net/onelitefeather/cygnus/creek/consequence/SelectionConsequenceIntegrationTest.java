@@ -65,26 +65,18 @@ class SelectionConsequenceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("Without a route point in range there is no teleport")
-    void noTeleportWithoutAPointInRange(Env env) {
-        Instance instance = env.createFlatInstance();
-        Player selected = env.createConnection().connect(instance, new Pos(0.5, 40, 0.5));
-        SelectionConsequence selection = new SelectionConsequence(() -> List.of(new Pos(5.5, 40, 0.5)), Optional::of,
-                new Random(1));
-
-        assertFalse(selection.teleportAway(selected));
-    }
-
-    @Test
-    @DisplayName("When the teleport finds no point, the stun is applied instead")
+    @DisplayName("Without a route point in range there is no teleport, the stun is applied instead")
     void fallsBackToTheStunWithoutAFittingPoint(Env env) {
         Instance instance = env.createFlatInstance();
-        Player selected = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        // nextBoolean() is false for 0, so apply() tries the teleport first
-        SelectionConsequence selection = new SelectionConsequence(List::of, Optional::of, () -> 0L);
+        Player selected = env.createConnection().connect(instance, new Pos(0.5, 40, 0.5));
+        // The only point is too close. nextBoolean() is false for 0, so apply() tries the teleport first.
+        SelectionConsequence selection = new SelectionConsequence(() -> List.of(new Pos(5.5, 40, 0.5)), Optional::of,
+                () -> 0L);
 
         selection.apply(selected, List.of(selected));
+        env.tick();
 
+        assertTrue(selected.getPosition().sameBlock(new Pos(0.5, 40, 0.5)), "stands at " + selected.getPosition());
         assertTrue(selected.hasEffect(PotionEffect.SLOWNESS));
     }
 
