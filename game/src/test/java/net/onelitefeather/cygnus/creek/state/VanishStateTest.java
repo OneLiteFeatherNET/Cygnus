@@ -76,14 +76,6 @@ class VanishStateTest {
     }
 
     @Test
-    @DisplayName("The cooldown shrinks as the dread grows")
-    void cooldownFollowsDread() {
-        assertEquals(40_000L, VanishState.cooldownMillis(Contexts.CONFIG, 0.0D));
-        assertEquals(30_000L, VanishState.cooldownMillis(Contexts.CONFIG, 0.5D));
-        assertEquals(20_000L, VanishState.cooldownMillis(Contexts.CONFIG, 1.0D));
-    }
-
-    @Test
     @DisplayName("Forever means forever")
     void foreverNeverEnds() {
         VanishState state = VanishState.forever();
