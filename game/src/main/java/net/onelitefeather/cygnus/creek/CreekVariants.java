@@ -189,8 +189,7 @@ final class CreekVariants {
                 this.random);
         if (spot.isEmpty()) return false;
 
-        long seconds = this.random.nextLong(config.stalkMinSeconds(), config.stalkMaxSeconds() + 1L);
-        StalkState stalk = new StalkState(view.id(), now + seconds * 1000L);
+        StalkState stalk = StalkState.starting(view.id(), now, this.config, this.random);
         this.running.put(view.id(), this.spawner.apply(spot.get(), stalk));
         return true;
     }

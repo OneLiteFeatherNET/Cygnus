@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.random.RandomGenerator;
 
 /**
  * The creek shadows one survivor from a distance, and only that survivor can see it.
@@ -51,13 +52,14 @@ public final class StalkState implements CreekState {
      * {@code stalkMaxSeconds}.
      *
      * @param target the survivor to stalk
-     * @param ctx    the current step
+     * @param now    the current time in milliseconds
+     * @param config the settings
+     * @param random the random source
      * @return the state
      */
-    static StalkState starting(UUID target, CreekContext ctx) {
-        CreekConfig config = ctx.config();
-        long seconds = ctx.random().nextLong(config.stalkMinSeconds(), config.stalkMaxSeconds() + 1L);
-        return new StalkState(target, ctx.now() + seconds * 1000L);
+    public static StalkState starting(UUID target, long now, CreekConfig config, RandomGenerator random) {
+        long seconds = random.nextLong(config.stalkMinSeconds(), config.stalkMaxSeconds() + 1L);
+        return new StalkState(target, now + seconds * 1000L);
     }
 
     /**
