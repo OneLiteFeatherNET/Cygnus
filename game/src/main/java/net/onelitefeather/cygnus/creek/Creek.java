@@ -2,11 +2,13 @@ package net.onelitefeather.cygnus.creek;
 
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
+import net.onelitefeather.cygnus.creek.state.CreekActions;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +31,9 @@ final class Creek {
     private final CreekBody body;
     private final RouteProvider route;
     private final CreekRound round;
+    private final CreekActions actions = new Actions();
     private CreekState state;
+    private @Nullable SurvivorSnapshot survivors;
     private List<SurvivorView> lastViews = List.of();
     private boolean entered;
 
@@ -97,20 +101,12 @@ final class Creek {
      * Fills in who sees this creek and builds the context for the states.
      */
     private CreekContext context(SurvivorSnapshot survivors, Set<UUID> ignored, long now) {
+        this.survivors = survivors;
         this.lastViews = this.views(survivors);
         List<SurvivorView> noticed = ignored.isEmpty() ? this.lastViews
                 : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
-        CreekRound round = this.round;
-        return new CreekContext(now, noticed, this.body, this.route, round.spots(),
-                id -> {
-                    Player caught = survivors.player(id);
-                    if (caught != null) round.consequence().apply(caught);
-                },
-                id -> {
-                    Player selected = survivors.player(id);
-                    if (selected != null) round.selection().apply(selected, survivors.players());
-                },
-                round.config(), round.random());
+        return new CreekContext(now, noticed, this.body, this.route, this.round.spots(), this.actions,
+                this.round.config(), this.round.random());
     }
 
     /**
@@ -164,5 +160,26 @@ final class Creek {
     private void switchTo(CreekState next, CreekContext ctx) {
         this.state = next;
         next.enter(ctx);
+    }
+
+    /**
+     * Applies the consequences to survivors of the current step. Anyone who is no longer among
+     * them is left alone.
+     */
+    private final class Actions implements CreekActions {
+
+        @Override
+        public void caught(UUID survivor) {
+            SurvivorSnapshot current = Creek.this.survivors;
+            Player player = current == null ? null : current.player(survivor);
+            if (player != null) Creek.this.round.consequence().apply(player);
+        }
+
+        @Override
+        public void selected(UUID survivor) {
+            SurvivorSnapshot current = Creek.this.survivors;
+            Player player = current == null ? null : current.player(survivor);
+            if (player != null) Creek.this.round.selection().apply(player, current.players());
+        }
     }
 }

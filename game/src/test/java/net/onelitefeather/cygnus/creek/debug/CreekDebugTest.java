@@ -108,7 +108,7 @@ class CreekDebugTest {
         PatrolState patrol = new PatrolState();
         List<SurvivorView> views = List.of(new SurvivorView(STEVE, new Pos(0, 40, 2), 0.1D, false));
         CreekContext ctx = new CreekContext(0L, views, new RecordingBody(HERE), Contexts.route(new Pos(30, 40, 0)),
-                SPOTS, _ -> {}, _ -> {}, CreekConfig.DEFAULT, new Random(1));
+                SPOTS, Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1));
         patrol.enter(ctx);
         patrol.tick(ctx);
 
@@ -138,11 +138,11 @@ class CreekDebugTest {
         List<SurvivorView> near = List.of(new SurvivorView(STEVE, new Pos(0, 40, 2), 0.1D, false));
         RecordingBody body = new RecordingBody(HERE);
         CreekContext start = new CreekContext(0L, near, body, Contexts.route(new Pos(30, 40, 0)), SPOTS,
-                _ -> {}, _ -> {}, CreekConfig.DEFAULT, new Random(1));
+                Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1));
         patrol.enter(start);
         patrol.tick(start);
         patrol.tick(new CreekContext(1000L, near, body, Contexts.route(new Pos(30, 40, 0)), SPOTS,
-                _ -> {}, _ -> {}, CreekConfig.DEFAULT, new Random(1)));
+                Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1)));
 
         assertEquals("PATROL · select 7s · Steve 0.10",
                 plain(CreekDebug.line(patrol, HERE, near, NAMES::get, "", 4000L)));

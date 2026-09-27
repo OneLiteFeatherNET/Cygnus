@@ -140,7 +140,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
             @Override
             public CreekState tick(CreekContext ctx) {
-                ctx.onSelect().accept(survivor.getUuid());
+                ctx.actions().selected(survivor.getUuid());
                 return this;
             }
         };

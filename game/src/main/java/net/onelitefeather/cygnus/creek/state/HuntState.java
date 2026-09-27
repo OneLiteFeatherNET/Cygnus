@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.creek.state;
 
-import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 
@@ -104,7 +103,7 @@ public final class HuntState implements CreekState {
 
         double distance = body.position().distance(view.position());
         if (distance <= config.catchDistance()) {
-            ctx.onCatch().accept(this.target);
+            ctx.actions().caught(this.target);
             return DoneState.INSTANCE;
         }
 
