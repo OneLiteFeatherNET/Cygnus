@@ -87,6 +87,33 @@ final class Creek {
      * @param now       the current time in milliseconds
      */
     void tick(Collection<Player> survivors, Set<UUID> ignored, long now) {
+        CreekContext ctx = this.context(survivors, ignored, now);
+        if (!this.entered) {
+            this.state.enter(ctx);
+            this.entered = true;
+        }
+        CreekState next = this.state.tick(ctx);
+        if (next != this.state) this.switchTo(next, ctx);
+    }
+
+    /**
+     * Sends the creek away for the rest of the round. Calling it again changes nothing.
+     *
+     * @param survivors the survivors of the round
+     * @param now       the current time in milliseconds
+     */
+    void vanishForGood(Collection<Player> survivors, long now) {
+        CreekContext ctx = this.context(survivors, Set.of(), now);
+        if (this.state instanceof VanishState vanish && vanish.isForever()) return;
+        // The state it had so far is never entered now, and never needs to be.
+        this.entered = true;
+        this.switchTo(VanishState.forever(), ctx);
+    }
+
+    /**
+     * Takes the snapshots for this step and builds the context for the states.
+     */
+    private CreekContext context(Collection<Player> survivors, Set<UUID> ignored, long now) {
         Map<UUID, Player> players = new HashMap<>();
         for (Player survivor : survivors) {
             players.put(survivor.getUuid(), survivor);
@@ -94,7 +121,7 @@ final class Creek {
         this.lastViews = this.views(survivors);
         List<SurvivorView> noticed = ignored.isEmpty() ? this.lastViews
                 : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
-        CreekContext ctx = new CreekContext(now, noticed, this.body, this.route, this.spots,
+        return new CreekContext(now, noticed, this.body, this.route, this.spots,
                 id -> {
                     Player caught = players.get(id);
                     if (caught != null) this.consequence.apply(caught);
@@ -104,21 +131,6 @@ final class Creek {
                     if (selected != null) this.selection.apply(selected, survivors);
                 },
                 this.config, this.random);
-
-        if (!this.entered) {
-            this.state.enter(ctx);
-            this.entered = true;
-        }
-        // Count every survivor here: leaving the haunted ones out is not being down to the last one.
-        if (!this.config.activeWithLastSurvivor() && this.lastViews.size() <= 1) {
-            if (!(this.state instanceof VanishState vanish && vanish.isForever())) {
-                this.switchTo(VanishState.forever(), ctx);
-            }
-            return;
-        }
-
-        CreekState next = this.state.tick(ctx);
-        if (next != this.state) this.switchTo(next, ctx);
     }
 
     /**
