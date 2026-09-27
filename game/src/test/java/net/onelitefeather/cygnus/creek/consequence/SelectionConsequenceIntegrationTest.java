@@ -51,6 +51,22 @@ class SelectionConsequenceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("Vanishing blinds the survivors nearby, nobody else")
+    void vanishBlindsSurvivorsNearby(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player near = env.createConnection().connect(instance, new Pos(5, 40, 0));
+        Player far = env.createConnection().connect(instance, new Pos(20, 40, 0));
+        Player slender = env.createConnection().connect(instance, new Pos(3, 40, 0));
+        SelectionConsequence selection = new SelectionConsequence(List::of, Optional::of, new Random(1));
+
+        selection.vanishAt(new Pos(0, 40, 0), List.of(near, far));
+
+        assertTrue(near.hasEffect(PotionEffect.BLINDNESS));
+        assertFalse(far.hasEffect(PotionEffect.BLINDNESS));
+        assertFalse(slender.hasEffect(PotionEffect.BLINDNESS), "only survivors go blind");
+    }
+
+    @Test
     @DisplayName("A teleport lands on a route point 20 to 40 blocks away")
     void teleportLandsInRange(Env env) {
         Instance instance = env.createFlatInstance();

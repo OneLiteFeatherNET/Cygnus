@@ -151,6 +151,31 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("Vanishing blinds the survivors nearby, but not the ones the creek leaves alone")
+    void vanishSparesTheIgnored(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player haunted = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        Player other = env.createConnection().connect(instance, new Pos(3, 40, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 2));
+        CreekState vanishing = new CreekState() {
+            @Override
+            public void enter(CreekContext ctx) {
+            }
+
+            @Override
+            public CreekState tick(CreekContext ctx) {
+                ctx.actions().vanished(ctx.body().position());
+                return this;
+            }
+        };
+
+        creek(body, CreekConfig.DEFAULT, vanishing).tick(survivors(haunted, other), Set.of(haunted.getUuid()), 0L);
+
+        assertTrue(other.hasEffect(PotionEffect.BLINDNESS));
+        assertFalse(haunted.hasEffect(PotionEffect.BLINDNESS));
+    }
+
+    @Test
     @DisplayName("A haunted survivor does not see the patrolling creek, everyone else does")
     void patrolIsHiddenFromTheHaunted(Env env) {
         Instance instance = env.createFlatInstance();

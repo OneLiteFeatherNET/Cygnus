@@ -19,6 +19,11 @@ import java.util.UUID;
  * looks back at you for a moment. At some waypoints it rests for a while, either because the route
  * says so or just by chance; whichever takes longer wins.
  * </p>
+ * <p>
+ * At the end of a route no other route links to, it may vanish instead of resting there, which
+ * blinds anyone close by. It stays away for as long as it would have rested and then turns up
+ * somewhere else on the map, so it does not keep pacing one stretch of routes all round.
+ * </p>
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -35,6 +40,9 @@ public final class PatrolState implements CreekState {
     /** How long it leaves everyone alone after picking someone out, in milliseconds. */
     static final long SELECT_COOLDOWN_MILLIS = 10_000L;
 
+    /** How likely it vanishes on reaching a dead end instead of resting there. */
+    static final double DEAD_END_VANISH_CHANCE = 0.5D;
+
     /** How close counts as having reached a waypoint, in blocks. */
     static final double ARRIVED = 2.0D;
 
@@ -45,6 +53,7 @@ public final class PatrolState implements CreekState {
     private boolean watched;
     private long pausedUntil;
     private int goalPauseMillis;
+    private boolean goalDeadEnd;
     private long restingUntil;
     private Pos progressAt = Pos.ZERO;
     private long progressSince;
@@ -102,6 +111,12 @@ public final class PatrolState implements CreekState {
             return this;
         }
         if (this.hasArrived(here)) {
+            if (this.goalDeadEnd && ctx.random().nextDouble() < DEAD_END_VANISH_CHANCE) {
+                this.goal = null;
+                ctx.actions().vanished(here);
+                // Gone for as long as it would have rested here, then back somewhere else.
+                return new VanishState(ctx.now() + this.goalPauseMillis);
+            }
             long rest = this.restMillis(ctx);
             this.goal = null;
             if (rest > 0) {
@@ -115,6 +130,7 @@ public final class PatrolState implements CreekState {
             Optional<RouteStep> step = ctx.route().next(here, _ -> true, ctx.random());
             this.goal = step.map(RouteStep::target).orElse(null);
             this.goalPauseMillis = step.map(RouteStep::pauseMillis).orElse(0);
+            this.goalDeadEnd = step.map(RouteStep::deadEnd).orElse(false);
             this.markProgress(ctx.now(), here);
         }
         if (this.goal == null) {

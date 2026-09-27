@@ -17,8 +17,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.random.RandomGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -333,5 +335,100 @@ class PatrolStateTest {
 
         state.tick(Contexts.context(1700L, body, route, new ArrayList<>(), watcher));
         assertEquals(new Pos(20, 40, 0), body.goal, "he goes on to the point he was heading for");
+    }
+
+    // ---- vanishing at a dead end ----
+
+    /** Answers every roll with the given value. */
+    private static RandomGenerator rolling(double value) {
+        return new RandomGenerator() {
+            @Override
+            public long nextLong() {
+                return 0L;
+            }
+
+            @Override
+            public double nextDouble() {
+                return value;
+            }
+        };
+    }
+
+    /** A route that always heads for A with the given pause, as a dead end or not. */
+    private static RouteProvider towardsA(int pauseMillis, boolean deadEnd) {
+        return (_, _, _) -> Optional.of(new RouteStep(A, pauseMillis, deadEnd));
+    }
+
+    /** Records every place the creek vanished from. */
+    private static CreekActions recordingVanishes(List<Pos> vanished) {
+        return new CreekActions() {
+            @Override
+            public void caught(UUID survivor) {
+            }
+
+            @Override
+            public void selected(UUID survivor) {
+            }
+
+            @Override
+            public void vanished(Pos where) {
+                vanished.add(where);
+            }
+        };
+    }
+
+    private static CreekContext deadEndContext(long now, RecordingBody body, RouteProvider route, List<Pos> vanished,
+                                               double roll) {
+        return Contexts.context(now, body, route, recordingVanishes(vanished), rolling(roll), far(FIRST, 0.0D, false));
+    }
+
+    @Test
+    @DisplayName("At a dead end he may vanish, gone for as long as he would have rested there")
+    void vanishesAtADeadEnd() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = towardsA(3000, true);
+        List<Pos> vanished = new ArrayList<>();
+        PatrolState state = new PatrolState();
+        state.enter(deadEndContext(0L, body, route, vanished, 0.0D));
+        state.tick(deadEndContext(0L, body, route, vanished, 0.0D));
+        assertEquals(A, body.goal);
+
+        body.position = A;
+        CreekState next = state.tick(deadEndContext(100L, body, route, vanished, 0.0D));
+
+        VanishState vanish = assertInstanceOf(VanishState.class, next);
+        assertEquals(3100L, vanish.until());
+        assertEquals(List.of(A), vanished);
+    }
+
+    @Test
+    @DisplayName("Missing the roll at a dead end, he rests and walks on as anywhere else")
+    void restsWhenTheRollMisses() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = towardsA(3000, true);
+        List<Pos> vanished = new ArrayList<>();
+        PatrolState state = new PatrolState();
+        state.enter(deadEndContext(0L, body, route, vanished, 0.99D));
+        state.tick(deadEndContext(0L, body, route, vanished, 0.99D));
+
+        body.position = A;
+        assertSame(state, state.tick(deadEndContext(100L, body, route, vanished, 0.99D)));
+        assertNull(body.goal, "he rests at the end");
+        assertTrue(vanished.isEmpty());
+    }
+
+    @Test
+    @DisplayName("A point that is no dead end never makes him vanish")
+    void noVanishWithoutADeadEnd() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = towardsA(3000, false);
+        List<Pos> vanished = new ArrayList<>();
+        PatrolState state = new PatrolState();
+        state.enter(deadEndContext(0L, body, route, vanished, 0.0D));
+        state.tick(deadEndContext(0L, body, route, vanished, 0.0D));
+
+        body.position = A;
+        assertSame(state, state.tick(deadEndContext(100L, body, route, vanished, 0.0D)));
+        assertTrue(vanished.isEmpty());
     }
 }

@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.random.RandomGenerator;
 
 /**
  * Builds contexts for the state tests: the design's settings, ground everywhere, fixed chance.
@@ -40,6 +41,10 @@ public final class Contexts {
             public void selected(UUID survivor) {
                 selected.accept(survivor);
             }
+
+            @Override
+            public void vanished(Pos where) {
+            }
         };
     }
 
@@ -52,6 +57,12 @@ public final class Contexts {
     static CreekContext context(long now, CreekBody body, RouteProvider route, CreekConfig config,
                                 SurvivorView... survivors) {
         return new CreekContext(now, List.of(survivors), body, route, SPOTS, NO_ACTIONS, config, new Random(7));
+    }
+
+    /** A context with the given actions and random source. */
+    static CreekContext context(long now, CreekBody body, RouteProvider route, CreekActions actions,
+                                RandomGenerator random, SurvivorView... survivors) {
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions, CONFIG, random);
     }
 
     /** A context that records every survivor the state selects. */
@@ -81,7 +92,7 @@ public final class Contexts {
         return new RouteProvider() {
             @Override
             public Optional<RouteStep> next(Pos current, java.util.function.Predicate<Pos> allowed,
-                                            java.util.random.RandomGenerator random) {
+                                            RandomGenerator random) {
                 return Arrays.stream(points)
                         .filter(point -> point.distance(current) >= 1.0D)
                         .filter(allowed)
