@@ -21,15 +21,26 @@ class CreekRoutePreviewTest {
     }
 
     @Test
-    @DisplayName("Only the ends of the edited route are marked, and only if another route's end is close")
+    @DisplayName("Ends of the edited route are marked if another route's end is close")
     void linkedEndsOfTheEditedRoute() {
         CreekRoute a = CreekRoute.ofPositions("A", List.of(new Vec(0, 80, 0), new Vec(10, 80, 0)));
         CreekRoute b = CreekRoute.ofPositions("B", List.of(new Vec(12, 80, 0), new Vec(20, 80, 0)));
         CreekRoute c = CreekRoute.ofPositions("C", List.of(new Vec(50, 80, 0), new Vec(60, 80, 0)));
         List<CreekRoute> routes = List.of(a, b, c);
 
-        assertEquals(Set.of(new Vec(10, 80, 0)), CreekRoutePreview.linkedEnds(a, routes, 3.0D));
-        assertEquals(Set.of(new Vec(12, 80, 0)), CreekRoutePreview.linkedEnds(b, routes, 3.0D));
-        assertEquals(Set.of(), CreekRoutePreview.linkedEnds(c, routes, 3.0D));
+        assertEquals(Set.of(new Vec(10, 80, 0)), CreekRoutePreview.linkedPoints(a, routes, 3.0D));
+        assertEquals(Set.of(new Vec(12, 80, 0)), CreekRoutePreview.linkedPoints(b, routes, 3.0D));
+        assertEquals(Set.of(), CreekRoutePreview.linkedPoints(c, routes, 3.0D));
+    }
+
+    @Test
+    @DisplayName("Where another route's end meets the middle, both points are marked")
+    void crossingsInTheMiddle() {
+        CreekRoute middle = CreekRoute.ofPositions("M", List.of(new Vec(0, 80, 0), new Vec(10, 80, 0), new Vec(20, 80, 0)));
+        CreekRoute branch = CreekRoute.ofPositions("N", List.of(new Vec(10, 80, 2), new Vec(10, 80, 20)));
+        List<CreekRoute> routes = List.of(middle, branch);
+
+        assertEquals(Set.of(new Vec(10, 80, 0)), CreekRoutePreview.linkedPoints(middle, routes, 3.0D));
+        assertEquals(Set.of(new Vec(10, 80, 2)), CreekRoutePreview.linkedPoints(branch, routes, 3.0D));
     }
 }

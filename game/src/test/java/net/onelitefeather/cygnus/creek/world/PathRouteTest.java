@@ -14,6 +14,7 @@ import java.util.function.Predicate;
 import java.util.random.RandomGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PathRouteTest {
@@ -174,9 +175,86 @@ class PathRouteTest {
         assertEquals(0, step(route, new Pos(0, 40, 0), fixed(0)).pauseMillis(), "it walks away from the start");
         assertEquals(0, step(route, new Pos(0, 40, 0), fixed(0)).pauseMillis());
         RouteStep end = step(route, new Pos(10, 40, 0), fixed(0));
-        assertEquals(new RouteStep(new Pos(20, 40, 0), 2000), end);
+        assertEquals(new RouteStep(new Pos(20, 40, 0), 2000, true), end);
         assertEquals(0, step(route, end.target(), fixed(0)).pauseMillis());
-        assertEquals(new RouteStep(new Pos(0, 40, 0), 1000), step(route, new Pos(10, 40, 0), fixed(0)));
+        assertEquals(new RouteStep(new Pos(0, 40, 0), 1000, true), step(route, new Pos(10, 40, 0), fixed(0)));
+    }
+
+    @Test
+    @DisplayName("Heading for an end without links is a dead end, heading anywhere else is not")
+    void marksDeadEnds() {
+        PathRoute route = route(A);
+
+        assertFalse(step(route, new Pos(0, 40, 0), fixed(0)).deadEnd(), "joining at the start walks away from it");
+        assertFalse(step(route, new Pos(0, 40, 0), fixed(0)).deadEnd(), "the middle is no end");
+        assertTrue(step(route, new Pos(10, 40, 0), fixed(0)).deadEnd());
+        assertFalse(step(route, new Pos(20, 40, 0), fixed(0)).deadEnd(), "turning around leaves the end");
+        assertTrue(step(route, new Pos(10, 40, 0), fixed(0)).deadEnd(), "the start is a dead end too");
+    }
+
+    @Test
+    @DisplayName("A linked end is no dead end")
+    void linkedEndIsNoDeadEnd() {
+        PathRoute route = route(A, B);
+        next(route, new Pos(10, 40, 0), fixed(0));
+
+        assertFalse(step(route, new Pos(10, 40, 0), fixed(0)).deadEnd());
+    }
+
+    /** X runs along the x axis; Y starts right next to X's middle point and runs off along z. */
+    private static final CreekRoute X = CreekRoute.ofPositions("X",
+            List.of(new Vec(0, 40, 0), new Vec(10, 40, 0), new Vec(20, 40, 0)));
+    private static final CreekRoute Y = CreekRoute.ofPositions("Y",
+            List.of(new Vec(10, 40, 2), new Vec(10, 40, 12), new Vec(10, 40, 22)));
+
+    @Test
+    @DisplayName("At a crossing in the middle it can turn onto the other route")
+    void turnsAtACrossing() {
+        PathRoute route = route(X, Y);
+        Pos at = next(route, new Pos(0, 40, 0), fixed(0));
+        at = next(route, at, fixed(0));
+        assertEquals(new Pos(10, 40, 0), at);
+
+        RouteStep turn = step(route, at, fixed(0));
+        assertEquals(new RouteStep(new Pos(10, 40, 2), 0), turn, "the other route's end is the stepping stone");
+        assertEquals(new Pos(10, 40, 12), next(route, turn.target(), fixed(0)));
+    }
+
+    @Test
+    @DisplayName("At a crossing in the middle it can also walk on")
+    void walksOnAtACrossing() {
+        PathRoute route = route(X, Y);
+        Pos at = next(route, new Pos(0, 40, 0), fixed(0));
+        at = next(route, at, fixed(0));
+
+        assertEquals(new Pos(20, 40, 0), next(route, at, fixed(1)));
+    }
+
+    @Test
+    @DisplayName("Right after taking a link it does not jump straight back")
+    void noJumpBackAfterALink() {
+        PathRoute route = route(X, Y);
+        Pos at = next(route, new Pos(0, 40, 0), fixed(0));
+        at = next(route, at, fixed(0));
+        at = next(route, at, fixed(0));
+        assertEquals(new Pos(10, 40, 2), at);
+
+        assertEquals(new Pos(10, 40, 12), next(route, at, fixed(0)));
+    }
+
+    @Test
+    @DisplayName("From an end it can join the middle of another route and walk on from there")
+    void joinsAMiddleFromAnEnd() {
+        PathRoute route = route(X, Y);
+        next(route, new Pos(10, 40, 22), fixed(0));
+        Pos at = next(route, new Pos(10, 40, 22), fixed(0));
+        RouteStep start = step(route, at, fixed(0));
+        assertEquals(new Pos(10, 40, 2), start.target());
+        assertFalse(start.deadEnd(), "an end on another route's middle is no dead end");
+
+        RouteStep join = step(route, start.target(), fixed(0));
+        assertEquals(new RouteStep(new Pos(10, 40, 0), 0), join, "no second stop where the routes meet");
+        assertEquals(new Pos(20, 40, 0), next(route, join.target(), fixed(0)), "it walks on, not back");
     }
 
     @Test

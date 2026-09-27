@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 
 /**
  * Shows the creek route being edited to the player editing it: particles at every point and along
- * the route, the route's name above its start, and a marker on ends that link to another route.
+ * the route, the route's name above its start, and a marker on every point that links to another route.
  * Without a route being edited it shows nothing.
  *
  * @author theEvilReaper
@@ -134,7 +134,7 @@ public final class CreekRoutePreview {
                 line(points.get(i), points.get(i + 1), LINE_STEP).forEach(spot -> this.particle(LINE_PARTICLE, spot));
             }
         }
-        linkedEnds(route, routes, this.linkDistance).forEach(end -> this.particle(LINK_PARTICLE, end.add(0, 0.5, 0)));
+        linkedPoints(route, routes, this.linkDistance).forEach(point -> this.particle(LINK_PARTICLE, point.add(0, 0.5, 0)));
     }
 
     private @Nullable CreekRoute activeRoute(List<CreekRoute> routes) {
@@ -170,24 +170,43 @@ public final class CreekRoutePreview {
     }
 
     /**
-     * Returns the ends of a route that are at most {@code distance} away from an end of another route.
+     * Returns the points of a route that link to another route, the same way the game links them:
+     * an end of one route links to the nearest point of another route within {@code distance}, be
+     * that the other route's end or a point in its middle.
      *
-     * @param route    the route whose ends are checked
+     * @param route    the route whose points are checked
      * @param routes   all routes of the map, the checked one included
      * @param distance the link distance, in blocks
-     * @return the linked ends of {@code route}
+     * @return the linked points of {@code route}
      */
-    static Set<Vec> linkedEnds(CreekRoute route, List<CreekRoute> routes, double distance) {
+    static Set<Vec> linkedPoints(CreekRoute route, List<CreekRoute> routes, double distance) {
         Set<Vec> linked = new HashSet<>();
-        for (Vec end : ends(route)) {
-            for (CreekRoute other : routes) {
-                if (other.name().equals(route.name())) continue;
-                for (Vec otherEnd : ends(other)) {
-                    if (end.distance(otherEnd) <= distance) linked.add(end);
-                }
+        for (CreekRoute other : routes) {
+            if (other.name().equals(route.name())) continue;
+            // This route's ends, reaching any point of the other route.
+            for (Vec end : ends(route)) {
+                if (nearest(other, end, distance) != null) linked.add(end);
+            }
+            // The other route's ends, reaching a point of this one.
+            for (Vec otherEnd : ends(other)) {
+                Vec point = nearest(route, otherEnd, distance);
+                if (point != null) linked.add(point);
             }
         }
         return linked;
+    }
+
+    private static @Nullable Vec nearest(CreekRoute route, Vec position, double distance) {
+        Vec nearest = null;
+        double best = distance;
+        for (CreekWaypoint point : route.points()) {
+            double away = point.position().distance(position);
+            if (away <= best) {
+                best = away;
+                nearest = point.position();
+            }
+        }
+        return nearest;
     }
 
     private static List<Vec> ends(CreekRoute route) {
