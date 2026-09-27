@@ -9,7 +9,6 @@ import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +31,7 @@ final class Creek {
     private final CreekBody body;
     private final RouteProvider route;
     private final CreekRound round;
-    private final CreekActions actions = new Actions();
     private CreekState state;
-    private @Nullable SurvivorSnapshot survivors;
-    private Set<UUID> ignored = Set.of();
     private List<SurvivorView> lastViews = List.of();
     private boolean entered;
 
@@ -103,12 +99,11 @@ final class Creek {
      * Fills in who sees this creek and builds the context for the states.
      */
     private CreekContext context(SurvivorSnapshot survivors, Set<UUID> ignored, long now) {
-        this.survivors = survivors;
-        this.ignored = ignored;
         this.lastViews = this.views(survivors);
         List<SurvivorView> noticed = ignored.isEmpty() ? this.lastViews
                 : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
-        return new CreekContext(now, noticed, this.body, this.route, this.round.spots(), this.actions,
+        return new CreekContext(now, noticed, this.body, this.route, this.round.spots(),
+                new Actions(this.round, survivors, ignored),
                 this.round.config(), this.round.random());
     }
 
@@ -166,34 +161,34 @@ final class Creek {
     }
 
     /**
-     * Applies the consequences to survivors of the current step. Anyone who is no longer among
-     * them is left alone.
+     * Applies the consequences to the survivors of one step. Anyone who is no longer among them is
+     * left alone, and so is everyone this creek ignores in that step.
+     *
+     * @param round     what the creek shares with the others of the round
+     * @param survivors the survivors of the step
+     * @param ignored   the survivors the creek leaves alone in the step
      */
-    private final class Actions implements CreekActions {
+    private record Actions(CreekRound round, SurvivorSnapshot survivors, Set<UUID> ignored) implements CreekActions {
 
         @Override
         public void caught(UUID survivor) {
-            SurvivorSnapshot current = Creek.this.survivors;
-            Player player = current == null ? null : current.player(survivor);
-            if (player != null) Creek.this.round.consequence().apply(player);
+            Player player = this.survivors.player(survivor);
+            if (player != null) this.round.consequence().apply(player);
         }
 
         @Override
         public void selected(UUID survivor) {
-            SurvivorSnapshot current = Creek.this.survivors;
-            Player player = current == null ? null : current.player(survivor);
-            if (player != null) Creek.this.round.selection().apply(player, current.players());
+            Player player = this.survivors.player(survivor);
+            if (player != null) this.round.patrol().selected(player, this.survivors.players());
         }
 
         @Override
         public void vanished(Pos where) {
-            SurvivorSnapshot current = Creek.this.survivors;
-            if (current == null) return;
             // Whoever this creek leaves alone does not see it, so they do not see it vanish either.
-            List<Player> noticing = current.players().stream()
-                    .filter(player -> !Creek.this.ignored.contains(player.getUuid()))
+            List<Player> noticing = this.survivors.players().stream()
+                    .filter(player -> !this.ignored.contains(player.getUuid()))
                     .toList();
-            Creek.this.round.selection().vanishAt(where, noticing);
+            this.round.patrol().vanished(where, noticing);
         }
     }
 }

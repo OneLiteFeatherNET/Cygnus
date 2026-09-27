@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.random.RandomGenerator;
 
 /**
@@ -31,6 +32,11 @@ public final class Contexts {
 
     /** Actions that hand every catch and selection to the given consumers. */
     public static CreekActions actions(Consumer<UUID> caught, Consumer<UUID> selected) {
+        return actions(caught, selected, _ -> {});
+    }
+
+    /** Actions that hand every catch, selection and vanish to the given consumers. */
+    public static CreekActions actions(Consumer<UUID> caught, Consumer<UUID> selected, Consumer<Pos> vanished) {
         return new CreekActions() {
             @Override
             public void caught(UUID survivor) {
@@ -44,6 +50,22 @@ public final class Contexts {
 
             @Override
             public void vanished(Pos where) {
+                vanished.accept(where);
+            }
+        };
+    }
+
+    /** A random source that answers every roll with the given value. */
+    public static RandomGenerator rolling(double value) {
+        return new RandomGenerator() {
+            @Override
+            public long nextLong() {
+                return 0L;
+            }
+
+            @Override
+            public double nextDouble() {
+                return value;
             }
         };
     }
@@ -74,9 +96,19 @@ public final class Contexts {
 
     /** The defaults with other random stops. */
     static CreekConfig randomStops(double chance, int minMillis, int maxMillis) {
+        return copy(CreekConfig.DEFAULT.activeWithLastSurvivor(), chance, minMillis, maxMillis);
+    }
+
+    /** The defaults, but the creek sits out the round once only one survivor is left. */
+    public static CreekConfig withoutLastSurvivor() {
+        CreekConfig d = CreekConfig.DEFAULT;
+        return copy(false, d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis());
+    }
+
+    private static CreekConfig copy(boolean activeWithLastSurvivor, double chance, int minMillis, int maxMillis) {
         CreekConfig d = CreekConfig.DEFAULT;
         return new CreekConfig(
-                d.enabled(), d.activeWithLastSurvivor(), d.sightRange(), d.sightViewAngle(),
+                d.enabled(), activeWithLastSurvivor, d.sightRange(), d.sightViewAngle(),
                 d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
                 d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
                 d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
@@ -91,7 +123,7 @@ public final class Contexts {
     public static RouteProvider route(Pos... points) {
         return new RouteProvider() {
             @Override
-            public Optional<RouteStep> next(Pos current, java.util.function.Predicate<Pos> allowed,
+            public Optional<RouteStep> next(Pos current, Predicate<Pos> allowed,
                                             RandomGenerator random) {
                 return Arrays.stream(points)
                         .filter(point -> point.distance(current) >= 1.0D)

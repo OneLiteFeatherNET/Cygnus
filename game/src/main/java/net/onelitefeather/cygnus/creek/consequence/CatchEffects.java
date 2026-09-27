@@ -66,7 +66,16 @@ public final class CatchEffects implements CatchConsequence {
     }
 
     private static void scareWithoutCorpse(Player survivor) {
-        survivor.playSound(Sound.sound(SCARE_SOUND, Sound.Source.HOSTILE, 1.0F, 0.6F));
+        playScare(survivor);
         survivor.addEffect(new Potion(PotionEffect.DARKNESS, 0, SCARE_DARKNESS_TICKS));
+    }
+
+    /**
+     * Plays the creek's scare sound to a player.
+     *
+     * @param player the player
+     */
+    static void playScare(Player player) {
+        player.playSound(Sound.sound(SCARE_SOUND, Sound.Source.HOSTILE, 1.0F, 0.6F));
     }
 }

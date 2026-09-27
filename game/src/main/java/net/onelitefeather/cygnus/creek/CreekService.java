@@ -10,7 +10,7 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
-import net.onelitefeather.cygnus.creek.consequence.SelectionConsequence;
+import net.onelitefeather.cygnus.creek.consequence.PatrolConsequence;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.creek.state.CreekState;
@@ -21,7 +21,6 @@ import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.Ground;
 import net.onelitefeather.cygnus.creek.world.InstanceGround;
 import net.onelitefeather.cygnus.creek.world.PathRoute;
-import net.onelitefeather.cygnus.creek.world.RouteProvider;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
@@ -71,8 +70,7 @@ public final class CreekService {
     private final Ground ground;
     private final SpotFinder spots;
     private final Supplier<List<CreekRoute>> routes;
-    private volatile @Nullable RouteProvider route;
-    private volatile @Nullable SelectionConsequence selection;
+    private volatile @Nullable CreekRound round;
     private final RepeatingTask task = new RepeatingTask(this::tick);
     private volatile @Nullable Creek creek;
     private volatile @Nullable CreekVariants variants;
@@ -135,22 +133,19 @@ public final class CreekService {
         }
         // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
-        this.route = pathRoute;
-        SelectionConsequence selection = new SelectionConsequence(paths::allPoints, this.ground, this.random);
-        this.selection = selection;
+        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence,
+                new PatrolConsequence(paths::allPoints, this.ground, this.random), this.config, this.random);
+        this.round = round;
         List<Pos> points = paths.allPoints();
 
         this.clock.start();
         Pos point = points.get(this.random.nextInt(points.size()));
         CreekBody body = this.bodies.apply(world, this.ground.settle(point).orElse(point));
-        // Start hidden. The creek only shows up once the survivors have had time to spread out,
-        // somewhere far away from all of them.
-        CreekState initial = new VanishState(this.clock.now() + this.config.vanishMinSeconds() * 1000L);
-        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, selection, this.config,
-                this.random);
-        this.creek = new Creek(body, pathRoute, round, initial);
-        long variantsFrom = this.clock.now() + this.config.vanishMinSeconds() * 1000L;
-        this.variants = new CreekVariants(this.config, this.spots, this.random, variantsFrom,
+        // Start hidden. The creek and its variants only show up once the survivors have had time to
+        // spread out, the creek somewhere far away from all of them.
+        long showsUp = this.clock.now() + this.config.vanishMinSeconds() * 1000L;
+        this.creek = new Creek(body, pathRoute, round, new VanishState(showsUp));
+        this.variants = new CreekVariants(this.config, this.spots, this.random, showsUp,
                 (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state));
         this.debug.setActive(true);
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
@@ -185,7 +180,7 @@ public final class CreekService {
             Function<UUID, String> names = id -> nameOf(survivors, id);
             List<SurvivorView> views = current.lastViews();
             Component line = CreekDebug.line(current.state(), current.body().position(), views, names,
-                    describeRoute(), now);
+                    current.route().describe(), now);
             if (currentVariants != null) {
                 List<CreekState> states = currentVariants.running().values().stream().map(Creek::state).toList();
                 line = line.append(CreekDebug.variants(states, CreekVariants.capacity(views.size()), names, now));
@@ -209,13 +204,12 @@ public final class CreekService {
         if (currentVariants != null) currentVariants.stop();
         Creek current = this.creek;
         this.creek = null;
-        this.route = null;
         this.clock.reset();
         if (current != null) current.remove();
         this.consequence.cleanUp();
-        SelectionConsequence currentSelection = this.selection;
-        this.selection = null;
-        if (currentSelection != null) currentSelection.cleanUp();
+        CreekRound currentRound = this.round;
+        this.round = null;
+        if (currentRound != null) currentRound.patrol().cleanUp();
         this.debug.setActive(false);
     }
 
@@ -227,12 +221,4 @@ public final class CreekService {
         return this.variants;
     }
 
-    private String describeRoute() {
-        RouteProvider current = this.route;
-        return current == null ? "" : current.describe();
-    }
-
-    @Nullable RouteProvider route() {
-        return this.route;
-    }
 }
