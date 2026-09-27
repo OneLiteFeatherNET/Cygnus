@@ -44,8 +44,8 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
     private static final SelectionConsequence SELECTION = new SelectionConsequence(List::of, Optional::of, new Random(1));
 
     private static BiFunction<Pos, CreekState, Creek> spawner(Instance instance, CreekConfig config, SpotFinder spots) {
-        return (spot, initial) -> new Creek(CreakingBody.spawn(instance, spot), SIGHT, (_, _, _) -> 0.0D,
-                Contexts.route(), spots, NO_CATCH, SELECTION, config, new Random(3), initial);
+        CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, SELECTION, config, new Random(3));
+        return (spot, initial) -> new Creek(CreakingBody.spawn(instance, spot), Contexts.route(), round, initial);
     }
 
     private static CreekVariants variants(Instance instance, CreekConfig config, Ground ground, long allowedAt) {
@@ -71,8 +71,8 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         List<Player> survivors = List.of(first, second);
         List<SurvivorView> views = List.of(view(first, 0.5D), view(second, 0.3D));
 
-        variants.tick(survivors, views, 0L);
-        variants.tick(survivors, views, 100L);
+        variants.tick(new SurvivorSnapshot(survivors, views), 0L);
+        variants.tick(new SurvivorSnapshot(survivors, views), 100L);
 
         assertEquals(1, variants.running().size(), "two survivors allow one variant");
         Creek variant = variants.running().get(first.getUuid());
@@ -90,8 +90,8 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
                 view(survivors.get(2), 0.3D), view(survivors.get(3), 0.0D), view(survivors.get(4), 0.0D));
         CreekVariants variants = variants(instance, CONFIG, Optional::of, 0L);
 
-        variants.tick(survivors, views, 0L);
-        variants.tick(survivors, views, 100L);
+        variants.tick(new SurvivorSnapshot(survivors, views), 0L);
+        variants.tick(new SurvivorSnapshot(survivors, views), 100L);
 
         assertEquals(2, variants.running().size());
         assertTrue(variants.running().containsKey(survivors.get(0).getUuid()));
@@ -105,7 +105,7 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         Player first = join(env, instance, 0);
         CreekVariants variants = variants(instance, CONFIG, Optional::of, 1000L);
 
-        variants.tick(List.of(first), List.of(view(first, 0.9D)), 999L);
+        variants.tick(new SurvivorSnapshot(List.of(first), List.of(view(first, 0.9D))), 999L);
 
         assertTrue(variants.running().isEmpty());
     }
@@ -119,19 +119,19 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         List<Player> survivors = List.of(first, second);
         List<SurvivorView> views = List.of(view(first, 0.5D), view(second, 0.0D));
         CreekVariants variants = variants(instance, CONFIG, Optional::of, 0L);
-        variants.tick(survivors, views, 0L);
+        variants.tick(new SurvivorSnapshot(survivors, views), 0L);
         Creek variant = variants.running().get(first.getUuid());
 
         // the stalk lasts at most stalkMaxSeconds (90 s)
-        variants.tick(survivors, views, 100_000L);
+        variants.tick(new SurvivorSnapshot(survivors, views), 100_000L);
         assertTrue(variants.running().isEmpty());
         assertTrue(variant.body().entity().isRemoved());
 
         // dread 0.5 gives a 30 s cooldown with the default vanish times
-        variants.tick(survivors, views, 129_999L);
+        variants.tick(new SurvivorSnapshot(survivors, views), 129_999L);
         assertTrue(variants.running().isEmpty());
 
-        variants.tick(survivors, views, 130_000L);
+        variants.tick(new SurvivorSnapshot(survivors, views), 130_000L);
         assertEquals(1, variants.running().size());
     }
 
@@ -142,10 +142,10 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         Player first = join(env, instance, 0);
         Player second = join(env, instance, 10);
         CreekVariants variants = variants(instance, CONFIG, Optional::of, 0L);
-        variants.tick(List.of(first, second), List.of(view(first, 0.5D), view(second, 0.0D)), 0L);
+        variants.tick(new SurvivorSnapshot(List.of(first, second), List.of(view(first, 0.5D), view(second, 0.0D))), 0L);
         Creek variant = variants.running().get(first.getUuid());
 
-        variants.tick(List.of(second), List.of(view(second, 0.0D)), 100L);
+        variants.tick(new SurvivorSnapshot(List.of(second), List.of(view(second, 0.0D))), 100L);
 
         assertTrue(variants.running().isEmpty());
         assertTrue(variant.body().entity().isRemoved());
@@ -160,9 +160,9 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         List<SurvivorView> views = List.of(view(survivors.get(0), 0.5D), view(survivors.get(1), 0.4D),
                 view(survivors.get(2), 0.3D), view(survivors.get(3), 0.0D), view(survivors.get(4), 0.0D));
         CreekVariants variants = variants(instance, CONFIG, Optional::of, 0L);
-        variants.tick(survivors, views, 0L);
+        variants.tick(new SurvivorSnapshot(survivors, views), 0L);
 
-        variants.tick(survivors.subList(0, 4), views.subList(0, 4), 100L);
+        variants.tick(new SurvivorSnapshot(survivors.subList(0, 4), views.subList(0, 4)), 100L);
 
         assertEquals(2, variants.running().size());
     }
@@ -176,11 +176,11 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         CreekVariants variants = variants(instance, CONFIG,
                 candidate -> floor.get() ? Optional.of(candidate) : Optional.empty(), 0L);
 
-        variants.tick(List.of(first), List.of(view(first, 0.5D)), 0L);
+        variants.tick(new SurvivorSnapshot(List.of(first), List.of(view(first, 0.5D))), 0L);
         assertTrue(variants.running().isEmpty());
 
         floor.set(true);
-        variants.tick(List.of(first), List.of(view(first, 0.5D)), 100L);
+        variants.tick(new SurvivorSnapshot(List.of(first), List.of(view(first, 0.5D))), 100L);
         assertEquals(1, variants.running().size());
     }
 
@@ -194,7 +194,7 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         CreekVariants variants = variants(instance, CONFIG,
                 candidate -> candidate.x() > 100 ? Optional.of(candidate) : Optional.empty(), 0L);
 
-        variants.tick(List.of(first, second), List.of(view(first, 0.5D), view(second, 0.3D)), 0L);
+        variants.tick(new SurvivorSnapshot(List.of(first, second), List.of(view(first, 0.5D), view(second, 0.3D))), 0L);
 
         assertEquals(List.of(second.getUuid()), List.copyOf(variants.running().keySet()));
     }
@@ -205,7 +205,7 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player first = join(env, instance, 0);
         CreekVariants variants = variants(instance, CONFIG, Optional::of, 0L);
-        variants.tick(List.of(first), List.of(view(first, 0.5D)), 0L);
+        variants.tick(new SurvivorSnapshot(List.of(first), List.of(view(first, 0.5D))), 0L);
         Creek variant = variants.running().get(first.getUuid());
 
         variants.stop();

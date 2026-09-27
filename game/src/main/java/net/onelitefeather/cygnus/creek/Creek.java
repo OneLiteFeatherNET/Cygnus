@@ -1,34 +1,23 @@
 package net.onelitefeather.cygnus.creek;
 
-import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
-import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
-import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
-import net.onelitefeather.cygnus.creek.consequence.SelectionConsequence;
-import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.state.VanishState;
-import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
-import net.onelitefeather.cygnus.creek.world.SpotFinder;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.random.RandomGenerator;
 
 /**
  * One creek in the round: its body, what it is doing right now, and the step that moves it on.
  * <p>
- * The patrolling creek is one of these, and so is every variant. Each step it takes a snapshot of
- * the survivors and lets its current state decide what happens next.
+ * The patrolling creek is one of these, and so is every variant. Each step it fills in who can see
+ * it in the shared snapshot of the survivors and lets its current state decide what happens next.
  * </p>
  *
  * @author theEvilReaper
@@ -38,40 +27,34 @@ import java.util.random.RandomGenerator;
 final class Creek {
 
     private final CreekBody body;
-    private final CreekSight sight;
-    private final DreadSource dread;
     private final RouteProvider route;
-    private final SpotFinder spots;
-    private final CatchConsequence consequence;
-    private final SelectionConsequence selection;
-    private final CreekConfig config;
-    private final RandomGenerator random;
+    private final CreekRound round;
     private CreekState state;
     private List<SurvivorView> lastViews = List.of();
     private boolean entered;
 
-    Creek(CreekBody body, CreekSight sight, DreadSource dread, RouteProvider route, SpotFinder spots,
-            CatchConsequence consequence, SelectionConsequence selection, CreekConfig config, RandomGenerator random,
-            CreekState initial) {
+    /**
+     * Sets up a creek.
+     *
+     * @param body    its body in the world
+     * @param route   its own walker along the routes
+     * @param round   what it shares with every other creek of the round
+     * @param initial the state it starts in
+     */
+    Creek(CreekBody body, RouteProvider route, CreekRound round, CreekState initial) {
         this.body = body;
-        this.sight = sight;
-        this.dread = dread;
         this.route = route;
-        this.spots = spots;
-        this.consequence = consequence;
-        this.selection = selection;
-        this.config = config;
-        this.random = random;
+        this.round = round;
         this.state = initial;
     }
 
     /**
      * Runs one step.
      *
-     * @param survivors the survivors of the round
+     * @param survivors the survivors of this step
      * @param now       the current time in milliseconds
      */
-    void tick(Collection<Player> survivors, long now) {
+    void tick(SurvivorSnapshot survivors, long now) {
         this.tick(survivors, Set.of(), now);
     }
 
@@ -82,11 +65,11 @@ final class Creek {
      * The snapshots in {@link #lastViews()} still cover every survivor.
      * </p>
      *
-     * @param survivors the survivors of the round
+     * @param survivors the survivors of this step
      * @param ignored   the survivors this creek leaves alone in this step
      * @param now       the current time in milliseconds
      */
-    void tick(Collection<Player> survivors, Set<UUID> ignored, long now) {
+    void tick(SurvivorSnapshot survivors, Set<UUID> ignored, long now) {
         CreekContext ctx = this.context(survivors, ignored, now);
         if (!this.entered) {
             this.state.enter(ctx);
@@ -99,10 +82,10 @@ final class Creek {
     /**
      * Sends the creek away for the rest of the round. Calling it again changes nothing.
      *
-     * @param survivors the survivors of the round
+     * @param survivors the survivors of this step
      * @param now       the current time in milliseconds
      */
-    void vanishForGood(Collection<Player> survivors, long now) {
+    void vanishForGood(SurvivorSnapshot survivors, long now) {
         CreekContext ctx = this.context(survivors, Set.of(), now);
         if (this.state instanceof VanishState vanish && vanish.isForever()) return;
         // The state it had so far is never entered now, and never needs to be.
@@ -111,49 +94,44 @@ final class Creek {
     }
 
     /**
-     * Takes the snapshots for this step and builds the context for the states.
+     * Fills in who sees this creek and builds the context for the states.
      */
-    private CreekContext context(Collection<Player> survivors, Set<UUID> ignored, long now) {
-        Map<UUID, Player> players = new HashMap<>();
-        for (Player survivor : survivors) {
-            players.put(survivor.getUuid(), survivor);
-        }
+    private CreekContext context(SurvivorSnapshot survivors, Set<UUID> ignored, long now) {
         this.lastViews = this.views(survivors);
         List<SurvivorView> noticed = ignored.isEmpty() ? this.lastViews
                 : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
-        return new CreekContext(now, noticed, this.body, this.route, this.spots,
+        CreekRound round = this.round;
+        return new CreekContext(now, noticed, this.body, this.route, round.spots(),
                 id -> {
-                    Player caught = players.get(id);
-                    if (caught != null) this.consequence.apply(caught);
+                    Player caught = survivors.player(id);
+                    if (caught != null) round.consequence().apply(caught);
                 },
                 id -> {
-                    Player selected = players.get(id);
-                    if (selected != null) this.selection.apply(selected, survivors);
+                    Player selected = survivors.player(id);
+                    if (selected != null) round.selection().apply(selected, survivors.players());
                 },
-                this.config, this.random);
+                round.config(), round.random());
     }
 
     /**
-     * Takes a snapshot of every survivor for the states.
+     * Tells for every survivor whether they see this creek.
      * <p>
      * A survivor only counts as seeing the creek if it is shown to them at all. A variant is hidden
      * from everyone but its target, so the others must not be able to scare it off.
      * </p>
      *
-     * @param survivors the survivors of the round
+     * @param survivors the survivors of this step
      * @return one view per survivor
      */
-    List<SurvivorView> views(Collection<Player> survivors) {
-        List<SurvivorView> views = new ArrayList<>(survivors.size());
-        for (Player survivor : survivors) {
-            Pos position = survivor.getPosition();
-            List<Pos> others = new ArrayList<>();
-            for (Player other : survivors) {
-                if (other != survivor) others.add(other.getPosition());
-            }
-            boolean sees = this.body.isVisibleTo(survivor.getUuid()) && this.sight.sees(survivor, this.body.entity());
-            views.add(new SurvivorView(survivor.getUuid(), position,
-                    this.dread.dreadOf(survivor.getUuid(), position, others), sees));
+    List<SurvivorView> views(SurvivorSnapshot survivors) {
+        List<Player> players = survivors.players();
+        List<SurvivorView> base = survivors.views();
+        List<SurvivorView> views = new ArrayList<>(players.size());
+        for (int index = 0; index < players.size(); index++) {
+            Player survivor = players.get(index);
+            boolean sees = this.body.isVisibleTo(survivor.getUuid())
+                    && this.round.sight().sees(survivor, this.body.entity());
+            views.add(base.get(index).withSeesCreek(sees));
         }
         return views;
     }

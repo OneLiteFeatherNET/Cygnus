@@ -41,8 +41,14 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         CreekSight sight = new CreekSight(config.sightRange(), config.sightViewAngle());
         // No route points: a selection always ends in the stun.
         SelectionConsequence selection = new SelectionConsequence(List::of, Optional::of, new Random(3));
-        return new Creek(body, sight, (_, _, _) -> 0.0D, Contexts.route(), new SpotFinder(sight, Optional::of),
-                _ -> {}, selection, config, new Random(3), initial);
+        CreekRound round = new CreekRound(sight, new SpotFinder(sight, Optional::of), _ -> {}, selection, config,
+                new Random(3));
+        return new Creek(body, Contexts.route(), round, initial);
+    }
+
+    /** A snapshot of the players, none of them scared. */
+    private static SurvivorSnapshot survivors(Player... players) {
+        return SurvivorSnapshot.take(List.of(players), (_, _, _) -> 0.0D);
     }
 
     @Test
@@ -53,7 +59,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         Player slender = env.createConnection().connect(instance, new Pos(3, 40, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
 
-        creek(body, CreekConfig.DEFAULT, new PatrolState()).tick(List.of(survivor), 0L);
+        creek(body, CreekConfig.DEFAULT, new PatrolState()).tick(survivors(survivor), 0L);
 
         assertTrue(body.entity().getViewers().contains(survivor));
         assertFalse(body.entity().getViewers().contains(slender));
@@ -66,9 +72,9 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
         Creek creek = creek(body, CreekConfig.DEFAULT, new PatrolState());
-        creek.tick(List.of(survivor), 0L);
+        creek.tick(survivors(survivor), 0L);
 
-        assertTrue(creek.views(List.of(survivor)).getFirst().seesCreek());
+        assertTrue(creek.views(survivors(survivor)).getFirst().seesCreek());
     }
 
     @Test
@@ -79,9 +85,9 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         Player other = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
         Creek creek = creek(body, CreekConfig.DEFAULT, new StalkState(target.getUuid(), Long.MAX_VALUE));
-        creek.tick(List.of(target, other), 0L);
+        creek.tick(survivors(target, other), 0L);
 
-        SurvivorView otherView = creek.views(List.of(target, other)).stream()
+        SurvivorView otherView = creek.views(survivors(target, other)).stream()
                 .filter(view -> view.id().equals(other.getUuid()))
                 .findFirst().orElseThrow();
         assertFalse(otherView.seesCreek());
@@ -95,9 +101,9 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         Player other = env.createConnection().connect(instance, new Pos(40, 40, 40));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 10));
         Creek creek = creek(body, CreekConfig.DEFAULT, new HuntState(target.getUuid(), Long.MAX_VALUE));
-        creek.tick(List.of(target, other), 0L);
+        creek.tick(survivors(target, other), 0L);
 
-        creek.tick(List.of(other), 100L);
+        creek.tick(survivors(other), 100L);
 
         assertInstanceOf(DoneState.class, creek.state());
         assertTrue(body.entity().getViewers().isEmpty());
@@ -110,11 +116,11 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 30));
         Creek creek = creek(body, CreekConfig.DEFAULT, new PatrolState());
-        creek.tick(List.of(survivor), 0L);
+        creek.tick(survivors(survivor), 0L);
 
-        creek.vanishForGood(List.of(survivor), 100L);
+        creek.vanishForGood(survivors(survivor), 100L);
         CreekState vanished = creek.state();
-        creek.vanishForGood(List.of(survivor), 200L);
+        creek.vanishForGood(survivors(survivor), 200L);
 
         assertTrue(((VanishState) vanished).isForever());
         assertSame(vanished, creek.state(), "calling it again changes nothing");
@@ -139,7 +145,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
             }
         };
 
-        creek(body, CreekConfig.DEFAULT, selecting).tick(List.of(survivor), 0L);
+        creek(body, CreekConfig.DEFAULT, selecting).tick(survivors(survivor), 0L);
 
         assertTrue(survivor.hasEffect(PotionEffect.SLOWNESS));
     }
@@ -153,7 +159,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
 
         creek(body, CreekConfig.DEFAULT, new PatrolState())
-                .tick(List.of(haunted, other), Set.of(haunted.getUuid()), 0L);
+                .tick(survivors(haunted, other), Set.of(haunted.getUuid()), 0L);
 
         assertFalse(body.isVisibleTo(haunted.getUuid()));
         assertTrue(body.isVisibleTo(other.getUuid()));
@@ -168,8 +174,8 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 2));
         Creek creek = creek(body, CreekConfig.DEFAULT, new PatrolState());
 
-        creek.tick(List.of(haunted, other), Set.of(haunted.getUuid()), 0L);
-        creek.tick(List.of(haunted, other), Set.of(haunted.getUuid()), 1000L);
+        creek.tick(survivors(haunted, other), Set.of(haunted.getUuid()), 0L);
+        creek.tick(survivors(haunted, other), Set.of(haunted.getUuid()), 1000L);
 
         assertFalse(haunted.hasEffect(PotionEffect.SLOWNESS));
         assertEquals(2, creek.lastViews().size(), "the snapshots still cover every survivor");

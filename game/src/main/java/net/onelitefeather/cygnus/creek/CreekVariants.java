@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.creek;
 
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.DoneState;
@@ -9,7 +8,6 @@ import net.onelitefeather.cygnus.creek.state.StalkState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -118,12 +116,12 @@ final class CreekVariants {
      * Runs one step: lets every variant act, clears away the finished ones and starts new ones
      * while there is room.
      *
-     * @param survivors the survivors of the round
-     * @param views     a snapshot of every survivor, for their dread and position
+     * @param survivors the survivors of this step
      * @param now       the current time in milliseconds
      */
-    void tick(Collection<Player> survivors, List<SurvivorView> views, long now) {
-        this.tickRunning(survivors, views, now);
+    void tick(SurvivorSnapshot survivors, long now) {
+        List<SurvivorView> views = survivors.views();
+        this.tickRunning(survivors, now);
         if (now < this.allowedAt) return;
         // Someone with no free spot next to them should not hold up everyone behind them.
         Set<UUID> noSpot = new HashSet<>();
@@ -160,7 +158,7 @@ final class CreekVariants {
         this.cooldowns.clear();
     }
 
-    private void tickRunning(Collection<Player> survivors, List<SurvivorView> views, long now) {
+    private void tickRunning(SurvivorSnapshot survivors, long now) {
         Iterator<Map.Entry<UUID, Creek>> iterator = this.running.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<UUID, Creek> entry = iterator.next();
@@ -169,7 +167,7 @@ final class CreekVariants {
             if (!(variant.state() instanceof DoneState)) continue;
             variant.remove();
             iterator.remove();
-            long cooldown = cooldownMillis(this.config, dreadOf(views, entry.getKey()));
+            long cooldown = cooldownMillis(this.config, dreadOf(survivors.views(), entry.getKey()));
             this.cooldowns.put(entry.getKey(), now + cooldown);
         }
     }

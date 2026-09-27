@@ -146,13 +146,12 @@ public final class CreekService {
         // Start hidden. The creek only shows up once the survivors have had time to spread out,
         // somewhere far away from all of them.
         CreekState initial = new VanishState(this.clock.now() + this.config.vanishMinSeconds() * 1000L);
-        this.creek = new Creek(body, this.sight, this.dread, pathRoute, this.spots, this.consequence, selection,
-                this.config, this.random, initial);
+        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, selection, this.config,
+                this.random);
+        this.creek = new Creek(body, pathRoute, round, initial);
         long variantsFrom = this.clock.now() + this.config.vanishMinSeconds() * 1000L;
         this.variants = new CreekVariants(this.config, this.spots, this.random, variantsFrom,
-                (spot, state) -> new Creek(this.bodies.apply(world, spot), this.sight, this.dread,
-                        new PathRoute(paths), this.spots, this.consequence, selection, this.config, this.random,
-                        state));
+                (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state));
         this.debug.setActive(true);
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }
@@ -168,21 +167,22 @@ public final class CreekService {
     void tick() {
         Creek current = this.creek;
         if (current == null) return;
-        Set<Player> players = this.survivors.get();
+        // One snapshot for every creek: where the survivors are and how scared they are is the same for all.
+        SurvivorSnapshot survivors = SurvivorSnapshot.take(this.survivors.get(), this.dread);
         long now = this.clock.now();
         CreekVariants currentVariants = this.variants;
         // Count every survivor here: hiding the patrol from the haunted is not being down to the last one.
-        if (!this.config.activeWithLastSurvivor() && players.size() <= 1) {
-            current.vanishForGood(players, now);
+        if (!this.config.activeWithLastSurvivor() && survivors.size() <= 1) {
+            current.vanishForGood(survivors, now);
             if (currentVariants != null) currentVariants.stop();
         } else {
             // A haunted survivor already has a creek of their own, so the patrolling one leaves them be.
             Set<UUID> haunted = currentVariants == null ? Set.of() : currentVariants.running().keySet();
-            current.tick(players, haunted, now);
-            if (currentVariants != null) currentVariants.tick(players, current.lastViews(), now);
+            current.tick(survivors, haunted, now);
+            if (currentVariants != null) currentVariants.tick(survivors, now);
         }
         if (this.debug.hasWatchers()) {
-            Function<UUID, String> names = id -> nameOf(players, id);
+            Function<UUID, String> names = id -> nameOf(survivors, id);
             List<SurvivorView> views = current.lastViews();
             Component line = CreekDebug.line(current.state(), current.body().position(), views, names,
                     describeRoute(), now);
@@ -194,11 +194,9 @@ public final class CreekService {
         }
     }
 
-    private static String nameOf(Set<Player> players, UUID id) {
-        for (Player player : players) {
-            if (player.getUuid().equals(id)) return player.getUsername();
-        }
-        return id.toString().substring(0, 8);
+    private static String nameOf(SurvivorSnapshot survivors, UUID id) {
+        Player player = survivors.player(id);
+        return player != null ? player.getUsername() : id.toString().substring(0, 8);
     }
 
     /**
