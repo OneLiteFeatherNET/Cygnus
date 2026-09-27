@@ -158,6 +158,10 @@ public final class CreekService {
     /**
      * Runs one step: first the patrolling creek, then the variants. Survivors with a variant do not
      * see the patrolling creek, and it does not pick them out.
+     * <p>
+     * Once only one survivor is left and {@code activeWithLastSurvivor} is off, the patrolling creek
+     * is gone for good and every variant ends.
+     * </p>
      */
     void tick() {
         Creek current = this.creek;
@@ -165,10 +169,16 @@ public final class CreekService {
         Set<Player> players = this.survivors.get();
         long now = this.clock.now();
         CreekVariants currentVariants = this.variants;
-        // A haunted survivor already has a creek of their own, so the patrolling one leaves them be.
-        Set<UUID> haunted = currentVariants == null ? Set.of() : currentVariants.running().keySet();
-        current.tick(players, haunted, now);
-        if (currentVariants != null) currentVariants.tick(players, current.lastViews(), now);
+        // Count every survivor here: hiding the patrol from the haunted is not being down to the last one.
+        if (!this.config.activeWithLastSurvivor() && players.size() <= 1) {
+            current.vanishForGood(players, now);
+            if (currentVariants != null) currentVariants.stop();
+        } else {
+            // A haunted survivor already has a creek of their own, so the patrolling one leaves them be.
+            Set<UUID> haunted = currentVariants == null ? Set.of() : currentVariants.running().keySet();
+            current.tick(players, haunted, now);
+            if (currentVariants != null) currentVariants.tick(players, current.lastViews(), now);
+        }
         if (this.debug.hasWatchers()) {
             Function<UUID, String> names = id -> nameOf(players, id);
             List<SurvivorView> views = current.lastViews();

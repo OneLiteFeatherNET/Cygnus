@@ -7,7 +7,6 @@ import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.DoneState;
 import net.onelitefeather.cygnus.creek.state.StalkState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
-import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 
 import java.util.Collection;
@@ -86,6 +85,20 @@ final class CreekVariants {
     }
 
     /**
+     * How long a survivor's breather after a variant lasts: {@code vanishMaxSeconds} for a calm
+     * survivor, down to {@code vanishMinSeconds} for one who is scared to death.
+     *
+     * @param config the settings
+     * @param dread  the survivor's dread
+     * @return the breather in milliseconds
+     */
+    static long cooldownMillis(CreekConfig config, double dread) {
+        double span = config.vanishMaxSeconds() - config.vanishMinSeconds();
+        double seconds = config.vanishMaxSeconds() - span * Math.clamp(dread, 0.0D, 1.0D);
+        return Math.round(seconds * 1000.0D);
+    }
+
+    /**
      * Picks who to haunt next: the survivor with the highest dread, as long as it reaches the
      * threshold. If two are equally scared, the one who strayed farthest from the others.
      *
@@ -110,10 +123,6 @@ final class CreekVariants {
      * @param now       the current time in milliseconds
      */
     void tick(Collection<Player> survivors, List<SurvivorView> views, long now) {
-        if (!this.config.activeWithLastSurvivor() && views.size() <= 1) {
-            this.stop();
-            return;
-        }
         this.tickRunning(survivors, views, now);
         if (now < this.allowedAt) return;
         // Someone with no free spot next to them should not hold up everyone behind them.
@@ -160,7 +169,7 @@ final class CreekVariants {
             if (!(variant.state() instanceof DoneState)) continue;
             variant.remove();
             iterator.remove();
-            long cooldown = VanishState.cooldownMillis(this.config, dreadOf(views, entry.getKey()));
+            long cooldown = cooldownMillis(this.config, dreadOf(views, entry.getKey()));
             this.cooldowns.put(entry.getKey(), now + cooldown);
         }
     }
