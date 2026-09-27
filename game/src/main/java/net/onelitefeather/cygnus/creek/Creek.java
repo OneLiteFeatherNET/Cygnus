@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.creek;
 
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.state.CreekActions;
@@ -34,6 +35,7 @@ final class Creek {
     private final CreekActions actions = new Actions();
     private CreekState state;
     private @Nullable SurvivorSnapshot survivors;
+    private Set<UUID> ignored = Set.of();
     private List<SurvivorView> lastViews = List.of();
     private boolean entered;
 
@@ -102,6 +104,7 @@ final class Creek {
      */
     private CreekContext context(SurvivorSnapshot survivors, Set<UUID> ignored, long now) {
         this.survivors = survivors;
+        this.ignored = ignored;
         this.lastViews = this.views(survivors);
         List<SurvivorView> noticed = ignored.isEmpty() ? this.lastViews
                 : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
@@ -180,6 +183,17 @@ final class Creek {
             SurvivorSnapshot current = Creek.this.survivors;
             Player player = current == null ? null : current.player(survivor);
             if (player != null) Creek.this.round.selection().apply(player, current.players());
+        }
+
+        @Override
+        public void vanished(Pos where) {
+            SurvivorSnapshot current = Creek.this.survivors;
+            if (current == null) return;
+            // Whoever this creek leaves alone does not see it, so they do not see it vanish either.
+            List<Player> noticing = current.players().stream()
+                    .filter(player -> !Creek.this.ignored.contains(player.getUuid()))
+                    .toList();
+            Creek.this.round.selection().vanishAt(where, noticing);
         }
     }
 }

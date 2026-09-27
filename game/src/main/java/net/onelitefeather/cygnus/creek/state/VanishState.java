@@ -38,6 +38,15 @@ public final class VanishState implements CreekState {
     }
 
     /**
+     * Tells when the creek may come back.
+     *
+     * @return the time in milliseconds, {@link Long#MAX_VALUE} for {@link #forever()}
+     */
+    public long until() {
+        return this.until;
+    }
+
+    /**
      * Tells whether this vanish never ends.
      *
      * @return {@code true} for {@link #forever()}

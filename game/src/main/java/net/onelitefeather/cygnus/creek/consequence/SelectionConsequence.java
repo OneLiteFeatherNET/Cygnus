@@ -6,6 +6,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.onelitefeather.cygnus.creek.world.Ground;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,6 +20,10 @@ import java.util.random.RandomGenerator;
  * It is a coin toss: either the survivor freezes on the spot and everyone standing next to them
  * goes blind for a moment, or they suddenly find themselves somewhere else on the map. It is a
  * scare, not a catch, so it never counts towards giving them away to the slender.
+ * </p>
+ * <p>
+ * When the patrolling creek vanishes at the end of its route, the survivors around it go blind
+ * the same way.
  * </p>
  *
  * @author theEvilReaper
@@ -82,9 +87,28 @@ public final class SelectionConsequence {
     void stun(Player selected, Collection<Player> survivors) {
         scare(selected);
         this.effects.add(selected, new Potion(PotionEffect.SLOWNESS, STUN_AMPLIFIER, STUN_TICKS));
-        Pos center = selected.getPosition();
+        this.blindAround(selected.getPosition(), survivors, selected);
+    }
+
+    /**
+     * The creek vanished: every survivor close by hears it and goes blind for a moment.
+     *
+     * @param where     where the creek vanished
+     * @param survivors the survivors it may blind
+     */
+    public void vanishAt(Pos where, Collection<Player> survivors) {
+        for (Player survivor : survivors) {
+            if (survivor.getPosition().distance(where) <= BLIND_RADIUS) scare(survivor);
+        }
+        this.blindAround(where, survivors, null);
+    }
+
+    /**
+     * Blinds every survivor within {@link #BLIND_RADIUS} of the centre, except the one spared.
+     */
+    private void blindAround(Pos center, Collection<Player> survivors, @Nullable Player spared) {
         for (Player other : survivors) {
-            if (other == selected || other.getPosition().distance(center) > BLIND_RADIUS) continue;
+            if (other == spared || other.getPosition().distance(center) > BLIND_RADIUS) continue;
             this.effects.add(other, new Potion(PotionEffect.BLINDNESS, 0, BLIND_TICKS));
         }
     }
