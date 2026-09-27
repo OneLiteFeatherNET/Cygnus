@@ -16,16 +16,16 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class SelectionConsequenceIntegrationTest extends CygnusPlayerTestBase {
+class PatrolConsequenceIntegrationTest extends CygnusPlayerTestBase {
 
     @Test
     @DisplayName("A stun slows the selected survivor and does not count as a catch")
     void stunSlowsTheSelected(Env env) {
         Instance instance = env.createFlatInstance();
         Player selected = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        SelectionConsequence selection = new SelectionConsequence(List::of, Optional::of, new Random(1));
+        PatrolConsequence patrol = new PatrolConsequence(List::of, Optional::of, new Random(1));
 
-        selection.stun(selected, List.of(selected));
+        patrol.stun(selected, List.of(selected));
 
         assertTrue(selected.hasEffect(PotionEffect.SLOWNESS));
         assertFalse(selected.hasEffect(PotionEffect.BLINDNESS));
@@ -40,9 +40,9 @@ class SelectionConsequenceIntegrationTest extends CygnusPlayerTestBase {
         Player near = env.createConnection().connect(instance, new Pos(5, 40, 0));
         Player far = env.createConnection().connect(instance, new Pos(20, 40, 0));
         Player slender = env.createConnection().connect(instance, new Pos(3, 40, 0));
-        SelectionConsequence selection = new SelectionConsequence(List::of, Optional::of, new Random(1));
+        PatrolConsequence patrol = new PatrolConsequence(List::of, Optional::of, new Random(1));
 
-        selection.stun(selected, List.of(selected, near, far));
+        patrol.stun(selected, List.of(selected, near, far));
 
         assertTrue(near.hasEffect(PotionEffect.BLINDNESS));
         assertFalse(far.hasEffect(PotionEffect.BLINDNESS));
@@ -57,9 +57,9 @@ class SelectionConsequenceIntegrationTest extends CygnusPlayerTestBase {
         Player near = env.createConnection().connect(instance, new Pos(5, 40, 0));
         Player far = env.createConnection().connect(instance, new Pos(20, 40, 0));
         Player slender = env.createConnection().connect(instance, new Pos(3, 40, 0));
-        SelectionConsequence selection = new SelectionConsequence(List::of, Optional::of, new Random(1));
+        PatrolConsequence patrol = new PatrolConsequence(List::of, Optional::of, new Random(1));
 
-        selection.vanishAt(new Pos(0, 40, 0), List.of(near, far));
+        patrol.vanished(new Pos(0, 40, 0), List.of(near, far));
 
         assertTrue(near.hasEffect(PotionEffect.BLINDNESS));
         assertFalse(far.hasEffect(PotionEffect.BLINDNESS));
@@ -72,9 +72,9 @@ class SelectionConsequenceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player selected = env.createConnection().connect(instance, new Pos(0.5, 40, 0.5));
         List<Pos> points = List.of(new Pos(10.5, 40, 0.5), new Pos(30.5, 40, 0.5), new Pos(60.5, 40, 0.5));
-        SelectionConsequence selection = new SelectionConsequence(() -> points, Optional::of, new Random(1));
+        PatrolConsequence patrol = new PatrolConsequence(() -> points, Optional::of, new Random(1));
 
-        assertTrue(selection.teleportAway(selected));
+        assertTrue(patrol.teleportAway(selected));
         env.tick();
 
         assertTrue(selected.getPosition().sameBlock(new Pos(30.5, 40, 0.5)), "stands at " + selected.getPosition());
@@ -86,10 +86,10 @@ class SelectionConsequenceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player selected = env.createConnection().connect(instance, new Pos(0.5, 40, 0.5));
         // The only point is too close. nextBoolean() is false for 0, so apply() tries the teleport first.
-        SelectionConsequence selection = new SelectionConsequence(() -> List.of(new Pos(5.5, 40, 0.5)), Optional::of,
+        PatrolConsequence patrol = new PatrolConsequence(() -> List.of(new Pos(5.5, 40, 0.5)), Optional::of,
                 () -> 0L);
 
-        selection.apply(selected, List.of(selected));
+        patrol.selected(selected, List.of(selected));
         env.tick();
 
         assertTrue(selected.getPosition().sameBlock(new Pos(0.5, 40, 0.5)), "stands at " + selected.getPosition());
@@ -102,10 +102,10 @@ class SelectionConsequenceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player selected = env.createConnection().connect(instance, new Pos(0, 40, 0));
         Player near = env.createConnection().connect(instance, new Pos(5, 40, 0));
-        SelectionConsequence selection = new SelectionConsequence(List::of, Optional::of, new Random(1));
-        selection.stun(selected, List.of(selected, near));
+        PatrolConsequence patrol = new PatrolConsequence(List::of, Optional::of, new Random(1));
+        patrol.stun(selected, List.of(selected, near));
 
-        selection.cleanUp();
+        patrol.cleanUp();
 
         assertFalse(selected.hasEffect(PotionEffect.SLOWNESS));
         assertFalse(near.hasEffect(PotionEffect.BLINDNESS));

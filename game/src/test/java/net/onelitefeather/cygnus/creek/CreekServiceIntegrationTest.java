@@ -15,6 +15,7 @@ import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
+import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.PatrolState;
 import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.PathRoute;
@@ -138,8 +139,9 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
 
         service.start();
 
-        assertInstanceOf(PathRoute.class, service.route());
-        assertNotNull(service.creek());
+        Creek creek = service.creek();
+        assertNotNull(creek);
+        assertInstanceOf(PathRoute.class, creek.route());
         service.stop();
     }
 
@@ -243,7 +245,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("With the last survivor and the setting off, he is gone for good and every variant ends")
     void goneForGoodWithTheLastSurvivor(Env env) {
-        Round round = this.roundWithVariant(env, withoutLastSurvivor());
+        Round round = this.roundWithVariant(env, Contexts.withoutLastSurvivor());
         Creek creek = round.service().creek();
         CreekVariants variants = round.service().variants();
         assertNotNull(creek);
@@ -293,17 +295,4 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
                          AtomicInteger dreadCalls) {
     }
 
-    private static CreekConfig withoutLastSurvivor() {
-        CreekConfig d = CreekConfig.DEFAULT;
-        return new CreekConfig(
-                d.enabled(), false, d.sightRange(), d.sightViewAngle(),
-                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
-                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
-                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
-                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                d.personalSpace(), d.stuckMillis(), d.dreadPageWeight(), d.dreadTimeWeight(),
-                d.dreadIsolationWeight(), d.isolationRadius(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis());
-    }
 }

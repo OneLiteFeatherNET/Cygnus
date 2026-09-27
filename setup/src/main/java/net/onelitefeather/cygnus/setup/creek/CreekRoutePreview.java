@@ -15,6 +15,7 @@ import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.timer.Task;
 import net.minestom.server.timer.TaskSchedule;
+import net.onelitefeather.cygnus.common.creek.CreekLinks;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
 import org.jetbrains.annotations.Nullable;
@@ -62,7 +63,7 @@ public final class CreekRoutePreview {
      * @param player       the player who sees it
      * @param routes       supplies the current routes
      * @param active       supplies the name of the route being edited, or {@code null}
-     * @param linkDistance how close two ends have to be to count as linked, in blocks
+     * @param linkDistance how close an end has to be to a point of another route to link to it, in blocks
      */
     public CreekRoutePreview(Player player, Supplier<List<CreekRoute>> routes, Supplier<@Nullable String> active,
                              double linkDistance) {
@@ -170,9 +171,8 @@ public final class CreekRoutePreview {
     }
 
     /**
-     * Returns the points of a route that link to another route, the same way the game links them:
-     * an end of one route links to the nearest point of another route within {@code distance}, be
-     * that the other route's end or a point in its middle.
+     * Returns the points of a route that link to another route, as {@link CreekLinks} links them
+     * for the game.
      *
      * @param route    the route whose points are checked
      * @param routes   all routes of the map, the checked one included
@@ -180,37 +180,15 @@ public final class CreekRoutePreview {
      * @return the linked points of {@code route}
      */
     static Set<Vec> linkedPoints(CreekRoute route, List<CreekRoute> routes, double distance) {
+        int index = routes.indexOf(route);
+        if (index < 0) return Set.of();
+        CreekLinks links = CreekLinks.of(routes, distance);
         Set<Vec> linked = new HashSet<>();
-        for (CreekRoute other : routes) {
-            if (other.name().equals(route.name())) continue;
-            // This route's ends, reaching any point of the other route.
-            for (Vec end : ends(route)) {
-                if (nearest(other, end, distance) != null) linked.add(end);
-            }
-            // The other route's ends, reaching a point of this one.
-            for (Vec otherEnd : ends(other)) {
-                Vec point = nearest(route, otherEnd, distance);
-                if (point != null) linked.add(point);
+        for (int point = 0; point < route.points().size(); point++) {
+            if (!links.of(new CreekLinks.Node(index, point)).isEmpty()) {
+                linked.add(route.points().get(point).position());
             }
         }
         return linked;
-    }
-
-    private static @Nullable Vec nearest(CreekRoute route, Vec position, double distance) {
-        Vec nearest = null;
-        double best = distance;
-        for (CreekWaypoint point : route.points()) {
-            double away = point.position().distance(position);
-            if (away <= best) {
-                best = away;
-                nearest = point.position();
-            }
-        }
-        return nearest;
-    }
-
-    private static List<Vec> ends(CreekRoute route) {
-        if (route.points().isEmpty()) return List.of();
-        return List.of(route.points().getFirst().position(), route.points().getLast().position());
     }
 }

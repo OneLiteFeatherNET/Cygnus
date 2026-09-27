@@ -49,11 +49,9 @@ public final class PatrolState implements CreekState {
     /** How far it has to get to count as moving at all, in blocks. */
     static final double PROGRESS = 0.5D;
 
-    private @Nullable Pos goal;
+    private @Nullable RouteStep goal;
     private boolean watched;
     private long pausedUntil;
-    private int goalPauseMillis;
-    private boolean goalDeadEnd;
     private long restingUntil;
     private Pos progressAt = Pos.ZERO;
     private long progressSince;
@@ -110,15 +108,15 @@ public final class PatrolState implements CreekState {
             body.stop();
             return this;
         }
-        if (this.hasArrived(here)) {
-            if (this.goalDeadEnd && ctx.random().nextDouble() < DEAD_END_VANISH_CHANCE) {
-                this.goal = null;
+        RouteStep reached = this.goal;
+        if (reached != null && here.distance(reached.target()) < ARRIVED) {
+            this.goal = null;
+            if (reached.deadEnd() && ctx.random().nextDouble() < DEAD_END_VANISH_CHANCE) {
                 ctx.actions().vanished(here);
                 // Gone for as long as it would have rested here, then back somewhere else.
-                return new VanishState(ctx.now() + this.goalPauseMillis);
+                return new VanishState(ctx.now() + reached.pauseMillis());
             }
-            long rest = this.restMillis(ctx);
-            this.goal = null;
+            long rest = this.restMillis(ctx, reached);
             if (rest > 0) {
                 this.restingUntil = ctx.now() + rest;
                 body.stop();
@@ -127,17 +125,15 @@ public final class PatrolState implements CreekState {
         }
 
         if (this.needsNewGoal(ctx, here)) {
-            Optional<RouteStep> step = ctx.route().next(here, _ -> true, ctx.random());
-            this.goal = step.map(RouteStep::target).orElse(null);
-            this.goalPauseMillis = step.map(RouteStep::pauseMillis).orElse(0);
-            this.goalDeadEnd = step.map(RouteStep::deadEnd).orElse(false);
+            this.goal = ctx.route().next(here, _ -> true, ctx.random()).orElse(null);
             this.markProgress(ctx.now(), here);
         }
-        if (this.goal == null) {
+        RouteStep next = this.goal;
+        if (next == null) {
             body.stop();
             return this;
         }
-        body.moveTo(this.goal, config.wanderSpeed());
+        body.moveTo(next.target(), config.wanderSpeed());
         return this;
     }
 
@@ -214,17 +210,13 @@ public final class PatrolState implements CreekState {
         return true;
     }
 
-    private boolean hasArrived(Pos here) {
-        return this.goal != null && here.distance(this.goal) < ARRIVED;
-    }
-
     /**
      * How long to rest at the point just reached: the route's pause, or a random stop if that
      * is longer.
      */
-    private long restMillis(CreekContext ctx) {
+    private long restMillis(CreekContext ctx, RouteStep reached) {
         CreekConfig config = ctx.config();
-        int rest = this.goalPauseMillis;
+        int rest = reached.pauseMillis();
         if (config.randomStopChance() > 0.0D && ctx.random().nextDouble() < config.randomStopChance()) {
             int spread = config.randomStopMaxMillis() - config.randomStopMinMillis();
             rest = Math.max(rest, config.randomStopMinMillis() + ctx.random().nextInt(spread + 1));
@@ -233,7 +225,8 @@ public final class PatrolState implements CreekState {
     }
 
     private boolean needsNewGoal(CreekContext ctx, Pos here) {
-        if (this.goal == null || here.distance(this.goal) < ARRIVED) return true;
+        RouteStep current = this.goal;
+        if (current == null || here.distance(current.target()) < ARRIVED) return true;
         if (here.distance(this.progressAt) >= PROGRESS) {
             this.markProgress(ctx.now(), here);
             return false;

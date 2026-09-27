@@ -17,7 +17,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.random.RandomGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -339,47 +338,14 @@ class PatrolStateTest {
 
     // ---- vanishing at a dead end ----
 
-    /** Answers every roll with the given value. */
-    private static RandomGenerator rolling(double value) {
-        return new RandomGenerator() {
-            @Override
-            public long nextLong() {
-                return 0L;
-            }
-
-            @Override
-            public double nextDouble() {
-                return value;
-            }
-        };
-    }
-
     /** A route that always heads for A with the given pause, as a dead end or not. */
     private static RouteProvider towardsA(int pauseMillis, boolean deadEnd) {
         return (_, _, _) -> Optional.of(new RouteStep(A, pauseMillis, deadEnd));
     }
 
-    /** Records every place the creek vanished from. */
-    private static CreekActions recordingVanishes(List<Pos> vanished) {
-        return new CreekActions() {
-            @Override
-            public void caught(UUID survivor) {
-            }
-
-            @Override
-            public void selected(UUID survivor) {
-            }
-
-            @Override
-            public void vanished(Pos where) {
-                vanished.add(where);
-            }
-        };
-    }
-
     private static CreekContext deadEndContext(long now, RecordingBody body, RouteProvider route, List<Pos> vanished,
                                                double roll) {
-        return Contexts.context(now, body, route, recordingVanishes(vanished), rolling(roll), far(FIRST, 0.0D, false));
+        return Contexts.context(now, body, route, Contexts.actions(_ -> {}, _ -> {}, vanished::add), Contexts.rolling(roll), far(FIRST, 0.0D, false));
     }
 
     @Test

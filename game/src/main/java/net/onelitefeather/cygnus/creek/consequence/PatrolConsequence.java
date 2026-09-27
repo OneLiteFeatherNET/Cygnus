@@ -1,12 +1,10 @@
 package net.onelitefeather.cygnus.creek.consequence;
 
-import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.onelitefeather.cygnus.creek.world.Ground;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,22 +13,20 @@ import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
 /**
- * What happens when the patrolling creek picks out a survivor who came too close.
+ * What the patrolling creek does to the survivors around it.
  * <p>
- * It is a coin toss: either the survivor freezes on the spot and everyone standing next to them
- * goes blind for a moment, or they suddenly find themselves somewhere else on the map. It is a
- * scare, not a catch, so it never counts towards giving them away to the slender.
- * </p>
- * <p>
- * When the patrolling creek vanishes at the end of its route, the survivors around it go blind
- * the same way.
+ * When it picks out a survivor who came too close, it is a coin toss: either the survivor freezes
+ * on the spot and everyone standing next to them goes blind for a moment, or they suddenly find
+ * themselves somewhere else on the map. It is a scare, not a catch, so it never counts towards
+ * giving them away to the slender. When it vanishes at the end of its route, everyone close by
+ * hears it and goes blind the same way.
  * </p>
  *
  * @author theEvilReaper
  * @version 1.0.0
  * @since 2.15.0
  */
-public final class SelectionConsequence {
+public final class PatrolConsequence {
 
     /** How long the survivor stays frozen, in ticks (2 seconds). */
     static final int STUN_TICKS = 40;
@@ -62,7 +58,7 @@ public final class SelectionConsequence {
      * @param ground      finds the floor at such a place
      * @param random      tosses the coin between freezing and teleporting, and picks the place
      */
-    public SelectionConsequence(Supplier<List<Pos>> routePoints, Ground ground, RandomGenerator random) {
+    public PatrolConsequence(Supplier<List<Pos>> routePoints, Ground ground, RandomGenerator random) {
         this.routePoints = routePoints;
         this.ground = ground;
         this.random = random;
@@ -75,7 +71,7 @@ public final class SelectionConsequence {
      * @param selected  the survivor the creek picked out
      * @param survivors every survivor of the round, to find the ones standing next to a frozen one
      */
-    public void apply(Player selected, Collection<Player> survivors) {
+    public void selected(Player selected, Collection<Player> survivors) {
         if (this.random.nextBoolean() || !this.teleportAway(selected)) {
             this.stun(selected, survivors);
         }
@@ -85,9 +81,11 @@ public final class SelectionConsequence {
      * Freezes the survivor for a moment and blinds the other survivors standing next to them.
      */
     void stun(Player selected, Collection<Player> survivors) {
-        scare(selected);
+        CatchEffects.playScare(selected);
         this.effects.add(selected, new Potion(PotionEffect.SLOWNESS, STUN_AMPLIFIER, STUN_TICKS));
-        this.blindAround(selected.getPosition(), survivors, selected);
+        for (Player other : near(selected.getPosition(), survivors)) {
+            if (other != selected) this.blind(other);
+        }
     }
 
     /**
@@ -96,21 +94,22 @@ public final class SelectionConsequence {
      * @param where     where the creek vanished
      * @param survivors the survivors it may blind
      */
-    public void vanishAt(Pos where, Collection<Player> survivors) {
-        for (Player survivor : survivors) {
-            if (survivor.getPosition().distance(where) <= BLIND_RADIUS) scare(survivor);
+    public void vanished(Pos where, Collection<Player> survivors) {
+        for (Player survivor : near(where, survivors)) {
+            CatchEffects.playScare(survivor);
+            this.blind(survivor);
         }
-        this.blindAround(where, survivors, null);
+    }
+
+    private void blind(Player player) {
+        this.effects.add(player, new Potion(PotionEffect.BLINDNESS, 0, BLIND_TICKS));
     }
 
     /**
-     * Blinds every survivor within {@link #BLIND_RADIUS} of the centre, except the one spared.
+     * The survivors within {@link #BLIND_RADIUS} of a point.
      */
-    private void blindAround(Pos center, Collection<Player> survivors, @Nullable Player spared) {
-        for (Player other : survivors) {
-            if (other == spared || other.getPosition().distance(center) > BLIND_RADIUS) continue;
-            this.effects.add(other, new Potion(PotionEffect.BLINDNESS, 0, BLIND_TICKS));
-        }
+    private static List<Player> near(Pos center, Collection<Player> survivors) {
+        return survivors.stream().filter(survivor -> survivor.getPosition().distance(center) <= BLIND_RADIUS).toList();
     }
 
     /**
@@ -130,7 +129,7 @@ public final class SelectionConsequence {
         if (targets.isEmpty()) return false;
         Pos target = targets.get(this.random.nextInt(targets.size()));
         selected.teleport(target.withView(from.yaw(), from.pitch()));
-        scare(selected);
+        CatchEffects.playScare(selected);
         return true;
     }
 
@@ -140,9 +139,5 @@ public final class SelectionConsequence {
      */
     public void cleanUp() {
         this.effects.removeAll();
-    }
-
-    private static void scare(Player player) {
-        player.playSound(Sound.sound(CatchEffects.SCARE_SOUND, Sound.Source.HOSTILE, 1.0F, 0.6F));
     }
 }

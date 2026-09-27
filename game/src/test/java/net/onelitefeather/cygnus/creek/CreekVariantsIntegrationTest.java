@@ -8,7 +8,7 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
-import net.onelitefeather.cygnus.creek.consequence.SelectionConsequence;
+import net.onelitefeather.cygnus.creek.consequence.PatrolConsequence;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
@@ -41,10 +41,10 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         public void cleanUp() {
         }
     };
-    private static final SelectionConsequence SELECTION = new SelectionConsequence(List::of, Optional::of, new Random(1));
+    private static final PatrolConsequence PATROL = new PatrolConsequence(List::of, Optional::of, new Random(1));
 
     private static BiFunction<Pos, CreekState, Creek> spawner(Instance instance, CreekConfig config, SpotFinder spots) {
-        CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, SELECTION, config, new Random(3));
+        CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, PATROL, config, new Random(3));
         return (spot, initial) -> new Creek(CreakingBody.spawn(instance, spot), Contexts.route(), round, initial);
     }
 

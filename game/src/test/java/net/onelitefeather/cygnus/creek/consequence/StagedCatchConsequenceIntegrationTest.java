@@ -7,12 +7,12 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import org.jetbrains.annotations.Nullable;
+import net.onelitefeather.cygnus.creek.state.Contexts;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.random.RandomGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -49,7 +49,7 @@ class StagedCatchConsequenceIntegrationTest extends CygnusPlayerTestBase {
     };
 
     private StagedCatchConsequence consequence(@Nullable Player slender, double draw) {
-        return new StagedCatchConsequence(effects, reveal, () -> slender, CreekConfig.DEFAULT, always(draw));
+        return new StagedCatchConsequence(effects, reveal, () -> slender, CreekConfig.DEFAULT, Contexts.rolling(draw));
     }
 
     @Test
@@ -123,17 +123,4 @@ class StagedCatchConsequenceIntegrationTest extends CygnusPlayerTestBase {
         assertEquals(2, cleanUps);
     }
 
-    private static RandomGenerator always(double value) {
-        return new RandomGenerator() {
-            @Override
-            public long nextLong() {
-                return 0L;
-            }
-
-            @Override
-            public double nextDouble() {
-                return value;
-            }
-        };
-    }
 }

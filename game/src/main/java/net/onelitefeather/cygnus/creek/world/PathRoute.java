@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek.world;
 
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.common.creek.CreekLinks;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -72,7 +73,7 @@ public final class PathRoute implements RouteProvider {
     }
 
     private Optional<RouteStep> rejoin(Pos current, Predicate<Pos> allowed, RandomGenerator random) {
-        Cursor best = null;
+        CreekLinks.Node best = null;
         double bestDistance = Double.MAX_VALUE;
         for (int route = 0; route < this.paths.size(); route++) {
             for (int index = 0; index < this.paths.pointCount(route); index++) {
@@ -81,16 +82,12 @@ public final class PathRoute implements RouteProvider {
                 double distance = point.distance(current);
                 if (distance < bestDistance) {
                     bestDistance = distance;
-                    best = new Cursor(route, index, 1, false);
+                    best = new CreekLinks.Node(route, index);
                 }
             }
         }
         if (best == null) return Optional.empty();
-
-        int lastIndex = this.paths.pointCount(best.route()) - 1;
-        // At an end there is only one way into the route.
-        int direction = best.index() == 0 ? 1 : best.index() == lastIndex ? -1 : (random.nextBoolean() ? 1 : -1);
-        return this.moveTo(new Cursor(best.route(), best.index(), direction, false));
+        return this.moveTo(this.enter(best, false, random));
     }
 
     /**
@@ -102,23 +99,23 @@ public final class PathRoute implements RouteProvider {
         boolean atEnd = nextIndex < 0 || nextIndex >= this.paths.pointCount(from.route());
         // An end only offers its links once the creek gets there. In the middle, a crossing offers
         // them on the way through, unless the creek has only just come over from the other route.
-        boolean crossing = !atEnd && !from.viaLink() && this.isMiddle(from);
-        List<CreekPaths.Node> links = atEnd || crossing ? this.paths.links(this.node(from)) : List.of();
+        boolean crossing = !atEnd && !from.viaLink() && !this.isEnd(from);
+        List<CreekLinks.Node> links = atEnd || crossing ? this.paths.links(this.node(from)) : List.of();
         int choice = atEnd || !links.isEmpty() ? random.nextInt(links.size() + 1) : 0;
-        if (choice < links.size()) return this.join(links.get(choice), random);
+        if (choice < links.size()) return this.enter(links.get(choice), true, random);
         if (!atEnd) return new Cursor(from.route(), nextIndex, from.direction(), false);
         Cursor back = this.behind(from);
         return back != null ? back : from;
     }
 
     /**
-     * Steps over to a linked point. At an end the creek walks into the route, in the middle it
+     * Puts the creek on a point. At an end there is only one way into the route, in the middle it
      * picks a way at random.
      */
-    private Cursor join(CreekPaths.Node node, RandomGenerator random) {
+    private Cursor enter(CreekLinks.Node node, boolean viaLink, RandomGenerator random) {
         int lastIndex = this.paths.pointCount(node.route()) - 1;
         int direction = node.index() == 0 ? 1 : node.index() == lastIndex ? -1 : (random.nextBoolean() ? 1 : -1);
-        return new Cursor(node.route(), node.index(), direction, true);
+        return new Cursor(node.route(), node.index(), direction, viaLink);
     }
 
     private @Nullable Cursor behind(Cursor from) {
@@ -138,11 +135,7 @@ public final class PathRoute implements RouteProvider {
      * Walking away from an end does not count.
      */
     private boolean isDeadEnd(Cursor cursor) {
-        int lastIndex = this.paths.pointCount(cursor.route()) - 1;
-        boolean reachingEnd = cursor.index() == lastIndex && cursor.direction() > 0;
-        boolean reachingStart = cursor.index() == 0 && cursor.direction() < 0;
-        if (!reachingEnd && !reachingStart) return false;
-        return this.paths.links(this.node(cursor)).isEmpty();
+        return this.reachesEnd(cursor) && this.paths.links(this.node(cursor)).isEmpty();
     }
 
     /**
@@ -150,11 +143,8 @@ public final class PathRoute implements RouteProvider {
      * it just stepped over to from another route: it is where it already was.
      */
     private int pauseAt(Cursor cursor) {
-        if (cursor.viaLink()) return 0;
-        int lastIndex = this.paths.pointCount(cursor.route()) - 1;
-        boolean leavingStart = cursor.index() == 0 && cursor.direction() > 0;
-        boolean leavingEnd = cursor.index() == lastIndex && cursor.direction() < 0;
-        if (leavingStart || leavingEnd) return 0;
+        boolean leavingEnd = this.isEnd(cursor) && !this.reachesEnd(cursor);
+        if (cursor.viaLink() || leavingEnd) return 0;
         return this.paths.pauseMillis(cursor.route(), cursor.index());
     }
 
@@ -162,12 +152,21 @@ public final class PathRoute implements RouteProvider {
         return this.paths.point(cursor.route(), cursor.index());
     }
 
-    private CreekPaths.Node node(Cursor cursor) {
-        return new CreekPaths.Node(cursor.route(), cursor.index());
+    private CreekLinks.Node node(Cursor cursor) {
+        return new CreekLinks.Node(cursor.route(), cursor.index());
     }
 
-    private boolean isMiddle(Cursor cursor) {
-        return cursor.index() > 0 && cursor.index() < this.paths.pointCount(cursor.route()) - 1;
+    private boolean isEnd(Cursor cursor) {
+        return cursor.index() == 0 || cursor.index() == this.paths.pointCount(cursor.route()) - 1;
+    }
+
+    /**
+     * Tells whether the creek is walking into an end of its route rather than away from it.
+     */
+    private boolean reachesEnd(Cursor cursor) {
+        return cursor.direction() > 0
+                ? cursor.index() == this.paths.pointCount(cursor.route()) - 1
+                : cursor.index() == 0;
     }
 
     /**
