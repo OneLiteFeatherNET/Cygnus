@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
-import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 
 import java.util.List;
@@ -45,20 +44,6 @@ public final class VanishState implements CreekState {
      */
     public boolean isForever() {
         return this.until == Long.MAX_VALUE;
-    }
-
-    /**
-     * How long a breather lasts: {@code vanishMaxSeconds} for a calm survivor, down to
-     * {@code vanishMinSeconds} for one who is scared to death. Used for the pause after a variant.
-     *
-     * @param config the settings
-     * @param dread  the survivor's dread
-     * @return the breather in milliseconds
-     */
-    public static long cooldownMillis(CreekConfig config, double dread) {
-        double span = config.vanishMaxSeconds() - config.vanishMinSeconds();
-        double seconds = config.vanishMaxSeconds() - span * Math.clamp(dread, 0.0D, 1.0D);
-        return Math.round(seconds * 1000.0D);
     }
 
     @Override
