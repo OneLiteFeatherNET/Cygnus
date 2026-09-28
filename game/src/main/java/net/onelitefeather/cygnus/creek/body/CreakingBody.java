@@ -31,12 +31,6 @@ public final class CreakingBody implements CreekBody {
     /** How far the goal has to move before the creek works out a new path, in blocks. */
     static final double REPATH_DISTANCE = 1.0D;
 
-    /**
-     * The highest step the creek takes without jumping, in blocks: the same as a vanilla mob. A
-     * creaking would walk straight up a whole block (1.0625), which the paths are not made for.
-     */
-    static final double STEP_HEIGHT = 0.6D;
-
     private final EntityCreature entity;
     private final Set<UUID> viewers = ConcurrentHashMap.newKeySet();
     private @Nullable Pos goal;
@@ -54,7 +48,6 @@ public final class CreakingBody implements CreekBody {
      */
     public static CreakingBody spawn(Instance instance, Pos position) {
         CreakingBody body = new CreakingBody(new EntityCreature(EntityType.CREAKING));
-        body.entity.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(STEP_HEIGHT);
         body.entity.getNavigator().setNodeGenerator(FoliageGroundGenerator::new);
         body.entity.getNavigator().setNodeFollower(() -> new StepFollower(body.entity));
         body.entity.updateViewableRule(player -> body.viewers.contains(player.getUuid()));

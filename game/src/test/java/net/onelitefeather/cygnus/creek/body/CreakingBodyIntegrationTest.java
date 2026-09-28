@@ -152,11 +152,11 @@ class CreakingBodyIntegrationTest extends CygnusPlayerTestBase {
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0.5, 40, 0.5));
         EntityCreature creature = (EntityCreature) body.entity();
         StepFollower follower = new StepFollower(creature);
-        assertEquals(CreakingBody.STEP_HEIGHT, follower.stepHeight(), 1.0E-9, "a vanilla mob's step, not a creaking's");
+        assertEquals(1.0625D, follower.stepHeight(), 1.0E-9, "a creaking's own step, as in vanilla");
 
-        creature.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(1.0D);
+        creature.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(0.6D);
 
-        assertEquals(1.0D, follower.stepHeight(), 1.0E-9);
+        assertEquals(0.6D, follower.stepHeight(), 1.0E-9);
     }
 
     @Test

@@ -21,9 +21,9 @@ import org.jetbrains.annotations.Nullable;
  * <ul>
  *     <li>Each step is checked a hair above the feet. Standing right on top of a slab, Minestom
  *     treats the next slab as a wall, and the creek would get stuck at the edge.</li>
- *     <li>Anything up to its step height attribute high, like slabs and dirt paths, it simply walks
- *     up. That is 0.6 blocks by default, the same as a vanilla mob. It only jumps when stepping up
- *     gets it nowhere.</li>
+ *     <li>Anything up to its step height attribute high it simply walks up. A creaking's own is
+ *     1.0625, so like in vanilla it takes whole blocks without hopping, as survivors do in a round.
+ *     It only jumps when stepping up gets it nowhere.</li>
  *     <li>A path point counts as reached once the creek stands in its column and less than a block
  *     away in height. The path puts the floor of a slab a block too high, so on slabs the creek
  *     never quite arrived and kept jumping at the point.</li>
