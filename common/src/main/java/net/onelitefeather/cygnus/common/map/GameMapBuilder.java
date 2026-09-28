@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public final class GameMapBuilder extends BaseMapBuilder {
 
@@ -57,8 +58,9 @@ public final class GameMapBuilder extends BaseMapBuilder {
         this.survivorSpawns.addAll(gameMap.getSurvivorSpawns());
         this.pageFaces = new HashSet<>(gameMap.getPageFaces());
         this.atmosphere = gameMap.getAtmosphere();
-        this.creekRoutes = new LinkedHashMap<>();
-        gameMap.getCreekRoutes().forEach(route -> this.creekRoutes.put(route.name(), new ArrayList<>(route.points())));
+        // Mutable on purpose: the setup adds, edits and removes routes. A name seen twice keeps the last route.
+        this.creekRoutes = gameMap.getCreekRoutes().stream().collect(Collectors.toMap(
+                CreekRoute::name, route -> new ArrayList<>(route.points()), (first, last) -> last, LinkedHashMap::new));
     }
 
     /**
