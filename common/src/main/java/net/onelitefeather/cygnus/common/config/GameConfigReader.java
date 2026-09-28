@@ -46,6 +46,7 @@ import java.util.regex.Pattern;
  *     <li>slenderStaticFranticInterval</li>
  *     <li>slenderStaticMinVolume</li>
  *     <li>slenderStaticMaxVolume</li>
+ *     <li>creek.* (see {@link CreekConfig})</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
@@ -66,6 +67,7 @@ public final class GameConfigReader {
     private static final String PAGE_PROXIMITY_SOUND_KEY = "pageProximitySound";
     private static final String DAMAGE_SOUND_KEY = "damageSound";
     private static final String SLENDER_STATIC_SOUND_KEY = "slenderStaticSound";
+    private static final String CREEK_PREFIX = "creek.";
 
     private final Path path;
 
@@ -147,6 +149,7 @@ public final class GameConfigReader {
                         getFloat(properties, "slenderStaticMinVolume", slenderStatic.minVolume()),
                         getFloat(properties, "slenderStaticMaxVolume", slenderStatic.maxVolume())
                 ),
+                getCreek(properties),
                 getFloat(properties, "lobbyAtmosphereShare", GameConfig.DEFAULT.lobbyAtmosphereShare())
         );
     }
@@ -184,6 +187,80 @@ public final class GameConfigReader {
             CONFIG_LOGGER.warn("Failed to parse decimal config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
             return defaultValue;
         }
+    }
+
+    /**
+     * Reads a decimal with double precision. The creek's values are compared with each other,
+     * and float rounding would turn 0.6 into 0.6000000238.
+     *
+     * @param properties   the loaded properties
+     * @param key          the key to read
+     * @param defaultValue the value to use when the key is absent or unreadable
+     * @return the parsed value
+     */
+    private double getDouble(Properties properties, String key, double defaultValue) {
+        String value = properties.getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Double.parseDouble(value.trim());
+        } catch (NumberFormatException _) {
+            CONFIG_LOGGER.warn("Failed to parse decimal config value for key '{}': '{}'. Falling back to default: {}", key, value, defaultValue);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Reads the creek settings. All keys start with {@value #CREEK_PREFIX}.
+     * <p>
+     * Like every other group, an unreadable value falls back to its default, while values that
+     * contradict each other are rejected by {@link CreekConfig}.
+     * </p>
+     *
+     * @param properties the loaded properties
+     * @return the creek settings, never {@code null}
+     * @throws IllegalArgumentException if the values do not fit together
+     */
+    private CreekConfig getCreek(Properties properties) {
+        CreekConfig d = CreekConfig.DEFAULT;
+        return new CreekConfig(
+                getBoolean(properties, CREEK_PREFIX + "enabled", d.enabled()),
+                getBoolean(properties, CREEK_PREFIX + "activeWithLastSurvivor", d.activeWithLastSurvivor()),
+                getInt(properties, CREEK_PREFIX + "sightRange", d.sightRange()),
+                getInt(properties, CREEK_PREFIX + "sightViewAngle", d.sightViewAngle()),
+                getInt(properties, CREEK_PREFIX + "wanderPauseMillis", d.wanderPauseMillis()),
+                getDouble(properties, CREEK_PREFIX + "wanderSpeed", d.wanderSpeed()),
+                getDouble(properties, CREEK_PREFIX + "huntSpeed", d.huntSpeed()),
+                getDouble(properties, CREEK_PREFIX + "stalkThreshold", d.stalkThreshold()),
+                getDouble(properties, CREEK_PREFIX + "huntThreshold", d.huntThreshold()),
+                getInt(properties, CREEK_PREFIX + "stalkMinDistance", d.stalkMinDistance()),
+                getInt(properties, CREEK_PREFIX + "stalkMaxDistance", d.stalkMaxDistance()),
+                getInt(properties, CREEK_PREFIX + "stalkMinAngle", d.stalkMinAngle()),
+                getInt(properties, CREEK_PREFIX + "stalkMaxAngle", d.stalkMaxAngle()),
+                getInt(properties, CREEK_PREFIX + "stalkRevealMillis", d.stalkRevealMillis()),
+                getInt(properties, CREEK_PREFIX + "stalkMinSeconds", d.stalkMinSeconds()),
+                getInt(properties, CREEK_PREFIX + "stalkMaxSeconds", d.stalkMaxSeconds()),
+                getInt(properties, CREEK_PREFIX + "huntMaxSeconds", d.huntMaxSeconds()),
+                getDouble(properties, CREEK_PREFIX + "catchDistance", d.catchDistance()),
+                getInt(properties, CREEK_PREFIX + "vanishMinSeconds", d.vanishMinSeconds()),
+                getInt(properties, CREEK_PREFIX + "vanishMaxSeconds", d.vanishMaxSeconds()),
+                getInt(properties, CREEK_PREFIX + "respawnMinDistance", d.respawnMinDistance()),
+                getInt(properties, CREEK_PREFIX + "personalSpace", d.personalSpace()),
+                getInt(properties, CREEK_PREFIX + "stuckMillis", d.stuckMillis()),
+                getDouble(properties, CREEK_PREFIX + "dreadPageWeight", d.dreadPageWeight()),
+                getDouble(properties, CREEK_PREFIX + "dreadTimeWeight", d.dreadTimeWeight()),
+                getDouble(properties, CREEK_PREFIX + "dreadIsolationWeight", d.dreadIsolationWeight()),
+                getInt(properties, CREEK_PREFIX + "isolationRadius", d.isolationRadius()),
+                getInt(properties, CREEK_PREFIX + "betrayalCatchCount", d.betrayalCatchCount()),
+                getDouble(properties, CREEK_PREFIX + "betrayalChance", d.betrayalChance()),
+                getInt(properties, CREEK_PREFIX + "betrayalGlowSeconds", d.betrayalGlowSeconds()),
+                getInt(properties, CREEK_PREFIX + "slownessSeconds", d.slownessSeconds()),
+                getDouble(properties, CREEK_PREFIX + "routeLinkDistance", d.routeLinkDistance()),
+                getDouble(properties, CREEK_PREFIX + "randomStopChance", d.randomStopChance()),
+                getInt(properties, CREEK_PREFIX + "randomStopMinMillis", d.randomStopMinMillis()),
+                getInt(properties, CREEK_PREFIX + "randomStopMaxMillis", d.randomStopMaxMillis())
+        );
     }
 
     /**

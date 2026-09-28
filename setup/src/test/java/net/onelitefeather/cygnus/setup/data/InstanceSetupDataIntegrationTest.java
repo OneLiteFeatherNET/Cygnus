@@ -14,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -34,7 +33,7 @@ class InstanceSetupDataIntegrationTest {
 
     @Test
     void testInstanceUsesFalcoChunkLoader(Env env, @TempDir Path worldRoot) {
-        TestSetupData data = new TestSetupData(MapEntry.of(worldRoot));
+        TestSetupData data = new TestSetupData(owner(env), MapEntry.of(worldRoot));
         data.loadData();
 
         assertNotNull(data.instance);
@@ -47,7 +46,7 @@ class InstanceSetupDataIntegrationTest {
 
     @Test
     void testResetClosesChunkLoader(Env env, @TempDir Path worldRoot) {
-        TestSetupData data = new TestSetupData(MapEntry.of(worldRoot));
+        TestSetupData data = new TestSetupData(owner(env), MapEntry.of(worldRoot));
         data.loadData();
 
         assertNotNull(data.instance);
@@ -57,8 +56,8 @@ class InstanceSetupDataIntegrationTest {
     }
 
     @Test
-    void testResetWithoutInstanceIsHarmless(@TempDir Path worldRoot) {
-        TestSetupData data = new TestSetupData(MapEntry.of(worldRoot));
+    void testResetWithoutInstanceIsHarmless(Env env, @TempDir Path worldRoot) {
+        TestSetupData data = new TestSetupData(owner(env), MapEntry.of(worldRoot));
 
         data.reset();
 
@@ -67,13 +66,20 @@ class InstanceSetupDataIntegrationTest {
     }
 
     /**
+     * Creates the player who owns the setup. Nothing in these tests looks at them.
+     */
+    private static Player owner(Env env) {
+        return env.createPlayer(env.createFlatInstance());
+    }
+
+    /**
      * Minimal {@link InstanceSetupData} which only creates the instance, so the test observes the
      * chunk loader handling of the base class and nothing else.
      */
     private static final class TestSetupData extends InstanceSetupData {
 
-        private TestSetupData(MapEntry mapEntry) {
-            super(UUID.randomUUID(), mapEntry, BossBar.Color.WHITE);
+        private TestSetupData(Player owner, MapEntry mapEntry) {
+            super(owner, mapEntry, BossBar.Color.WHITE);
         }
 
         @Override

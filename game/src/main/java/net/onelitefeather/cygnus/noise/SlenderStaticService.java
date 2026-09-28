@@ -24,8 +24,8 @@ import java.util.function.Supplier;
  * left, the way the static in Slender: The Eight Pages tightens with every page.</p>
  *
  * <p>Two things carry it. A carpet runs for as long as the round does and closes the gap between
- * its bursts from {@link GameConfig#slenderStaticQuietInterval()} down to
- * {@link GameConfig#slenderStaticFranticInterval()} as the pages disappear. On top of it, every
+ * its bursts from {@link GameConfig.SlenderStatic#quietInterval()} down to
+ * {@link GameConfig.SlenderStatic#franticInterval()} as the pages disappear. On top of it, every
  * single find lands as a burst of its own, so he knows a page went the moment it went instead of
  * on the next beat of the carpet.</p>
  *

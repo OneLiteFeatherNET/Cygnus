@@ -18,7 +18,8 @@ public sealed interface DialogContext permits
         DialogContext.PositionContent,
         DialogContext.AuthorAmount,
         DialogContext.PageContent,
-        DialogContext.AtmosphereContext {
+        DialogContext.AtmosphereContext,
+        DialogContext.CreekPauseContext {
 
     /**
      * Specific context for the update or deletion of a name.
@@ -63,6 +64,18 @@ public sealed interface DialogContext permits
      * @param atmosphere the atmosphere being edited
      */
     record AtmosphereContext(MapAtmosphere atmosphere) implements DialogContext {
+
+    }
+
+
+    /**
+     * Carries the creek route whose pauses are edited, so the dialog can pre-fill its sliders.
+     *
+     * @param route       the route's name
+     * @param startMillis the current pause at the start, in milliseconds
+     * @param endMillis   the current pause at the end, in milliseconds
+     */
+    record CreekPauseContext(String route, int startMillis, int endMillis) implements DialogContext {
 
     }
 }

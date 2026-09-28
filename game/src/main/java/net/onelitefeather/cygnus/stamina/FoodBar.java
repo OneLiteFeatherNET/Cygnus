@@ -136,4 +136,22 @@ public non-sealed class FoodBar extends StaminaBar {
         if (state == State.REGENERATING) return;
         state = State.REGENERATING;
     }
+
+    /**
+     * Empties the bar instantly and lets it regenerate.
+     * <p>
+     * Used when the creek catches a survivor. Sprinting is blocked just like after running the
+     * bar empty, so the survivor cannot escape the slender for a while.
+     * </p>
+     */
+    public void drain() {
+        this.currentSpeedCount = 0;
+        player.setExp(0.0F);
+        if (player.isSprinting()) {
+            player.setSprinting(false);
+            EventDispatcher.call(new PlayerStopSprintingEvent(player));
+        }
+        player.setBlockedSprinting(true);
+        state = State.REGENERATING;
+    }
 }

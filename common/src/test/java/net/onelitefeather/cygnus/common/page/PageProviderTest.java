@@ -359,4 +359,18 @@ class PageProviderTest {
             executor.shutdown();
         }
     }
+
+    @Test
+    void testFoundPageCount(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
+        Player player = env.createPlayer(instance);
+
+        assertEquals(0, pageProvider.foundPageCount());
+
+        pageProvider.triggerPageFound(player, pageProvider.interactablePages().getFirst().getHitBoxUUID());
+
+        assertEquals(1, pageProvider.foundPageCount());
+        env.destroyInstance(instance, true);
+    }
 }

@@ -28,7 +28,7 @@ public final class LobbyData extends InstanceSetupData {
      * @param mapEntry that contains the map
      */
     public LobbyData(Player player, MapEntry mapEntry) {
-        super(player.getUuid(), mapEntry, BossBar.Color.GREEN);
+        super(player, mapEntry, BossBar.Color.GREEN);
         this.loadData();
         this.viewInventory = new MapDataOverviewInventory(player, this.mapBuilder, InventoryMode.LOBBY);
     }
@@ -120,6 +120,7 @@ public final class LobbyData extends InstanceSetupData {
     @Override
     public void reset() {
         super.reset();
+        this.bossBar.removeViewer(player);
         this.viewInventory.unregister();
     }
 

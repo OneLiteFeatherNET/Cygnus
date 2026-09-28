@@ -8,6 +8,7 @@ import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.world.DimensionType;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.creek.CreekRoutesFile;
 import net.onelitefeather.cygnus.common.dimension.BlendedAtmosphere;
 import net.onelitefeather.cygnus.common.dimension.DimensionAtmosphere;
 import net.onelitefeather.cygnus.common.dimension.DimensionFactory;
@@ -161,7 +162,8 @@ public final class GameMapProvider extends AbstractMapProvider {
      * Reads the game map from its map file.
      *
      * <p>This also merges in the page faces from the sibling {@code pages.json}, if one exists, via
-     * {@link PageFacesFile#loadInto(Path, GameMap)}.</p>
+     * {@link PageFacesFile#loadInto(Path, GameMap)}. The creek routes come from the sibling
+     * {@code creek.json} via {@link CreekRoutesFile#loadInto(Path, GameMap)}.</p>
      *
      * @return the loaded game map
      * @throws IllegalStateException if the file cannot be read
@@ -169,7 +171,8 @@ public final class GameMapProvider extends AbstractMapProvider {
     private GameMap readGameMap() {
         GameMap map = this.fileHandler.load(this.gameEntry.getMapFile(), GameMap.class)
                 .orElseThrow(() -> new IllegalStateException("Failed to load GameMap from file: " + this.gameEntry.getMapFile()));
-        return PageFacesFile.loadInto(this.gameEntry.getMapFile(), map);
+        Path mapFile = this.gameEntry.getMapFile();
+        return CreekRoutesFile.loadInto(mapFile, PageFacesFile.loadInto(mapFile, map));
     }
 
     public void loadGameMap() {

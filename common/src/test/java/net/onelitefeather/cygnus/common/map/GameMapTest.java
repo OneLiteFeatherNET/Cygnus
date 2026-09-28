@@ -130,4 +130,18 @@ class GameMapTest {
         assertNotNull(builder.getPageFaces());
         assertTrue(builder.getPageFaces().isEmpty());
     }
+
+    @Test
+    void testWithPageFacesKeepsTheRest() {
+        GameMap map = new GameMap("Forest", Pos.ZERO, new Pos(1, 2, 3), Set.of(), Set.of(new Pos(4, 5, 6)), List.of("Builder"), null);
+        PageResource page = new PageResource(Vec.ZERO, Direction.NORTH);
+
+        GameMap copy = map.withPageFaces(Set.of(page));
+
+        assertEquals(Set.of(page), copy.getPageFaces());
+        assertEquals("Forest", copy.name());
+        assertEquals(new Pos(1, 2, 3), copy.getSlenderSpawn());
+        assertEquals(Set.of(new Pos(4, 5, 6)), copy.getSurvivorSpawns());
+        assertEquals(List.of("Builder"), copy.builders());
+    }
 }

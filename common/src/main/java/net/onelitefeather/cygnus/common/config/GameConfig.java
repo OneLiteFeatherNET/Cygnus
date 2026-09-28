@@ -21,6 +21,7 @@ import java.net.URI;
  * @param damageSound          the sound a player hears when hit
  * @param glitch               how the sight of the slender tears a survivor's view
  * @param slenderStatic        the static the slender hears while pages are found
+ * @param creek                the creek, the second figure next to the slender
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
@@ -36,6 +37,7 @@ public record GameConfig(
         DamageSound damageSound,
         Glitch glitch,
         SlenderStatic slenderStatic,
+        CreekConfig creek,
         float lobbyAtmosphereShare
 ) {
 
@@ -53,16 +55,12 @@ public record GameConfig(
      * Spawning immediately at {@code GameStartEvent} let survivors grab a page before they had even
      * moved from the spawn point. The delay gives them time to spread across the map first.
      * </p>
-     *
-     * @since 2.15.0
      */
     public static final int PAGE_SPAWN_DELAY = 10;
 
     /**
      * How many seconds {@link #PAGE_SPAWN_DELAY} may randomly shift up or down, re-rolled every
      * round, so the moment the first pages appear stays unpredictable.
-     *
-     * @since 2.15.0
      */
     public static final int PAGE_SPAWN_DELAY_JITTER = 2;
 
@@ -72,16 +70,12 @@ public record GameConfig(
      * The page then has to come back on the spot it was found on. Without the delay it would be
      * collectible again right away, letting a survivor pick up page after page on the same spot.
      * </p>
-     *
-     * @since 2.15.0
      */
     public static final int PAGE_RESPAWN_DELAY = 15;
 
     /**
      * How many seconds {@link #PAGE_RESPAWN_DELAY} may randomly shift up or down, re-rolled for every
      * hidden page, so waiting next to the spot does not pay off.
-     *
-     * @since 2.15.0
      */
     public static final int PAGE_RESPAWN_DELAY_JITTER = 5;
 
@@ -112,6 +106,7 @@ public record GameConfig(
             DamageSound.DEFAULT,
             Glitch.DEFAULT,
             SlenderStatic.DEFAULT,
+            CreekConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 

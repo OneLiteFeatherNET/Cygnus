@@ -355,4 +355,59 @@ class GameConfigReaderTest {
         assertEquals(GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR,
                 new GameConfigReader(tempDir).getConfig().pageProximity().volumeFactor());
     }
+
+    @Test
+    void testCreekDefaultsWhenNotConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(CreekConfig.DEFAULT, config.creek());
+    }
+
+    @Test
+    void testCreekValuesAreRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.enabled=false
+                creek.huntThreshold=0.7
+                creek.stalkMaxDistance=40
+                creek.routeLinkDistance=4.5
+                creek.randomStopChance=0.4
+                creek.randomStopMinMillis=500
+                creek.randomStopMaxMillis=900
+                """);
+
+        CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
+
+        assertFalse(creek.enabled());
+        assertEquals(0.7D, creek.huntThreshold(), 1.0E-9);
+        assertEquals(40, creek.stalkMaxDistance());
+        assertEquals(CreekConfig.DEFAULT.stalkMinDistance(), creek.stalkMinDistance());
+        assertEquals(4.5D, creek.routeLinkDistance(), 1.0E-9);
+        assertEquals(0.4D, creek.randomStopChance(), 1.0E-9);
+        assertEquals(500, creek.randomStopMinMillis());
+        assertEquals(900, creek.randomStopMaxMillis());
+    }
+
+    @Test
+    void testCreekRejectsValuesThatDoNotFit(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.enabled=false
+                creek.stalkThreshold=0.9
+                """);
+        GameConfigReader reader = new GameConfigReader(tempDir);
+
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
+    }
+
+    @Test
+    void testAnUnreadableCreekValueFallsBackToTheDefault(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.huntThreshold=not-a-number
+                """);
+
+        assertEquals(CreekConfig.DEFAULT.huntThreshold(),
+                new GameConfigReader(tempDir).getConfig().creek().huntThreshold());
+    }
 }

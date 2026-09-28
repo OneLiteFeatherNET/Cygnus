@@ -210,6 +210,15 @@ public final class PageProvider {
     }
 
     /**
+     * Returns the number of pages found in this round.
+     *
+     * @return the number of found pages, never negative
+     */
+    public int foundPageCount() {
+        return this.foundPages.get();
+    }
+
+    /**
      * Returns the max page amount.
      *
      * @return max page amount
