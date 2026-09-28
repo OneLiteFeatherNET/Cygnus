@@ -6,13 +6,17 @@ import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.creek.world.CreekPaths;
 import net.onelitefeather.cygnus.creek.world.PathRoute;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
+import net.onelitefeather.cygnus.creek.world.SpotFinder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -73,6 +77,24 @@ class VanishStateTest {
         VanishState state = new VanishState(1000L);
 
         assertSame(state, state.tick(Contexts.context(1000L, body, Contexts.route(AHEAD), new ArrayList<>(), WATCHER)));
+    }
+
+    @Test
+    @DisplayName("Coming back, he stops looking once he has found a hidden point")
+    void stopsAtTheFirstHiddenPoint() {
+        RecordingBody body = new RecordingBody(new Pos(50, 40, 50));
+        AtomicInteger checked = new AtomicInteger();
+        SpotFinder counting = new SpotFinder(Contexts.SIGHT, candidate -> {
+            checked.incrementAndGet();
+            return Optional.of(candidate);
+        });
+        Pos[] behind = new Pos[20];
+        for (int i = 0; i < behind.length; i++) behind[i] = new Pos(i, 40, -40 - i);
+        CreekContext ctx = new CreekContext(1000L, List.of(WATCHER), body, Contexts.route(behind), counting,
+                Contexts.NO_ACTIONS, Contexts.CONFIG, new Random(7));
+
+        assertInstanceOf(PatrolState.class, new VanishState(1000L).tick(ctx));
+        assertEquals(1, checked.get(), "every point behind the survivor is hidden, so the first one will do");
     }
 
     @Test

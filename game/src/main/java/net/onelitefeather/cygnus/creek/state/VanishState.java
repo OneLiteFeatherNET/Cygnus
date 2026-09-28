@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.creek.state;
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -72,13 +74,17 @@ public final class VanishState implements CreekState {
         double distance = ctx.config().respawnMinDistance();
         // Any point of the route will do. Asking the route for its next point would only offer the
         // neighbours of where the creek disappeared, and that is often right next to a survivor.
-        List<Pos> spots = ctx.route().points().stream()
-                .map(point -> ctx.spots().hiddenSpotAt(point, observers, distance))
-                .flatMap(Optional::stream)
-                .toList();
-        if (spots.isEmpty()) return this;
-
-        ctx.body().teleport(spots.get(ctx.random().nextInt(spots.size())));
-        return new PatrolState();
+        // Checking them in random order and taking the first hidden one picks just as fairly as
+        // checking them all, but usually stops after one or two.
+        List<Pos> points = new ArrayList<>(ctx.route().points());
+        Collections.shuffle(points, ctx.random());
+        for (Pos point : points) {
+            Optional<Pos> spot = ctx.spots().hiddenSpotAt(point, observers, distance);
+            if (spot.isPresent()) {
+                ctx.body().teleport(spot.get());
+                return new PatrolState();
+            }
+        }
+        return this;
     }
 }
