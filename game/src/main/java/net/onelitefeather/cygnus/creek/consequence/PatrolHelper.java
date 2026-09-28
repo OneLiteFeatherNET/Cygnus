@@ -25,7 +25,7 @@ import java.util.random.RandomGenerator;
  * @version 1.0.0
  * @since 2.15.0
  */
-public final class PatrolConsequence {
+public final class PatrolHelper {
 
     /** How long the survivor stays frozen, in ticks (2 seconds). */
     static final int STUN_TICKS = 40;
@@ -72,7 +72,7 @@ public final class PatrolConsequence {
      *
      * @param random tosses the coin between freezing and flinging
      */
-    public PatrolConsequence(RandomGenerator random) {
+    public PatrolHelper(RandomGenerator random) {
         this.random = random;
     }
 

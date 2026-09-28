@@ -2,7 +2,7 @@ package net.onelitefeather.cygnus.creek;
 
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
-import net.onelitefeather.cygnus.creek.consequence.PatrolConsequence;
+import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 
@@ -26,7 +26,7 @@ record CreekRound(
         CreekSight sight,
         SpotFinder spots,
         CatchConsequence consequence,
-        PatrolConsequence patrol,
+        PatrolHelper patrol,
         CreekConfig config,
         RandomGenerator random
 ) {

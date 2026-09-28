@@ -18,14 +18,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class PatrolConsequenceIntegrationTest extends CygnusPlayerTestBase {
+class PatrolHelperIntegrationTest extends CygnusPlayerTestBase {
 
     @Test
     @DisplayName("A stun slows the selected survivor and does not count as a catch")
     void stunSlowsTheSelected(Env env) {
         Instance instance = env.createFlatInstance();
         Player selected = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        PatrolConsequence patrol = new PatrolConsequence(new Random(1));
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
 
         patrol.stun(selected, List.of(selected));
 
@@ -42,7 +42,7 @@ class PatrolConsequenceIntegrationTest extends CygnusPlayerTestBase {
         Player near = env.createConnection().connect(instance, new Pos(5, 40, 0));
         Player far = env.createConnection().connect(instance, new Pos(20, 40, 0));
         Player slender = env.createConnection().connect(instance, new Pos(3, 40, 0));
-        PatrolConsequence patrol = new PatrolConsequence(new Random(1));
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
 
         patrol.stun(selected, List.of(selected, near, far));
 
@@ -59,7 +59,7 @@ class PatrolConsequenceIntegrationTest extends CygnusPlayerTestBase {
         Player near = env.createConnection().connect(instance, new Pos(5, 40, 0));
         Player far = env.createConnection().connect(instance, new Pos(20, 40, 0));
         Player slender = env.createConnection().connect(instance, new Pos(3, 40, 0));
-        PatrolConsequence patrol = new PatrolConsequence(new Random(1));
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
 
         patrol.vanished(new Pos(0, 40, 0), List.of(near, far));
 
@@ -93,14 +93,14 @@ class PatrolConsequenceIntegrationTest extends CygnusPlayerTestBase {
     void flingsAwayFromTheCreek(Env env) {
         Instance instance = flat(env);
         Player selected = env.createConnection().connect(instance, new Pos(8.5, 40, 8.5));
-        PatrolConsequence patrol = new PatrolConsequence(new Random(1));
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
 
         assertTrue(patrol.flingAway(selected, new Pos(8.5, 40, 6.5)));
 
         Vec velocity = selected.getVelocity();
-        assertEquals(PatrolConsequence.FLING_MAX_DISTANCE * PatrolConsequence.FLING_SPEED_PER_BLOCK, velocity.z(), 1.0E-6);
+        assertEquals(PatrolHelper.FLING_MAX_DISTANCE * PatrolHelper.FLING_SPEED_PER_BLOCK, velocity.z(), 1.0E-6);
         assertEquals(0.0D, velocity.x(), 1.0E-6);
-        assertEquals(PatrolConsequence.FLING_LIFT, velocity.y(), 1.0E-6);
+        assertEquals(PatrolHelper.FLING_LIFT, velocity.y(), 1.0E-6);
     }
 
     @Test
@@ -109,12 +109,12 @@ class PatrolConsequenceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = flat(env);
         Player selected = env.createConnection().connect(instance, new Pos(8.5, 40, 8.5));
         wall(instance, 8, 8, 14, 14);
-        PatrolConsequence patrol = new PatrolConsequence(new Random(1));
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
 
         assertTrue(patrol.flingAway(selected, new Pos(8.5, 40, 6.5)));
 
-        double distance = selected.getVelocity().z() / PatrolConsequence.FLING_SPEED_PER_BLOCK;
-        assertTrue(distance >= PatrolConsequence.FLING_MIN_DISTANCE && distance < 6.0D, "flung " + distance + " blocks");
+        double distance = selected.getVelocity().z() / PatrolHelper.FLING_SPEED_PER_BLOCK;
+        assertTrue(distance >= PatrolHelper.FLING_MIN_DISTANCE && distance < 6.0D, "flung " + distance + " blocks");
     }
 
     @Test
@@ -123,13 +123,13 @@ class PatrolConsequenceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = flat(env);
         Player selected = env.createConnection().connect(instance, new Pos(8.5, 40, 8.5));
         wall(instance, 0, 15, 10, 10);
-        PatrolConsequence patrol = new PatrolConsequence(new Random(1));
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
 
         assertTrue(patrol.flingAway(selected, new Pos(8.5, 40, 6.5)));
 
         Vec velocity = selected.getVelocity();
         assertEquals(0.0D, velocity.z(), 1.0E-6, "straight and diagonal are blocked");
-        assertTrue(Math.abs(velocity.x()) >= PatrolConsequence.FLING_MIN_DISTANCE * PatrolConsequence.FLING_SPEED_PER_BLOCK);
+        assertTrue(Math.abs(velocity.x()) >= PatrolHelper.FLING_MIN_DISTANCE * PatrolHelper.FLING_SPEED_PER_BLOCK);
     }
 
     @Test
@@ -142,7 +142,7 @@ class PatrolConsequenceIntegrationTest extends CygnusPlayerTestBase {
         wall(instance, 6, 6, 6, 11);
         wall(instance, 11, 11, 6, 11);
         // nextBoolean() is false for 0, so selected() tries the fling first.
-        PatrolConsequence patrol = new PatrolConsequence(() -> 0L);
+        PatrolHelper patrol = new PatrolHelper(() -> 0L);
 
         patrol.selected(selected, new Pos(8.5, 40, 7.5), List.of(selected));
 
@@ -156,7 +156,7 @@ class PatrolConsequenceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player selected = env.createConnection().connect(instance, new Pos(0, 40, 0));
         Player near = env.createConnection().connect(instance, new Pos(5, 40, 0));
-        PatrolConsequence patrol = new PatrolConsequence(new Random(1));
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
         patrol.stun(selected, List.of(selected, near));
 
         patrol.cleanUp();

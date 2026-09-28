@@ -10,7 +10,7 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
-import net.onelitefeather.cygnus.creek.consequence.PatrolConsequence;
+import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.creek.state.CreekState;
@@ -134,7 +134,7 @@ public final class CreekService {
         // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
         CreekRound round = new CreekRound(this.sight, this.spots, this.consequence,
-                new PatrolConsequence(this.random), this.config, this.random);
+                new PatrolHelper(this.random), this.config, this.random);
         this.round = round;
         List<Pos> points = paths.allPoints();
 

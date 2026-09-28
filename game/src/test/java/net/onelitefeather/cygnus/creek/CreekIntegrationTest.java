@@ -9,7 +9,7 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
-import net.onelitefeather.cygnus.creek.consequence.PatrolConsequence;
+import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.DoneState;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
@@ -40,7 +40,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     private static Creek creek(CreekBody body, CreekConfig config, CreekState initial) {
         CreekSight sight = new CreekSight(config.sightRange(), config.sightViewAngle());
         // nextBoolean() is true for -1, so a selection always ends in the stun.
-        PatrolConsequence patrol = new PatrolConsequence(() -> -1L);
+        PatrolHelper patrol = new PatrolHelper(() -> -1L);
         CreekRound round = new CreekRound(sight, new SpotFinder(sight, Optional::of), _ -> {}, patrol, config,
                 new Random(3));
         return new Creek(body, Contexts.route(), round, initial);
@@ -128,7 +128,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("A state selecting a survivor hands them to the patrol consequence")
+    @DisplayName("A state selecting a survivor hands them to the patrol helper")
     void selectionReachesTheConsequence(Env env) {
         Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
