@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.creek.body;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EntityCreature;
+import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.metadata.monster.CreakingMeta;
 import net.minestom.server.instance.Instance;
@@ -141,6 +142,21 @@ class CreakingBodyIntegrationTest extends CygnusPlayerTestBase {
         walk(env, body, goal);
 
         assertTrue(body.position().distance(goal) <= 1.0D, "he gets to the top, stands at " + body.position());
+    }
+
+    @Test
+    @DisplayName("The step he walks up comes from his step height attribute")
+    void stepHeightFollowsTheAttribute(Env env) {
+        Instance instance = env.createFlatInstance();
+        env.createConnection().connect(instance, new Pos(0, 40, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0.5, 40, 0.5));
+        EntityCreature creature = (EntityCreature) body.entity();
+        StepFollower follower = new StepFollower(creature);
+        assertEquals(CreakingBody.STEP_HEIGHT, follower.stepHeight(), 1.0E-9, "a vanilla mob's step, not a creaking's");
+
+        creature.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(1.0D);
+
+        assertEquals(1.0D, follower.stepHeight(), 1.0E-9);
     }
 
     @Test

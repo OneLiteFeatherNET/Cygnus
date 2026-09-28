@@ -5,7 +5,8 @@ import net.minestom.server.collision.PhysicsResult;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
-import net.minestom.server.entity.Entity;
+import net.minestom.server.entity.LivingEntity;
+import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.pathfinding.followers.GroundNodeFollower;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.position.PositionUtils;
@@ -20,8 +21,9 @@ import org.jetbrains.annotations.Nullable;
  * <ul>
  *     <li>Each step is checked a hair above the feet. Standing right on top of a slab, Minestom
  *     treats the next slab as a wall, and the creek would get stuck at the edge.</li>
- *     <li>Anything up to {@link #STEP_HEIGHT} high, like slabs and dirt paths, it simply walks up.
- *     It only jumps when stepping up gets it nowhere.</li>
+ *     <li>Anything up to its step height attribute high, like slabs and dirt paths, it simply walks
+ *     up. That is 0.6 blocks by default, the same as a vanilla mob. It only jumps when stepping up
+ *     gets it nowhere.</li>
  *     <li>A path point counts as reached once the creek stands in its column and less than a block
  *     away in height. The path puts the floor of a slab a block too high, so on slabs the creek
  *     never quite arrived and kept jumping at the point.</li>
@@ -33,17 +35,23 @@ import org.jetbrains.annotations.Nullable;
  */
 final class StepFollower extends GroundNodeFollower {
 
-    /** The highest step the creek takes without jumping, in blocks. The same as a vanilla mob. */
-    static final double STEP_HEIGHT = 0.6D;
-
     /** How far ahead it looks for a blocked step before deciding to jump, in blocks. */
     private static final double LOOK_AHEAD = 0.3D;
 
-    private final Entity entity;
+    private final LivingEntity entity;
 
-    StepFollower(Entity entity) {
+    StepFollower(LivingEntity entity) {
         super(entity);
         this.entity = entity;
+    }
+
+    /**
+     * The highest step the creek takes without jumping, from its step height attribute.
+     *
+     * @return the step height, in blocks
+     */
+    double stepHeight() {
+        return this.entity.getAttributeValue(Attribute.STEP_HEIGHT);
     }
 
     @Override
@@ -95,14 +103,14 @@ final class StepFollower extends GroundNodeFollower {
 
         PhysicsResult over = this.sweep(instance, this.lifted(instance, from), step);
         if (horizontalDistance(from, over.newPosition()) <= horizontalDistance(from, flatEnd)) return flatEnd;
-        return this.sweep(instance, over.newPosition(), new Vec(0, -STEP_HEIGHT, 0)).newPosition();
+        return this.sweep(instance, over.newPosition(), new Vec(0, -this.stepHeight(), 0)).newPosition();
     }
 
     /**
-     * Returns the position {@link #STEP_HEIGHT} higher, or lower if a ceiling is in the way.
+     * Returns the position {@link #stepHeight()} higher, or lower if a ceiling is in the way.
      */
     private Pos lifted(Instance instance, Pos from) {
-        return this.sweep(instance, from.add(0, Vec.EPSILON, 0), new Vec(0, STEP_HEIGHT, 0)).newPosition();
+        return this.sweep(instance, from.add(0, Vec.EPSILON, 0), new Vec(0, this.stepHeight(), 0)).newPosition();
     }
 
     private boolean blocked(Instance instance, Pos from, Vec step) {
