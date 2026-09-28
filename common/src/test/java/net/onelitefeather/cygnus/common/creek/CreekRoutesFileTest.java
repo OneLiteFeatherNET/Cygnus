@@ -64,9 +64,9 @@ class CreekRoutesFileTest {
     void invalidRoutesAreSkipped(@TempDir Path root) throws IOException {
         Files.writeString(root.resolve("creek.json"), """
                 [
-                  { "name": " ", "points": [ { "x": 0, "y": 80, "z": 0 }, { "x": 5, "y": 80, "z": 0 } ] },
-                  { "name": "Stub", "points": [ { "x": 0, "y": 80, "z": 0 } ] },
-                  { "name": "Waldweg Süd", "points": [ { "x": 0.5, "y": 80, "z": 0.5 }, { "x": 0.5, "y": 80, "z": 10.5 } ] }
+                  { "name": " ", "points": [ { "position": { "x": 0, "y": 80, "z": 0 } }, { "position": { "x": 5, "y": 80, "z": 0 } } ] },
+                  { "name": "Stub", "points": [ { "position": { "x": 0, "y": 80, "z": 0 } } ] },
+                  { "name": "Waldweg Süd", "points": [ { "position": { "x": 0.5, "y": 80, "z": 0.5 } }, { "position": { "x": 0.5, "y": 80, "z": 10.5 } } ] }
                 ]
                 """, StandardCharsets.UTF_8);
 
@@ -77,7 +77,7 @@ class CreekRoutesFileTest {
     @DisplayName("Only invalid routes leave nothing to walk")
     void onlyInvalidRoutesMeansNoRoutes(@TempDir Path root) throws IOException {
         Files.writeString(root.resolve("creek.json"), """
-                [ { "name": "Stub", "points": [ { "x": 0, "y": 80, "z": 0 } ] } ]
+                [ { "name": "Stub", "points": [ { "position": { "x": 0, "y": 80, "z": 0 } } ] } ]
                 """, StandardCharsets.UTF_8);
 
         assertTrue(CreekRoutesFile.load(mapFile(root)).isEmpty());
@@ -117,16 +117,29 @@ class CreekRoutesFileTest {
     }
 
     @Test
-    @DisplayName("A file written before pauses existed loads with no pauses")
+    @DisplayName("A point without a pause loads with no pause")
     void oldFileHasNoPauses(@TempDir Path root) throws IOException {
         Files.writeString(root.resolve("creek.json"), """
-                [ { "name": "Alt", "points": [ { "x": 0.5, "y": 80, "z": 0.5 }, { "x": 0.5, "y": 80, "z": 10.5 } ] } ]
+                [ { "name": "Alt", "points": [ { "position": { "x": 0.5, "y": 80, "z": 0.5 } }, { "position": { "x": 0.5, "y": 80, "z": 10.5 } } ] } ]
                 """, StandardCharsets.UTF_8);
 
         List<CreekRoute> routes = CreekRoutesFile.load(mapFile(root));
 
         assertEquals(1, routes.size());
         assertTrue(routes.getFirst().points().stream().allMatch(point -> point.pauseMillis() == 0));
+    }
+
+    @Test
+    @DisplayName("A route with a point from before positions were nested is skipped, not a crash")
+    void flatPointIsSkipped(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("creek.json"), """
+                [
+                  { "name": "Flach", "points": [ { "x": 0.5, "y": 80, "z": 0.5 }, { "x": 0.5, "y": 80, "z": 10.5 } ] },
+                  { "name": "Waldweg Süd", "points": [ { "position": { "x": 0.5, "y": 80, "z": 0.5 } }, { "position": { "x": 0.5, "y": 80, "z": 10.5 } } ] }
+                ]
+                """, StandardCharsets.UTF_8);
+
+        assertEquals(List.of(SOUTH), CreekRoutesFile.load(mapFile(root)));
     }
 
     @Test
@@ -146,8 +159,8 @@ class CreekRoutesFileTest {
     void negativePauseIsSkipped(@TempDir Path root) throws IOException {
         Files.writeString(root.resolve("creek.json"), """
                 [
-                  { "name": "Kaputt", "points": [ { "x": 0, "y": 80, "z": 0, "pauseMillis": -5 }, { "x": 5, "y": 80, "z": 0 } ] },
-                  { "name": "Waldweg Süd", "points": [ { "x": 0.5, "y": 80, "z": 0.5 }, { "x": 0.5, "y": 80, "z": 10.5 } ] }
+                  { "name": "Kaputt", "points": [ { "position": { "x": 0, "y": 80, "z": 0 }, "pauseMillis": -5 }, { "position": { "x": 5, "y": 80, "z": 0 } } ] },
+                  { "name": "Waldweg Süd", "points": [ { "position": { "x": 0.5, "y": 80, "z": 0.5 } }, { "position": { "x": 0.5, "y": 80, "z": 10.5 } } ] }
                 ]
                 """, StandardCharsets.UTF_8);
 

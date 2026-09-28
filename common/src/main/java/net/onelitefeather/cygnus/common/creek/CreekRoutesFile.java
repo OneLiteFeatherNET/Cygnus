@@ -132,10 +132,15 @@ public final class CreekRoutesFile {
         return List.copyOf(valid);
     }
 
+    @SuppressWarnings("ConstantValue")
     private static @Nullable String problemOf(CreekRoute route, Set<String> names) {
         if (route.name().isEmpty()) return "the name is empty";
         if (route.points().size() < CreekRoute.MIN_POINTS) {
             return "it needs at least " + CreekRoute.MIN_POINTS + " points";
+        }
+        // Gson leaves the position out of a hand-written point, or of one in the older flat layout.
+        if (route.points().stream().anyMatch(point -> point.position() == null)) {
+            return "a point has no position";
         }
         if (route.points().stream().anyMatch(point -> point.pauseMillis() < 0)) {
             return "a point has a negative pause";

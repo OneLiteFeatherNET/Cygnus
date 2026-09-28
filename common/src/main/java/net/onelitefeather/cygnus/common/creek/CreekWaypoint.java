@@ -5,19 +5,18 @@ import net.minestom.server.coordinate.Vec;
 /**
  * One point of a creek route: where the creek's feet stand, and how long it waits there.
  * <p>
- * The fields are flat so the JSON keeps the {@code x}, {@code y}, {@code z} layout of older files.
- * A file without {@code pauseMillis} loads with a pause of 0.
+ * In the JSON the position is a nested object written by the position adapter, as in
+ * {@code {"position":{"x":…,"y":…,"z":…},"pauseMillis":…}}. A point without {@code pauseMillis}
+ * loads with a pause of 0. A point without a position is reported by {@link CreekRoutesFile}.
  * </p>
  *
- * @param x           the x coordinate
- * @param y           the y coordinate
- * @param z           the z coordinate
+ * @param position    where the creek's feet stand
  * @param pauseMillis how long the creek waits after reaching this point, in milliseconds
  * @author theEvilReaper
  * @version 1.0.0
  * @since 2.15.0
  */
-public record CreekWaypoint(double x, double y, double z, int pauseMillis) {
+public record CreekWaypoint(Vec position, int pauseMillis) {
 
     /**
      * Creates a waypoint without a pause.
@@ -26,16 +25,7 @@ public record CreekWaypoint(double x, double y, double z, int pauseMillis) {
      * @return the waypoint
      */
     public static CreekWaypoint of(Vec position) {
-        return new CreekWaypoint(position.x(), position.y(), position.z(), 0);
-    }
-
-    /**
-     * Returns where the creek's feet stand.
-     *
-     * @return the position
-     */
-    public Vec position() {
-        return new Vec(this.x, this.y, this.z);
+        return new CreekWaypoint(position, 0);
     }
 
     /**
@@ -45,6 +35,6 @@ public record CreekWaypoint(double x, double y, double z, int pauseMillis) {
      * @return the copy
      */
     public CreekWaypoint withPause(int pauseMillis) {
-        return new CreekWaypoint(this.x, this.y, this.z, pauseMillis);
+        return new CreekWaypoint(this.position, pauseMillis);
     }
 }
