@@ -8,6 +8,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerUseItemEvent;
+import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
@@ -30,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
  * @version 1.2.0
  * @since 2.7.0
  */
-public final class SpectatorService {
+public final class SpectatorService implements GameFeature {
 
     private static final Component LEAVE_MESSAGE = Component.text("Thanks for playing it. <3", NamedTextColor.RED);
 
@@ -47,6 +48,7 @@ public final class SpectatorService {
      *
      * @param node to register the listeners
      */
+    @Override
     public void registerListener(EventNode<Event> node) {
         node.addListener(SpectatorAddEvent.class, new SpectatorAddListener(this));
         node.addListener(PlayerUseItemEvent.class, new SpectatorItemListener(this));

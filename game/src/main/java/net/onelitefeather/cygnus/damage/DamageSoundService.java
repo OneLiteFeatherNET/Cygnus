@@ -7,6 +7,7 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.sound.SoundEvent;
+import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import net.onelitefeather.cygnus.utils.PlayerState;
@@ -43,7 +44,7 @@ import java.util.function.LongSupplier;
  * @version 1.0.0
  * @since 2.13.0
  */
-public final class DamageSoundService {
+public final class DamageSoundService implements GameFeature {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DamageSoundService.class);
 
@@ -90,6 +91,7 @@ public final class DamageSoundService {
      *
      * @param node the node to register on
      */
+    @Override
     public void registerListener(EventNode<Event> node) {
         node.addListener(PlayerDamagedEvent.class, event -> this.play(event.getPlayer()));
         node.addListener(PlayerDisconnectEvent.class, event -> this.clear(event.getPlayer()));

@@ -5,6 +5,7 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
+import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.utils.PlayerState;
@@ -45,22 +46,26 @@ import java.util.function.ToDoubleFunction;
  * @version 2.1.0
  * @since 2.7.0
  */
-public final class TunnelVisionService {
+public final class TunnelVisionService implements GameFeature {
 
     private final TunnelVisionRenderer renderer;
     private final ToDoubleFunction<Player> stamina;
+    private final Supplier<Set<Player>> roundSurvivors;
     private final PlayerState<Tracked> survivors = new PlayerState<>();
     private final RepeatingTask task = new RepeatingTask(this::tick);
 
     /**
      * Creates a new service.
      *
-     * @param renderer the renderer that puts a stage on the screen
-     * @param stamina  supplies a survivor's remaining stamina as a share of a full bar
+     * @param renderer  the renderer that puts a stage on the screen
+     * @param stamina   supplies a survivor's remaining stamina as a share of a full bar
+     * @param survivors supplies the survivors of the starting round
      */
-    public TunnelVisionService(TunnelVisionRenderer renderer, ToDoubleFunction<Player> stamina) {
+    public TunnelVisionService(TunnelVisionRenderer renderer, ToDoubleFunction<Player> stamina,
+                               Supplier<Set<Player>> survivors) {
         this.renderer = renderer;
         this.stamina = stamina;
+        this.roundSurvivors = survivors;
     }
 
     /**
@@ -97,13 +102,13 @@ public final class TunnelVisionService {
      * name the way {@code AmbientProvider} is.
      * </p>
      *
-     * @param node      the node to register on
-     * @param survivors supplies the survivors of the starting round
+     * @param node the node to register on
      */
-    public void registerListener(EventNode<Event> node, Supplier<Set<Player>> survivors) {
+    @Override
+    public void registerListener(EventNode<Event> node) {
         node.addListener(GameStartEvent.class, event -> {
             this.startTask();
-            for (Player survivor : survivors.get()) {
+            for (Player survivor : this.roundSurvivors.get()) {
                 this.track(survivor);
             }
         });

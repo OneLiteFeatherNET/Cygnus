@@ -5,6 +5,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.sound.SoundEvent;
+import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
@@ -43,7 +44,7 @@ import java.util.function.Supplier;
  * @version 1.0.0
  * @since 2.14.0
  */
-public final class SlenderStaticService {
+public final class SlenderStaticService implements GameFeature {
 
     /** How often the carpet is looked at, in seconds. */
     private static final long TICK_SECONDS = 1L;
@@ -83,6 +84,7 @@ public final class SlenderStaticService {
      *
      * @param node the node to register on
      */
+    @Override
     public void registerListener(EventNode<Event> node) {
         node.addListener(GameStartEvent.class, event -> this.start());
         node.addListener(PageFoundEvent.class, this::onPageFound);

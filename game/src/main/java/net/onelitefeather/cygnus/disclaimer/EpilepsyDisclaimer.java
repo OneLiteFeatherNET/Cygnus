@@ -12,6 +12,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.sound.SoundEvent;
+import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.pica.dialog.DialogTemplate;
 import net.onelitefeather.pica.dialog.type.DialogType;
@@ -35,7 +36,7 @@ import java.time.Duration;
  * @version 1.1.0
  * @since 2.11.0
  */
-public final class EpilepsyDisclaimer {
+public final class EpilepsyDisclaimer implements GameFeature {
 
     /**
      * The id the dialog button sends back. The listener below waits for exactly this key, so the two
@@ -110,6 +111,7 @@ public final class EpilepsyDisclaimer {
      *
      * @param node the event node to register the listeners on
      */
+    @Override
     public void registerListener(EventNode<Event> node) {
         node.addListener(PlayerSpawnEvent.class, event -> {
             if (!event.isFirstSpawn()) return;

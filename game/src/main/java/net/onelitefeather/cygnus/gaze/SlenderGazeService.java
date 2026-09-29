@@ -6,6 +6,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
+import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.utils.PlayerState;
@@ -34,7 +35,7 @@ import java.util.function.Supplier;
  * @version 3.1.0
  * @since 2.7.0
  */
-public final class SlenderGazeService {
+public final class SlenderGazeService implements GameFeature {
 
 
     /** How many frames the tearing runs through. */
@@ -44,21 +45,25 @@ public final class SlenderGazeService {
     private final GazeSink sink;
     private final SlenderGaze gaze;
     private final Supplier<@Nullable Player> slender;
+    private final Supplier<Set<Player>> roundSurvivors;
     private final PlayerState<Tracked> survivors = new PlayerState<>();
     private final RepeatingTask task = new RepeatingTask(this::tick);
 
     /**
      * Creates a new service.
      *
-     * @param sink    where a survivor's level is signalled to, {@link GazeSink#NONE} to work the
-     *                levels out without sending them anywhere
-     * @param gaze    the thresholds the levels are worked out from
-     * @param slender supplies the current slender, or {@code null} while there is none
+     * @param sink      where a survivor's level is signalled to, {@link GazeSink#NONE} to work the
+     *                  levels out without sending them anywhere
+     * @param gaze      the thresholds the levels are worked out from
+     * @param slender   supplies the current slender, or {@code null} while there is none
+     * @param survivors supplies the survivors of the starting round
      */
-    public SlenderGazeService(GazeSink sink, SlenderGaze gaze, Supplier<@Nullable Player> slender) {
+    public SlenderGazeService(GazeSink sink, SlenderGaze gaze, Supplier<@Nullable Player> slender,
+                              Supplier<Set<Player>> survivors) {
         this.sink = sink;
         this.gaze = gaze;
         this.slender = slender;
+        this.roundSurvivors = survivors;
     }
 
     /**
@@ -72,13 +77,13 @@ public final class SlenderGazeService {
      * needs it; listening for itself keeps this self-contained instead.
      * </p>
      *
-     * @param node      the node to register on
-     * @param survivors supplies the survivors of the starting round
+     * @param node the node to register on
      */
-    public void registerListener(EventNode<Event> node, Supplier<Set<Player>> survivors) {
+    @Override
+    public void registerListener(EventNode<Event> node) {
         node.addListener(GameStartEvent.class, event -> {
             this.startTask();
-            for (Player survivor : survivors.get()) {
+            for (Player survivor : this.roundSurvivors.get()) {
                 this.track(survivor);
             }
         });
