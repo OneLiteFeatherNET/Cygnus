@@ -14,10 +14,9 @@ import net.onelitefeather.cygnus.map.GameMapProvider;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
-import net.onelitefeather.cygnus.overlay.EquipmentScreenOverlay;
-import net.onelitefeather.cygnus.overlay.OverlayProperties;
-import net.onelitefeather.cygnus.overlay.ScreenOverlay;
+import net.onelitefeather.cygnus.overlay.OverlayModule;
 import net.onelitefeather.cygnus.spectator.SpectatorService;
+import net.onelitefeather.cygnus.creek.CreekModule;
 import net.onelitefeather.cygnus.team.TeamCreator;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
@@ -42,27 +41,18 @@ import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.page.PageProximityService;
-import net.onelitefeather.cygnus.blood.BloodSplatterService;
 import net.onelitefeather.cygnus.damage.DamageSoundService;
 import net.onelitefeather.cygnus.noise.SlenderStaticService;
-import net.onelitefeather.cygnus.command.GlitchCommand;
-import net.onelitefeather.cygnus.command.CreekCommand;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
-import net.onelitefeather.cygnus.common.config.CreekConfig;
-import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
-import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.disclaimer.EpilepsyDisclaimer;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
-import net.onelitefeather.cygnus.gaze.BossBarGazeSignal;
-import net.onelitefeather.cygnus.gaze.SlenderGaze;
-import net.onelitefeather.cygnus.gaze.SlenderGazeService;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
@@ -92,30 +82,18 @@ import net.onelitefeather.cygnus.phase.WaitingPhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
-import net.onelitefeather.cygnus.creek.consequence.CatchEffects;
-import net.onelitefeather.cygnus.creek.body.CreakingBody;
-import net.onelitefeather.cygnus.creek.consequence.GlowReveal;
-import net.onelitefeather.cygnus.creek.dread.PageProgressDread;
-import net.onelitefeather.cygnus.creek.RoundClock;
-import net.onelitefeather.cygnus.creek.consequence.StagedCatchConsequence;
-import net.onelitefeather.cygnus.creek.debug.CreekDebug;
-import net.onelitefeather.cygnus.creek.CreekService;
 import net.onelitefeather.cygnus.stamina.StaminaService;
-import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
-import net.onelitefeather.cygnus.tunnelvision.TunnelVisionRenderer;
-import net.onelitefeather.cygnus.tunnelvision.TunnelVisionService;
 import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.List;
-import java.util.Random;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * @author theEvilReaper
@@ -138,17 +116,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final SpectatorService spectatorService;
     private final Optional<ResourcePackService> resourcePackService;
     private final ScoreboardDisplay scoreboardDisplay;
-    private final EpilepsyDisclaimer epilepsyDisclaimer;
-    private final ScreenOverlay screenOverlay;
-    private final SlenderGazeService slenderGazeService;
-    private final BossBarGazeSignal gazeSignal;
-    private final BloodSplatterService bloodSplatterService;
-    private final DamageSoundService damageSoundService;
-    private final TunnelVisionRenderer tunnelVisionRenderer;
-    private final TunnelVisionService tunnelVisionService;
-    private final SlenderStaticService slenderStaticService;
-    private final CreekService creekService;
-    private final CreekDebug creekDebug;
+    private final List<GameFeature> features;
 
     public Cygnus() {
         Path path = ServiceBootstrap.resolveWorkingDirectory();
@@ -186,59 +154,24 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
-        this.epilepsyDisclaimer = new EpilepsyDisclaimer();
-        this.screenOverlay = new EquipmentScreenOverlay();
-        this.gazeSignal = new BossBarGazeSignal();
-        // The service drives the signal during a round. Outside one it does not tick - it starts on
-        // GameStartEvent - so /glitch keeps working in the lobby for judging a level by hand.
-        this.slenderGazeService = new SlenderGazeService(
-                this.gazeSignal,
-                new SlenderGaze(
-                        this.gameConfig.glitch().range(),
-                        this.gameConfig.glitch().closeRange(),
-                        this.gameConfig.glitch().viewAngle()),
-                () -> TeamHelper.slenderOf(this.teamService));
-        this.bloodSplatterService = new BloodSplatterService(
-                this.screenOverlay,
-                bound -> ThreadLocalRandom.current().nextInt(bound)
-        );
-        this.damageSoundService = new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis);
-        this.slenderStaticService = new SlenderStaticService(
-                this.gameConfig.slenderStatic(),
-                () -> TeamHelper.slenderOf(this.teamService));
-        this.tunnelVisionRenderer = new OverlayTunnelVisionRenderer(this.screenOverlay);
-        this.tunnelVisionService = new TunnelVisionService(this.tunnelVisionRenderer, player -> StaminaHelper.remainingShare(this.staminaService, player));
-        CreekConfig creekConfig = this.gameConfig.creek();
-        this.creekDebug = new CreekDebug();
-        // One clock for the service and the dread: the service starts it, the dread reads it.
-        RoundClock roundClock = new RoundClock(System::currentTimeMillis);
-        // Every step and every catch runs on the scheduler thread, but Random is thread-safe
-        // anyway, which keeps a stray call from elsewhere harmless.
-        Random creekRandom = new Random();
-        this.creekService = new CreekService(
-                creekConfig,
-                () -> TeamHelper.survivorsOf(this.teamService),
-                this.mapProvider.getActiveInstance(),
-                this::creekRoutes,
-                CreakingBody::spawn,
-                new PageProgressDread(
-                        this.pageProvider::foundPageCount,
-                        this.pageProvider::getMaxPageAmount,
-                        roundClock::elapsedMillis,
-                        this.gameConfig.round().gameTime(),
-                        creekConfig),
-                new StagedCatchConsequence(
-                        new CatchEffects(this.jumpscareManager::force, this.staminaService::getFoodBar, creekConfig.slownessSeconds()),
-                        new GlowReveal(creekConfig.betrayalGlowSeconds()),
-                        () -> TeamHelper.slenderOf(this.teamService),
-                        creekConfig,
-                        creekRandom),
-                roundClock,
-                creekRandom,
-                this.creekDebug);
+        this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
+                new EpilepsyDisclaimer(),
+                this.spectatorService,
+                // Not part of the OverlayModule: the sound is the feedback a hit owes the player
+                // either way, and it needs neither the resource pack nor the overlay gate to be heard.
+                new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
+                // Outside the OverlayModule for the same reason as the damage sound: the static is
+                // heard, not drawn, so neither the resource pack nor the overlay gate has a say in it.
+                new SlenderStaticService(
+                        this.gameConfig.slenderStatic(),
+                        () -> TeamHelper.slenderOf(this.teamService)),
+                new CreekModule(this.gameConfig.creek(), this.gameConfig.round().gameTime(), this.teamService,
+                        this.mapProvider, this.pageProvider, this.jumpscareManager, this.staminaService),
+                new OverlayModule(this.gameConfig.glitch(), this.teamService, this.staminaService)
+        )).toList();
         this.initPhases();
         this.initCommands();
-        this.initListener();
+        this.initListener(spectatorTeam);
         this.linearPhaseSeries.start();
         this.registerGameListener();
     }
@@ -246,12 +179,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initCommands() {
         var manager = MinecraftServer.getCommandManager();
         manager.register(new StartCommand(this.linearPhaseSeries));
-        manager.register(new GlitchCommand(this.gazeSignal));
-        manager.register(new CreekCommand(this.creekDebug));
+        this.features.forEach(feature -> feature.registerCommands(manager));
     }
 
 
-    private void initListener() {
+    private void initListener(Team spectatorTeam) {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         var manager = MinecraftServer.getGlobalEventHandler();
         manager.addListener(GameMapLoadedEvent.class, event ->
@@ -269,10 +201,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         this.resourcePackService
                 )
         );
-        this.resourcePackService.ifPresent(service -> service.registerListener(manager));
-        this.epilepsyDisclaimer.registerListener(manager);
-        Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
-                .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener(spectatorTeam));
         manager.addListener(GameMapLoadEvent.class, _ -> this.mapProvider.loadGameMap());
         manager.addListener(GamePrepareEvent.class, _ -> {
@@ -308,38 +236,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientSettingsPacket.class, CygnusSettingsListener::listener);
-
-        spectatorService.registerListener(handler);
-        // Not part of registerOverlayListeners: the sound is the feedback a hit owes the player
-        // either way, and it needs neither the resource pack nor the overlay gate to be heard.
-        this.damageSoundService.registerListener(handler);
-        // Outside registerOverlayListeners for the same reason as the damage sound: the static is
-        // heard, not drawn, so neither the resource pack nor the overlay gate has a say in it.
-        this.slenderStaticService.registerListener(handler);
-        // Outside registerOverlayListeners too: the creek is an entity in the world that the
-        // client draws like any other, not a camera overlay.
-        if (this.gameConfig.creek().enabled()) {
-            this.creekService.registerListener(handler);
-        }
-        this.registerOverlayListeners(handler);
-    }
-
-    /**
-     * Registers the full-screen effects, unless the overlays are switched off.
-     * <p>
-     * The effects are drawn as {@code camera_overlay} textures and are gated by
-     * {@link OverlayProperties} alone - deliberately not by whether this server hands out a resource
-     * pack. One gate for all of them, so that {@code cygnus.overlays} means what its name says and
-     * an effect cannot end up outside it by being wired in somewhere else.
-     * </p>
-     *
-     * @param handler the node the effects register their listeners on
-     */
-    private void registerOverlayListeners(GlobalEventHandler handler) {
-        if (!OverlayProperties.enabled()) return;
-        this.slenderGazeService.registerListener(handler, () -> TeamHelper.survivorsOf(this.teamService));
-        this.bloodSplatterService.registerListener(handler);
-        this.tunnelVisionService.registerListener(handler, () -> TeamHelper.survivorsOf(this.teamService));
+        this.features.forEach(feature -> feature.registerListener(handler));
     }
 
     private void initPhases() {
@@ -361,16 +258,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.round().gameTime(), this.jumpscareManager));
         this.linearPhaseSeries.add(new RestartPhase());
-    }
-
-    /**
-     * Returns the creek routes of the current map.
-     *
-     * @return the routes, empty without a map or without routes
-     */
-    private List<CreekRoute> creekRoutes() {
-        GameMap map = this.mapProvider.getGameMap();
-        return map != null ? map.getCreekRoutes() : List.of();
     }
 
     private void finishGame() {

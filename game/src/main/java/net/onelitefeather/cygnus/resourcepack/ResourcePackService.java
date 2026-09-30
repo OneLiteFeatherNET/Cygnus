@@ -9,6 +9,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerResourcePackStatusEvent;
+import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +34,7 @@ import java.util.concurrent.TimeoutException;
  * @version 1.2.0
  * @since 1.0.0
  */
-public final class ResourcePackService {
+public final class ResourcePackService implements GameFeature {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourcePackService.class);
 
@@ -131,6 +132,7 @@ public final class ResourcePackService {
      *
      * @param node the event node to register the listener on
      */
+    @Override
     public void registerListener(EventNode<Event> node) {
         node.addListener(PlayerResourcePackStatusEvent.class, this::handleStatus);
     }

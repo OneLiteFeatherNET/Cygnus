@@ -45,7 +45,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void exhaustedSurvivorIsFullyNarrowed(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, Set::of);
         service.track(survivor);
 
         service.tick();
@@ -58,7 +58,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void restedSurvivorSeesNothing(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> FULL_STAMINA);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> FULL_STAMINA, Set::of);
         service.track(survivor);
 
         service.tick();
@@ -71,7 +71,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void removedSurvivorIsCleared(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, Set::of);
         service.track(survivor);
         service.tick();
         renderer.forget();
@@ -90,7 +90,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player first = spawn(env, instance, new Pos(0, 40, 0));
         Player second = spawn(env, instance, new Pos(4, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, Set::of);
         service.track(first);
         service.track(second);
         service.tick();
@@ -109,7 +109,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     @DisplayName("Starting and stopping the task is idempotent")
     void startAndStopTaskAreIdempotent(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, Set::of);
 
         service.startTask();
         service.startTask();
@@ -122,8 +122,8 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void gameStartRegistersSurvivors(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
-        service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> Set.of(survivor));
+        service.registerListener(env.process().eventHandler());
 
         EventDispatcher.call(new GameStartEvent());
         service.tick();
@@ -136,8 +136,8 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void deathClearsTheOverlay(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
-        service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> Set.of(survivor));
+        service.registerListener(env.process().eventHandler());
         service.track(survivor);
         service.tick();
         renderer.forget();
@@ -154,8 +154,8 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
     void gameFinishCleansUp(Env env) {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
-        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA);
-        service.registerListener(env.process().eventHandler(), () -> Set.of(survivor));
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> Set.of(survivor));
+        service.registerListener(env.process().eventHandler());
         service.track(survivor);
         service.tick();
         renderer.forget();
