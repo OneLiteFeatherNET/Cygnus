@@ -12,6 +12,7 @@ import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
+import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
@@ -62,6 +63,7 @@ public final class CreekService {
     private final Supplier<? extends @Nullable Instance> instance;
     private final BiFunction<Instance, Pos, CreekBody> bodies;
     private final DreadSource dread;
+    private final CreekWitness witness;
     private final CatchConsequence consequence;
     private final RoundClock clock;
     private final RandomGenerator random;
@@ -84,6 +86,7 @@ public final class CreekService {
      * @param routes      supplies the creek routes of the current map; without any, the creek stays away
      * @param bodies      puts a creek body into the world
      * @param dread       rates how scared each survivor is
+     * @param witness     hears about catches and sightings
      * @param consequence what happens on a catch
      * @param clock       the round's clock
      * @param random      the random source
@@ -91,7 +94,7 @@ public final class CreekService {
      */
     public CreekService(CreekConfig config, Supplier<Set<Player>> survivors,
                           Supplier<? extends @Nullable Instance> instance, Supplier<List<CreekRoute>> routes,
-                          BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread,
+                          BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread, CreekWitness witness,
                           CatchConsequence consequence, RoundClock clock, RandomGenerator random,
                           CreekDebug debug) {
         this.config = config;
@@ -99,6 +102,7 @@ public final class CreekService {
         this.instance = instance;
         this.bodies = bodies;
         this.dread = dread;
+        this.witness = witness;
         this.consequence = consequence;
         this.clock = clock;
         this.random = random;
@@ -133,7 +137,7 @@ public final class CreekService {
         }
         // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
-        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence,
+        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.witness,
                 new PatrolHelper(this.random), this.config, this.random);
         this.round = round;
         List<Pos> points = paths.allPoints();

@@ -11,6 +11,7 @@ import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -33,6 +34,7 @@ final class Creek {
     private final CreekRound round;
     private CreekState state;
     private List<SurvivorView> lastViews = List.of();
+    private Set<UUID> seenLastStep = Set.of();
     private boolean entered;
 
     /**
@@ -73,6 +75,7 @@ final class Creek {
      */
     void tick(SurvivorSnapshot survivors, Set<UUID> ignored, long now) {
         CreekContext ctx = this.context(survivors, ignored, now);
+        this.reportSightings(ctx.survivors());
         if (!this.entered) {
             this.state.enter(ctx);
             this.entered = true;
@@ -93,6 +96,22 @@ final class Creek {
         // The state it had so far is never entered now, and never needs to be.
         this.entered = true;
         this.switchTo(VanishState.forever(), ctx);
+    }
+
+    /**
+     * Tells the witness about everyone who has just spotted this creek. Only the moment it comes
+     * into view counts; staring at it to hold it still is the survivor's defence, not a new scare.
+     *
+     * @param noticed the survivors this creek pays attention to in this step
+     */
+    private void reportSightings(List<SurvivorView> noticed) {
+        Set<UUID> seen = new HashSet<>();
+        for (SurvivorView view : noticed) {
+            if (!view.seesCreek()) continue;
+            seen.add(view.id());
+            if (!this.seenLastStep.contains(view.id())) this.round.witness().sighted(view.id());
+        }
+        this.seenLastStep = seen;
     }
 
     /**
@@ -175,7 +194,9 @@ final class Creek {
         @Override
         public void caught(UUID survivor) {
             Player player = this.survivors.player(survivor);
-            if (player != null) this.round.consequence().apply(player);
+            if (player == null) return;
+            this.round.consequence().apply(player);
+            this.round.witness().caught(survivor);
         }
 
         @Override
