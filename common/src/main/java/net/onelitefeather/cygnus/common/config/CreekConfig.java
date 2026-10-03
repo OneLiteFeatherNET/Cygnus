@@ -33,10 +33,6 @@ package net.onelitefeather.cygnus.common.config;
  * @param respawnMinDistance     minimum distance to every survivor when reappearing, in blocks
  * @param personalSpace          how close a survivor may come outside a hunt, in blocks
  * @param stuckMillis            how long the creek may make no progress before taking a shortcut
- * @param dreadPageWeight        dread share from found pages
- * @param dreadTimeWeight        dread share from elapsed round time
- * @param dreadIsolationWeight   dread share from being alone
- * @param isolationRadius        distance to the nearest survivor at which someone counts as alone
  * @param betrayalCatchCount     from this catch on, a survivor is always revealed to the slender
  * @param betrayalChance         chance of a reveal on earlier catches
  * @param betrayalGlowSeconds    how long a revealed survivor glows for the slender
@@ -73,10 +69,6 @@ public record CreekConfig(
         int respawnMinDistance,
         int personalSpace,
         int stuckMillis,
-        double dreadPageWeight,
-        double dreadTimeWeight,
-        double dreadIsolationWeight,
-        int isolationRadius,
         int betrayalCatchCount,
         double betrayalChance,
         int betrayalGlowSeconds,
@@ -98,7 +90,6 @@ public record CreekConfig(
             20, 35, 40, 70, 700, 45, 90,
             30, 1.5D,
             20, 40, 30, 15, 3000,
-            0.6D, 0.3D, 0.1D, 25,
             2, 0.15D, 6, 4,
             3.0D,
             0.15D, 1500, 4000
@@ -134,10 +125,6 @@ public record CreekConfig(
         notAbove("vanishMinSeconds", vanishMinSeconds, "vanishMaxSeconds", vanishMaxSeconds);
         atLeast("respawnMinDistance", respawnMinDistance, 1);
         atLeast("stuckMillis", stuckMillis, 1);
-        atLeast("dreadPageWeight", dreadPageWeight, 0.0D);
-        atLeast("dreadTimeWeight", dreadTimeWeight, 0.0D);
-        atLeast("dreadIsolationWeight", dreadIsolationWeight, 0.0D);
-        atLeast("isolationRadius", isolationRadius, 1);
         atLeast("betrayalCatchCount", betrayalCatchCount, 1);
         between("betrayalChance", betrayalChance, 0.0D, 1.0D);
         atLeast("betrayalGlowSeconds", betrayalGlowSeconds, 1);

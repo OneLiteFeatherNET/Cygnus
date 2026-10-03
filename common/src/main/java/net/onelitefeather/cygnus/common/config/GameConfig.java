@@ -22,6 +22,7 @@ import java.net.URI;
  * @param glitch               how the sight of the slender tears a survivor's view
  * @param slenderStatic        the static the slender hears while pages are found
  * @param creek                the creek, the second figure next to the slender
+ * @param sanity               the survivors' fear, which the creek reads
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
@@ -38,6 +39,7 @@ public record GameConfig(
         Glitch glitch,
         SlenderStatic slenderStatic,
         CreekConfig creek,
+        SanityConfig sanity,
         float lobbyAtmosphereShare
 ) {
 
@@ -107,6 +109,7 @@ public record GameConfig(
             Glitch.DEFAULT,
             SlenderStatic.DEFAULT,
             CreekConfig.DEFAULT,
+            SanityConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 
