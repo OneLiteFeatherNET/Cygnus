@@ -82,6 +82,9 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
         Phase currentPhase = this.phaseSupplier.get();
         //TODO: Should be tested
         if (!(currentPhase instanceof GamePhase gamePhase) || !survivorTeam.isEmpty()) return;
+        // Nobody is the slender while a survivor's takeover counts down; SlenderTakeover ends the
+        // round itself once it finds nobody left to choose.
+        if (this.slenderTeam.isEmpty()) return;
         event.setChatMessage(null);
         Player slenderPlayer = this.slenderTeam.getPlayers().iterator().next();
         gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.ALL_SURVIVOR_DEAD, slenderPlayer));

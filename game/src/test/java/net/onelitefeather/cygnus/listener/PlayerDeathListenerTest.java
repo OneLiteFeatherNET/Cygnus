@@ -9,17 +9,22 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
+import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
 import net.onelitefeather.cygnus.stamina.StaminaService;
+import net.onelitefeather.cygnus.view.GameViewImpl;
  import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -153,6 +158,30 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         listener.accept(new PlayerDeathEvent(player, null, null));
 
         assertNull(staminaService.getFoodBar(player), "a player who left the round must not keep a ticking stamina bar");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("The last survivor dying while nobody is the slender leaves the end to the takeover")
+    void lastDeathWithoutSlender(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        TeamService teamService = TeamService.of();
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        teamService.add(slenderTeam);
+        teamService.add(survivorTeam);
+        survivorTeam.addPlayer(player);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        // During a takeover countdown the slender team is empty
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
+        PlayerDeathListener listener = new PlayerDeathListener(() -> gamePhase, teamService, new JumpScareManager(), new StaminaService(), () -> {});
+
+        assertDoesNotThrow(() -> listener.accept(new PlayerDeathEvent(player, null, null)));
+        assertFalse(gamePhase.isFinished(), "without a slender there is no winner to name");
 
         env.destroyInstance(instance, true);
     }

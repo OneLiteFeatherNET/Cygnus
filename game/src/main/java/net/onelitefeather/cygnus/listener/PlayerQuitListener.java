@@ -2,23 +2,20 @@ package net.onelitefeather.cygnus.listener;
 
 import net.kyori.adventure.key.Key;
 import net.theevilreaper.aves.util.Broadcaster;
-import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.Phase;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.minestom.server.entity.Player;
-import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
-import net.onelitefeather.cygnus.event.SlenderReviveEvent;
+import net.onelitefeather.cygnus.listener.game.SlenderTakeover;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -39,38 +36,33 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.SURVIVOR_KEY;
  **/
 public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent> {
 
-    /**
-     * Minimum remaining game ticks (seconds) required to allow a Slender player revival.
-     */
-    private static final int MINIMUM_SLENDER_RE_CHECK = 120;
-    private static final int GLOBAL_MIN_PLAYERS = 2;
     private final Supplier<Phase> phaseSupplier;
     private final TeamService teamService;
     private final StaminaService staminaService;
     private final VoidConsumer inventoryUpdater;
-    private final int maxReviveCount;
-    private int currentReviveCount = 0;
+    private final SlenderTakeover takeover;
 
     /**
      * Constructs a new PlayerQuitListener.
      *
      * @param phaseSupplier  supplier to retrieve the current active phase
      * @param teamService    service to manage teams
-     * @param staminaService service to manage player stamina
-     * @param minPlayers     minimum players required for the game
+     * @param staminaService   service to manage player stamina
+     * @param inventoryUpdater refreshes the spectators' inventories
+     * @param takeover         hands the slender's role to a survivor once he left
      */
     public PlayerQuitListener(
             Supplier<Phase> phaseSupplier,
             TeamService teamService,
             StaminaService staminaService,
             VoidConsumer inventoryUpdater,
-            int minPlayers
+            SlenderTakeover takeover
     ) {
         this.phaseSupplier = phaseSupplier;
         this.teamService = teamService;
         this.staminaService = staminaService;
-        this.maxReviveCount = minPlayers -1;
         this.inventoryUpdater = inventoryUpdater;
+        this.takeover = takeover;
     }
 
     @Override
@@ -124,41 +116,13 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
     }
 
     /**
-     * Handles the Slender player disconnecting: attempts a revival, otherwise ends the match.
+     * Handles the Slender player disconnecting: a survivor takes over after a countdown, otherwise
+     * the match ends.
      *
      * @param gamePhase the active game phase
      */
     private void handleSlenderQuit(GamePhase gamePhase) {
-        var survivorSize = teamService.getTeam(SURVIVOR_KEY)
-                .orElseThrow(() -> new IllegalStateException("Survivor team not found"))
-                .getCurrentSize();
-        boolean canRevive = currentReviveCount < this.maxReviveCount
-                && gamePhase.getCurrentTicks() >= MINIMUM_SLENDER_RE_CHECK
-                && survivorSize >= GLOBAL_MIN_PLAYERS;
-
-        if (!canRevive) {
-            gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.SLENDER_LEFT));
-            gamePhase.finish();
-            return;
-        }
-
-        ++currentReviveCount;
-        Team survivorTeam = teamService.getTeam(SURVIVOR_KEY)
-                .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
-        Optional<Player> randomPlayerOpt = Players.getRandomPlayer(new ArrayList<>(survivorTeam.getPlayers()));
-        if (randomPlayerOpt.isEmpty()) {
-            gamePhase.setFinishEvent(new GameFinishEvent(GameFinishEvent.Reason.SLENDER_LEFT));
-            gamePhase.finish();
-            return;
-        }
-        Player randomPlayer = randomPlayerOpt.get();
-
-        survivorTeam.removePlayer(randomPlayer);
-        teamService.getTeam(SLENDER_KEY)
-                .orElseThrow(() -> new IllegalStateException("Slender team not found"))
-                .addPlayer(randomPlayer);
-
-        EventDispatcher.call(new SlenderReviveEvent(randomPlayer));
+        this.takeover.begin(gamePhase);
     }
 
     /**

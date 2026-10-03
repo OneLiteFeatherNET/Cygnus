@@ -44,6 +44,7 @@ public final class Messages {
     private static final Component SURVIVOR_JOIN_PART_UPPER;
     private static final Component SURVIVOR_JOIN_LOWER_PART;
     public static final Component SLENDER_JOIN_PART;
+    public static final Component SLENDER_TAKEOVER_TITLE;
     private static final Component STATS_HEADER;
     private static final int MAP_ANNOUNCEMENT_MIN_WIDTH = 20;
 
@@ -81,6 +82,8 @@ public final class Messages {
                 .append(Component.newline())
                 .append(withMiniPrefix("<yellow>Stay as far away as possible from <color:#5A5A5A>Slenderman</color>"));
 
+
+        SLENDER_TAKEOVER_TITLE = withMini("<dark_red><bold>You become the Slender");
 
         SLENDER_JOIN_PART = withMiniPrefix("<yellow>Find survivors and <red>get as close as you can <yellow>to kill them")
                 .append(Component.newline())
