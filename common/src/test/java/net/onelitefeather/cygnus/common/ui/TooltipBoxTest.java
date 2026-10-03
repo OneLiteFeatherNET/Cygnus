@@ -157,4 +157,36 @@ class TooltipBoxTest {
         assertEquals(PLAIN.serialize(boxFromBuilder), PLAIN.serialize(boxFromVarargs));
         assertEquals(PLAIN.serialize(boxFromBuilder), PLAIN.serialize(boxFromList));
     }
+
+    @Test
+    @DisplayName("Centered box has no leading space and starts with the top-left corner")
+    void testCenteredBoxHasNoLeadingSpace() {
+        Component centered = TooltipBox.builder().centered().line(Component.text("Help me")).build();
+        String plain = PLAIN.serialize(centered);
+        assertTrue(plain.startsWith(TooltipBox.TOP_LEFT),
+                "a centered box must start with the box itself, got: " + plain.codePointAt(0));
+    }
+
+    @Test
+    @DisplayName("Centered box is the default box without its leading space")
+    void testCenteredBoxEqualsDefaultWithoutLeadingSpace() {
+        Component line = Component.text("Don't look\nor it takes you");
+        String centered = PLAIN.serialize(TooltipBox.builder().centered().line(line).build());
+        String anchored = PLAIN.serialize(TooltipBox.builder().line(line).build());
+        assertTrue(anchored.endsWith(centered), "only the leading space may differ");
+        String leading = anchored.substring(0, anchored.length() - centered.length());
+        assertFalse(leading.isEmpty(), "the default box must keep its crosshair offset");
+        for (char c : leading.toCharArray()) {
+            assertTrue(c >= '\uF00F' && c <= '\uF01B', "leading part must be positive space only");
+        }
+    }
+
+    @Test
+    @DisplayName("centered() ignores the crosshair offset")
+    void testCenteredIgnoresCrosshairOffset() {
+        Component line = Component.text("Help me");
+        Component a = TooltipBox.builder().centered().crosshairOffsetX(40).line(line).build();
+        Component b = TooltipBox.builder().centered().line(line).build();
+        assertEquals(PLAIN.serialize(b), PLAIN.serialize(a));
+    }
 }

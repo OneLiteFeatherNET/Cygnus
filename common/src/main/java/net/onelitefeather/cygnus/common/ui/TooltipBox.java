@@ -16,7 +16,7 @@ import java.util.List;
  * and crosshair alignment.
  *
  * @author theEvilReaper
- * @version 2.2.0
+ * @version 2.3.0
  * @since 2.15.0
  */
 public final class TooltipBox {
@@ -145,6 +145,7 @@ public final class TooltipBox {
     public static final class Builder {
         private final List<Component> lines = new ArrayList<>();
         private int crosshairOffsetX = DEFAULT_CROSSHAIR_OFFSET;
+        private boolean centered;
 
         private Builder() {
         }
@@ -208,6 +209,20 @@ public final class TooltipBox {
         }
 
         /**
+         * Centers the box on the anchor of whatever renders it, instead of placing it beside the
+         * crosshair. Meant for text displays in the world: they center each line on their own
+         * position, so any leading space would push the box off the page. The crosshair offset
+         * has no effect once this is set.
+         *
+         * @return this builder
+         */
+        @NotNull
+        public Builder centered() {
+            this.centered = true;
+            return this;
+        }
+
+        /**
          * Builds the Adventure {@link Component} containing the positive centering shift,
          * modular 3-band container box, inline ribbon, negative text-alignment shift, and content.
          *
@@ -236,13 +251,14 @@ public final class TooltipBox {
             int middleTiles = Math.max(MIN_CONTENT_WIDTH, contentWidth + INNER_RIGHT_PADDING);
             int boxWidth = CAP_WIDTH + middleTiles + CAP_WIDTH;
 
-            // Step 1: Leading space for crosshair offset
-            int leadingSpace = boxWidth + (2 * this.crosshairOffsetX);
-            String leadingSpaceStr = getPositiveSpace(leadingSpace);
-
+            // Step 1: Leading space for crosshair offset. A centered box has none: its total
+            // advance is exactly boxWidth, so it sits centered on the renderer's anchor.
             TextComponent.Builder root = Component.text().font(FONT);
-            if (!leadingSpaceStr.isEmpty()) {
-                root.append(Component.text(leadingSpaceStr).font(FONT));
+            if (!this.centered) {
+                String leadingSpaceStr = getPositiveSpace(boxWidth + (2 * this.crosshairOffsetX));
+                if (!leadingSpaceStr.isEmpty()) {
+                    root.append(Component.text(leadingSpaceStr).font(FONT));
+                }
             }
 
             // Step 2: Header Band (drawn with FONT_LINE1)
