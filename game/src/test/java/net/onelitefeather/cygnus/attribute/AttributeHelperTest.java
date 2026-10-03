@@ -145,4 +145,51 @@ class AttributeHelperTest {
         assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.001);
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    void testFieldOfViewFollowsTheWalkingSpeed(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        AttributeHelper.decreaseSpeed(player);
+        assertEquals(0.065f, player.getFieldViewModifier(), 0.0001);
+
+        AttributeHelper.updateSpeedScale(player, 0.01);
+        assertEquals(0.075f, player.getFieldViewModifier(), 0.0001);
+
+        AttributeHelper.removeSpeedScale(player);
+        AttributeHelper.resetSpeed(player);
+        assertEquals(0.1f, player.getFieldViewModifier(), 0.0001);
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testFieldOfViewIgnoresSprintAndDraining(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        AttributeHelper.decreaseSpeed(player);
+        AttributeHelper.applySlenderDrainingSpeed(player);
+
+        // Slowing down still narrows the view, the way it does in vanilla
+        assertEquals(0.065f, player.getFieldViewModifier(), 0.0001);
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testFreezeKeepsTheFieldOfViewNeutral(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+
+        AttributeHelper.freeze(player);
+        // The game speed is applied while the players are still frozen
+        AttributeHelper.decreaseSpeed(player);
+        AttributeHelper.updateSpeedScale(player, 0.01);
+        assertEquals(0f, player.getFieldViewModifier());
+
+        AttributeHelper.unfreeze(player);
+        assertEquals(0.075f, player.getFieldViewModifier(), 0.0001);
+        assertEquals(0.075, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
+        env.destroyInstance(instance, true);
+    }
 }

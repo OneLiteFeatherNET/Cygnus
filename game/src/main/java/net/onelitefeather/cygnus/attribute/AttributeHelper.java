@@ -7,6 +7,8 @@ import net.minestom.server.entity.attribute.AttributeInstance;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
 
+import java.util.Set;
+
 /**
  * The {@link AttributeHelper} class provides utility methods to adjust the player's attributes.
  *
@@ -38,8 +40,9 @@ public final class AttributeHelper {
             AttributeOperation.ADD_MULTIPLIED_TOTAL
     );
 
-    // Minestom's default walking speed in the abilities packet
-    private static final float DEFAULT_FIELD_VIEW_MODIFIER = 0.1f;
+    // The modifiers that make up the speed a player walks at during a round, as opposed to
+    // temporary ones like sprinting or the slender draining
+    private static final Set<Key> WALKING_SPEED_KEYS = Set.of(GAME_SPEED_KEY, SPEED_SCALING_KEY);
 
     private static final double DEFAULT_JUMP_STRENGTH = 0.42;
     private static final double GAME_JUMP_STRENGTH = 0.0;
@@ -105,6 +108,7 @@ public final class AttributeHelper {
         AttributeInstance attribute = player.getAttribute(Attribute.MOVEMENT_SPEED);
         attribute.removeModifier(GAME_SPEED_KEY);
         attribute.addModifier(GAME_SPEED_MODIFIER);
+        refreshFieldOfView(player);
     }
 
     /**
@@ -114,6 +118,7 @@ public final class AttributeHelper {
      */
     public static void resetSpeed(Player player) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(GAME_SPEED_KEY);
+        refreshFieldOfView(player);
     }
 
     /**
@@ -149,6 +154,7 @@ public final class AttributeHelper {
         AttributeInstance attribute = player.getAttribute(Attribute.MOVEMENT_SPEED);
         attribute.removeModifier(SPEED_SCALING_KEY);
         attribute.addModifier(new AttributeModifier(SPEED_SCALING_KEY, bonus, AttributeOperation.ADD_VALUE));
+        refreshFieldOfView(player);
     }
 
     /**
@@ -158,6 +164,7 @@ public final class AttributeHelper {
      */
     public static void removeSpeedScale(Player player) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(SPEED_SCALING_KEY);
+        refreshFieldOfView(player);
     }
 
     /**
@@ -190,9 +197,7 @@ public final class AttributeHelper {
             attribute.removeModifier(FREEZE_KEY);
             attribute.addModifier(FREEZE_MODIFIER);
         }
-        // The client scales its FOV by movement speed / walking speed, so a speed of zero would zoom
-        // in. A walking speed of zero makes the client skip that scaling entirely.
-        player.setFieldViewModifier(0f);
+        refreshFieldOfView(player);
     }
 
     /**
@@ -204,7 +209,32 @@ public final class AttributeHelper {
         for (AttributeInstance attribute : freezeAttributes(player)) {
             attribute.removeModifier(FREEZE_KEY);
         }
-        player.setFieldViewModifier(DEFAULT_FIELD_VIEW_MODIFIER);
+        refreshFieldOfView(player);
+    }
+
+    /**
+     * Tells the client which speed counts as plain walking, so its FOV only reacts to changes on top of it.
+     * <p>
+     * The client zooms by {@code movement speed / walking speed}. Left at the vanilla walking speed, the
+     * slower game speed reads as a permanent slowness effect and zooms the view in. A frozen player gets a
+     * walking speed of zero, which makes the client skip the scaling entirely.
+     * </p>
+     *
+     * @param player the player to update
+     */
+    private static void refreshFieldOfView(Player player) {
+        AttributeInstance speed = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        double walkingSpeed = speed.getBaseValue();
+        for (AttributeModifier modifier : speed.modifiers()) {
+            if (FREEZE_KEY.equals(modifier.id())) {
+                player.setFieldViewModifier(0f);
+                return;
+            }
+            if (WALKING_SPEED_KEYS.contains(modifier.id())) {
+                walkingSpeed += modifier.amount();
+            }
+        }
+        player.setFieldViewModifier((float) walkingSpeed);
     }
 
     private static AttributeInstance[] freezeAttributes(Player player) {
