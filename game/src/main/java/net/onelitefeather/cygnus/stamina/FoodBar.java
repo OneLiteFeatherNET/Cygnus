@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.stamina;
 
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.timer.ExecutionType;
+import net.onelitefeather.cygnus.common.config.StaminaConfig;
 import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 
@@ -11,8 +12,9 @@ import java.time.temporal.ChronoUnit;
  * Represents the stamina bar implementation based on the player's food level and experience bar.
  * <p>
  * Manages the consumption and regeneration of stamina when a survivor sprints.
- * When stamina is depleted, sprinting is temporarily blocked until sufficient stamina
- * has regenerated.
+ * When stamina is depleted, sprinting is blocked until the bar is back at the
+ * {@linkplain StaminaConfig#sprintResumeShare() resume share}; the same share decides when a survivor
+ * who stopped early may sprint again.
  * </p>
  *
  * @author theEvilReaper
@@ -23,15 +25,18 @@ public non-sealed class FoodBar extends StaminaBar {
 
     private static final int MAX_FOOD = 20;
     private static final int FOOD_TAKE = 2;
+    private final StaminaConfig config;
     private float currentSpeedCount;
 
     /**
      * Creates a new instance of the {@link FoodBar} for the specific player
      *
      * @param player who owns the bar
+     * @param config the sprint settings
      */
-    FoodBar(CygnusPlayer player) {
+    FoodBar(CygnusPlayer player, StaminaConfig config) {
         super(player, ChronoUnit.MILLIS, 1000, ExecutionType.TICK_START);
+        this.config = config;
         state = State.READY;
         this.currentSpeedCount = MAX_FOOD;
     }
@@ -79,13 +84,25 @@ public non-sealed class FoodBar extends StaminaBar {
      * Handles the food regeneration for the player.
      */
     private void handleFoodRegeneration() {
-        this.currentSpeedCount = Math.min(MAX_FOOD, this.currentSpeedCount + 1);
+        this.currentSpeedCount = (float) Math.min(MAX_FOOD, this.currentSpeedCount + this.config.regenPerSecond());
         player.setExp(normalize(this.currentSpeedCount));
 
-        if (this.currentSpeedCount >= MAX_FOOD) {
-            state = State.READY;
+        // A survivor who ran dry gets the sprint back long before the bar is full again
+        if (this.canResume()) {
             player.setBlockedSprinting(false);
         }
+        if (this.currentSpeedCount >= MAX_FOOD) {
+            state = State.READY;
+        }
+    }
+
+    /**
+     * Returns whether the bar is full enough to start a new sprint while it regenerates.
+     *
+     * @return {@code true} once the bar reaches the resume share
+     */
+    private boolean canResume() {
+        return this.currentSpeedCount >= this.config.sprintResumeShare() * MAX_FOOD;
     }
 
     /**
@@ -118,7 +135,7 @@ public non-sealed class FoodBar extends StaminaBar {
      * @return true for yes otherwise false
      */
     public boolean canConsume() {
-        return (state == State.READY) || (state == State.DRAINING) || (state == State.REGENERATING && currentSpeedCount > 7D);
+        return (state == State.READY) || (state == State.DRAINING) || (state == State.REGENERATING && this.canResume());
     }
 
     /**
