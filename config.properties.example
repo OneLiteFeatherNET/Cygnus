@@ -245,3 +245,27 @@ survivorTeamSize=12
 #sanity.deathGain=0.25
 #sanity.deathRadius=32
 #sanity.decayPerSecond=0.005
+
+# --- Stamina ----------------------------------------------------------------
+# A survivor's sprint bar holds 20 points and drains 2 per second while they
+# sprint. Once it ran dry, or once they stopped early, they may sprint again as
+# soon as the bar is back at sprintResumeShare - not only when it is full.
+# The slender cannot appear again for slenderReappearCooldownSeconds after he
+# vanished, so he cannot chain one appearance onto the next. 0 turns it off.
+# Every key below maps to a field of StaminaConfig. An unreadable value falls
+# back to its default; values out of range are rejected.
+#stamina.sprintResumeShare=0.3
+#stamina.regenPerSecond=1.25
+#stamina.slenderReappearCooldownSeconds=5
+
+# --- Adrenaline -------------------------------------------------------------
+# A survivor who gets within adrenaline.radius blocks of the visible slender
+# moves faster by adrenaline.speedBonus for adrenaline.durationSeconds and
+# hears a heartbeat. After that, the same survivor waits
+# adrenaline.cooldownSeconds before the next rush.
+# Every key below maps to a field of AdrenalineConfig. An unreadable value
+# falls back to its default; values out of range are rejected.
+#adrenaline.radius=8
+#adrenaline.speedBonus=0.2
+#adrenaline.durationSeconds=4
+#adrenaline.cooldownSeconds=20
