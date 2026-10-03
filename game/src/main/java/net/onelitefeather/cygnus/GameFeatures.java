@@ -18,7 +18,7 @@ public final class GameFeatures {
     }
 
     /**
-     * Gives every enabled feature a node of its own, named after it, below the given parent.
+     * Hangs the node of every enabled feature below the given parent.
      * <p>
      * Minestom calls the parent's listeners first and the children in the order they were added,
      * so the features hear an event after the parent and in the order of the list.
@@ -30,9 +30,7 @@ public final class GameFeatures {
     public static void register(EventNode<Event> parent, List<GameFeature> features) {
         for (GameFeature feature : features) {
             if (!feature.enabled()) continue;
-            EventNode<Event> node = EventNode.all(feature.name());
-            feature.registerListener(node);
-            parent.addChild(node);
+            parent.addChild(feature.node());
         }
     }
 }

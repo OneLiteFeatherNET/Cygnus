@@ -18,16 +18,30 @@ class GameFeaturesTest {
     /**
      * A feature that writes its name into the shared log whenever it hears a {@link Ping}.
      */
-    private record LoggingFeature(String name, boolean enabled, List<String> log) implements GameFeature {
+    private static final class LoggingFeature implements GameFeature {
+
+        private final EventNode<Event> node;
+        private final boolean enabled;
+
+        private LoggingFeature(String name, boolean enabled, List<String> log) {
+            this.node = EventNode.all(name);
+            this.enabled = enabled;
+            this.node.addListener(Ping.class, _ -> log.add(name));
+        }
 
         @Override
-        public void registerListener(EventNode<Event> node) {
-            node.addListener(Ping.class, _ -> this.log.add(this.name));
+        public EventNode<Event> node() {
+            return this.node;
+        }
+
+        @Override
+        public boolean enabled() {
+            return this.enabled;
         }
     }
 
     @Test
-    void testAnEnabledFeatureListensOnAChildNodeNamedAfterIt() {
+    void testAnEnabledFeatureHangsItsOwnNodeBelowTheParent() {
         EventNode<Event> root = EventNode.all("root");
         List<String> log = new ArrayList<>();
 
@@ -35,11 +49,12 @@ class GameFeaturesTest {
         root.call(new Ping());
 
         assertEquals(List.of("creek"), log);
-        assertEquals(1, root.findChildren("creek").size(), "the feature must get a node of its own, named after it");
+        assertEquals(List.of("creek"), root.getChildren().stream().map(EventNode::getName).toList(),
+                "the feature's own node must hang below the parent");
     }
 
     @Test
-    void testADisabledFeatureGetsNoNode() {
+    void testADisabledFeatureIsNotHungIn() {
         EventNode<Event> root = EventNode.all("root");
         List<String> log = new ArrayList<>();
 
@@ -47,7 +62,7 @@ class GameFeaturesTest {
         root.call(new Ping());
 
         assertTrue(log.isEmpty(), "a disabled feature must not hear anything");
-        assertTrue(root.getChildren().isEmpty(), "a disabled feature must not leave an empty node behind");
+        assertTrue(root.getChildren().isEmpty(), "a disabled feature must not end up in the tree");
     }
 
     @Test
@@ -67,11 +82,9 @@ class GameFeaturesTest {
     }
 
     @Test
-    void testTheDefaultNameIsTheSimpleClassName() {
-        GameFeature feature = _ -> {
-        };
+    void testAFeatureWithoutASwitchOfItsOwnIsAlwaysOn() {
+        GameFeature feature = () -> EventNode.all("plain");
 
-        assertEquals(feature.getClass().getSimpleName(), feature.name());
-        assertTrue(feature.enabled(), "a feature without a switch of its own is always on");
+        assertTrue(feature.enabled());
     }
 }

@@ -7,9 +7,9 @@ import net.minestom.server.event.EventNode;
 /**
  * A self-contained part of the game that builds its own services and hooks them into the server.
  * <p>
- * {@link Cygnus} only puts the features together; whether a feature is switched on is decided by
- * the feature itself through {@link #enabled()}. Every enabled feature listens on a node of its
- * own, see {@link GameFeatures#register}.
+ * Every feature owns an event node and puts its listeners on it while it is built, so it is
+ * complete on its own. {@link Cygnus} only hangs the nodes of the enabled features into the
+ * global handler, see {@link GameFeatures#register}.
  * </p>
  *
  * @author Joltra
@@ -19,13 +19,11 @@ import net.minestom.server.event.EventNode;
 public interface GameFeature {
 
     /**
-     * Returns the name of the feature, used for the event node it listens on.
+     * Returns the node the feature listens on, with all its listeners already in place.
      *
-     * @return the name, the simple class name by default
+     * @return the feature's own node
      */
-    default String name() {
-        return getClass().getSimpleName();
-    }
+    EventNode<Event> node();
 
     /**
      * Returns whether the feature takes part in the game. A disabled feature gets no event node,
@@ -36,13 +34,6 @@ public interface GameFeature {
     default boolean enabled() {
         return true;
     }
-
-    /**
-     * Registers the listeners of the feature.
-     *
-     * @param node the node to register on
-     */
-    void registerListener(EventNode<Event> node);
 
     /**
      * Registers the commands of the feature. Does nothing by default.
