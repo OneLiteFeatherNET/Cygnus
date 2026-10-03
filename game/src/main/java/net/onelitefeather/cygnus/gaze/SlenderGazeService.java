@@ -9,6 +9,7 @@ import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.utils.PlayerState;
 import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.jetbrains.annotations.Nullable;
@@ -94,6 +95,8 @@ public final class SlenderGazeService implements GameFeature {
         });
         this.node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
         this.node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
+        // A survivor who takes over as the slender is no longer one of the haunted.
+        this.node.addListener(SlenderReviveEvent.class, event -> this.remove(event.getPlayer()));
         this.node.addListener(GameFinishEvent.class, event -> {
             this.cleanUp();
             this.stopTask();

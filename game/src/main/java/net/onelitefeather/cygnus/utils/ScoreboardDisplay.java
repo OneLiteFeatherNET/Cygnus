@@ -76,14 +76,22 @@ public final class ScoreboardDisplay {
      * survivor never receives a spectator as an entity at all, so there is no name of theirs for
      * anyone still in the round to see.</p>
      *
+     * <p>Every team drops its stale members before any team takes new ones. The client moves a
+     * player who is added to one team out of the other on its own, so a removal sent after that
+     * addition names a team the player is no longer on - and the client disconnects over it. That is
+     * exactly what promoting a survivor to slender would do with one team after the other.</p>
+     *
      * @param teamService the service holding the current game teams
      */
     public void sync(TeamService teamService) {
-        setMembers(GameConfig.SLENDER_TEAM_NAME, usernames(teamService, GameConfig.SLENDER_KEY));
-
+        Set<String> slenderSide = usernames(teamService, GameConfig.SLENDER_KEY);
         Set<String> survivorSide = usernames(teamService, GameConfig.SURVIVOR_KEY);
         survivorSide.addAll(usernames(teamService, GameConfig.SPECTATOR_KEY));
-        setMembers(GameConfig.SURVIVOR_TEAM_NAME, survivorSide);
+
+        removeStale(GameConfig.SLENDER_TEAM_NAME, slenderSide);
+        removeStale(GameConfig.SURVIVOR_TEAM_NAME, survivorSide);
+        addMissing(GameConfig.SLENDER_TEAM_NAME, slenderSide);
+        addMissing(GameConfig.SURVIVOR_TEAM_NAME, survivorSide);
     }
 
     /**
@@ -113,22 +121,32 @@ public final class ScoreboardDisplay {
     }
 
     /**
-     * Replaces the members of the named scoreboard team with exactly the given usernames.
+     * Removes every member of the named scoreboard team who should not be on it.
      *
      * @param teamName the scoreboard team to update
      * @param wanted   the usernames that should be on it afterwards
      */
-    private void setMembers(String teamName, Set<String> wanted) {
+    private void removeStale(String teamName, Set<String> wanted) {
         net.minestom.server.scoreboard.Team team = findTeam(teamName);
         if (team == null) return;
 
-        Set<String> current = new HashSet<>(team.getMembers());
-        Set<String> stale = new HashSet<>(current);
+        Set<String> stale = new HashSet<>(team.getMembers());
         stale.removeAll(wanted);
         if (!stale.isEmpty()) team.removeMembers(stale);
+    }
+
+    /**
+     * Adds every username to the named scoreboard team that is not on it yet.
+     *
+     * @param teamName the scoreboard team to update
+     * @param wanted   the usernames that should be on it afterwards
+     */
+    private void addMissing(String teamName, Set<String> wanted) {
+        net.minestom.server.scoreboard.Team team = findTeam(teamName);
+        if (team == null) return;
 
         Set<String> missing = new HashSet<>(wanted);
-        missing.removeAll(current);
+        missing.removeAll(team.getMembers());
         if (!missing.isEmpty()) team.addMembers(missing);
     }
 

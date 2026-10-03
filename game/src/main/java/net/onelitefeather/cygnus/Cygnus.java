@@ -71,6 +71,7 @@ import net.onelitefeather.cygnus.listener.page.PlayerPageInteractListener;
 import net.onelitefeather.cygnus.listener.game.PlayerStartSprintingListener;
 import net.onelitefeather.cygnus.listener.game.PlayerStopSprintingListener;
 import net.onelitefeather.cygnus.listener.game.SlenderItemListener;
+import net.onelitefeather.cygnus.listener.game.SlenderTakeover;
 import net.onelitefeather.cygnus.monitoring.SentrySupport;
 import net.onelitefeather.cygnus.movement.CygnusEntityActionListener;
 import net.onelitefeather.cygnus.movement.PlayerStartSprintingEvent;
@@ -117,6 +118,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final SpectatorService spectatorService;
     private final Optional<ResourcePackService> resourcePackService;
     private final ScoreboardDisplay scoreboardDisplay;
+    private final SlenderTakeover slenderTakeover;
     private final List<GameFeature> features;
 
     public Cygnus() {
@@ -163,8 +165,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 this.pageProvider::foundShare,
                 System::currentTimeMillis,
                 () -> TeamHelper.survivorsOf(this.teamService));
+        this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase);
         this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
                 new EpilepsyDisclaimer(),
+                this.slenderTakeover,
                 this.spectatorService,
                 // Not part of the OverlayModule: the sound is the feedback a hit owes the player
                 // either way, and it needs neither the resource pack nor the overlay gate to be heard.
@@ -201,7 +205,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(GameMapLoadedEvent.class, new GameMapLoadedListener());
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier));
-        PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.spectatorService::updateInventory, this.gameConfig.round().minPlayers());
+        PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.spectatorService::updateInventory, this.slenderTakeover);
         manager.addListener(PlayerDisconnectEvent.class, quitListener);
         manager.addListener(AsyncPlayerConfigurationEvent.class,
                 new PlayerLoginListener(

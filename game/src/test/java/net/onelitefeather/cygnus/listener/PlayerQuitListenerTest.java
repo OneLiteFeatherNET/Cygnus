@@ -5,6 +5,7 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.potion.PotionEffect;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
@@ -12,6 +13,7 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
+import net.onelitefeather.cygnus.listener.game.SlenderTakeover;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.view.GameViewImpl;
@@ -29,6 +31,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
@@ -70,7 +74,8 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
-        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {}, 2);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
+                new SlenderTakeover(teamService, () -> gamePhase));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicBoolean finishFired = new AtomicBoolean(false);
@@ -99,7 +104,8 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
-        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {}, 2);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
+                new SlenderTakeover(teamService, () -> gamePhase));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
@@ -131,7 +137,8 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivor2.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
-        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {}, 2);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
+                new SlenderTakeover(teamService, () -> gamePhase));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<SlenderReviveEvent> reviveEvent = new AtomicReference<>();
@@ -139,9 +146,11 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         playerQuit(slender, env);
 
-        assertNotNull(reviveEvent.get(), "Slender disconnect with >= 2 survivors must trigger revive.");
-        assertEquals(1, slenderTeam.getCurrentSize(), "Slender team must have the revived player.");
-        assertEquals(1, survivorTeam.getCurrentSize(), "Survivor team must have 1 remaining player.");
+        // The takeover itself, after its countdown, is covered by SlenderTakeoverTest
+        assertNull(reviveEvent.get(), "the chosen survivor is warned first, the takeover follows the countdown");
+        assertTrue(survivor1.hasEffect(PotionEffect.BLINDNESS) || survivor2.hasEffect(PotionEffect.BLINDNESS),
+                "one survivor must have been chosen and blinded for the countdown");
+        assertEquals(2, survivorTeam.getCurrentSize(), "the chosen survivor stays a survivor during the countdown");
     }
 
     @Test
@@ -161,7 +170,8 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
-        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {}, 2);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
+                new SlenderTakeover(teamService, () -> gamePhase));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
