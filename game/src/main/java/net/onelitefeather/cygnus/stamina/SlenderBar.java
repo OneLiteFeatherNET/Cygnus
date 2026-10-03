@@ -59,6 +59,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
 
     private static final int DAMAGE_RANGE = 3;
 
+
     private final String tileChar;
     private final int time;
     private final long reappearCooldownMillis;
@@ -114,14 +115,17 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     }
 
     private void handleDraining() {
-        if (currentTime >= 0) {
-            currentTime -= TIME_STEP;
-            Instance instance = player.getInstance();
-            applyDamage(instance, player.getUuid(), player.getPosition(), DAMAGE_RANGE, TIME_STEP);
-            this.colorState.sendProgressBar(player, tileChar, currentTime, time);
+        currentTime -= TIME_STEP;
+        Instance instance = player.getInstance();
+        applyDamage(instance, player.getUuid(), player.getPosition(), DAMAGE_RANGE, TIME_STEP);
+        // Hides in the same tick the bar runs dry: one tick later he would stay visible and hit
+        // once more with a bar that already shows empty.
+        if (currentTime <= 0) {
+            currentTime = 0;
+            enterRegenerating();
             return;
         }
-        enterRegenerating();
+        this.colorState.sendProgressBar(player, tileChar, currentTime, time);
     }
 
     private void handleRegeneration() {

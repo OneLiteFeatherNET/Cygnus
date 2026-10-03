@@ -127,7 +127,7 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         slenderBar.changeStatus(); // READY -> DRAINING
 
         // fully drain so the bar enters REGENERATING at its lowest point
-        for (int i = 0; i < 34; i++) {
+        for (int i = 0; i < 32; i++) {
             slenderBar.consume();
         }
 
@@ -151,9 +151,9 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         slenderBar.start();
         slenderBar.changeStatus(); // READY -> DRAINING
 
-        // 34 ticks to fully drain and auto-switch to REGENERATING at currentTime == -0.5,
-        // then 21 more ticks of +0.5 regeneration land currentTime exactly on 10.0.
-        for (int i = 0; i < 55; i++) {
+        // 32 ticks to fully drain and auto-switch to REGENERATING at currentTime == 0,
+        // then 20 more ticks of +0.5 regeneration land currentTime exactly on 10.0.
+        for (int i = 0; i < 52; i++) {
             slenderBar.consume();
         }
 
@@ -184,7 +184,7 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         // the teleport sound plays to nearby SURVIVORS, not to the slender player themselves
         Collector<ServerPacket> collector = survivorConnection.trackIncoming();
         // fully drain so the bar automatically switches to REGENERATING
-        for (int i = 0; i < 34; i++) {
+        for (int i = 0; i < 32; i++) {
             slenderBar.consume();
         }
 
@@ -265,4 +265,27 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         slenderBar.stop();
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    @DisplayName("The slender hides the moment his bar runs dry")
+    void hidesWhenTheBarRunsDry(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance);
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        slenderBar.start();
+        slenderBar.changeStatus(); // READY -> DRAINING, 16 units
+
+        for (int i = 0; i < 31; i++) {
+            slenderBar.consume();
+        }
+        assertEquals(SlenderBarHelper.VISIBLE, player.getTag(Tags.HIDDEN), "half a unit is still left");
+
+        slenderBar.consume(); // the last half unit
+
+        assertEquals(SlenderBarHelper.HIDDEN, player.getTag(Tags.HIDDEN));
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
 }
