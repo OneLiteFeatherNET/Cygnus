@@ -17,7 +17,6 @@ import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.utils.PlayerState;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.IntSupplier;
@@ -115,7 +114,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      * {@inheritDoc}
      */
     @Override
-    public double dreadOf(UUID survivor, Pos position, List<Pos> others) {
+    public double dreadOf(UUID survivor) {
         double floor = this.floor();
         Tracked tracked = this.survivors.get(survivor);
         if (tracked == null) return floor;

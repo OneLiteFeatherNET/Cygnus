@@ -17,7 +17,6 @@ import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,7 +40,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
     }
 
     private static double dread(SanityService service, Player player) {
-        return service.dreadOf(player.getUuid(), player.getPosition(), List.of());
+        return service.dreadOf(player.getUuid());
     }
 
     private static Player connect(Env env, Instance instance, Pos position) {
@@ -54,7 +53,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         SanityService service = service(NO_DECAY);
         this.found.set(4);
 
-        assertEquals(0.25D, service.dreadOf(UUID.randomUUID(), Pos.ZERO, List.of()), EPSILON);
+        assertEquals(0.25D, service.dreadOf(UUID.randomUUID()), EPSILON);
     }
 
     @Test
@@ -63,7 +62,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         SanityService service = service(NO_DECAY);
         this.max.set(0);
 
-        assertEquals(0.0D, service.dreadOf(UUID.randomUUID(), Pos.ZERO, List.of()), EPSILON);
+        assertEquals(0.0D, service.dreadOf(UUID.randomUUID()), EPSILON);
     }
 
     @Test

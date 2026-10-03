@@ -71,7 +71,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
     /** A snapshot of the players, none of them scared. */
     private static SurvivorSnapshot survivors(Player... players) {
-        return SurvivorSnapshot.take(List.of(players), (_, _, _) -> 0.0D);
+        return SurvivorSnapshot.take(List.of(players), _ -> 0.0D);
     }
 
     @Test
