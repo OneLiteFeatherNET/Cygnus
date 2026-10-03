@@ -39,6 +39,7 @@ import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
+import net.onelitefeather.cygnus.adrenaline.AdrenalineService;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.damage.DamageSoundService;
@@ -125,9 +126,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Path path = ServiceBootstrap.resolveWorkingDirectory();
         this.teamService = TeamService.of();
         this.linearPhaseSeries = new LinearPhaseSeries<>("game");
-        this.staminaService = new StaminaService();
         this.jumpscareManager = new JumpScareManager();
         this.gameConfig = new GameConfigReader(path).getConfig();
+        this.staminaService = new StaminaService(this.gameConfig.stamina());
         // Set up as early as possible so anything that goes wrong while the rest of the game is
         // being wired up is already covered. Stays off entirely when no DSN is configured.
         SentrySupport.init(this.gameConfig.sentryDsn());
@@ -181,6 +182,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
                         sanityService, sanityService, this.jumpscareManager, this.staminaService),
                 sanityService,
+                new AdrenalineService(
+                        this.gameConfig.adrenaline(),
+                        () -> TeamHelper.survivorsOf(this.teamService),
+                        System::currentTimeMillis),
                 new OverlayModule(this.gameConfig.glitch(), this.teamService, this.staminaService)
         )).toList();
         this.initPhases();
