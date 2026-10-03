@@ -73,11 +73,13 @@ public final class PageNoteDisplay {
         meta.setScale(Vec.ZERO);
 
         Pos pagePosition = page.getPosition();
-        Direction face = page.getResource().face();
+        // A page's direction is the way the player looked when it was set, so it hangs on the
+        // opposite face of its block: the side it is read from lies against that direction.
+        Direction look = page.getResource().face();
         Pos position = pagePosition.add(
-                face.normalX() * FACE_OFFSET,
-                LIFT + face.normalY() * FACE_OFFSET,
-                face.normalZ() * FACE_OFFSET
+                -look.normalX() * FACE_OFFSET,
+                LIFT,
+                -look.normalZ() * FACE_OFFSET
         );
         entity.setInstance(page.getInstance(), position).join();
         entity.addViewer(viewer);

@@ -137,7 +137,7 @@ Metadaten des `TextDisplay`:
 | `billboard` | `CENTER` | Siehe Entscheidungen. |
 | `brightness` | fest, `NOTE_BLOCK_LIGHT = 15`, `NOTE_SKY_LIGHT = 15` | Sonst übernimmt das Display das Licht der Umgebung und ist auf dunklen Karten kaum lesbar. |
 | `scale` | `NOTE_SCALE = 0.35` | Ein Text-Pixel ist 1/40 Block. Eine 150 px breite Box ist damit etwa 1,3 Blöcke breit. Der Wert wird im Spiel feinjustiert. |
-| Position | Position der Page + Richtungsvektor von `getResource().face()` · `0.15` + `0.45` nach oben | Die Box schwebt knapp vor und über der Page, ohne in der Wand zu stecken. Die Hitbox bleibt frei anklickbar. |
+| Position | Position der Page − Richtungsvektor von `getResource().face()` · `0.15` + `0.45` nach oben | `face` ist die Blickrichtung beim Setzen der Page, die Page hängt also auf der gegenüberliegenden Blockseite. Gegen diese Richtung versetzt, schwebt die Box knapp vor und über der Page, ohne in der Wand zu stecken. Die Hitbox bleibt frei anklickbar. |
 
 Ein- und Ausblenden laufen über die Skalierung, weil die Client-Interpolation
 `transformation` unterstützt, die Text-Deckkraft aber nicht:

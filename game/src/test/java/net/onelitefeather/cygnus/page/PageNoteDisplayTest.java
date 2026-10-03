@@ -16,6 +16,8 @@ import net.onelitefeather.cygnus.common.page.PageNote;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Duration;
 
@@ -66,16 +68,25 @@ class PageNoteDisplayTest {
         assertEquals(Vec.ZERO, meta.getScale(), "a note spawns collapsed and grows in on the next tick");
     }
 
-    @Test
-    void floatsInFrontOfAndAboveThePage(Env env) {
+    /**
+     * A page's direction is the way the player looked when it was set, so the page sits on the
+     * opposite face of its block: a NORTH page hangs on the block's +Z side and is read from +Z.
+     */
+    @ParameterizedTest
+    @CsvSource({"NORTH, 0, 1", "SOUTH, 0, -1", "EAST, -1, 0", "WEST, 1, 0"})
+    void floatsInFrontOfAndAboveThePage(Direction direction, int frontX, int frontZ, Env env) {
         Instance instance = env.createFlatInstance();
         Player reader = env.createPlayer(instance, new Pos(0, 40, 0));
-        PageEntity page = placePage(instance);
+        PageEntity page = PageFactory.createPage(new PageResource(new Pos(0, 40, 2), direction), 1);
+        page.place(instance).join();
 
         PageNoteDisplay display = PageNoteDisplay.spawn(reader, page, PageNote.HELP_ME.getWorldComponent());
 
-        // NORTH faces -Z, so "in front" is towards -Z
-        Pos expected = page.getPosition().add(0, PageNoteDisplay.LIFT, -PageNoteDisplay.FACE_OFFSET);
+        Pos expected = page.getPosition().add(
+                frontX * PageNoteDisplay.FACE_OFFSET,
+                PageNoteDisplay.LIFT,
+                frontZ * PageNoteDisplay.FACE_OFFSET
+        );
         assertTrue(expected.samePoint(display.entity().getPosition()),
                 "expected " + expected + " but was " + display.entity().getPosition());
     }
