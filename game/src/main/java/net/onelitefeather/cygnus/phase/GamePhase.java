@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.phase;
 
 import net.minestom.server.event.EventDispatcher;
+import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
@@ -25,6 +26,7 @@ public final class GamePhase extends TimedPhase {
 
     private final GameView gameView;
     private final JumpScareManager jumpscareManager;
+    private final DreadSource dreadSource;
     private final Runnable endRunnable;
     private @Nullable GameFinishEvent finishEvent;
 
@@ -35,12 +37,14 @@ public final class GamePhase extends TimedPhase {
      * @param endRunnable      the runnable to execute on end
      * @param gameTime         the game time
      * @param jumpscareManager the jumpscare manager instance
+     * @param dreadSource      rates how scared a survivor is, to pace their ambient sounds
      */
     public GamePhase(
             GameView gameView,
             Runnable endRunnable,
             int gameTime,
-            JumpScareManager jumpscareManager
+            JumpScareManager jumpscareManager,
+            DreadSource dreadSource
     ) {
         super("GamePhase", ChronoUnit.SECONDS, 1);
         this.setCurrentTicks(gameTime);
@@ -48,6 +52,7 @@ public final class GamePhase extends TimedPhase {
         this.setEndTicks(0);
         this.gameView = gameView;
         this.jumpscareManager = jumpscareManager;
+        this.dreadSource = dreadSource;
         // Not passed as the finished callback: LinearPhaseSeries replaces that with its own advance call
         this.endRunnable = endRunnable;
     }
@@ -65,7 +70,7 @@ public final class GamePhase extends TimedPhase {
     @Override
     public void onStart() {
         super.onStart();
-        addListener(PlayerTickEvent.class, new CygnusPlayerTickListener(this.jumpscareManager));
+        addListener(PlayerTickEvent.class, new CygnusPlayerTickListener(this.jumpscareManager, this.dreadSource));
         EventDispatcher.call(new GameStartEvent());
     }
 
