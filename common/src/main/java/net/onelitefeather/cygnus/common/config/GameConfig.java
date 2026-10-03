@@ -23,6 +23,8 @@ import java.net.URI;
  * @param slenderStatic        the static the slender hears while pages are found
  * @param creek                the creek, the second figure next to the slender
  * @param sanity               the survivors' fear, which the creek reads
+ * @param stamina              the survivors' sprint and the slender's appearing
+ * @param adrenaline           the rush a survivor gets when the visible slender comes close
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
@@ -40,6 +42,8 @@ public record GameConfig(
         SlenderStatic slenderStatic,
         CreekConfig creek,
         SanityConfig sanity,
+        StaminaConfig stamina,
+        AdrenalineConfig adrenaline,
         float lobbyAtmosphereShare
 ) {
 
@@ -110,6 +114,8 @@ public record GameConfig(
             SlenderStatic.DEFAULT,
             CreekConfig.DEFAULT,
             SanityConfig.DEFAULT,
+            StaminaConfig.DEFAULT,
+            AdrenalineConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 

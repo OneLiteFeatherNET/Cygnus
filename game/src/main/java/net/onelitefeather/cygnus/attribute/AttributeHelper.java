@@ -20,6 +20,7 @@ import java.util.Set;
 public final class AttributeHelper {
 
     public static final Key SLENDER_DRAINING_SPEED_KEY = Key.key("cygnus", "slender_draining");
+    public static final Key ADRENALINE_KEY = Key.key("cygnus", "adrenaline");
     public static final Key SPEED_SCALING_KEY = Key.key("cygnus", "speed_scaling");
     public static final Key HEALTH_SCALING_KEY = Key.key("cygnus", "health_scaling");
     public static final Key GAME_SPEED_KEY = Key.key("cygnus", "game_speed");
@@ -185,6 +186,27 @@ public final class AttributeHelper {
      */
     public static void removeSlenderDrainingSpeed(Player player) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(SLENDER_DRAINING_SPEED_KEY);
+    }
+
+    /**
+     * Speeds a survivor up for an adrenaline rush, on top of every other change to their speed.
+     *
+     * @param player the survivor
+     * @param bonus  the share to add, {@code 0.2} for 20 % faster
+     */
+    public static void applyAdrenaline(Player player, double bonus) {
+        AttributeInstance attribute = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        attribute.removeModifier(ADRENALINE_KEY);
+        attribute.addModifier(new AttributeModifier(ADRENALINE_KEY, bonus, AttributeOperation.ADD_MULTIPLIED_TOTAL));
+    }
+
+    /**
+     * Takes the adrenaline rush off a survivor again.
+     *
+     * @param player the survivor
+     */
+    public static void removeAdrenaline(Player player) {
+        player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(ADRENALINE_KEY);
     }
 
     /**

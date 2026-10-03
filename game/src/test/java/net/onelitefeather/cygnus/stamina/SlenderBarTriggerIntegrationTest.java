@@ -75,7 +75,7 @@ class SlenderBarTriggerIntegrationTest extends CygnusPlayerTestBase {
         slenderBar.changeStatus(); // READY -> DRAINING, bypassing the trigger's own cooldown bookkeeping
 
         // fully drain so the bar auto-switches to REGENERATING while stamina is still low
-        for (int i = 0; i < 34; i++) {
+        for (int i = 0; i < 32; i++) {
             slenderBar.consume();
         }
 

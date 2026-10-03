@@ -71,12 +71,12 @@ class FoodBarIntegrationTest extends CygnusPlayerTestBase {
         }
         assertTrue(player.hasBlockedSprinting());
 
-        // 20 food, +1 per tick, needs 20 ticks to fully regenerate
-        for (int i = 0; i < 20; i++) {
+        // 20 food, +1.25 per tick, needs 16 ticks to fully regenerate
+        for (int i = 0; i < 16; i++) {
             foodBar.consume();
         }
 
-        assertFalse(player.hasBlockedSprinting(), "sprinting should be unblocked once food is fully restored");
+        assertFalse(player.hasBlockedSprinting(), "sprinting must be unblocked once food is fully restored");
         assertEquals(1.0f, player.getExp(), "fully regenerated food should show a full bar");
         assertTrue(foodBar.canConsume(), "a fully regenerated, READY bar should allow sprinting again");
 
