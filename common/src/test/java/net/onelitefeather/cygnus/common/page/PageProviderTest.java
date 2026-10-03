@@ -373,4 +373,36 @@ class PageProviderTest {
         assertEquals(1, pageProvider.foundPageCount());
         env.destroyInstance(instance, true);
     }
+    @Test
+    void testFoundShareIsZeroWithoutAMaxPageAmount() {
+        assertEquals(0.0D, new PageProvider().foundShare(), "without any pages there is nothing to have found");
+    }
+
+    @Test
+    void testFoundShareIsTheFoundPartOfAllPages(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
+        pageProvider.setMaxPageAmount(4);
+        Player player = env.createPlayer(instance);
+
+        pageProvider.triggerPageFound(player, pageProvider.interactablePages().getFirst().getHitBoxUUID());
+
+        assertEquals(0.25D, pageProvider.foundShare());
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testFoundShareNeverExceedsOne(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 2);
+        pageProvider.setMaxPageAmount(1);
+        Player player = env.createPlayer(instance);
+
+        pageProvider.triggerPageFound(player, pageProvider.interactablePages().getFirst().getHitBoxUUID());
+        pageProvider.triggerPageFound(player, pageProvider.interactablePages().getFirst().getHitBoxUUID());
+
+        assertEquals(2, pageProvider.foundPageCount(), "both finds must count for the test to mean anything");
+        assertEquals(1.0D, pageProvider.foundShare());
+        env.destroyInstance(instance, true);
+    }
 }

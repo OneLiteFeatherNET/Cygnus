@@ -158,8 +158,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // The creek reads the fear and reports back to it; pages and deaths reach it as events.
         SanityService sanityService = new SanityService(
                 this.gameConfig.sanity(),
-                this.pageProvider::foundPageCount,
-                this.pageProvider::getMaxPageAmount,
+                this.pageProvider::foundShare,
                 System::currentTimeMillis,
                 () -> TeamHelper.survivorsOf(this.teamService));
         this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(

@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,13 +29,12 @@ class SanityServiceTest extends CygnusPlayerTestBase {
     /** The defaults without decay, so a test can look at gains alone. */
     private static final SanityConfig NO_DECAY = new SanityConfig(0.5D, 0.10D, 0.10D, 20, 0.30D, 0.25D, 32, 0.0D);
 
-    private final AtomicInteger found = new AtomicInteger();
-    private final AtomicInteger max = new AtomicInteger(8);
+    private double pageProgress;
     private final AtomicLong clock = new AtomicLong();
     private Set<Player> survivors = Set.of();
 
     private SanityService service(SanityConfig config) {
-        return new SanityService(config, this.found::get, this.max::get, this.clock::get, () -> this.survivors);
+        return new SanityService(config, () -> this.pageProgress, this.clock::get, () -> this.survivors);
     }
 
     private static double dread(SanityService service, Player player) {
@@ -51,16 +49,15 @@ class SanityServiceTest extends CygnusPlayerTestBase {
     @DisplayName("Someone who is not tracked gets the page floor")
     void untrackedGetsTheFloor() {
         SanityService service = service(NO_DECAY);
-        this.found.set(4);
+        this.pageProgress = 0.5D;
 
         assertEquals(0.25D, service.dreadOf(UUID.randomUUID()), EPSILON);
     }
 
     @Test
-    @DisplayName("Without any pages there is no floor")
-    void noPagesNoFloor() {
+    @DisplayName("Without any found pages there is no floor")
+    void noFoundPagesNoFloor() {
         SanityService service = service(NO_DECAY);
-        this.max.set(0);
 
         assertEquals(0.0D, service.dreadOf(UUID.randomUUID()), EPSILON);
     }
@@ -172,7 +169,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0));
         SanityService service = service(SanityConfig.DEFAULT);
         service.track(survivor);
-        this.found.set(8);
+        this.pageProgress = 1.0D;
 
         assertEquals(0.5D, dread(service, survivor), EPSILON);
     }

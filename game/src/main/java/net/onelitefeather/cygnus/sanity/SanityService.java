@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.IntSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
@@ -47,8 +47,7 @@ import java.util.function.Supplier;
 public final class SanityService implements GameFeature, DreadSource, CreekWitness {
 
     private final SanityConfig config;
-    private final IntSupplier foundPages;
-    private final IntSupplier maxPages;
+    private final DoubleSupplier pageProgress;
     private final LongSupplier clock;
     private final Supplier<Set<Player>> roundSurvivors;
     private final PlayerState<Tracked> survivors;
@@ -57,16 +56,14 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      * Sets up the service.
      *
      * @param config         the settings
-     * @param foundPages     supplies how many pages have been found
-     * @param maxPages       supplies how many pages there are in total
+     * @param pageProgress   supplies how much of all pages has been found, between {@code 0} and {@code 1}
      * @param clock          supplies the current time in milliseconds
      * @param roundSurvivors supplies the survivors of the starting round
      */
-    public SanityService(SanityConfig config, IntSupplier foundPages, IntSupplier maxPages, LongSupplier clock,
+    public SanityService(SanityConfig config, DoubleSupplier pageProgress, LongSupplier clock,
                          Supplier<Set<Player>> roundSurvivors) {
         this.config = config;
-        this.foundPages = foundPages;
-        this.maxPages = maxPages;
+        this.pageProgress = pageProgress;
         this.clock = clock;
         this.roundSurvivors = roundSurvivors;
         this.survivors = new PlayerState<>();
@@ -164,10 +161,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     }
 
     private double floor() {
-        int max = this.maxPages.getAsInt();
-        if (max <= 0) return 0.0D;
-        double share = Math.clamp((double) this.foundPages.getAsInt() / max, 0.0D, 1.0D);
-        return this.config.pageFloorWeight() * share;
+        return this.config.pageFloorWeight() * this.pageProgress.getAsDouble();
     }
 
     /**
