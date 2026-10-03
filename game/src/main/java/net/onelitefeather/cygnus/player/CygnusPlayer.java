@@ -16,6 +16,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static net.onelitefeather.cygnus.common.util.Helper.getRandomPitchValue;
+
 @SuppressWarnings("java:S3252")
 public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
 
@@ -29,11 +31,23 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private static final int MAX_INTERVAL_TICKS = 36;   // Every 1.8s (slow, subtle pulse at start)
     private static final int MIN_INTERVAL_TICKS = 12;   // Every 0.6s (fast & tense without sound overlapping)
 
+    private static final int CALM_AMBIENT_INTERVAL_TICKS = 300;      // Every 15s, the old fixed rhythm
+    private static final int TERRIFIED_AMBIENT_INTERVAL_TICKS = 100; // Every 5s
+    private static final double AMBIENT_JITTER = 0.2D;               // Up to 20 percent shorter or longer
+    private static final double EERIE_DREAD_THRESHOLD = 0.6D;        // The creek's default hunt threshold
+    private static final SoundEvent[] EERIE_SOUNDS = {
+            SoundEvent.AMBIENT_SOUL_SAND_VALLEY_MOOD,
+            SoundEvent.AMBIENT_BASALT_DELTAS_MOOD,
+            SoundEvent.ENTITY_WARDEN_LISTENING
+    };
+
     private final @Nullable UUID resourcePackId;
 
     private boolean blockedSprinting;
     private int heartbeatTicks;
     private boolean heartbeatActive;
+    private int ambientTicks;
+    private double ambientJitter;
 
     private int pageFounds;
     private int kills;
@@ -53,6 +67,8 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
         this.blockedSprinting = false;
         this.heartbeatTicks = 0;
         this.heartbeatActive = false;
+        this.ambientTicks = 0;
+        this.ambientJitter = rollAmbientJitter();
         this.pageFounds = 0;
         this.kills = 0;
         this.death = false;
@@ -239,6 +255,43 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
      */
     public boolean isHeartbeatActive() {
         return heartbeatActive;
+    }
+
+    /**
+     * Plays the ambient sounds on player tick.
+     *
+     * <p>The more scared the player is, the shorter the gap between two sounds: from
+     * {@value #CALM_AMBIENT_INTERVAL_TICKS} ticks when calm down to
+     * {@value #TERRIFIED_AMBIENT_INTERVAL_TICKS} ticks when terrified, each gap randomly up to
+     * 20 percent shorter or longer. The dread is read every tick, so a sudden scare shortens the
+     * running gap right away. From {@value #EERIE_DREAD_THRESHOLD} on, eerier sounds join the
+     * cave.</p>
+     *
+     * @param dread how scared the player is, between {@code 0} and {@code 1}
+     */
+    public void tickAmbient(double dread) {
+        double fear = Math.clamp(dread, 0.0D, 1.0D);
+        double interval = CALM_AMBIENT_INTERVAL_TICKS
+                - fear * (CALM_AMBIENT_INTERVAL_TICKS - TERRIFIED_AMBIENT_INTERVAL_TICKS);
+        ambientTicks++;
+
+        if (ambientTicks >= interval * ambientJitter) {
+            playAmbientSound(fear);
+            ambientTicks = 0;
+            ambientJitter = rollAmbientJitter();
+        }
+    }
+
+    private void playAmbientSound(double fear) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        SoundEvent event = fear >= EERIE_DREAD_THRESHOLD && random.nextBoolean()
+                ? EERIE_SOUNDS[random.nextInt(EERIE_SOUNDS.length)]
+                : SoundEvent.AMBIENT_CAVE;
+        playSound(Sound.sound(event, Sound.Source.MASTER, 1F, getRandomPitchValue()), getPosition());
+    }
+
+    private static double rollAmbientJitter() {
+        return ThreadLocalRandom.current().nextDouble(1.0D - AMBIENT_JITTER, 1.0D + AMBIENT_JITTER);
     }
 
     /**
