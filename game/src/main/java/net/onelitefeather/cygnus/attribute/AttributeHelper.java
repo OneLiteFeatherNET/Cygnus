@@ -7,6 +7,8 @@ import net.minestom.server.entity.attribute.AttributeInstance;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
 
+import java.util.Set;
+
 /**
  * The {@link AttributeHelper} class provides utility methods to adjust the player's attributes.
  *
@@ -23,12 +25,24 @@ public final class AttributeHelper {
     public static final Key GAME_SPEED_KEY = Key.key("cygnus", "game_speed");
     public static final Key GAME_JUMP_STRENGTH_KEY = Key.key("cygnus", "game_jump_strength");
     public static final Key GAME_STEP_HEIGHT_KEY = Key.key("cygnus", "game_step_height");
+    public static final Key FREEZE_KEY = Key.key("cygnus", "freeze");
 
     private static final AttributeModifier SLENDER_DRAINING_SPEED_MODIFIER = new AttributeModifier(
                     SLENDER_DRAINING_SPEED_KEY,
             -0.331,
             AttributeOperation.ADD_MULTIPLIED_TOTAL
     );
+
+    // Multiplies the final value by zero, so it holds regardless of the other modifiers on the attribute
+    private static final AttributeModifier FREEZE_MODIFIER = new AttributeModifier(
+            FREEZE_KEY,
+            -1.0,
+            AttributeOperation.ADD_MULTIPLIED_TOTAL
+    );
+
+    // The modifiers that make up the speed a player walks at during a round, as opposed to
+    // temporary ones like sprinting or the slender draining
+    private static final Set<Key> WALKING_SPEED_KEYS = Set.of(GAME_SPEED_KEY, SPEED_SCALING_KEY);
 
     private static final double DEFAULT_JUMP_STRENGTH = 0.42;
     private static final double GAME_JUMP_STRENGTH = 0.0;
@@ -94,6 +108,7 @@ public final class AttributeHelper {
         AttributeInstance attribute = player.getAttribute(Attribute.MOVEMENT_SPEED);
         attribute.removeModifier(GAME_SPEED_KEY);
         attribute.addModifier(GAME_SPEED_MODIFIER);
+        refreshFieldOfView(player);
     }
 
     /**
@@ -103,6 +118,7 @@ public final class AttributeHelper {
      */
     public static void resetSpeed(Player player) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(GAME_SPEED_KEY);
+        refreshFieldOfView(player);
     }
 
     /**
@@ -138,6 +154,7 @@ public final class AttributeHelper {
         AttributeInstance attribute = player.getAttribute(Attribute.MOVEMENT_SPEED);
         attribute.removeModifier(SPEED_SCALING_KEY);
         attribute.addModifier(new AttributeModifier(SPEED_SCALING_KEY, bonus, AttributeOperation.ADD_VALUE));
+        refreshFieldOfView(player);
     }
 
     /**
@@ -147,6 +164,7 @@ public final class AttributeHelper {
      */
     public static void removeSpeedScale(Player player) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(SPEED_SCALING_KEY);
+        refreshFieldOfView(player);
     }
 
     /**
@@ -167,6 +185,63 @@ public final class AttributeHelper {
      */
     public static void removeSlenderDrainingSpeed(Player player) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(SLENDER_DRAINING_SPEED_KEY);
+    }
+
+    /**
+     * Stops the player from walking and jumping while still letting them look around.
+     *
+     * @param player the player to freeze
+     */
+    public static void freeze(Player player) {
+        for (AttributeInstance attribute : freezeAttributes(player)) {
+            attribute.removeModifier(FREEZE_KEY);
+            attribute.addModifier(FREEZE_MODIFIER);
+        }
+        refreshFieldOfView(player);
+    }
+
+    /**
+     * Lets a player frozen by {@link #freeze(Player)} move again.
+     *
+     * @param player the player to release
+     */
+    public static void unfreeze(Player player) {
+        for (AttributeInstance attribute : freezeAttributes(player)) {
+            attribute.removeModifier(FREEZE_KEY);
+        }
+        refreshFieldOfView(player);
+    }
+
+    /**
+     * Tells the client which speed counts as plain walking, so its FOV only reacts to changes on top of it.
+     * <p>
+     * The client zooms by {@code movement speed / walking speed}. Left at the vanilla walking speed, the
+     * slower game speed reads as a permanent slowness effect and zooms the view in. A frozen player gets a
+     * walking speed of zero, which makes the client skip the scaling entirely.
+     * </p>
+     *
+     * @param player the player to update
+     */
+    private static void refreshFieldOfView(Player player) {
+        AttributeInstance speed = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        double walkingSpeed = speed.getBaseValue();
+        for (AttributeModifier modifier : speed.modifiers()) {
+            if (FREEZE_KEY.equals(modifier.id())) {
+                player.setFieldViewModifier(0f);
+                return;
+            }
+            if (WALKING_SPEED_KEYS.contains(modifier.id())) {
+                walkingSpeed += modifier.amount();
+            }
+        }
+        player.setFieldViewModifier((float) walkingSpeed);
+    }
+
+    private static AttributeInstance[] freezeAttributes(Player player) {
+        return new AttributeInstance[]{
+                player.getAttribute(Attribute.MOVEMENT_SPEED),
+                player.getAttribute(Attribute.JUMP_STRENGTH)
+        };
     }
 
     private AttributeHelper() {
