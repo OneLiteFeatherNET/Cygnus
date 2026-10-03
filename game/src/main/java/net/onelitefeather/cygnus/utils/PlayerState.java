@@ -54,6 +54,19 @@ public final class PlayerState<V> {
     }
 
     /**
+     * Reads the value tracked for the player with the given id.
+     * <p>
+     * For callers that only get an id, like the creek asking for a survivor's dread.
+     * </p>
+     *
+     * @param id the id of the player to read
+     * @return the tracked value, or {@code null} if none is tracked
+     */
+    public @Nullable V get(UUID id) {
+        return this.values.get(id);
+    }
+
+    /**
      * Reads the value tracked for the given player, computing and storing one first if none is
      * tracked yet.
      *
