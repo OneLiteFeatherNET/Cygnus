@@ -22,6 +22,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SanityServiceTest extends CygnusPlayerTestBase {
 
@@ -34,7 +36,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
     private Set<Player> survivors = Set.of();
 
     private SanityService service(SanityConfig config) {
-        return new SanityService(config, () -> this.pageProgress, this.clock::get, () -> this.survivors);
+        return new SanityService(config, true, () -> this.pageProgress, this.clock::get, () -> this.survivors);
     }
 
     private static double dread(SanityService service, Player player) {
@@ -238,5 +240,12 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new PlayerDeathEvent(promoted, Component.empty(), Component.empty()));
 
         assertEquals(0.0D, dread(service, near), EPSILON);
+    }
+
+    @Test
+    @DisplayName("The switch handed in decides whether the service takes part")
+    void enabledFollowsTheSwitch() {
+        assertTrue(service(NO_DECAY).enabled());
+        assertFalse(new SanityService(NO_DECAY, false, () -> 0.0D, this.clock::get, Set::of).enabled());
     }
 }
