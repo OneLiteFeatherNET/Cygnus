@@ -71,7 +71,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(survivor);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
 
         EventDispatcher.call(new GameStartEvent());
         service.caught(survivor.getUuid());
@@ -87,7 +87,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player other = connect(env, instance, new Pos(2, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(finder, other);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
 
         EventDispatcher.call(new PageFoundEvent(finder, 1, 8));
@@ -138,7 +138,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player otherWorld = connect(env, elsewhere, new Pos(0, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(dead, near, far, otherWorld);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         service.caught(dead.getUuid());
 
@@ -183,7 +183,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player slender = connect(env, instance, new Pos(0, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of();
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
 
         EventDispatcher.call(new PageFoundEvent(slender, 1, 8));
@@ -200,7 +200,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(survivor);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         service.caught(survivor.getUuid());
 
@@ -216,7 +216,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(survivor);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         service.caught(survivor.getUuid());
 
@@ -233,7 +233,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player near = connect(env, instance, new Pos(5, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(promoted, near);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
 
         EventDispatcher.call(new SlenderReviveEvent(promoted));

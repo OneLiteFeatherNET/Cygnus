@@ -32,6 +32,8 @@ import java.util.Random;
  */
 public final class CreekModule implements GameFeature {
 
+    private final EventNode<Event> node = EventNode.all("creek");
+
     private final CreekConfig config;
     private final GameMapProvider mapProvider;
     private final CreekDebug debug;
@@ -76,6 +78,7 @@ public final class CreekModule implements GameFeature {
                 roundClock,
                 random,
                 this.debug);
+        this.registerListeners();
     }
 
     /**
@@ -90,8 +93,15 @@ public final class CreekModule implements GameFeature {
     }
 
     @Override
-    public void registerListener(EventNode<Event> node) {
-        this.service.registerListener(node);
+    public EventNode<Event> node() {
+        return this.node;
+    }
+
+    /**
+     * Hooks the creek service, which is no feature of its own, into the module's node.
+     */
+    private void registerListeners() {
+        this.service.registerListener(this.node);
     }
 
     @Override

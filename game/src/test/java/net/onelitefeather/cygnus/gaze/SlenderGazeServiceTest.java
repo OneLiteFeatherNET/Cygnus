@@ -155,7 +155,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
         SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender, () -> Set.of(survivor));
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
 
         EventDispatcher.call(new GameStartEvent());
         service.tick();
@@ -170,7 +170,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
         SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender, () -> Set.of(survivor));
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         service.track(survivor);
         service.tick();
 
@@ -187,7 +187,7 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0, 0, 0));
         Player slender = connect(env, instance, new Pos(0, 40, 5));
         SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> slender, () -> Set.of(survivor));
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         service.track(survivor);
         service.tick();
 

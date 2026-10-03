@@ -5,6 +5,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
+import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
 import net.onelitefeather.cygnus.overlay.OverlayTextureKeys;
@@ -29,7 +30,7 @@ import java.util.function.IntUnaryOperator;
  * @version 2.1.1
  * @since 2.7.0
  */
-public final class BloodSplatterService {
+public final class BloodSplatterService implements GameFeature {
 
     /** How many drawings exist per direction. */
     static final int VARIANTS = 2;
@@ -50,6 +51,8 @@ public final class BloodSplatterService {
     /** The keys, indexed {@code [direction][variant][frame]}. */
     private static final Key[][][] TEXTURES = buildTextures();
 
+    private final EventNode<Event> node = EventNode.all("blood-splatter");
+
     private final ScreenOverlay overlay;
     private final IntUnaryOperator variantPicker;
     private final PlayerState<Splatter> active = new PlayerState<>();
@@ -66,19 +69,23 @@ public final class BloodSplatterService {
     public BloodSplatterService(ScreenOverlay overlay, IntUnaryOperator variantPicker) {
         this.overlay = overlay;
         this.variantPicker = variantPicker;
+        this.registerListeners();
+    }
+
+    @Override
+    public EventNode<Event> node() {
+        return this.node;
     }
 
     /**
      * Listens for hits and for players leaving.
-     *
-     * @param node the node to register on
      */
-    public void registerListener(EventNode<Event> node) {
-        node.addListener(PlayerDamagedEvent.class, event -> this.splatter(
+    private void registerListeners() {
+        this.node.addListener(PlayerDamagedEvent.class, event -> this.splatter(
                 event.getPlayer(),
                 BloodDirection.between(event.getPlayer().getPosition(), event.getSource())
         ));
-        node.addListener(PlayerDisconnectEvent.class, event -> this.clear(event.getPlayer()));
+        this.node.addListener(PlayerDisconnectEvent.class, event -> this.clear(event.getPlayer()));
     }
 
     /**

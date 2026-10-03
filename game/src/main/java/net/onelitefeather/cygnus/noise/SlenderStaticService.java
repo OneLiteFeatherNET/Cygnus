@@ -37,7 +37,7 @@ import java.util.function.Supplier;
  * <p>Usage:</p>
  * <pre>{@code
  * SlenderStaticService service = new SlenderStaticService(config, () -> currentSlender);
- * service.registerListener(eventNode);
+ * eventNode.addChild(service.node());
  * }</pre>
  *
  * @author TheMeinerLP
@@ -54,6 +54,8 @@ public final class SlenderStaticService implements GameFeature {
 
     /** The pitch it has dropped to once every page is gone: a tape that has been running too long. */
     private static final float WORN_PITCH = 0.7F;
+
+    private final EventNode<Event> node = EventNode.all("slender-static");
 
     private final GameConfig.SlenderStatic config;
     private final Supplier<@Nullable Player> slender;
@@ -77,18 +79,21 @@ public final class SlenderStaticService implements GameFeature {
         this.slender = slender;
         this.sound = SoundEvent.of(config.sound(), null);
         this.secondsUntilBurst = this.interval();
+        this.registerListeners();
+    }
+
+    @Override
+    public EventNode<Event> node() {
+        return this.node;
     }
 
     /**
      * Hooks the service into the round's lifecycle.
-     *
-     * @param node the node to register on
      */
-    @Override
-    public void registerListener(EventNode<Event> node) {
-        node.addListener(GameStartEvent.class, event -> this.start());
-        node.addListener(PageFoundEvent.class, this::onPageFound);
-        node.addListener(GameFinishEvent.class, event -> this.stop());
+    private void registerListeners() {
+        this.node.addListener(GameStartEvent.class, event -> this.start());
+        this.node.addListener(PageFoundEvent.class, this::onPageFound);
+        this.node.addListener(GameFinishEvent.class, event -> this.stop());
     }
 
     /**
