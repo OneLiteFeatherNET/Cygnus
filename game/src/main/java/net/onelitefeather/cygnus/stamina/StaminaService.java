@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.stamina;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.utils.validate.Check;
+import net.onelitefeather.cygnus.common.config.StaminaConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,13 +20,24 @@ import java.util.UUID;
  */
 public final class StaminaService {
 
+    private final StaminaConfig config;
     private final Map<UUID, StaminaBar> staminaBars;
     private @Nullable StaminaBar slenderBar;
 
     /**
-     * Creates a new instance from this class.
+     * Creates a new instance from this class with the default settings.
      */
     public StaminaService() {
+        this(StaminaConfig.DEFAULT);
+    }
+
+    /**
+     * Creates a new instance from this class.
+     *
+     * @param config the settings every bar is created with
+     */
+    public StaminaService(StaminaConfig config) {
+        this.config = config;
         this.staminaBars = new HashMap<>();
     }
 
@@ -49,7 +61,7 @@ public final class StaminaService {
             this.slenderBar.stop();
         }
 
-        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player);
+        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player, this.config, System::currentTimeMillis);
         if (!forceStart) return;
         this.slenderBar.start();
     }
@@ -63,7 +75,7 @@ public final class StaminaService {
         Check.argCondition(!staminaBars.isEmpty(), "Unable to load stamina bars twice");
         Check.argCondition(team.isEmpty(), "Can't add players from a team without teams");
         for (Player player : team) {
-            this.staminaBars.put(player.getUuid(), StaminaFactory.createFoodStamina((CygnusPlayer) player));
+            this.staminaBars.put(player.getUuid(), StaminaFactory.createFoodStamina((CygnusPlayer) player, this.config));
         }
     }
 
