@@ -81,6 +81,7 @@ import net.onelitefeather.cygnus.phase.RestartPhase;
 import net.onelitefeather.cygnus.phase.WaitingPhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
+import net.onelitefeather.cygnus.sanity.SanityService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
@@ -154,6 +155,13 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
         this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
+        // The creek reads the fear and reports back to it; pages and deaths reach it as events.
+        SanityService sanityService = new SanityService(
+                this.gameConfig.sanity(),
+                this.pageProvider::foundPageCount,
+                this.pageProvider::getMaxPageAmount,
+                System::currentTimeMillis,
+                () -> TeamHelper.survivorsOf(this.teamService));
         this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
                 new EpilepsyDisclaimer(),
                 this.spectatorService,
@@ -165,8 +173,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 new SlenderStaticService(
                         this.gameConfig.slenderStatic(),
                         () -> TeamHelper.slenderOf(this.teamService)),
-                new CreekModule(this.gameConfig.creek(), this.gameConfig.round().gameTime(), this.teamService,
-                        this.mapProvider, this.pageProvider, this.jumpscareManager, this.staminaService),
+                new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
+                        sanityService, sanityService, this.jumpscareManager, this.staminaService),
+                sanityService,
                 new OverlayModule(this.gameConfig.glitch(), this.teamService, this.staminaService)
         )).toList();
         this.initPhases();
