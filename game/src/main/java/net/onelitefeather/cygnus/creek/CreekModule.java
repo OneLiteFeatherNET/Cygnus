@@ -8,13 +8,13 @@ import net.onelitefeather.cygnus.command.CreekCommand;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.map.GameMap;
-import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchEffects;
 import net.onelitefeather.cygnus.creek.consequence.GlowReveal;
 import net.onelitefeather.cygnus.creek.consequence.StagedCatchConsequence;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
-import net.onelitefeather.cygnus.creek.dread.PageProgressDread;
+import net.onelitefeather.cygnus.creek.dread.CreekWitness;
+import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.map.GameMapProvider;
 import net.onelitefeather.cygnus.stamina.StaminaService;
@@ -41,20 +41,20 @@ public final class CreekModule implements GameFeature {
      * Builds the creek.
      *
      * @param config           the creek settings
-     * @param gameTime         the length of a round in seconds
      * @param teamService      the teams of the round
      * @param mapProvider      the maps and the active instance
-     * @param pageProvider     the pages of the round
+     * @param dread            rates how scared each survivor is
+     * @param witness          hears about catches and sightings
      * @param jumpScareManager plays the jump scare of a catch
      * @param staminaService   the stamina bars a catch drains
      */
-    public CreekModule(CreekConfig config, int gameTime, TeamService teamService,
-                       GameMapProvider mapProvider, PageProvider pageProvider,
+    public CreekModule(CreekConfig config, TeamService teamService,
+                       GameMapProvider mapProvider, DreadSource dread, CreekWitness witness,
                        JumpScareManager jumpScareManager, StaminaService staminaService) {
         this.config = config;
         this.mapProvider = mapProvider;
         this.debug = new CreekDebug();
-        // One clock for the service and the dread: the service starts it, the dread reads it.
+        // One clock for the service: it starts it with the round and stops it at the end.
         RoundClock roundClock = new RoundClock(System::currentTimeMillis);
         // Every step and every catch runs on the scheduler thread, but Random is thread-safe
         // anyway, which keeps a stray call from elsewhere harmless.
@@ -65,12 +65,8 @@ public final class CreekModule implements GameFeature {
                 mapProvider.getActiveInstance(),
                 this::routes,
                 CreakingBody::spawn,
-                new PageProgressDread(
-                        pageProvider::foundPageCount,
-                        pageProvider::getMaxPageAmount,
-                        roundClock::elapsedMillis,
-                        gameTime,
-                        this.config),
+                dread,
+                witness,
                 new StagedCatchConsequence(
                         new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.slownessSeconds()),
                         new GlowReveal(this.config.betrayalGlowSeconds()),

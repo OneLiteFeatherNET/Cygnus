@@ -43,8 +43,7 @@ class CreekConfigTest {
                 config.stalkMinDistance(), config.stalkMaxDistance(), config.stalkMinAngle(), config.stalkMaxAngle(),
                 config.stalkRevealMillis(), config.stalkMinSeconds(), config.stalkMaxSeconds(), config.huntMaxSeconds(),
                 config.catchDistance(), config.vanishMinSeconds(), config.vanishMaxSeconds(), config.respawnMinDistance(),
-                config.personalSpace(), config.stuckMillis(), config.dreadPageWeight(), config.dreadTimeWeight(),
-                config.dreadIsolationWeight(), config.isolationRadius(), config.betrayalCatchCount(),
+                config.personalSpace(), config.stuckMillis(), config.betrayalCatchCount(),
                 config.betrayalChance(), config.betrayalGlowSeconds(), config.slownessSeconds(), 0.0D,
                 config.randomStopChance(), config.randomStopMinMillis(), config.randomStopMaxMillis()));
         assertTrue(exception.getMessage().contains("routeLinkDistance"));
@@ -83,8 +82,7 @@ class CreekConfigTest {
                 d.stalkMinDistance(), d.stalkMaxDistance(), stalkMinAngle, d.stalkMaxAngle(),
                 d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                personalSpace, d.stuckMillis(), d.dreadPageWeight(), d.dreadTimeWeight(),
-                d.dreadIsolationWeight(), d.isolationRadius(), d.betrayalCatchCount(),
+                personalSpace, d.stuckMillis(), d.betrayalCatchCount(),
                 d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
                 d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis());
     }
@@ -104,8 +102,7 @@ class CreekConfigTest {
                 d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
                 d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                d.personalSpace(), d.stuckMillis(), d.dreadPageWeight(), d.dreadTimeWeight(),
-                d.dreadIsolationWeight(), d.isolationRadius(), d.betrayalCatchCount(),
+                d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
                 d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
                 chance, minMillis, maxMillis);
     }

@@ -16,6 +16,7 @@ import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
+import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.PatrolState;
 import net.onelitefeather.cygnus.creek.state.VanishState;
@@ -57,7 +58,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
 
     private CreekService service(Instance instance, Set<Player> survivors, List<CreekRoute> routes, AtomicLong clock) {
         return new CreekService(CreekConfig.DEFAULT, () -> survivors, () -> instance, () -> routes,
-                CreakingBody::spawn, (_, _, _) -> 0.0D, consequence, new RoundClock(clock::get), new Random(3), new CreekDebug());
+                CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, consequence, new RoundClock(clock::get), new Random(3), new CreekDebug());
     }
 
     @Test
@@ -97,7 +98,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         AtomicLong clock = new AtomicLong(1000L);
         RoundClock roundClock = new RoundClock(clock::get);
         CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(survivor), () -> instance,
-                () -> List.of(ROUTE), CreakingBody::spawn, (_, _, _) -> 0.0D, consequence, roundClock, new Random(3), new CreekDebug());
+                () -> List.of(ROUTE), CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, consequence, roundClock, new Random(3), new CreekDebug());
 
         service.start();
         clock.set(4000L);
@@ -118,7 +119,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         CreekDebug debug = new CreekDebug();
         debug.toggle(watcher.getUuid());
         CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(watcher, other), () -> instance,
-                () -> List.of(ROUTE), CreakingBody::spawn, (_, _, _) -> 0.0D, consequence,
+                () -> List.of(ROUTE), CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, consequence,
                 new RoundClock(new AtomicLong()::get), new Random(3), debug);
         Collector<ActionBarPacket> watched = watcherConnection.trackIncoming(ActionBarPacket.class);
         Collector<ActionBarPacket> unwatched = otherConnection.trackIncoming(ActionBarPacket.class);
@@ -293,10 +294,10 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         AtomicInteger dreadCalls = new AtomicInteger();
         AtomicLong clock = new AtomicLong();
         CreekService service = new CreekService(config, survivors::get, () -> instance, () -> List.of(ROUTE),
-                CreakingBody::spawn, (id, _, _) -> {
+                CreakingBody::spawn, id -> {
                     dreadCalls.incrementAndGet();
                     return id.equals(scared.getUuid()) ? 0.5D : 0.0D;
-                }, consequence,
+                }, CreekWitness.NONE, consequence,
                 new RoundClock(clock::get), new Random(3), new CreekDebug());
         service.start();
         clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);

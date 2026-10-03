@@ -10,6 +10,7 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
+import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.DoneState;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
@@ -24,10 +25,12 @@ import net.onelitefeather.cygnus.creek.world.SpotFinder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -38,17 +41,37 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CreekIntegrationTest extends CygnusPlayerTestBase {
 
     private static Creek creek(CreekBody body, CreekConfig config, CreekState initial) {
+        return creek(body, config, initial, CreekWitness.NONE);
+    }
+
+    private static Creek creek(CreekBody body, CreekConfig config, CreekState initial, CreekWitness witness) {
         CreekSight sight = new CreekSight(config.sightRange(), config.sightViewAngle());
         // nextBoolean() is true for -1, so a selection always ends in the stun.
         PatrolHelper patrol = new PatrolHelper(() -> -1L);
-        CreekRound round = new CreekRound(sight, new SpotFinder(sight, Optional::of), _ -> {}, patrol, config,
-                new Random(3));
+        CreekRound round = new CreekRound(sight, new SpotFinder(sight, Optional::of), _ -> {}, witness, patrol,
+                config, new Random(3));
         return new Creek(body, Contexts.route(), round, initial);
+    }
+
+    /** Writes down what the creek reports. */
+    private static final class RecordingWitness implements CreekWitness {
+        private final List<UUID> sightings = new ArrayList<>();
+        private final List<UUID> catches = new ArrayList<>();
+
+        @Override
+        public void sighted(UUID survivor) {
+            this.sightings.add(survivor);
+        }
+
+        @Override
+        public void caught(UUID survivor) {
+            this.catches.add(survivor);
+        }
     }
 
     /** A snapshot of the players, none of them scared. */
     private static SurvivorSnapshot survivors(Player... players) {
-        return SurvivorSnapshot.take(List.of(players), (_, _, _) -> 0.0D);
+        return SurvivorSnapshot.take(List.of(players), _ -> 0.0D);
     }
 
     @Test
@@ -204,5 +227,71 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
         assertFalse(haunted.hasEffect(PotionEffect.SLOWNESS));
         assertEquals(2, creek.lastViews().size(), "the snapshots still cover every survivor");
+    }
+
+    @Test
+    @DisplayName("Spotting him is reported once, not for every step he stays in view")
+    void sightingIsReportedOnce(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 10));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new HuntState(survivor.getUuid(), Long.MAX_VALUE), witness);
+
+        // The first step only enters the hunt, which shows him to the target; he is seen from the next one on.
+        creek.tick(survivors(survivor), 0L);
+        creek.tick(survivors(survivor), 100L);
+        creek.tick(survivors(survivor), 200L);
+
+        assertEquals(List.of(survivor.getUuid()), witness.sightings);
+    }
+
+    @Test
+    @DisplayName("Looking away and back again is a new sighting")
+    void lookingBackIsANewSighting(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 10));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new HuntState(survivor.getUuid(), Long.MAX_VALUE), witness);
+        creek.tick(survivors(survivor), 0L);
+        creek.tick(survivors(survivor), 100L);
+
+        survivor.teleport(new Pos(0, 40, 0, 180, 0)).join();
+        creek.tick(survivors(survivor), 200L);
+        survivor.teleport(new Pos(0, 40, 0, 0, 0)).join();
+        creek.tick(survivors(survivor), 300L);
+
+        assertEquals(List.of(survivor.getUuid(), survivor.getUuid()), witness.sightings);
+    }
+
+    @Test
+    @DisplayName("Survivors he leaves alone are not reported as seeing him")
+    void ignoredSurvivorsAreNotReported(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new PatrolState(), witness);
+
+        creek.tick(survivors(survivor), Set.of(survivor.getUuid()), 0L);
+        creek.tick(survivors(survivor), Set.of(survivor.getUuid()), 100L);
+
+        assertTrue(witness.sightings.isEmpty());
+    }
+
+    @Test
+    @DisplayName("A catch is reported")
+    void catchIsReported(Env env) {
+        Instance instance = env.createFlatInstance();
+        // Facing away, so the creek is not frozen by being watched.
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 1));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new HuntState(survivor.getUuid(), Long.MAX_VALUE), witness);
+
+        creek.tick(survivors(survivor), 0L);
+
+        assertEquals(List.of(survivor.getUuid()), witness.catches);
     }
 }

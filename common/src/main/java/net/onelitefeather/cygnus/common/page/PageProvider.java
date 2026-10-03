@@ -219,6 +219,16 @@ public final class PageProvider {
     }
 
     /**
+     * Returns how much of all pages has been found in this round.
+     *
+     * @return the found part, between {@code 0} and {@code 1}; {@code 0} while the max page amount is unset
+     */
+    public double foundShare() {
+        if (this.maxPageAmount <= 0) return 0.0D;
+        return Math.clamp((double) this.foundPages.get() / this.maxPageAmount, 0.0D, 1.0D);
+    }
+
+    /**
      * Returns the max page amount.
      *
      * @return max page amount

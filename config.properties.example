@@ -228,3 +228,20 @@ survivorTeamSize=12
 #creek.randomStopChance=0.15
 #creek.randomStopMinMillis=1500
 #creek.randomStopMaxMillis=4000
+
+# --- Sanity -----------------------------------------------------------------
+# Every survivor has a fear value between 0 and 1. It jumps when they find a
+# page, see the creek, get caught by it or someone dies close by, and wears off
+# again over time - but never below a floor that grows with the pages found.
+# The creek reads it to decide whom to stalk (creek.stalkThreshold) and when to
+# hunt (creek.huntThreshold). Players never see it.
+# Every key below maps to a field of SanityConfig. An unreadable value falls back
+# to its default; values out of range are rejected.
+#sanity.pageFloorWeight=0.5
+#sanity.pageFoundGain=0.10
+#sanity.sightingGain=0.10
+#sanity.sightingCooldownSeconds=20
+#sanity.caughtGain=0.30
+#sanity.deathGain=0.25
+#sanity.deathRadius=32
+#sanity.decayPerSecond=0.005

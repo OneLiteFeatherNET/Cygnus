@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Iterator;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,6 +33,17 @@ class PlayerStateTest {
 
         assertNull(state.get(player));
         assertTrue(state.isEmpty());
+    }
+
+    @Test
+    void aValueCanBeReadByTheUuid(Env env) {
+        Player player = spawn(env);
+        PlayerState<String> state = new PlayerState<>();
+
+        state.put(player, "value");
+
+        assertEquals("value", state.get(player.getUuid()));
+        assertNull(state.get(UUID.randomUUID()));
     }
 
     @Test

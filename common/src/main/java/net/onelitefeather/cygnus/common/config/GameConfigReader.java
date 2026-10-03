@@ -47,6 +47,7 @@ import java.util.regex.Pattern;
  *     <li>slenderStaticMinVolume</li>
  *     <li>slenderStaticMaxVolume</li>
  *     <li>creek.* (see {@link CreekConfig})</li>
+ *     <li>sanity.* (see {@link SanityConfig})</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
@@ -68,6 +69,7 @@ public final class GameConfigReader {
     private static final String DAMAGE_SOUND_KEY = "damageSound";
     private static final String SLENDER_STATIC_SOUND_KEY = "slenderStaticSound";
     private static final String CREEK_PREFIX = "creek.";
+    private static final String SANITY_PREFIX = "sanity.";
 
     private final Path path;
 
@@ -150,6 +152,7 @@ public final class GameConfigReader {
                         getFloat(properties, "slenderStaticMaxVolume", slenderStatic.maxVolume())
                 ),
                 getCreek(properties),
+                getSanity(properties),
                 getFloat(properties, "lobbyAtmosphereShare", GameConfig.DEFAULT.lobbyAtmosphereShare())
         );
     }
@@ -248,10 +251,6 @@ public final class GameConfigReader {
                 getInt(properties, CREEK_PREFIX + "respawnMinDistance", d.respawnMinDistance()),
                 getInt(properties, CREEK_PREFIX + "personalSpace", d.personalSpace()),
                 getInt(properties, CREEK_PREFIX + "stuckMillis", d.stuckMillis()),
-                getDouble(properties, CREEK_PREFIX + "dreadPageWeight", d.dreadPageWeight()),
-                getDouble(properties, CREEK_PREFIX + "dreadTimeWeight", d.dreadTimeWeight()),
-                getDouble(properties, CREEK_PREFIX + "dreadIsolationWeight", d.dreadIsolationWeight()),
-                getInt(properties, CREEK_PREFIX + "isolationRadius", d.isolationRadius()),
                 getInt(properties, CREEK_PREFIX + "betrayalCatchCount", d.betrayalCatchCount()),
                 getDouble(properties, CREEK_PREFIX + "betrayalChance", d.betrayalChance()),
                 getInt(properties, CREEK_PREFIX + "betrayalGlowSeconds", d.betrayalGlowSeconds()),
@@ -260,6 +259,31 @@ public final class GameConfigReader {
                 getDouble(properties, CREEK_PREFIX + "randomStopChance", d.randomStopChance()),
                 getInt(properties, CREEK_PREFIX + "randomStopMinMillis", d.randomStopMinMillis()),
                 getInt(properties, CREEK_PREFIX + "randomStopMaxMillis", d.randomStopMaxMillis())
+        );
+    }
+
+    /**
+     * Reads the fear settings. All keys start with {@value #SANITY_PREFIX}.
+     * <p>
+     * An unreadable value falls back to its default, while values out of range are rejected by
+     * {@link SanityConfig}.
+     * </p>
+     *
+     * @param properties the loaded properties
+     * @return the fear settings, never {@code null}
+     * @throws IllegalArgumentException if a value is out of range
+     */
+    private SanityConfig getSanity(Properties properties) {
+        SanityConfig d = SanityConfig.DEFAULT;
+        return new SanityConfig(
+                getDouble(properties, SANITY_PREFIX + "pageFloorWeight", d.pageFloorWeight()),
+                getDouble(properties, SANITY_PREFIX + "pageFoundGain", d.pageFoundGain()),
+                getDouble(properties, SANITY_PREFIX + "sightingGain", d.sightingGain()),
+                getInt(properties, SANITY_PREFIX + "sightingCooldownSeconds", d.sightingCooldownSeconds()),
+                getDouble(properties, SANITY_PREFIX + "caughtGain", d.caughtGain()),
+                getDouble(properties, SANITY_PREFIX + "deathGain", d.deathGain()),
+                getInt(properties, SANITY_PREFIX + "deathRadius", d.deathRadius()),
+                getDouble(properties, SANITY_PREFIX + "decayPerSecond", d.decayPerSecond())
         );
     }
 

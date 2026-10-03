@@ -1,15 +1,13 @@
 package net.onelitefeather.cygnus.creek.dread;
 
-import net.minestom.server.coordinate.Pos;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
  * Rates how likely a survivor is to be haunted.
  * <p>
- * The creek only ever asks this interface. A sanity system can take over the rating later without
- * the creek noticing.
+ * The creek only ever asks this interface. In a round it is answered by the survivors' fear,
+ * {@code SanityService}.
  * </p>
  *
  * @author theEvilReaper
@@ -23,9 +21,7 @@ public interface DreadSource {
      * Rates one survivor.
      *
      * @param survivor the survivor to rate
-     * @param position where the survivor is
-     * @param others   where all the other survivors are
      * @return the dread, between {@code 0} and {@code 1}
      */
-    double dreadOf(UUID survivor, Pos position, List<Pos> others);
+    double dreadOf(UUID survivor);
 }

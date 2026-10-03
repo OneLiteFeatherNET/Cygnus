@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.creek;
 
-import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
@@ -53,13 +52,8 @@ final class SurvivorSnapshot {
         List<Player> survivors = List.copyOf(players);
         List<SurvivorView> views = new ArrayList<>(survivors.size());
         for (Player survivor : survivors) {
-            Pos position = survivor.getPosition();
-            List<Pos> others = new ArrayList<>(survivors.size());
-            for (Player other : survivors) {
-                if (other != survivor) others.add(other.getPosition());
-            }
-            views.add(new SurvivorView(survivor.getUuid(), position,
-                    dread.dreadOf(survivor.getUuid(), position, others), false));
+            views.add(new SurvivorView(survivor.getUuid(), survivor.getPosition(),
+                    dread.dreadOf(survivor.getUuid()), false));
         }
         return new SurvivorSnapshot(survivors, views);
     }
