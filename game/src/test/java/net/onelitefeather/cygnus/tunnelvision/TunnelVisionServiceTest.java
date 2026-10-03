@@ -10,6 +10,7 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -147,6 +148,24 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
 
         assertTrue(renderer.wasCleared(survivor));
         assertNull(renderer.stageOf(survivor), "a dead survivor must not be drawn any more");
+    }
+
+    @Test
+    @DisplayName("A survivor who takes over as the slender gets their screen back")
+    void promotionClearsTheOverlay(Env env) {
+        RecordingRenderer renderer = new RecordingRenderer();
+        Player promoted = spawn(env, new Pos(0, 40, 0));
+        TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> Set.of(promoted));
+        env.process().eventHandler().addChild(service.node());
+        service.track(promoted);
+        service.tick();
+        renderer.forget();
+
+        EventDispatcher.call(new SlenderReviveEvent(promoted));
+        service.tick();
+
+        assertTrue(renderer.wasCleared(promoted));
+        assertNull(renderer.stageOf(promoted), "the slender must not be drawn a survivor's tunnel vision");
     }
 
     @Test

@@ -10,6 +10,7 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -178,6 +179,22 @@ class SlenderGazeServiceTest extends CygnusPlayerTestBase {
         service.tick();
 
         assertEquals(SlenderGaze.NONE, service.levelOf(survivor));
+    }
+
+    @Test
+    @DisplayName("A survivor who takes over as the slender is dropped")
+    void promotionRemovesTheSurvivor(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player promoted = connect(env, instance, new Pos(0, 40, 0, 0, 0));
+        // Once promoted, the survivor is the slender: he would stand right on top of himself
+        SlenderGazeService service = new SlenderGazeService(GazeSink.NONE, GAZE, () -> promoted, () -> Set.of(promoted));
+        env.process().eventHandler().addChild(service.node());
+        service.track(promoted);
+
+        EventDispatcher.call(new SlenderReviveEvent(promoted));
+        service.tick();
+
+        assertEquals(SlenderGaze.NONE, service.levelOf(promoted));
     }
 
     @Test
