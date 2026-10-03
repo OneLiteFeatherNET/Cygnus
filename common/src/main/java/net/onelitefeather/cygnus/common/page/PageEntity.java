@@ -280,7 +280,7 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
      *
      * @return the resource
      */
-    PageResource getResource() {
+    public PageResource getResource() {
         return this.resource;
     }
 

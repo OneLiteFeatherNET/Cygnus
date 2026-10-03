@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
  * Associates custom page models (IDs 1 through 6) with atmospheric handwritten horror notes.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 public enum PageNote {
@@ -37,6 +37,7 @@ public enum PageNote {
     private final String text;
     private final Component component;
     private final Component tooltipComponent;
+    private final Component worldComponent;
 
     PageNote(int modelId, String defaultText) {
         this.modelId = modelId;
@@ -44,6 +45,7 @@ public enum PageNote {
         this.text = resolvedText;
         this.component = Component.text(resolvedText, NamedTextColor.GRAY, TextDecoration.ITALIC);
         this.tooltipComponent = TooltipBox.of(this.component);
+        this.worldComponent = TooltipBox.builder().centered().line(this.component).build();
     }
 
     private static final class Holder {
@@ -84,6 +86,15 @@ public enum PageNote {
      */
     public Component getTooltipComponent() {
         return tooltipComponent;
+    }
+
+    /**
+     * Returns the pre-built note box for a text display in the world, centered on its anchor.
+     *
+     * @return the centered note box component
+     */
+    public Component getWorldComponent() {
+        return worldComponent;
     }
 
     /**
@@ -177,6 +188,16 @@ public enum PageNote {
             return Optional.empty();
         }
         return tooltipForCustomModel(modelId.getAsInt());
+    }
+
+    /**
+     * Resolves the pre-built world note box for the given {@link ItemStack} if it represents a custom page model.
+     *
+     * @param itemStack the item stack to resolve the note for
+     * @return an {@link Optional} containing the centered note box, or empty if not a custom page model item
+     */
+    public static Optional<Component> worldComponentForItem(@Nullable ItemStack itemStack) {
+        return fromItem(itemStack).map(PageNote::getWorldComponent);
     }
 
     /**

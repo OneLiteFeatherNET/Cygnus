@@ -9,6 +9,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.common.ui.TooltipBox;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -115,5 +116,25 @@ class PageNoteTest {
             assertTrue(note.isPresent());
             assertFalse(PLAIN.serialize(note.get()).isBlank());
         }
+    }
+
+    @Test
+    void testPrebuiltWorldComponentIsCentered(Env ignored) {
+        for (PageNote note : PageNote.values()) {
+            Component world = note.getWorldComponent();
+            assertNotNull(world, "Pre-built world component must not be null");
+            assertTrue(PLAIN.serialize(world).startsWith(TooltipBox.TOP_LEFT),
+                    "World component of " + note + " must be centered, without leading space");
+        }
+    }
+
+    @Test
+    void testWorldComponentForItem(Env ignored) {
+        ItemStack item = ItemStack.builder(Material.PAPER)
+                .set(DataComponents.ITEM_MODEL, Key.key("cygnus", "page_3").asString())
+                .build();
+        assertEquals(Optional.of(PageNote.CANT_RUN.getWorldComponent()), PageNote.worldComponentForItem(item));
+        assertTrue(PageNote.worldComponentForItem(ItemStack.of(Material.PAPER)).isEmpty());
+        assertTrue(PageNote.worldComponentForItem(null).isEmpty());
     }
 }
