@@ -267,8 +267,14 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.pageProximityService.stopTask();
         this.jumpscareManager.cleanUp();
         this.teamService.getTeam(GameConfig.SLENDER_KEY)
-                .ifPresent(slenderTeam -> slenderTeam.getPlayers()
-                        .forEach(player -> player.switchEntityType(EntityType.PLAYER)));
+                .ifPresent(slenderTeam -> slenderTeam.getPlayers().forEach(player -> {
+                    player.switchEntityType(EntityType.PLAYER);
+                    player.getInventory().clear();
+                }));
+        // Drops the pages the survivors collected during the round
+        this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
+                .ifPresent(survivorTeam -> survivorTeam.getPlayers()
+                        .forEach(player -> player.getInventory().clear()));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, EntityActionListener::listener);
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientSettingsPacket.class, SettingsListener::listener);
     }

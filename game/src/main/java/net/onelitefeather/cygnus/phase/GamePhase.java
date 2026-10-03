@@ -25,6 +25,7 @@ public final class GamePhase extends TimedPhase {
 
     private final GameView gameView;
     private final JumpScareManager jumpscareManager;
+    private final Runnable endRunnable;
     private @Nullable GameFinishEvent finishEvent;
 
     /**
@@ -47,7 +48,8 @@ public final class GamePhase extends TimedPhase {
         this.setEndTicks(0);
         this.gameView = gameView;
         this.jumpscareManager = jumpscareManager;
-        this.setFinishedCallback(endRunnable);
+        // Not passed as the finished callback: LinearPhaseSeries replaces that with its own advance call
+        this.endRunnable = endRunnable;
     }
 
     /**
@@ -71,6 +73,7 @@ public final class GamePhase extends TimedPhase {
     protected void onFinish() {
         finishEvent = finishEvent == null ? new GameFinishEvent(GameFinishEvent.Reason.TIME_OVER) : finishEvent;
         MinecraftServer.getGlobalEventHandler().call(finishEvent);
+        this.endRunnable.run();
         this.gameView.removePlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
     }
 
