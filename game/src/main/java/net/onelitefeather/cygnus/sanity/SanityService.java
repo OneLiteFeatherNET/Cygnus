@@ -33,7 +33,8 @@ import java.util.function.Supplier;
  * Fear jumps when a survivor finds a page, spots the creek, is caught by it, or someone dies close
  * by. It wears off again over time, but never below a floor that grows with the pages found, so
  * the round still gets tenser towards the end. The creek reads it as its {@link DreadSource} and
- * reports catches and sightings back as its {@link CreekWitness}.
+ * reports catches and sightings back as its {@link CreekWitness}. The survivors' ambient sounds read
+ * it too, to get more frequent the more scared a survivor is.
  * </p>
  * <p>
  * Like {@code SlenderGazeService}, it listens for the round's start and end on its own and drops a
@@ -49,7 +50,6 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     private final EventNode<Event> node = EventNode.all("sanity");
 
     private final SanityConfig config;
-    private final boolean enabled;
     private final DoubleSupplier pageProgress;
     private final LongSupplier clock;
     private final Supplier<Set<Player>> roundSurvivors;
@@ -59,25 +59,18 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      * Sets up the service.
      *
      * @param config         the settings
-     * @param enabled        whether the service takes part in the game
      * @param pageProgress   supplies how much of all pages has been found, between {@code 0} and {@code 1}
      * @param clock          supplies the current time in milliseconds
      * @param roundSurvivors supplies the survivors of the starting round
      */
-    public SanityService(SanityConfig config, boolean enabled, DoubleSupplier pageProgress, LongSupplier clock,
+    public SanityService(SanityConfig config, DoubleSupplier pageProgress, LongSupplier clock,
                          Supplier<Set<Player>> roundSurvivors) {
         this.config = config;
-        this.enabled = enabled;
         this.pageProgress = pageProgress;
         this.clock = clock;
         this.roundSurvivors = roundSurvivors;
         this.survivors = new PlayerState<>();
         this.registerListeners();
-    }
-
-    @Override
-    public boolean enabled() {
-        return this.enabled;
     }
 
     @Override
