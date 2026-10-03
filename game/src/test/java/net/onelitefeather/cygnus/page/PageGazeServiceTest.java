@@ -44,7 +44,8 @@ class PageGazeServiceTest {
     }
 
     private PageEntity createPageEntity(Instance instance, Pos pos, ItemStack item) {
-        PageEntity entity = PageFactory.createPage(instance, pos, Direction.NORTH, 1);
+        PageEntity entity = PageFactory.createPage(new PageResource(pos, Direction.NORTH), 1);
+        entity.place(instance).join();
         try {
             var field = PageEntity.class.getDeclaredField("pageItem");
             field.setAccessible(true);
@@ -251,7 +252,8 @@ class PageGazeServiceTest {
             resources.add(new PageResource(new Pos(i, player.getEyeHeight(), 2.0), Direction.NORTH));
         }
         pageProvider.loadPageData(resources);
-        pageProvider.collectStartPages(instance);
+        pageProvider.collectStartPages(resources.size());
+        pageProvider.spawn(instance);
 
         PageGazeService gazeService = new PageGazeService(() -> List.of(player), pageProvider);
         gazeService.tick();

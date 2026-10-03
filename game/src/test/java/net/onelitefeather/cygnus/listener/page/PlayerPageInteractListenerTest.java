@@ -72,7 +72,8 @@ class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
         pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
         pageProvider.setMaxPageAmount(1);
 
-        PageEntity pageEntity = PageFactory.createPage(instance, Pos.ZERO, Direction.NORTH, 1);
+        PageEntity pageEntity = PageFactory.createPage(new PageResource(Pos.ZERO, Direction.NORTH), 1);
+        pageEntity.place(instance).join();
         UUID hitBoxUuid = pageEntity.getHitBoxUUID();
         seedActivePage(pageProvider, pageEntity);
 
