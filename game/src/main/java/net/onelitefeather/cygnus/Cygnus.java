@@ -17,6 +17,7 @@ import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
 import net.onelitefeather.cygnus.overlay.OverlayModule;
 import net.onelitefeather.cygnus.spectator.SpectatorService;
 import net.onelitefeather.cygnus.creek.CreekModule;
+import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.team.TeamCreator;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.view.event.ViewUpdateEvent;
@@ -160,8 +161,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // The creek reads the fear and reports back to it; pages and deaths reach it as events.
         SanityService sanityService = new SanityService(
                 this.gameConfig.sanity(),
-                // Only the creek reads the fear so far, so without it there is nothing to track it for.
-                this.gameConfig.creek().enabled(),
                 this.pageProvider::foundShare,
                 System::currentTimeMillis,
                 () -> TeamHelper.survivorsOf(this.teamService));
@@ -183,7 +182,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 sanityService,
                 new OverlayModule(this.gameConfig.glitch(), this.teamService, this.staminaService)
         )).toList();
-        this.initPhases();
+        this.initPhases(sanityService);
         this.initCommands();
         this.initListener(spectatorTeam);
         this.linearPhaseSeries.start();
@@ -253,7 +252,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         GameFeatures.register(handler, this.features);
     }
 
-    private void initPhases() {
+    private void initPhases(DreadSource dreadSource) {
         VoidConsumer instanceSwitch = this.mapProvider::switchToGameMap;
         VoidConsumer teamInitializer = () -> {
             Instance activeInstance = this.mapProvider.getActiveInstance().get();
@@ -270,7 +269,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig.round(), this.mapProvider.getActiveInstance());
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
-        this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.round().gameTime(), this.jumpscareManager));
+        this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.round().gameTime(), this.jumpscareManager, dreadSource));
         this.linearPhaseSeries.add(new RestartPhase());
     }
 
