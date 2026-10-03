@@ -18,7 +18,7 @@ class GamePhaseTest extends CygnusPlayerTestBase {
     @DisplayName("The clean up runs although the series replaces the finished callback")
     void runsCleanUp(@NotNull Env env) {
         AtomicBoolean cleanedUp = new AtomicBoolean();
-        GamePhase phase = new GamePhase(new GameViewImpl(), () -> cleanedUp.set(true), 10, new JumpScareManager());
+        GamePhase phase = new GamePhase(new GameViewImpl(), () -> cleanedUp.set(true), 10, new JumpScareManager(), _ -> 0.0D);
         // LinearPhaseSeries#startCurrentPhase does exactly this before it starts a phase
         phase.setFinishedCallback(() -> {});
 
