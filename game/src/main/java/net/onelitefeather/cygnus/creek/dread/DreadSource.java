@@ -8,8 +8,8 @@ import java.util.UUID;
 /**
  * Rates how likely a survivor is to be haunted.
  * <p>
- * The creek only ever asks this interface. A sanity system can take over the rating later without
- * the creek noticing.
+ * The creek only ever asks this interface. In a round it is answered by the survivors' fear,
+ * {@code SanityService}.
  * </p>
  *
  * @author theEvilReaper
