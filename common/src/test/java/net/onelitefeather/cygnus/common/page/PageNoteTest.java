@@ -48,20 +48,6 @@ class PageNoteTest {
         }
     }
 
-    @Test
-    void testPrebuiltTooltipComponent(Env ignored) {
-        for (PageNote note : PageNote.values()) {
-            Component tooltip = note.getTooltipComponent();
-            assertNotNull(tooltip, "Pre-built tooltip component must not be null");
-            assertFalse(PLAIN.serialize(tooltip).isEmpty());
-        }
-
-        for (int id = 1; id <= 6; id++) {
-            Optional<Component> tooltipOpt = PageNote.tooltipForCustomModel(id);
-            assertTrue(tooltipOpt.isPresent());
-        }
-    }
-
     @ParameterizedTest
     @ValueSource(ints = {-1, 0, 7, 8, 100})
     void testUnknownModelIdsReturnEmpty(int unknownId) {

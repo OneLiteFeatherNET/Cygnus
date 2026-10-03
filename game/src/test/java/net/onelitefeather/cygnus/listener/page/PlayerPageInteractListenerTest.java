@@ -4,7 +4,6 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
-import net.minestom.server.entity.Player;
 import net.minestom.server.entity.PlayerHand;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.instance.Instance;
@@ -77,29 +76,30 @@ class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
         UUID hitBoxUuid = pageEntity.getHitBoxUUID();
         seedActivePage(pageProvider, pageEntity);
 
+        // The page sits at 0.5 / 0.5 / 1.0: stand two blocks in front of it at eye height, facing +Z
+        player.teleport(new Pos(0.5, 0.5 - player.getEyeHeight(), -1.0, 0, 0)).join();
+        PageGazeService gazeService = new PageGazeService(() -> List.of(player), () -> List.of(pageEntity));
+        for (int i = 0; i < 3; i++) {
+            gazeService.tick();
+        }
+        assertTrue(gazeService.isGazing(player), "Player must initially be reading the note");
+
         Entity target = new Entity(EntityType.INTERACTION);
         target.setTag(Tags.PAGE_TAG, hitBoxUuid);
-
-        PageGazeService gazeService = new PageGazeService(List::of, List::of);
-        Field activeGazeField = PageGazeService.class.getDeclaredField("activeGaze");
-        activeGazeField.setAccessible(true);
-        @SuppressWarnings("unchecked")
-        Map<Player, UUID> activeGaze = (Map<Player, UUID>) activeGazeField.get(gazeService);
-        activeGaze.put(player, pageEntity.getUuid());
-
-        assertTrue(gazeService.isGazing(player), "Player must initially be marked as gazing");
 
         PlayerPageInteractListener listener = new PlayerPageInteractListener(pageProvider, gazeService);
         listener.accept(new PlayerEntityInteractEvent(player, target, PlayerHand.MAIN, Vec.ZERO));
 
         assertEquals(1, player.getPageFounds(), "Counter must increment upon successfully finding a page");
-        assertFalse(gazeService.isGazing(player), "Active gaze must be cleared when player picks up the page");
+        assertFalse(gazeService.isGazing(player), "The note must close when the player picks up the page");
+        assertTrue(instance.getEntities().stream().noneMatch(e -> e.getEntityType() == EntityType.TEXT_DISPLAY),
+                "No note display may be left behind after the pickup");
 
         env.destroyInstance(instance, true);
     }
 
     @Test
-    void testInvalidPageDoesNotClearGaze(@NotNull Env env) throws Exception {
+    void testInvalidPageDoesNotClearGaze(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
@@ -108,16 +108,19 @@ class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
         pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
         pageProvider.setMaxPageAmount(1);
 
+        PageEntity pageEntity = PageFactory.createPage(new PageResource(Pos.ZERO, Direction.NORTH), 1);
+        pageEntity.place(instance).join();
+
+        // The page sits at 0.5 / 0.5 / 1.0: stand two blocks in front of it at eye height, facing +Z
+        player.teleport(new Pos(0.5, 0.5 - player.getEyeHeight(), -1.0, 0, 0)).join();
+        PageGazeService gazeService = new PageGazeService(() -> List.of(player), () -> List.of(pageEntity));
+        for (int i = 0; i < 3; i++) {
+            gazeService.tick();
+        }
+        assertTrue(gazeService.isGazing(player), "Player must initially be reading the note");
+
         Entity target = new Entity(EntityType.INTERACTION);
         target.setTag(Tags.PAGE_TAG, UUID.randomUUID());
-
-        PageGazeService gazeService = new PageGazeService(List::of, List::of);
-        Field activeGazeField = PageGazeService.class.getDeclaredField("activeGaze");
-        activeGazeField.setAccessible(true);
-        @SuppressWarnings("unchecked")
-        Map<Player, UUID> activeGaze = (Map<Player, UUID>) activeGazeField.get(gazeService);
-        UUID dummyId = UUID.randomUUID();
-        activeGaze.put(player, dummyId);
 
         PlayerPageInteractListener listener = new PlayerPageInteractListener(pageProvider, gazeService);
         listener.accept(new PlayerEntityInteractEvent(player, target, PlayerHand.MAIN, Vec.ZERO));

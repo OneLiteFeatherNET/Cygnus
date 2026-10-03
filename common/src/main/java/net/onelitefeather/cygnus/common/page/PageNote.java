@@ -36,7 +36,6 @@ public enum PageNote {
     private final int modelId;
     private final String text;
     private final Component component;
-    private final Component tooltipComponent;
     private final Component worldComponent;
 
     PageNote(int modelId, String defaultText) {
@@ -44,7 +43,6 @@ public enum PageNote {
         String resolvedText = Holder.LOADED_TEXTS.getOrDefault(modelId, defaultText);
         this.text = resolvedText;
         this.component = Component.text(resolvedText, NamedTextColor.GRAY, TextDecoration.ITALIC);
-        this.tooltipComponent = TooltipBox.of(this.component);
         this.worldComponent = TooltipBox.builder().centered().line(this.component).build();
     }
 
@@ -80,15 +78,6 @@ public enum PageNote {
      }
 
     /**
-     * Returns the pre-built, ready-to-display tooltip component built at startup.
-     *
-     * @return the tooltip box component
-     */
-    public Component getTooltipComponent() {
-        return tooltipComponent;
-    }
-
-    /**
      * Returns the pre-built note box for a text display in the world, centered on its anchor.
      *
      * @return the centered note box component
@@ -121,17 +110,6 @@ public enum PageNote {
     @Contract(pure = true)
     public static Optional<Component> forCustomModel(int modelId) {
         return fromModelId(modelId).map(PageNote::getComponent);
-    }
-
-    /**
-     * Returns the pre-built tooltip box component for the specified custom model ID.
-     *
-     * @param modelId the model ID (e.g. 1 to 6)
-     * @return an {@link Optional} containing the pre-built tooltip component, or empty if unknown
-     */
-    @Contract(pure = true)
-    public static Optional<Component> tooltipForCustomModel(int modelId) {
-        return fromModelId(modelId).map(PageNote::getTooltipComponent);
     }
 
     /**
@@ -174,20 +152,6 @@ public enum PageNote {
             return Optional.empty();
         }
         return forCustomModel(modelId.getAsInt());
-    }
-
-    /**
-     * Resolves the pre-built tooltip box component for the given {@link ItemStack} if it represents a custom page model.
-     *
-     * @param itemStack the item stack to resolve the tooltip for
-     * @return an {@link Optional} containing the pre-built tooltip component, or empty if not a custom page model item
-     */
-    public static Optional<Component> tooltipForItem(@Nullable ItemStack itemStack) {
-        OptionalInt modelId = extractModelId(itemStack);
-        if (modelId.isEmpty()) {
-            return Optional.empty();
-        }
-        return tooltipForCustomModel(modelId.getAsInt());
     }
 
     /**
