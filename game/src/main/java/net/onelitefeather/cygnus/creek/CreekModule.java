@@ -78,11 +78,19 @@ public final class CreekModule implements GameFeature {
                 this.debug);
     }
 
+    /**
+     * The creek is an entity in the world that the client draws like any other, not a camera
+     * overlay, so only its own switch has a say in it.
+     *
+     * @return whether the creek is switched on
+     */
+    @Override
+    public boolean enabled() {
+        return this.config.enabled();
+    }
+
     @Override
     public void registerListener(EventNode<Event> node) {
-        // The creek is an entity in the world that the client draws like any other, not a camera
-        // overlay, so only its own switch has a say in it.
-        if (!this.config.enabled()) return;
         this.service.registerListener(node);
     }
 

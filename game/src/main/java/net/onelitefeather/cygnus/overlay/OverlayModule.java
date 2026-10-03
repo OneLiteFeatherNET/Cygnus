@@ -64,8 +64,12 @@ public final class OverlayModule implements GameFeature {
     }
 
     @Override
+    public boolean enabled() {
+        return OverlayProperties.enabled();
+    }
+
+    @Override
     public void registerListener(EventNode<Event> node) {
-        if (!OverlayProperties.enabled()) return;
         this.slenderGazeService.registerListener(node);
         this.bloodSplatterService.registerListener(node);
         this.tunnelVisionService.registerListener(node);
