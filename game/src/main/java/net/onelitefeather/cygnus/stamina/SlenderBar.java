@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.stamina;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.item.Material;
+import net.minestom.server.network.packet.server.play.SetCooldownPacket;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.ExecutionType;
 import net.onelitefeather.cygnus.attribute.AttributeHelper;
@@ -59,6 +61,17 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
 
     private static final int DAMAGE_RANGE = 3;
 
+    /** How long one tick of the bar takes, in milliseconds. */
+    private static final long TICK_MILLIS = 500L;
+
+    /** How long one server tick takes, in milliseconds, the unit the item cooldown is sent in. */
+    private static final long SERVER_TICK_MILLIS = 50L;
+
+    /**
+     * The cooldown group of the eye. The item has no cooldown component of its own, so the client
+     * files its cooldown under the item's key.
+     */
+    static final String COOLDOWN_GROUP = Material.ENDER_EYE.key().asString();
 
     private final String tileChar;
     private final int time;
@@ -138,6 +151,39 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     }
 
     /**
+     * Returns how long regeneration takes from here to {@value #MIN_TIME_TO_REACTIVATE}.
+     *
+     * @return the time in milliseconds, {@code 0} once the bar is there
+     */
+    private long millisUntilReactivation() {
+        double missing = Math.max(0.0D, MIN_TIME_TO_REACTIVATE - this.currentTime);
+        return (long) Math.ceil(missing / TIME_STEP) * TICK_MILLIS;
+    }
+
+    /**
+     * Shows the slender on his eye how long he has to wait before he can appear again.
+     * <p>
+     * Rounded up to whole server ticks: the client must not hand the eye back a tick before the
+     * server takes it.
+     * </p>
+     *
+     * @param millis the wait in milliseconds, {@code 0} clears the cooldown
+     */
+    private void sendCooldown(long millis) {
+        int ticks = (int) Math.ceil((double) millis / SERVER_TICK_MILLIS);
+        player.sendPacket(new SetCooldownPacket(COOLDOWN_GROUP, ticks));
+    }
+
+    /**
+     * Stops the bar and takes the cooldown off the eye, so no stale overlay outlives the round.
+     */
+    @Override
+    public void stop() {
+        super.stop();
+        this.sendCooldown(0);
+    }
+
+    /**
      * Toggles the ability for the current {@link State}: activates draining from {@link State#READY} or
      * {@link State#REGENERATING}, or cancels an active drain back into {@link State#REGENERATING}.
      *
@@ -178,6 +224,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private void enterRegenerating() {
         state = State.REGENERATING;
         this.reappearAt = this.clock.getAsLong() + this.reappearCooldownMillis;
+        this.sendCooldown(Math.max(this.reappearCooldownMillis, this.millisUntilReactivation()));
         colorState = StaminaColors.REGENERATING;
         player.setTag(Tags.HIDDEN, HIDDEN);
         this.playTeleportSound(player.getInstance(), player.getPosition(), player.getUuid());

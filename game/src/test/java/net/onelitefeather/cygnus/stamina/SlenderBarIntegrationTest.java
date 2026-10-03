@@ -6,6 +6,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.ServerPacket;
 import net.minestom.server.network.packet.server.play.ActionBarPacket;
+import net.minestom.server.network.packet.server.play.SetCooldownPacket;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
@@ -288,4 +289,67 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         env.destroyInstance(instance, true);
     }
 
+    @Test
+    @DisplayName("Hiding puts the eye on cooldown for the longer of both waits")
+    void hidingSendsTheLongerWaitAsCooldown(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        slenderBar.start();
+        slenderBar.changeStatus(); // READY -> DRAINING
+
+        // Hiding at 15.5 of 16: the bar is past the threshold, so the 5 s reappear cooldown counts
+        slenderBar.consume();
+        Collector<SetCooldownPacket> early = connection.trackIncoming(SetCooldownPacket.class);
+        slenderBar.changeStatus();
+        early.assertSingle(packet -> {
+            assertEquals(SlenderBar.COOLDOWN_GROUP, packet.cooldownGroup());
+            assertEquals(100, packet.cooldownTicks());
+        });
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("A bar that ran dry shows the time until it reaches the threshold again")
+    void runningDrySendsTheRegenerationTime(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        slenderBar.start();
+        slenderBar.changeStatus(); // READY -> DRAINING
+        for (int i = 0; i < 31; i++) {
+            slenderBar.consume();
+        }
+
+        Collector<SetCooldownPacket> collector = connection.trackIncoming(SetCooldownPacket.class);
+        slenderBar.consume(); // runs dry
+
+        // 0 to 10 units at 0.5 every 500 ms takes 10 s, longer than the 5 s reappear cooldown
+        collector.assertSingle(packet -> assertEquals(200, packet.cooldownTicks()));
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("Stopping the bar takes the cooldown off the eye")
+    void stopClearsTheCooldown(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        slenderBar.start();
+        slenderBar.changeStatus();
+        slenderBar.changeStatus();
+
+        Collector<SetCooldownPacket> collector = connection.trackIncoming(SetCooldownPacket.class);
+        slenderBar.stop();
+
+        collector.assertSingle(packet -> assertEquals(0, packet.cooldownTicks()));
+        env.destroyInstance(instance, true);
+    }
 }
