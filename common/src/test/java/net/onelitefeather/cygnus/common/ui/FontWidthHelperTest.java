@@ -145,26 +145,51 @@ class FontWidthHelperTest {
     }
 
     @Test
-    @DisplayName("Tooltip font width calculation for 6px compact font")
+    @DisplayName("Tooltip font width calculation for 5px compact font")
     void testTooltipFontWidth() {
-        // "Test": T(5) + e(5) + s(5) + t(3) = 18
-        assertEquals(18, FontWidthHelper.getTooltipWidth("Test"));
-        // "Help me": H(5) + e(5) + l(3) + p(5) + ' '(4) + m(5) + e(5) = 32
-        assertEquals(32, FontWidthHelper.getTooltipWidth("Help me"));
+        // "Test": T(4) + e(4) + s(4) + t(3) = 15
+        assertEquals(15, FontWidthHelper.getTooltipWidth("Test"));
+        // "Help me": H(4) + e(4) + l(2) + p(4) + ' '(4) + m(4) + e(4) = 26
+        assertEquals(26, FontWidthHelper.getTooltipWidth("Help me"));
         // Component measurement
-        assertEquals(32, FontWidthHelper.getTooltipWidth(Component.text("Help me")));
+        assertEquals(26, FontWidthHelper.getTooltipWidth(Component.text("Help me")));
+    }
+
+    /**
+     * The tooltip text is minecraft:font/ascii.png scaled to height 5, so a glyph that is w pixels
+     * wide in the 8px cell advances floor(0.5 + w * 5 / 8) + 1.
+     */
+    static Stream<Arguments> tooltipCharWidths() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (char c : "aW0fk<>".toCharArray()) cases.add(Arguments.of(c, 4));
+        for (char c : "@~".toCharArray()) cases.add(Arguments.of(c, 5));
+        for (char c : "tI()*[]{}\"".toCharArray()) cases.add(Arguments.of(c, 3));
+        for (char c : "li!',.:;`|".toCharArray()) cases.add(Arguments.of(c, 2));
+        return cases.build();
+    }
+
+    @ParameterizedTest(name = "''{0}'' advances {1}px")
+    @MethodSource("tooltipCharWidths")
+    void testTooltipCharWidths(char c, int expected) {
+        assertEquals(expected, FontWidthHelper.getTooltipCharWidth(c));
+    }
+
+    @Test
+    @DisplayName("Tooltip space keeps its 4px advance")
+    void testTooltipSpaceWidth() {
+        assertEquals(4, FontWidthHelper.getTooltipCharWidth(' '));
     }
 
     @Test
     @DisplayName("Multi-line string returns max line width")
     void testMultiLineStringWidth() {
-        // Line 1: "Always watches," -> A(5)+l(3)+w(5)+a(5)+y(5)+s(5)+' '(4)+w(5)+a(5)+t(3)+c(5)+h(5)+e(5)+s(5)+,(2) = 67
-        // Line 2: "no eyes" -> n(5)+o(5)+' '(4)+e(5)+y(5)+e(5)+s(5) = 34
+        // Line 1: "Always watches," -> A(4)+l(2)+w(4)+a(4)+y(4)+s(4)+' '(4)+w(4)+a(4)+t(3)+c(4)+h(4)+e(4)+s(4)+,(2) = 55
+        // Line 2: "no eyes" -> n(4)+o(4)+' '(4)+e(4)+y(4)+e(4)+s(4) = 28
         String multiLine = "Always watches,\nno eyes";
-        assertEquals(67, FontWidthHelper.getMaxTooltipLineWidth(multiLine));
+        assertEquals(55, FontWidthHelper.getMaxTooltipLineWidth(multiLine));
 
         // Single line fallback
-        assertEquals(32, FontWidthHelper.getMaxTooltipLineWidth("Help me"));
+        assertEquals(26, FontWidthHelper.getMaxTooltipLineWidth("Help me"));
         assertEquals(0, FontWidthHelper.getMaxTooltipLineWidth((String) null));
         assertEquals(0, FontWidthHelper.getMaxTooltipLineWidth(""));
     }
@@ -173,7 +198,7 @@ class FontWidthHelperTest {
     @DisplayName("Multi-line Component returns max line width")
     void testMultiLineComponentWidth() {
         Component comp = Component.text("Always watches,\nno eyes");
-        assertEquals(67, FontWidthHelper.getMaxTooltipLineWidth(comp));
+        assertEquals(55, FontWidthHelper.getMaxTooltipLineWidth(comp));
         assertEquals(0, FontWidthHelper.getMaxTooltipLineWidth((Component) null));
     }
 }

@@ -16,7 +16,7 @@ public final class FontWidthHelper {
     private static final int DEFAULT_CHAR_WIDTH = 6; // 5px character + 1px spacing
     private static final int[] ASCII_WIDTHS = new int[128];
 
-    private static final int DEFAULT_TOOLTIP_CHAR_WIDTH = 5;
+    private static final int DEFAULT_TOOLTIP_CHAR_WIDTH = 4;
     private static final int[] TOOLTIP_ASCII_WIDTHS = new int[128];
 
     static {
@@ -40,35 +40,19 @@ public final class FontWidthHelper {
         ASCII_WIDTHS['k'] = 5;   // 4px + 1px spacing
         ASCII_WIDTHS['f'] = 5;   // 4px + 1px spacing
 
-        // Specific compact tooltip font metrics (height 6, ascent 5 in 26.2)
+        // Compact tooltip font: minecraft:font/ascii.png at height 5. A glyph that is w pixels wide in
+        // its 8px cell advances floor(0.5 + w * 5 / 8) + 1, so 5px letters land on 4.
         Arrays.fill(TOOLTIP_ASCII_WIDTHS, DEFAULT_TOOLTIP_CHAR_WIDTH);
         TOOLTIP_ASCII_WIDTHS[' '] = 4;
-        TOOLTIP_ASCII_WIDTHS['!'] = 2;
-        TOOLTIP_ASCII_WIDTHS['"'] = 3;
-        TOOLTIP_ASCII_WIDTHS['\''] = 2;
-        TOOLTIP_ASCII_WIDTHS['('] = 3;
-        TOOLTIP_ASCII_WIDTHS[')'] = 3;
-        TOOLTIP_ASCII_WIDTHS['*'] = 3;
-        TOOLTIP_ASCII_WIDTHS[','] = 2;
-        TOOLTIP_ASCII_WIDTHS['.'] = 2;
-        TOOLTIP_ASCII_WIDTHS[':'] = 2;
-        TOOLTIP_ASCII_WIDTHS[';'] = 2;
-        TOOLTIP_ASCII_WIDTHS['<'] = 4;
-        TOOLTIP_ASCII_WIDTHS['>'] = 4;
-        TOOLTIP_ASCII_WIDTHS['@'] = 6;
-        TOOLTIP_ASCII_WIDTHS['I'] = 3;
-        TOOLTIP_ASCII_WIDTHS['['] = 3;
-        TOOLTIP_ASCII_WIDTHS[']'] = 3;
-        TOOLTIP_ASCII_WIDTHS['`'] = 3;
-        TOOLTIP_ASCII_WIDTHS['f'] = 4;
-        TOOLTIP_ASCII_WIDTHS['i'] = 2;
-        TOOLTIP_ASCII_WIDTHS['k'] = 4;
-        TOOLTIP_ASCII_WIDTHS['l'] = 3;
-        TOOLTIP_ASCII_WIDTHS['t'] = 3;
-        TOOLTIP_ASCII_WIDTHS['{'] = 3;
-        TOOLTIP_ASCII_WIDTHS['|'] = 2;
-        TOOLTIP_ASCII_WIDTHS['}'] = 3;
-        TOOLTIP_ASCII_WIDTHS['~'] = 6;
+        for (char c : "@~".toCharArray()) {
+            TOOLTIP_ASCII_WIDTHS[c] = 5;
+        }
+        for (char c : "\"()*I[]t{}".toCharArray()) {
+            TOOLTIP_ASCII_WIDTHS[c] = 3;
+        }
+        for (char c : "!',.:;`il|".toCharArray()) {
+            TOOLTIP_ASCII_WIDTHS[c] = 2;
+        }
     }
 
     private FontWidthHelper() {
@@ -158,7 +142,7 @@ public final class FontWidthHelper {
     }
 
     /**
-     * Returns the pixel width of a single character in the compact tooltip font (height 6).
+     * Returns the pixel width of a single character in the compact tooltip font (height 5).
      *
      * @param c the character
      * @return width in pixels
@@ -168,7 +152,7 @@ public final class FontWidthHelper {
     }
 
     /**
-     * Returns the pixel width of a single character in the compact tooltip font (height 6),
+     * Returns the pixel width of a single character in the compact tooltip font (height 5),
      * taking bold styling into account (+1px if bold).
      *
      * @param c    the character
