@@ -6,6 +6,8 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +18,7 @@ import java.util.List;
  * and crosshair alignment.
  *
  * @author theEvilReaper
- * @version 2.3.0
+ * @version 3.0.0
  * @since 2.15.0
  */
 public final class TooltipBox {
@@ -30,22 +32,41 @@ public final class TooltipBox {
     public static final Key FONT_LINE2 = Key.key("cygnus", "tooltip_line2");
     public static final Key FONT_LINE3 = Key.key("cygnus", "tooltip_line3");
 
-    // Legacy 3-part full-height glyph constants (height 16, ascent 11) for backward compatibility
-    public static final String CAP_LEFT = "\uE100";
-    public static final String MIDDLE = "\uE101";
-    public static final String CAP_RIGHT = "\uE102";
+    /**
+     * The most lines a box has room for. The pack draws one box per line count, up to three.
+     */
+    public static final int MAX_LINES = 3;
 
-    // Modular 3-band box slice glyphs
-    public static final String RIBBON = "\uE103";
-    public static final String TOP_LEFT = "\uE110";
-    public static final String TOP_MIDDLE = "\uE111";
-    public static final String TOP_RIGHT = "\uE112";
-    public static final String ROW_LEFT = "\uE113";
-    public static final String ROW_MIDDLE = "\uE114";
-    public static final String ROW_RIGHT = "\uE115";
-    public static final String BOTTOM_LEFT = "\uE116";
-    public static final String BOTTOM_MIDDLE = "\uE117";
-    public static final String BOTTOM_RIGHT = "\uE118";
+    // Full-height box glyphs, one set per line count: left cap, 1px middle tile, right cap.
+    // Each set comes with the ribbon that sits on its first line.
+    public static final String BOX_1_LEFT = "\uE100";
+    public static final String BOX_1_MIDDLE = "\uE101";
+    public static final String BOX_1_RIGHT = "\uE102";
+    public static final String RIBBON_1 = "\uE103";
+
+    public static final String BOX_2_LEFT = "\uE104";
+    public static final String BOX_2_MIDDLE = "\uE105";
+    public static final String BOX_2_RIGHT = "\uE106";
+    public static final String RIBBON_2 = "\uE10A";
+
+    public static final String BOX_3_LEFT = "\uE107";
+    public static final String BOX_3_MIDDLE = "\uE108";
+    public static final String BOX_3_RIGHT = "\uE109";
+    public static final String RIBBON_3 = "\uE10B";
+
+    private static final String[][] BOX_GLYPHS = {
+            {BOX_1_LEFT, BOX_1_MIDDLE, BOX_1_RIGHT, RIBBON_1},
+            {BOX_2_LEFT, BOX_2_MIDDLE, BOX_2_RIGHT, RIBBON_2},
+            {BOX_3_LEFT, BOX_3_MIDDLE, BOX_3_RIGHT, RIBBON_3},
+    };
+
+    /**
+     * Pulls the cursor back by one pixel. Every glyph advances one pixel more than it is wide, so
+     * box glyphs are each followed by this to sit flush against the next.
+     */
+    private static final String PULL_BACK = "\uF001";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TooltipBox.class);
 
     // Geometry constants
     public static final int CAP_WIDTH = 5;
@@ -238,6 +259,11 @@ public final class TooltipBox {
             if (rawLines.isEmpty()) {
                 rawLines.add("");
             }
+            if (rawLines.size() > MAX_LINES) {
+                LOGGER.warn("Tooltip has {} lines, but a box holds at most {}; dropping the rest: {}",
+                        rawLines.size(), MAX_LINES, rawLines.subList(MAX_LINES, rawLines.size()));
+                rawLines = new ArrayList<>(rawLines.subList(0, MAX_LINES));
+            }
 
             int numLines = rawLines.size();
             int maxTextLineWidth = 0;
@@ -261,39 +287,20 @@ public final class TooltipBox {
                 }
             }
 
-            // Step 2: Header Band (drawn with FONT_LINE1)
-            // Minecraft font adds +1px spacing after each character. \uF001 (-1px) eliminates gaps.
-            String stepTop = TOP_MIDDLE + "\uF001";
-            String headerStr = TOP_LEFT + "\uF001" + stepTop.repeat(middleTiles) + TOP_RIGHT + "\uF001";
-            root.append(Component.text(headerStr, NamedTextColor.WHITE).font(FONT_LINE1));
+            // Step 2: The whole box in one run, drawn in the box set for this many lines.
+            String[] glyphs = BOX_GLYPHS[numLines - 1];
+            String step = glyphs[1] + PULL_BACK;
+            String boxStr = glyphs[0] + PULL_BACK + step.repeat(middleTiles) + glyphs[2] + PULL_BACK;
+            root.append(Component.text(boxStr, NamedTextColor.WHITE).font(FONT));
 
-            // Step 3: Body Row Bands for each line
-            String stepRow = ROW_MIDDLE + "\uF001";
-            String rowStr = ROW_LEFT + "\uF001" + stepRow.repeat(middleTiles) + ROW_RIGHT + "\uF001";
-            String shiftBackBox = getNegativeSpace(boxWidth);
-
-            for (int i = 0; i < numLines; i++) {
-                Key lineFont = getFontForLine(i);
-                root.append(Component.text(shiftBackBox).font(FONT));
-                root.append(Component.text(rowStr, NamedTextColor.WHITE).font(lineFont));
-            }
-
-            // Step 4: Footer Band (drawn with bottom line's font)
-            Key footerFont = getFontForLine(numLines - 1);
-            String stepBottom = BOTTOM_MIDDLE + "\uF001";
-            String footerStr = BOTTOM_LEFT + "\uF001" + stepBottom.repeat(middleTiles) + BOTTOM_RIGHT + "\uF001";
-            root.append(Component.text(shiftBackBox).font(FONT));
-            root.append(Component.text(footerStr, NamedTextColor.WHITE).font(footerFont));
-
-            // Step 5: Ribbon & Text
-            // Cursor is currently at the right edge of the footer (boxWidth from box left edge).
-            // Line 1 ribbon starts at INNER_LEFT_PADDING + CAP_WIDTH = 3 + 5 = 8px from box left edge.
+            // Step 3: Ribbon & Text
+            // Cursor is currently at the right edge of the box (boxWidth from box left edge).
+            // The ribbon starts at INNER_LEFT_PADDING + CAP_WIDTH = 3 + 5 = 8px from box left edge.
             int shiftToRibbon = boxWidth - (CAP_WIDTH + INNER_LEFT_PADDING);
             root.append(Component.text(getNegativeSpace(shiftToRibbon)).font(FONT));
 
-            // Draw Ribbon (4px wide + 1px font advance = 5px)
-            // Adding \uF001 (-1px) ensures ribbon advance is exactly 4px.
-            root.append(Component.text(RIBBON + "\uF001", NamedTextColor.WHITE).font(FONT_LINE1));
+            // Draw Ribbon (4px wide + 1px font advance = 5px), pulled back to an exact 4px advance
+            root.append(Component.text(glyphs[3] + PULL_BACK, NamedTextColor.WHITE).font(FONT));
 
             // Gap between ribbon and text (3px)
             root.append(Component.text(getPositiveSpace(RIBBON_GAP)).font(FONT));
@@ -313,7 +320,7 @@ public final class TooltipBox {
                 root.append(Component.text(rawLines.get(i)).font(lineFont));
             }
 
-            // Step 6: Compensate final cursor to reach full boxWidth for exact centering
+            // Step 4: Compensate final cursor to reach full boxWidth for exact centering
             int lastLineWidth = lineWidths[numLines - 1];
             int currentCursorFromBoxLeft = (numLines == 1)
                     ? (CAP_WIDTH + INNER_LEFT_PADDING + RIBBON_WIDTH + RIBBON_GAP + lastLineWidth)

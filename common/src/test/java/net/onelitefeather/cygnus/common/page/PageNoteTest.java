@@ -109,7 +109,8 @@ class PageNoteTest {
         for (PageNote note : PageNote.values()) {
             Component world = note.getWorldComponent();
             assertNotNull(world, "Pre-built world component must not be null");
-            assertTrue(PLAIN.serialize(world).startsWith(TooltipBox.TOP_LEFT),
+            assertTrue(PLAIN.serialize(world).startsWith(TooltipBox.BOX_1_LEFT)
+                            || PLAIN.serialize(world).startsWith(TooltipBox.BOX_2_LEFT),
                     "World component of " + note + " must be centered, without leading space");
         }
     }
