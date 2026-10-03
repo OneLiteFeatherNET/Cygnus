@@ -48,6 +48,8 @@ import java.util.regex.Pattern;
  *     <li>slenderStaticMaxVolume</li>
  *     <li>creek.* (see {@link CreekConfig})</li>
  *     <li>sanity.* (see {@link SanityConfig})</li>
+ *     <li>stamina.* (see {@link StaminaConfig})</li>
+ *     <li>adrenaline.* (see {@link AdrenalineConfig})</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
@@ -70,6 +72,8 @@ public final class GameConfigReader {
     private static final String SLENDER_STATIC_SOUND_KEY = "slenderStaticSound";
     private static final String CREEK_PREFIX = "creek.";
     private static final String SANITY_PREFIX = "sanity.";
+    private static final String STAMINA_PREFIX = "stamina.";
+    private static final String ADRENALINE_PREFIX = "adrenaline.";
 
     private final Path path;
 
@@ -153,6 +157,8 @@ public final class GameConfigReader {
                 ),
                 getCreek(properties),
                 getSanity(properties),
+                getStamina(properties),
+                getAdrenaline(properties),
                 getFloat(properties, "lobbyAtmosphereShare", GameConfig.DEFAULT.lobbyAtmosphereShare())
         );
     }
@@ -284,6 +290,47 @@ public final class GameConfigReader {
                 getDouble(properties, SANITY_PREFIX + "deathGain", d.deathGain()),
                 getInt(properties, SANITY_PREFIX + "deathRadius", d.deathRadius()),
                 getDouble(properties, SANITY_PREFIX + "decayPerSecond", d.decayPerSecond())
+        );
+    }
+
+    /**
+     * Reads the sprint settings. All keys start with {@value #STAMINA_PREFIX}.
+     * <p>
+     * An unreadable value falls back to its default, while values out of range are rejected by
+     * {@link StaminaConfig}.
+     * </p>
+     *
+     * @param properties the loaded properties
+     * @return the sprint settings, never {@code null}
+     * @throws IllegalArgumentException if a value is out of range
+     */
+    private StaminaConfig getStamina(Properties properties) {
+        StaminaConfig d = StaminaConfig.DEFAULT;
+        return new StaminaConfig(
+                getDouble(properties, STAMINA_PREFIX + "sprintResumeShare", d.sprintResumeShare()),
+                getDouble(properties, STAMINA_PREFIX + "regenPerSecond", d.regenPerSecond()),
+                getInt(properties, STAMINA_PREFIX + "slenderReappearCooldownSeconds", d.slenderReappearCooldownSeconds())
+        );
+    }
+
+    /**
+     * Reads the adrenaline settings. All keys start with {@value #ADRENALINE_PREFIX}.
+     * <p>
+     * An unreadable value falls back to its default, while values out of range are rejected by
+     * {@link AdrenalineConfig}.
+     * </p>
+     *
+     * @param properties the loaded properties
+     * @return the adrenaline settings, never {@code null}
+     * @throws IllegalArgumentException if a value is out of range
+     */
+    private AdrenalineConfig getAdrenaline(Properties properties) {
+        AdrenalineConfig d = AdrenalineConfig.DEFAULT;
+        return new AdrenalineConfig(
+                getInt(properties, ADRENALINE_PREFIX + "radius", d.radius()),
+                getDouble(properties, ADRENALINE_PREFIX + "speedBonus", d.speedBonus()),
+                getInt(properties, ADRENALINE_PREFIX + "durationSeconds", d.durationSeconds()),
+                getInt(properties, ADRENALINE_PREFIX + "cooldownSeconds", d.cooldownSeconds())
         );
     }
 

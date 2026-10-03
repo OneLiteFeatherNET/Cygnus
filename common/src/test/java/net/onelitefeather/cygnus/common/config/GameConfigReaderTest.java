@@ -412,6 +412,74 @@ class GameConfigReaderTest {
     }
 
     @Test
+    void testAdrenalineDefaultsWhenNotConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(AdrenalineConfig.DEFAULT, config.adrenaline());
+    }
+
+    @Test
+    void testAdrenalineValuesAreRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                adrenaline.radius=12
+                adrenaline.speedBonus=0.3
+                adrenaline.cooldownSeconds=30
+                """);
+
+        AdrenalineConfig adrenaline = new GameConfigReader(tempDir).getConfig().adrenaline();
+
+        assertEquals(12, adrenaline.radius());
+        assertEquals(0.3D, adrenaline.speedBonus(), 1.0E-9);
+        assertEquals(30, adrenaline.cooldownSeconds());
+        assertEquals(AdrenalineConfig.DEFAULT.durationSeconds(), adrenaline.durationSeconds());
+    }
+
+    @Test
+    void testAdrenalineRejectsValuesOutOfRange(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                adrenaline.speedBonus=2
+                """);
+
+        GameConfigReader reader = new GameConfigReader(tempDir);
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
+    }
+
+    @Test
+    void testStaminaDefaultsWhenNotConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(StaminaConfig.DEFAULT, config.stamina());
+    }
+
+    @Test
+    void testStaminaValuesAreRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                stamina.sprintResumeShare=0.5
+                stamina.slenderReappearCooldownSeconds=8
+                """);
+
+        StaminaConfig stamina = new GameConfigReader(tempDir).getConfig().stamina();
+
+        assertEquals(0.5D, stamina.sprintResumeShare(), 1.0E-9);
+        assertEquals(8, stamina.slenderReappearCooldownSeconds());
+        assertEquals(StaminaConfig.DEFAULT.regenPerSecond(), stamina.regenPerSecond());
+    }
+
+    @Test
+    void testStaminaRejectsValuesOutOfRange(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                stamina.regenPerSecond=-1
+                """);
+
+        GameConfigReader reader = new GameConfigReader(tempDir);
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
+    }
+
+    @Test
     void testSanityDefaultsWhenNotConfigured() {
         GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
 
