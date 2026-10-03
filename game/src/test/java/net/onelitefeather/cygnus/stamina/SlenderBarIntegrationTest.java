@@ -12,13 +12,16 @@ import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.config.StaminaConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.minestom.server.entity.attribute.Attribute;
 import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -142,7 +145,9 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
 
-        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        // Without the reappear cooldown, so only the regeneration threshold is under test
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player,
+                new StaminaConfig(0.3D, 1.25D, 0), System::currentTimeMillis);
         slenderBar.start();
         slenderBar.changeStatus(); // READY -> DRAINING
 
@@ -218,6 +223,46 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         env.destroyInstance(instance, true);
     }
 
+    @Test
+    @DisplayName("Once hidden, the slender cannot appear again before the cooldown ran out")
+    void reappearWaitsForTheCooldown(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance);
+        AtomicLong clock = new AtomicLong();
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player, StaminaConfig.DEFAULT, clock::get);
+        slenderBar.start();
+        slenderBar.changeStatus(); // READY -> DRAINING
+        slenderBar.changeStatus(); // DRAINING -> REGENERATING at 0 ms, the bar is still nearly full
 
+        clock.set(4_999);
+        assertFalse(slenderBar.changeStatus());
+
+        clock.set(5_000);
+        assertTrue(slenderBar.changeStatus());
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("A bar that regenerated to full inside the cooldown does not skip it")
+    void readyBarStillWaitsForTheCooldown(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance);
+        AtomicLong clock = new AtomicLong();
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player, StaminaConfig.DEFAULT, clock::get);
+        slenderBar.start();
+        slenderBar.changeStatus(); // READY -> DRAINING
+        slenderBar.consume();      // 15.5 of 16
+        slenderBar.changeStatus(); // DRAINING -> REGENERATING
+        slenderBar.consume();      // full again
+        slenderBar.consume();      // READY
+
+        clock.set(1_000);
+
+        assertFalse(slenderBar.changeStatus());
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
 }
-

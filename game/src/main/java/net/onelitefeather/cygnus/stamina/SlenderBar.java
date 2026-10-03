@@ -7,10 +7,12 @@ import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.ExecutionType;
 import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.config.StaminaConfig;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 
 import java.time.temporal.ChronoUnit;
+import java.util.function.LongSupplier;
 
 /**
  * Manages the stamina/stealth ability of the slender player.
@@ -24,7 +26,10 @@ import java.time.temporal.ChronoUnit;
  *     speed) while {@link #currentTime} counts back up, reached either by manually cancelling DRAINING or
  *     automatically once it runs out</li>
  * </ul>
- * Regeneration must reach {@value #MIN_TIME_TO_REACTIVATE} before {@link #changeStatus()} allows draining again.
+ * Regeneration must reach {@value #MIN_TIME_TO_REACTIVATE} before {@link #changeStatus()} allows draining again,
+ * and once hidden the slender stays hidden for at least
+ * {@linkplain StaminaConfig#slenderReappearCooldownSeconds() the reappear cooldown}, so he cannot chain one
+ * appearance onto the next.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -56,8 +61,12 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
 
     private final String tileChar;
     private final int time;
+    private final long reappearCooldownMillis;
+    private final LongSupplier clock;
     private double currentTime;
     private StaminaColors colorState;
+    /** The earliest moment the slender may appear again, in milliseconds. */
+    private long reappearAt;
 
     /**
      * Runs its periodic {@link #consume()} at {@link ExecutionType#TICK_END} rather than the default
@@ -65,13 +74,20 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
      * {@link net.minestom.server.event.player.PlayerUseItemEvent}) are handled between those two phases,
      * so this guarantees {@link #consume()} always sees a state already updated by a same-tick manual
      * transition instead of racing it with stale data.
+     *
+     * @param player who owns the bar
+     * @param config the settings, of which the bar reads the reappear cooldown
+     * @param clock  supplies the current time in milliseconds
      */
-    SlenderBar(CygnusPlayer player) {
+    SlenderBar(CygnusPlayer player, StaminaConfig config, LongSupplier clock) {
         super(player, ChronoUnit.MILLIS, 500, ExecutionType.TICK_END);
         this.tileChar = "▋";
         this.time = MAX_TIME;
+        this.reappearCooldownMillis = config.slenderReappearCooldownSeconds() * 1000L;
+        this.clock = clock;
         this.currentTime = time;
         this.colorState = StaminaColors.DRAINING;
+        this.reappearAt = Long.MIN_VALUE;
     }
 
     /**
@@ -121,11 +137,13 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
      * Toggles the ability for the current {@link State}: activates draining from {@link State#READY} or
      * {@link State#REGENERATING}, or cancels an active drain back into {@link State#REGENERATING}.
      *
-     * @return {@code false} if regeneration hasn't reached {@link #MIN_TIME_TO_REACTIVATE} yet and the
-     * status could not be changed, {@code true} otherwise
+     * @return {@code false} if regeneration hasn't reached {@link #MIN_TIME_TO_REACTIVATE} yet or the
+     * reappear cooldown is still running and the status could not be changed, {@code true} otherwise
      */
     public boolean changeStatus() {
         if (state == State.REGENERATING && this.currentTime < MIN_TIME_TO_REACTIVATE) return false;
+        // Holds for READY too: a bar that refilled inside the cooldown must not skip it
+        if (state != State.DRAINING && this.clock.getAsLong() < this.reappearAt) return false;
         switch (state) {
             case READY -> enterDraining(false);
             case REGENERATING -> enterDraining(true);
@@ -155,6 +173,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
 
     private void enterRegenerating() {
         state = State.REGENERATING;
+        this.reappearAt = this.clock.getAsLong() + this.reappearCooldownMillis;
         colorState = StaminaColors.REGENERATING;
         player.setTag(Tags.HIDDEN, HIDDEN);
         this.playTeleportSound(player.getInstance(), player.getPosition(), player.getUuid());
