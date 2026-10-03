@@ -6,7 +6,6 @@ import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
-import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
 import net.onelitefeather.cygnus.phase.task.LobbyCountdownSoundTask;
 import net.onelitefeather.cygnus.phase.task.LobbyTimeTransitionTask;
 import net.onelitefeather.cygnus.phase.task.LobbyWaitingTask;
@@ -134,10 +133,6 @@ public final class LobbyPhase extends TimedPhase {
 
         if (getCurrentTicks() == FORCE_START_TIME - 1) {
             EventDispatcher.call(new GameMapLoadEvent());
-        }
-
-        if (getCurrentTicks() == 0) {
-            EventDispatcher.call(new GamePrepareEvent());
         }
     }
 

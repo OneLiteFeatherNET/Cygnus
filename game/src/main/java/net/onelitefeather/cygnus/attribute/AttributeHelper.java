@@ -23,12 +23,23 @@ public final class AttributeHelper {
     public static final Key GAME_SPEED_KEY = Key.key("cygnus", "game_speed");
     public static final Key GAME_JUMP_STRENGTH_KEY = Key.key("cygnus", "game_jump_strength");
     public static final Key GAME_STEP_HEIGHT_KEY = Key.key("cygnus", "game_step_height");
+    public static final Key FREEZE_KEY = Key.key("cygnus", "freeze");
 
     private static final AttributeModifier SLENDER_DRAINING_SPEED_MODIFIER = new AttributeModifier(
                     SLENDER_DRAINING_SPEED_KEY,
             -0.331,
             AttributeOperation.ADD_MULTIPLIED_TOTAL
     );
+
+    // Multiplies the final value by zero, so it holds regardless of the other modifiers on the attribute
+    private static final AttributeModifier FREEZE_MODIFIER = new AttributeModifier(
+            FREEZE_KEY,
+            -1.0,
+            AttributeOperation.ADD_MULTIPLIED_TOTAL
+    );
+
+    // Minestom's default walking speed in the abilities packet
+    private static final float DEFAULT_FIELD_VIEW_MODIFIER = 0.1f;
 
     private static final double DEFAULT_JUMP_STRENGTH = 0.42;
     private static final double GAME_JUMP_STRENGTH = 0.0;
@@ -167,6 +178,40 @@ public final class AttributeHelper {
      */
     public static void removeSlenderDrainingSpeed(Player player) {
         player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(SLENDER_DRAINING_SPEED_KEY);
+    }
+
+    /**
+     * Stops the player from walking and jumping while still letting them look around.
+     *
+     * @param player the player to freeze
+     */
+    public static void freeze(Player player) {
+        for (AttributeInstance attribute : freezeAttributes(player)) {
+            attribute.removeModifier(FREEZE_KEY);
+            attribute.addModifier(FREEZE_MODIFIER);
+        }
+        // The client scales its FOV by movement speed / walking speed, so a speed of zero would zoom
+        // in. A walking speed of zero makes the client skip that scaling entirely.
+        player.setFieldViewModifier(0f);
+    }
+
+    /**
+     * Lets a player frozen by {@link #freeze(Player)} move again.
+     *
+     * @param player the player to release
+     */
+    public static void unfreeze(Player player) {
+        for (AttributeInstance attribute : freezeAttributes(player)) {
+            attribute.removeModifier(FREEZE_KEY);
+        }
+        player.setFieldViewModifier(DEFAULT_FIELD_VIEW_MODIFIER);
+    }
+
+    private static AttributeInstance[] freezeAttributes(Player player) {
+        return new AttributeInstance[]{
+                player.getAttribute(Attribute.MOVEMENT_SPEED),
+                player.getAttribute(Attribute.JUMP_STRENGTH)
+        };
     }
 
     private AttributeHelper() {

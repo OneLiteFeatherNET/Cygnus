@@ -4,7 +4,9 @@ import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.EventDispatcher;
+import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
+import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
 import net.onelitefeather.cygnus.view.GameView;
 
 import java.time.temporal.ChronoUnit;
@@ -35,17 +37,24 @@ public final class WaitingPhase extends TimedPhase {
     @Override
     public void onStart() {
         super.onStart();
+        // The players arrive on the game map one by one, so whoever lands first could otherwise walk
+        // off before the round starts. Looking around stays allowed.
+        MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(AttributeHelper::freeze);
         this.instanceSwitch.apply();
     }
 
     @Override
     protected void onFinish() {
+        MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(AttributeHelper::unfreeze);
         this.gameView.addPlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
     }
 
     @Override
     public void onUpdate() {
         if (getCurrentTicks() == 1) {
+            // The roles are handed out in the same tick the players leave the lobby, so nobody can
+            // read the slender off the lobby (hidden player, name tag colour) before the round starts
+            EventDispatcher.call(new GamePrepareEvent());
             // Right before the end, so the page counts are based on the players that actually start
             EventDispatcher.call(new GamePreLaunchEvent());
             this.teleportLogic.apply();
