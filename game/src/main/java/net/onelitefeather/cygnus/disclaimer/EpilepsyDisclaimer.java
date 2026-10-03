@@ -75,6 +75,8 @@ public final class EpilepsyDisclaimer implements GameFeature {
     private static final Sound REMINDER_SOUND =
             Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.MASTER, 0.8F, 0.7F);
 
+    private final EventNode<Event> node = EventNode.all("epilepsy-disclaimer");
+
     private final DialogTemplate dialog;
 
     /**
@@ -82,6 +84,7 @@ public final class EpilepsyDisclaimer implements GameFeature {
      */
     public EpilepsyDisclaimer() {
         this.dialog = buildDialog();
+        this.registerListeners();
     }
 
     private static DialogTemplate buildDialog() {
@@ -106,18 +109,20 @@ public final class EpilepsyDisclaimer implements GameFeature {
                 .build();
     }
 
+    @Override
+    public EventNode<Event> node() {
+        return this.node;
+    }
+
     /**
      * Registers the two halves of the disclaimer: showing it on join, and reacting to its button.
-     *
-     * @param node the event node to register the listeners on
      */
-    @Override
-    public void registerListener(EventNode<Event> node) {
-        node.addListener(PlayerSpawnEvent.class, event -> {
+    private void registerListeners() {
+        this.node.addListener(PlayerSpawnEvent.class, event -> {
             if (!event.isFirstSpawn()) return;
             showTo(event.getPlayer());
         });
-        node.addListener(PlayerCustomClickEvent.class, this::handleClick);
+        this.node.addListener(PlayerCustomClickEvent.class, this::handleClick);
     }
 
     /**

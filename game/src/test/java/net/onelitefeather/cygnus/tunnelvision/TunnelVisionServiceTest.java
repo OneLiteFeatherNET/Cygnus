@@ -123,7 +123,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
         TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> Set.of(survivor));
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
 
         EventDispatcher.call(new GameStartEvent());
         service.tick();
@@ -137,7 +137,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
         TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> Set.of(survivor));
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         service.track(survivor);
         service.tick();
         renderer.forget();
@@ -155,7 +155,7 @@ class TunnelVisionServiceTest extends CygnusPlayerTestBase {
         RecordingRenderer renderer = new RecordingRenderer();
         Player survivor = spawn(env, new Pos(0, 40, 0));
         TunnelVisionService service = new TunnelVisionService(renderer, player -> NO_STAMINA, () -> Set.of(survivor));
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         service.track(survivor);
         service.tick();
         renderer.forget();

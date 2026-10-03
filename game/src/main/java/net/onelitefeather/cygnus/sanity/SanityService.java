@@ -46,7 +46,10 @@ import java.util.function.Supplier;
  */
 public final class SanityService implements GameFeature, DreadSource, CreekWitness {
 
+    private final EventNode<Event> node = EventNode.all("sanity");
+
     private final SanityConfig config;
+    private final boolean enabled;
     private final DoubleSupplier pageProgress;
     private final LongSupplier clock;
     private final Supplier<Set<Player>> roundSurvivors;
@@ -56,38 +59,48 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      * Sets up the service.
      *
      * @param config         the settings
+     * @param enabled        whether the service takes part in the game
      * @param pageProgress   supplies how much of all pages has been found, between {@code 0} and {@code 1}
      * @param clock          supplies the current time in milliseconds
      * @param roundSurvivors supplies the survivors of the starting round
      */
-    public SanityService(SanityConfig config, DoubleSupplier pageProgress, LongSupplier clock,
+    public SanityService(SanityConfig config, boolean enabled, DoubleSupplier pageProgress, LongSupplier clock,
                          Supplier<Set<Player>> roundSurvivors) {
         this.config = config;
+        this.enabled = enabled;
         this.pageProgress = pageProgress;
         this.clock = clock;
         this.roundSurvivors = roundSurvivors;
         this.survivors = new PlayerState<>();
+        this.registerListeners();
+    }
+
+    @Override
+    public boolean enabled() {
+        return this.enabled;
+    }
+
+    @Override
+    public EventNode<Event> node() {
+        return this.node;
     }
 
     /**
      * Hooks the service into the round's lifecycle.
-     *
-     * @param node the node to register on
      */
-    @Override
-    public void registerListener(EventNode<Event> node) {
-        node.addListener(GameStartEvent.class, _ -> {
+    private void registerListeners() {
+        this.node.addListener(GameStartEvent.class, _ -> {
             this.survivors.clear();
             for (Player survivor : this.roundSurvivors.get()) {
                 this.track(survivor);
             }
         });
-        node.addListener(PageFoundEvent.class, event -> this.pageFound(event.finder()));
-        node.addListener(PlayerDeathEvent.class, event -> this.died(event.getPlayer()));
-        node.addListener(PlayerDisconnectEvent.class, event -> this.survivors.remove(event.getPlayer()));
+        this.node.addListener(PageFoundEvent.class, event -> this.pageFound(event.finder()));
+        this.node.addListener(PlayerDeathEvent.class, event -> this.died(event.getPlayer()));
+        this.node.addListener(PlayerDisconnectEvent.class, event -> this.survivors.remove(event.getPlayer()));
         // A survivor who takes over as the slender is no longer one of the scared.
-        node.addListener(SlenderReviveEvent.class, event -> this.survivors.remove(event.getPlayer()));
-        node.addListener(GameFinishEvent.class, _ -> this.survivors.clear());
+        this.node.addListener(SlenderReviveEvent.class, event -> this.survivors.remove(event.getPlayer()));
+        this.node.addListener(GameFinishEvent.class, _ -> this.survivors.clear());
     }
 
     /**

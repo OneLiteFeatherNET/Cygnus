@@ -42,6 +42,8 @@ public final class SlenderGazeService implements GameFeature {
     /** Interval the service updates at. */
     static final int TICK_MILLIS = 100;
 
+    private final EventNode<Event> node = EventNode.all("slender-gaze");
+
     private final GazeSink sink;
     private final SlenderGaze gaze;
     private final Supplier<@Nullable Player> slender;
@@ -64,6 +66,12 @@ public final class SlenderGazeService implements GameFeature {
         this.gaze = gaze;
         this.slender = slender;
         this.roundSurvivors = survivors;
+        this.registerListeners();
+    }
+
+    @Override
+    public EventNode<Event> node() {
+        return this.node;
     }
 
     /**
@@ -76,20 +84,17 @@ public final class SlenderGazeService implements GameFeature {
      * round's start and finish hooks would mean widening their signatures for every service that
      * needs it; listening for itself keeps this self-contained instead.
      * </p>
-     *
-     * @param node the node to register on
      */
-    @Override
-    public void registerListener(EventNode<Event> node) {
-        node.addListener(GameStartEvent.class, event -> {
+    private void registerListeners() {
+        this.node.addListener(GameStartEvent.class, event -> {
             this.startTask();
             for (Player survivor : this.roundSurvivors.get()) {
                 this.track(survivor);
             }
         });
-        node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
-        node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
-        node.addListener(GameFinishEvent.class, event -> {
+        this.node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
+        this.node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
+        this.node.addListener(GameFinishEvent.class, event -> {
             this.cleanUp();
             this.stopTask();
         });

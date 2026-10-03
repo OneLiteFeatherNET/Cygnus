@@ -37,7 +37,7 @@ import java.util.function.LongSupplier;
  * <p>Usage:</p>
  * <pre>{@code
  * DamageSoundService service = new DamageSoundService(config, System::currentTimeMillis);
- * service.registerListener(eventNode);
+ * eventNode.addChild(service.node());
  * }</pre>
  *
  * @author TheMeinerLP
@@ -59,6 +59,8 @@ public final class DamageSoundService implements GameFeature {
 
     /** @see #VOLUME */
     private static final float PITCH = 1.0F;
+
+    private final EventNode<Event> node = EventNode.all("damage-sound");
 
     private final GameConfig.DamageSound config;
     private final LongSupplier clock;
@@ -84,17 +86,20 @@ public final class DamageSoundService implements GameFeature {
                 VOLUME,
                 PITCH
         );
+        this.registerListeners();
+    }
+
+    @Override
+    public EventNode<Event> node() {
+        return this.node;
     }
 
     /**
      * Listens for hits and for players leaving.
-     *
-     * @param node the node to register on
      */
-    @Override
-    public void registerListener(EventNode<Event> node) {
-        node.addListener(PlayerDamagedEvent.class, event -> this.play(event.getPlayer()));
-        node.addListener(PlayerDisconnectEvent.class, event -> this.clear(event.getPlayer()));
+    private void registerListeners() {
+        this.node.addListener(PlayerDamagedEvent.class, event -> this.play(event.getPlayer()));
+        this.node.addListener(PlayerDisconnectEvent.class, event -> this.clear(event.getPlayer()));
     }
 
     /**

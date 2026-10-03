@@ -60,9 +60,8 @@ class EpilepsyDisclaimerTest extends CygnusPlayerTestBase {
     @Test
     void testTheWarningIsShownOnTheFirstSpawn(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
-        EventNode<Event> node = EventNode.all("epilepsy-disclaimer-test");
+        EventNode<Event> node = new EpilepsyDisclaimer().node();
         env.process().eventHandler().addChild(node);
-        new EpilepsyDisclaimer().registerListener(node);
         TestConnection connection = env.createConnection();
         Collector<ShowDialogPacket> dialogs = connection.trackIncoming(ShowDialogPacket.class);
 

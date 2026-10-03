@@ -35,23 +35,28 @@ public final class SpectatorService implements GameFeature {
 
     private static final Component LEAVE_MESSAGE = Component.text("Thanks for playing it. <3", NamedTextColor.RED);
 
+    private final EventNode<Event> node = EventNode.all("spectator");
+
     private final Team spectatorTeam;
     private final SpectatorInventory spectatorInventory;
 
     public SpectatorService(Team spectatorTeam, Team survivorTeam) {
         this.spectatorTeam = spectatorTeam;
         this.spectatorInventory = new SpectatorInventory(survivorTeam, this::teleportTo);
+        this.registerListeners();
+    }
+
+    @Override
+    public EventNode<Event> node() {
+        return this.node;
     }
 
     /**
      * Registers some spectator listener into a given {@link EventNode<Event>} reference.
-     *
-     * @param node to register the listeners
      */
-    @Override
-    public void registerListener(EventNode<Event> node) {
-        node.addListener(SpectatorAddEvent.class, new SpectatorAddListener(this));
-        node.addListener(PlayerUseItemEvent.class, new SpectatorItemListener(this));
+    private void registerListeners() {
+        this.node.addListener(SpectatorAddEvent.class, new SpectatorAddListener(this));
+        this.node.addListener(PlayerUseItemEvent.class, new SpectatorItemListener(this));
     }
 
     /**

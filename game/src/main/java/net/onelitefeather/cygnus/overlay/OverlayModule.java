@@ -30,6 +30,8 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class OverlayModule implements GameFeature {
 
+    private final EventNode<Event> node = EventNode.all("overlay");
+
     private final BossBarGazeSignal gazeSignal;
     private final SlenderGazeService slenderGazeService;
     private final BloodSplatterService bloodSplatterService;
@@ -61,14 +63,26 @@ public final class OverlayModule implements GameFeature {
                 new OverlayTunnelVisionRenderer(screenOverlay),
                 player -> StaminaHelper.remainingShare(staminaService, player),
                 () -> TeamHelper.survivorsOf(teamService));
+        this.registerListeners();
     }
 
     @Override
-    public void registerListener(EventNode<Event> node) {
-        if (!OverlayProperties.enabled()) return;
-        this.slenderGazeService.registerListener(node);
-        this.bloodSplatterService.registerListener(node);
-        this.tunnelVisionService.registerListener(node);
+    public boolean enabled() {
+        return OverlayProperties.enabled();
+    }
+
+    @Override
+    public EventNode<Event> node() {
+        return this.node;
+    }
+
+    /**
+     * Hangs the node of every effect below the module's own, so they share its gate.
+     */
+    private void registerListeners() {
+        this.node.addChild(this.slenderGazeService.node());
+        this.node.addChild(this.bloodSplatterService.node());
+        this.node.addChild(this.tunnelVisionService.node());
     }
 
     @Override

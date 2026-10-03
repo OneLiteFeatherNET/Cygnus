@@ -47,7 +47,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         Player player = connection.connect(instance);
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
         DamageSoundService service = service(config(true, COOLDOWN_TICKS, Key.key("entity.player.hurt")), new AtomicLong());
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
 
         EventDispatcher.call(new PlayerDamagedEvent(player, SOURCE, 1.0F));
 
@@ -70,7 +70,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         Collector<EntitySoundEffectPacket> bystanderSounds =
                 bystanderConnection.trackIncoming(EntitySoundEffectPacket.class);
         DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), new AtomicLong());
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
 
         EventDispatcher.call(new PlayerDamagedEvent(victim, SOURCE, 1.0F));
 
@@ -144,7 +144,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         Player player = connection.connect(instance);
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
         DamageSoundService service = service(config(false, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), new AtomicLong());
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
 
         EventDispatcher.call(new PlayerDamagedEvent(player, SOURCE, 1.0F));
 

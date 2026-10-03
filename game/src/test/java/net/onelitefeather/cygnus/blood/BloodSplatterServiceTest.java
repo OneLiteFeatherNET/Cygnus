@@ -96,7 +96,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
         RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
         BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
 
         EventDispatcher.call(new PlayerDamagedEvent(player, new Pos(0, 40, 6), 1.0F));
 

@@ -48,6 +48,8 @@ import java.util.function.ToDoubleFunction;
  */
 public final class TunnelVisionService implements GameFeature {
 
+    private final EventNode<Event> node = EventNode.all("tunnel-vision");
+
     private final TunnelVisionRenderer renderer;
     private final ToDoubleFunction<Player> stamina;
     private final Supplier<Set<Player>> roundSurvivors;
@@ -66,6 +68,7 @@ public final class TunnelVisionService implements GameFeature {
         this.renderer = renderer;
         this.stamina = stamina;
         this.roundSurvivors = survivors;
+        this.registerListeners();
     }
 
     /**
@@ -85,7 +88,7 @@ public final class TunnelVisionService implements GameFeature {
     /**
      * Starts drawing for a survivor, with a fresh stage.
      * <p>
-     * This is bookkeeping only: it does not touch the update task, so {@link #registerListener} can
+     * This is bookkeeping only: it does not touch the update task, so {@link #registerListeners} can
      * compose it with {@link #startTask()} instead of the two always happening together.
      * </p>
      *
@@ -95,26 +98,28 @@ public final class TunnelVisionService implements GameFeature {
         this.survivors.put(survivor, new Tracked(survivor, new TunnelVisionStage()));
     }
 
+    @Override
+    public EventNode<Event> node() {
+        return this.node;
+    }
+
     /**
      * Hooks the service into the round's lifecycle.
      * <p>
      * See the class documentation for why this service registers itself rather than being called by
      * name the way {@code AmbientProvider} is.
      * </p>
-     *
-     * @param node the node to register on
      */
-    @Override
-    public void registerListener(EventNode<Event> node) {
-        node.addListener(GameStartEvent.class, event -> {
+    private void registerListeners() {
+        this.node.addListener(GameStartEvent.class, event -> {
             this.startTask();
             for (Player survivor : this.roundSurvivors.get()) {
                 this.track(survivor);
             }
         });
-        node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
-        node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
-        node.addListener(GameFinishEvent.class, event -> {
+        this.node.addListener(PlayerDeathEvent.class, event -> this.remove(event.getPlayer()));
+        this.node.addListener(PlayerDisconnectEvent.class, event -> this.remove(event.getPlayer()));
+        this.node.addListener(GameFinishEvent.class, event -> {
             this.cleanUp();
             this.stopTask();
         });
@@ -133,7 +138,7 @@ public final class TunnelVisionService implements GameFeature {
 
     /**
      * Clears every survivor's screen and stops tracking all of them, without touching the update
-     * task — pair with {@link #stopTask()} to end a round the way {@link #registerListener} does.
+     * task — pair with {@link #stopTask()} to end a round the way {@link #registerListeners} does.
      */
     public void cleanUp() {
         for (Tracked tracked : this.survivors.values()) {

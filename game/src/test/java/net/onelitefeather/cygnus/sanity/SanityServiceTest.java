@@ -22,6 +22,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SanityServiceTest extends CygnusPlayerTestBase {
 
@@ -34,7 +36,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
     private Set<Player> survivors = Set.of();
 
     private SanityService service(SanityConfig config) {
-        return new SanityService(config, () -> this.pageProgress, this.clock::get, () -> this.survivors);
+        return new SanityService(config, true, () -> this.pageProgress, this.clock::get, () -> this.survivors);
     }
 
     private static double dread(SanityService service, Player player) {
@@ -69,7 +71,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(survivor);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
 
         EventDispatcher.call(new GameStartEvent());
         service.caught(survivor.getUuid());
@@ -85,7 +87,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player other = connect(env, instance, new Pos(2, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(finder, other);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
 
         EventDispatcher.call(new PageFoundEvent(finder, 1, 8));
@@ -136,7 +138,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player otherWorld = connect(env, elsewhere, new Pos(0, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(dead, near, far, otherWorld);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         service.caught(dead.getUuid());
 
@@ -181,7 +183,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player slender = connect(env, instance, new Pos(0, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of();
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
 
         EventDispatcher.call(new PageFoundEvent(slender, 1, 8));
@@ -198,7 +200,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(survivor);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         service.caught(survivor.getUuid());
 
@@ -214,7 +216,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player survivor = connect(env, instance, new Pos(0, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(survivor);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         service.caught(survivor.getUuid());
 
@@ -231,12 +233,19 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         Player near = connect(env, instance, new Pos(5, 40, 0));
         SanityService service = service(NO_DECAY);
         this.survivors = Set.of(promoted, near);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
 
         EventDispatcher.call(new SlenderReviveEvent(promoted));
         EventDispatcher.call(new PlayerDeathEvent(promoted, Component.empty(), Component.empty()));
 
         assertEquals(0.0D, dread(service, near), EPSILON);
+    }
+
+    @Test
+    @DisplayName("The given switch decides whether the service runs")
+    void followsSwitch() {
+        assertTrue(service(NO_DECAY).enabled());
+        assertFalse(new SanityService(NO_DECAY, false, () -> 0.0D, this.clock::get, Set::of).enabled());
     }
 }

@@ -51,7 +51,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player slender = connection.connect(instance);
         SlenderStaticService service = service(config(true), () -> slender);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         Collector<EntitySoundEffectPacket> beforeTheGapIsUp = connection.trackIncoming(EntitySoundEffectPacket.class);
 
@@ -75,7 +75,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player slender = connection.connect(instance);
         SlenderStaticService service = service(config(true), () -> slender);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         EventDispatcher.call(new PageFoundEvent(slender, PAGES, PAGES));
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
@@ -95,7 +95,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player slender = connection.connect(instance);
         SlenderStaticService service = service(config(true), () -> slender);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
 
@@ -114,7 +114,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player slender = connection.connect(instance);
         SlenderStaticService service = service(config(true), () -> slender);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         tick(service, QUIET_INTERVAL - 1);
         EventDispatcher.call(new PageFoundEvent(slender, 1, PAGES));
@@ -136,7 +136,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
         TestConnection survivorConnection = env.createConnection();
         survivorConnection.connect(instance);
         SlenderStaticService service = service(config(true), () -> slender);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         Collector<EntitySoundEffectPacket> survivorSounds =
                 survivorConnection.trackIncoming(EntitySoundEffectPacket.class);
@@ -156,7 +156,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player slender = connection.connect(instance);
         SlenderStaticService service = service(config(false), () -> slender);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
 
@@ -176,7 +176,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player slender = connection.connect(instance);
         SlenderStaticService service = service(config(true), () -> slender);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         EventDispatcher.call(new PageFoundEvent(slender, PAGES, PAGES));
 
@@ -199,7 +199,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         connection.connect(instance);
         SlenderStaticService service = service(config(true), () -> null);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
 
@@ -219,7 +219,7 @@ class SlenderStaticServiceTest extends CygnusPlayerTestBase {
         Key packSound = Key.key("cygnus", "vhs_static");
         GameConfig.SlenderStatic config = new GameConfig.SlenderStatic(true, packSound, QUIET_INTERVAL, FRANTIC_INTERVAL, MIN_VOLUME, MAX_VOLUME);
         SlenderStaticService service = service(config, () -> slender);
-        service.registerListener(env.process().eventHandler());
+        env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
 

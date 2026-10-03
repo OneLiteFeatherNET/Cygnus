@@ -58,6 +58,8 @@ public final class ResourcePackService implements GameFeature {
     // so it must not be able to hang that join forever.
     private static final long HASH_TIMEOUT_SECONDS = 30;
 
+    private final EventNode<Event> node = EventNode.all("resource-pack");
+
     private final UUID packId;
     private final URI url;
     private @Nullable CompletableFuture<ResourcePackInfo> packInfo;
@@ -70,6 +72,7 @@ public final class ResourcePackService implements GameFeature {
         this.packInfo = hash == null
                 ? null
                 : CompletableFuture.completedFuture(ResourcePackInfo.resourcePackInfo(this.packId, url, hash));
+        this.registerListeners();
     }
 
     /**
@@ -127,14 +130,16 @@ public final class ResourcePackService implements GameFeature {
         return packId;
     }
 
+    @Override
+    public EventNode<Event> node() {
+        return this.node;
+    }
+
     /**
      * Registers the status listener that kicks players who decline or fail to load the pack.
-     *
-     * @param node the event node to register the listener on
      */
-    @Override
-    public void registerListener(EventNode<Event> node) {
-        node.addListener(PlayerResourcePackStatusEvent.class, this::handleStatus);
+    private void registerListeners() {
+        this.node.addListener(PlayerResourcePackStatusEvent.class, this::handleStatus);
     }
 
     void handleStatus(PlayerResourcePackStatusEvent event) {

@@ -32,6 +32,8 @@ import java.util.Random;
  */
 public final class CreekModule implements GameFeature {
 
+    private final EventNode<Event> node = EventNode.all("creek");
+
     private final CreekConfig config;
     private final GameMapProvider mapProvider;
     private final CreekDebug debug;
@@ -76,14 +78,30 @@ public final class CreekModule implements GameFeature {
                 roundClock,
                 random,
                 this.debug);
+        this.registerListeners();
+    }
+
+    /**
+     * The creek is an entity in the world that the client draws like any other, not a camera
+     * overlay, so only its own switch has a say in it.
+     *
+     * @return whether the creek is switched on
+     */
+    @Override
+    public boolean enabled() {
+        return this.config.enabled();
     }
 
     @Override
-    public void registerListener(EventNode<Event> node) {
-        // The creek is an entity in the world that the client draws like any other, not a camera
-        // overlay, so only its own switch has a say in it.
-        if (!this.config.enabled()) return;
-        this.service.registerListener(node);
+    public EventNode<Event> node() {
+        return this.node;
+    }
+
+    /**
+     * Hooks the creek service, which is no feature of its own, into the module's node.
+     */
+    private void registerListeners() {
+        this.service.registerListener(this.node);
     }
 
     @Override

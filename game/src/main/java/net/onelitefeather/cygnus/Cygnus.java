@@ -158,6 +158,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // The creek reads the fear and reports back to it; pages and deaths reach it as events.
         SanityService sanityService = new SanityService(
                 this.gameConfig.sanity(),
+                // Only the creek reads the fear so far, so without it there is nothing to track it for.
+                this.gameConfig.creek().enabled(),
                 this.pageProvider::foundShare,
                 System::currentTimeMillis,
                 () -> TeamHelper.survivorsOf(this.teamService));
@@ -244,7 +246,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientEntityActionPacket.class, CygnusEntityActionListener::listener);
         MinecraftServer.getPacketListenerManager().setPlayListener(ClientSettingsPacket.class, CygnusSettingsListener::listener);
-        this.features.forEach(feature -> feature.registerListener(handler));
+        GameFeatures.register(handler, this.features);
     }
 
     private void initPhases() {
