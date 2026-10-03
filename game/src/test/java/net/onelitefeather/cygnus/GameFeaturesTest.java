@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus;
 
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -41,7 +42,8 @@ class GameFeaturesTest {
     }
 
     @Test
-    void testAnEnabledFeatureHangsItsOwnNodeBelowTheParent() {
+    @DisplayName("An enabled feature hangs its node below the parent")
+    void registersEnabled() {
         EventNode<Event> root = EventNode.all("root");
         List<String> log = new ArrayList<>();
 
@@ -50,23 +52,25 @@ class GameFeaturesTest {
 
         assertEquals(List.of("creek"), log);
         assertEquals(List.of("creek"), root.getChildren().stream().map(EventNode::getName).toList(),
-                "the feature's own node must hang below the parent");
+                "its own node must hang below the parent");
     }
 
     @Test
-    void testADisabledFeatureIsNotHungIn() {
+    @DisplayName("A disabled feature stays out of the tree")
+    void skipsDisabled() {
         EventNode<Event> root = EventNode.all("root");
         List<String> log = new ArrayList<>();
 
         GameFeatures.register(root, List.of(new LoggingFeature("creek", false, log)));
         root.call(new Ping());
 
-        assertTrue(log.isEmpty(), "a disabled feature must not hear anything");
-        assertTrue(root.getChildren().isEmpty(), "a disabled feature must not end up in the tree");
+        assertTrue(log.isEmpty());
+        assertTrue(root.getChildren().isEmpty());
     }
 
     @Test
-    void testFeaturesHearEventsAfterTheParentAndInTheirListOrder() {
+    @DisplayName("Features hear events after the parent, in list order")
+    void keepsOrder() {
         EventNode<Event> root = EventNode.all("root");
         List<String> log = new ArrayList<>();
         root.addListener(Ping.class, _ -> log.add("root"));
@@ -78,11 +82,12 @@ class GameFeaturesTest {
         root.call(new Ping());
 
         assertEquals(List.of("root", "first", "second", "third"), log,
-                "the features registered last on the global handler before, so their order must not change");
+                "the features ran last on the global handler before, so this order must not change");
     }
 
     @Test
-    void testAFeatureWithoutASwitchOfItsOwnIsAlwaysOn() {
+    @DisplayName("A feature without a switch of its own is always on")
+    void enabledByDefault() {
         GameFeature feature = () -> EventNode.all("plain");
 
         assertTrue(feature.enabled());

@@ -39,15 +39,15 @@ class OverlayModuleTest {
     }
 
     @Test
-    @DisplayName("Switching the overlays off switches the whole module off")
-    void followsTheOverlaySwitch() {
+    @DisplayName("Switching the overlays off switches the module off")
+    void followsOverlaySwitch() {
         System.setProperty(OverlayProperties.ENABLED_PROPERTY, "false");
         assertFalse(module().enabled());
     }
 
     @Test
-    @DisplayName("Every effect listens on a node of its own below the module")
-    void everyEffectGetsItsOwnNode() {
+    @DisplayName("Every effect gets its own node below the module")
+    void nestsEffects() {
         EventNode<Event> root = EventNode.all("root");
 
         GameFeatures.register(root, List.of(module()));

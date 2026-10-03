@@ -243,8 +243,8 @@ class SanityServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("The switch handed in decides whether the service takes part")
-    void enabledFollowsTheSwitch() {
+    @DisplayName("The given switch decides whether the service runs")
+    void followsSwitch() {
         assertTrue(service(NO_DECAY).enabled());
         assertFalse(new SanityService(NO_DECAY, false, () -> 0.0D, this.clock::get, Set::of).enabled());
     }
