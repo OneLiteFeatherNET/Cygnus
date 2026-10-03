@@ -410,4 +410,65 @@ class GameConfigReaderTest {
         assertEquals(CreekConfig.DEFAULT.huntThreshold(),
                 new GameConfigReader(tempDir).getConfig().creek().huntThreshold());
     }
+
+    @Test
+    void testSanityDefaultsWhenNotConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(SanityConfig.DEFAULT, config.sanity());
+    }
+
+    @Test
+    void testSanityValuesAreRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                sanity.pageFloorWeight=0.4
+                sanity.caughtGain=0.2
+                sanity.sightingCooldownSeconds=30
+                sanity.deathRadius=16
+                sanity.decayPerSecond=0.01
+                """);
+
+        SanityConfig sanity = new GameConfigReader(tempDir).getConfig().sanity();
+
+        assertEquals(0.4D, sanity.pageFloorWeight(), 1.0E-9);
+        assertEquals(0.2D, sanity.caughtGain(), 1.0E-9);
+        assertEquals(30, sanity.sightingCooldownSeconds());
+        assertEquals(16, sanity.deathRadius());
+        assertEquals(0.01D, sanity.decayPerSecond(), 1.0E-9);
+        assertEquals(SanityConfig.DEFAULT.pageFoundGain(), sanity.pageFoundGain());
+    }
+
+    @Test
+    void testSanityRejectsValuesOutOfRange(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                sanity.deathGain=1.5
+                """);
+        GameConfigReader reader = new GameConfigReader(tempDir);
+
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
+    }
+
+    @Test
+    void testAnUnreadableSanityValueFallsBackToTheDefault(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                sanity.caughtGain=lots
+                """);
+
+        assertEquals(SanityConfig.DEFAULT.caughtGain(),
+                new GameConfigReader(tempDir).getConfig().sanity().caughtGain());
+    }
+
+    @Test
+    void testTheOldDreadKeysAreIgnored(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.dreadPageWeight=-5
+                creek.isolationRadius=0
+                """);
+
+        assertEquals(CreekConfig.DEFAULT, new GameConfigReader(tempDir).getConfig().creek());
+    }
 }
