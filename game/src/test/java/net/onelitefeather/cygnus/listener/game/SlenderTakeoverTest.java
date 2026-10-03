@@ -55,7 +55,7 @@ class SlenderTakeoverTest extends CygnusPlayerTestBase {
     }
 
     private SlenderTakeover takeover(Env env) {
-        SlenderTakeover takeover = new SlenderTakeover(this.teamService, () -> this.gamePhase, 1);
+        SlenderTakeover takeover = new SlenderTakeover(this.teamService, () -> this.gamePhase);
         env.process().eventHandler().addChild(takeover.node());
         env.process().eventHandler().addListener(SlenderReviveEvent.class, this.revive::set);
         env.process().eventHandler().addListener(GameFinishEvent.class, this.finish::set);
@@ -199,6 +199,26 @@ class SlenderTakeoverTest extends CygnusPlayerTestBase {
         countdown(takeover);
 
         assertNull(this.revive.get());
+        assertNotNull(this.finish.get());
+        assertEquals(GameFinishEvent.Reason.SLENDER_LEFT, this.finish.get().reason());
+    }
+
+    @Test
+    @DisplayName("A round gets one takeover only, however many survivors are left")
+    void oneTakeoverPerRound(Env env) {
+        Instance instance = env.createFlatInstance();
+        survivor(env, instance);
+        survivor(env, instance);
+        survivor(env, instance);
+        SlenderTakeover takeover = takeover(env);
+        takeover.begin(this.gamePhase);
+        countdown(takeover);
+        assertNotNull(this.revive.get());
+
+        // The new slender leaves as well, two survivors would still be there to take over
+        takeover.begin(this.gamePhase);
+
+        assertNull(takeover.chosen());
         assertNotNull(this.finish.get());
         assertEquals(GameFinishEvent.Reason.SLENDER_LEFT, this.finish.get().reason());
     }

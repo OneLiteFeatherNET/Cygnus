@@ -57,10 +57,16 @@ public final class SlenderTakeover implements GameFeature {
     static final int COUNTDOWN_SECONDS = 3;
 
     /** The least time a round must have left for a new slender to be worth it, in seconds. */
-    private static final int MINIMUM_SLENDER_RE_CHECK = 120;
+    private static final int MIN_SECONDS_LEFT = 120;
 
-    /** How many survivors a round needs for one of them to take over. */
-    private static final int GLOBAL_MIN_PLAYERS = 2;
+    /** The one who takes over and at least one left to hunt. */
+    private static final int MIN_SURVIVORS = 2;
+
+    /**
+     * How often per round a survivor may take over. If the new slender leaves as well, the round
+     * ends: by then it has lost too much to be worth saving.
+     */
+    private static final int MAX_TAKEOVERS = 1;
 
     /** The countdown plus a second to cover the teleport, in ticks. */
     private static final int BLINDNESS_TICKS = (COUNTDOWN_SECONDS + 1) * 20;
@@ -75,7 +81,6 @@ public final class SlenderTakeover implements GameFeature {
 
     private final TeamService teamService;
     private final Supplier<Phase> phaseSupplier;
-    private final int maxTakeovers;
     private final RepeatingTask task = new RepeatingTask(this::tick);
     private int takeovers;
     private @Nullable Player chosen;
@@ -86,12 +91,10 @@ public final class SlenderTakeover implements GameFeature {
      *
      * @param teamService   the teams of the round
      * @param phaseSupplier supplies the current phase, a takeover only runs during the {@link GamePhase}
-     * @param maxTakeovers  how often per round a survivor may take over
      */
-    public SlenderTakeover(TeamService teamService, Supplier<Phase> phaseSupplier, int maxTakeovers) {
+    public SlenderTakeover(TeamService teamService, Supplier<Phase> phaseSupplier) {
         this.teamService = teamService;
         this.phaseSupplier = phaseSupplier;
-        this.maxTakeovers = maxTakeovers;
         this.registerListeners();
     }
 
@@ -116,9 +119,9 @@ public final class SlenderTakeover implements GameFeature {
      */
     public void begin(GamePhase gamePhase) {
         Team survivorTeam = this.team(SURVIVOR_KEY);
-        boolean canTakeOver = this.takeovers < this.maxTakeovers
-                && gamePhase.getCurrentTicks() >= MINIMUM_SLENDER_RE_CHECK
-                && survivorTeam.getCurrentSize() >= GLOBAL_MIN_PLAYERS;
+        boolean canTakeOver = this.takeovers < MAX_TAKEOVERS
+                && gamePhase.getCurrentTicks() >= MIN_SECONDS_LEFT
+                && survivorTeam.getCurrentSize() >= MIN_SURVIVORS;
         Optional<Player> pick = canTakeOver
                 ? Players.getRandomPlayer(new ArrayList<>(survivorTeam.getPlayers()))
                 : Optional.empty();
@@ -151,7 +154,7 @@ public final class SlenderTakeover implements GameFeature {
         this.chosen = null;
         Team survivorTeam = this.team(SURVIVOR_KEY);
         // Someone may have died during the countdown: without anyone left to hunt, the round is over
-        if (survivorTeam.getCurrentSize() < GLOBAL_MIN_PLAYERS) {
+        if (survivorTeam.getCurrentSize() < MIN_SURVIVORS) {
             if (this.phaseSupplier.get() instanceof GamePhase gamePhase) {
                 this.end(gamePhase);
             }

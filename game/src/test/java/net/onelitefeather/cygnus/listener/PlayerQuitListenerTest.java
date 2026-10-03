@@ -75,7 +75,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase, 1));
+                new SlenderTakeover(teamService, () -> gamePhase));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicBoolean finishFired = new AtomicBoolean(false);
@@ -105,7 +105,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase, 1));
+                new SlenderTakeover(teamService, () -> gamePhase));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
@@ -138,7 +138,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase, 1));
+                new SlenderTakeover(teamService, () -> gamePhase));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<SlenderReviveEvent> reviveEvent = new AtomicReference<>();
@@ -171,7 +171,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager());
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase, 1));
+                new SlenderTakeover(teamService, () -> gamePhase));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();

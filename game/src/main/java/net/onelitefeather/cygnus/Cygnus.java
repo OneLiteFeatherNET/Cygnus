@@ -165,9 +165,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 this.pageProvider::foundShare,
                 System::currentTimeMillis,
                 () -> TeamHelper.survivorsOf(this.teamService));
-        // Only as many takeovers as players a round may lose and still be played
-        this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase,
-                this.gameConfig.round().minPlayers() - 1);
+        this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase);
         this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
                 new EpilepsyDisclaimer(),
                 this.slenderTakeover,
