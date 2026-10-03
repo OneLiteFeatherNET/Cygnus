@@ -6,6 +6,7 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.network.packet.server.play.SoundEffectPacket;
 import net.minestom.server.network.packet.server.play.SpawnEntityPacket;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
@@ -67,13 +68,51 @@ class CygnusPlayerTickListenerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin corpse = registerCorpse(env, manager, instance, corpseOwner);
 
         Collector<SpawnEntityPacket> spawns = victimConnection.trackIncoming(SpawnEntityPacket.class);
-        driveTurnArounds(new CygnusPlayerTickListener(manager), victim);
+        driveTurnArounds(new CygnusPlayerTickListener(manager, _ -> 0.0D), victim);
 
         List<SpawnEntityPacket> packets = spawns.collect();
         assertTrue(packets.stream().anyMatch(packet -> packet.type() == EntityType.MANNEQUIN),
                 "a survivor must still receive a jump scare phantom");
         assertFalse(corpse.isViewer(victim), "the real corpse gets hidden while the phantom is up");
 
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testSurvivorHearsTheAmbientOfTheirOwnDread(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player survivor = connection.connect(instance, VICTIM_POS);
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        // Terrified: a sound within at most 120 ticks. A calm survivor would wait at least 240.
+        CygnusPlayerTickListener listener = new CygnusPlayerTickListener(new JumpScareManager(),
+                uuid -> uuid.equals(survivor.getUuid()) ? 1.0D : 0.0D);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        for (int i = 0; i < 120; i++) {
+            listener.accept(new PlayerTickEvent(survivor));
+        }
+
+        assertFalse(sounds.collect().isEmpty(), "a terrified survivor should hear the ambient");
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testSlenderNeverHearsTheAmbient(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player slender = connection.connect(instance, VICTIM_POS);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+
+        CygnusPlayerTickListener listener = new CygnusPlayerTickListener(new JumpScareManager(), _ -> 1.0D);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        for (int i = 0; i < 600; i++) {
+            listener.accept(new PlayerTickEvent(slender));
+        }
+
+        sounds.assertEmpty();
         env.destroyInstance(instance, true);
     }
 
@@ -103,7 +142,7 @@ class CygnusPlayerTickListenerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin corpse = registerCorpse(env, manager, instance, corpseOwner);
 
         Collector<SpawnEntityPacket> spawns = connection.trackIncoming(SpawnEntityPacket.class);
-        driveTurnArounds(new CygnusPlayerTickListener(manager), player);
+        driveTurnArounds(new CygnusPlayerTickListener(manager, _ -> 0.0D), player);
 
         assertTrue(spawns.collect().isEmpty(), description + " must never receive a jump scare phantom");
         assertTrue(corpse.isViewer(player), description + " must keep the untouched view on the corpse");
