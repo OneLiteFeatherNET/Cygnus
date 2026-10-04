@@ -11,7 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 public final class CygnusAttributes {
@@ -58,6 +58,8 @@ public final class CygnusAttributes {
     public static final String ACTION_CREEK_SELECTED = "cygnus.action.creek.selected";
     public static final String ACTION_CREEK_STALK = "cygnus.action.creek.stalk";
     public static final String ACTION_CREEK_CAUGHT = "cygnus.action.creek.caught";
+    /** A creek hunting a survivor, from the start of the hunt to its end. */
+    public static final String ACTION_CREEK_HUNT = "cygnus.action.creek.hunt";
 
     // --- Events on the round span --------------------------------------------------------------
 
@@ -115,6 +117,8 @@ public final class CygnusAttributes {
     public static final AttributeKey<String> SANITY_BAND = AttributeKey.stringKey("cygnus.sanity.band");
     public static final AttributeKey<String> SANITY_BAND_FROM = AttributeKey.stringKey("cygnus.sanity.band.from");
     public static final AttributeKey<String> SANITY_SOURCE = AttributeKey.stringKey("cygnus.sanity.source");
+    public static final AttributeKey<String> HUNT_OUTCOME = AttributeKey.stringKey("cygnus.creek.hunt.outcome");
+    public static final AttributeKey<Long> HUNT_DURATION_MS = AttributeKey.longKey("cygnus.creek.hunt.duration_ms");
     public static final AttributeKey<String> LINK_KIND = AttributeKey.stringKey("cygnus.link.kind");
 
     /** The link points at the round trace a player's cookie remembered. */
@@ -125,6 +129,19 @@ public final class CygnusAttributes {
 
     /** Link kind: from the shutdown to the round it cut short. */
     public static final String LINK_ROUND = "round";
+
+    // --- Values of creek.hunt.outcome ----------------------------------------------------------
+
+    /** The creek caught the survivor. */
+    public static final String HUNT_CAUGHT = "caught";
+    /** The creek was sent away while it hunted. */
+    public static final String HUNT_ESCAPED = "escaped";
+    /** The hunt ran out of time. */
+    public static final String HUNT_TIMEOUT = "timeout";
+    /** The survivor died or left. */
+    public static final String HUNT_GONE = "gone";
+    /** The round ended with the hunt still going. */
+    public static final String HUNT_ROUND_END = "round_end";
 
     // --- Values of kick.completed_by -----------------------------------------------------------
 

@@ -49,7 +49,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 public final class ActionTracer {
@@ -439,7 +439,7 @@ public final class ActionTracer {
         return Duration.between(spawn.at, this.clock.instant()).toMillis();
     }
 
-    private static void position(TraceStep step, double x, double y, double z) {
+    static void position(TraceStep step, double x, double y, double z) {
         step.set(CygnusAttributes.POSITION_X, round(x));
         step.set(CygnusAttributes.POSITION_Y, round(y));
         step.set(CygnusAttributes.POSITION_Z, round(z));

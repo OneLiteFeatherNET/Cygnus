@@ -106,6 +106,8 @@ import net.onelitefeather.cygnus.telemetry.KickTracer;
 import net.onelitefeather.cygnus.telemetry.RoundTracer;
 import net.onelitefeather.cygnus.telemetry.ShutdownTracer;
 import net.onelitefeather.cygnus.telemetry.SlowTickTracer;
+import net.onelitefeather.cygnus.telemetry.HuntMetrics;
+import net.onelitefeather.cygnus.telemetry.HuntTracer;
 import net.onelitefeather.cygnus.telemetry.TickMetrics;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.onelitefeather.cygnus.telemetry.TraceStep;
@@ -121,7 +123,7 @@ import java.util.stream.Stream;
 
 /**
  * @author theEvilReaper
- * @version 1.5.0
+ * @version 1.6.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -235,7 +237,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         // either way, and it needs neither the resource pack nor the overlay gate to be heard.
                         new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
                         new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
-                                sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor),
+                                sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor,
+                                        new HuntTracer(this.roundTracer, Clock.systemUTC(), this::activeMapName,
+                                                Cygnus::survivorActor, HuntMetrics.fromGlobal(serviceVersion()))),
                                         MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), this.jumpscareManager, this.staminaService, tickSections),
                         sanityService,
                         new AdrenalineService(

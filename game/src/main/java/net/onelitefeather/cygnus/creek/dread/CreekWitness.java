@@ -90,4 +90,17 @@ public interface CreekWitness {
     default void huntEnded(UUID survivor) {
         // Nobody listens by default.
     }
+
+    /**
+     * A creek stopped hunting a survivor, and how. The creek reports this one; by default it passes
+     * on to {@link #huntEnded(UUID)}, so a witness that does not care about the reason is unchanged.
+     * A witness that decorates another one has to forward this method, not the other.
+     *
+     * @param survivor the survivor who is no longer hunted
+     * @param how      why the hunt ended
+     * @since 2.15.0
+     */
+    default void huntEnded(UUID survivor, HuntEnd how) {
+        this.huntEnded(survivor);
+    }
 }

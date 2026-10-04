@@ -4,6 +4,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
+import net.onelitefeather.cygnus.creek.dread.HuntEnd;
 import net.onelitefeather.cygnus.creek.state.CreekActions;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
 import net.onelitefeather.cygnus.creek.state.CreekState;
@@ -30,7 +31,7 @@ import java.util.UUID;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.15.0
  */
 final class Creek {
@@ -49,6 +50,7 @@ final class Creek {
     private Set<UUID> seenLastStep = Set.of();
     private boolean entered;
     private @Nullable UUID hunting;
+    private @Nullable HuntState huntState;
 
     /**
      * Sets up a creek.
@@ -93,11 +95,11 @@ final class Creek {
             this.state.enter(ctx);
             this.entered = true;
             // A hunt the creek starts in may be over within this very step.
-            this.syncHunt();
+            this.syncHunt(HuntEnd.TIMEOUT);
         }
         CreekState next = this.state.tick(ctx);
         if (next != this.state) this.switchTo(next, ctx);
-        this.syncHunt();
+        this.syncHunt(HuntEnd.TIMEOUT);
         // Reported after the step, so a stalk that just ended or turned into a hunt is not counted.
         if (this.state instanceof StalkState stalk) this.round.witness().stalked(stalk.target());
     }
@@ -114,19 +116,28 @@ final class Creek {
         // The state it had so far is never entered now, and never needs to be.
         this.entered = true;
         this.switchTo(VanishState.forever(), ctx);
-        this.syncHunt();
+        this.syncHunt(HuntEnd.SENT_AWAY);
     }
 
     /**
      * Tells the witness when the survivor this creek hunts changes: a hunt that starts, one that
      * ends, or a switch to another target. Called after every step, so each hunt is reported once.
+     *
+     * @param otherwise how a hunt ended that did not say so itself; the state a hunt leaves behind
+     *                  knows whether it was a catch, a timeout or the survivor being gone
      */
-    private void syncHunt() {
-        UUID now = this.state instanceof HuntState hunt ? hunt.target() : null;
+    private void syncHunt(HuntEnd otherwise) {
+        HuntState hunt = this.state instanceof HuntState current ? current : null;
+        UUID now = hunt == null ? null : hunt.target();
         UUID before = this.hunting;
         if (Objects.equals(now, before)) return;
+        HuntState ended = this.huntState;
         this.hunting = now;
-        if (before != null) this.round.witness().huntEnded(before);
+        this.huntState = hunt;
+        if (before != null) {
+            HuntEnd how = ended != null && ended.end() != null ? ended.end() : otherwise;
+            this.round.witness().huntEnded(before, how);
+        }
         if (now != null) this.round.witness().hunted(now);
     }
 
@@ -219,7 +230,8 @@ final class Creek {
     void remove() {
         UUID before = this.hunting;
         this.hunting = null;
-        if (before != null) this.round.witness().huntEnded(before);
+        this.huntState = null;
+        if (before != null) this.round.witness().huntEnded(before, HuntEnd.REMOVED);
         this.body.remove();
     }
 
