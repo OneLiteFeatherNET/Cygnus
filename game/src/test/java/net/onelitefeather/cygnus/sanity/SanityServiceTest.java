@@ -29,8 +29,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
 
     private static final double EPSILON = 1.0E-9;
     /** The defaults without decay, scars, time floor or cap. So a test can look at gains alone. */
-    private static final SanityConfig NO_DECAY = new SanityConfig(0.5D, 0.10D, 0.10D, 20, 0.30D, 0.25D, 0.0D,
-            0.015D, 0.0D, 0.0D, 1.0D);
+    private static final SanityConfig NO_DECAY = new SanityConfig(0.5D, 0.10D, 0.10D, 20, 0.30D, 0.15D, 0.25D, 0.0D, 0.015D, 0.0D, 0.0D, 1.0D);
     private static final long ROUND_MILLIS = 600_000L;
 
     private double pageProgress;
@@ -191,6 +190,19 @@ class SanityServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("Being picked out by the patrol scares")
+    void selectionScares(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        service.track(survivor);
+
+        service.selected(survivor.getUuid());
+
+        assertEquals(0.15D, dread(service, survivor), EPSILON);
+    }
+
+    @Test
     @DisplayName("Being stalked raises the fear over time")
     void stalkingScares(Env env) {
         Instance instance = env.createFlatInstance();
@@ -232,6 +244,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         service.caught(slender.getUuid());
         service.sighted(slender.getUuid());
         service.stalked(slender.getUuid());
+        service.selected(slender.getUuid());
 
         assertEquals(0.0D, dread(service, slender), EPSILON);
     }

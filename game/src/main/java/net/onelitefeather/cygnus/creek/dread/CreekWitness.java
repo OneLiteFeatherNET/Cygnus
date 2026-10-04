@@ -33,6 +33,11 @@ public interface CreekWitness {
         public void stalked(UUID survivor) {
             // Nobody listens.
         }
+
+        @Override
+        public void selected(UUID survivor) {
+            // Nobody listens.
+        }
     };
 
     /**
@@ -56,4 +61,11 @@ public interface CreekWitness {
      * @param survivor the survivor being stalked
      */
     void stalked(UUID survivor);
+
+    /**
+     * The patrolling creek has picked a survivor out.
+     *
+     * @param survivor the survivor who was picked out
+     */
+    void selected(UUID survivor);
 }

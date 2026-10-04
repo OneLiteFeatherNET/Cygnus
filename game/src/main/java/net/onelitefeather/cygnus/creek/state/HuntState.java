@@ -12,7 +12,8 @@ import java.util.UUID;
  * The creek chases one survivor, but only moves while they are not looking at it.
  * <p>
  * Look at it and it freezes. Let it get close enough, with nothing in between, and you are caught. The hunt is over after a
- * catch, when time runs out or when the survivor is gone.
+ * catch, when time runs out or when the survivor is gone. However it ends, the survivor's breather
+ * in {@link HuntCooldowns} starts.
  * </p>
  *
  * @author theEvilReaper
@@ -87,7 +88,7 @@ public final class HuntState implements CreekState {
     @Override
     public CreekState tick(CreekContext ctx) {
         Optional<SurvivorView> found = ctx.survivor(this.target);
-        if (found.isEmpty() || ctx.now() >= this.endsAt) return DoneState.INSTANCE;
+        if (found.isEmpty() || ctx.now() >= this.endsAt) return this.over(ctx);
 
         SurvivorView view = found.get();
         CreekConfig config = ctx.config();
@@ -104,7 +105,7 @@ public final class HuntState implements CreekState {
         double distance = body.position().distance(view.position());
         if (distance <= config.catchDistance() && view.inSight()) {
             ctx.actions().caught(this.target);
-            return DoneState.INSTANCE;
+            return this.over(ctx);
         }
 
         if (distance < this.bestDistance - PROGRESS) {
@@ -118,6 +119,14 @@ public final class HuntState implements CreekState {
         body.lookAt(view.eyes());
         body.moveTo(view.position(), config.huntSpeed());
         return this;
+    }
+
+    /**
+     * Ends the hunt and starts the survivor's breather.
+     */
+    private CreekState over(CreekContext ctx) {
+        ctx.hunts().ended(this.target, ctx.now());
+        return DoneState.INSTANCE;
     }
 
     /**

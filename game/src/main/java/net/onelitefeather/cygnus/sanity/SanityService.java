@@ -29,13 +29,13 @@ import java.util.function.Supplier;
  * value means less sanity, which is the direction the creek's thresholds read it in.
  * </p>
  * <p>
- * Fear jumps when a survivor finds a page, spots the creek, is caught by it, or another survivor
- * dies, and it grows steadily while a creek stalks them. It wears off again over time, but never
+ * Fear jumps when a survivor finds a page, spots the creek, is picked out or caught by it, or
+ * another survivor dies, and it grows steadily while a creek stalks them. It wears off again over time, but never
  * below a floor that grows with the pages found and the time played, so the round still gets
  * tenser towards the end. Every jump also leaves a share that never wears off. The floor and that
  * share together stay below {@link SanityConfig#floorCap()}, so only a fresh scare starts a hunt.
- * The creek reads it as its {@link DreadSource} and reports catches, sightings and stalks back as
- * its {@link CreekWitness}.
+ * The creek reads it as its {@link DreadSource} and reports catches, pick-outs, sightings and
+ * stalks back as its {@link CreekWitness}.
  * </p>
  * <p>
  * Like {@code SlenderGazeService}, it listens for the round's start and end on its own and drops a
@@ -164,6 +164,14 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     @Override
     public void caught(UUID survivor) {
         this.scare(this.survivors.get(survivor), this.config.caughtGain());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void selected(UUID survivor) {
+        this.scare(this.survivors.get(survivor), this.config.selectedGain());
     }
 
     /**

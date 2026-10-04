@@ -16,6 +16,7 @@ import net.onelitefeather.cygnus.creek.state.DoneState;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.HuntState;
+import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.creek.state.StalkState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.state.VanishState;
@@ -49,7 +50,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         // nextBoolean() is true for -1, so a selection always ends in the stun.
         PatrolHelper patrol = new PatrolHelper(() -> -1L);
         CreekRound round = new CreekRound(sight, new SpotFinder(sight, Optional::of), _ -> {}, witness, patrol,
-                config, new Random(3));
+                config, new Random(3), HuntCooldowns.none());
         return new Creek(body, Contexts.route(), round, initial);
     }
 
@@ -58,6 +59,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         private final List<UUID> sightings = new ArrayList<>();
         private final List<UUID> catches = new ArrayList<>();
         private final List<UUID> stalks = new ArrayList<>();
+        private final List<UUID> selections = new ArrayList<>();
 
         @Override
         public void sighted(UUID survivor) {
@@ -72,6 +74,11 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         @Override
         public void stalked(UUID survivor) {
             this.stalks.add(survivor);
+        }
+
+        @Override
+        public void selected(UUID survivor) {
+            this.selections.add(survivor);
         }
     }
 
@@ -201,9 +208,11 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
             }
         };
 
-        creek(body, CreekConfig.DEFAULT, selecting).tick(survivors(survivor), 0L);
+        RecordingWitness witness = new RecordingWitness();
+        creek(body, CreekConfig.DEFAULT, selecting, witness).tick(survivors(survivor), 0L);
 
         assertTrue(survivor.hasEffect(PotionEffect.SLOWNESS));
+        assertEquals(List.of(survivor.getUuid()), witness.selections);
     }
 
     @Test

@@ -119,4 +119,40 @@ class HuntStateTest {
         double distance = body.position.distance(TARGET_POS);
         assertTrue(distance >= HuntState.NEAR_MIN - 1.0E-6 && distance <= HuntState.NEAR_MAX + 1.0E-6, "distance was " + distance);
     }
+
+    @Test
+    @DisplayName("A catch starts the survivor's breather")
+    void catchStartsTheCooldown() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 1));
+        HuntCooldowns hunts = new HuntCooldowns(45_000L);
+
+        new HuntState(TARGET, 30_000L).tick(Contexts.hunting(5_000L, body, hunts, new ArrayList<>(), target(false)));
+
+        assertFalse(hunts.ready(TARGET, 49_999L));
+        assertTrue(hunts.ready(TARGET, 50_000L));
+    }
+
+    @Test
+    @DisplayName("A hunt that runs out of time starts the breather too")
+    void timeoutStartsTheCooldown() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 10));
+        HuntCooldowns hunts = new HuntCooldowns(45_000L);
+
+        CreekState next = new HuntState(TARGET, 30_000L)
+                .tick(Contexts.hunting(30_000L, body, hunts, new ArrayList<>(), target(false)));
+
+        assertSame(DoneState.INSTANCE, next);
+        assertFalse(hunts.ready(TARGET, 74_999L));
+    }
+
+    @Test
+    @DisplayName("While the hunt goes on, no breather starts")
+    void runningHuntStartsNoCooldown() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 10));
+        HuntCooldowns hunts = new HuntCooldowns(45_000L);
+
+        new HuntState(TARGET, 30_000L).tick(Contexts.hunting(0L, body, hunts, new ArrayList<>(), target(false)));
+
+        assertTrue(hunts.ready(TARGET, 0L));
+    }
 }

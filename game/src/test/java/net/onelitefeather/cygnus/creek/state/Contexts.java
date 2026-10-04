@@ -73,25 +73,32 @@ public final class Contexts {
     static CreekContext context(long now, CreekBody body, RouteProvider route, List<UUID> caught,
                                   SurvivorView... survivors) {
         return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions(caught::add, _ -> {}), CONFIG,
-                new Random(7));
+                new Random(7), HuntCooldowns.none());
     }
 
     static CreekContext context(long now, CreekBody body, RouteProvider route, CreekConfig config,
                                 SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route, SPOTS, NO_ACTIONS, config, new Random(7));
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, NO_ACTIONS, config, new Random(7), HuntCooldowns.none());
     }
 
     /** A context with the given actions and random source. */
     static CreekContext context(long now, CreekBody body, RouteProvider route, CreekActions actions,
                                 RandomGenerator random, SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions, CONFIG, random);
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions, CONFIG, random, HuntCooldowns.none());
+    }
+
+    /** A context that keeps the hunt breathers in the given record and every catch in the list. */
+    static CreekContext hunting(long now, CreekBody body, HuntCooldowns hunts, List<UUID> caught,
+                                SurvivorView... survivors) {
+        return new CreekContext(now, List.of(survivors), body, route(), SPOTS, actions(caught::add, _ -> {}), CONFIG,
+                new Random(7), hunts);
     }
 
     /** A context that records every survivor the state selects. */
     static CreekContext selecting(long now, CreekBody body, RouteProvider route, List<UUID> selected,
                                   SurvivorView... survivors) {
         return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions(_ -> {}, selected::add), CONFIG,
-                new Random(7));
+                new Random(7), HuntCooldowns.none());
     }
 
     /** The defaults with other random stops. */
@@ -112,6 +119,7 @@ public final class Contexts {
                 d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
                 d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
                 d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
+                d.huntMinStalkSeconds(), d.huntCooldownSeconds(),
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
                 d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
                 d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),

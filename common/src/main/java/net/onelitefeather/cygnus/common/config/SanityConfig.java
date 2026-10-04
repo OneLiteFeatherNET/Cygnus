@@ -13,6 +13,7 @@ package net.onelitefeather.cygnus.common.config;
  * @param sightingGain            the jump when the creek comes into a survivor's view
  * @param sightingCooldownSeconds the shortest gap between two counted sightings of one survivor
  * @param caughtGain              the jump when the creek catches a survivor
+ * @param selectedGain            the jump when the patrolling creek picks a survivor out
  * @param deathGain               the jump for every survivor when another one dies
  * @param decayPerSecond          how much fear wears off per second
  * @param stalkGainPerSecond      how much fear grows per second while a creek stalks the survivor
@@ -30,6 +31,7 @@ public record SanityConfig(
         double sightingGain,
         int sightingCooldownSeconds,
         double caughtGain,
+        double selectedGain,
         double deathGain,
         double decayPerSecond,
         double stalkGainPerSecond,
@@ -44,7 +46,7 @@ public record SanityConfig(
      * one turns into a hunt on its own, and sooner the later it is in the round.
      */
     public static final SanityConfig DEFAULT = new SanityConfig(
-            0.5D, 0.10D, 0.10D, 20, 0.30D, 0.25D, 0.005D,
+            0.5D, 0.10D, 0.10D, 20, 0.30D, 0.15D, 0.25D, 0.005D,
             0.015D, 0.25D, 0.15D, 0.55D
     );
 
@@ -59,6 +61,7 @@ public record SanityConfig(
         between("sightingGain", sightingGain);
         atLeast("sightingCooldownSeconds", sightingCooldownSeconds, 1);
         between("caughtGain", caughtGain);
+        between("selectedGain", selectedGain);
         between("deathGain", deathGain);
         atLeast("decayPerSecond", decayPerSecond, 0.0D);
         between("stalkGainPerSecond", stalkGainPerSecond);

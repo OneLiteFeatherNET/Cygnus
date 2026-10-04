@@ -132,7 +132,7 @@ final class Creek {
                 : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
         return new CreekContext(now, noticed, this.body, this.route, this.round.spots(),
                 new Actions(this.round, survivors, ignored, this.body.position()),
-                this.round.config(), this.round.random());
+                this.round.config(), this.round.random(), this.round.hunts());
     }
 
     /**
@@ -225,7 +225,9 @@ final class Creek {
         @Override
         public void selected(UUID survivor) {
             Player player = this.survivors.player(survivor);
-            if (player != null) this.round.patrol().selected(player, this.creek, this.survivors.players());
+            if (player == null) return;
+            this.round.patrol().selected(player, this.creek, this.survivors.players());
+            this.round.witness().selected(survivor);
         }
 
         @Override

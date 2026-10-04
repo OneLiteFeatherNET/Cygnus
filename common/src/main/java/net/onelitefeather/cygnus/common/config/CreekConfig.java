@@ -27,6 +27,8 @@ package net.onelitefeather.cygnus.common.config;
  * @param stalkMinSeconds        minimum length of a stalk
  * @param stalkMaxSeconds        maximum length of a stalk
  * @param huntMaxSeconds         maximum length of a hunt
+ * @param huntMinStalkSeconds    how long a stalk has to run before it may turn into a hunt
+ * @param huntCooldownSeconds    how long a survivor is safe from the next hunt after one ends
  * @param catchDistance          distance at which the creek catches a survivor, in blocks
  * @param vanishMinSeconds       shortest vanish time, used at full dread
  * @param vanishMaxSeconds       longest vanish time, used at no dread
@@ -63,6 +65,8 @@ public record CreekConfig(
         int stalkMinSeconds,
         int stalkMaxSeconds,
         int huntMaxSeconds,
+        int huntMinStalkSeconds,
+        int huntCooldownSeconds,
         double catchDistance,
         int vanishMinSeconds,
         int vanishMaxSeconds,
@@ -88,7 +92,7 @@ public record CreekConfig(
             1500, 0.07D, 0.25D,
             0.25D, 0.6D,
             20, 35, 40, 70, 700, 45, 90,
-            30, 1.5D,
+            30, 10, 45, 1.5D,
             20, 40, 30, 15, 3000,
             2, 0.15D, 6, 4,
             3.0D,
@@ -120,6 +124,8 @@ public record CreekConfig(
         atLeast("stalkMinSeconds", stalkMinSeconds, 1);
         notAbove("stalkMinSeconds", stalkMinSeconds, "stalkMaxSeconds", stalkMaxSeconds);
         atLeast("huntMaxSeconds", huntMaxSeconds, 1);
+        atLeast("huntMinStalkSeconds", huntMinStalkSeconds, 0);
+        atLeast("huntCooldownSeconds", huntCooldownSeconds, 0);
         positive("catchDistance", catchDistance);
         atLeast("vanishMinSeconds", vanishMinSeconds, 0);
         notAbove("vanishMinSeconds", vanishMinSeconds, "vanishMaxSeconds", vanishMaxSeconds);

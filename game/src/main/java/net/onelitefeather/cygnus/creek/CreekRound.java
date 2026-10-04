@@ -4,6 +4,7 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
+import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 
@@ -19,6 +20,7 @@ import java.util.random.RandomGenerator;
  * @param patrol      what the patrolling creek does to the survivors around it
  * @param config      the settings
  * @param random      the random source
+ * @param hunts       when each survivor's last hunt ended
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -31,6 +33,7 @@ record CreekRound(
         CreekWitness witness,
         PatrolHelper patrol,
         CreekConfig config,
-        RandomGenerator random
+        RandomGenerator random,
+        HuntCooldowns hunts
 ) {
 }
