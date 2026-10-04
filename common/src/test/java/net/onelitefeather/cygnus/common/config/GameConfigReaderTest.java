@@ -493,6 +493,34 @@ class GameConfigReaderTest {
     }
 
     @Test
+    void testSlenderDamageRangeDefaultsToFour() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(4, config.stamina().slenderDamageRange());
+    }
+
+    @Test
+    void testSlenderDamageRangeIsRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                stamina.slenderDamageRange=6
+                """);
+
+        assertEquals(6, new GameConfigReader(tempDir).getConfig().stamina().slenderDamageRange());
+    }
+
+    @Test
+    void testSlenderDamageRangeRejectsValuesOutOfRange(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                stamina.slenderDamageRange=17
+                """);
+
+        GameConfigReader reader = new GameConfigReader(tempDir);
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
+    }
+
+    @Test
     void testStaminaRejectsValuesOutOfRange(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=2

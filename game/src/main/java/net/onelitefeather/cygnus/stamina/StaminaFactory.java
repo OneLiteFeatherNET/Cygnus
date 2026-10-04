@@ -54,7 +54,7 @@ public final class StaminaFactory {
      * Creates a new instance of an {@link SlenderBar}.
      *
      * @param player the player who owns the created object
-     * @param config the settings, of which the bar reads the reappear cooldown
+     * @param config the settings, of which the bar reads the reappear cooldown and the damage range
      * @param clock  supplies the current time in milliseconds
      * @return the created instance from a {@link SlenderBar}
      */

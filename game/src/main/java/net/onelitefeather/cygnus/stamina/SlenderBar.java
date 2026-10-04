@@ -34,7 +34,7 @@ import java.util.function.LongSupplier;
  * appearance onto the next.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -66,8 +66,6 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
      */
     private static final float DAMAGE_PER_TICK = 2 * TIME_STEP;
 
-    private static final int DAMAGE_RANGE = 3;
-
     /** How long one tick of the bar takes, in milliseconds. */
     private static final long TICK_MILLIS = 500L;
 
@@ -83,6 +81,8 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private final String tileChar;
     private final int time;
     private final long reappearCooldownMillis;
+    /** How far around him a draining slender hurts survivors, in blocks. */
+    private final int damageRange;
     private final LongSupplier clock;
     private double currentTime;
     private StaminaColors colorState;
@@ -97,7 +97,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
      * transition instead of racing it with stale data.
      *
      * @param player who owns the bar
-     * @param config the settings, of which the bar reads the reappear cooldown
+     * @param config the settings, of which the bar reads the reappear cooldown and the damage range
      * @param clock  supplies the current time in milliseconds
      */
     SlenderBar(CygnusPlayer player, StaminaConfig config, LongSupplier clock) {
@@ -105,6 +105,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         this.tileChar = "▋";
         this.time = MAX_TIME;
         this.reappearCooldownMillis = config.slenderReappearCooldownSeconds() * 1000L;
+        this.damageRange = config.slenderDamageRange();
         this.clock = clock;
         this.currentTime = time;
         this.colorState = StaminaColors.DRAINING;
@@ -137,7 +138,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private void handleDraining() {
         currentTime -= TIME_STEP;
         Instance instance = player.getInstance();
-        applyDamage(instance, player.getUuid(), player.getPosition(), DAMAGE_RANGE, DAMAGE_PER_TICK);
+        applyDamage(instance, player.getUuid(), player.getPosition(), damageRange, DAMAGE_PER_TICK);
         // Hides in the same tick the bar runs dry: one tick later he would stay visible and hit
         // once more with a bar that already shows empty.
         if (currentTime <= 0) {
