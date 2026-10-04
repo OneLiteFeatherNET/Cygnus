@@ -11,7 +11,7 @@ import java.util.UUID;
 /**
  * The creek chases one survivor, but only moves while they are not looking at it.
  * <p>
- * Look at it and it freezes. Let it get close enough and you are caught. The hunt is over after a
+ * Look at it and it freezes. Let it get close enough, with nothing in between, and you are caught. The hunt is over after a
  * catch, when time runs out or when the survivor is gone.
  * </p>
  *
@@ -102,7 +102,7 @@ public final class HuntState implements CreekState {
         body.setFrozen(false);
 
         double distance = body.position().distance(view.position());
-        if (distance <= config.catchDistance()) {
+        if (distance <= config.catchDistance() && view.inSight()) {
             ctx.actions().caught(this.target);
             return DoneState.INSTANCE;
         }
