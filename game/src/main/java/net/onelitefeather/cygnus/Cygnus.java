@@ -96,6 +96,7 @@ import net.onelitefeather.cygnus.telemetry.ActionTracer;
 import net.onelitefeather.cygnus.telemetry.CygnusAttributes;
 import net.onelitefeather.cygnus.telemetry.TraceCookie;
 import net.onelitefeather.cygnus.telemetry.TracingCreekWitness;
+import net.onelitefeather.cygnus.creek.tab.HuntedTabWitness;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -231,7 +232,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         // either way, and it needs neither the resource pack nor the overlay gate to be heard.
                         new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
                         new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
-                                sanityService, new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor), this.jumpscareManager, this.staminaService, tickSections),
+                                sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor),
+                                        MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), this.jumpscareManager, this.staminaService, tickSections),
                         sanityService,
                         new AdrenalineService(
                                 this.gameConfig.adrenaline(),

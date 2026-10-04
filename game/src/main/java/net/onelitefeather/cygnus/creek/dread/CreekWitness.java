@@ -10,7 +10,7 @@ import java.util.UUID;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.16.0
  */
 public interface CreekWitness {
@@ -68,4 +68,26 @@ public interface CreekWitness {
      * @param survivor the survivor who was picked out
      */
     void selected(UUID survivor);
+
+    /**
+     * A creek has started to hunt a survivor, the chase that ends in a catch. Called once, when the
+     * creek takes the survivor as its target. A stalk is not a hunt: it only shadows the survivor.
+     *
+     * @param survivor the survivor being hunted
+     * @since 2.15.0
+     */
+    default void hunted(UUID survivor) {
+        // Nobody listens by default.
+    }
+
+    /**
+     * A creek stopped hunting a survivor, however the hunt ended: a catch, time running out, the
+     * survivor being gone, the creek being sent away or removed. Called once per {@link #hunted(UUID)}.
+     *
+     * @param survivor the survivor who is no longer hunted
+     * @since 2.15.0
+     */
+    default void huntEnded(UUID survivor) {
+        // Nobody listens by default.
+    }
 }

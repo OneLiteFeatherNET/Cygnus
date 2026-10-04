@@ -21,7 +21,7 @@ import java.util.function.Function;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 public final class TracingCreekWitness implements CreekWitness {
@@ -74,6 +74,16 @@ public final class TracingCreekWitness implements CreekWitness {
         this.stalking.remove(survivor);
         trace(CygnusAttributes.ACTION_CREEK_SELECTED, survivor);
         this.delegate.selected(survivor);
+    }
+
+    @Override
+    public void hunted(UUID survivor) {
+        this.delegate.hunted(survivor);
+    }
+
+    @Override
+    public void huntEnded(UUID survivor) {
+        this.delegate.huntEnded(survivor);
     }
 
     /**
