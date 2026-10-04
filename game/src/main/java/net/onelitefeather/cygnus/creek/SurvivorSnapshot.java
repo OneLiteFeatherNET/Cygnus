@@ -14,8 +14,9 @@ import java.util.UUID;
  * The survivors of one step: the players and a snapshot of each of them.
  * <p>
  * It is taken once per step and shared by every creek. Where a survivor stands and how scared they
- * are is the same for all of them; only whether they see a creek differs, so every view here says
- * {@code false} for that and each creek fills it in for itself.
+ * are is the same for all of them; only whether they see a creek, and whether a block stands in
+ * between, differs. So every view here says {@code false} for both and each creek fills them in for
+ * itself.
  * </p>
  *
  * @author theEvilReaper
@@ -53,7 +54,7 @@ final class SurvivorSnapshot {
         List<SurvivorView> views = new ArrayList<>(survivors.size());
         for (Player survivor : survivors) {
             views.add(new SurvivorView(survivor.getUuid(), survivor.getPosition(),
-                    dread.dreadOf(survivor.getUuid()), false));
+                    dread.dreadOf(survivor.getUuid()), false, false));
         }
         return new SurvivorSnapshot(survivors, views);
     }
@@ -68,7 +69,7 @@ final class SurvivorSnapshot {
     }
 
     /**
-     * One view per survivor, none of them seeing a creek.
+     * One view per survivor, none of them seeing a creek or having it in sight.
      *
      * @return the views, in the same order as {@link #players()}
      */

@@ -127,7 +127,8 @@ final class Creek {
     }
 
     /**
-     * Tells for every survivor whether they see this creek.
+     * Tells for every survivor whether they see this creek, and whether any block stands between
+     * them.
      * <p>
      * A survivor only counts as seeing the creek if it is shown to them at all. A variant is hidden
      * from everyone but its target, so the others must not be able to scare it off.
@@ -142,9 +143,11 @@ final class Creek {
         List<SurvivorView> views = new ArrayList<>(players.size());
         for (int index = 0; index < players.size(); index++) {
             Player survivor = players.get(index);
-            boolean sees = this.body.isVisibleTo(survivor.getUuid())
-                    && this.round.sight().sees(survivor, this.body.entity());
-            views.add(base.get(index).withSeesCreek(sees));
+            boolean shown = this.body.isVisibleTo(survivor.getUuid());
+            boolean sees = shown && this.round.sight().sees(survivor, this.body.entity());
+            // Seeing it already means nothing is in the way, so the ray only runs for the rest.
+            boolean inSight = sees || this.round.sight().clear(survivor, this.body.entity());
+            views.add(base.get(index).withSight(sees, inSight));
         }
         return views;
     }

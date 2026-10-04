@@ -11,15 +11,29 @@ import java.util.UUID;
  * @param position  where the survivor's feet are, including where they are looking
  * @param dread     how likely the survivor is to be haunted, from 0 to 1
  * @param seesCreek whether the survivor can see the creek right now
+ * @param inSight   whether no block stands between the survivor and the creek, wherever the
+ *                  survivor is looking
  *
  * @author theEvilReaper
  * @version 1.0.0
  * @since 2.15.0
  */
-public record SurvivorView(UUID id, Pos position, double dread, boolean seesCreek) {
+public record SurvivorView(UUID id, Pos position, double dread, boolean seesCreek, boolean inSight) {
 
     /** How high a standing player's eyes are, in blocks. */
     public static final double EYE_HEIGHT = 1.62D;
+
+    /**
+     * A snapshot of a survivor with nothing between them and the creek.
+     *
+     * @param id        the survivor's id
+     * @param position  where the survivor's feet are, including where they are looking
+     * @param dread     how likely the survivor is to be haunted, from 0 to 1
+     * @param seesCreek whether the survivor can see the creek right now
+     */
+    public SurvivorView(UUID id, Pos position, double dread, boolean seesCreek) {
+        this(id, position, dread, seesCreek, true);
+    }
 
     /**
      * Where the survivor's eyes are.
@@ -31,12 +45,15 @@ public record SurvivorView(UUID id, Pos position, double dread, boolean seesCree
     }
 
     /**
-     * The same snapshot, with the given answer to whether the survivor sees the creek.
+     * The same snapshot, with the given answers to whether the survivor sees the creek and whether
+     * anything stands between them.
      *
-     * @param sees whether the survivor sees the creek
+     * @param sees    whether the survivor sees the creek
+     * @param inSight whether no block stands between the survivor and the creek
      * @return this view if nothing changes, otherwise a copy
      */
-    public SurvivorView withSeesCreek(boolean sees) {
-        return sees == this.seesCreek ? this : new SurvivorView(this.id, this.position, this.dread, sees);
+    public SurvivorView withSight(boolean sees, boolean inSight) {
+        if (sees == this.seesCreek && inSight == this.inSight) return this;
+        return new SurvivorView(this.id, this.position, this.dread, sees, inSight);
     }
 }
