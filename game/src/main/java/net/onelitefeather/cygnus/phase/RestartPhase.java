@@ -9,6 +9,7 @@ import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceShutdown;
 import net.onelitefeather.cygnus.common.player.PermissionAwarePlayer;
+import net.onelitefeather.cygnus.team.TabOrder;
 
 import java.time.temporal.ChronoUnit;
 
@@ -17,7 +18,7 @@ import java.time.temporal.ChronoUnit;
  * It will kick all players after a certain time and stops the server.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  **/
 public final class RestartPhase extends TimedPhase {
@@ -37,7 +38,8 @@ public final class RestartPhase extends TimedPhase {
      * Re-applies every online player's rank tag to their tab list name.
      * <p>
      * The round overwrote it with a {@link net.onelitefeather.cygnus.team.RoleIcon} (Slender/Survivor)
-     * or a struck-through spectator name; the restart lobby shows rank instead of round role again.
+     * or a struck-through spectator name; the restart lobby shows rank instead of round role again, and the
+     * tab list is back to its default order.
      * </p>
      */
     @Override
@@ -55,6 +57,7 @@ public final class RestartPhase extends TimedPhase {
      */
     void resetDisplayNames() {
         for (Player player : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
+            TabOrder.reset(player);
             if (player instanceof PermissionAwarePlayer permissionAwarePlayer) {
                 permissionAwarePlayer.applyRankTagDisplayName();
             }

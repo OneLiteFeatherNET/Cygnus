@@ -8,6 +8,7 @@ import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.stamina.StaminaService;
+import net.onelitefeather.cygnus.team.TabOrder;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
@@ -20,7 +21,7 @@ import java.util.function.Supplier;
  * This class is responsible for handling the {@link SlenderReviveEvent} and performing the necessary actions to revive the player in the game.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  **/
 public final class SlenderReviveListener implements Consumer<SlenderReviveEvent> {
@@ -52,6 +53,7 @@ public final class SlenderReviveListener implements Consumer<SlenderReviveEvent>
         player.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
         player.updateViewableRule(VisibilityRules.slenderRule(player));
         VisibilityRules.refresh(player);
+        TabOrder.apply(player);
         TeamHelper.updateTabList(this.teamService);
         player.sendMessage(Messages.SLENDER_JOIN_PART);
         GameMap gameMap = gameMapSupplier.get();

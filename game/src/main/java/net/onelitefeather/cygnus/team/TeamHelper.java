@@ -25,7 +25,7 @@ import java.util.Set;
  * This class provides utility methods for the team handling in the game.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class TeamHelper {
@@ -164,11 +164,13 @@ public final class TeamHelper {
         slenderTeam.getPlayers().forEach(player -> {
             Component slenderDisplayName = RoleIcon.SLENDER.prefix(Component.text(player.getUsername(), NamedTextColor.GRAY));
             player.setDisplayName(slenderDisplayName);
+            player.setListOrder(TabOrder.SLENDER);
         });
 
         survivorTeam.getPlayers().forEach(player -> {
             Component survivorDisplayName = RoleIcon.SURVIVOR.prefix(Component.text(player.getUsername(), NamedTextColor.GREEN));
             player.setDisplayName(survivorDisplayName);
+            player.setListOrder(TabOrder.SURVIVOR);
         });
     }
 

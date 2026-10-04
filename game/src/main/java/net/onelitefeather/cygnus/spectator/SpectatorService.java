@@ -16,6 +16,7 @@ import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
 import net.onelitefeather.cygnus.player.listener.SpectatorAddListener;
 import net.onelitefeather.cygnus.player.listener.SpectatorItemListener;
 import net.onelitefeather.cygnus.team.RoleIcon;
+import net.onelitefeather.cygnus.team.TabOrder;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
@@ -28,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
  * the spectate-overview GUI, and leaving spectator mode.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.7.0
  */
 public final class SpectatorService implements GameFeature {
@@ -100,6 +101,7 @@ public final class SpectatorService implements GameFeature {
     private static void markAsSpectator(Player player) {
         Component name = Component.text(player.getUsername(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH);
         player.setDisplayName(RoleIcon.SPECTATOR.prefix(name));
+        player.setListOrder(TabOrder.SPECTATOR);
     }
 
     /**
