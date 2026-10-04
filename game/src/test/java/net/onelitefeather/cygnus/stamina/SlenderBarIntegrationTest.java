@@ -372,4 +372,64 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         assertFalse(player.hasBlockedSprinting());
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    void testDrainTickTakesDoubleTheBarStepFromASurvivorInRange(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer slender = (CygnusPlayer) env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(0, 40, 0));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        Player survivor = env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(1, 40, 0));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        survivor.setHealth(20F);
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender);
+        slenderBar.start();
+        slenderBar.changeStatus();
+
+        slenderBar.consume();
+
+        assertEquals(19F, survivor.getHealth(), 0.001F, "one 500 ms tick must take 1.0 health, twice the 0.5 bar step");
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testDrainDamageDoesNotChangeTheBarSpeed(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        CygnusPlayer slender = (CygnusPlayer) connection.connect(instance, new net.minestom.server.coordinate.Pos(0, 40, 0));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender);
+        slenderBar.start();
+        slenderBar.changeStatus();
+        Collector<ActionBarPacket> collector = connection.trackIncoming(ActionBarPacket.class);
+
+        slenderBar.consume();
+
+        collector.assertSingle(packet -> {
+            TextComponent root = assertInstanceOf(TextComponent.class, packet.text());
+            assertEquals("▋".repeat(15), root.content(), "the bar must still move by 0.5 per tick");
+            assertEquals("▍", assertInstanceOf(TextComponent.class, root.children().get(0)).content());
+        });
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testDrainDoesNotHurtTheSlenderOrANonSurvivor(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer slender = (CygnusPlayer) env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(0, 40, 0));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        Player spectator = env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(1, 40, 0));
+        spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender);
+        slenderBar.start();
+        slenderBar.changeStatus();
+
+        slenderBar.consume();
+
+        assertEquals(20F, slender.getHealth(), 0.001F, "the slender must not hurt himself");
+        assertEquals(20F, spectator.getHealth(), 0.001F, "non-survivors must stay untouched");
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
 }
