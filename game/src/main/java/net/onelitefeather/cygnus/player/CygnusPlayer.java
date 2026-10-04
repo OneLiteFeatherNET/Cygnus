@@ -14,6 +14,9 @@ import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.TaskSchedule;
 import net.onelitefeather.cygnus.common.player.InstanceSwitchChunkPlayer;
+import net.onelitefeather.cygnus.telemetry.CygnusAttributes;
+import net.onelitefeather.cygnus.telemetry.KickTracer;
+import net.onelitefeather.cygnus.telemetry.TraceStep;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -47,9 +50,11 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     };
 
     private final @Nullable UUID resourcePackId;
+    private final KickTracer kickTracer;
 
     private boolean leaving;
     private @Nullable Component pendingKick;
+    private @Nullable TraceStep kickStep;
     private boolean blockedSprinting;
     private int heartbeatTicks;
     private boolean heartbeatActive;
@@ -69,8 +74,24 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
      *                         the ResourcePack feature is disabled
      */
     public CygnusPlayer(PlayerConnection playerConnection, GameProfile gameProfile, @Nullable UUID resourcePackId) {
+        this(playerConnection, gameProfile, resourcePackId, KickTracer.NONE);
+    }
+
+    /**
+     * Creates a new player whose kicks are traced.
+     *
+     * @param playerConnection the connection the player is created for
+     * @param gameProfile      the profile the player logged in with
+     * @param resourcePackId   the id of the ResourcePack this service pushes, or {@code null} when
+     *                         the ResourcePack feature is disabled
+     * @param kickTracer       creates the span of a kick
+     * @since 2.15.0
+     */
+    public CygnusPlayer(PlayerConnection playerConnection, GameProfile gameProfile, @Nullable UUID resourcePackId,
+                        KickTracer kickTracer) {
         super(playerConnection, gameProfile);
         this.resourcePackId = resourcePackId;
+        this.kickTracer = kickTracer;
         this.blockedSprinting = false;
         this.heartbeatTicks = 0;
         this.heartbeatActive = false;
@@ -118,13 +139,20 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
         }
         if (this.resourcePackId == null || !isOnline()
                 || getPlayerConnection().getServerState() != ConnectionState.PLAY) {
-            super.kick(component);
+            // Nothing to wait for, so the span only records that the kick happened and why.
+            TraceStep immediate = this.kickTracer.begin(getUuid(), component);
+            try {
+                super.kick(component);
+            } finally {
+                this.kickTracer.complete(immediate, CygnusAttributes.KICK_BY_IMMEDIATE);
+            }
             return;
         }
         this.leaving = true;
         this.pendingKick = component;
+        this.kickStep = this.kickTracer.begin(getUuid(), component);
         removeResourcePacks(this.resourcePackId);
-        scheduler().buildTask(this::completeKick).delay(TaskSchedule.tick(POP_TIMEOUT_TICKS)).schedule();
+        scheduler().buildTask(() -> completeKick(CygnusAttributes.KICK_BY_TIMEOUT)).delay(TaskSchedule.tick(POP_TIMEOUT_TICKS)).schedule();
     }
 
     /**
@@ -154,19 +182,34 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     @Override
     public void onResourcePackStatus(UUID id, ResourcePackStatus status) {
         if (this.leaving && id.equals(this.resourcePackId) && !status.intermediate()) {
-            completeKick();
+            completeKick(CygnusAttributes.KICK_BY_ACK);
         }
         super.onResourcePackStatus(id, status);
     }
 
-    private void completeKick() {
+    /**
+     * Lets the held-back disconnect through. Whichever of the ack and the timeout comes first wins;
+     * the other finds nothing pending and does nothing, which also keeps the kick span from being
+     * ended twice.
+     *
+     * @param completedBy what ended the wait, for the kick span
+     */
+    private void completeKick(String completedBy) {
         Component component = this.pendingKick;
         if (component == null) {
             return;
         }
         this.pendingKick = null;
-        if (isOnline()) {
-            super.kick(component);
+        TraceStep step = this.kickStep;
+        this.kickStep = null;
+        try {
+            if (isOnline()) {
+                super.kick(component);
+            }
+        } finally {
+            if (step != null) {
+                this.kickTracer.complete(step, completedBy);
+            }
         }
     }
 

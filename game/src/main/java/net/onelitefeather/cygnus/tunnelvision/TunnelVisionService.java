@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.tunnelvision;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -55,7 +56,7 @@ public final class TunnelVisionService implements GameFeature {
     private final ToDoubleFunction<Player> stamina;
     private final Supplier<Set<Player>> roundSurvivors;
     private final PlayerState<Tracked> survivors = new PlayerState<>();
-    private final RepeatingTask task = new RepeatingTask(this::tick);
+    private final RepeatingTask task;
 
     /**
      * Creates a new service.
@@ -66,6 +67,21 @@ public final class TunnelVisionService implements GameFeature {
      */
     public TunnelVisionService(TunnelVisionRenderer renderer, ToDoubleFunction<Player> stamina,
                                Supplier<Set<Player>> survivors) {
+        this(renderer, stamina, survivors, TickSections.NONE);
+    }
+
+    /**
+     * Creates a new service whose update is measured for the slow tick report.
+     *
+     * @param renderer  the renderer that puts a stage on the screen
+     * @param stamina   supplies a survivor's remaining stamina as a share of a full bar
+     * @param survivors supplies the survivors of the starting round
+     * @param sections  measures how long each update takes
+     * @since 2.15.0
+     */
+    public TunnelVisionService(TunnelVisionRenderer renderer, ToDoubleFunction<Player> stamina,
+                               Supplier<Set<Player>> survivors, TickSections sections) {
+        this.task = new RepeatingTask(sections.wrap("tunnel-vision", this::tick));
         this.renderer = renderer;
         this.stamina = stamina;
         this.roundSurvivors = survivors;

@@ -47,6 +47,7 @@ import net.onelitefeather.cygnus.damage.DamageSoundService;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
+import net.onelitefeather.cygnus.common.bootstrap.ServiceShutdown;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
@@ -91,7 +92,19 @@ import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 
+import net.onelitefeather.cygnus.telemetry.CygnusAttributes;
+import net.onelitefeather.cygnus.telemetry.CygnusTracing;
+import net.onelitefeather.cygnus.telemetry.JoinTracer;
+import net.onelitefeather.cygnus.telemetry.KickTracer;
+import net.onelitefeather.cygnus.telemetry.RoundTracer;
+import net.onelitefeather.cygnus.telemetry.ShutdownTracer;
+import net.onelitefeather.cygnus.telemetry.SlowTickTracer;
+import net.onelitefeather.cygnus.telemetry.TickSections;
+import net.onelitefeather.cygnus.telemetry.TraceStep;
+import net.onelitefeather.cygnus.telemetry.TracedPhaseSeries;
+
 import java.nio.file.Path;
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -100,7 +113,7 @@ import java.util.stream.Stream;
 
 /**
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -122,71 +135,127 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final SlenderTakeover slenderTakeover;
     private final List<GameFeature> features;
 
+    private final CygnusTracing tracing;
+    private final RoundTracer roundTracer;
+    private final JoinTracer joinTracer;
+    private final SlowTickTracer slowTickTracer;
+
+    /**
+     * Wires the game together.
+     * <p>
+     * This is the composition root, so it is also where the tracer is taken from
+     * {@code GlobalOpenTelemetry} - once, and handed to everything that creates spans. The whole
+     * construction is one {@code cygnus.startup} span with a child per major step. It ends when the
+     * game is wired up; binding the port happens afterwards, in {@link CygnusLoader}, and is not part of it.
+     * </p>
+     */
     public Cygnus() {
-        Path path = ServiceBootstrap.resolveWorkingDirectory();
-        this.teamService = TeamService.of();
-        this.linearPhaseSeries = new LinearPhaseSeries<>("game");
-        this.jumpscareManager = new JumpScareManager();
-        this.gameConfig = new GameConfigReader(path).getConfig();
-        this.staminaService = new StaminaService(this.gameConfig.stamina());
-        // Set up as early as possible so anything that goes wrong while the rest of the game is
-        // being wired up is already covered. Stays off entirely when no DSN is configured.
-        SentrySupport.init(this.gameConfig.sentryDsn());
-        this.resourcePackService = ResourcePackService.create(this.gameConfig.resourcePack());
-        // Every player needs the pack id so it can hand the pack back when it is kicked; see
-        // CygnusPlayer#kick. Null when the ResourcePack feature is off, which leaves the kick untouched.
-        UUID resourcePackId = this.resourcePackService.map(ResourcePackService::packId).orElse(null);
-        MinecraftServer.getConnectionManager().setPlayerProvider(
-                (connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, resourcePackId));
-        this.pageProvider = new PageProvider();
-        this.mapProvider = new GameMapProvider(path, this.gameConfig.lobbyAtmosphereShare());
-        // Falco keeps its region files open, so the loaders have to be released on shutdown
-        MinecraftServer.getSchedulerManager().buildShutdownTask(this.mapProvider::close);
-        this.view = new GameViewImpl();
-        this.createTeams(this.gameConfig.teams(), this.teamService);
-        this.scoreboardDisplay = new ScoreboardDisplay(this.teamService.getTeams());
-        Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
-                .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
-        this.ambientProvider = new AmbientProvider(survivorTeam);
-        // Only survivors get the hint: the slender hearing it would turn every page into a place to
-        // camp at, which is the opposite of what the hint is for.
-        this.pageProximityService = new PageProximityService(
-                this.gameConfig.pageProximity(),
-                survivorTeam::getPlayers,
-                this.pageProvider::interactablePages
-        );
-        Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
-                .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
-        this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
-        // The creek reads the fear and reports back to it; pages and deaths reach it as events.
-        SanityService sanityService = new SanityService(
-                this.gameConfig.sanity(),
-                this.pageProvider::foundShare,
-                this.gameConfig.round().gameTime() * 1000L,
-                System::currentTimeMillis,
-                () -> TeamHelper.survivorsOf(this.teamService));
-        this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase);
-        this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
-                new EpilepsyDisclaimer(),
-                this.slenderTakeover,
-                this.spectatorService,
-                // Not part of the OverlayModule: the sound is the feedback a hit owes the player
-                // either way, and it needs neither the resource pack nor the overlay gate to be heard.
-                new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
-                new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
-                        sanityService, sanityService, this.jumpscareManager, this.staminaService),
-                sanityService,
-                new AdrenalineService(
-                        this.gameConfig.adrenaline(),
-                        () -> TeamHelper.survivorsOf(this.teamService),
-                        System::currentTimeMillis),
-                new OverlayModule(this.gameConfig.glitch(), this.gameConfig.pageGlitch(), this.teamService, this.staminaService)
-        )).toList();
-        this.initPhases(sanityService);
-        this.initCommands();
-        this.initListener(spectatorTeam);
-        this.linearPhaseSeries.start();
-        this.registerGameListener();
+        this.tracing = CygnusTracing.fromGlobal(serviceVersion());
+        this.roundTracer = new RoundTracer(this.tracing);
+        this.joinTracer = new JoinTracer(this.tracing);
+        KickTracer kickTracer = new KickTracer(this.tracing);
+        TickSections tickSections = TickSections.measuring(System::nanoTime);
+        // A shutdown in the middle of a round or a tick would otherwise leave its spans open; this
+        // ends them before ServiceShutdown tells the JVM to exit, which is what flushes the exporter.
+        ServiceShutdown.observe(new ShutdownTracer(this.tracing, this.roundTracer));
+        TraceStep startup = this.tracing.root(CygnusAttributes.SPAN_STARTUP);
+        try {
+            Path path = ServiceBootstrap.resolveWorkingDirectory();
+            this.teamService = TeamService.of();
+            this.linearPhaseSeries = new TracedPhaseSeries<>("game", this.roundTracer);
+            this.jumpscareManager = new JumpScareManager();
+            try (TraceStep ignored = startup.child("cygnus.startup.config")) {
+                this.gameConfig = new GameConfigReader(path).getConfig();
+            }
+            this.slowTickTracer = new SlowTickTracer(this.tracing, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections);
+            this.staminaService = new StaminaService(this.gameConfig.stamina());
+            // Set up as early as possible so anything that goes wrong while the rest of the game is
+            // being wired up is already covered. Stays off entirely when no DSN is configured.
+            SentrySupport.init(this.gameConfig.sentryDsn());
+            try (TraceStep ignored = startup.child("cygnus.startup.resourcepack")) {
+                this.resourcePackService = ResourcePackService.create(this.gameConfig.resourcePack());
+            }
+            // Every player needs the pack id so it can hand the pack back when it is kicked; see
+            // CygnusPlayer#kick. Null when the ResourcePack feature is off, which leaves the kick untouched.
+            UUID resourcePackId = this.resourcePackService.map(ResourcePackService::packId).orElse(null);
+            MinecraftServer.getConnectionManager().setPlayerProvider(
+                    (connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, resourcePackId, kickTracer));
+            this.pageProvider = new PageProvider();
+            try (TraceStep ignored = startup.child("cygnus.startup.maps")) {
+                this.mapProvider = new GameMapProvider(path, this.gameConfig.lobbyAtmosphereShare());
+            }
+            // Falco keeps its region files open, so the loaders have to be released on shutdown
+            MinecraftServer.getSchedulerManager().buildShutdownTask(this.mapProvider::close);
+            this.view = new GameViewImpl();
+            this.createTeams(this.gameConfig.teams(), this.teamService);
+            this.scoreboardDisplay = new ScoreboardDisplay(this.teamService.getTeams());
+            Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
+                    .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
+            this.ambientProvider = new AmbientProvider(survivorTeam);
+            // Only survivors get the hint: the slender hearing it would turn every page into a place to
+            // camp at, which is the opposite of what the hint is for.
+            this.pageProximityService = new PageProximityService(
+                    this.gameConfig.pageProximity(),
+                    survivorTeam::getPlayers,
+                    this.pageProvider::interactablePages
+            );
+            Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
+                    .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
+            this.spectatorService = new SpectatorService(spectatorTeam, survivorTeam);
+            // The creek reads the fear and reports back to it; pages and deaths reach it as events.
+            SanityService sanityService = new SanityService(
+                    this.gameConfig.sanity(),
+                    this.pageProvider::foundShare,
+                    this.gameConfig.round().gameTime() * 1000L,
+                    System::currentTimeMillis,
+                    () -> TeamHelper.survivorsOf(this.teamService));
+            this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase);
+            try (TraceStep ignored = startup.child("cygnus.startup.features")) {
+                this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
+                        new EpilepsyDisclaimer(),
+                        this.slenderTakeover,
+                        this.spectatorService,
+                        // Not part of the OverlayModule: the sound is the feedback a hit owes the player
+                        // either way, and it needs neither the resource pack nor the overlay gate to be heard.
+                        new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
+                        new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
+                                sanityService, sanityService, this.jumpscareManager, this.staminaService, tickSections),
+                        sanityService,
+                        new AdrenalineService(
+                                this.gameConfig.adrenaline(),
+                                () -> TeamHelper.survivorsOf(this.teamService),
+                                System::currentTimeMillis),
+                        new OverlayModule(this.gameConfig.glitch(), this.gameConfig.pageGlitch(), this.teamService,
+                                this.staminaService, tickSections)
+                )).toList();
+            }
+            try (TraceStep ignored = startup.child("cygnus.startup.phases")) {
+                this.initPhases(sanityService);
+            }
+            try (TraceStep ignored = startup.child("cygnus.startup.listeners")) {
+                this.initCommands();
+                this.initListener(spectatorTeam);
+                this.registerGameListener();
+            }
+            // Last, so the lobby only opens - and the round span only starts - once everything above
+            // is in place.
+            this.linearPhaseSeries.start();
+        } catch (RuntimeException | Error throwable) {
+            startup.fail(throwable);
+            throw throwable;
+        } finally {
+            startup.close();
+        }
+    }
+
+    /**
+     * Returns the version this jar was built as, for the instrumentation scope.
+     *
+     * @return the version from the jar manifest, or {@code unknown} when not run from a jar
+     */
+    private static String serviceVersion() {
+        String version = Cygnus.class.getPackage().getImplementationVersion();
+        return version == null ? "unknown" : version;
     }
 
     private void initCommands() {
@@ -199,6 +268,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void initListener(Team spectatorTeam) {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         var manager = MinecraftServer.getGlobalEventHandler();
+        // First, so the join span exists before any listener below can turn the player away.
+        this.joinTracer.register(manager);
         manager.addListener(GameMapLoadedEvent.class, event ->
                 this.pageProvider.loadPageData(event.gameMap().getPageFaces())
         );
@@ -228,6 +299,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private void registerGameListener() {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         GlobalEventHandler handler = MinecraftServer.getGlobalEventHandler();
+        // Before the listeners below: the death listener strips the team tag the round tracer reads
+        // the role from.
+        this.roundTracer.register(handler);
+        this.slowTickTracer.register(handler);
 
         SlenderBarTrigger trigger = new SlenderBarTrigger(this.staminaService::getSlenderBar);
         handler.addListener(PlayerUseItemEvent.class, new SlenderItemListener(trigger));

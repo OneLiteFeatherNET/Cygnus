@@ -77,6 +77,8 @@ tasks {
     shadowJar {
         archiveClassifier.set("")
         archiveFileName.set("cygnus.jar")
+        // Read back by Cygnus as the version of the OpenTelemetry instrumentation scope.
+        manifest.attributes("Implementation-Version" to rootProject.version)
         mergeServiceFiles()
         // Shaded deps ship signed and multi-release jars that break a relocation-free
         // application fat jar; drop signatures and module-info.
