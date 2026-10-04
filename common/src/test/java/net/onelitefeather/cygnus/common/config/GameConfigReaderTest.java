@@ -484,8 +484,9 @@ class GameConfigReaderTest {
                 sanity.pageFloorWeight=0.4
                 sanity.caughtGain=0.2
                 sanity.sightingCooldownSeconds=30
-                sanity.deathRadius=16
                 sanity.decayPerSecond=0.01
+                sanity.stalkGainPerSecond=0.02
+                sanity.floorCap=0.5
                 """);
 
         SanityConfig sanity = new GameConfigReader(tempDir).getConfig().sanity();
@@ -493,8 +494,10 @@ class GameConfigReaderTest {
         assertEquals(0.4D, sanity.pageFloorWeight(), 1.0E-9);
         assertEquals(0.2D, sanity.caughtGain(), 1.0E-9);
         assertEquals(30, sanity.sightingCooldownSeconds());
-        assertEquals(16, sanity.deathRadius());
         assertEquals(0.01D, sanity.decayPerSecond(), 1.0E-9);
+        assertEquals(0.02D, sanity.stalkGainPerSecond(), 1.0E-9);
+        assertEquals(0.5D, sanity.floorCap(), 1.0E-9);
+        assertEquals(SanityConfig.DEFAULT.residualShare(), sanity.residualShare());
         assertEquals(SanityConfig.DEFAULT.pageFoundGain(), sanity.pageFoundGain());
     }
 

@@ -279,8 +279,11 @@ public final class GameConfigReader {
                 getInt(properties, SANITY_PREFIX + "sightingCooldownSeconds", d.sightingCooldownSeconds()),
                 getDouble(properties, SANITY_PREFIX + "caughtGain", d.caughtGain()),
                 getDouble(properties, SANITY_PREFIX + "deathGain", d.deathGain()),
-                getInt(properties, SANITY_PREFIX + "deathRadius", d.deathRadius()),
-                getDouble(properties, SANITY_PREFIX + "decayPerSecond", d.decayPerSecond())
+                getDouble(properties, SANITY_PREFIX + "decayPerSecond", d.decayPerSecond()),
+                getDouble(properties, SANITY_PREFIX + "stalkGainPerSecond", d.stalkGainPerSecond()),
+                getDouble(properties, SANITY_PREFIX + "residualShare", d.residualShare()),
+                getDouble(properties, SANITY_PREFIX + "timeFloorWeight", d.timeFloorWeight()),
+                getDouble(properties, SANITY_PREFIX + "floorCap", d.floorCap())
         );
     }
 
