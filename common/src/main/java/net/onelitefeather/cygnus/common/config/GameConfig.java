@@ -29,7 +29,7 @@ import java.net.URI;
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
- * @version 2.2.0
+ * @version 2.3.0
  * @since 1.0.0
  */
 public record GameConfig(
@@ -55,7 +55,11 @@ public record GameConfig(
     public static final Key SURVIVOR_KEY = Key.key("cygnus", "survivor");
     public static final Key SPECTATOR_KEY = Key.key("cygnus", "spectator");
 
-    public static final int MIN_ACTIVE_PAGE_COUNT = 4 * 2;
+    /**
+     * How many pages are in the world at once, at least. Playtest tuning: at most four pages are out at the
+     * same time; the total number to find was doubled separately.
+     */
+    public static final int MIN_ACTIVE_PAGE_COUNT = 4;
 
     /**
      * How many seconds after a round starts before the first pages spawn.
