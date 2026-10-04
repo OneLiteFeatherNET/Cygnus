@@ -163,6 +163,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                 // Only the creek reads the fear so far, so without it there is nothing to track it for.
                 this.gameConfig.creek().enabled(),
                 this.pageProvider::foundShare,
+                this.gameConfig.round().gameTime() * 1000L,
                 System::currentTimeMillis,
                 () -> TeamHelper.survivorsOf(this.teamService));
         this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase);

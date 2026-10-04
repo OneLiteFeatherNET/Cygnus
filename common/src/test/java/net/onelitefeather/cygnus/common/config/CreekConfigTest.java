@@ -23,6 +23,8 @@ class CreekConfigTest {
         assertEquals(35, config.stalkMaxDistance());
         assertEquals(40, config.stalkMinAngle());
         assertEquals(70, config.stalkMaxAngle());
+        assertEquals(10, config.huntMinStalkSeconds());
+        assertEquals(45, config.huntCooldownSeconds());
         assertEquals(1.5D, config.catchDistance());
         assertEquals(15, config.personalSpace());
         assertEquals(2, config.betrayalCatchCount());
@@ -42,6 +44,7 @@ class CreekConfigTest {
                 config.wanderPauseMillis(), config.wanderSpeed(), config.huntSpeed(), config.stalkThreshold(), config.huntThreshold(),
                 config.stalkMinDistance(), config.stalkMaxDistance(), config.stalkMinAngle(), config.stalkMaxAngle(),
                 config.stalkRevealMillis(), config.stalkMinSeconds(), config.stalkMaxSeconds(), config.huntMaxSeconds(),
+                config.huntMinStalkSeconds(), config.huntCooldownSeconds(),
                 config.catchDistance(), config.vanishMinSeconds(), config.vanishMaxSeconds(), config.respawnMinDistance(),
                 config.personalSpace(), config.stuckMillis(), config.betrayalCatchCount(),
                 config.betrayalChance(), config.betrayalGlowSeconds(), config.slownessSeconds(), 0.0D,
@@ -81,6 +84,7 @@ class CreekConfigTest {
                 d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), stalkThreshold, huntThreshold,
                 d.stalkMinDistance(), d.stalkMaxDistance(), stalkMinAngle, d.stalkMaxAngle(),
                 d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
+                d.huntMinStalkSeconds(), d.huntCooldownSeconds(),
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
                 personalSpace, d.stuckMillis(), d.betrayalCatchCount(),
                 d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
@@ -101,6 +105,7 @@ class CreekConfigTest {
                 d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
                 d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
                 d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
+                d.huntMinStalkSeconds(), d.huntCooldownSeconds(),
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
                 d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
                 d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),

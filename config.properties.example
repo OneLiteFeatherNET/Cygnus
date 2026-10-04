@@ -194,6 +194,11 @@ survivorTeamSize=12
 #creek.stalkMinDistance=20
 #creek.stalkMaxDistance=35
 #creek.catchDistance=1.5
+# A stalk only turns into a hunt once it has run for huntMinStalkSeconds, and
+# never sooner than huntCooldownSeconds after the survivor's last hunt ended -
+# however it ended. Keeps a caught survivor from being hunted again right away.
+#creek.huntMinStalkSeconds=10
+#creek.huntCooldownSeconds=45
 # Speeds are in blocks per tick. A walking survivor covers about 0.216, so the
 # hunt speed has to stay above that or a hunted survivor simply walks away.
 #creek.wanderSpeed=0.07
@@ -213,10 +218,16 @@ survivorTeamSize=12
 
 # --- Sanity -----------------------------------------------------------------
 # Every survivor has a fear value between 0 and 1. It jumps when they find a
-# page, see the creek, get caught by it or someone dies close by, and wears off
-# again over time - but never below a floor that grows with the pages found.
+# page, see the creek, get picked out or caught by it, or another survivor dies
+# (anywhere on the map), and it grows steadily while a creek stalks them.
+# It wears off again over time - but never below a floor. The floor grows with
+# the pages found (pageFloorWeight) and the time played (timeFloorWeight), plus
+# the share of every jump that never wears off (residualShare). The floor is
+# capped at floorCap; keep that below creek.huntThreshold, so only a fresh scare
+# starts a hunt.
 # The creek reads it to decide whom to stalk (creek.stalkThreshold) and when to
-# hunt (creek.huntThreshold). Players never see it.
+# hunt (creek.huntThreshold). Players never see it; /creek shows it inverted as
+# sanity (1 = calm, the lower the more scared).
 # Every key below maps to a field of SanityConfig. An unreadable value falls back
 # to its default; values out of range are rejected.
 #sanity.pageFloorWeight=0.5
@@ -224,9 +235,13 @@ survivorTeamSize=12
 #sanity.sightingGain=0.10
 #sanity.sightingCooldownSeconds=20
 #sanity.caughtGain=0.30
+#sanity.selectedGain=0.15
 #sanity.deathGain=0.25
-#sanity.deathRadius=32
 #sanity.decayPerSecond=0.005
+#sanity.stalkGainPerSecond=0.015
+#sanity.residualShare=0.25
+#sanity.timeFloorWeight=0.15
+#sanity.floorCap=0.55
 
 # --- Stamina ----------------------------------------------------------------
 # A survivor's sprint bar holds 20 points and drains 2 per second while they

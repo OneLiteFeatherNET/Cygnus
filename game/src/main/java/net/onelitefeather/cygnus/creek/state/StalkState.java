@@ -18,6 +18,11 @@ import java.util.random.RandomGenerator;
  * {@code stalkMinDistance} to {@code stalkMaxDistance} away and ends at {@link #END_MIN_DISTANCE}
  * to {@link #END_MAX_DISTANCE}. The stalk is over when time runs out or the survivor is gone.
  * </p>
+ * <p>
+ * It turns into a hunt once the survivor is scared enough, but only after it has run for
+ * {@code huntMinStalkSeconds} and the survivor's last hunt is {@code huntCooldownSeconds} ago.
+ * A scared survivor still gets stalked first, and a caught one gets a breather.
+ * </p>
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -97,7 +102,7 @@ public final class StalkState implements CreekState {
 
         SurvivorView view = found.get();
         CreekConfig config = ctx.config();
-        if (view.dread() >= config.huntThreshold()) return HuntState.starting(this.target, ctx);
+        if (this.mayHunt(ctx, view)) return HuntState.starting(this.target, ctx);
 
         CreekBody body = ctx.body();
         body.lookAt(view.eyes());
@@ -116,6 +121,16 @@ public final class StalkState implements CreekState {
             this.relocate(ctx, view);
         }
         return this;
+    }
+
+    /**
+     * Tells whether the stalk may turn into a hunt in this step.
+     */
+    private boolean mayHunt(CreekContext ctx, SurvivorView view) {
+        CreekConfig config = ctx.config();
+        if (view.dread() < config.huntThreshold()) return false;
+        if (ctx.now() - this.startedAt < config.huntMinStalkSeconds() * 1000L) return false;
+        return ctx.hunts().ready(this.target, ctx.now());
     }
 
     /**

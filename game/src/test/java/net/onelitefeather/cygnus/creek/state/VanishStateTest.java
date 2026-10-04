@@ -91,7 +91,7 @@ class VanishStateTest {
         Pos[] behind = new Pos[20];
         for (int i = 0; i < behind.length; i++) behind[i] = new Pos(i, 40, -40 - i);
         CreekContext ctx = new CreekContext(1000L, List.of(WATCHER), body, Contexts.route(behind), counting,
-                Contexts.NO_ACTIONS, Contexts.CONFIG, new Random(7));
+                Contexts.NO_ACTIONS, Contexts.CONFIG, new Random(7), HuntCooldowns.none());
 
         assertInstanceOf(PatrolState.class, new VanishState(1000L).tick(ctx));
         assertEquals(1, checked.get(), "every point behind the survivor is hidden, so the first one will do");

@@ -28,6 +28,7 @@ import java.util.random.RandomGenerator;
  * @param actions   what the states can do to a survivor
  * @param config    the settings
  * @param random    the random source
+ * @param hunts     when each survivor's last hunt ended, shared by every creek of the round
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -41,7 +42,8 @@ public record CreekContext(
         SpotFinder spots,
         CreekActions actions,
         CreekConfig config,
-        RandomGenerator random
+        RandomGenerator random,
+        HuntCooldowns hunts
 ) {
 
     /**

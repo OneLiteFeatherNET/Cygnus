@@ -242,6 +242,8 @@ public final class GameConfigReader {
                 getInt(properties, CREEK_PREFIX + "stalkMinSeconds", d.stalkMinSeconds()),
                 getInt(properties, CREEK_PREFIX + "stalkMaxSeconds", d.stalkMaxSeconds()),
                 getInt(properties, CREEK_PREFIX + "huntMaxSeconds", d.huntMaxSeconds()),
+                getInt(properties, CREEK_PREFIX + "huntMinStalkSeconds", d.huntMinStalkSeconds()),
+                getInt(properties, CREEK_PREFIX + "huntCooldownSeconds", d.huntCooldownSeconds()),
                 getDouble(properties, CREEK_PREFIX + "catchDistance", d.catchDistance()),
                 getInt(properties, CREEK_PREFIX + "vanishMinSeconds", d.vanishMinSeconds()),
                 getInt(properties, CREEK_PREFIX + "vanishMaxSeconds", d.vanishMaxSeconds()),
@@ -278,9 +280,13 @@ public final class GameConfigReader {
                 getDouble(properties, SANITY_PREFIX + "sightingGain", d.sightingGain()),
                 getInt(properties, SANITY_PREFIX + "sightingCooldownSeconds", d.sightingCooldownSeconds()),
                 getDouble(properties, SANITY_PREFIX + "caughtGain", d.caughtGain()),
+                getDouble(properties, SANITY_PREFIX + "selectedGain", d.selectedGain()),
                 getDouble(properties, SANITY_PREFIX + "deathGain", d.deathGain()),
-                getInt(properties, SANITY_PREFIX + "deathRadius", d.deathRadius()),
-                getDouble(properties, SANITY_PREFIX + "decayPerSecond", d.decayPerSecond())
+                getDouble(properties, SANITY_PREFIX + "decayPerSecond", d.decayPerSecond()),
+                getDouble(properties, SANITY_PREFIX + "stalkGainPerSecond", d.stalkGainPerSecond()),
+                getDouble(properties, SANITY_PREFIX + "residualShare", d.residualShare()),
+                getDouble(properties, SANITY_PREFIX + "timeFloorWeight", d.timeFloorWeight()),
+                getDouble(properties, SANITY_PREFIX + "floorCap", d.floorCap())
         );
     }
 

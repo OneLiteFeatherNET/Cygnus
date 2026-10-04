@@ -55,10 +55,51 @@ class StalkStateTest {
     }
 
     @Test
-    @DisplayName("At the hunt threshold the stalk turns into a hunt")
+    @DisplayName("At the hunt threshold the stalk turns into a hunt once it has run long enough")
     void turnsIntoAHunt() {
         RecordingBody body = new RecordingBody(IN_THE_BAND);
-        assertInstanceOf(HuntState.class, new StalkState(TARGET, 60_000L).tick(at(0L, body, target(0.6D, false))));
+        StalkState state = new StalkState(TARGET, 60_000L);
+        state.enter(at(0L, body, target(0.6D, false)));
+
+        assertSame(state, state.tick(at(9_999L, body, target(0.6D, false))), "too early for a hunt");
+        assertInstanceOf(HuntState.class, state.tick(at(10_000L, body, target(0.6D, false))));
+    }
+
+    @Test
+    @DisplayName("Below the hunt threshold the stalk goes on, however long it runs")
+    void staysAStalkBelowTheThreshold() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        state.enter(at(0L, body, target(0.59D, false)));
+
+        assertSame(state, state.tick(at(30_000L, body, target(0.59D, false))));
+    }
+
+    @Test
+    @DisplayName("Right after a hunt the survivor gets a breather before the next one")
+    void huntCooldownHoldsTheNextHunt() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        HuntCooldowns hunts = new HuntCooldowns(45_000L);
+        hunts.ended(TARGET, 0L);
+        StalkState state = new StalkState(TARGET, 120_000L);
+        state.enter(Contexts.hunting(0L, body, hunts, new ArrayList<>(), target(0.9D, false)));
+
+        assertSame(state, state.tick(Contexts.hunting(44_999L, body, hunts, new ArrayList<>(), target(0.9D, false))));
+        assertInstanceOf(HuntState.class,
+                state.tick(Contexts.hunting(45_000L, body, hunts, new ArrayList<>(), target(0.9D, false))));
+    }
+
+    @Test
+    @DisplayName("Another survivor's hunt does not hold this one")
+    void huntCooldownIsPerSurvivor() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        HuntCooldowns hunts = new HuntCooldowns(45_000L);
+        hunts.ended(OTHER, 0L);
+        StalkState state = new StalkState(TARGET, 120_000L);
+        state.enter(Contexts.hunting(0L, body, hunts, new ArrayList<>(), target(0.9D, false)));
+
+        assertInstanceOf(HuntState.class,
+                state.tick(Contexts.hunting(10_000L, body, hunts, new ArrayList<>(), target(0.9D, false))));
     }
 
     @Test

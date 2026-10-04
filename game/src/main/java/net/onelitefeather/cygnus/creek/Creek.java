@@ -6,6 +6,7 @@ import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.state.CreekActions;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
 import net.onelitefeather.cygnus.creek.state.CreekState;
+import net.onelitefeather.cygnus.creek.state.StalkState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
@@ -88,6 +89,8 @@ final class Creek {
         }
         CreekState next = this.state.tick(ctx);
         if (next != this.state) this.switchTo(next, ctx);
+        // Reported after the step, so a stalk that just ended or turned into a hunt is not counted.
+        if (this.state instanceof StalkState stalk) this.round.witness().stalked(stalk.target());
     }
 
     /**
@@ -129,7 +132,7 @@ final class Creek {
                 : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
         return new CreekContext(now, noticed, this.body, this.route, this.round.spots(),
                 new Actions(this.round, survivors, ignored, this.body.position()),
-                this.round.config(), this.round.random());
+                this.round.config(), this.round.random(), this.round.hunts());
     }
 
     /**
@@ -222,7 +225,9 @@ final class Creek {
         @Override
         public void selected(UUID survivor) {
             Player player = this.survivors.player(survivor);
-            if (player != null) this.round.patrol().selected(player, this.creek, this.survivors.players());
+            if (player == null) return;
+            this.round.patrol().selected(player, this.creek, this.survivors.players());
+            this.round.witness().selected(survivor);
         }
 
         @Override

@@ -6,6 +6,7 @@ import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
+import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.DoneState;
 import net.onelitefeather.cygnus.creek.state.HuntState;
@@ -48,7 +49,7 @@ class CreekDebugTest {
 
         Component line = CreekDebug.line(new HuntState(STEVE, Long.MAX_VALUE), new Pos(0, 40, 0), views, NAMES::get);
 
-        assertEquals("HUNT → Steve · 12.4 m · Steve 0.62 ◉ · Alex 0.18", plain(line));
+        assertEquals("HUNT → Steve · 12.4 m · Steve 0.38 ◉ · Alex 0.82", plain(line));
     }
 
     @Test
@@ -58,7 +59,7 @@ class CreekDebugTest {
 
         Component line = CreekDebug.line(new PatrolState(), Pos.ZERO, views, NAMES::get);
 
-        assertEquals("PATROL · Steve 0.10", plain(line));
+        assertEquals("PATROL · Steve 0.90", plain(line));
     }
 
     @Test
@@ -88,7 +89,7 @@ class CreekDebugTest {
 
         Component line = CreekDebug.line(new PatrolState(), Pos.ZERO, views, NAMES::get, "Waldweg Nord 3/7 →");
 
-        assertEquals("PATROL · Waldweg Nord 3/7 → · Steve 0.10", plain(line));
+        assertEquals("PATROL · Waldweg Nord 3/7 → · Steve 0.90", plain(line));
     }
 
     @Test
@@ -96,7 +97,7 @@ class CreekDebugTest {
     void emptyRouteAddsNothing() {
         List<SurvivorView> views = List.of(new SurvivorView(STEVE, new Pos(0, 40, 30), 0.1D, false));
 
-        assertEquals("PATROL · Steve 0.10", plain(CreekDebug.line(new PatrolState(), Pos.ZERO, views, NAMES::get, "")));
+        assertEquals("PATROL · Steve 0.90", plain(CreekDebug.line(new PatrolState(), Pos.ZERO, views, NAMES::get, "")));
     }
 
     private static final Pos HERE = new Pos(0, 40, 0);
@@ -108,11 +109,11 @@ class CreekDebugTest {
         PatrolState patrol = new PatrolState();
         List<SurvivorView> views = List.of(new SurvivorView(STEVE, new Pos(0, 40, 2), 0.1D, false));
         CreekContext ctx = new CreekContext(0L, views, new RecordingBody(HERE), Contexts.route(new Pos(30, 40, 0)),
-                SPOTS, Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1));
+                SPOTS, Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1), HuntCooldowns.none());
         patrol.enter(ctx);
         patrol.tick(ctx);
 
-        assertEquals("PATROL → Steve · 2.0 m · Steve 0.10",
+        assertEquals("PATROL → Steve · 2.0 m · Steve 0.90",
                 plain(CreekDebug.line(patrol, HERE, views, NAMES::get, "", 0L)));
     }
 
@@ -138,13 +139,13 @@ class CreekDebugTest {
         List<SurvivorView> near = List.of(new SurvivorView(STEVE, new Pos(0, 40, 2), 0.1D, false));
         RecordingBody body = new RecordingBody(HERE);
         CreekContext start = new CreekContext(0L, near, body, Contexts.route(new Pos(30, 40, 0)), SPOTS,
-                Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1));
+                Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1), HuntCooldowns.none());
         patrol.enter(start);
         patrol.tick(start);
         patrol.tick(new CreekContext(1000L, near, body, Contexts.route(new Pos(30, 40, 0)), SPOTS,
-                Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1)));
+                Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1), HuntCooldowns.none()));
 
-        assertEquals("PATROL · select 7s · Steve 0.10",
+        assertEquals("PATROL · select 7s · Steve 0.90",
                 plain(CreekDebug.line(patrol, HERE, near, NAMES::get, "", 4000L)));
     }
 }
