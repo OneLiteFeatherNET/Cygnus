@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.stamina;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.timer.ExecutionType;
 import net.minestom.server.timer.Task;
@@ -15,7 +17,7 @@ import java.util.Objects;
  * The core functionality of the class revolves around a timer that ticks at regular intervals defined by the provided period parameter.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  **/
 public abstract sealed class StaminaBar implements Runnable permits SlenderBar, FoodBar {
@@ -26,6 +28,23 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
     protected int period;
     protected State state;
     private @Nullable Task task;
+    private TickSections sections = TickSections.NONE;
+    private String sectionName = TickSectionNames.STAMINA;
+
+    /**
+     * Has the periodic {@link #consume()} measured for the slow tick report. Takes effect the next
+     * time the bar is started.
+     *
+     * @param sections the sections to count the time in
+     * @param name     the name the time is reported under
+     * @return this bar
+     * @since 2.15.0
+     */
+    public StaminaBar measuredBy(TickSections sections, String name) {
+        this.sections = sections;
+        this.sectionName = name;
+        return this;
+    }
 
     /**
      * Creates a new reference from an {@link StaminaBar}.
@@ -51,7 +70,7 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
         if (task != null) return;
         this.onStart();
         task = MinecraftServer.getSchedulerManager()
-                .buildTask(this::consume)
+                .buildTask(this.sections.wrap(this.sectionName, this::consume))
                 .executionType(executionType)
                 .repeat(this.period, this.chronoUnit).schedule();
     }

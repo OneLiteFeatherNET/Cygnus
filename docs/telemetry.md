@@ -66,7 +66,7 @@ Player identity is always the UUID in `cygnus.player.uuid`. No address of a play
 | `cygnus.player.kick` | A kick, including the wait for the client to drop the ResourcePack. Child of the phase running at the kick; a root when no round runs. | `cygnus.player.uuid`, `cygnus.kick.reason`, `cygnus.kick.completed_by` (`ack`, `timeout`, `immediate`) |
 | `cygnus.shutdown` | The request until the server stopped, ended before the JVM is told to exit. Its own trace, linked to the running (or last) round. | |
 | `cygnus.tick.slow` | A server tick that took at least the threshold, created after the fact. Child of the current phase; a root when no round runs. | `cygnus.tick.duration_ms`, `cygnus.tick.acquisition_ms`, `cygnus.tick.threshold_ms` |
-| `cygnus.tick.section` | Child of a slow tick: the share of one measured service (`creek`, `slender-gaze`, `tunnel-vision`). | `cygnus.tick.section.name`, `cygnus.tick.section.duration_ms` |
+| `cygnus.tick.section` | Child of a slow tick: the share of one measured service, see [Slow ticks](#slow-ticks). | `cygnus.tick.section.name`, `cygnus.tick.section.duration_ms` |
 
 A span that fails is marked `ERROR` and carries the exception.
 
@@ -95,7 +95,33 @@ There is no span per tick. When a tick takes at least `telemetry.slowTickThresho
 Minestom's tick budget), a `cygnus.tick.slow` span is created after the fact: it ends now and started as
 long ago as the tick took. The services measured through `TickSections` appear as children. They all start
 at the start of the tick and last as long as the service took in total, so they show who was in the tick, not
-when. A share below one millisecond is left out.
+when. A share below 0.1 ms is left out, and a service that did not run in the tick has no child, so the lobby
+tick shows `lobby-waiting` and `lobby-time` where a game tick shows the creek.
+
+The measured services, with the name each reports as `cygnus.tick.section.name` (the constants are in
+`TickSectionNames`; one name per service, never per player):
+
+| Name | Service |
+| --- | --- |
+| `lobby-waiting` | The lobby's waiting action bar |
+| `lobby-time` | The lobby's slide of the world time |
+| `creek` | The creek's step |
+| `glow-reveal` | The betrayal glow resend |
+| `slender-gaze` | The slender's gaze check |
+| `tunnel-vision` | The tunnel vision overlay |
+| `page-glitch` | The page glitch overlay |
+| `blood-splatter` | The fade of blood splatters |
+| `page-proximity` | The page proximity hint |
+| `ambient` | Ambient sounds and blackouts |
+| `adrenaline` | The adrenaline rush |
+| `slender-takeover` | The takeover countdown after the slender left |
+| `stamina` | The survivors' stamina bars, added up |
+| `slender-bar` | The slender's stamina bar |
+| `jump-scare` | The despawn of a jump scare |
+
+Only what is scheduled through the Minestom scheduler can be measured. Time the server spends outside of
+it (entity and chunk ticking, packet handling) is not a section, so a slow tick can still have a gap between the
+sum of its children and its own duration; that gap is the engine.
 
 ```properties
 # config.properties

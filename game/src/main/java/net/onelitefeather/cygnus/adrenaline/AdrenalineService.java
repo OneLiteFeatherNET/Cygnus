@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.adrenaline;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
@@ -40,7 +42,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.16.0
  */
 public final class AdrenalineService implements GameFeature {
@@ -62,7 +64,7 @@ public final class AdrenalineService implements GameFeature {
     private final AdrenalineConfig config;
     private final Supplier<Set<Player>> survivors;
     private final LongSupplier clock;
-    private final RepeatingTask task = new RepeatingTask(this::tick);
+    private final RepeatingTask task;
     private final Set<Player> rushing = new HashSet<>();
     private @Nullable Player visibleSlender;
 
@@ -74,6 +76,21 @@ public final class AdrenalineService implements GameFeature {
      * @param clock     supplies the current time in milliseconds
      */
     public AdrenalineService(AdrenalineConfig config, Supplier<Set<Player>> survivors, LongSupplier clock) {
+        this(config, survivors, clock, TickSections.NONE);
+    }
+
+    /**
+     * Creates the service with its tick measured for the slow tick report.
+     *
+     * @param config    the radius, the bonus, the duration and the cooldown
+     * @param survivors supplies the survivors of the round
+     * @param clock     supplies the current time in milliseconds
+     * @param sections  measures how long each run takes
+     * @since 2.15.0
+     */
+    public AdrenalineService(AdrenalineConfig config, Supplier<Set<Player>> survivors, LongSupplier clock,
+                             TickSections sections) {
+        this.task = new RepeatingTask(sections.wrap(TickSectionNames.ADRENALINE, this::tick));
         this.config = config;
         this.survivors = survivors;
         this.clock = clock;

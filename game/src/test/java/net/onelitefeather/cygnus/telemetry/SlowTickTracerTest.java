@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * waits and none reads the real clock.
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 class SlowTickTracerTest {
@@ -110,6 +110,38 @@ class SlowTickTracerTest {
     }
 
     @Test
+    @DisplayName("A service that took a few hundred microseconds still gets its child span")
+    void shortShareAboveTheFloorIsReported() {
+        this.sections.wrap("ambient", () -> this.nanos.addAndGet(300_000L)).run();
+
+        this.tracer.onTick(80.0D, 0.0D);
+
+        assertEquals(0.3D, this.telemetry.span(CygnusAttributes.SPAN_TICK_SECTION)
+                .getAttributes().get(CygnusAttributes.TICK_SECTION_DURATION_MS));
+    }
+
+    @Test
+    @DisplayName("Every section that ran is a child with its own duration, the ones that did not are omitted")
+    void oneChildPerActiveSection() {
+        this.sections.wrap(TickSectionNames.AMBIENT, () -> {
+        });
+        this.sections.wrap(TickSectionNames.CREEK, () -> {
+        });
+        runFor(TickSectionNames.PAGE_PROXIMITY, 4);
+        runFor(TickSectionNames.STAMINA, 7);
+
+        this.tracer.onTick(80.0D, 0.0D);
+
+        List<SpanData> children = this.telemetry.spans().stream()
+                .filter(span -> span.getName().equals(CygnusAttributes.SPAN_TICK_SECTION)).toList();
+        assertEquals(List.of(TickSectionNames.PAGE_PROXIMITY, TickSectionNames.STAMINA),
+                children.stream().map(span -> span.getAttributes().get(CygnusAttributes.TICK_SECTION_NAME)).toList(),
+                "only the sections that ran, in registration order");
+        assertEquals(List.of(4.0D, 7.0D), children.stream()
+                .map(span -> span.getAttributes().get(CygnusAttributes.TICK_SECTION_DURATION_MS)).toList());
+    }
+
+    @Test
     @DisplayName("A service that ran twice in the tick is reported once, with both runs added")
     void repeatedRunsAreAdded() {
         runFor("gaze", 10);
@@ -122,9 +154,9 @@ class SlowTickTracerTest {
     }
 
     @Test
-    @DisplayName("A service under a millisecond is left out")
+    @DisplayName("A service under a tenth of a millisecond is left out")
     void tinyShareIsLeftOut() {
-        this.sections.wrap("tunnelvision", () -> this.nanos.addAndGet(MILLI - 1)).run();
+        this.sections.wrap("tunnelvision", () -> this.nanos.addAndGet(SlowTickTracer.SECTION_MIN_NANOS - 1)).run();
 
         this.tracer.onTick(80.0D, 0.0D);
 

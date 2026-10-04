@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.phase.task;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
@@ -16,7 +18,7 @@ import java.util.Collection;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.3.0
+ * @version 1.4.0
  * @since 1.0.0
  **/
 public final class LobbyWaitingTask {
@@ -40,6 +42,17 @@ public final class LobbyWaitingTask {
      * @param minPlayers the minimum number of players required to start the game
      */
     public LobbyWaitingTask(int minPlayers) {
+        this(minPlayers, TickSections.NONE);
+    }
+
+    /**
+     * Creates a new instance of the waiting display with its ticks measured for the slow tick report.
+     *
+     * @param minPlayers the minimum number of players required to start the game
+     * @param sections   measures how long each tick of the display takes
+     * @since 2.15.0
+     */
+    public LobbyWaitingTask(int minPlayers, TickSections sections) {
         this.minPlayers = minPlayers;
         this.cachedComponents = new Component[minPlayers + 1];
 
@@ -52,6 +65,8 @@ public final class LobbyWaitingTask {
                     .append(SUFFIX_TO_START);
         }
 
+        Runnable step = sections.wrap(TickSectionNames.LOBBY_WAITING, this::refreshDisplay);
+
         // Define the self-scheduling tick task
         this.tickRunnable = new Runnable() {
             @Override
@@ -60,10 +75,7 @@ public final class LobbyWaitingTask {
                     return; // Gracefully exit the loop when stopped
                 }
 
-                // Send the action bar only at the specified tick interval
-                if (tickCounter++ % DISPLAY_REFRESH_INTERVAL_TICKS == 0) {
-                    sendToAll(MinecraftServer.getConnectionManager().getOnlinePlayers());
-                }
+                step.run();
 
                 // Schedule this task again for the next server tick
                 MinecraftServer.getSchedulerManager().scheduleNextTick(this);
@@ -72,6 +84,15 @@ public final class LobbyWaitingTask {
 
         // Start the loop automatically on creation
         this.start();
+    }
+
+    /**
+     * Sends the action bar, but only at the specified tick interval.
+     */
+    private void refreshDisplay() {
+        if (this.tickCounter++ % DISPLAY_REFRESH_INTERVAL_TICKS == 0) {
+            sendToAll(MinecraftServer.getConnectionManager().getOnlinePlayers());
+        }
     }
 
     /**
