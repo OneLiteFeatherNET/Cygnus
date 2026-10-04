@@ -22,6 +22,36 @@ relocated.
 
 The instrumentation scope is `net.onelitefeather.cygnus`, versioned with the jar.
 
+## Hierarchy
+
+```
+cygnus.startup                      (own trace)  <-- link: first round
+  cygnus.startup.config | .resourcepack | .maps | .features | .phases | .listeners
+
+cygnus.round                        (own trace; links: startup, previous rounds from cookies)
+  cygnus.phase.lobby
+    cygnus.player.join              (started during the lobby, may end later)
+    cygnus.action.*
+    cygnus.tick.slow
+      cygnus.tick.section
+  cygnus.phase.waiting
+    ... same children
+  cygnus.phase.gamephase
+    cygnus.action.* (page, creek, sanity, blackout, ...)
+    cygnus.player.kick              (spectator leave)
+    cygnus.tick.slow
+  cygnus.phase.restart
+    cygnus.player.kick
+
+cygnus.shutdown                     (own trace)  --> link: running or last round
+```
+
+Work attaches to the phase that is running when it starts. Between two phases it attaches to the round.
+A span may outlive its phase (a join started in the lobby ends in the waiting phase); it is never ended
+early. With no round running (before the series started), joins, kicks and slow ticks are roots of their own
+trace. The current phase is kept as a volatile snapshot in `RoundTracer`, so the tick thread and the
+configuration threads read it without taking the lock.
+
 ## Spans
 
 Player identity is always the UUID in `cygnus.player.uuid`. No address of a player is recorded.
@@ -30,12 +60,12 @@ Player identity is always the UUID in `cygnus.player.uuid`. No address of a play
 | --- | --- | --- |
 | `cygnus.startup` | Wiring the game in `Cygnus`. Ends before the port is bound. | |
 | `cygnus.startup.config`, `.resourcepack`, `.maps`, `.features`, `.phases`, `.listeners` | Children of the startup, one per major step. | |
-| `cygnus.round` | One round, from the lobby opening to the restart ending. Root of its own trace. | `cygnus.round.id`, `cygnus.game.end_reason` |
+| `cygnus.round` | One round, from the lobby opening to the restart ending. Root of its own trace; the first round links to `cygnus.startup`. | `cygnus.round.id`, `cygnus.game.end_reason` |
 | `cygnus.phase.<name>` | One phase of the round (`lobby`, `waiting`, `gamephase`, `restart`). Child of the round. | `cygnus.phase.name` |
-| `cygnus.player.join` | A player from the login until the first spawn. | `cygnus.player.uuid`, `cygnus.join.outcome` (`spawned`, `abandoned`) |
-| `cygnus.player.kick` | A kick, including the wait for the client to drop the ResourcePack. | `cygnus.player.uuid`, `cygnus.kick.reason`, `cygnus.kick.completed_by` (`ack`, `timeout`, `immediate`) |
-| `cygnus.shutdown` | The request until the server stopped, ended before the JVM is told to exit. | |
-| `cygnus.tick.slow` | A server tick that took at least the threshold, created after the fact. | `cygnus.tick.duration_ms`, `cygnus.tick.acquisition_ms`, `cygnus.tick.threshold_ms` |
+| `cygnus.player.join` | A player from the login until the first spawn. Child of the phase running at the login; a root when no round runs. | `cygnus.player.uuid`, `cygnus.join.outcome` (`spawned`, `abandoned`) |
+| `cygnus.player.kick` | A kick, including the wait for the client to drop the ResourcePack. Child of the phase running at the kick; a root when no round runs. | `cygnus.player.uuid`, `cygnus.kick.reason`, `cygnus.kick.completed_by` (`ack`, `timeout`, `immediate`) |
+| `cygnus.shutdown` | The request until the server stopped, ended before the JVM is told to exit. Its own trace, linked to the running (or last) round. | |
+| `cygnus.tick.slow` | A server tick that took at least the threshold, created after the fact. Child of the current phase; a root when no round runs. | `cygnus.tick.duration_ms`, `cygnus.tick.acquisition_ms`, `cygnus.tick.threshold_ms` |
 | `cygnus.tick.section` | Child of a slow tick: the share of one measured service (`creek`, `slender-gaze`, `tunnel-vision`). | `cygnus.tick.section.name`, `cygnus.tick.section.duration_ms` |
 
 A span that fails is marked `ERROR` and carries the exception.
@@ -83,7 +113,7 @@ and the tail of every other export, is lost.
 
 ## Actions
 
-What happens in a round is recorded as one short span per action, a child of `cygnus.round`. A span
+What happens in a round is recorded as one short span per action, a child of the phase it happened in (`cygnus.round` between two phases). A span
 rather than an event on the round span, because a backend can search spans by name and attribute
 ("every `cygnus.action.page.found` within 5 blocks of this spot", "everything player X did"), while events
 pile up on one long span and are capped per span by the SDK. Movement and anything that happens per tick are

@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.telemetry;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.UUID;
 
 /**
@@ -26,6 +28,7 @@ public final class KickTracer {
     public static final KickTracer NONE = new KickTracer(CygnusTracing.noop());
 
     private final CygnusTracing tracing;
+    private final @Nullable RoundTracer rounds;
 
     /**
      * Creates the tracer.
@@ -33,7 +36,18 @@ public final class KickTracer {
      * @param tracing where the spans go
      */
     public KickTracer(CygnusTracing tracing) {
+        this(tracing, null);
+    }
+
+    /**
+     * Creates the tracer so that a kick hangs below the phase running when it begins.
+     *
+     * @param tracing where the spans go
+     * @param rounds  the round whose current phase is the parent, or {@code null} for roots only
+     */
+    public KickTracer(CygnusTracing tracing, @Nullable RoundTracer rounds) {
         this.tracing = tracing;
+        this.rounds = rounds;
     }
 
     /**
@@ -44,7 +58,7 @@ public final class KickTracer {
      * @return the open span
      */
     public TraceStep begin(UUID player, Component reason) {
-        return this.tracing.root(CygnusAttributes.SPAN_PLAYER_KICK)
+        return this.tracing.step(CygnusAttributes.SPAN_PLAYER_KICK, this.rounds == null ? null : this.rounds.currentContext())
                 .set(CygnusAttributes.PLAYER_UUID, player.toString())
                 .set(CygnusAttributes.KICK_REASON, PlainTextComponentSerializer.plainText().serialize(reason));
     }

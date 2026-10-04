@@ -120,6 +120,12 @@ public final class CygnusAttributes {
     /** The link points at the round trace a player's cookie remembered. */
     public static final String LINK_PREVIOUS_ROUND = "previous_round";
 
+    /** Link kind: from the first round to the startup that wired it up. */
+    public static final String LINK_STARTUP = "startup";
+
+    /** Link kind: from the shutdown to the round it cut short. */
+    public static final String LINK_ROUND = "round";
+
     // --- Values of kick.completed_by -----------------------------------------------------------
 
     /** The client confirmed it dropped the pack. */

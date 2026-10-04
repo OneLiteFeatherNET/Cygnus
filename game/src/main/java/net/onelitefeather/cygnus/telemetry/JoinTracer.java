@@ -12,6 +12,8 @@ import net.minestom.server.event.player.PlayerResourcePackStatusEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.server.ServerTickMonitorEvent;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
@@ -57,6 +59,7 @@ public final class JoinTracer {
     private final CygnusTracing tracing;
     private final LongSupplier nanoTime;
     private final long timeoutNanos;
+    private final @Nullable RoundTracer rounds;
     private final Map<UUID, Join> joins = new ConcurrentHashMap<>();
 
     /**
@@ -76,7 +79,20 @@ public final class JoinTracer {
      * @param timeout  how long a join may stay open before {@link #sweep()} ends it
      */
     public JoinTracer(CygnusTracing tracing, LongSupplier nanoTime, Duration timeout) {
+        this(tracing, null, nanoTime, timeout);
+    }
+
+    /**
+     * Creates the tracer so that a join hangs below the phase running when the login starts.
+     *
+     * @param tracing  where the spans go
+     * @param rounds   the round whose current phase is the parent, or {@code null} for roots only
+     * @param nanoTime the monotonic clock
+     * @param timeout  how long a join may stay open
+     */
+    public JoinTracer(CygnusTracing tracing, @Nullable RoundTracer rounds, LongSupplier nanoTime, Duration timeout) {
         this.tracing = tracing;
+        this.rounds = rounds;
         this.nanoTime = nanoTime;
         this.timeoutNanos = timeout.toNanos();
     }
@@ -90,7 +106,8 @@ public final class JoinTracer {
      */
     public void loginStarted(UUID player, Object connection) {
         Join created = new Join(connection, this.nanoTime.getAsLong(),
-                this.tracing.root(CygnusAttributes.SPAN_PLAYER_JOIN)
+                this.tracing.step(CygnusAttributes.SPAN_PLAYER_JOIN,
+                        this.rounds == null ? null : this.rounds.currentContext())
                         .set(CygnusAttributes.PLAYER_UUID, player.toString()));
         Join previous = this.joins.put(player, created);
         if (previous != null) {

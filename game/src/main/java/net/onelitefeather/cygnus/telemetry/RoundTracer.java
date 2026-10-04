@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.telemetry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
@@ -44,6 +45,11 @@ public final class RoundTracer {
     private final Supplier<String> roundIds;
     private @Nullable TraceStep round;
     private @Nullable TraceStep phase;
+    // Snapshot read without the lock by other threads: the phase span while one runs, the round span
+    // between phases, null with no round. Written only under the lock, on every change.
+    private volatile @Nullable Context current;
+    private volatile @Nullable SpanContext latestRound;
+    private @Nullable SpanContext startup;
     // The span API cannot be read back, so whether gameFinished already set the reason is kept here.
     private boolean endReasonSet;
     /** More incoming traces than this are not linked: a cookie is client data, the links must stay bounded. */
@@ -83,8 +89,47 @@ public final class RoundTracer {
         this.linked.clear();
         this.droppedLinks = 0;
         notifyBoundary();
-        this.round = this.tracing.root(CygnusAttributes.SPAN_ROUND)
+        TraceStep started = this.tracing.root(CygnusAttributes.SPAN_ROUND)
                 .set(CygnusAttributes.ROUND_ID, this.roundIds.get());
+        this.round = started;
+        this.latestRound = started.span().getSpanContext();
+        this.current = Context.root().with(started.span());
+        SpanContext wiredBy = this.startup;
+        if (wiredBy != null) {
+            this.startup = null;
+            started.span().addLink(wiredBy, Attributes.of(CygnusAttributes.LINK_KIND, CygnusAttributes.LINK_STARTUP));
+        }
+    }
+
+    /**
+     * Remembers the startup span, which the first round links to: the round is started by the startup,
+     * but the startup ends before it, so it cannot be its parent.
+     *
+     * @param context the context of the startup span
+     */
+    public synchronized void startupContext(SpanContext context) {
+        this.startup = context;
+    }
+
+    /**
+     * Returns the context new work should hang below: the running phase, the round between two
+     * phases, or {@code null} when no round runs. Cheap and safe from any thread; a span created
+     * from it may outlive the phase, which tracing allows.
+     *
+     * @return the context, or {@code null}
+     */
+    @Nullable Context currentContext() {
+        return this.current;
+    }
+
+    /**
+     * Returns the context of the running round, or of the last one when none runs; for a span that
+     * only links to it.
+     *
+     * @return the context, or {@code null} if there was no round yet
+     */
+    @Nullable SpanContext latestRoundContext() {
+        return this.latestRound;
     }
 
     /**
@@ -97,8 +142,10 @@ public final class RoundTracer {
         if (this.round == null) {
             return;
         }
-        this.phase = this.round.child(CygnusAttributes.SPAN_PHASE_PREFIX + phaseName.toLowerCase(Locale.ROOT))
+        TraceStep started = this.round.child(CygnusAttributes.SPAN_PHASE_PREFIX + phaseName.toLowerCase(Locale.ROOT))
                 .set(CygnusAttributes.PHASE_NAME, phaseName);
+        this.phase = started;
+        this.current = Context.root().with(started.span());
     }
 
     /**
@@ -128,6 +175,7 @@ public final class RoundTracer {
         endPhase();
         TraceStep current = this.round;
         this.round = null;
+        this.current = null;
         if (current != null) {
             if (this.droppedLinks > 0) {
                 current.set(CygnusAttributes.LINKS_DROPPED, (long) this.droppedLinks);
@@ -235,15 +283,15 @@ public final class RoundTracer {
     }
 
     /**
-     * Starts a span below the running round, for a single action.
+     * Starts a span below the running phase (the round between two phases), for a single action.
      *
      * @param name the span name
      * @return the open span, or {@code null} when no round is running, in which case the action is
      * not traced
      */
-    synchronized @Nullable TraceStep actionSpan(String name) {
-        TraceStep current = this.round;
-        return current == null ? null : current.child(name);
+    @Nullable TraceStep actionSpan(String name) {
+        Context parent = this.current;
+        return parent == null ? null : this.tracing.step(name, parent);
     }
 
     /**
@@ -305,10 +353,13 @@ public final class RoundTracer {
     }
 
     private void endPhase() {
-        TraceStep current = this.phase;
+        TraceStep ended = this.phase;
         this.phase = null;
-        if (current != null) {
-            current.close();
+        TraceStep running = this.round;
+        // Back to the round first, so nothing created from now on attaches to the closed phase.
+        this.current = running == null ? null : Context.root().with(running.span());
+        if (ended != null) {
+            ended.close();
         }
     }
 }

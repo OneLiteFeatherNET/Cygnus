@@ -160,15 +160,16 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     public Cygnus() {
         this.tracing = CygnusTracing.fromGlobal(serviceVersion());
         this.roundTracer = new RoundTracer(this.tracing);
-        this.joinTracer = new JoinTracer(this.tracing);
+        this.joinTracer = new JoinTracer(this.tracing, this.roundTracer, System::nanoTime, JoinTracer.DEFAULT_TIMEOUT);
         this.traceCookie = new TraceCookie(this.roundTracer, this.joinTracer);
         this.actionTracer = new ActionTracer(this.roundTracer, Clock.systemUTC(), this::activeMapName);
-        KickTracer kickTracer = new KickTracer(this.tracing);
+        KickTracer kickTracer = new KickTracer(this.tracing, this.roundTracer);
         TickSections tickSections = TickSections.measuring(System::nanoTime);
         // A shutdown in the middle of a round or a tick would otherwise leave its spans open; this
         // ends them before ServiceShutdown tells the JVM to exit, which is what flushes the exporter.
         ServiceShutdown.observe(new ShutdownTracer(this.tracing, this.roundTracer));
         TraceStep startup = this.tracing.root(CygnusAttributes.SPAN_STARTUP);
+        this.roundTracer.startupContext(startup.span().getSpanContext());
         try {
             Path path = ServiceBootstrap.resolveWorkingDirectory();
             this.teamService = TeamService.of();
@@ -177,7 +178,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             try (TraceStep ignored = startup.child("cygnus.startup.config")) {
                 this.gameConfig = new GameConfigReader(path).getConfig();
             }
-            this.slowTickTracer = new SlowTickTracer(this.tracing, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections);
+            this.slowTickTracer = new SlowTickTracer(this.tracing, this.roundTracer, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections);
             this.staminaService = new StaminaService(this.gameConfig.stamina());
             // Set up as early as possible so anything that goes wrong while the rest of the game is
             // being wired up is already covered. Stays off entirely when no DSN is configured.

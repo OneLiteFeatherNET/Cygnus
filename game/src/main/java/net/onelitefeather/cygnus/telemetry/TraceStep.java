@@ -7,6 +7,8 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -46,6 +48,21 @@ public final class TraceStep implements AutoCloseable {
     static TraceStep root(Tracer tracer, String name) {
         SpanBuilder builder = tracer.spanBuilder(name).setNoParent();
         return new TraceStep(tracer, builder.startSpan());
+    }
+
+    /**
+     * Starts a step below the given context, or a root when there is none.
+     *
+     * @param tracer the tracer to create the span with
+     * @param name   the span name
+     * @param parent the context of the parent span, or {@code null} for a root
+     * @return the started step
+     */
+    static TraceStep start(Tracer tracer, String name, @Nullable Context parent) {
+        if (parent == null) {
+            return root(tracer, name);
+        }
+        return new TraceStep(tracer, tracer.spanBuilder(name).setParent(parent).startSpan());
     }
 
     /**
