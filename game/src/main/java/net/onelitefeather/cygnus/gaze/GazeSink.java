@@ -48,6 +48,23 @@ public interface GazeSink {
     void attach(Player survivor);
 
     /**
+     * Starts signalling for a player who must not have the world darkened along with the veil.
+     * <p>
+     * The two halves of the effect are separable and the slender needs only one of them: the veil
+     * says how far the round has got, while darkening the world would take his sight, which is the
+     * one thing he has over the survivors. A sink that has no world tint to leave out ignores the
+     * distinction, which is what the default here does.
+     * </p>
+     *
+     * @param player    the player to start signalling for
+     * @param worldTint whether the world may be darkened along with the veil
+     * @since 2.15.0
+     */
+    default void attach(Player player, boolean worldTint) {
+        this.attach(player);
+    }
+
+    /**
      * Stops signalling for a survivor and takes back whatever was set for them.
      *
      * @param survivor the survivor to stop signalling for

@@ -135,6 +135,21 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
         assertFalse(signal.barOf(survivor).hasFlag(BossBar.Flag.DARKEN_SCREEN));
     }
 
+    @Test
+    @DisplayName("A player attached without the world tint gets the veil and nothing else")
+    void withoutTheWorldTintOnlyTheVeilIsSent(Env env) {
+        BossBarGazeSignal signal = new BossBarGazeSignal();
+        Player slender = connect(env, env.createFlatInstance());
+        signal.attach(slender, false);
+
+        signal.level(slender, 2);
+
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE + 3, colourOf(signal.barOf(slender)),
+                "the veil is the effect and has to arrive either way");
+        assertFalse(signal.barOf(slender).hasFlag(BossBar.Flag.DARKEN_SCREEN),
+                "darkening the world would take the slender's sight, which is his whole advantage");
+    }
+
     /**
      * Reads the encoded colour back out of a bar's title.
      *

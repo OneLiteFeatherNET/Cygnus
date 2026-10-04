@@ -20,7 +20,7 @@ import java.net.URI;
  * @param pageProximity        the sound that hints at a nearby page
  * @param damageSound          the sound a player hears when hit
  * @param glitch               how the sight of the slender tears a survivor's view
- * @param slenderStatic        the static the slender hears while pages are found
+ * @param pageGlitch           how the slender's own screen tears as pages are found
  * @param creek                the creek, the second figure next to the slender
  * @param sanity               the survivors' fear, which the creek reads
  * @param stamina              the survivors' sprint and the slender's appearing
@@ -39,7 +39,7 @@ public record GameConfig(
         PageProximity pageProximity,
         DamageSound damageSound,
         Glitch glitch,
-        SlenderStatic slenderStatic,
+        PageGlitch pageGlitch,
         CreekConfig creek,
         SanityConfig sanity,
         StaminaConfig stamina,
@@ -111,7 +111,7 @@ public record GameConfig(
             PageProximity.DEFAULT,
             DamageSound.DEFAULT,
             Glitch.DEFAULT,
-            SlenderStatic.DEFAULT,
+            PageGlitch.DEFAULT,
             CreekConfig.DEFAULT,
             SanityConfig.DEFAULT,
             StaminaConfig.DEFAULT,
@@ -285,63 +285,32 @@ public record GameConfig(
     }
 
     /**
-     * The static the slender hears while the survivors take his pages away. It is the only thing
-     * that tells him how far they have got without putting the page counter in front of him.
+     * The glitch on the slender's own screen while the survivors take his pages away. It is the
+     * only thing that tells him how far they have got without putting the page counter in front of
+     * him. A baseline climbs a level at a time as the pages disappear and every find pulses one
+     * level above it.
      *
-     * @param enabled         whether the static is played at all
-     * @param sound           the sound, sent as named: a resource pack sound would not be found in the
-     *                        registry
-     * @param quietInterval   the seconds between two bursts while no page has been found
-     * @param franticInterval the seconds between two bursts once every page is gone, below the quiet
-     *                        interval
-     * @param minVolume       the volume while no page has been found
-     * @param maxVolume       the volume once every page is gone
+     * @param enabled      whether the slender's screen tears at all
+     * @param pulseSeconds how long a single find holds the glitch one level above the round's
+     *                     level, in seconds
      */
-    public record SlenderStatic(
-            boolean enabled,
-            Key sound,
-            int quietInterval,
-            int franticInterval,
-            float minVolume,
-            float maxVolume
-    ) {
+    public record PageGlitch(boolean enabled, int pulseSeconds) {
+
+        /** The pulse a configuration gets when it says nothing. */
+        public static final int DEFAULT_PULSE_SECONDS = 3;
 
         /**
-         * Three takes of tape hiss from the Cygnus resource pack. A server without the pack hears
-         * nothing here, which beats half a horror cue played through the wrong sample.
+         * Past this a find late in the round would still be on screen when the next one lands, and
+         * the pulse stops reading as an event.
          */
-        public static final Key DEFAULT_SOUND = Key.key("cygnus", "vhs_static");
+        public static final int MAX_PULSE_SECONDS = 30;
 
-        /** Past this a round could end before the slender has heard the static twice. */
-        public static final int MAX_INTERVAL = 120;
+        public static final PageGlitch DEFAULT = new PageGlitch(true, DEFAULT_PULSE_SECONDS);
 
-        public static final SlenderStatic DEFAULT = new SlenderStatic(true, DEFAULT_SOUND, 12, 3, 0.15F, 0.8F);
-
-        public SlenderStatic {
-            if (quietInterval < 1 || quietInterval > MAX_INTERVAL) {
+        public PageGlitch {
+            if (pulseSeconds < 1 || pulseSeconds > MAX_PULSE_SECONDS) {
                 throw new IllegalArgumentException(
-                        "Slender static quiet interval must be between 1 and " + MAX_INTERVAL + " seconds");
-            }
-            if (franticInterval < 1) {
-                throw new IllegalArgumentException("Slender static frantic interval must be at least 1 second");
-            }
-            checkVolume(minVolume, "minimum");
-            checkVolume(maxVolume, "maximum");
-            if (franticInterval >= quietInterval) {
-                throw new IllegalArgumentException(
-                        "Slender static frantic interval (" + franticInterval
-                                + ") must be below the quiet interval (" + quietInterval + ")");
-            }
-            if (minVolume > maxVolume) {
-                throw new IllegalArgumentException(
-                        "Slender static minimum volume (" + minVolume
-                                + ") must not be above the maximum volume (" + maxVolume + ")");
-            }
-        }
-
-        private static void checkVolume(float volume, String name) {
-            if (volume < 0.0F || volume > 1.0F) {
-                throw new IllegalArgumentException("Slender static " + name + " volume must be between 0 and 1");
+                        "Page glitch pulse must be between 1 and " + MAX_PULSE_SECONDS + " seconds");
             }
         }
     }

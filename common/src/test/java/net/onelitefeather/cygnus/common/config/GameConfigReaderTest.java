@@ -56,7 +56,7 @@ class GameConfigReaderTest {
         assertEquals(GameConfig.PageProximity.DEFAULT, config.pageProximity());
         assertEquals(GameConfig.DamageSound.DEFAULT, config.damageSound());
         assertEquals(GameConfig.Glitch.DEFAULT, config.glitch());
-        assertEquals(GameConfig.SlenderStatic.DEFAULT, config.slenderStatic());
+        assertEquals(GameConfig.PageGlitch.DEFAULT, config.pageGlitch());
         assertEquals(GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE, config.lobbyAtmosphereShare());
     }
 
@@ -176,44 +176,35 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testSlenderStaticValuesAreReadWhenTheyAreConfigured(@TempDir Path tempDir) throws IOException {
+    void testPageGlitchValuesAreReadWhenTheyAreConfigured(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
-                slenderStaticSound=cygnus:vhs_static
-                slenderStaticQuietInterval=20
-                slenderStaticFranticInterval=2
-                slenderStaticMinVolume=0.1
-                slenderStaticMaxVolume=1.0
+                pageGlitchPulseSeconds=7
                 """);
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertEquals(Key.key("cygnus", "vhs_static"), config.slenderStatic().sound(),
-                "a resource pack sound has to survive the reader, it is the point of the setting");
-        assertEquals(20, config.slenderStatic().quietInterval());
-        assertEquals(2, config.slenderStatic().franticInterval());
-        assertEquals(0.1F, config.slenderStatic().minVolume());
-        assertEquals(1.0F, config.slenderStatic().maxVolume());
+        assertTrue(config.pageGlitch().enabled());
+        assertEquals(7, config.pageGlitch().pulseSeconds());
     }
 
     @Test
-    void testSlenderStaticCanBeTurnedOff(@TempDir Path tempDir) throws IOException {
+    void testPageGlitchCanBeTurnedOff(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
-                slenderStaticEnabled=false
+                pageGlitchEnabled=false
                 """);
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
-        assertFalse(config.slenderStatic().enabled());
+        assertFalse(config.pageGlitch().enabled());
     }
 
     @Test
-    void testAFranticIntervalAtOrAboveTheQuietOneIsRejected(@TempDir Path tempDir) throws IOException {
+    void testAPageGlitchPulseOutsideItsRangeIsRejected(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
-                slenderStaticQuietInterval=5
-                slenderStaticFranticInterval=5
+                pageGlitchPulseSeconds=31
                 """);
 
         GameConfigReader reader = new GameConfigReader(tempDir);
