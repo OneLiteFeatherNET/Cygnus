@@ -385,6 +385,7 @@ class GameConfigReaderTest {
         GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
 
         assertEquals(CreekConfig.DEFAULT, config.creek());
+        assertEquals(0.5D, config.creek().swapChance(), 1.0E-9, "the swap chance defaults to 0.5");
     }
 
     @Test
@@ -399,6 +400,7 @@ class GameConfigReaderTest {
                 creek.randomStopMinMillis=500
                 creek.randomStopMaxMillis=900
                 creek.launchHeight=7.5
+                creek.swapChance=0.25
                 """);
 
         CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
@@ -412,6 +414,7 @@ class GameConfigReaderTest {
         assertEquals(500, creek.randomStopMinMillis());
         assertEquals(900, creek.randomStopMaxMillis());
         assertEquals(7.5D, creek.launchHeight(), 1.0E-9);
+        assertEquals(0.25D, creek.swapChance(), 1.0E-9);
     }
 
     @Test

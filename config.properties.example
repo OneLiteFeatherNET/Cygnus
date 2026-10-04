@@ -227,6 +227,12 @@ survivorTeamSize=12
 # into the air, without fall damage. Between 0 and 20; 0 turns the launch off.
 # Playtest: tune this if the throw feels too weak or too violent.
 #creek.launchHeight=5.0
+# On a catch the creek chooses one punishment on top of the usual ones: throw the
+# caught survivor into the air (launchHeight above), or swap places with another
+# living survivor. This is the chance for the swap, between 0 and 1: 0 always
+# throws, 1 always swaps. Without another survivor the creek throws instead.
+# Playtest: tune this if the swaps happen too often or too rarely.
+#creek.swapChance=0.5
 
 # --- Sanity -----------------------------------------------------------------
 # Every survivor has a fear value between 0 and 1. It jumps when they find a

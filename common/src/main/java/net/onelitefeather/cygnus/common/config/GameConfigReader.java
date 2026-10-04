@@ -54,7 +54,7 @@ import java.util.regex.Pattern;
  * The default values are defined in {@link GameConfig#DEFAULT}.
  *
  * @author theEvilReaper
- * @version 1.7.0
+ * @version 1.8.0
  * @see GameConfig
  * @since 1.0.0
  */
@@ -263,7 +263,8 @@ public final class GameConfigReader {
                 getDouble(properties, CREEK_PREFIX + "randomStopChance", d.randomStopChance()),
                 getInt(properties, CREEK_PREFIX + "randomStopMinMillis", d.randomStopMinMillis()),
                 getInt(properties, CREEK_PREFIX + "randomStopMaxMillis", d.randomStopMaxMillis()),
-                getDouble(properties, CREEK_PREFIX + "launchHeight", d.launchHeight())
+                getDouble(properties, CREEK_PREFIX + "launchHeight", d.launchHeight()),
+                getDouble(properties, CREEK_PREFIX + "swapChance", d.swapChance())
         );
     }
 

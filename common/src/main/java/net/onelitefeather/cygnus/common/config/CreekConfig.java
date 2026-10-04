@@ -45,8 +45,10 @@ package net.onelitefeather.cygnus.common.config;
  * @param randomStopMaxMillis    longest random stop, in milliseconds
  * @param launchHeight           how high a caught survivor is thrown into the air, in blocks;
  *                               0 turns the launch off
+ * @param swapChance             chance that a catch swaps two survivors instead of throwing the
+ *                               caught one; 0 always throws, 1 always swaps
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.15.0
  */
 public record CreekConfig(
@@ -83,7 +85,8 @@ public record CreekConfig(
         double randomStopChance,
         int randomStopMinMillis,
         int randomStopMaxMillis,
-        double launchHeight
+        double launchHeight,
+        double swapChance
 ) {
 
     /** The highest launch a catch may be set to, in blocks. */
@@ -103,7 +106,7 @@ public record CreekConfig(
             2, 0.15D, 6, 4,
             3.0D,
             0.15D, 1500, 4000,
-            5.0D
+            5.0D, 0.5D
     );
 
     /**
@@ -147,6 +150,7 @@ public record CreekConfig(
         atLeast("randomStopMinMillis", randomStopMinMillis, 0);
         notAbove("randomStopMinMillis", randomStopMinMillis, "randomStopMaxMillis", randomStopMaxMillis);
         between("launchHeight", launchHeight, 0.0D, MAX_LAUNCH_HEIGHT);
+        between("swapChance", swapChance, 0.0D, 1.0D);
     }
 
     private static void atLeast(String name, double value, double minimum) {

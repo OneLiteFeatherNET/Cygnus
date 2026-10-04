@@ -4,19 +4,19 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 
 /**
- * Throws a caught survivor up into the air, on top of whatever else the catch does.
+ * Throws a caught survivor up into the air.
  * <p>
- * The wrapped consequence runs first, so its effects are in place when the survivor leaves the
- * ground. {@link FaceLock} only turns the head and never holds the body, and slowness only changes
+ * {@link FaceLock} only turns the head and never holds the body, and slowness only changes
  * walking, so neither gets in the way of the throw: the velocity packet sets the client's motion
- * outright. There is no fall damage to suppress: Minestom has none and Cygnus adds none.
+ * outright. There is no fall damage to suppress: Minestom has none and Cygnus adds none. A height
+ * of 0 turns the launch off: nothing happens, which is not a failure.
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
-public final class CatchLaunch implements CatchConsequence {
+public final class CatchLaunch implements CatchTrick {
 
     /** How much of the upward speed is kept each tick, as in vanilla. */
     static final double DRAG = 0.98D;
@@ -27,31 +27,23 @@ public final class CatchLaunch implements CatchConsequence {
     private static final int SEARCH_STEPS = 80;
     private static final double MAX_SPEED_PER_TICK = 5.0D;
 
-    private final CatchConsequence wrapped;
     private final double velocity;
 
     /**
      * Sets up the launch.
      *
-     * @param wrapped the rest of the punishment, applied first
-     * @param height  how high the survivor is thrown, in blocks; 0 or less turns the launch off
+     * @param height how high the survivor is thrown, in blocks; 0 or less turns the launch off
      */
-    public CatchLaunch(CatchConsequence wrapped, double height) {
-        this.wrapped = wrapped;
+    public CatchLaunch(double height) {
         this.velocity = launchSpeed(height);
     }
 
     @Override
-    public void apply(Player survivor) {
-        this.wrapped.apply(survivor);
+    public boolean perform(Player survivor) {
         if (this.velocity > 0.0D) {
             survivor.setVelocity(new Vec(0.0D, this.velocity, 0.0D));
         }
-    }
-
-    @Override
-    public void cleanUp() {
-        this.wrapped.cleanUp();
+        return true;
     }
 
     /**

@@ -152,7 +152,7 @@ public final class Contexts {
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
                 d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
                 d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                chance, minMillis, maxMillis, d.launchHeight());
+                chance, minMillis, maxMillis, d.launchHeight(), d.swapChance());
     }
 
     /** A route that offers the first allowed point at least a block away. */

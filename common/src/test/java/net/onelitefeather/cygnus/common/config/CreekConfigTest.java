@@ -48,7 +48,7 @@ class CreekConfigTest {
                 config.catchDistance(), config.vanishMinSeconds(), config.vanishMaxSeconds(), config.respawnMinDistance(),
                 config.personalSpace(), config.stuckMillis(), config.betrayalCatchCount(),
                 config.betrayalChance(), config.betrayalGlowSeconds(), config.slownessSeconds(), 0.0D,
-                config.randomStopChance(), config.randomStopMinMillis(), config.randomStopMaxMillis(), config.launchHeight()));
+                config.randomStopChance(), config.randomStopMinMillis(), config.randomStopMaxMillis(), config.launchHeight(), config.swapChance()));
         assertTrue(exception.getMessage().contains("routeLinkDistance"));
     }
 
@@ -88,7 +88,7 @@ class CreekConfigTest {
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
                 personalSpace, d.stuckMillis(), d.betrayalCatchCount(),
                 d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis(), d.launchHeight());
+                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis(), d.launchHeight(), d.swapChance());
     }
 
     @Test
@@ -109,7 +109,7 @@ class CreekConfigTest {
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
                 d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
                 d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                chance, minMillis, maxMillis, d.launchHeight());
+                chance, minMillis, maxMillis, d.launchHeight(), d.swapChance());
     }
 
     @Test
@@ -144,6 +144,30 @@ class CreekConfigTest {
                 d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
                 d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
                 d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis(), height);
+                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis(), height, d.swapChance());
+    }
+
+    @Test
+    @DisplayName("The swap chance is 0.5 by default and must lie between 0 and 1")
+    void swapChanceIsChecked() {
+        assertEquals(0.5D, CreekConfig.DEFAULT.swapChance());
+        assertThrows(IllegalArgumentException.class, () -> withSwapChance(-0.1D));
+        assertThrows(IllegalArgumentException.class, () -> withSwapChance(1.1D));
+        withSwapChance(0.0D);
+        withSwapChance(1.0D);
+    }
+
+    private static CreekConfig withSwapChance(double chance) {
+        CreekConfig d = CreekConfig.DEFAULT;
+        return new CreekConfig(
+                d.enabled(), d.activeWithLastSurvivor(), d.sightRange(), d.sightViewAngle(),
+                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
+                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
+                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
+                d.huntMinStalkSeconds(), d.huntCooldownSeconds(),
+                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
+                d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
+                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
+                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis(), d.launchHeight(), chance);
     }
 }
