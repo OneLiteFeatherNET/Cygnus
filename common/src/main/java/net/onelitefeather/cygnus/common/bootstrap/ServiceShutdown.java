@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 /**
@@ -41,8 +42,18 @@ import java.util.function.IntConsumer;
  * back.
  * </p>
  *
+ * <h2>Ordering against the telemetry flush</h2>
+ * <p>
+ * A {@link ShutdownObserver} sees the shutdown before and after the server stopped, and the
+ * {@code serverStopped} call is made before {@link Runtime#exit(int)}. That order is the one
+ * guarantee tracing needs: the OpenTelemetry javaagent flushes its span processor from a JVM
+ * shutdown hook, and that hook only runs once the exit started - a span ended before it is
+ * flushed, a span ended after is lost. The watchdog's {@link Runtime#halt(int)} skips the hooks,
+ * so on that path the shutdown span is lost along with the tail of every other export.
+ * </p>
+ *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.11.0
  **/
 public final class ServiceShutdown {
@@ -70,6 +81,7 @@ public final class ServiceShutdown {
     private final IntConsumer halt;
     private final Duration watchdogTimeout;
     private final AtomicBoolean requested = new AtomicBoolean(false);
+    private volatile ShutdownObserver observer = ShutdownObserver.NONE;
 
     /**
      * Creates a shutdown with explicit collaborators. Package-private so tests can drive it without
@@ -86,6 +98,28 @@ public final class ServiceShutdown {
         this.exit = exit;
         this.halt = halt;
         this.watchdogTimeout = watchdogTimeout;
+    }
+
+    /**
+     * Hands the shutdown to an observer, replacing the previous one.
+     * <p>
+     * Static because the shutdown is: there is one process to end. The default does nothing.
+     * </p>
+     *
+     * @param observer who is told about the shutdown
+     */
+    public static void observe(@NotNull ShutdownObserver observer) {
+        INSTANCE.observer = observer;
+    }
+
+    /**
+     * Replaces the observer of this instance. Package-private for tests, which never touch the
+     * shared instance.
+     *
+     * @param observer who is told about the shutdown
+     */
+    void setObserver(@NotNull ShutdownObserver observer) {
+        this.observer = observer;
     }
 
     /**
@@ -116,6 +150,7 @@ public final class ServiceShutdown {
             LOGGER.debug("Shutdown already in progress - ignoring the additional request");
             return false;
         }
+        notifyObserver(ShutdownObserver::requested);
         startWatchdog();
         Thread.ofPlatform().name(SHUTDOWN_THREAD_NAME).start(this::runShutdown);
         return true;
@@ -129,13 +164,30 @@ public final class ServiceShutdown {
      * </p>
      */
     private void runShutdown() {
+        Throwable failure = null;
         try {
             stopServer.run();
         } catch (RuntimeException | Error exception) {
+            failure = exception;
             LOGGER.error("Stopping the server failed - exiting anyway", exception);
         }
+        // Before the exit on purpose, see the class comment: the exit is what flushes the exporter.
+        Throwable stopFailure = failure;
+        notifyObserver(watcher -> watcher.serverStopped(stopFailure));
         LOGGER.info("Exiting the process");
         exit.accept(EXIT_CODE);
+    }
+
+    /**
+     * Calls the observer without letting it hold up the shutdown: a broken tracer must not be the
+     * reason the service never exits.
+     */
+    private void notifyObserver(Consumer<ShutdownObserver> call) {
+        try {
+            call.accept(observer);
+        } catch (RuntimeException exception) {
+            LOGGER.warn("The shutdown observer failed - continuing the shutdown", exception);
+        }
     }
 
     /**

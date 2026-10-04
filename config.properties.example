@@ -266,3 +266,17 @@ survivorTeamSize=12
 #adrenaline.speedBonus=0.2
 #adrenaline.durationSeconds=4
 #adrenaline.cooldownSeconds=20
+
+# --- Telemetry --------------------------------------------------------------
+# Cygnus creates OpenTelemetry traces: one per round with a child per phase, one per
+# player join and kick, the startup and the shutdown. They only go anywhere when the
+# opentelemetry-javaagent is attached to the JVM (-javaagent:opentelemetry-javaagent.jar,
+# OTEL_SERVICE_NAME=cygnus, OTEL_EXPORTER_OTLP_ENDPOINT=...); without it every span is a
+# no-op. See docs/telemetry.md.
+#
+# A span per tick would drown the backend, so ticks are only reported when one is slow.
+
+# A server tick that takes at least this many milliseconds is reported as a
+# cygnus.tick.slow span. At least 1; a smaller value is rejected and the service refuses
+# to start. 50 is Minestom's tick budget, so the default flags every tick that ran over.
+#telemetry.slowTickThresholdMillis=50
