@@ -7,14 +7,18 @@ import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.state.CreekActions;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
 import net.onelitefeather.cygnus.creek.state.CreekState;
+import net.onelitefeather.cygnus.creek.state.HuntState;
 import net.onelitefeather.cygnus.creek.state.StalkState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,7 +30,7 @@ import java.util.UUID;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 final class Creek {
@@ -44,6 +48,7 @@ final class Creek {
     private List<SurvivorView> lastViews = List.of();
     private Set<UUID> seenLastStep = Set.of();
     private boolean entered;
+    private @Nullable UUID hunting;
 
     /**
      * Sets up a creek.
@@ -87,9 +92,12 @@ final class Creek {
         if (!this.entered) {
             this.state.enter(ctx);
             this.entered = true;
+            // A hunt the creek starts in may be over within this very step.
+            this.syncHunt();
         }
         CreekState next = this.state.tick(ctx);
         if (next != this.state) this.switchTo(next, ctx);
+        this.syncHunt();
         // Reported after the step, so a stalk that just ended or turned into a hunt is not counted.
         if (this.state instanceof StalkState stalk) this.round.witness().stalked(stalk.target());
     }
@@ -106,6 +114,20 @@ final class Creek {
         // The state it had so far is never entered now, and never needs to be.
         this.entered = true;
         this.switchTo(VanishState.forever(), ctx);
+        this.syncHunt();
+    }
+
+    /**
+     * Tells the witness when the survivor this creek hunts changes: a hunt that starts, one that
+     * ends, or a switch to another target. Called after every step, so each hunt is reported once.
+     */
+    private void syncHunt() {
+        UUID now = this.state instanceof HuntState hunt ? hunt.target() : null;
+        UUID before = this.hunting;
+        if (Objects.equals(now, before)) return;
+        this.hunting = now;
+        if (before != null) this.round.witness().huntEnded(before);
+        if (now != null) this.round.witness().hunted(now);
     }
 
     /**
@@ -195,6 +217,9 @@ final class Creek {
     }
 
     void remove() {
+        UUID before = this.hunting;
+        this.hunting = null;
+        if (before != null) this.round.witness().huntEnded(before);
         this.body.remove();
     }
 

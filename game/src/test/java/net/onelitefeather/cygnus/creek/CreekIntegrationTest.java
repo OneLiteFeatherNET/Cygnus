@@ -22,6 +22,9 @@ import net.onelitefeather.cygnus.creek.state.StalkState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.state.PatrolState;
+import net.onelitefeather.cygnus.creek.tab.HuntedTabWitness;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 import org.junit.jupiter.api.DisplayName;
@@ -61,6 +64,18 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         private final List<UUID> catches = new ArrayList<>();
         private final List<UUID> stalks = new ArrayList<>();
         private final List<UUID> selections = new ArrayList<>();
+        private final List<UUID> hunts = new ArrayList<>();
+        private final List<UUID> huntEnds = new ArrayList<>();
+
+        @Override
+        public void hunted(UUID survivor) {
+            this.hunts.add(survivor);
+        }
+
+        @Override
+        public void huntEnded(UUID survivor) {
+            this.huntEnds.add(survivor);
+        }
 
         @Override
         public void sighted(UUID survivor) {
@@ -321,6 +336,133 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         creek.tick(survivors(survivor), Set.of(survivor.getUuid()), 100L);
 
         assertTrue(witness.sightings.isEmpty());
+    }
+
+    @Test
+    @DisplayName("A hunt is reported once when it starts, not for every step")
+    void huntIsReportedOnce(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new HuntState(survivor.getUuid(), Long.MAX_VALUE), witness);
+
+        creek.tick(survivors(survivor), 0L);
+        creek.tick(survivors(survivor), 100L);
+
+        assertEquals(List.of(survivor.getUuid()), witness.hunts);
+        assertTrue(witness.huntEnds.isEmpty());
+    }
+
+    @Test
+    @DisplayName("A stalk is not a hunt")
+    void stalkIsNotAHunt(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player target = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 25));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new StalkState(target.getUuid(), Long.MAX_VALUE), witness);
+
+        creek.tick(survivors(target), 0L);
+
+        assertTrue(witness.hunts.isEmpty());
+    }
+
+    @Test
+    @DisplayName("A catch ends the hunt")
+    void catchEndsTheHunt(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 1));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new HuntState(survivor.getUuid(), Long.MAX_VALUE), witness);
+
+        creek.tick(survivors(survivor), 0L);
+
+        assertEquals(List.of(survivor.getUuid()), witness.hunts);
+        assertEquals(List.of(survivor.getUuid()), witness.huntEnds);
+    }
+
+    @Test
+    @DisplayName("A hunt that runs out of time ends")
+    void timeoutEndsTheHunt(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new HuntState(survivor.getUuid(), 500L), witness);
+        creek.tick(survivors(survivor), 0L);
+
+        creek.tick(survivors(survivor), 600L);
+
+        assertEquals(List.of(survivor.getUuid()), witness.huntEnds);
+    }
+
+    @Test
+    @DisplayName("A survivor who disappears from the round ends the hunt")
+    void goneSurvivorEndsTheHunt(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player target = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
+        Player other = env.createConnection().connect(instance, new Pos(5, 40, 0, 0, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 10));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new HuntState(target.getUuid(), Long.MAX_VALUE), witness);
+        creek.tick(survivors(target, other), 0L);
+
+        creek.tick(survivors(other), 100L);
+
+        assertEquals(List.of(target.getUuid()), witness.huntEnds);
+    }
+
+    @Test
+    @DisplayName("Removing a creek in the middle of a hunt ends it")
+    void removingEndsTheHunt(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new HuntState(survivor.getUuid(), Long.MAX_VALUE), witness);
+        creek.tick(survivors(survivor), 0L);
+
+        creek.remove();
+        creek.remove();
+
+        assertEquals(List.of(survivor.getUuid()), witness.huntEnds);
+    }
+
+    @Test
+    @DisplayName("Sending a hunting creek away for good ends the hunt")
+    void vanishingEndsTheHunt(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new HuntState(survivor.getUuid(), Long.MAX_VALUE), witness);
+        creek.tick(survivors(survivor), 0L);
+
+        creek.vanishForGood(survivors(survivor), 100L);
+
+        assertEquals(List.of(survivor.getUuid()), witness.huntEnds);
+    }
+
+    @Test
+    @DisplayName("Through the creek, the tab name is marked during the hunt and back to normal after the catch")
+    void tabNameFollowsTheHunt(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
+        Component before = Component.text(survivor.getUsername());
+        survivor.setDisplayName(before);
+        CreakingBody far = CreakingBody.spawn(instance, new Pos(0, 40, 20));
+        HuntedTabWitness witness = new HuntedTabWitness(CreekWitness.NONE,
+                id -> id.equals(survivor.getUuid()) ? survivor : null);
+        Creek hunting = creek(far, CreekConfig.DEFAULT, new HuntState(survivor.getUuid(), Long.MAX_VALUE), witness);
+
+        hunting.tick(survivors(survivor), 0L);
+        assertTrue(PlainTextComponentSerializer.plainText().serialize(survivor.getDisplayName())
+                .contains(HuntedTabWitness.MARKER));
+
+        hunting.remove();
+        assertEquals(before, survivor.getDisplayName());
     }
 
     @Test
