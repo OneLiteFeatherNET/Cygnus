@@ -8,6 +8,7 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.rank.RankTag;
 import net.onelitefeather.cygnus.team.RoleIcon;
+import net.onelitefeather.cygnus.team.TabOrder;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -25,6 +26,19 @@ class RestartPhaseTest extends CygnusPlayerTestBase {
 
         assertEquals(RankTag.PLAYER.prefix(Component.text(player.getUsername())), player.getDisplayName(),
                 "the restart lobby must show the rank tag again, not the round's role icon (LuckPerms is absent in tests, so it falls back to RankTag.PLAYER)");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testResetDisplayNamesPutsTheTabListBackToItsDefaultOrder(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        player.setListOrder(TabOrder.SLENDER);
+
+        new RestartPhase().resetDisplayNames();
+
+        assertEquals(TabOrder.SPECTATOR, player.getListOrder(), "the restart lobby uses the default order again");
 
         env.destroyInstance(instance, true);
     }
