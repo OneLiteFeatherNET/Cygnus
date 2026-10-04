@@ -3,6 +3,9 @@ package net.onelitefeather.cygnus.common.page.event;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.trait.PlayerEvent;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
 
 /**
  * Called every time a survivor claims a page, with the state of the round attached.
@@ -16,11 +19,24 @@ import net.minestom.server.event.trait.PlayerEvent;
  * @param finder     the survivor who claimed the page
  * @param foundCount how many pages have been claimed including this one, starting at {@code 1}
  * @param maxPages   how many pages the round needs in total
+ * @param pageId     the id of the page that was claimed, or {@code null} when the sender does not know it
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.14.0
  */
-public record PageFoundEvent(Player finder, int foundCount, int maxPages) implements Event, PlayerEvent {
+public record PageFoundEvent(Player finder, int foundCount, int maxPages, @Nullable UUID pageId)
+        implements Event, PlayerEvent {
+
+    /**
+     * Creates the event for a page whose id is not known.
+     *
+     * @param finder     the survivor who claimed the page
+     * @param foundCount how many pages have been claimed including this one
+     * @param maxPages   how many pages the round needs in total
+     */
+    public PageFoundEvent(Player finder, int foundCount, int maxPages) {
+        this(finder, foundCount, maxPages, null);
+    }
 
     /**
      * Returns the survivor who claimed the page.

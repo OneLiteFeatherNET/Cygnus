@@ -294,4 +294,58 @@ class SanityServiceTest extends CygnusPlayerTestBase {
 
         assertEquals(0.0D, dread(service, near), EPSILON);
     }
+
+    @Test
+    @DisplayName("The observer hears a caught survivor's jump with its source")
+    void observerHearsCaught(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        java.util.List<String> heard = new java.util.ArrayList<>();
+        SanityService service = new SanityService(NO_DECAY, () -> this.pageProgress, ROUND_MILLIS, this.clock::get,
+                () -> this.survivors, (id, source, before, after) -> heard.add(source + ":" + before + ">" + after));
+        service.track(survivor);
+
+        service.caught(survivor.getUuid());
+
+        assertEquals(java.util.List.of("caught:0.0>0.3"), heard);
+    }
+
+    @Test
+    @DisplayName("A death is heard once for every other survivor, with the source death")
+    void observerHearsDeathForEveryoneElse(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player dead = connect(env, instance, new Pos(0, 40, 0));
+        Player other = connect(env, instance, new Pos(2, 40, 0));
+        java.util.List<java.util.UUID> heard = new java.util.ArrayList<>();
+        SanityService service = new SanityService(NO_DECAY, () -> this.pageProgress, ROUND_MILLIS, this.clock::get,
+                () -> this.survivors, (id, source, before, after) -> {
+                    assertEquals("death", source);
+                    heard.add(id);
+                });
+        service.track(dead);
+        service.track(other);
+        env.process().eventHandler().addChild(service.node());
+
+        EventDispatcher.call(new net.minestom.server.event.player.PlayerDeathEvent(dead, net.kyori.adventure.text.Component.empty(), net.kyori.adventure.text.Component.empty()));
+
+        assertEquals(java.util.List.of(other.getUuid()), heard);
+    }
+
+    @Test
+    @DisplayName("Observing does not change how scared the survivor is")
+    void observerDoesNotChangeTheFear(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        SanityService observed = new SanityService(NO_DECAY, () -> this.pageProgress, ROUND_MILLIS, this.clock::get,
+                () -> this.survivors, (id, source, before, after) -> {
+                });
+        SanityService plain = service(NO_DECAY);
+        observed.track(survivor);
+        plain.track(survivor);
+
+        observed.caught(survivor.getUuid());
+        plain.caught(survivor.getUuid());
+
+        assertEquals(dread(plain, survivor), dread(observed, survivor), EPSILON);
+    }
 }

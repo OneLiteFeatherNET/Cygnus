@@ -3,12 +3,16 @@ package net.onelitefeather.cygnus.common.bootstrap;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -124,5 +128,117 @@ class ServiceShutdownTest {
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    @Test
+    void testObserverSeesTheServerStopBeforeTheExit() throws InterruptedException {
+        CountDownLatch exited = new CountDownLatch(1);
+        List<String> order = new CopyOnWriteArrayList<>();
+
+        ServiceShutdown shutdown = new ServiceShutdown(
+                () -> order.add("stop"),
+                _ -> {
+                    order.add("exit");
+                    exited.countDown();
+                },
+                _ -> fail("the watchdog must not fire while the shutdown makes progress"),
+                NEVER
+        );
+        shutdown.setObserver(new ShutdownObserver() {
+            @Override
+            public void requested() {
+                order.add("requested");
+            }
+
+            @Override
+            public void serverStopped(Throwable failure) {
+                order.add(failure == null ? "stopped" : "failed");
+            }
+        });
+
+        shutdown.requestShutdown();
+
+        assertTrue(exited.await(AWAIT_SECONDS, TimeUnit.SECONDS), "the process has to exit");
+        assertEquals(List.of("requested", "stop", "stopped", "exit"), order,
+                "the observer has to hear about the stop before the exit starts the exporter flush");
+    }
+
+    @Test
+    void testObserverIsToldWhyTheServerFailedToStop() throws InterruptedException {
+        CountDownLatch exited = new CountDownLatch(1);
+        AtomicReference<Throwable> reported = new AtomicReference<>();
+        IllegalStateException cause = new IllegalStateException("the server refuses to stop");
+
+        ServiceShutdown shutdown = new ServiceShutdown(
+                () -> {
+                    throw cause;
+                },
+                _ -> exited.countDown(),
+                _ -> fail("the watchdog must not fire while the shutdown makes progress"),
+                NEVER
+        );
+        shutdown.setObserver(new ShutdownObserver() {
+            @Override
+            public void serverStopped(Throwable failure) {
+                reported.set(failure);
+            }
+        });
+
+        shutdown.requestShutdown();
+
+        assertTrue(exited.await(AWAIT_SECONDS, TimeUnit.SECONDS), "the process has to exit");
+        assertSame(cause, reported.get(), "the observer receives the failure");
+    }
+
+    @Test
+    void testABrokenObserverDoesNotKeepTheProcessAlive() throws InterruptedException {
+        CountDownLatch exited = new CountDownLatch(1);
+
+        ServiceShutdown shutdown = new ServiceShutdown(
+                () -> {
+                },
+                _ -> exited.countDown(),
+                _ -> fail("the watchdog must not fire while the shutdown makes progress"),
+                NEVER
+        );
+        shutdown.setObserver(new ShutdownObserver() {
+            @Override
+            public void serverStopped(Throwable failure) {
+                throw new IllegalStateException("the tracer is broken");
+            }
+        });
+
+        shutdown.requestShutdown();
+
+        assertTrue(exited.await(AWAIT_SECONDS, TimeUnit.SECONDS), "an observer must not be able to block the exit");
+    }
+
+    @Test
+    void testAnErrorFromTheObserverStillStartsTheShutdownAndTheWatchdog() throws InterruptedException {
+        CountDownLatch exited = new CountDownLatch(1);
+        CountDownLatch halted = new CountDownLatch(1);
+
+        ServiceShutdown shutdown = new ServiceShutdown(
+                () -> {
+                },
+                _ -> exited.countDown(),
+                _ -> halted.countDown(),
+                Duration.ofMillis(1)
+        );
+        shutdown.setObserver(new ShutdownObserver() {
+            @Override
+            public void requested() {
+                throw new AssertionError("the observer blew up with an Error");
+            }
+
+            @Override
+            public void serverStopped(Throwable failure) {
+                throw new OutOfMemoryError("and again");
+            }
+        });
+
+        assertTrue(shutdown.requestShutdown(), "the request is accepted");
+        assertTrue(exited.await(AWAIT_SECONDS, TimeUnit.SECONDS), "the shutdown thread exists and exits");
+        assertTrue(halted.await(AWAIT_SECONDS, TimeUnit.SECONDS), "the watchdog was started before the observer ran");
     }
 }

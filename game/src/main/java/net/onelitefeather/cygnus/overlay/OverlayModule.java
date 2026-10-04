@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.overlay;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.command.CommandManager;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -48,6 +49,21 @@ public final class OverlayModule implements GameFeature {
      * @param staminaService the stamina the tunnel vision follows
      */
     public OverlayModule(GameConfig.Glitch glitch, GameConfig.PageGlitch pageGlitch, TeamService teamService, StaminaService staminaService) {
+        this(glitch, pageGlitch, teamService, staminaService, TickSections.NONE);
+    }
+
+    /**
+     * Builds the effects, with the ones that update on a timer measured for the slow tick report.
+     *
+     * @param glitch         the thresholds of the slender gaze
+     * @param pageGlitch     how the slender's own screen tears as pages are found
+     * @param teamService    the teams of the round
+     * @param staminaService the stamina the tunnel vision follows
+     * @param sections       measures how long the gaze and the tunnel vision updates take
+     * @since 2.15.0
+     */
+    public OverlayModule(GameConfig.Glitch glitch, GameConfig.PageGlitch pageGlitch, TeamService teamService,
+                         StaminaService staminaService, TickSections sections) {
         ScreenOverlay screenOverlay = new EquipmentScreenOverlay();
         this.gazeSignal = new BossBarGazeSignal();
         this.slenderGazeService = new SlenderGazeService(
@@ -57,7 +73,8 @@ public final class OverlayModule implements GameFeature {
                         glitch.closeRange(),
                         glitch.viewAngle()),
                 () -> TeamHelper.slenderOf(teamService),
-                () -> TeamHelper.survivorsOf(teamService));
+                () -> TeamHelper.survivorsOf(teamService),
+                sections);
         // The gaze's signal, shared rather than a second one: a player has one carrier, and two
         // would draw two full-screen quads over each other. Which of the two services addresses a
         // player follows their team, and a hand-over moves them from one to the other.
@@ -72,7 +89,8 @@ public final class OverlayModule implements GameFeature {
         this.tunnelVisionService = new TunnelVisionService(
                 new OverlayTunnelVisionRenderer(screenOverlay),
                 player -> StaminaHelper.remainingShare(staminaService, player),
-                () -> TeamHelper.survivorsOf(teamService));
+                () -> TeamHelper.survivorsOf(teamService),
+                sections);
         this.registerListeners();
     }
 

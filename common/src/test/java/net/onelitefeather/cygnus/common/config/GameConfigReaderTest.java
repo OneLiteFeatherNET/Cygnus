@@ -471,6 +471,34 @@ class GameConfigReaderTest {
     }
 
     @Test
+    void testTelemetryDefaultsWhenNotConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(TelemetryConfig.DEFAULT, config.telemetry());
+    }
+
+    @Test
+    void testTelemetryThresholdIsRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                telemetry.slowTickThresholdMillis=80
+                """);
+
+        assertEquals(80, new GameConfigReader(tempDir).getConfig().telemetry().slowTickThresholdMillis());
+    }
+
+    @Test
+    void testTelemetryRejectsThresholdOutOfRange(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                telemetry.slowTickThresholdMillis=0
+                """);
+
+        GameConfigReader reader = new GameConfigReader(tempDir);
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
+    }
+
+    @Test
     void testSanityDefaultsWhenNotConfigured() {
         GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
 

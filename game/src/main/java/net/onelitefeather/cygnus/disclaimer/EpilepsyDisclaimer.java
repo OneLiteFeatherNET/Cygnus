@@ -42,13 +42,13 @@ public final class EpilepsyDisclaimer implements GameFeature {
      * The id the dialog button sends back. The listener below waits for exactly this key, so the two
      * have to be read together: a button carrying a different id leaves the title unsent.
      */
-    static final Key ACKNOWLEDGE_KEY = Key.key("cygnus", "disclaimer/epilepsy/acknowledged");
+    public static final Key ACKNOWLEDGE_KEY = Key.key("cygnus", "disclaimer/epilepsy/acknowledged");
 
     /**
      * The id the leave button sends back. Answering with it takes the player off the service instead
      * of into the round.
      */
-    static final Key DECLINE_KEY = Key.key("cygnus", "disclaimer/epilepsy/declined");
+    public static final Key DECLINE_KEY = Key.key("cygnus", "disclaimer/epilepsy/declined");
 
     private static final Key DIALOG_KEY = Key.key("cygnus", "dialog/epilepsy_disclaimer");
 

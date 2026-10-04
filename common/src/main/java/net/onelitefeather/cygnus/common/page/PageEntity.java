@@ -14,6 +14,7 @@ import net.minestom.server.utils.chunk.ChunkUtils;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
+import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
 
 import java.util.UUID;
@@ -173,13 +174,21 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
         if (currentTickTime >= ttlTime) {
             // A page is only out of play while it waits to come back, see hideFor
             if (!this.interactable) {
-                this.enableInteraction();
+                this.reappear();
                 return;
             }
             this.disableInteraction();
             send = true;
             EventDispatcher.call(new PageExpiredEvent(this));
         }
+    }
+
+    /**
+     * Brings a hidden page back on its spot and announces it, since only now is it collectible again.
+     */
+    void reappear() {
+        this.enableInteraction();
+        EventDispatcher.call(new PageSpawnedEvent(this.getHitBoxUUID(), this.spot(), true));
     }
 
     /**
@@ -273,6 +282,18 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
     void moveTo(PageResource resource) {
         this.resource = resource;
         this.teleport(Helper.updatePosition(resource.position().asPos(), resource.face()));
+    }
+
+    /**
+     * Returns the position of the spot the page stands on, which is where it is (or will be, once
+     * its placement went through). Unlike {@link #position()} this does not lag behind an
+     * asynchronous teleport.
+     *
+     * @return the position of the current spot
+     * @since 2.15.0
+     */
+    public Pos spot() {
+        return Helper.updatePosition(this.resource.position().asPos(), this.resource.face());
     }
 
     /**

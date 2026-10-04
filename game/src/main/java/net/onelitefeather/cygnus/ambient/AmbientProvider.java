@@ -45,8 +45,10 @@ public final class AmbientProvider {
     private static final int MIN_BLACKOUT_INTERVAL_SECONDS = 100;
     private static final int MAX_BLACKOUT_INTERVAL_SECONDS = 220;
 
+    private static final int BLACKOUT_DURATION_TICKS = 200;
+
     private static final TimedPotion POTION_EFFECT =
-            new TimedPotion(new Potion(PotionEffect.BLINDNESS, (byte) 1, 200), 200);
+            new TimedPotion(new Potion(PotionEffect.BLINDNESS, (byte) 1, BLACKOUT_DURATION_TICKS), BLACKOUT_DURATION_TICKS);
     private static final Sound[] BLACKOUT_SOUNDS = {
             Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.MASTER, 1F, 0F),
             Sound.sound(SoundEvent.BLOCK_FIRE_EXTINGUISH, Sound.Source.MASTER, 1F, 1F),
@@ -54,6 +56,7 @@ public final class AmbientProvider {
     };
 
     private final Team team;
+    private final BlackoutObserver observer;
     private final RepeatingTask task = new RepeatingTask(this::tick);
     private final RandomGenerator random;
     private int ticksSinceLastBlackout;
@@ -64,7 +67,18 @@ public final class AmbientProvider {
      * @param team which is involved
      */
     public AmbientProvider(Team team) {
-        this(team, ThreadLocalRandom.current());
+        this(team, ThreadLocalRandom.current(), BlackoutObserver.NONE);
+    }
+
+    /**
+     * Creates the provider with an observer for its blackouts.
+     *
+     * @param team     the team the lights go out for
+     * @param observer hears about every blackout
+     * @since 2.15.0
+     */
+    public AmbientProvider(Team team, BlackoutObserver observer) {
+        this(team, ThreadLocalRandom.current(), observer);
     }
 
     /**
@@ -75,7 +89,12 @@ public final class AmbientProvider {
      * @param random the source used to roll the gap between blackout events
      */
     AmbientProvider(Team team, RandomGenerator random) {
+        this(team, random, BlackoutObserver.NONE);
+    }
+
+    AmbientProvider(Team team, RandomGenerator random, BlackoutObserver observer) {
         this.team = team;
+        this.observer = observer;
         this.random = random;
         this.nextBlackoutIn = randomBlackoutInterval();
     }
@@ -114,9 +133,11 @@ public final class AmbientProvider {
     public void tick() {
         ticksSinceLastBlackout++;
         if (ticksSinceLastBlackout >= nextBlackoutIn) {
-            triggerBlackout(List.copyOf(this.team.getPlayers()));
+            List<Player> hit = List.copyOf(this.team.getPlayers());
+            triggerBlackout(hit);
             ticksSinceLastBlackout = 0;
             nextBlackoutIn = randomBlackoutInterval();
+            this.observer.blackout(hit, BLACKOUT_DURATION_TICKS, nextBlackoutIn);
         }
     }
 

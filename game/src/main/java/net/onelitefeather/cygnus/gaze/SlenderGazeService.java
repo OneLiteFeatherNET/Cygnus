@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.gaze;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -50,7 +51,7 @@ public final class SlenderGazeService implements GameFeature {
     private final Supplier<@Nullable Player> slender;
     private final Supplier<Set<Player>> roundSurvivors;
     private final PlayerState<Tracked> survivors = new PlayerState<>();
-    private final RepeatingTask task = new RepeatingTask(this::tick);
+    private final RepeatingTask task;
 
     /**
      * Creates a new service.
@@ -63,6 +64,23 @@ public final class SlenderGazeService implements GameFeature {
      */
     public SlenderGazeService(GazeSink sink, SlenderGaze gaze, Supplier<@Nullable Player> slender,
                               Supplier<Set<Player>> survivors) {
+        this(sink, gaze, slender, survivors, TickSections.NONE);
+    }
+
+    /**
+     * Creates a new service whose update is measured for the slow tick report.
+     *
+     * @param sink      where a survivor's level is signalled to, {@link GazeSink#NONE} to work the
+     *                  levels out without sending them anywhere
+     * @param gaze      the thresholds the levels are worked out from
+     * @param slender   supplies the current slender, or {@code null} while there is none
+     * @param survivors supplies the survivors of the starting round
+     * @param sections  measures how long each update takes
+     * @since 2.15.0
+     */
+    public SlenderGazeService(GazeSink sink, SlenderGaze gaze, Supplier<@Nullable Player> slender,
+                              Supplier<Set<Player>> survivors, TickSections sections) {
+        this.task = new RepeatingTask(sections.wrap("slender-gaze", this::tick));
         this.sink = sink;
         this.gaze = gaze;
         this.slender = slender;

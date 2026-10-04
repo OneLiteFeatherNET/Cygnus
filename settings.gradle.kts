@@ -48,12 +48,26 @@ dependencyResolutionManagement {
             version("falco", "3.0.0")
             version("minestom-extensions", "2.2.0")
             version("sentry", "8.59.0")
+            // The API is the only OpenTelemetry artifact Cygnus ships. Production attaches the
+            // opentelemetry-javaagent, which brings the SDK and the OTLP exporter and bridges
+            // GlobalOpenTelemetry by exact class name - so this must stay unrelocated, and its
+            // version must not exceed what the attached agent supports. Nothing in this repository
+            // (setup/, docs, task configs) states the agent version, so this follows Ploceus, the
+            // other OneLiteFeather service on the same agent line: agent 2.16.0, whose muzzle
+            // markers top out at API 1.50, hence 1.51.0 as the most conservative release at or
+            // above that ceiling. Raise it together with the agent, never ahead of it. Without the
+            // agent every call lands on the no-op implementation.
+            version("opentelemetry", "1.51.0")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("slf4j.api", "org.slf4j", "slf4j-api").versionRef("slf4j")
             library("slf4j.simple", "org.slf4j", "slf4j-simple").versionRef("slf4j")
             library("guava", "com.google.guava", "guava").versionRef("guava")
             library("sentry", "io.sentry", "sentry").versionRef("sentry")
+            library("opentelemetry.api", "io.opentelemetry", "opentelemetry-api").versionRef("opentelemetry")
+            // Test only: an in-process SDK with an in-memory exporter, so tests assert on real spans.
+            library("opentelemetry.sdk", "io.opentelemetry", "opentelemetry-sdk").versionRef("opentelemetry")
+            library("opentelemetry.sdk.testing", "io.opentelemetry", "opentelemetry-sdk-testing").versionRef("opentelemetry")
             library("luckperms.api", "net.luckperms", "api").versionRef("luckperms")
             library("luckperms.minestom.loader", "net.luckperms", "minestom-loader").versionRef("luckperms-minestom-loader")
 

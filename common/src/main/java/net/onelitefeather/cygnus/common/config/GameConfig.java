@@ -25,10 +25,11 @@ import java.net.URI;
  * @param sanity               the survivors' fear, which the creek reads
  * @param stamina              the survivors' sprint and the slender's appearing
  * @param adrenaline           the rush a survivor gets when the visible slender comes close
+ * @param telemetry            the OpenTelemetry traces, which only do anything with the javaagent attached
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
- * @version 2.0.1
+ * @version 2.1.0
  * @since 1.0.0
  */
 public record GameConfig(
@@ -44,6 +45,7 @@ public record GameConfig(
         SanityConfig sanity,
         StaminaConfig stamina,
         AdrenalineConfig adrenaline,
+        TelemetryConfig telemetry,
         float lobbyAtmosphereShare
 ) {
 
@@ -116,6 +118,7 @@ public record GameConfig(
             SanityConfig.DEFAULT,
             StaminaConfig.DEFAULT,
             AdrenalineConfig.DEFAULT,
+            TelemetryConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 
