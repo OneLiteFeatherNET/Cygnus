@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.ambient;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.theevilreaper.xerus.api.team.Team;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
@@ -37,7 +39,7 @@ import java.util.random.RandomGenerator;
  * }</pre>
  *
  * @author theEvilReaper
- * @version 3.0.0
+ * @version 3.1.0
  * @since 1.0.0
  */
 public final class AmbientProvider {
@@ -57,7 +59,7 @@ public final class AmbientProvider {
 
     private final Team team;
     private final BlackoutObserver observer;
-    private final RepeatingTask task = new RepeatingTask(this::tick);
+    private final RepeatingTask task;
     private final RandomGenerator random;
     private int ticksSinceLastBlackout;
     private int nextBlackoutIn;
@@ -82,6 +84,18 @@ public final class AmbientProvider {
     }
 
     /**
+     * Creates the provider with its tick measured for the slow tick report.
+     *
+     * @param team     the team the lights go out for
+     * @param observer hears about every blackout
+     * @param sections measures how long each run takes
+     * @since 2.15.0
+     */
+    public AmbientProvider(Team team, BlackoutObserver observer, TickSections sections) {
+        this(team, ThreadLocalRandom.current(), observer, sections);
+    }
+
+    /**
      * Creates a new instance with an injectable random source, so tests can force a specific
      * blackout interval instead of depending on {@link ThreadLocalRandom}.
      *
@@ -93,6 +107,11 @@ public final class AmbientProvider {
     }
 
     AmbientProvider(Team team, RandomGenerator random, BlackoutObserver observer) {
+        this(team, random, observer, TickSections.NONE);
+    }
+
+    AmbientProvider(Team team, RandomGenerator random, BlackoutObserver observer, TickSections sections) {
+        this.task = new RepeatingTask(sections.wrap(TickSectionNames.AMBIENT, this::tick));
         this.team = team;
         this.observer = observer;
         this.random = random;

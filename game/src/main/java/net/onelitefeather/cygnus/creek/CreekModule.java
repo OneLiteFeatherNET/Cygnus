@@ -101,7 +101,7 @@ public final class CreekModule implements GameFeature {
                                 new CatchLaunch(this.config.catching().launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
                                 this.config.catching().swapChance(),
                                 random),
-                        new GlowReveal(this.config.catching().betrayalGlowSeconds()),
+                        new GlowReveal(this.config.catching().betrayalGlowSeconds(), sections),
                         () -> TeamHelper.slenderOf(teamService),
                         this.config,
                         random),

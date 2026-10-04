@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.page;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
@@ -32,7 +34,7 @@ import java.util.function.Supplier;
  *
  * @author TheMeinerLP
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.12.0
  */
 public final class PageProximityService {
@@ -56,7 +58,7 @@ public final class PageProximityService {
 
     public static final int SERVICE_TICK_RATE = 5;
 
-    private final RepeatingTask task = new RepeatingTask(this::tick);
+    private final RepeatingTask task;
     private final GameConfig.PageProximity config;
     private final Supplier<Collection<Player>> listeners;
     private final Supplier<? extends Collection<? extends PageProximityTarget>> pageSupplier;
@@ -78,6 +80,25 @@ public final class PageProximityService {
             Supplier<Collection<Player>> listeners,
             Supplier<? extends Collection<? extends PageProximityTarget>> pageSupplier
     ) {
+        this(config, listeners, pageSupplier, TickSections.NONE);
+    }
+
+    /**
+     * Creates the service with its tick measured for the slow tick report.
+     *
+     * @param config       the configuration holding range and sound
+     * @param listeners    supplies the players the hint is played to
+     * @param pageSupplier supplies the proximity page targets that can currently be collected
+     * @param sections     measures how long each run takes
+     * @since 2.15.0
+     */
+    public PageProximityService(
+            GameConfig.PageProximity config,
+            Supplier<Collection<Player>> listeners,
+            Supplier<? extends Collection<? extends PageProximityTarget>> pageSupplier,
+            TickSections sections
+    ) {
+        this.task = new RepeatingTask(sections.wrap(TickSectionNames.PAGE_PROXIMITY, this::tick));
         this.config = config;
         this.listeners = listeners;
         this.pageSupplier = pageSupplier;

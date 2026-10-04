@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.gaze;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
@@ -34,7 +35,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author TheMeinerLP
- * @version 3.1.0
+ * @version 3.2.0
  * @since 2.7.0
  */
 public final class SlenderGazeService implements GameFeature {
@@ -80,7 +81,7 @@ public final class SlenderGazeService implements GameFeature {
      */
     public SlenderGazeService(GazeSink sink, SlenderGaze gaze, Supplier<@Nullable Player> slender,
                               Supplier<Set<Player>> survivors, TickSections sections) {
-        this.task = new RepeatingTask(sections.wrap("slender-gaze", this::tick));
+        this.task = new RepeatingTask(sections.wrap(TickSectionNames.SLENDER_GAZE, this::tick));
         this.sink = sink;
         this.gaze = gaze;
         this.slender = slender;

@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.blood;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
@@ -27,7 +29,7 @@ import java.util.function.IntUnaryOperator;
  * </p>
  *
  * @author TheMeinerLP
- * @version 2.1.1
+ * @version 2.2.0
  * @since 2.7.0
  */
 public final class BloodSplatterService implements GameFeature {
@@ -58,7 +60,7 @@ public final class BloodSplatterService implements GameFeature {
     private final PlayerState<Splatter> active = new PlayerState<>();
 
     /** Fades every active splatter forward by one frame. Runs only while someone is bleeding. */
-    final RepeatingTask fadeTask = new RepeatingTask(this::tick);
+    final RepeatingTask fadeTask;
 
     /**
      * Creates a new service.
@@ -67,6 +69,19 @@ public final class BloodSplatterService implements GameFeature {
      * @param variantPicker picks a variant below the given bound
      */
     public BloodSplatterService(ScreenOverlay overlay, IntUnaryOperator variantPicker) {
+        this(overlay, variantPicker, TickSections.NONE);
+    }
+
+    /**
+     * Creates a new service with its fade measured for the slow tick report.
+     *
+     * @param overlay       the overlay that owns the player's screen
+     * @param variantPicker picks a variant below the given bound
+     * @param sections      measures how long each fade step takes
+     * @since 2.15.0
+     */
+    public BloodSplatterService(ScreenOverlay overlay, IntUnaryOperator variantPicker, TickSections sections) {
+        this.fadeTask = new RepeatingTask(sections.wrap(TickSectionNames.BLOOD_SPLATTER, this::tick));
         this.overlay = overlay;
         this.variantPicker = variantPicker;
         this.registerListeners();

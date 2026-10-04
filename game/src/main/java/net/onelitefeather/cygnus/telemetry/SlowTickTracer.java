@@ -34,15 +34,15 @@ import java.time.Instant;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 public final class SlowTickTracer {
 
     /**
-     * A service that took less than a millisecond of a slow tick is not worth a span of its own.
+     * A service that took less than a tenth of a millisecond of a slow tick is not worth a span of its own.
      */
-    static final long SECTION_MIN_NANOS = 1_000_000L;
+    static final long SECTION_MIN_NANOS = 100_000L;
 
     private static final double NANOS_PER_MILLI = 1_000_000.0D;
 
