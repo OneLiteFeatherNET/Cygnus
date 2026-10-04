@@ -9,6 +9,7 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.GameFeature;
+import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
@@ -81,6 +82,7 @@ public final class SpectatorService implements GameFeature {
         player.setFlying(true);
         player.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
         spectatorTeam.addPlayer(player);
+        AttributeHelper.resetAttributeAdjustments(player);
         clearStaminaHud(player);
         Items.setSpectatorLayout(player);
         markAsSpectator(player);
