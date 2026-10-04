@@ -11,6 +11,7 @@ import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchEffects;
+import net.onelitefeather.cygnus.creek.consequence.CatchLaunch;
 import net.onelitefeather.cygnus.creek.consequence.GlowReveal;
 import net.onelitefeather.cygnus.creek.consequence.StagedCatchConsequence;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
@@ -90,7 +91,9 @@ public final class CreekModule implements GameFeature {
                 dread,
                 witness,
                 new StagedCatchConsequence(
-                        new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.slownessSeconds()),
+                        new CatchLaunch(
+                                new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.slownessSeconds()),
+                                this.config.launchHeight()),
                         new GlowReveal(this.config.betrayalGlowSeconds()),
                         () -> TeamHelper.slenderOf(teamService),
                         this.config,

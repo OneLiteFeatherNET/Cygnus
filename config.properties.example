@@ -223,6 +223,10 @@ survivorTeamSize=12
 #creek.randomStopChance=0.15
 #creek.randomStopMinMillis=1500
 #creek.randomStopMaxMillis=4000
+# When the creek ("Manfred") catches a survivor, they are thrown this many blocks
+# into the air, without fall damage. Between 0 and 20; 0 turns the launch off.
+# Playtest: tune this if the throw feels too weak or too violent.
+#creek.launchHeight=5.0
 
 # --- Sanity -----------------------------------------------------------------
 # Every survivor has a fear value between 0 and 1. It jumps when they find a
