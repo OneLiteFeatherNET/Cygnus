@@ -16,7 +16,7 @@ import net.minestom.server.entity.Player;
  * a stutter at worst.</p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.3
  */
 public interface GazeSink {
@@ -48,19 +48,20 @@ public interface GazeSink {
     void attach(Player survivor);
 
     /**
-     * Starts signalling for a player who must not have the world darkened along with the veil.
+     * Starts signalling for a player who must not get the colour shift.
      * <p>
-     * The two halves of the effect are separable and the slender needs only one of them: the veil
-     * says how far the round has got, while darkening the world would take his sight, which is the
-     * one thing he has over the survivors. A sink that has no world tint to leave out ignores the
-     * distinction, which is what the default here does.
+     * The colour shift is the purple of the effect, both the wash over the screen and the darkened
+     * world. The slender needs neither: the glitch bursts alone tell him how far the round has got,
+     * while darkening the world would take his sight, which is the one thing he has over the
+     * survivors. A sink that has no colour shift to leave out ignores the distinction, which is
+     * what the default here does.
      * </p>
      *
-     * @param player    the player to start signalling for
-     * @param worldTint whether the world may be darkened along with the veil
+     * @param player      the player to start signalling for
+     * @param colourShift whether the purple may be shown along with the glitch bursts
      * @since 2.15.0
      */
-    default void attach(Player player, boolean worldTint) {
+    default void attach(Player player, boolean colourShift) {
         this.attach(player);
     }
 

@@ -24,8 +24,10 @@ import java.util.function.Supplier;
  * than as a number - the same worn-tape look the survivors get from seeing him, turned back on him
  * and driven by the round instead of by a line of sight.</p>
  *
- * <p>Two things carry it. A baseline sits on his screen for the rest of the round and climbs a
- * level at a time as the pages disappear, and every single find pulses one level above that for
+ * <p>Two things carry it. A baseline sits on his screen for the rest of the round. It eases in:
+ * it stays quiet through the first half of the pages and only climbs steeply towards the end, so
+ * the worst level is saved for the last page instead of being reached with a third of the round
+ * still to go. Every single find pulses one level above that for
  * {@link GameConfig.PageGlitch#pulseSeconds()} before falling back. Until the first page goes there
  * is nothing at all: {@link SlenderGaze#NONE} rather than the weakest level, because an untouched
  * round has nothing to say yet.</p>
@@ -44,7 +46,7 @@ import java.util.function.Supplier;
  * }</pre>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.0.2
  * @since 2.15.0
  */
 public final class PageGlitchService implements GameFeature {
@@ -169,8 +171,8 @@ public final class PageGlitchService implements GameFeature {
             // A hand-over, from SlenderReviveEvent. The old slender is a survivor's problem now and
             // must not keep a torn screen; the round's state follows whoever took his place.
             this.release();
-            // Without the world tint: the veil tells him how far the round has got, while darkening
-            // the world on top of it would take the sight he hunts with.
+            // Without the colour shift: the glitch alone tells him how far the round has got, while
+            // the purple wash and a darkened world on top of it would take the sight he hunts with.
             this.sink.attach(currentSlender, false);
             this.attached = currentSlender;
         }
@@ -192,7 +194,8 @@ public final class PageGlitchService implements GameFeature {
     }
 
     /**
-     * Works out the level his screen sits at right now.
+     * Works out the level his screen sits at right now. The baseline follows {@link #baselineOf}, so
+     * it starts slowly and a pulse on top of it is what lets a find stand out early in the round.
      *
      * @return a level between {@code 0} and {@link SlenderGaze#LEVELS} minus one, or
      *         {@link SlenderGaze#NONE} while no page has been found
@@ -203,9 +206,24 @@ public final class PageGlitchService implements GameFeature {
             return SlenderGaze.NONE;
         }
 
-        int baseline = Math.round(this.progress * (SlenderGaze.LEVELS - 1));
+        int baseline = baselineOf(this.progress);
         if (this.pulseSecondsLeft <= 0) return baseline;
         return Math.min(baseline + 1, SlenderGaze.LEVELS - 1);
+    }
+
+    /**
+     * Works out the level the round has settled at once the pulse is gone.
+     *
+     * <p>The progress is squared so the curve eases in. A straight line (or plain rounding) put the
+     * baseline at the second level from half the pages of a small round, and every pulse after that
+     * reached the worst level, long before the end. Squared and rounded down, an eight page round
+     * holds the weakest level up to the fourth page and only reaches the worst one with the last.</p>
+     *
+     * @param progress how far the round has got, above {@code 0} and at most {@code 1}
+     * @return a level between {@code 0} and {@link SlenderGaze#LEVELS} minus one
+     */
+    static int baselineOf(float progress) {
+        return (int) Math.floor(progress * progress * (SlenderGaze.LEVELS - 1));
     }
 
     /**

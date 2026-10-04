@@ -50,6 +50,13 @@ class SignalWireProbeTest {
         assertTrue(serialize(3).contains("#FE0004"), "the strongest level must not wrap");
     }
 
+    @Test
+    @DisplayName("Without colour shift the level arrives with bit 4 set")
+    void withoutColourShiftBitFourIsSet(Env env) {
+        assertTrue(BossBarGazeSignal.signalFor(0, false).color().value() == 0xFE0011);
+        assertTrue(BossBarGazeSignal.signalFor(3, false).color().value() == 0xFE0014);
+    }
+
     /**
      * Serializes a level's signal component and renders the bytes readable.
      *
@@ -58,7 +65,7 @@ class SignalWireProbeTest {
      */
     private static String serialize(int level) {
         byte[] bytes = NetworkBuffer.makeArray(
-                NetworkBuffer.COMPONENT, BossBarGazeSignal.signalFor(level));
+                NetworkBuffer.COMPONENT, BossBarGazeSignal.signalFor(level, true));
         StringBuilder readable = new StringBuilder(bytes.length);
         for (byte b : bytes) {
             readable.append(b >= 32 && b < 127 ? (char) b : '.');

@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Verifies the glitch the slender's own screen picks up as his pages are taken.
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.0.1
  * @since 2.15.0
  */
 class PageGlitchServiceTest extends CygnusPlayerTestBase {
@@ -40,8 +40,74 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
     /** How long a find's pulse holds, in seconds. */
     private static final int PULSE_SECONDS = 2;
 
+    /** The smallest round there is, which is the one the curve has to feel right on. */
+    private static final int MIN_ROUND_PAGES = 8;
+
     /** The strongest level there is. */
     private static final int WORST = SlenderGaze.LEVELS - 1;
+
+    @Test
+    @DisplayName("Six of eight pages hold the screen at the first level once the pulse is gone")
+    void sixOfEightPagesHoldTheFirstLevel(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        PageGlitchService service = service(config(true), sink, slender);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+
+        EventDispatcher.call(new PageFoundEvent(slender, 6, MIN_ROUND_PAGES));
+        tick(service, PULSE_SECONDS);
+
+        assertEquals(1, sink.lastLevel(), "the glitch has to start slowly, three quarters in is still only the first level");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("A find at six of eight pages pulses to the second level, not the worst")
+    void aFindAtSixOfEightDoesNotHitTheWorst(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        PageGlitchService service = service(config(true), sink, slender);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+
+        EventDispatcher.call(new PageFoundEvent(slender, 6, MIN_ROUND_PAGES));
+
+        assertEquals(2, sink.lastLevel(), "the worst level is for the end of the round, not for the sixth page");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("The last page of the smallest round still reaches the worst level")
+    void theLastOfEightPagesIsTheWorst(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        PageGlitchService service = service(config(true), sink, slender);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+
+        EventDispatcher.call(new PageFoundEvent(slender, MIN_ROUND_PAGES, MIN_ROUND_PAGES));
+        tick(service, PULSE_SECONDS);
+
+        assertEquals(WORST, sink.lastLevel(), "the curve may start slowly but it has to arrive");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("The baseline eases in over the smallest round")
+    void theBaselineEasesIn() {
+        int[] expected = {0, 0, 0, 0, 1, 1, 2, 3};
+        for (int found = 1; found <= MIN_ROUND_PAGES; found++) {
+            assertEquals(expected[found - 1], PageGlitchService.baselineOf((float) found / MIN_ROUND_PAGES),
+                    "baseline after " + found + " of " + MIN_ROUND_PAGES + " pages");
+        }
+    }
 
     @Test
     @DisplayName("The slender's screen is clean until the first page goes")
@@ -223,8 +289,8 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("The slender keeps his sight: the veil comes without the world tint")
-    void theWorldIsNeverDarkenedForHim(@NotNull Env env) {
+    @DisplayName("The slender gets the glitch alone: no colour shift")
+    void hisGlitchComesWithoutColourShift(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player slender = env.createPlayer(instance);
         RecordingSink sink = new RecordingSink();
@@ -233,8 +299,8 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
 
         EventDispatcher.call(new GameStartEvent());
 
-        assertEquals(List.of(false), sink.worldTints,
-                "darkening the world would blind the hunter, which is the one thing he must not lose");
+        assertEquals(List.of(false), sink.colourShifts,
+                "the purple belongs to the survivors, and darkening the world would blind the hunter");
 
         env.destroyInstance(instance, true);
     }
@@ -279,7 +345,7 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
     private static final class RecordingSink implements GazeSink {
 
         private final List<Player> attached = new ArrayList<>();
-        private final List<Boolean> worldTints = new ArrayList<>();
+        private final List<Boolean> colourShifts = new ArrayList<>();
         private final List<Player> detached = new ArrayList<>();
         private final List<Integer> levels = new ArrayList<>();
         private final List<Player> players = new ArrayList<>();
@@ -290,9 +356,9 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         }
 
         @Override
-        public void attach(Player player, boolean worldTint) {
+        public void attach(Player player, boolean colourShift) {
             this.attached.add(player);
-            this.worldTints.add(worldTint);
+            this.colourShifts.add(colourShift);
         }
 
         @Override

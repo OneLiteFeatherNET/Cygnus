@@ -28,7 +28,7 @@ import java.net.URI;
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
- * @version 2.0.0
+ * @version 2.0.1
  * @since 1.0.0
  */
 public record GameConfig(
@@ -287,7 +287,8 @@ public record GameConfig(
     /**
      * The glitch on the slender's own screen while the survivors take his pages away. It is the
      * only thing that tells him how far they have got without putting the page counter in front of
-     * him. A baseline climbs a level at a time as the pages disappear and every find pulses one
+     * him. A baseline eases in as the pages disappear, staying low for the first half of
+     * them and climbing late so the worst level is kept for the end, and every find pulses one
      * level above it.
      *
      * @param enabled      whether the slender's screen tears at all
