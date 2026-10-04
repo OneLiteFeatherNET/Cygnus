@@ -106,6 +106,7 @@ import net.onelitefeather.cygnus.telemetry.KickTracer;
 import net.onelitefeather.cygnus.telemetry.RoundTracer;
 import net.onelitefeather.cygnus.telemetry.ShutdownTracer;
 import net.onelitefeather.cygnus.telemetry.SlowTickTracer;
+import net.onelitefeather.cygnus.telemetry.TickMetrics;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.onelitefeather.cygnus.telemetry.TraceStep;
 import net.onelitefeather.cygnus.telemetry.TracedPhaseSeries;
@@ -120,7 +121,7 @@ import java.util.stream.Stream;
 
 /**
  * @author theEvilReaper
- * @version 1.4.0
+ * @version 1.5.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -179,7 +180,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             try (TraceStep ignored = startup.child("cygnus.startup.config")) {
                 this.gameConfig = new GameConfigReader(path).getConfig();
             }
-            this.slowTickTracer = new SlowTickTracer(this.tracing, this.roundTracer, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections);
+            this.slowTickTracer = new SlowTickTracer(this.tracing, this.roundTracer, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections,
+                    TickMetrics.fromGlobal(serviceVersion(), this.roundTracer::phaseLabel));
             this.staminaService = new StaminaService(this.gameConfig.stamina(), tickSections);
             // Set up as early as possible so anything that goes wrong while the rest of the game is
             // being wired up is already covered. Stays off entirely when no DSN is configured.

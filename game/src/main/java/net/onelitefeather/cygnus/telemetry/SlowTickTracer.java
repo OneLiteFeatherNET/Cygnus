@@ -34,7 +34,7 @@ import java.time.Instant;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.15.0
  */
 public final class SlowTickTracer {
@@ -51,6 +51,10 @@ public final class SlowTickTracer {
     private final Clock clock;
     private final TickSections sections;
     private final @Nullable RoundTracer rounds;
+    private final TickMetrics metrics;
+    // The time each section took in the tick being handled; grown when a section is registered,
+    // which happens at startup, so the tick thread does not allocate.
+    private long[] taken = new long[0];
 
     /**
      * Creates the tracer.
@@ -75,6 +79,23 @@ public final class SlowTickTracer {
      */
     public SlowTickTracer(CygnusTracing tracing, @Nullable RoundTracer rounds, TelemetryConfig config,
                           Clock clock, TickSections sections) {
+        this(tracing, rounds, config, clock, sections, TickMetrics.NONE);
+    }
+
+    /**
+     * Creates the tracer so that every tick is also measured.
+     *
+     * @param tracing  where the spans go
+     * @param rounds   the round whose current phase is the parent, or {@code null} for roots only
+     * @param config   the telemetry config
+     * @param clock    the clock the end of the tick is read from
+     * @param sections the measured services
+     * @param metrics  where the duration of every tick and section goes
+     * @since 2.15.0
+     */
+    public SlowTickTracer(CygnusTracing tracing, @Nullable RoundTracer rounds, TelemetryConfig config,
+                          Clock clock, TickSections sections, TickMetrics metrics) {
+        this.metrics = metrics;
         this.rounds = rounds;
         this.tracing = tracing;
         this.thresholdMillis = config.slowTickThresholdMillis();
@@ -89,14 +110,30 @@ public final class SlowTickTracer {
      * @param acquisitionMillis how much of it went into waiting for acquirable entities
      */
     public void onTick(double tickMillis, double acquisitionMillis) {
-        if (tickMillis < this.thresholdMillis) {
-            // The counters of a fast tick must not leak into the next slow one.
-            for (int i = 0; i < this.sections.size(); i++) {
-                this.sections.takeNanos(i);
-            }
-            return;
+        boolean slow = tickMillis >= this.thresholdMillis;
+        this.metrics.recordTick(tickMillis, slow);
+        takeSections();
+        if (slow) {
+            report(tickMillis, acquisitionMillis);
         }
-        report(tickMillis, acquisitionMillis);
+    }
+
+    /**
+     * Reads and clears the counters of this tick, so the time of a fast tick cannot leak into the
+     * next slow one, and records every section that ran.
+     */
+    private void takeSections() {
+        int size = this.sections.size();
+        if (this.taken.length < size) {
+            this.taken = new long[size];
+        }
+        for (int i = 0; i < size; i++) {
+            long nanos = this.sections.takeNanos(i);
+            this.taken[i] = nanos;
+            if (nanos > 0L) {
+                this.metrics.recordSection(this.sections.name(i), nanos / NANOS_PER_MILLI);
+            }
+        }
     }
 
     private void report(double tickMillis, double acquisitionMillis) {
@@ -119,8 +156,8 @@ public final class SlowTickTracer {
 
     private void reportSections(Span tick, Instant start, Instant end) {
         Context parent = Context.root().with(tick);
-        for (int i = 0; i < this.sections.size(); i++) {
-            long nanos = this.sections.takeNanos(i);
+        for (int i = 0; i < Math.min(this.sections.size(), this.taken.length); i++) {
+            long nanos = this.taken[i];
             if (nanos < SECTION_MIN_NANOS) {
                 continue;
             }
