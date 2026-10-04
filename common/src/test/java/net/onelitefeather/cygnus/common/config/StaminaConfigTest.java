@@ -19,6 +19,7 @@ class StaminaConfigTest {
         assertEquals(0.3D, config.sprintResumeShare());
         assertEquals(1.25D, config.regenPerSecond());
         assertEquals(5, config.slenderReappearCooldownSeconds());
+        assertEquals(4, config.slenderDamageRange());
     }
 
     @Test
@@ -40,6 +41,15 @@ class StaminaConfigTest {
     void cooldownNotNegative() {
         assertRejected("slenderReappearCooldownSeconds", () -> new StaminaConfig(0.3D, 1.25D, -1));
         assertDoesNotThrow(() -> new StaminaConfig(0.3D, 1.25D, 0));
+    }
+
+    @Test
+    @DisplayName("The slender's damage range has to be between 1 and 16 blocks")
+    void damageRangeBounds() {
+        assertRejected("slenderDamageRange", () -> new StaminaConfig(0.3D, 1.25D, 5, 0));
+        assertRejected("slenderDamageRange", () -> new StaminaConfig(0.3D, 1.25D, 5, 17));
+        assertDoesNotThrow(() -> new StaminaConfig(0.3D, 1.25D, 5, 1));
+        assertDoesNotThrow(() -> new StaminaConfig(0.3D, 1.25D, 5, 16));
     }
 
     private static void assertRejected(String field, Executable creation) {

@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.stamina;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.potion.PotionEffect;
@@ -431,5 +432,50 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         assertEquals(20F, spectator.getHealth(), 0.001F, "non-survivors must stay untouched");
         slenderBar.stop();
         env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("A survivor 3.5 blocks away is hurt with the default range")
+    void survivorInsideTheDefaultRangeIsHurt(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = drainOnce(env, instance, StaminaConfig.DEFAULT, 3.5D);
+
+        assertEquals(19.0F, survivor.getHealth(), 0.001F, "one tick takes the damage of one bar step");
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("A survivor 4.5 blocks away is left alone with the default range")
+    void survivorOutsideTheDefaultRangeIsUntouched(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = drainOnce(env, instance, StaminaConfig.DEFAULT, 4.5D);
+
+        assertEquals(20.0F, survivor.getHealth(), 0.001F);
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("A configured range of 2 leaves a survivor 3 blocks away untouched")
+    void configuredRangeIsHonoured(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        StaminaConfig narrow = new StaminaConfig(0.3D, 1.25D, 5, 2);
+        Player survivor = drainOnce(env, instance, narrow, 3.0D);
+
+        assertEquals(20.0F, survivor.getHealth(), 0.001F);
+        env.destroyInstance(instance, true);
+    }
+
+    private Player drainOnce(Env env, Instance instance, StaminaConfig config, double distance) {
+        CygnusPlayer slender = (CygnusPlayer) env.createConnection().connect(instance, new Pos(0, 40, 0));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        Player survivor = env.createConnection().connect(instance, new Pos(distance, 40, 0));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        survivor.setHealth(20F);
+        SlenderBar bar = (SlenderBar) StaminaFactory.createSlenderStamina(slender, config, () -> 0L);
+        bar.start();
+        bar.changeStatus();
+        bar.consume();
+        bar.stop();
+        return survivor;
     }
 }

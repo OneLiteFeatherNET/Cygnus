@@ -257,11 +257,16 @@ survivorTeamSize=12
 # soon as the bar is back at sprintResumeShare - not only when it is full.
 # The slender cannot appear again for slenderReappearCooldownSeconds after he
 # vanished, so he cannot chain one appearance onto the next. 0 turns it off.
+# slenderDamageRange is how far around him the draining slender hurts survivors, in
+# blocks, 1 to 16. Temporary playtest tuning: testers wanted more reach, so it went
+# from 3 to 4. It stacks with the doubled damage per hit, so he now hurts more
+# survivors for longer; lower it again if the rounds end too fast.
 # Every key below maps to a field of StaminaConfig. An unreadable value falls
 # back to its default; values out of range are rejected.
 #stamina.sprintResumeShare=0.3
 #stamina.regenPerSecond=1.25
 #stamina.slenderReappearCooldownSeconds=5
+#stamina.slenderDamageRange=4
 
 # --- Adrenaline -------------------------------------------------------------
 # A survivor who gets within adrenaline.radius blocks of the visible slender

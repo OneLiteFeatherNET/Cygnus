@@ -54,7 +54,7 @@ import java.util.regex.Pattern;
  * The default values are defined in {@link GameConfig#DEFAULT}.
  *
  * @author theEvilReaper
- * @version 1.5.1
+ * @version 1.6.0
  * @see GameConfig
  * @since 1.0.0
  */
@@ -311,7 +311,8 @@ public final class GameConfigReader {
         return new StaminaConfig(
                 getDouble(properties, STAMINA_PREFIX + "sprintResumeShare", d.sprintResumeShare()),
                 getDouble(properties, STAMINA_PREFIX + "regenPerSecond", d.regenPerSecond()),
-                getInt(properties, STAMINA_PREFIX + "slenderReappearCooldownSeconds", d.slenderReappearCooldownSeconds())
+                getInt(properties, STAMINA_PREFIX + "slenderReappearCooldownSeconds", d.slenderReappearCooldownSeconds()),
+                getInt(properties, STAMINA_PREFIX + "slenderDamageRange", d.slenderDamageRange())
         );
     }
 
