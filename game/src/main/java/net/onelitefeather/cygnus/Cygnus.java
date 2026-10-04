@@ -120,7 +120,7 @@ import java.util.stream.Stream;
 
 /**
  * @author theEvilReaper
- * @version 1.3.0
+ * @version 1.4.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -175,12 +175,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             Path path = ServiceBootstrap.resolveWorkingDirectory();
             this.teamService = TeamService.of();
             this.linearPhaseSeries = new TracedPhaseSeries<>("game", this.roundTracer);
-            this.jumpscareManager = new JumpScareManager();
+            this.jumpscareManager = new JumpScareManager(tickSections);
             try (TraceStep ignored = startup.child("cygnus.startup.config")) {
                 this.gameConfig = new GameConfigReader(path).getConfig();
             }
             this.slowTickTracer = new SlowTickTracer(this.tracing, this.roundTracer, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections);
-            this.staminaService = new StaminaService(this.gameConfig.stamina());
+            this.staminaService = new StaminaService(this.gameConfig.stamina(), tickSections);
             // Set up as early as possible so anything that goes wrong while the rest of the game is
             // being wired up is already covered. Stays off entirely when no DSN is configured.
             SentrySupport.init(this.gameConfig.sentryDsn());
@@ -203,13 +203,14 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             this.scoreboardDisplay = new ScoreboardDisplay(this.teamService.getTeams());
             Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
                     .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
-            this.ambientProvider = new AmbientProvider(survivorTeam, this.actionTracer.blackoutObserver("survivor"));
+            this.ambientProvider = new AmbientProvider(survivorTeam, this.actionTracer.blackoutObserver("survivor"), tickSections);
             // Only survivors get the hint: the slender hearing it would turn every page into a place to
             // camp at, which is the opposite of what the hint is for.
             this.pageProximityService = new PageProximityService(
                     this.gameConfig.pageProximity(),
                     survivorTeam::getPlayers,
-                    this.pageProvider::interactablePages
+                    this.pageProvider::interactablePages,
+                    tickSections
             );
             Team spectatorTeam = this.teamService.getTeam(GameConfig.SPECTATOR_KEY)
                     .orElseThrow(() -> new IllegalStateException("Spectator team not found"));
@@ -222,7 +223,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                     System::currentTimeMillis,
                     () -> TeamHelper.survivorsOf(this.teamService),
                     this.actionTracer.sanityObserver(Cygnus::survivorActor));
-            this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase);
+            this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase, tickSections);
             try (TraceStep ignored = startup.child("cygnus.startup.features")) {
                 this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
                         new EpilepsyDisclaimer(),
@@ -238,13 +239,14 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         new AdrenalineService(
                                 this.gameConfig.adrenaline(),
                                 () -> TeamHelper.survivorsOf(this.teamService),
-                                System::currentTimeMillis),
+                                System::currentTimeMillis,
+                                tickSections),
                         new OverlayModule(this.gameConfig.glitch(), this.gameConfig.pageGlitch(), this.teamService,
                                 this.staminaService, tickSections)
                 )).toList();
             }
             try (TraceStep ignored = startup.child("cygnus.startup.phases")) {
-                this.initPhases(sanityService);
+                this.initPhases(sanityService, tickSections);
             }
             try (TraceStep ignored = startup.child("cygnus.startup.listeners")) {
                 this.initCommands();
@@ -353,7 +355,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         GameFeatures.register(handler, this.features);
     }
 
-    private void initPhases(DreadSource dreadSource) {
+    private void initPhases(DreadSource dreadSource, TickSections tickSections) {
         VoidConsumer instanceSwitch = this.mapProvider::switchToGameMap;
         VoidConsumer teamInitializer = () -> {
             Instance activeInstance = this.mapProvider.getActiveInstance().get();
@@ -367,7 +369,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             );
             MinecraftServer.getSchedulerManager().scheduleNextTick(this.mapProvider::releasePreviousInstance);
         };
-        LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig.round(), this.mapProvider.getActiveInstance());
+        LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig.round(), this.mapProvider.getActiveInstance(), tickSections);
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.round().gameTime(), this.jumpscareManager, dreadSource));

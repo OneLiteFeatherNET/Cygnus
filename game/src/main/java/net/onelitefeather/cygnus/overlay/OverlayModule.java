@@ -83,10 +83,12 @@ public final class OverlayModule implements GameFeature {
                 pageGlitch,
                 this.gazeSignal,
                 () -> TeamHelper.slenderOf(teamService),
-                VisibilityRules::isHidden);
+                VisibilityRules::isHidden,
+                sections);
         this.bloodSplatterService = new BloodSplatterService(
                 screenOverlay,
-                bound -> ThreadLocalRandom.current().nextInt(bound)
+                bound -> ThreadLocalRandom.current().nextInt(bound),
+                sections
         );
         this.tunnelVisionService = new TunnelVisionService(
                 new OverlayTunnelVisionRenderer(screenOverlay),

@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.creek;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.coordinate.Pos;
@@ -51,7 +52,7 @@ import java.util.random.RandomGenerator;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 public final class CreekService {
@@ -126,7 +127,7 @@ public final class CreekService {
                           BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread, CreekWitness witness,
                           CatchConsequence consequence, RoundClock clock, RandomGenerator random,
                           CreekDebug debug, TickSections sections) {
-        this.task = new RepeatingTask(sections.wrap("creek", this::tick));
+        this.task = new RepeatingTask(sections.wrap(TickSectionNames.CREEK, this::tick));
         this.config = config;
         this.survivors = survivors;
         this.instance = instance;

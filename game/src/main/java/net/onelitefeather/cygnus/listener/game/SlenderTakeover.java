@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.listener.game;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -48,7 +50,7 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.SURVIVOR_KEY;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.16.0
  */
 public final class SlenderTakeover implements GameFeature {
@@ -81,7 +83,7 @@ public final class SlenderTakeover implements GameFeature {
 
     private final TeamService teamService;
     private final Supplier<Phase> phaseSupplier;
-    private final RepeatingTask task = new RepeatingTask(this::tick);
+    private final RepeatingTask task;
     private int takeovers;
     private @Nullable Player chosen;
     private int secondsLeft;
@@ -93,6 +95,19 @@ public final class SlenderTakeover implements GameFeature {
      * @param phaseSupplier supplies the current phase, a takeover only runs during the {@link GamePhase}
      */
     public SlenderTakeover(TeamService teamService, Supplier<Phase> phaseSupplier) {
+        this(teamService, phaseSupplier, TickSections.NONE);
+    }
+
+    /**
+     * Creates the takeover with its countdown measured for the slow tick report.
+     *
+     * @param teamService   the teams of the round
+     * @param phaseSupplier supplies the current phase, a takeover only runs during the {@link GamePhase}
+     * @param sections      measures how long each run takes
+     * @since 2.15.0
+     */
+    public SlenderTakeover(TeamService teamService, Supplier<Phase> phaseSupplier, TickSections sections) {
+        this.task = new RepeatingTask(sections.wrap(TickSectionNames.SLENDER_TAKEOVER, this::tick));
         this.teamService = teamService;
         this.phaseSupplier = phaseSupplier;
         this.registerListeners();

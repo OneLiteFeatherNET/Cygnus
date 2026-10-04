@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.glitch;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -57,7 +59,7 @@ import java.util.function.Supplier;
  * }</pre>
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.15.0
  */
 public final class PageGlitchService implements GameFeature {
@@ -71,7 +73,7 @@ public final class PageGlitchService implements GameFeature {
     private final GazeSink sink;
     private final Supplier<@Nullable Player> slender;
     private final Predicate<Player> invisible;
-    private final RepeatingTask task = new RepeatingTask(this::tick);
+    private final RepeatingTask task;
 
     /** How far the round has got, between {@code 0} and {@code 1}. */
     private float progress;
@@ -109,6 +111,23 @@ public final class PageGlitchService implements GameFeature {
      */
     public PageGlitchService(GameConfig.PageGlitch config, GazeSink sink, Supplier<@Nullable Player> slender,
                              Predicate<Player> invisible) {
+        this(config, sink, slender, invisible, TickSections.NONE);
+    }
+
+    /**
+     * Creates a new instance of the {@link PageGlitchService} with its tick measured for the slow
+     * tick report.
+     *
+     * @param config    the configuration holding the switch, the pulse and the cap
+     * @param sink      where the level is signalled to
+     * @param slender   supplies the current slender, or {@code null} while there is none
+     * @param invisible tells whether the given slender is invisible right now
+     * @param sections  measures how long each run takes
+     * @since 2.15.0
+     */
+    public PageGlitchService(GameConfig.PageGlitch config, GazeSink sink, Supplier<@Nullable Player> slender,
+                             Predicate<Player> invisible, TickSections sections) {
+        this.task = new RepeatingTask(sections.wrap(TickSectionNames.PAGE_GLITCH, this::tick));
         this.config = config;
         this.sink = sink;
         this.slender = slender;

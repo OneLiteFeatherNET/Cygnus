@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.tunnelvision;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
@@ -45,7 +46,7 @@ import java.util.function.ToDoubleFunction;
  * </p>
  *
  * @author TheMeinerLP
- * @version 2.1.0
+ * @version 2.2.0
  * @since 2.7.0
  */
 public final class TunnelVisionService implements GameFeature {
@@ -81,7 +82,7 @@ public final class TunnelVisionService implements GameFeature {
      */
     public TunnelVisionService(TunnelVisionRenderer renderer, ToDoubleFunction<Player> stamina,
                                Supplier<Set<Player>> survivors, TickSections sections) {
-        this.task = new RepeatingTask(sections.wrap("tunnel-vision", this::tick));
+        this.task = new RepeatingTask(sections.wrap(TickSectionNames.TUNNEL_VISION, this::tick));
         this.renderer = renderer;
         this.stamina = stamina;
         this.roundSurvivors = survivors;

@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.jumpscare;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.MinecraftServer;
@@ -33,7 +35,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Manages dead player mannequins and turnaround scare for surviving players.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.7.0
  */
 public final class JumpScareManager {
@@ -50,11 +52,23 @@ public final class JumpScareManager {
     private final Map<UUID, Float> playerLastYaws;
     private final Map<DeadPlayerMannequin, Set<UUID>> corpseHiddenFromViewers;
     private final Random random;
+    private final TickSections sections;
 
     /**
      * Creates a new instance of the service.
      */
     public JumpScareManager() {
+        this(TickSections.NONE);
+    }
+
+    /**
+     * Creates a new instance of the service with its delayed despawn measured for the slow tick report.
+     *
+     * @param sections measures how long the despawn of a jump scare takes
+     * @since 2.15.0
+     */
+    public JumpScareManager(TickSections sections) {
+        this.sections = sections;
         this.activeMannequins = new CopyOnWriteArrayList<>();
         this.jumpScareCooldowns = new ConcurrentHashMap<>();
         this.playerLastYaws = new ConcurrentHashMap<>();
@@ -182,7 +196,7 @@ public final class JumpScareManager {
         ));
 
         // Schedule smooth despawn transition after 2.5 seconds (50 ticks)
-        MinecraftServer.getSchedulerManager().buildTask(() -> {
+        MinecraftServer.getSchedulerManager().buildTask(this.sections.wrap(TickSectionNames.JUMP_SCARE, () -> {
             if (player.isOnline()) {
                 // Smoke & Poof particle burst covering full body height
                 player.sendPacket(new ParticlePacket(
@@ -205,7 +219,7 @@ public final class JumpScareManager {
                 player.sendPacket(new DestroyEntitiesPacket(phantomEntityId));
             }
             restoreCorpseVisibility(sampleCorpse, player);
-        }).delay(TaskSchedule.tick(50)).schedule();
+        })).delay(TaskSchedule.tick(50)).schedule();
 
         return true;
     }
