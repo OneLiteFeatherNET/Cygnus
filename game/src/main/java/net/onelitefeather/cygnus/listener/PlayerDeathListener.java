@@ -30,6 +30,7 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
     private final JumpScareManager jumpscareManager;
     private final StaminaService staminaService;
     private final VoidConsumer inventoryUpdater;
+    private final DeathStrike strike = new DeathStrike();
 
     public PlayerDeathListener(
             Supplier<Phase> phaseSupplier,
@@ -68,6 +69,7 @@ public final class PlayerDeathListener implements Consumer<PlayerDeathEvent> {
             DeadPlayerMannequin mannequin = DeadPlayerMannequin.sleeping(player);
             mannequin.setInstance(player.getInstance(), deathPos.add(0, 0.15, 0));
             this.jumpscareManager.register(mannequin);
+            this.strike.strike(player.getInstance(), deathPos);
         }
 
         event.setChatMessage(Messages.getDeathComponent(player));

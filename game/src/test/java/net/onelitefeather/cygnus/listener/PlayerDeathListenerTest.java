@@ -185,4 +185,40 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
 
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    @DisplayName("A dying survivor is struck by lightning")
+    void dyingSurvivorIsStruck(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        TeamService teamService = TeamService.of();
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        teamService.add(Team.of(GameConfig.SLENDER_KEY, 1));
+        teamService.add(survivorTeam);
+        survivorTeam.addPlayer(player);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
+
+        listener.accept(new PlayerDeathEvent(player, null, null));
+
+        assertEquals(1, DeathStrikeTest.bolts(instance).size());
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("Anyone else dying is not struck by lightning")
+    void othersAreNotStruck(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        TeamService teamService = TeamService.of();
+        teamService.add(Team.of(GameConfig.SLENDER_KEY, 1));
+        teamService.add(Team.of(GameConfig.SURVIVOR_KEY, 5));
+        player.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
+
+        listener.accept(new PlayerDeathEvent(player, null, null));
+
+        assertTrue(DeathStrikeTest.bolts(instance).isEmpty());
+        env.destroyInstance(instance, true);
+    }
 }
