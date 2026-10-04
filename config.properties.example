@@ -322,6 +322,9 @@ survivorTeamSize=12
 #   fair      the map stays, radar and cave mode are asked to switch off.
 #   off       nothing is sent.
 #
+# LabyMod 4 is asked, after it announces itself on labymod:neo, to deny entity_marker. It has
+# no minimap or radar permission, so every mode but off sends the same thing.
+#
 # JourneyMap (current versions) is not covered: it is controlled by its own server mod.
 # An unknown value is logged and replaced by the default.
 #minimap.mode=disabled

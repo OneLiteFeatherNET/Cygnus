@@ -41,6 +41,7 @@ import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.adrenaline.AdrenalineService;
+import net.onelitefeather.cygnus.minimap.LabyModPolicy;
 import net.onelitefeather.cygnus.minimap.MinimapPolicy;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.page.PageProximityService;
@@ -232,6 +233,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         // Not part of the OverlayModule: the sound is the feedback a hit owes the player
                         // either way, and it needs neither the resource pack nor the overlay gate to be heard.
                         new MinimapPolicy(this.gameConfig.minimap()),
+                        new LabyModPolicy(this.gameConfig.minimap()),
                         new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
                         new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
                                 sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor),
