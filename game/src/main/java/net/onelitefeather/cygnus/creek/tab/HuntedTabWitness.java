@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
+import net.onelitefeather.cygnus.creek.dread.HuntEnd;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -31,7 +32,7 @@ import java.util.function.Function;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.15.0
  */
 public final class HuntedTabWitness implements CreekWitness {
@@ -93,8 +94,18 @@ public final class HuntedTabWitness implements CreekWitness {
     }
 
     @Override
+    public void huntEnded(UUID survivor, HuntEnd how) {
+        this.delegate.huntEnded(survivor, how);
+        this.unmark(survivor);
+    }
+
+    @Override
     public void huntEnded(UUID survivor) {
         this.delegate.huntEnded(survivor);
+        this.unmark(survivor);
+    }
+
+    private void unmark(UUID survivor) {
         this.marks.computeIfPresent(survivor, (_, mark) -> {
             if (mark.hunts() > 1) return mark.fewer();
             Player player = this.players.apply(survivor);

@@ -12,6 +12,7 @@ import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
+import net.onelitefeather.cygnus.creek.dread.HuntEnd;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.DoneState;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
@@ -66,6 +67,13 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         private final List<UUID> selections = new ArrayList<>();
         private final List<UUID> hunts = new ArrayList<>();
         private final List<UUID> huntEnds = new ArrayList<>();
+        private final List<HuntEnd> huntReasons = new ArrayList<>();
+
+        @Override
+        public void huntEnded(UUID survivor, HuntEnd how) {
+            this.huntReasons.add(how);
+            this.huntEnded(survivor);
+        }
 
         @Override
         public void hunted(UUID survivor) {
@@ -381,6 +389,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
         assertEquals(List.of(survivor.getUuid()), witness.hunts);
         assertEquals(List.of(survivor.getUuid()), witness.huntEnds);
+        assertEquals(List.of(HuntEnd.CAUGHT), witness.huntReasons);
     }
 
     @Test
@@ -396,6 +405,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         creek.tick(survivors(survivor), 600L);
 
         assertEquals(List.of(survivor.getUuid()), witness.huntEnds);
+        assertEquals(List.of(HuntEnd.TIMEOUT), witness.huntReasons);
     }
 
     @Test
@@ -412,6 +422,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         creek.tick(survivors(other), 100L);
 
         assertEquals(List.of(target.getUuid()), witness.huntEnds);
+        assertEquals(List.of(HuntEnd.GONE), witness.huntReasons);
     }
 
     @Test
@@ -428,6 +439,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         creek.remove();
 
         assertEquals(List.of(survivor.getUuid()), witness.huntEnds);
+        assertEquals(List.of(HuntEnd.REMOVED), witness.huntReasons);
     }
 
     @Test
@@ -443,6 +455,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         creek.vanishForGood(survivors(survivor), 100L);
 
         assertEquals(List.of(survivor.getUuid()), witness.huntEnds);
+        assertEquals(List.of(HuntEnd.SENT_AWAY), witness.huntReasons);
     }
 
     @Test
