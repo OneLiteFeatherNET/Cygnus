@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.Player;
+import net.minestom.server.inventory.Inventory;
 import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.inventory.click.Click;
 import net.minestom.server.item.ItemStack;
@@ -23,6 +24,13 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+/**
+ * Global "Spectate" inventory which lists every survivor as a clickable player head.
+ *
+ * @author OneLiteFeather
+ * @version 1.0.1
+ * @since 1.0.0
+ */
 public class SpectatorInventory extends GlobalInventoryBuilder {
 
     private static final ItemStack DECORATION_PANE = ItemStack.builder(Material.BLACK_STAINED_GLASS_PANE)
@@ -40,6 +48,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
             .quad(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_3_ROW.getSize() - 1);
 
     private final BiConsumer<Player, Player> teleportCallback;
+    private volatile int populatedSlots;
 
     /**
      * Creates a new instance from the builder with the given parameter values.
@@ -80,6 +89,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
 
                 index++;
             }
+            this.populatedSlots = index;
 
             return dataLayout;
         });
@@ -101,6 +111,10 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
 
         UUID target = stack.getTag(TARGET_TAG);
 
+        if (target == null) {
+            return;
+        }
+
         Player targetPlayer = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(target);
 
         if (targetPlayer == null) {
@@ -110,6 +124,19 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
 
         player.closeInventory();
         teleportCallback.accept(player, targetPlayer);
+    }
+
+    /**
+     * Applies the data layout and clears every head slot beyond the current survivor count.
+     * The framework only writes non-empty stacks, so a shrinking list would otherwise leave a stale head behind.
+     */
+    @Override
+    protected void applyDataLayout() {
+        super.applyDataLayout();
+        Inventory inventory = getInventory();
+        for (int i = populatedSlots; i < SLOTS.length; i++) {
+            inventory.setItemStack(SLOTS[i], ItemStack.AIR);
+        }
     }
 
     /**
