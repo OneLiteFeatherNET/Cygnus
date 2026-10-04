@@ -11,6 +11,8 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
+import net.onelitefeather.cygnus.stamina.StaminaBar;
 import net.onelitefeather.cygnus.gaze.GazeSink;
 import net.onelitefeather.cygnus.gaze.SlenderGaze;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Verifies the glitch the slender's own screen picks up as his pages are taken.
  *
  * @author TheMeinerLP
- * @version 1.0.1
+ * @version 1.0.3
  * @since 2.15.0
  */
 class PageGlitchServiceTest extends CygnusPlayerTestBase {
@@ -95,6 +98,165 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         tick(service, PULSE_SECONDS);
 
         assertEquals(WORST, sink.lastLevel(), "the curve may start slowly but it has to arrive");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("With the default cap every page count settles at the weakest level")
+    void theDefaultCapHoldsEveryBaselineAtTheWeakestLevel(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        PageGlitchService service = service(cappedConfig(), sink, slender);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+
+        for (int found = 1; found <= MIN_ROUND_PAGES; found++) {
+            EventDispatcher.call(new PageFoundEvent(slender, found, MIN_ROUND_PAGES));
+            tick(service, PULSE_SECONDS);
+            assertEquals(0, sink.lastLevel(), "baseline after " + found + " of " + MIN_ROUND_PAGES + " pages");
+        }
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("With the default cap a find's pulse never rises above the weakest level")
+    void theDefaultCapHoldsEveryPulseAtTheWeakestLevel(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        PageGlitchService service = service(cappedConfig(), sink, slender);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+
+        for (int found = 1; found <= MIN_ROUND_PAGES; found++) {
+            EventDispatcher.call(new PageFoundEvent(slender, found, MIN_ROUND_PAGES));
+            assertEquals(0, sink.lastLevel(), "pulse at " + found + " of " + MIN_ROUND_PAGES + " pages");
+            tick(service, PULSE_SECONDS);
+        }
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("With the default cap the screen is still clean before the first page")
+    void theDefaultCapKeepsTheScreenCleanBeforeTheFirstPage(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        PageGlitchService service = service(cappedConfig(), sink, slender);
+        env.process().eventHandler().addChild(service.node());
+
+        EventDispatcher.call(new GameStartEvent());
+        service.tick();
+
+        assertEquals(List.of(), sink.levels, "the cap lowers levels, it does not invent one before a page goes");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("A cap of one limits the last page to the second level")
+    void aCapOfOneLimitsTheLastPage(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        PageGlitchService service = service(new GameConfig.PageGlitch(true, PULSE_SECONDS, 1), sink, slender);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+
+        EventDispatcher.call(new PageFoundEvent(slender, MIN_ROUND_PAGES, MIN_ROUND_PAGES));
+
+        assertEquals(1, sink.lastLevel(), "neither the baseline nor the pulse may pass the cap");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("While he is visible his screen stays clean, however many pages are gone")
+    void aVisibleSlenderGetsNoGlitch(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        AtomicBoolean invisible = new AtomicBoolean(false);
+        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get());
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+
+        EventDispatcher.call(new PageFoundEvent(slender, 2, MIN_ROUND_PAGES));
+        tick(service, PULSE_SECONDS);
+        EventDispatcher.call(new PageFoundEvent(slender, MIN_ROUND_PAGES, MIN_ROUND_PAGES));
+
+        assertEquals(List.of(), sink.levels, "a hunting slender must not lose sight to his own glitch");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("Turning invisible shows the level the round has reached, turning visible clears it at once")
+    void theToggleMovesTheGlitchImmediately(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        AtomicBoolean invisible = new AtomicBoolean(false);
+        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get());
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+        EventDispatcher.call(new PageFoundEvent(slender, MIN_ROUND_PAGES, MIN_ROUND_PAGES));
+        tick(service, PULSE_SECONDS);
+
+        invisible.set(true);
+        EventDispatcher.call(new StaminaStateChangeEvent(slender, StaminaBar.State.REGENERATING));
+        assertEquals(WORST, sink.lastLevel(), "the progress was kept running while he was visible");
+
+        invisible.set(false);
+        EventDispatcher.call(new StaminaStateChangeEvent(slender, StaminaBar.State.DRAINING));
+        assertEquals(SlenderGaze.NONE, sink.lastLevel(), "no tick may pass with a glitch up while he hunts");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("A toggle after the round has ended does not bring the carrier back")
+    void aToggleAfterTheRoundStaysAway(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> true);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+        EventDispatcher.call(new PageFoundEvent(slender, 1, MIN_ROUND_PAGES));
+        service.stop();
+        sink.attached.clear();
+        sink.levels.clear();
+
+        EventDispatcher.call(new StaminaStateChangeEvent(slender, StaminaBar.State.REGENERATING));
+
+        assertEquals(List.of(), sink.attached, "a finished round must not attach the carrier again");
+        assertEquals(List.of(), sink.levels, "a finished round has nothing to draw");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("A pulse keeps counting down while he is visible")
+    void thePulseRunsOnWhileHeIsVisible(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        RecordingSink sink = new RecordingSink();
+        AtomicBoolean invisible = new AtomicBoolean(false);
+        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get());
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+        EventDispatcher.call(new PageFoundEvent(slender, 1, PAGES));
+        tick(service, PULSE_SECONDS);
+
+        invisible.set(true);
+        EventDispatcher.call(new StaminaStateChangeEvent(slender, StaminaBar.State.REGENERATING));
+
+        assertEquals(0, sink.lastLevel(), "the pulse ran out while he was visible, only the baseline is left");
 
         env.destroyInstance(instance, true);
     }
@@ -336,7 +498,16 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
      * @return the page glitch configuration
      */
     private static GameConfig.PageGlitch config(boolean enabled) {
-        return new GameConfig.PageGlitch(enabled, PULSE_SECONDS);
+        return new GameConfig.PageGlitch(enabled, PULSE_SECONDS, WORST);
+    }
+
+    /**
+     * Builds an enabled configuration with the shipped cap, the weakest level only.
+     *
+     * @return the page glitch configuration
+     */
+    private static GameConfig.PageGlitch cappedConfig() {
+        return new GameConfig.PageGlitch(true, PULSE_SECONDS, GameConfig.PageGlitch.DEFAULT_MAX_LEVEL);
     }
 
     /**

@@ -29,7 +29,7 @@ import java.net.URI;
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
- * @version 2.1.0
+ * @version 2.1.1
  * @since 1.0.0
  */
 public record GameConfig(
@@ -292,13 +292,26 @@ public record GameConfig(
      * only thing that tells him how far they have got without putting the page counter in front of
      * him. A baseline eases in as the pages disappear, staying low for the first half of
      * them and climbing late so the worst level is kept for the end, and every find pulses one
-     * level above it.
+     * level above it. Both are capped at {@code maxLevel}: playtests showed that the higher levels
+     * left the slender blind to the very players he hunts, so by default he gets the weakest level
+     * only and the pulse has no visible step above it.
      *
      * @param enabled      whether the slender's screen tears at all
      * @param pulseSeconds how long a single find holds the glitch one level above the round's
      *                     level, in seconds
+     * @param maxLevel     the strongest level his screen may reach, baseline and pulse alike,
+     *                     between {@code 0} (the weakest) and {@link #MAX_LEVEL}
      */
-    public record PageGlitch(boolean enabled, int pulseSeconds) {
+    public record PageGlitch(boolean enabled, int pulseSeconds, int maxLevel) {
+
+        /**
+         * The strongest level a cap may allow. Mirrors the gaze's level count minus one; the common
+         * module cannot see the game's {@code SlenderGaze}, so the two are kept in step by hand.
+         */
+        public static final int MAX_LEVEL = 3;
+
+        /** The cap a configuration gets when it says nothing: the weakest level only. */
+        public static final int DEFAULT_MAX_LEVEL = 0;
 
         /** The pulse a configuration gets when it says nothing. */
         public static final int DEFAULT_PULSE_SECONDS = 3;
@@ -309,9 +322,22 @@ public record GameConfig(
          */
         public static final int MAX_PULSE_SECONDS = 30;
 
-        public static final PageGlitch DEFAULT = new PageGlitch(true, DEFAULT_PULSE_SECONDS);
+        public static final PageGlitch DEFAULT = new PageGlitch(true, DEFAULT_PULSE_SECONDS, DEFAULT_MAX_LEVEL);
+
+        /**
+         * Creates a page glitch with the default cap.
+         *
+         * @param enabled      whether the slender's screen tears at all
+         * @param pulseSeconds how long a single find holds the pulse, in seconds
+         */
+        public PageGlitch(boolean enabled, int pulseSeconds) {
+            this(enabled, pulseSeconds, DEFAULT_MAX_LEVEL);
+        }
 
         public PageGlitch {
+            if (maxLevel < 0 || maxLevel > MAX_LEVEL) {
+                throw new IllegalArgumentException("Page glitch max level must be between 0 and " + MAX_LEVEL);
+            }
             if (pulseSeconds < 1 || pulseSeconds > MAX_PULSE_SECONDS) {
                 throw new IllegalArgumentException(
                         "Page glitch pulse must be between 1 and " + MAX_PULSE_SECONDS + " seconds");

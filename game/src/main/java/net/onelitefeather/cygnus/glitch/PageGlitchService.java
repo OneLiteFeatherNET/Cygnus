@@ -8,12 +8,14 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
 import net.onelitefeather.cygnus.gaze.GazeSink;
 import net.onelitefeather.cygnus.gaze.SlenderGaze;
 import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -32,6 +34,15 @@ import java.util.function.Supplier;
  * is nothing at all: {@link SlenderGaze#NONE} rather than the weakest level, because an untouched
  * round has nothing to say yet.</p>
  *
+ * <p>Both are capped at {@link GameConfig.PageGlitch#maxLevel()}. Playtests showed the higher levels
+ * left the slender blind, so the default cap is the weakest level: from the first page on he sees
+ * that level and the pulse has no visible step above it.</p>
+ *
+ * <p>The glitch is only ever on his screen while he is invisible. While he is visible and hunting
+ * his screen is completely clean ({@link SlenderGaze#NONE}). The round's progress and pulse keep
+ * running underneath, so the level is right the moment he turns invisible again. A toggle arrives as
+ * a {@link StaminaStateChangeEvent} and is applied at once rather than on the next second.</p>
+ *
  * <p>The level travels through a {@link GazeSink}, the same seam {@code SlenderGazeService} uses,
  * so what reaches the client is decided in one place. The sink is deliberately shared with the
  * gaze rather than a second one of its own: a player has one signal carrier, and two would draw
@@ -46,7 +57,7 @@ import java.util.function.Supplier;
  * }</pre>
  *
  * @author TheMeinerLP
- * @version 1.0.2
+ * @version 1.1.0
  * @since 2.15.0
  */
 public final class PageGlitchService implements GameFeature {
@@ -59,6 +70,7 @@ public final class PageGlitchService implements GameFeature {
     private final GameConfig.PageGlitch config;
     private final GazeSink sink;
     private final Supplier<@Nullable Player> slender;
+    private final Predicate<Player> invisible;
     private final RepeatingTask task = new RepeatingTask(this::tick);
 
     /** How far the round has got, between {@code 0} and {@code 1}. */
@@ -78,12 +90,29 @@ public final class PageGlitchService implements GameFeature {
      *
      * @param config  the configuration holding the switch and the pulse
      * @param sink    where the level is signalled to
-     * @param slender supplies the current slender, or {@code null} while there is none
+     * @param slender supplies the current slender, or {@code null} while there is none; he counts as
+     *                invisible
      */
-    public PageGlitchService(GameConfig.PageGlitch config, GazeSink sink, Supplier<@Nullable Player> slender) {
+    PageGlitchService(GameConfig.PageGlitch config, GazeSink sink, Supplier<@Nullable Player> slender) {
+        this(config, sink, slender, _ -> true);
+    }
+
+    /**
+     * Creates a new instance of the {@link PageGlitchService}.
+     *
+     * @param config    the configuration holding the switch, the pulse and the cap
+     * @param sink      where the level is signalled to
+     * @param slender   supplies the current slender, or {@code null} while there is none
+     * @param invisible tells whether the given slender is invisible right now; the glitch is only
+     *                  shown while it is
+     * @since 2.14.1
+     */
+    public PageGlitchService(GameConfig.PageGlitch config, GazeSink sink, Supplier<@Nullable Player> slender,
+                             Predicate<Player> invisible) {
         this.config = config;
         this.sink = sink;
         this.slender = slender;
+        this.invisible = invisible;
         this.registerListeners();
     }
 
@@ -98,6 +127,12 @@ public final class PageGlitchService implements GameFeature {
     private void registerListeners() {
         this.node.addListener(GameStartEvent.class, event -> this.start());
         this.node.addListener(PageFoundEvent.class, this::onPageFound);
+        // The tag the predicate reads is flipped before this event is fired, so the new state is
+        // already visible here and the glitch moves the moment he toggles. Outside a round there is
+        // nothing to show, and applying would attach the carrier to a slender after the round ended.
+        this.node.addListener(StaminaStateChangeEvent.class, event -> {
+            if (this.isRunning()) this.apply();
+        });
         this.node.addListener(GameFinishEvent.class, event -> this.stop());
     }
 
@@ -177,7 +212,7 @@ public final class PageGlitchService implements GameFeature {
             this.attached = currentSlender;
         }
 
-        int level = this.level();
+        int level = this.invisible.test(currentSlender) ? this.level() : SlenderGaze.NONE;
         if (level == this.reported) return;
         this.reported = level;
         this.sink.level(currentSlender, level);
@@ -197,8 +232,10 @@ public final class PageGlitchService implements GameFeature {
      * Works out the level his screen sits at right now. The baseline follows {@link #baselineOf}, so
      * it starts slowly and a pulse on top of it is what lets a find stand out early in the round.
      *
-     * @return a level between {@code 0} and {@link SlenderGaze#LEVELS} minus one, or
-     *         {@link SlenderGaze#NONE} while no page has been found
+     * <p>Baseline and pulse are both clamped to the configured cap.</p>
+     *
+     * @return a level between {@code 0} and the configured cap, or {@link SlenderGaze#NONE} while no
+     *         page has been found
      */
     private int level() {
         if (this.progress <= 0.0F) {
@@ -206,9 +243,10 @@ public final class PageGlitchService implements GameFeature {
             return SlenderGaze.NONE;
         }
 
-        int baseline = baselineOf(this.progress);
+        int cap = Math.min(this.config.maxLevel(), SlenderGaze.LEVELS - 1);
+        int baseline = Math.min(baselineOf(this.progress), cap);
         if (this.pulseSecondsLeft <= 0) return baseline;
-        return Math.min(baseline + 1, SlenderGaze.LEVELS - 1);
+        return Math.min(baseline + 1, cap);
     }
 
     /**
