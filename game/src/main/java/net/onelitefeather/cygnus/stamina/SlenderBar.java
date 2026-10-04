@@ -176,11 +176,18 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
 
     /**
      * Stops the bar and takes the cooldown off the eye, so no stale overlay outlives the round.
+     * <p>
+     * A round can end while he is draining, which never runs {@link #enterRegenerating()}. The
+     * blindness has no end of its own, so the drain effects are lifted here or he stays in the dark.
+     * </p>
      */
     @Override
     public void stop() {
         super.stop();
         this.sendCooldown(0);
+        this.clearBlindness(player);
+        AttributeHelper.removeSlenderDrainingSpeed(player);
+        player.setBlockedSprinting(false);
     }
 
     /**

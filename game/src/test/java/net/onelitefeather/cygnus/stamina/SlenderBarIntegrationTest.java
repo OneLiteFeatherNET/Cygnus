@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.network.packet.server.ServerPacket;
 import net.minestom.server.network.packet.server.play.ActionBarPacket;
 import net.minestom.server.network.packet.server.play.SetCooldownPacket;
@@ -350,6 +351,25 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         slenderBar.stop();
 
         collector.assertSingle(packet -> assertEquals(0, packet.cooldownTicks()));
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("Stopping the bar mid drain takes his blindness, slowness and sprint block off")
+    void testStopWhileDrainingLiftsTheDrainEffects(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
+
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        slenderBar.start();
+        slenderBar.changeStatus(); // READY -> DRAINING, the round ends while he hunts
+
+        slenderBar.stop();
+
+        assertFalse(player.getActiveEffects().stream().anyMatch(timed -> timed.potion().effect() == PotionEffect.BLINDNESS),
+                "the blindness must not outlive the round");
+        assertFalse(player.getAttribute(Attribute.MOVEMENT_SPEED).modifiers().stream().anyMatch(m -> m.id().equals(AttributeHelper.SLENDER_DRAINING_SPEED_KEY)));
+        assertFalse(player.hasBlockedSprinting());
         env.destroyInstance(instance, true);
     }
 }
