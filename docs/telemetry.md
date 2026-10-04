@@ -130,6 +130,52 @@ telemetry.slowTickThresholdMillis=50
 
 A value below 1 is rejected and the service refuses to start.
 
+## Tick metrics
+
+Spans exist only for slow ticks, so a trace cannot say how long a lobby tick usually takes. Metrics are
+recorded for every tick (`ServerTickMonitorEvent`) and every measured section, per phase. The javaagent exports
+them over OTLP together with its own metrics; without the agent they are no-ops.
+
+| Instrument | Kind | Unit | Attributes |
+| --- | --- | --- | --- |
+| `cygnus.tick.duration` | histogram | `ms` | `cygnus.phase.name` |
+| `cygnus.tick.section.duration` | histogram | `ms` | `cygnus.tick.section.name`, `cygnus.phase.name` |
+| `cygnus.tick.slow` | counter | `{tick}` | `cygnus.phase.name` |
+
+- `cygnus.phase.name` is `lobby`, `waiting`, `gamephase`, `restart`, or `none` (no round or between phases).
+- `cygnus.tick.section.name` is one of the names in [Slow ticks](#slow-ticks). A section is recorded for a tick
+  only if it ran in it, with the total of its runs.
+- `cygnus.tick.slow` counts ticks at or above `telemetry.slowTickThresholdMillis`, the same rule as the span.
+- Unit is milliseconds, not the seconds the semantic conventions prefer: Minestom's budget, the threshold and the
+  span attributes are in milliseconds, and a bucket at `50` reads as 50.
+- Explicit buckets (ms): 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200. The SDK
+  default starts at 5 and would put the whole lobby in one bucket.
+- The hot path allocates nothing of its own: attributes per phase and per section/phase pair are built once and
+  reused, values are recorded as primitives.
+
+### In Mimir / Grafana
+
+OTLP to Prometheus translation appends the unit and, for counters, `_total` (checked against the existing
+`jvm_gc_duration_seconds_*` and `jvm_cpu_time_seconds_total` in Mimir). Dots become underscores:
+
+| OTel | Prometheus |
+| --- | --- |
+| `cygnus.tick.duration` | `cygnus_tick_duration_milliseconds_bucket` / `_sum` / `_count` |
+| `cygnus.tick.section.duration` | `cygnus_tick_section_duration_milliseconds_bucket` / `_sum` / `_count` |
+| `cygnus.tick.slow` | `cygnus_tick_slow_total` |
+| `cygnus.phase.name` | label `cygnus_phase_name` |
+| `cygnus.tick.section.name` | label `cygnus_tick_section_name` |
+
+For the Kubernetes-FLUX dashboard `cygnus-traces`, the per-phase and sub-tick panels should query these metrics
+rather than derive them from slow tick spans, which only cover the tail. For example the p99 tick per phase:
+
+```promql
+histogram_quantile(0.99, sum by (le, cygnus_phase_name) (rate(cygnus_tick_duration_milliseconds_bucket[5m])))
+```
+
+and the mean cost of a section: `sum by (cygnus_tick_section_name) (rate(..._section_duration_milliseconds_sum[5m]))
+/ sum by (cygnus_tick_section_name) (rate(..._section_duration_milliseconds_count[5m]))`.
+
 ## Shutdown
 
 `ServiceShutdown` ends the span before it calls `Runtime.exit`. The agent flushes its exporter from a JVM
