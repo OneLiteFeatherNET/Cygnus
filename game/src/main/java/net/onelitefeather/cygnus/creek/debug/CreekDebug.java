@@ -162,8 +162,9 @@ public final class CreekDebug {
 
         for (SurvivorView view : views) {
             builder.append(Component.text(" · ", NamedTextColor.DARK_GRAY));
+            // Shown as sanity, the inverse of the dread: 1 is calm, the lower the more scared.
             builder.append(Component.text(
-                    String.format(Locale.ROOT, "%s %.2f", names.apply(view.id()), view.dread()),
+                    String.format(Locale.ROOT, "%s %.2f", names.apply(view.id()), 1.0D - view.dread()),
                     NamedTextColor.GRAY));
             if (view.seesCreek()) {
                 builder.append(Component.text(" " + SEEN, NamedTextColor.YELLOW));
