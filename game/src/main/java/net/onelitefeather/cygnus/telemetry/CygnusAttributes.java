@@ -102,6 +102,7 @@ public final class CygnusAttributes {
     public static final AttributeKey<Double> DISTANCE = AttributeKey.doubleKey("cygnus.distance");
     public static final AttributeKey<String> KILLER_UUID = AttributeKey.stringKey("cygnus.killer.uuid");
     public static final AttributeKey<String> STAMINA_STATE = AttributeKey.stringKey("cygnus.stamina.state");
+    public static final AttributeKey<Long> LINKS_DROPPED = AttributeKey.longKey("cygnus.links.dropped");
     public static final AttributeKey<String> LINK_KIND = AttributeKey.stringKey("cygnus.link.kind");
 
     /** The link points at the round trace a player's cookie remembered. */

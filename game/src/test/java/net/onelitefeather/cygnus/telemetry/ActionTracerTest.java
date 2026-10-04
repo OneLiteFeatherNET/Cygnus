@@ -215,7 +215,7 @@ class ActionTracerTest {
     @DisplayName("Accepting and declining the disclaimer are separate action types")
     void disclaimerAnswers() {
         this.actions.disclaimer(survivor(0, 0, 0), true);
-        this.actions.disclaimer(survivor(0, 0, 0), false);
+        this.actions.disclaimer(new Actor(SLENDER, "slender", 0, 0, 0), false);
 
         this.telemetry.span(CygnusAttributes.ACTION_DISCLAIMER_ACKNOWLEDGE);
         this.telemetry.span(CygnusAttributes.ACTION_DISCLAIMER_DECLINE);
@@ -256,5 +256,61 @@ class ActionTracerTest {
         public Instant instant() {
             return this.now;
         }
+    }
+
+    @Test
+    @DisplayName("A player's disclaimer answer is traced once per round, however often the packet arrives")
+    void disclaimerIsTracedOncePerPlayerAndRound() {
+        for (int i = 0; i < 100; i++) {
+            this.actions.disclaimer(survivor(0, 0, 0), true);
+        }
+        this.actions.disclaimer(survivor(0, 0, 0), false);
+
+        assertEquals(1, this.telemetry.spans().stream()
+                .filter(span -> span.getName().startsWith("cygnus.action.disclaimer")).count());
+    }
+
+    @Test
+    @DisplayName("Another player's answer is traced separately")
+    void disclaimerOfAnotherPlayerIsTraced() {
+        this.actions.disclaimer(survivor(0, 0, 0), true);
+        this.actions.disclaimer(new Actor(SLENDER, "slender", 0, 0, 0), true);
+
+        assertEquals(2, this.telemetry.spans().stream()
+                .filter(span -> span.getName().equals(CygnusAttributes.ACTION_DISCLAIMER_ACKNOWLEDGE)).count());
+    }
+
+    @Test
+    @DisplayName("The next round traces a player's answer again")
+    void disclaimerIsTracedAgainInTheNextRound() {
+        this.actions.disclaimer(survivor(0, 0, 0), true);
+
+        this.rounds.roundStarted();
+        this.actions.disclaimer(survivor(0, 0, 0), true);
+
+        assertEquals(2, this.telemetry.spans().stream()
+                .filter(span -> span.getName().equals(CygnusAttributes.ACTION_DISCLAIMER_ACKNOWLEDGE)).count());
+    }
+
+    @Test
+    @DisplayName("The pages of a finished round are forgotten, so they cannot date a page of the next one")
+    void pagesAreForgottenWhenARoundEnds() {
+        this.actions.pageSpawned(PAGE, new Pos(0, 64, 0), false);
+        this.rounds.abort("test");
+        this.rounds.roundStarted();
+        this.clock.advance(Duration.ofSeconds(30));
+
+        this.actions.pageFound(survivor(0, 64, 0), PAGE, 1, 8);
+
+        assertNull(this.telemetry.span(CygnusAttributes.ACTION_PAGE_FOUND)
+                .getAttributes().get(CygnusAttributes.PAGE_OUT_MS));
+    }
+
+    @Test
+    @DisplayName("A listener body that throws does not escape")
+    void safelySwallowsFailures() {
+        ActionTracer.safely(() -> {
+            throw new IllegalStateException("player is mid-disconnect");
+        });
     }
 }

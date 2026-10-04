@@ -256,4 +256,47 @@ class RoundTracerTest {
         protected void onStart() {
         }
     }
+
+    private static io.opentelemetry.api.trace.SpanContext remote(int trace, int span) {
+        return io.opentelemetry.api.trace.SpanContext.createFromRemoteParent(
+                String.format("%032x", trace), String.format("%016x", span),
+                io.opentelemetry.api.trace.TraceFlags.getSampled(), io.opentelemetry.api.trace.TraceState.getDefault());
+    }
+
+    @Test
+    @DisplayName("Two incoming spans of the same trace are one link")
+    void linksAreKeyedOnTheTraceId() {
+        this.series.start();
+
+        this.rounds.linkPrevious(remote(1, 1));
+        this.rounds.linkPrevious(remote(1, 2));
+        this.rounds.abort("test");
+
+        assertEquals(1, this.telemetry.span(CygnusAttributes.SPAN_ROUND).getLinks().size());
+    }
+
+    @Test
+    @DisplayName("Links are capped, and the ones beyond the cap are counted")
+    void linksAreCappedAndTheDroppedAreCounted() {
+        this.series.start();
+
+        for (int i = 1; i <= RoundTracer.MAX_LINKS + 4; i++) {
+            this.rounds.linkPrevious(remote(i, 1));
+        }
+        this.rounds.abort("test");
+
+        SpanData round = this.telemetry.span(CygnusAttributes.SPAN_ROUND);
+        assertEquals(RoundTracer.MAX_LINKS, round.getLinks().size());
+        assertEquals(4L, round.getAttributes().get(CygnusAttributes.LINKS_DROPPED));
+    }
+
+    @Test
+    @DisplayName("A round that dropped no link has no dropped count")
+    void noDroppedCountWithoutDrops() {
+        this.series.start();
+        this.rounds.linkPrevious(remote(1, 1));
+        this.rounds.abort("test");
+
+        assertNull(this.telemetry.span(CygnusAttributes.SPAN_ROUND).getAttributes().get(CygnusAttributes.LINKS_DROPPED));
+    }
 }

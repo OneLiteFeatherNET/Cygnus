@@ -31,11 +31,12 @@ class TracingCreekWitnessTest {
     private TestTelemetry telemetry;
     private List<String> heard;
     private TracingCreekWitness witness;
+    private RoundTracer rounds;
 
     @BeforeEach
     void setUp() {
         this.telemetry = new TestTelemetry();
-        RoundTracer rounds = new RoundTracer(this.telemetry.tracing(), () -> "round-1");
+        this.rounds = new RoundTracer(this.telemetry.tracing(), () -> "round-1");
         rounds.roundStarted();
         ActionTracer actions = new ActionTracer(rounds, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), () -> "Cabin");
         this.heard = new ArrayList<>();
@@ -124,5 +125,16 @@ class TracingCreekWitnessTest {
 
         assertEquals(0, spansNamed(CygnusAttributes.ACTION_CREEK_CAUGHT));
         assertEquals(List.of("caught"), this.heard);
+    }
+
+    @Test
+    @DisplayName("A survivor stalked again in the next round gets a first-step span again")
+    void stalkIsTracedAgainInTheNextRound() {
+        this.witness.stalked(SURVIVOR);
+
+        this.rounds.roundStarted();
+        this.witness.stalked(SURVIVOR);
+
+        assertEquals(2, spansNamed(CygnusAttributes.ACTION_CREEK_STALK));
     }
 }

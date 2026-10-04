@@ -162,7 +162,7 @@ class JoinTracerTest {
     }
 
     @Test
-    @DisplayName("A login whose connection died before a player existed is ended as abandoned by the sweep")
+    @DisplayName("A login whose connection died before a player existed is ended as timeout by the sweep")
     void sweepEndsJoinsThatNeverReachedASpawn() {
         this.joins.loginStarted(PLAYER, this.connection);
 
@@ -172,8 +172,14 @@ class JoinTracerTest {
 
         this.nanos.addAndGet(1);
         this.joins.sweep();
-        assertEquals(JoinTracer.OUTCOME_ABANDONED, this.telemetry.span(CygnusAttributes.SPAN_PLAYER_JOIN)
-                .getAttributes().get(CygnusAttributes.JOIN_OUTCOME));
+        assertEquals(JoinTracer.OUTCOME_TIMEOUT, this.telemetry.span(CygnusAttributes.SPAN_PLAYER_JOIN)
+                .getAttributes().get(CygnusAttributes.JOIN_OUTCOME), "a timeout, not an abandoned join: the player may just be slow");
+    }
+
+    @Test
+    @DisplayName("The default timeout leaves room for a slow ResourcePack download")
+    void defaultTimeoutIsGenerous() {
+        assertTrue(JoinTracer.DEFAULT_TIMEOUT.compareTo(Duration.ofMinutes(10)) >= 0);
     }
 
     @Test

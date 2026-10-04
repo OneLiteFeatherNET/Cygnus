@@ -160,7 +160,8 @@ public final class PageProvider {
         // Polled first, so the page can't draw its own spot again; queued last, so the spot only
         // comes back once every other one had its turn.
         PageResource newSpot = this.freeSpots.poll();
-        if (newSpot == null && !returnOldSpot) {
+        boolean hidden = newSpot == null && !returnOldSpot;
+        if (hidden) {
             // Found with nowhere else to go: the spot has to be reused, but not right away
             page.hideFor(respawnDelay());
         } else {
@@ -174,7 +175,10 @@ public final class PageProvider {
             page.enableInteraction();
         }
         this.activePages.put(page.getHitBoxUUID(), page);
-        EventDispatcher.call(new PageSpawnedEvent(page.getHitBoxUUID(), page.spot(), true));
+        // A hidden page is announced when it shows up again, see PageEntity#reappear
+        if (!hidden) {
+            EventDispatcher.call(new PageSpawnedEvent(page.getHitBoxUUID(), page.spot(), true));
+        }
     }
 
     private static int respawnDelay() {

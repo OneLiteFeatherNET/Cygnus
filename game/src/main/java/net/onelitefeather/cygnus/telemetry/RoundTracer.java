@@ -12,6 +12,8 @@ import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -44,7 +46,12 @@ public final class RoundTracer {
     private @Nullable TraceStep phase;
     // The span API cannot be read back, so whether gameFinished already set the reason is kept here.
     private boolean endReasonSet;
+    /** More incoming traces than this are not linked: a cookie is client data, the links must stay bounded. */
+    static final int MAX_LINKS = 16;
+
     private final Set<String> linked = new HashSet<>();
+    private int droppedLinks;
+    private final List<Runnable> boundaryListeners = new CopyOnWriteArrayList<>();
 
     /**
      * Creates the tracer.
@@ -74,6 +81,8 @@ public final class RoundTracer {
         abort("restarted");
         this.endReasonSet = false;
         this.linked.clear();
+        this.droppedLinks = 0;
+        notifyBoundary();
         this.round = this.tracing.root(CygnusAttributes.SPAN_ROUND)
                 .set(CygnusAttributes.ROUND_ID, this.roundIds.get());
     }
@@ -120,7 +129,26 @@ public final class RoundTracer {
         TraceStep current = this.round;
         this.round = null;
         if (current != null) {
+            if (this.droppedLinks > 0) {
+                current.set(CygnusAttributes.LINKS_DROPPED, (long) this.droppedLinks);
+            }
             current.close();
+        }
+        notifyBoundary();
+    }
+
+    /**
+     * Registers something that has to forget its per-round state when a round starts or ends.
+     *
+     * @param listener called on every boundary, on the thread that starts or ends the round; must be quick
+     */
+    void onBoundary(Runnable listener) {
+        this.boundaryListeners.add(listener);
+    }
+
+    private void notifyBoundary() {
+        for (Runnable listener : this.boundaryListeners) {
+            listener.run();
         }
     }
 
@@ -230,16 +258,23 @@ public final class RoundTracer {
 
     /**
      * Links the running round to the round trace a joining player's cookie remembered. One link per
-     * distinct trace: a lobby full of players who all come from the same round adds one, not thirteen.
+     * distinct trace id: a lobby full of players who all come from the same round adds one, not
+     * thirteen. At most {@value #MAX_LINKS} per round; the rest are counted in
+     * {@code cygnus.links.dropped}.
      *
      * @param previous the span context read from a cookie
      */
     synchronized void linkPrevious(SpanContext previous) {
         TraceStep current = this.round;
         if (current == null || current.span().getSpanContext().getTraceId().equals(previous.getTraceId())
-                || !this.linked.add(previous.getTraceId() + previous.getSpanId())) {
+                || this.linked.contains(previous.getTraceId())) {
             return;
         }
+        if (this.linked.size() >= MAX_LINKS) {
+            this.droppedLinks++;
+            return;
+        }
+        this.linked.add(previous.getTraceId());
         current.span().addLink(previous, Attributes.of(CygnusAttributes.LINK_KIND, CygnusAttributes.LINK_PREVIOUS_ROUND));
     }
 

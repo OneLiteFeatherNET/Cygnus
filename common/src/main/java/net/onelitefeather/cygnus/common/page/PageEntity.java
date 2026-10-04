@@ -14,6 +14,7 @@ import net.minestom.server.utils.chunk.ChunkUtils;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
+import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
 
 import java.util.UUID;
@@ -173,13 +174,21 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
         if (currentTickTime >= ttlTime) {
             // A page is only out of play while it waits to come back, see hideFor
             if (!this.interactable) {
-                this.enableInteraction();
+                this.reappear();
                 return;
             }
             this.disableInteraction();
             send = true;
             EventDispatcher.call(new PageExpiredEvent(this));
         }
+    }
+
+    /**
+     * Brings a hidden page back on its spot and announces it, since only now is it collectible again.
+     */
+    void reappear() {
+        this.enableInteraction();
+        EventDispatcher.call(new PageSpawnedEvent(this.getHitBoxUUID(), this.spot(), true));
     }
 
     /**

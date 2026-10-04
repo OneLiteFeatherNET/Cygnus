@@ -15,9 +15,13 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -132,33 +136,40 @@ class CygnusPlayerKickTracingTest {
     }
 
     @Test
-    void testAckAndTimeoutRacingDisconnectOnlyOnce(Env env) throws Exception {
+    void testAckRacingTheTimeoutEndsTheKickSpanExactlyOnce(Env env) throws Exception {
         try (TestTelemetry telemetry = new TestTelemetry()) {
             Instance instance = env.createFlatInstance();
             UUID packId = UUID.randomUUID();
             useTracedPlayers(env, packId, telemetry);
-            Player player = env.createConnection().connect(instance);
-            player.kick(KICK_MESSAGE);
+            int rounds = 20;
+            for (int i = 0; i < rounds; i++) {
+                Player player = env.createConnection().connect(instance);
+                player.kick(KICK_MESSAGE);
 
-            // Two threads deliver the ack at the same moment; only one may take the pending kick.
-            java.util.concurrent.CountDownLatch go = new java.util.concurrent.CountDownLatch(1);
-            Runnable ack = () -> {
-                try {
-                    go.await();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                ResourcePackListener.listener(new ClientResourcePackStatusPacket(packId, ResourcePackStatus.DISCARDED), player);
-            };
-            Thread first = new Thread(ack);
-            Thread second = new Thread(ack);
-            first.start();
-            second.start();
-            go.countDown();
-            first.join();
-            second.join();
+                // The ack arrives on another thread while the main thread ticks through the timeout
+                CyclicBarrier start = new CyclicBarrier(2);
+                Thread network = new Thread(() -> {
+                    try {
+                        start.await(5, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                        return;
+                    }
+                    ResourcePackListener.listener(new ClientResourcePackStatusPacket(packId, ResourcePackStatus.DISCARDED), player);
+                });
+                network.start();
+                start.await(5, TimeUnit.SECONDS);
+                for (int tick = 0; tick < 11; tick++) env.tick();
+                network.join(5_000);
+                assertFalse(network.isAlive(), "the network thread has to finish");
+            }
 
-            assertEquals(1, telemetry.spans().size(), "the kick span ended exactly once");
+            List<SpanData> kicks = telemetry.spans().stream()
+                    .filter(span -> span.getName().equals(CygnusAttributes.SPAN_PLAYER_KICK)).toList();
+            assertEquals(rounds, kicks.size(), "one kick span per player, never two and never none");
+            assertTrue(kicks.stream().allMatch(span -> {
+                String by = span.getAttributes().get(CygnusAttributes.KICK_COMPLETED_BY);
+                return CygnusAttributes.KICK_BY_ACK.equals(by) || CygnusAttributes.KICK_BY_TIMEOUT.equals(by);
+            }), "whichever won, the span says ack or timeout");
             env.destroyInstance(instance, true);
         }
     }

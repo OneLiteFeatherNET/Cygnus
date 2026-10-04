@@ -44,6 +44,8 @@ public final class TracingCreekWitness implements CreekWitness {
         this.delegate = delegate;
         this.actions = actions;
         this.survivors = survivors;
+        // A stalk belongs to a round: a survivor stalked again in the next one gets a first-step span.
+        actions.onReset(this.stalking::clear);
     }
 
     @Override

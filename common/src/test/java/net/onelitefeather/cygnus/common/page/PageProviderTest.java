@@ -178,6 +178,29 @@ class PageProviderTest {
     }
 
     @Test
+    void testAHiddenPageIsAnnouncedWhenItReappearsNotWhenItIsHidden(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        // No spare spot: a found page has to wait on its own spot
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT);
+        pageProvider.setMaxPageAmount(3);
+        Player player = env.createPlayer(instance);
+        PageEntity page = pageProvider.interactablePages().getFirst();
+        List<PageSpawnedEvent> spawned = Collections.synchronizedList(new ArrayList<>());
+        env.process().eventHandler().addListener(PageSpawnedEvent.class, spawned::add);
+
+        pageProvider.triggerPageFound(player, page.getHitBoxUUID());
+        assertFalse(page.isInteractable(), "the page waits on its spot");
+        assertTrue(spawned.isEmpty(), "a hidden page is not out yet, so nothing is announced");
+
+        page.reappear();
+        assertEquals(1, spawned.size(), "it is announced once it can be collected again");
+        assertTrue(spawned.getFirst().relocated());
+        assertEquals(page.getHitBoxUUID(), spawned.getFirst().pageId());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
     void testEveryFindFiresAnEventCarryingTheRunningCount(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         int pageCount = 3;

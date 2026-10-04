@@ -29,7 +29,7 @@ import java.util.function.LongSupplier;
  * <p>
  * Every join span ends, by one of three routes: at the first spawn; on the disconnect of the
  * connection that opened it; or, for a connection that dies before a player exists (so no disconnect
- * ever comes), when {@link #sweep()} finds it older than the timeout. The sweep is driven by the
+ * ever comes), when {@link #sweep()} finds it older than the timeout and ends it as {@code timeout}. The sweep is driven by the
  * server tick and a clock that is injected, so nothing waits on wall time.
  * </p>
  * <p>
@@ -48,9 +48,11 @@ public final class JoinTracer {
     public static final String OUTCOME_SPAWNED = "spawned";
     /** The player left, was kicked, or timed out before the first spawn. */
     public static final String OUTCOME_ABANDONED = "abandoned";
+    /** The join was still open when {@link #sweep()} gave up on it. */
+    public static final String OUTCOME_TIMEOUT = "timeout";
 
     /** How long a join may stay open before {@link #sweep()} gives up on it. */
-    public static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(2);
+    public static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(10);
 
     private final CygnusTracing tracing;
     private final LongSupplier nanoTime;
@@ -164,7 +166,7 @@ public final class JoinTracer {
     }
 
     /**
-     * Ends every join that has been open longer than the timeout, as abandoned. Those are logins whose
+     * Ends every join that has been open longer than the timeout, as timeout. Those are logins whose
      * connection died before a player existed, so no disconnect will ever name them.
      */
     public void sweep() {
@@ -174,7 +176,7 @@ public final class JoinTracer {
         long now = this.nanoTime.getAsLong();
         this.joins.forEach((player, join) -> {
             if (now - join.startedNanos >= this.timeoutNanos && this.joins.remove(player, join)) {
-                join.end(OUTCOME_ABANDONED);
+                join.end(OUTCOME_TIMEOUT);
             }
         });
     }

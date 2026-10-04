@@ -18,7 +18,10 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -54,6 +57,10 @@ public final class ActionTracer {
     private final Clock clock;
     private final Supplier<@Nullable String> mapName;
     private final Map<UUID, Spawn> pages = new ConcurrentHashMap<>();
+    // Players who already answered the disclaimer this round: any client can send the click packets
+    // at any rate, so a second answer is not an action worth a span.
+    private final Set<UUID> answered = ConcurrentHashMap.newKeySet();
+    private final List<Runnable> resetListeners = new CopyOnWriteArrayList<>();
 
     /**
      * Creates the tracer.
@@ -66,6 +73,37 @@ public final class ActionTracer {
         this.rounds = rounds;
         this.clock = clock;
         this.mapName = mapName;
+        // Page ids and answers belong to one round; forgetting them keeps the maps bounded by a round.
+        rounds.onBoundary(this::reset);
+    }
+
+    /**
+     * Registers something that has to forget its per-round state along with this tracer.
+     *
+     * @param listener called when a round starts or ends
+     */
+    void onReset(Runnable listener) {
+        this.resetListeners.add(listener);
+    }
+
+    private void reset() {
+        this.pages.clear();
+        this.answered.clear();
+        for (Runnable listener : this.resetListeners) {
+            listener.run();
+        }
+    }
+
+    /**
+     * Runs a listener body so that nothing it does can reach the game: a snapshot of a player that
+     * is mid-disconnect, or anything else going wrong, only costs the span.
+     */
+    static void safely(Runnable body) {
+        try {
+            body.run();
+        } catch (RuntimeException ignored) {
+            // observing must not change what happens
+        }
     }
 
     /**
@@ -208,6 +246,9 @@ public final class ActionTracer {
      * @param acknowledged {@code true} for taking note of it, {@code false} for declining
      */
     public void disclaimer(Actor player, boolean acknowledged) {
+        if (!this.answered.add(player.uuid())) {
+            return;
+        }
         emit(acknowledged ? CygnusAttributes.ACTION_DISCLAIMER_ACKNOWLEDGE : CygnusAttributes.ACTION_DISCLAIMER_DECLINE,
                 player, step -> {
                 });
@@ -235,25 +276,26 @@ public final class ActionTracer {
      * @param slender supplies the slender of the round, or {@code null} if there is none
      */
     public void register(EventNode<? super Event> node, Supplier<@Nullable Player> slender) {
-        node.addListener(PageSpawnedEvent.class, event -> pageSpawned(event.pageId(), event.position(), event.relocated()));
-        node.addListener(PageFoundEvent.class,
-                event -> pageFound(Actor.of(event.finder()), event.pageId(), event.foundCount(), event.maxPages()));
-        node.addListener(PageExpiredEvent.class, event -> pageExpired(event.entity().getHitBoxUUID()));
-        node.addListener(PlayerDeathEvent.class, event -> {
+        node.addListener(PageSpawnedEvent.class,
+                event -> safely(() -> pageSpawned(event.pageId(), event.position(), event.relocated())));
+        node.addListener(PageFoundEvent.class, event -> safely(() ->
+                pageFound(Actor.of(event.finder()), event.pageId(), event.foundCount(), event.maxPages())));
+        node.addListener(PageExpiredEvent.class, event -> safely(() -> pageExpired(event.entity().getHitBoxUUID())));
+        node.addListener(PlayerDeathEvent.class, event -> safely(() -> {
             Player slenderPlayer = slender.get();
             playerDied(Actor.of(event.getPlayer()), slenderPlayer == null ? null : Actor.of(slenderPlayer));
-        });
-        node.addListener(SlenderReviveEvent.class, event -> slenderRevived(Actor.of(event.getPlayer())));
+        }));
+        node.addListener(SlenderReviveEvent.class, event -> safely(() -> slenderRevived(Actor.of(event.getPlayer()))));
         node.addListener(StaminaStateChangeEvent.class,
-                event -> staminaState(Actor.of(event.getPlayer()), event.getState().name()));
-        node.addListener(SpectatorAddEvent.class, event -> spectatorJoined(Actor.of(event.getPlayer())));
-        node.addListener(PlayerCustomClickEvent.class, event -> {
+                event -> safely(() -> staminaState(Actor.of(event.getPlayer()), event.getState().name())));
+        node.addListener(SpectatorAddEvent.class, event -> safely(() -> spectatorJoined(Actor.of(event.getPlayer()))));
+        node.addListener(PlayerCustomClickEvent.class, event -> safely(() -> {
             if (EpilepsyDisclaimer.ACKNOWLEDGE_KEY.equals(event.getKey())) {
                 disclaimer(Actor.of(event.getPlayer()), true);
             } else if (EpilepsyDisclaimer.DECLINE_KEY.equals(event.getKey())) {
                 disclaimer(Actor.of(event.getPlayer()), false);
             }
-        });
+        }));
     }
 
     private void emit(String name, @Nullable Actor actor, Consumer<TraceStep> details) {
