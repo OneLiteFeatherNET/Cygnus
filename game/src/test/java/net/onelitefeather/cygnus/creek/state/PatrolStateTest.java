@@ -14,11 +14,13 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -265,7 +267,7 @@ class PatrolStateTest {
     }
 
     @Test
-    @DisplayName("After staring for a second he applies the consequence and walks on")
+    @DisplayName("After staring for a second and a half he applies the consequence and walks on")
     void staresThenAppliesAndWalksOn() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
         PatrolState state = new PatrolState();
@@ -273,15 +275,15 @@ class PatrolStateTest {
         state.enter(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2)));
         state.tick(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2)));
 
-        state.tick(Contexts.selecting(999L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        state.tick(Contexts.selecting(1499L, body, Contexts.route(A), selected, at(SECOND, 2)));
         assertTrue(selected.isEmpty());
         assertNull(body.goal);
 
-        state.tick(Contexts.selecting(1000L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        state.tick(Contexts.selecting(1500L, body, Contexts.route(A), selected, at(SECOND, 2)));
         assertEquals(List.of(SECOND), selected);
         assertEquals(A, body.goal);
         assertEquals(Optional.empty(), state.staring());
-        assertEquals(11_000L, state.selectAllowedAt());
+        assertEquals(11_500L, state.selectAllowedAt());
     }
 
     @Test
@@ -292,13 +294,13 @@ class PatrolStateTest {
         List<UUID> selected = new ArrayList<>();
         state.enter(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2)));
         state.tick(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2)));
-        state.tick(Contexts.selecting(1000L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        state.tick(Contexts.selecting(1500L, body, Contexts.route(A), selected, at(SECOND, 2)));
 
-        state.tick(Contexts.selecting(10_999L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        state.tick(Contexts.selecting(11_499L, body, Contexts.route(A), selected, at(SECOND, 2)));
         assertEquals(Optional.empty(), state.staring());
         assertEquals(A, body.goal);
 
-        state.tick(Contexts.selecting(11_000L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        state.tick(Contexts.selecting(11_500L, body, Contexts.route(A), selected, at(SECOND, 2)));
         assertEquals(Optional.of(SECOND), state.staring());
     }
 
@@ -358,11 +360,88 @@ class PatrolStateTest {
         state.tick(Contexts.selecting(500L, body, Contexts.route(A), selected, hidden(SECOND, 2)));
         assertEquals(Optional.empty(), state.staring());
 
-        state.tick(Contexts.selecting(1000L, body, Contexts.route(A), selected, hidden(SECOND, 2)));
+        state.tick(Contexts.selecting(1500L, body, Contexts.route(A), selected, hidden(SECOND, 2)));
         assertTrue(selected.isEmpty());
 
         state.tick(Contexts.selecting(1100L, body, Contexts.route(A), selected, at(SECOND, 2)));
         assertEquals(Optional.of(SECOND), state.staring());
+    }
+
+    // ---- the stare ----
+
+    /** Writes down every selection, heartbeat and broken stare. */
+    private static final class StareLog {
+        private final List<UUID> selected = new ArrayList<>();
+        private final List<Integer> beats = new ArrayList<>();
+        private final List<UUID> broken = new ArrayList<>();
+
+        private CreekContext at(long now, RecordingBody body, SurvivorView... survivors) {
+            CreekActions actions = Contexts.actions(_ -> {}, this.selected::add, _ -> {},
+                    (_, beat) -> this.beats.add(beat), this.broken::add);
+            return Contexts.context(now, body, Contexts.route(A), actions, new Random(7), survivors);
+        }
+    }
+
+    @Test
+    @DisplayName("While he stares his eyes light up, and they go out once he is done")
+    void eyesLightUpDuringTheStare() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        StareLog log = new StareLog();
+        state.enter(log.at(0L, body, at(SECOND, 2)));
+
+        state.tick(log.at(0L, body, at(SECOND, 2)));
+        assertTrue(body.aggressive);
+
+        state.tick(log.at(1500L, body, at(SECOND, 2)));
+        assertFalse(body.aggressive);
+        assertEquals(List.of(SECOND), log.selected);
+    }
+
+    @Test
+    @DisplayName("His heart beats three times during the stare")
+    void heartBeatsDuringTheStare() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        StareLog log = new StareLog();
+        state.enter(log.at(0L, body, at(SECOND, 2)));
+
+        for (long now = 0L; now < 1500L; now += 100L) {
+            state.tick(log.at(now, body, at(SECOND, 2)));
+        }
+
+        assertEquals(List.of(0, 1, 2), log.beats);
+    }
+
+    @Test
+    @DisplayName("Ducking behind a wall breaks the stare and puts his eyes out")
+    void duckingBreaksTheStare() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        StareLog log = new StareLog();
+        state.enter(log.at(0L, body, at(SECOND, 2)));
+        state.tick(log.at(0L, body, at(SECOND, 2)));
+
+        state.tick(log.at(500L, body, hidden(SECOND, 2)));
+
+        assertEquals(List.of(SECOND), log.broken);
+        assertFalse(body.aggressive);
+        assertTrue(log.selected.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Leaving the survivors during the stare puts his eyes out without a broken stare")
+    void leavingPutsTheEyesOut() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        StareLog log = new StareLog();
+        state.enter(log.at(0L, body, at(SECOND, 2), far(FIRST, 0.0D, false)));
+        state.tick(log.at(0L, body, at(SECOND, 2), far(FIRST, 0.0D, false)));
+
+        state.tick(log.at(500L, body, far(FIRST, 0.0D, false)));
+
+        assertTrue(log.broken.isEmpty());
+        assertFalse(body.aggressive);
     }
 
     @Test

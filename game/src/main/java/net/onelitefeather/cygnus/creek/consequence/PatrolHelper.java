@@ -1,22 +1,27 @@
 package net.onelitefeather.cygnus.creek.consequence;
 
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
+import net.onelitefeather.cygnus.creek.state.PatrolState;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
 /**
  * What the patrolling creek does to the survivors around it.
  * <p>
- * When it picks out a survivor who came too close, it is a coin toss: either the survivor freezes
- * on the spot and everyone standing next to them goes blind for a moment, or the creek flings them
- * away from itself. It is a scare, not a catch, so it never counts towards
+ * While it stares at a survivor before picking them out, their view darkens and they hear its heart
+ * beat faster. Once it has picked them out, it is a coin toss: either the survivor freezes on the
+ * spot with their head turned towards the creek, and everyone standing next to them goes blind for a
+ * moment, or the creek flings them away from itself. It is a scare, not a catch, so it never counts towards
  * giving them away to the slender. When it vanishes at the end of its route, everyone close by
  * hears it and goes blind the same way.
  * </p>
@@ -38,6 +43,16 @@ public final class PatrolHelper {
 
     /** How long they stay blind, in ticks (2 seconds). */
     static final int BLIND_TICKS = 40;
+
+    /** How long the darkness of a stare lasts at most, in ticks: as long as the stare itself. */
+    static final int STARE_DARKNESS_TICKS = (int) (PatrolState.STARE_MILLIS / 50L);
+
+    static final Key TWITCH_SOUND = Key.key("entity.creaking.twitch");
+    static final Key HEARTBEAT_SOUND = Key.key("entity.warden.heartbeat");
+    static final Key BROKEN_SOUND = Key.key("entity.creaking.deactivate");
+
+    /** How much higher each heartbeat of a stare sounds than the one before. */
+    static final float HEARTBEAT_PITCH_STEP = 0.15F;
 
     /** A fling needs at least this much room, in blocks. With less, it tries another way. */
     static final double FLING_MIN_DISTANCE = 4.0D;
@@ -66,6 +81,7 @@ public final class PatrolHelper {
 
     private final RandomGenerator random;
     private final TrackedEffects effects = new TrackedEffects();
+    private final FaceLock faces = new FaceLock();
 
     /**
      * Sets up the consequence for a round.
@@ -77,25 +93,55 @@ public final class PatrolHelper {
     }
 
     /**
+     * One heartbeat while the creek stares at a survivor. The first one also makes the creek twitch
+     * and darkens the survivor's view for as long as the stare lasts.
+     *
+     * @param target the survivor it stares at
+     * @param beat   which beat this is, counting from 0
+     * @param creek  where the creek stands
+     */
+    public void stareBeat(Player target, int beat, Pos creek) {
+        if (beat == 0) {
+            target.playSound(Sound.sound(TWITCH_SOUND, Sound.Source.HOSTILE, 1.0F, 1.0F), creek.x(), creek.y(), creek.z());
+            this.effects.add(target, new Potion(PotionEffect.DARKNESS, 0, STARE_DARKNESS_TICKS));
+        }
+        float pitch = 1.0F + beat * HEARTBEAT_PITCH_STEP;
+        target.playSound(Sound.sound(HEARTBEAT_SOUND, Sound.Source.HOSTILE, 1.0F, pitch));
+    }
+
+    /**
+     * The survivor got out of the creek's sight during the stare: it lets go and their view clears.
+     *
+     * @param target the survivor it stared at
+     */
+    public void stareBroken(Player target) {
+        target.playSound(Sound.sound(BROKEN_SOUND, Sound.Source.HOSTILE, 1.0F, 1.0F));
+        this.effects.remove(target, PotionEffect.DARKNESS);
+    }
+
+    /**
      * Freezes the survivor or flings them away. If there is no room to fling them, they are frozen
      * instead, so a selection never goes unnoticed.
      *
      * @param selected  the survivor the creek picked out
-     * @param creek     where the creek stands, to fling them away from it
+     * @param creekEyes where the creek's eyes are right now, to fling them away from it or turn
+     *                  their head towards it
      * @param survivors every survivor of the round, to find the ones standing next to a frozen one
      */
-    public void selected(Player selected, Pos creek, Collection<Player> survivors) {
-        if (this.random.nextBoolean() || !this.flingAway(selected, creek)) {
-            this.stun(selected, survivors);
+    public void selected(Player selected, Supplier<Pos> creekEyes, Collection<Player> survivors) {
+        if (this.random.nextBoolean() || !this.flingAway(selected, creekEyes.get())) {
+            this.stun(selected, creekEyes, survivors);
         }
     }
 
     /**
-     * Freezes the survivor for a moment and blinds the other survivors standing next to them.
+     * Freezes the survivor for a moment with their head turned towards the creek, and blinds the
+     * other survivors standing next to them.
      */
-    void stun(Player selected, Collection<Player> survivors) {
+    void stun(Player selected, Supplier<Pos> creekEyes, Collection<Player> survivors) {
         CatchEffects.playScare(selected);
         this.effects.add(selected, new Potion(PotionEffect.SLOWNESS, STUN_AMPLIFIER, STUN_TICKS));
+        this.faces.lock(selected, creekEyes, STUN_TICKS);
         for (Player other : near(selected.getPosition(), survivors)) {
             if (other != selected) this.blind(other);
         }
@@ -166,10 +212,11 @@ public final class PatrolHelper {
     }
 
     /**
-     * Takes back every slowness and blindness handed out that is still running, so nothing lingers
-     * after the round.
+     * Takes back every effect handed out that is still running and lets go of every head still
+     * held, so nothing lingers after the round.
      */
     public void cleanUp() {
         this.effects.removeAll();
+        this.faces.cleanUp();
     }
 }

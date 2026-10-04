@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek;
 
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.state.CreekActions;
@@ -131,7 +132,7 @@ final class Creek {
         List<SurvivorView> noticed = ignored.isEmpty() ? this.lastViews
                 : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
         return new CreekContext(now, noticed, this.body, this.route, this.round.spots(),
-                new Actions(this.round, survivors, ignored, this.body.position()),
+                new Actions(this.round, survivors, ignored, this.body),
                 this.round.config(), this.round.random(), this.round.hunts());
     }
 
@@ -209,9 +210,9 @@ final class Creek {
      * @param round     what the creek shares with the others of the round
      * @param survivors the survivors of the step
      * @param ignored   the survivors the creek leaves alone in the step
-     * @param creek     where the creek stands in the step
+     * @param body      the creek's body
      */
-    private record Actions(CreekRound round, SurvivorSnapshot survivors, Set<UUID> ignored, Pos creek)
+    private record Actions(CreekRound round, SurvivorSnapshot survivors, Set<UUID> ignored, CreekBody body)
             implements CreekActions {
 
         @Override
@@ -226,8 +227,20 @@ final class Creek {
         public void selected(UUID survivor) {
             Player player = this.survivors.player(survivor);
             if (player == null) return;
-            this.round.patrol().selected(player, this.creek, this.survivors.players());
+            this.round.patrol().selected(player, this::eyes, this.survivors.players());
             this.round.witness().selected(survivor);
+        }
+
+        @Override
+        public void stareBeat(UUID survivor, int beat) {
+            Player player = this.survivors.player(survivor);
+            if (player != null) this.round.patrol().stareBeat(player, beat, this.body.position());
+        }
+
+        @Override
+        public void stareBroken(UUID survivor) {
+            Player player = this.survivors.player(survivor);
+            if (player != null) this.round.patrol().stareBroken(player);
         }
 
         @Override
@@ -237,6 +250,15 @@ final class Creek {
                     .filter(player -> !this.ignored.contains(player.getUuid()))
                     .toList();
             this.round.patrol().vanished(where, noticing);
+        }
+
+        /**
+         * Where the creek's eyes are right now. Asked for again whenever needed, so it follows the
+         * creek as it walks on.
+         */
+        private Pos eyes() {
+            Entity entity = this.body.entity();
+            return entity.getPosition().add(0, entity.getEyeHeight(), 0);
         }
     }
 }

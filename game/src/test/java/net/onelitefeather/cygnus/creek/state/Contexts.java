@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.random.RandomGenerator;
@@ -37,6 +38,12 @@ public final class Contexts {
 
     /** Actions that hand every catch, selection and vanish to the given consumers. */
     public static CreekActions actions(Consumer<UUID> caught, Consumer<UUID> selected, Consumer<Pos> vanished) {
+        return actions(caught, selected, vanished, (_, _) -> {}, _ -> {});
+    }
+
+    /** Actions that hand everything the creek does to the given consumers. */
+    public static CreekActions actions(Consumer<UUID> caught, Consumer<UUID> selected, Consumer<Pos> vanished,
+                                       BiConsumer<UUID, Integer> stareBeats, Consumer<UUID> staresBroken) {
         return new CreekActions() {
             @Override
             public void caught(UUID survivor) {
@@ -51,6 +58,16 @@ public final class Contexts {
             @Override
             public void vanished(Pos where) {
                 vanished.accept(where);
+            }
+
+            @Override
+            public void stareBeat(UUID survivor, int beat) {
+                stareBeats.accept(survivor, beat);
+            }
+
+            @Override
+            public void stareBroken(UUID survivor) {
+                staresBroken.accept(survivor);
             }
         };
     }

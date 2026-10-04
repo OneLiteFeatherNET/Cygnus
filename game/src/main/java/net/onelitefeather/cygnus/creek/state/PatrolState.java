@@ -14,8 +14,9 @@ import java.util.UUID;
  * The creek on its rounds: it walks its routes, and every survivor can see it.
  * <p>
  * Come within {@link #SELECT_RADIUS} of it with nothing in between and it picks out whoever is
- * closest, stares at them for a second and then freezes them or flings them away. Duck behind a
- * wall during that second and nothing happens. After that it simply walks on and leaves
+ * closest, stares at them for a second and a half and then freezes them or flings them away. While
+ * it stares, its eyes light up and its heart beats every {@link #BEAT_MILLIS}. Duck behind a wall
+ * during the stare and nothing happens. After that it simply walks on and leaves
  * everyone alone for {@link #SELECT_COOLDOWN_MILLIS}. Spot it from farther away and it stops and
  * looks back at you for a moment. At some waypoints it rests for a while, either because the route
  * says so or just by chance; whichever takes longer wins.
@@ -36,7 +37,10 @@ public final class PatrolState implements CreekState {
     static final double SELECT_RADIUS = 4.0D;
 
     /** How long it stares at the chosen survivor before anything happens, in milliseconds. */
-    static final long STARE_MILLIS = 1000L;
+    public static final long STARE_MILLIS = 1500L;
+
+    /** How long between two heartbeats during the stare, in milliseconds. */
+    static final long BEAT_MILLIS = 500L;
 
     /** How long it leaves everyone alone after picking someone out, in milliseconds. */
     static final long SELECT_COOLDOWN_MILLIS = 10_000L;
@@ -59,6 +63,7 @@ public final class PatrolState implements CreekState {
     private Set<UUID> shownTo = Set.of();
     private @Nullable UUID staring;
     private long stareUntil;
+    private int nextBeat;
     private long selectAllowedAt;
 
     /**
@@ -139,27 +144,36 @@ public final class PatrolState implements CreekState {
     }
 
     /**
-     * Keeps staring at the chosen survivor. Once the second is up, the consequence hits them.
+     * Keeps staring at the chosen survivor, with a heartbeat every {@link #BEAT_MILLIS}. Once the
+     * stare is over, the consequence hits them.
      *
      * @return {@code true} while the stare lasts
      */
     private boolean stare(CreekContext ctx) {
         UUID target = this.staring;
         if (target == null) return false;
+        CreekBody body = ctx.body();
         Optional<SurvivorView> view = ctx.survivor(target);
         if (view.isEmpty() || !view.get().inSight()) {
             // They left or ducked behind a wall before the stare was over: nothing happens, and no
             // cooldown starts. Anyone still in sight may be picked out right away.
             this.staring = null;
+            body.setAggressive(false);
+            if (view.isPresent()) ctx.actions().stareBroken(target);
             return false;
         }
-        CreekBody body = ctx.body();
         if (ctx.now() < this.stareUntil) {
             body.stop();
             body.lookAt(view.get().eyes());
+            long startedAt = this.stareUntil - STARE_MILLIS;
+            if (ctx.now() >= startedAt + this.nextBeat * BEAT_MILLIS) {
+                ctx.actions().stareBeat(target, this.nextBeat);
+                this.nextBeat++;
+            }
             return true;
         }
         this.staring = null;
+        body.setAggressive(false);
         this.selectAllowedAt = ctx.now() + SELECT_COOLDOWN_MILLIS;
         // They are most likely still looking at it. Walk on rather than stop again to look back.
         this.watched = true;
@@ -170,7 +184,7 @@ public final class PatrolState implements CreekState {
 
     /**
      * Picks out the closest survivor within {@link #SELECT_RADIUS} with nothing in between and
-     * starts staring at them.
+     * starts staring at them, with its eyes lit.
      *
      * @return {@code true} if someone was picked out
      */
@@ -190,6 +204,9 @@ public final class PatrolState implements CreekState {
         this.stareUntil = ctx.now() + STARE_MILLIS;
         ctx.body().stop();
         ctx.body().lookAt(nearest.eyes());
+        ctx.body().setAggressive(true);
+        ctx.actions().stareBeat(nearest.id(), 0);
+        this.nextBeat = 1;
         this.markProgress(ctx.now(), here);
         return true;
     }

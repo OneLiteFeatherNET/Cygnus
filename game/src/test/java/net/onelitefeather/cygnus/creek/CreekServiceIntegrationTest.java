@@ -196,13 +196,14 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
 
         creek.body().teleport(new Pos(0, 40, -58));
         service.tick();
-        clock.addAndGet(1000L);
+        clock.addAndGet(PatrolState.STARE_MILLIS);
         service.tick();
         assertTrue(survivor.hasEffect(PotionEffect.SLOWNESS), "the patrol stunned the survivor");
 
         service.stop();
 
         assertFalse(survivor.hasEffect(PotionEffect.SLOWNESS));
+        assertFalse(survivor.hasEffect(PotionEffect.DARKNESS), "nor the darkness of the stare");
     }
 
     @Test
