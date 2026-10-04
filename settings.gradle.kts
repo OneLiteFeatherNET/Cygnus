@@ -57,7 +57,7 @@ dependencyResolutionManagement {
             // markers top out at API 1.50, hence 1.51.0 as the most conservative release at or
             // above that ceiling. Raise it together with the agent, never ahead of it. Without the
             // agent every call lands on the no-op implementation.
-            version("opentelemetry", "1.54.1")
+            version("opentelemetry", "1.55.0")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("slf4j.api", "org.slf4j", "slf4j-api").versionRef("slf4j")
