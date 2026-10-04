@@ -6,8 +6,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.random.RandomGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -185,5 +188,82 @@ class StalkStateTest {
         assertEquals(1, body.teleports.size());
         double distance = distanceToTarget(body);
         assertTrue(distance >= 8.0D - 1.0E-6 && distance <= 15.5D, "distance was " + distance);
+    }
+
+    // ---- sounds ----
+
+    /** Writes down when he was heard and how far into the stalk. */
+    private static final class SoundLog {
+        private final List<Long> times = new ArrayList<>();
+        private final List<Double> progress = new ArrayList<>();
+        private long now;
+
+        private CreekContext at(long now, RecordingBody body, RandomGenerator random, SurvivorView... survivors) {
+            this.now = now;
+            CreekActions actions = Contexts.actions(_ -> {}, _ -> {}, _ -> {}, (_, _) -> {}, _ -> {},
+                    (survivor, progress) -> {
+                        assertEquals(TARGET, survivor);
+                        this.times.add(this.now);
+                        this.progress.add(progress);
+                    });
+            return Contexts.context(now, body, Contexts.route(), actions, random, survivors);
+        }
+    }
+
+    @Test
+    @DisplayName("The gap between two sounds shrinks from 6 to 10 seconds down to 3 to 5")
+    void soundGapShrinks() {
+        assertEquals(6000L, StalkState.soundGapMillis(0.0D, 0.0D));
+        assertEquals(10_000L, StalkState.soundGapMillis(0.0D, 1.0D));
+        assertEquals(3000L, StalkState.soundGapMillis(1.0D, 0.0D));
+        assertEquals(5000L, StalkState.soundGapMillis(1.0D, 1.0D));
+        assertEquals(4500L, StalkState.soundGapMillis(0.5D, 0.0D));
+    }
+
+    @Test
+    @DisplayName("Unseen in the band, he is heard once the first gap is over, and again after the next")
+    void heardInIntervals() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 600_000L);
+        SoundLog log = new SoundLog();
+        RandomGenerator shortest = Contexts.rolling(0.0D);
+        state.enter(log.at(0L, body, shortest, target(0.3D, false)));
+
+        for (long now = 0L; now <= 12_000L; now += 100L) {
+            state.tick(log.at(now, body, shortest, target(0.3D, false)));
+        }
+
+        assertTrue(body.teleports.isEmpty());
+        assertEquals(List.of(6000L, 12_000L), log.times);
+        assertEquals(0.01D, log.progress.getFirst(), 1.0E-9);
+    }
+
+    @Test
+    @DisplayName("While the target looks at him he makes no sound")
+    void silentWhileSeen() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 600_000L);
+        SoundLog log = new SoundLog();
+        state.enter(log.at(0L, body, new Random(7), target(0.3D, true)));
+
+        for (long now = 0L; now <= 12_000L; now += 100L) {
+            state.tick(log.at(now, body, new Random(7), target(0.3D, true)));
+        }
+
+        assertTrue(log.times.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Moving back into the band out of sight, he is heard at once")
+    void heardWhenMovingUnseen() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -10));
+        StalkState state = new StalkState(TARGET, 600_000L);
+        SoundLog log = new SoundLog();
+        state.enter(log.at(0L, body, new Random(7), target(0.3D, false)));
+
+        state.tick(log.at(100L, body, new Random(7), target(0.3D, false)));
+
+        assertEquals(1, body.teleports.size());
+        assertEquals(List.of(100L), log.times);
     }
 }
