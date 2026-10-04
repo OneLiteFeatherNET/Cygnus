@@ -17,7 +17,7 @@ import java.util.function.Function;
  * <p>
  * It decorates the {@link CreekWitness}, so the creek needs no knowledge of the tab list. The mark is
  * composed on top of whatever display name the survivor carries (role icon, name color) instead of
- * replacing it: the name turns {@link NamedTextColor#RED} and a {@value #MARKER} marker goes in front.
+ * replacing it: the name turns {@link NamedTextColor#RED} and a {@value #MARKER} marker goes behind it, after a space.
  * Glyphs from the icon font keep their own color.
  * </p>
  * <p>
@@ -31,12 +31,12 @@ import java.util.function.Function;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 public final class HuntedTabWitness implements CreekWitness {
 
-    /** The marker in front of a hunted survivor's name. */
+    /** The marker behind a hunted survivor's name. */
     public static final String MARKER = "◆";
 
     private final CreekWitness delegate;
@@ -58,13 +58,13 @@ public final class HuntedTabWitness implements CreekWitness {
      * Builds the marked version of a display name.
      *
      * @param base the name as it is shown without the mark
-     * @return the red name with the marker in front
+     * @return the red name with the marker behind it
      */
     public static Component highlight(Component base) {
         return Component.text()
                 .color(NamedTextColor.RED)
-                .append(Component.text(MARKER + " ", NamedTextColor.DARK_RED))
                 .append(recolor(base))
+                .append(Component.text(" " + MARKER, NamedTextColor.DARK_RED))
                 .build();
     }
 

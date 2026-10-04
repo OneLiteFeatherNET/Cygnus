@@ -59,6 +59,18 @@ class HuntedTabWitnessTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("The marker comes behind the name, not in front of it")
+    void markerIsBehindTheName(Env env) {
+        Component marked = HuntedTabWitness.highlight(RoleIcon.SURVIVOR.prefix(Component.text("Alex", NamedTextColor.GREEN)));
+
+        String text = plain(marked);
+        assertTrue(text.endsWith("Alex " + HuntedTabWitness.MARKER), "the marker must be last: " + text);
+        Component last = marked.children().getLast();
+        assertEquals(" " + HuntedTabWitness.MARKER, ((net.kyori.adventure.text.TextComponent) last).content());
+        assertEquals(NamedTextColor.DARK_RED, last.color());
+    }
+
+    @Test
     @DisplayName("The role icon keeps its own font and color under the highlight")
     void roleIconSurvivesTheHighlight(Env env) {
         Component marked = HuntedTabWitness.highlight(RoleIcon.SURVIVOR.prefix(Component.text("Alex", NamedTextColor.GREEN)));
