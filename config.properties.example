@@ -233,6 +233,11 @@ survivorTeamSize=12
 # throws, 1 always swaps. Without another survivor the creek throws instead.
 # Playtest: tune this if the swaps happen too often or too rarely.
 #creek.swapChance=0.5
+# A survivor who was thrown loses this many health points when they land again
+# (4.0 = two hearts). They are never killed by it: at least 1 health point stays.
+# Between 0 and 20; 0 turns it off. A swap does no damage.
+# Playtest: tune this if the landing hurts too much or too little.
+#creek.launchDamage=4.0
 
 # --- Sanity -----------------------------------------------------------------
 # Every survivor has a fear value between 0 and 1. It jumps when they find a

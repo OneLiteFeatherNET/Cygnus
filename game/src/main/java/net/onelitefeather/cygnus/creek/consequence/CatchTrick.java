@@ -6,7 +6,7 @@ import net.minestom.server.entity.Player;
  * One of the punishments the creek chooses between on a catch, on top of the usual effects.
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 @FunctionalInterface
@@ -20,4 +20,10 @@ public interface CatchTrick {
      * and the creek should choose another
      */
     boolean perform(Player survivor);
+
+    /**
+     * Takes back anything that is still running. Called when the round ends.
+     */
+    default void cleanUp() {
+    }
 }

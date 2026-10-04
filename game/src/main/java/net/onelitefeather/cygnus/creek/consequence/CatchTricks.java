@@ -55,5 +55,7 @@ public final class CatchTricks implements CatchConsequence {
     @Override
     public void cleanUp() {
         this.base.cleanUp();
+        this.swap.cleanUp();
+        this.launch.cleanUp();
     }
 }

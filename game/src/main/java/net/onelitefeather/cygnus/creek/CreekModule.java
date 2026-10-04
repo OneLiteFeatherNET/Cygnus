@@ -15,6 +15,7 @@ import net.onelitefeather.cygnus.creek.consequence.CatchLaunch;
 import net.onelitefeather.cygnus.creek.consequence.CatchSwap;
 import net.onelitefeather.cygnus.creek.consequence.CatchTricks;
 import net.onelitefeather.cygnus.creek.consequence.GlowReveal;
+import net.onelitefeather.cygnus.creek.consequence.LandingDamage;
 import net.onelitefeather.cygnus.creek.consequence.StagedCatchConsequence;
 import net.onelitefeather.cygnus.creek.debug.CreekDebug;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
@@ -96,7 +97,7 @@ public final class CreekModule implements GameFeature {
                         new CatchTricks(
                                 new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.slownessSeconds()),
                                 new CatchSwap(() -> TeamHelper.survivorsOf(teamService), random),
-                                new CatchLaunch(this.config.launchHeight()),
+                                new CatchLaunch(this.config.launchHeight(), new LandingDamage(this.config.launchDamage())),
                                 this.config.swapChance(),
                                 random),
                         new GlowReveal(this.config.betrayalGlowSeconds()),

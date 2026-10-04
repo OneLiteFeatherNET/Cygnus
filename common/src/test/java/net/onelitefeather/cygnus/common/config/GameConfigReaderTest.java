@@ -401,6 +401,7 @@ class GameConfigReaderTest {
                 creek.randomStopMaxMillis=900
                 creek.launchHeight=7.5
                 creek.swapChance=0.25
+                creek.launchDamage=6
                 """);
 
         CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
@@ -415,6 +416,7 @@ class GameConfigReaderTest {
         assertEquals(900, creek.randomStopMaxMillis());
         assertEquals(7.5D, creek.launchHeight(), 1.0E-9);
         assertEquals(0.25D, creek.swapChance(), 1.0E-9);
+        assertEquals(6.0D, creek.launchDamage(), 1.0E-9);
     }
 
     @Test

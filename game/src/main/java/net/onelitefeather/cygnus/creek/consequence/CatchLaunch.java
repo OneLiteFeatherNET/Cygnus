@@ -9,11 +9,12 @@ import net.minestom.server.entity.Player;
  * {@link FaceLock} only turns the head and never holds the body, and slowness only changes
  * walking, so neither gets in the way of the throw: the velocity packet sets the client's motion
  * outright. There is no fall damage to suppress: Minestom has none and Cygnus adds none. A height
- * of 0 turns the launch off: nothing happens, which is not a failure.
+ * of 0 turns the launch off: nothing happens, which is not a failure. When they land again,
+ * {@link LandingDamage} hurts them.
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.15.0
  */
 public final class CatchLaunch implements CatchTrick {
@@ -28,6 +29,7 @@ public final class CatchLaunch implements CatchTrick {
     private static final double MAX_SPEED_PER_TICK = 5.0D;
 
     private final double velocity;
+    private final LandingDamage landing;
 
     /**
      * Sets up the launch.
@@ -35,15 +37,32 @@ public final class CatchLaunch implements CatchTrick {
      * @param height how high the survivor is thrown, in blocks; 0 or less turns the launch off
      */
     public CatchLaunch(double height) {
+        this(height, new LandingDamage(0.0D));
+    }
+
+    /**
+     * Sets up the launch with damage on landing.
+     *
+     * @param height how high the survivor is thrown, in blocks; 0 or less turns the launch off
+     * @param landing hurts the survivor when they come down; only watches a survivor who was thrown
+     */
+    public CatchLaunch(double height, LandingDamage landing) {
         this.velocity = launchSpeed(height);
+        this.landing = landing;
     }
 
     @Override
     public boolean perform(Player survivor) {
         if (this.velocity > 0.0D) {
             survivor.setVelocity(new Vec(0.0D, this.velocity, 0.0D));
+            this.landing.watch(survivor);
         }
         return true;
+    }
+
+    @Override
+    public void cleanUp() {
+        this.landing.cleanUp();
     }
 
     /**

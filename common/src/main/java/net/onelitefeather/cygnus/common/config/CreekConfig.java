@@ -47,8 +47,10 @@ package net.onelitefeather.cygnus.common.config;
  *                               0 turns the launch off
  * @param swapChance             chance that a catch swaps two survivors instead of throwing the
  *                               caught one; 0 always throws, 1 always swaps
+ * @param launchDamage           health points a thrown survivor loses on landing, never taking
+ *                               them below 1; 0 turns it off
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.15.0
  */
 public record CreekConfig(
@@ -86,11 +88,15 @@ public record CreekConfig(
         int randomStopMinMillis,
         int randomStopMaxMillis,
         double launchHeight,
-        double swapChance
+        double swapChance,
+        double launchDamage
 ) {
 
     /** The highest launch a catch may be set to, in blocks. */
     public static final double MAX_LAUNCH_HEIGHT = 20.0D;
+
+    /** The most health a landing may cost, in health points. */
+    public static final double MAX_LAUNCH_DAMAGE = 20.0D;
 
     /**
      * The default settings: enabled, and tuned for a round of about fifteen minutes.
@@ -106,7 +112,7 @@ public record CreekConfig(
             2, 0.15D, 6, 4,
             3.0D,
             0.15D, 1500, 4000,
-            5.0D, 0.5D
+            5.0D, 0.5D, 4.0D
     );
 
     /**
@@ -151,6 +157,7 @@ public record CreekConfig(
         notAbove("randomStopMinMillis", randomStopMinMillis, "randomStopMaxMillis", randomStopMaxMillis);
         between("launchHeight", launchHeight, 0.0D, MAX_LAUNCH_HEIGHT);
         between("swapChance", swapChance, 0.0D, 1.0D);
+        between("launchDamage", launchDamage, 0.0D, MAX_LAUNCH_DAMAGE);
     }
 
     private static void atLeast(String name, double value, double minimum) {
