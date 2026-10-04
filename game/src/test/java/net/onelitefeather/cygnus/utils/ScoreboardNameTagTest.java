@@ -28,13 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Covers what keeps the slender from reading the survivors' names off their heads.
+ * Covers what keeps player names off the heads of survivors and the slender.
  *
  * <p>The mechanism has two halves and both have to hold: the scoreboard teams must hide names from
  * other teams, and the players must actually be on them. Either half alone does nothing.</p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.11.0
  */
 @ExtendWith(MicrotusExtension.class)
@@ -91,16 +91,23 @@ class ScoreboardNameTagTest {
     }
 
     @Test
-    void testNamesAreHiddenFromTheOtherTeamOnly(@NotNull Env env) {
+    void testSurvivorNamesAreHiddenFromEveryone(@NotNull Env env) {
         createGameTeams();
         new ScoreboardDisplay(teamService.getTeams());
 
-        TeamManager teamManager = env.process().team();
+        assertEquals(TeamsPacket.NameTagVisibility.NEVER,
+                env.process().team().getTeam(GameConfig.SURVIVOR_TEAM_NAME).getNameTagVisibility(),
+                "survivors must not read each other's names either");
+    }
+
+    @Test
+    void testSlenderNameIsHiddenFromTheOtherTeamOnly(@NotNull Env env) {
+        createGameTeams();
+        new ScoreboardDisplay(teamService.getTeams());
+
         assertEquals(TeamsPacket.NameTagVisibility.HIDE_FOR_OTHER_TEAMS,
-                teamManager.getTeam(GameConfig.SURVIVOR_TEAM_NAME).getNameTagVisibility(),
-                "the slender must not read survivor names, but the survivors have to keep reading each other's");
-        assertEquals(TeamsPacket.NameTagVisibility.HIDE_FOR_OTHER_TEAMS,
-                teamManager.getTeam(GameConfig.SLENDER_TEAM_NAME).getNameTagVisibility());
+                env.process().team().getTeam(GameConfig.SLENDER_TEAM_NAME).getNameTagVisibility(),
+                "the slender's name must stay hidden from the survivors");
     }
 
     @Test

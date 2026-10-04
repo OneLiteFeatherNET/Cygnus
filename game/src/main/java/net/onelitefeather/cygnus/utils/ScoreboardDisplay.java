@@ -24,12 +24,14 @@ import java.util.Set;
  * The class is used to create the teams and add them to a team or remove them.
  *
  * <p>The name tag above a player's head is a client-side decision, and the only lever a server has
- * over it is a scoreboard team. {@link TeamsPacket.NameTagVisibility#HIDE_FOR_OTHER_TEAMS} is what
- * makes the survivors' names unreadable for the slender while they stay readable among themselves -
- * without it, the slender can track a survivor through a wall by their floating name.</p>
+ * over it is a scoreboard team. Nobody is supposed to track a survivor through a wall or fog by a
+ * floating name, so the survivor team uses {@link TeamsPacket.NameTagVisibility#NEVER}: not even the
+ * survivors read each other's names (playtests showed that made finding teammates too easy). Every
+ * other team uses {@link TeamsPacket.NameTagVisibility#HIDE_FOR_OTHER_TEAMS}, which keeps the
+ * slender's own name hidden from the survivors.</p>
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class ScoreboardDisplay {
@@ -53,9 +55,7 @@ public final class ScoreboardDisplay {
 
             TeamBuilder sbTeamBuilder = teamManager
                     .createBuilder(teamName)
-                    // Not NEVER: the survivors are supposed to keep reading each other's names, only
-                    // the slender must not.
-                    .nameTagVisibility(TeamsPacket.NameTagVisibility.HIDE_FOR_OTHER_TEAMS)
+                    .nameTagVisibility(nameTagVisibility(teamName))
                     .collisionRule(TeamsPacket.CollisionRule.NEVER)
                     // temp fix
                     .teamColor(TeamColor.fromName(colorData.name()));
@@ -65,16 +65,32 @@ public final class ScoreboardDisplay {
     }
 
     /**
+     * Picks the name tag visibility for the scoreboard team of the given name.
+     *
+     * <p>Survivors hide their names from everybody, including each other, so no teammate can be
+     * tracked through walls or fog. Any other team only hides from the other teams, which is what
+     * keeps the slender's name away from the survivors.</p>
+     *
+     * @param teamName the scoreboard team name
+     * @return the visibility to apply
+     */
+    private static TeamsPacket.NameTagVisibility nameTagVisibility(String teamName) {
+        return GameConfig.SURVIVOR_TEAM_NAME.equals(teamName)
+                ? TeamsPacket.NameTagVisibility.NEVER
+                : TeamsPacket.NameTagVisibility.HIDE_FOR_OTHER_TEAMS;
+    }
+
+    /**
      * Brings the scoreboard teams in line with the current game teams.
      *
      * <p>Membership is what makes {@code HIDE_FOR_OTHER_TEAMS} mean anything: a player in no team is
      * "another team" to everybody, so the roles have to be mirrored here or the whole mechanism is
      * inert.</p>
      *
-     * <p>Spectators are put on the <b>survivor</b> scoreboard team rather than one of their own. That
-     * is what keeps survivor names readable while spectating, and it leaks nothing in return: a
-     * survivor never receives a spectator as an entity at all, so there is no name of theirs for
-     * anyone still in the round to see.</p>
+     * <p>Spectators are put on the <b>survivor</b> scoreboard team rather than one of their own. A
+     * spectator never receives a spectator as an entity at all, so nothing of theirs leaks to the
+     * round. Since the survivor team hides names from everybody, spectators do not read survivor
+     * names either; the spectate menu lists them by name instead.</p>
      *
      * <p>Every team drops its stale members before any team takes new ones. The client moves a
      * player who is added to one team out of the other on its own, so a removal sent after that
