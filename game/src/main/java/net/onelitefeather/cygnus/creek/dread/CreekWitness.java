@@ -28,6 +28,11 @@ public interface CreekWitness {
         public void caught(UUID survivor) {
             // Nobody listens.
         }
+
+        @Override
+        public void stalked(UUID survivor) {
+            // Nobody listens.
+        }
     };
 
     /**
@@ -44,4 +49,11 @@ public interface CreekWitness {
      * @param survivor the survivor who was caught
      */
     void caught(UUID survivor);
+
+    /**
+     * A creek is stalking a survivor. Called for every step of the stalk.
+     *
+     * @param survivor the survivor being stalked
+     */
+    void stalked(UUID survivor);
 }

@@ -57,6 +57,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     private static final class RecordingWitness implements CreekWitness {
         private final List<UUID> sightings = new ArrayList<>();
         private final List<UUID> catches = new ArrayList<>();
+        private final List<UUID> stalks = new ArrayList<>();
 
         @Override
         public void sighted(UUID survivor) {
@@ -66,6 +67,11 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         @Override
         public void caught(UUID survivor) {
             this.catches.add(survivor);
+        }
+
+        @Override
+        public void stalked(UUID survivor) {
+            this.stalks.add(survivor);
         }
     }
 
@@ -320,5 +326,34 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         creek.tick(survivors(survivor), 0L);
 
         assertEquals(List.of(survivor.getUuid()), witness.catches);
+    }
+
+    @Test
+    @DisplayName("Every step of a stalk is reported for its target")
+    void stalkIsReported(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player target = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 25));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new StalkState(target.getUuid(), Long.MAX_VALUE), witness);
+
+        creek.tick(survivors(target), 0L);
+        creek.tick(survivors(target), 100L);
+
+        assertEquals(List.of(target.getUuid(), target.getUuid()), witness.stalks);
+    }
+
+    @Test
+    @DisplayName("A stalk that ends in this step is not reported")
+    void endedStalkIsNotReported(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player target = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 25));
+        RecordingWitness witness = new RecordingWitness();
+        Creek creek = creek(body, CreekConfig.DEFAULT, new StalkState(target.getUuid(), 0L), witness);
+
+        creek.tick(survivors(target), 0L);
+
+        assertTrue(witness.stalks.isEmpty());
     }
 }
