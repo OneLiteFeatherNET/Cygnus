@@ -69,7 +69,7 @@ public final class CreekRouteListener implements Consumer<PlayerBlockBreakEvent>
      * @return the point
      */
     static Vec pointOnTop(Point position, Block block) {
-        double top = block.registry().collisionShape().relativeEnd().y();
+        double top = block.collisionShape().relativeEnd().y();
         return new Vec(position.blockX() + 0.5D, position.blockY() + top, position.blockZ() + 0.5D);
     }
 }
