@@ -10,6 +10,7 @@ import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
+import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.xerus.api.phase.GamePhase;
 import org.slf4j.Logger;
@@ -89,6 +90,7 @@ public final class PageProvider {
     public void spawn(Instance instance) {
         for (PageEntity page : this.activePages.values()) {
             page.place(instance);
+            EventDispatcher.call(new PageSpawnedEvent(page.getHitBoxUUID(), page.spot(), false));
         }
     }
 
@@ -132,7 +134,7 @@ public final class PageProvider {
         player.getInventory().addItemStack(page.getPageItem());
         Broadcaster.broadcast(Messages.getPageFoundComponent(player));
         int foundCount = this.foundPages.incrementAndGet();
-        EventDispatcher.call(new PageFoundEvent(player, foundCount, this.maxPageAmount));
+        EventDispatcher.call(new PageFoundEvent(player, foundCount, this.maxPageAmount, uuid));
 
         if (foundCount >= this.maxPageAmount) {
             EventDispatcher.call(new PageDiscoveryCompletedEvent());
@@ -172,6 +174,7 @@ public final class PageProvider {
             page.enableInteraction();
         }
         this.activePages.put(page.getHitBoxUUID(), page);
+        EventDispatcher.call(new PageSpawnedEvent(page.getHitBoxUUID(), page.spot(), true));
     }
 
     private static int respawnDelay() {

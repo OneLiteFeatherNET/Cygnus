@@ -40,6 +40,22 @@ public final class CygnusAttributes {
     /** The share one service had in a slow tick. */
     public static final String SPAN_TICK_SECTION = "cygnus.tick.section";
 
+    // --- Action spans (children of the round span) ---------------------------------------------
+
+    public static final String ACTION_PAGE_SPAWN = "cygnus.action.page.spawn";
+    public static final String ACTION_PAGE_FOUND = "cygnus.action.page.found";
+    public static final String ACTION_PAGE_EXPIRED = "cygnus.action.page.expired";
+    public static final String ACTION_PLAYER_DEATH = "cygnus.action.player.death";
+    public static final String ACTION_SLENDER_REVIVE = "cygnus.action.slender.revive";
+    public static final String ACTION_SLENDER_STAMINA = "cygnus.action.slender.stamina";
+    public static final String ACTION_SPECTATOR_JOIN = "cygnus.action.spectator.join";
+    public static final String ACTION_DISCLAIMER_ACKNOWLEDGE = "cygnus.action.disclaimer.acknowledge";
+    public static final String ACTION_DISCLAIMER_DECLINE = "cygnus.action.disclaimer.decline";
+    public static final String ACTION_CREEK_SIGHTED = "cygnus.action.creek.sighted";
+    public static final String ACTION_CREEK_SELECTED = "cygnus.action.creek.selected";
+    public static final String ACTION_CREEK_STALK = "cygnus.action.creek.stalk";
+    public static final String ACTION_CREEK_CAUGHT = "cygnus.action.creek.caught";
+
     // --- Events on the round span --------------------------------------------------------------
 
     public static final String EVENT_GAME_START = "cygnus.game.start";
@@ -71,6 +87,25 @@ public final class CygnusAttributes {
     public static final AttributeKey<Long> TICK_THRESHOLD_MS = AttributeKey.longKey("cygnus.tick.threshold_ms");
     public static final AttributeKey<String> TICK_SECTION_NAME = AttributeKey.stringKey("cygnus.tick.section.name");
     public static final AttributeKey<Double> TICK_SECTION_DURATION_MS = AttributeKey.doubleKey("cygnus.tick.section.duration_ms");
+
+    public static final AttributeKey<String> MAP = AttributeKey.stringKey("cygnus.map");
+    public static final AttributeKey<Double> POSITION_X = AttributeKey.doubleKey("cygnus.position.x");
+    public static final AttributeKey<Double> POSITION_Y = AttributeKey.doubleKey("cygnus.position.y");
+    public static final AttributeKey<Double> POSITION_Z = AttributeKey.doubleKey("cygnus.position.z");
+    public static final AttributeKey<String> PAGE_ID = AttributeKey.stringKey("cygnus.page.id");
+    public static final AttributeKey<Long> PAGE_INDEX = AttributeKey.longKey("cygnus.page.index");
+    public static final AttributeKey<Boolean> PAGE_RELOCATED = AttributeKey.booleanKey("cygnus.page.relocated");
+    public static final AttributeKey<Long> PAGE_OUT_MS = AttributeKey.longKey("cygnus.page.out_ms");
+    public static final AttributeKey<Double> PAGE_SPOT_X = AttributeKey.doubleKey("cygnus.page.spot.x");
+    public static final AttributeKey<Double> PAGE_SPOT_Y = AttributeKey.doubleKey("cygnus.page.spot.y");
+    public static final AttributeKey<Double> PAGE_SPOT_Z = AttributeKey.doubleKey("cygnus.page.spot.z");
+    public static final AttributeKey<Double> DISTANCE = AttributeKey.doubleKey("cygnus.distance");
+    public static final AttributeKey<String> KILLER_UUID = AttributeKey.stringKey("cygnus.killer.uuid");
+    public static final AttributeKey<String> STAMINA_STATE = AttributeKey.stringKey("cygnus.stamina.state");
+    public static final AttributeKey<String> LINK_KIND = AttributeKey.stringKey("cygnus.link.kind");
+
+    /** The link points at the round trace a player's cookie remembered. */
+    public static final String LINK_PREVIOUS_ROUND = "previous_round";
 
     // --- Values of kick.completed_by -----------------------------------------------------------
 

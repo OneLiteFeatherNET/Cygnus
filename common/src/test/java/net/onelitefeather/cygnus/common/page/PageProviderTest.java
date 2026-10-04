@@ -12,6 +12,7 @@ import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
+import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -128,6 +129,50 @@ class PageProviderTest {
 
         assertFalse(pageProvider.triggerPageFound(player, UUID.randomUUID()), "a claim on a missing uuid must return false");
         assertEquals(0, events.get(), "a claim that finds nothing must not raise the tension");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testSpawnAnnouncesEveryPageOnItsSpot(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        instance.loadChunk(0, 0).join();
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(spots(MIN_ACTIVE_PAGE_COUNT));
+        pageProvider.collectStartPages(MIN_ACTIVE_PAGE_COUNT);
+        List<PageSpawnedEvent> events = Collections.synchronizedList(new ArrayList<>());
+        env.process().eventHandler().addListener(PageSpawnedEvent.class, events::add);
+
+        pageProvider.spawn(instance);
+
+        assertEquals(MIN_ACTIVE_PAGE_COUNT, events.size(), "one announcement per placed page");
+        assertTrue(events.stream().noneMatch(PageSpawnedEvent::relocated), "the first placement is not a relocation");
+        assertEquals(
+                pageProvider.interactablePages().stream().map(PageEntity::getHitBoxUUID).collect(Collectors.toSet()),
+                events.stream().map(PageSpawnedEvent::pageId).collect(Collectors.toSet()));
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAFindCarriesThePageIdAndAnnouncesTheRelocation(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        PageProvider pageProvider = spawnedProvider(instance, MIN_ACTIVE_PAGE_COUNT + 1);
+        pageProvider.setMaxPageAmount(3);
+        Player player = env.createPlayer(instance);
+        List<PageFoundEvent> found = Collections.synchronizedList(new ArrayList<>());
+        List<PageSpawnedEvent> spawned = Collections.synchronizedList(new ArrayList<>());
+        env.process().eventHandler().addListener(PageFoundEvent.class, found::add);
+        env.process().eventHandler().addListener(PageSpawnedEvent.class, spawned::add);
+        PageEntity page = pageProvider.interactablePages().getFirst();
+
+        pageProvider.triggerPageFound(player, page.getHitBoxUUID());
+
+        assertEquals(page.getHitBoxUUID(), found.getFirst().pageId(), "the find names the page that was claimed");
+        assertEquals(1, spawned.size(), "the claimed page is moved on");
+        assertTrue(spawned.getFirst().relocated());
+        assertEquals(page.getHitBoxUUID(), spawned.getFirst().pageId());
+        assertEquals(page.spot(), spawned.getFirst().position());
 
         env.destroyInstance(instance, true);
     }

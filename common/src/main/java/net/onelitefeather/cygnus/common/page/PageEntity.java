@@ -276,6 +276,18 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
     }
 
     /**
+     * Returns the position of the spot the page stands on, which is where it is (or will be, once
+     * its placement went through). Unlike {@link #position()} this does not lag behind an
+     * asynchronous teleport.
+     *
+     * @return the position of the current spot
+     * @since 2.15.0
+     */
+    public Pos spot() {
+        return Helper.updatePosition(this.resource.position().asPos(), this.resource.face());
+    }
+
+    /**
      * Returns the {@link PageResource} the page currently stands on.
      *
      * @return the resource

@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.telemetry;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.SpanContext;
 import net.kyori.adventure.resource.ResourcePackStatus;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -107,6 +108,22 @@ public final class JoinTracer {
         Join join = ownJoin(player, connection);
         if (join != null) {
             join.step.span().addEvent(CygnusAttributes.EVENT_JOIN_CONFIGURATION);
+        }
+    }
+
+    /**
+     * Links the join to the round trace the player's cookie remembered, so the trace of this join and
+     * the trace of the round the player came from can be followed into each other.
+     *
+     * @param player     the joining player
+     * @param connection the connection of the join
+     * @param previous   the span context read from the cookie
+     */
+    public void link(UUID player, Object connection, SpanContext previous) {
+        Join join = ownJoin(player, connection);
+        if (join != null) {
+            join.step.span().addLink(previous, Attributes.of(
+                    CygnusAttributes.LINK_KIND, CygnusAttributes.LINK_PREVIOUS_ROUND));
         }
     }
 

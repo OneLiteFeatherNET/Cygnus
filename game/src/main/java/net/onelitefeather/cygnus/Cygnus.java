@@ -92,7 +92,13 @@ import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 
+import net.onelitefeather.cygnus.telemetry.ActionTracer;
 import net.onelitefeather.cygnus.telemetry.CygnusAttributes;
+import net.onelitefeather.cygnus.telemetry.TraceCookie;
+import net.onelitefeather.cygnus.telemetry.TracingCreekWitness;
+import net.onelitefeather.cygnus.common.map.GameMap;
+import net.minestom.server.entity.Player;
+import org.jetbrains.annotations.Nullable;
 import net.onelitefeather.cygnus.telemetry.CygnusTracing;
 import net.onelitefeather.cygnus.telemetry.JoinTracer;
 import net.onelitefeather.cygnus.telemetry.KickTracer;
@@ -139,6 +145,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final RoundTracer roundTracer;
     private final JoinTracer joinTracer;
     private final SlowTickTracer slowTickTracer;
+    private final ActionTracer actionTracer;
+    private final TraceCookie traceCookie;
 
     /**
      * Wires the game together.
@@ -153,6 +161,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         this.tracing = CygnusTracing.fromGlobal(serviceVersion());
         this.roundTracer = new RoundTracer(this.tracing);
         this.joinTracer = new JoinTracer(this.tracing);
+        this.traceCookie = new TraceCookie(this.roundTracer, this.joinTracer);
+        this.actionTracer = new ActionTracer(this.roundTracer, Clock.systemUTC(), this::activeMapName);
         KickTracer kickTracer = new KickTracer(this.tracing);
         TickSections tickSections = TickSections.measuring(System::nanoTime);
         // A shutdown in the middle of a round or a tick would otherwise leave its spans open; this
@@ -219,7 +229,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         // either way, and it needs neither the resource pack nor the overlay gate to be heard.
                         new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
                         new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
-                                sanityService, sanityService, this.jumpscareManager, this.staminaService, tickSections),
+                                sanityService, new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor), this.jumpscareManager, this.staminaService, tickSections),
                         sanityService,
                         new AdrenalineService(
                                 this.gameConfig.adrenaline(),
@@ -248,6 +258,16 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         }
     }
 
+    private @Nullable String activeMapName() {
+        GameMap activeMap = this.mapProvider.getGameMap();
+        return activeMap == null ? null : activeMap.name();
+    }
+
+    private static ActionTracer.@Nullable Actor survivorActor(UUID uuid) {
+        Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid);
+        return player == null ? null : ActionTracer.Actor.of(player);
+    }
+
     /**
      * Returns the version this jar was built as, for the instrumentation scope.
      *
@@ -270,6 +290,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         var manager = MinecraftServer.getGlobalEventHandler();
         // First, so the join span exists before any listener below can turn the player away.
         this.joinTracer.register(manager);
+        this.traceCookie.register(manager, TraceCookie.DEFAULT_TIMEOUT);
         manager.addListener(GameMapLoadedEvent.class, event ->
                 this.pageProvider.loadPageData(event.gameMap().getPageFaces())
         );
@@ -302,6 +323,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         // Before the listeners below: the death listener strips the team tag the round tracer reads
         // the role from.
         this.roundTracer.register(handler);
+        this.actionTracer.register(handler, () -> TeamHelper.slenderOf(this.teamService));
         this.slowTickTracer.register(handler);
 
         SlenderBarTrigger trigger = new SlenderBarTrigger(this.staminaService::getSlenderBar);

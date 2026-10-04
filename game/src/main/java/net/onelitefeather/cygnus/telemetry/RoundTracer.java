@@ -1,7 +1,7 @@
 package net.onelitefeather.cygnus.telemetry;
 
 import io.opentelemetry.api.common.Attributes;
-import net.minestom.server.entity.Player;
+import io.opentelemetry.api.trace.SpanContext;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
@@ -9,10 +9,11 @@ import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
-import net.onelitefeather.cygnus.team.TeamHelper;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -43,6 +44,7 @@ public final class RoundTracer {
     private @Nullable TraceStep phase;
     // The span API cannot be read back, so whether gameFinished already set the reason is kept here.
     private boolean endReasonSet;
+    private final Set<String> linked = new HashSet<>();
 
     /**
      * Creates the tracer.
@@ -71,6 +73,7 @@ public final class RoundTracer {
     synchronized void roundStarted() {
         abort("restarted");
         this.endReasonSet = false;
+        this.linked.clear();
         this.round = this.tracing.root(CygnusAttributes.SPAN_ROUND)
                 .set(CygnusAttributes.ROUND_ID, this.roundIds.get());
     }
@@ -204,6 +207,43 @@ public final class RoundTracer {
     }
 
     /**
+     * Starts a span below the running round, for a single action.
+     *
+     * @param name the span name
+     * @return the open span, or {@code null} when no round is running, in which case the action is
+     * not traced
+     */
+    synchronized @Nullable TraceStep actionSpan(String name) {
+        TraceStep current = this.round;
+        return current == null ? null : current.child(name);
+    }
+
+    /**
+     * Returns the span context of the running round, for writing it to the players' cookie.
+     *
+     * @return the context, or {@code null} when no round is running
+     */
+    synchronized @Nullable SpanContext roundContext() {
+        TraceStep current = this.round;
+        return current == null ? null : current.span().getSpanContext();
+    }
+
+    /**
+     * Links the running round to the round trace a joining player's cookie remembered. One link per
+     * distinct trace: a lobby full of players who all come from the same round adds one, not thirteen.
+     *
+     * @param previous the span context read from a cookie
+     */
+    synchronized void linkPrevious(SpanContext previous) {
+        TraceStep current = this.round;
+        if (current == null || current.span().getSpanContext().getTraceId().equals(previous.getTraceId())
+                || !this.linked.add(previous.getTraceId() + previous.getSpanId())) {
+            return;
+        }
+        current.span().addLink(previous, Attributes.of(CygnusAttributes.LINK_KIND, CygnusAttributes.LINK_PREVIOUS_ROUND));
+    }
+
+    /**
      * Hooks the game's events onto this tracer.
      * <p>
      * Register it <em>before</em> the listener that handles the same event: the death listener strips
@@ -219,17 +259,7 @@ public final class RoundTracer {
                 event -> pageFound(event.finder().getUuid(), event.foundCount(), event.maxPages()));
         node.addListener(SlenderReviveEvent.class, event -> slenderRevived(event.getPlayer().getUuid()));
         node.addListener(PlayerDeathEvent.class,
-                event -> playerDied(event.getPlayer().getUuid(), roleOf(event.getPlayer())));
-    }
-
-    private static String roleOf(Player player) {
-        if (TeamHelper.isSlenderTeam(player)) {
-            return "slender";
-        }
-        if (TeamHelper.isSurvivorTeam(player)) {
-            return "survivor";
-        }
-        return TeamHelper.isSpectatorTeam(player) ? "spectator" : "none";
+                event -> playerDied(event.getPlayer().getUuid(), PlayerRoles.of(event.getPlayer())));
     }
 
     private void addEvent(String name, Attributes attributes) {
