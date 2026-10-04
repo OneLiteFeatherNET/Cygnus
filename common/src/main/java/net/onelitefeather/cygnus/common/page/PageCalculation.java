@@ -4,20 +4,26 @@ import net.minestom.server.MinecraftServer;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.random.RandomGenerator;
 
 /**
  * Utility class for calculating the number of pages allocated for the dynamic page system.
  * The page count is based on the number of current online players.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 
 public final class PageCalculation {
 
     private static final int PLAYER_SIZE_FOR_DYNAMIC_PAGE_ALLOCATION = 4;
-    private static final int PAGE_COUNT_MULTIPLIER = 2;
+
+    /**
+     * Pages per survivor once the dynamic allocation applies. Doubled from 2 to 4: playtesters
+     * wanted a round to need twice as many pages.
+     */
+    private static final int PAGE_COUNT_MULTIPLIER = 4;
 
     /**
      * The largest amount {@link #calculatePageAmount()} may add on top of the base amount, so the
@@ -26,8 +32,12 @@ public final class PageCalculation {
      * Not exposed through {@link GameConfig}: unlike the other page settings, this one is
      * deliberately not something a server operator should be able to turn off or tune.
      * </p>
+     * <p>
+     * Doubled from 2 to 4 together with the page total (playtesters wanted twice as many pages),
+     * so the unpredictable part stays the same share of the total.
+     * </p>
      */
-    private static final int PAGE_COUNT_JITTER_MAX = 2;
+    private static final int PAGE_COUNT_JITTER_MAX = 4;
 
     private static final int PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING = 8;
 
@@ -54,12 +64,23 @@ public final class PageCalculation {
      */
     public static int calculatePageAmount() {
         int currentPlayers = MinecraftServer.getConnectionManager().getOnlinePlayers().size();
+        return calculatePageAmount(currentPlayers, ThreadLocalRandom.current());
+    }
 
-        int baseAmount = currentPlayers - 1 < PLAYER_SIZE_FOR_DYNAMIC_PAGE_ALLOCATION
+    /**
+     * Calculates the number of pages to allocate for the given player count, see {@link #calculatePageAmount()}.
+     * Exists so the calculation can be driven without a running server and with a fixed random source.
+     *
+     * @param onlinePlayers the number of online players
+     * @param random        the source of the jitter added on top of the base amount
+     * @return the number of pages to allocate, at least {@link GameConfig#MIN_PAGE_COUNT}
+     */
+    static int calculatePageAmount(int onlinePlayers, RandomGenerator random) {
+        int baseAmount = onlinePlayers - 1 < PLAYER_SIZE_FOR_DYNAMIC_PAGE_ALLOCATION
                 ? GameConfig.MIN_PAGE_COUNT
-                : (currentPlayers - 1) * PAGE_COUNT_MULTIPLIER;
+                : (onlinePlayers - 1) * PAGE_COUNT_MULTIPLIER;
 
-        return baseAmount + ThreadLocalRandom.current().nextInt(PAGE_COUNT_JITTER_MAX + 1);
+        return baseAmount + random.nextInt(PAGE_COUNT_JITTER_MAX + 1);
     }
 
     /**

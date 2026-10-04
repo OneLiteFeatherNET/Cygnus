@@ -29,7 +29,7 @@ import java.net.URI;
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
- * @version 2.1.1
+ * @version 2.2.0
  * @since 1.0.0
  */
 public record GameConfig(
@@ -89,7 +89,11 @@ public record GameConfig(
 
     public static final int PAGE_TTL_TIME = 60;
     public static final int FORCE_START_TIME = 11;
-    public static final int MIN_PAGE_COUNT = 8;
+
+    /**
+     * The fewest pages a round needs to find. Doubled from 8 to 16: playtesters wanted twice as many pages.
+     */
+    public static final int MIN_PAGE_COUNT = 16;
 
     /**
      * The {@link #lobbyAtmosphereShare()} a configuration gets when it says nothing: enough of the
