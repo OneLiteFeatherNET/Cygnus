@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpectatorInventoryTest extends CygnusPlayerTestBase {
@@ -97,5 +98,78 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         assertEquals(Component.text(survivor.getUsername()), item.get(DataComponents.CUSTOM_NAME));
 
         env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testShrinkingSurvivorListClearsStaleHeadInFreedSlot(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player spectator = env.createPlayer(instance);
+        Player first = env.createPlayer(instance);
+        Player second = env.createPlayer(instance);
+        Player third = env.createPlayer(instance);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        survivorTeam.addPlayer(first);
+        survivorTeam.addPlayer(second);
+        survivorTeam.addPlayer(third);
+
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, (_, _) -> {});
+        inventory.open(spectator);
+        env.tick();
+        assertEquals(3, countHeads(inventory), "all survivors should be listed initially");
+
+        survivorTeam.removePlayer(first);
+        inventory.invalidateDataLayout();
+        env.tick();
+
+        assertEquals(2, countHeads(inventory), "each remaining survivor must be listed exactly once");
+        assertTrue(inventory.getInventory().getItemStack(11).isAir(), "freed slot must be empty");
+        assertNull(inventory.getInventory().getItemStack(11).getTag(SpectatorInventory.TARGET_TAG),
+                "freed slot must not keep a stale target");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testGrowingSurvivorListAddsHeads(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player spectator = env.createPlayer(instance);
+        Player first = env.createPlayer(instance);
+        Player second = env.createPlayer(instance);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        survivorTeam.addPlayer(first);
+
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, (_, _) -> {});
+        inventory.open(spectator);
+        env.tick();
+        assertEquals(1, countHeads(inventory));
+
+        survivorTeam.addPlayer(second);
+        inventory.invalidateDataLayout();
+        env.tick();
+
+        assertEquals(2, countHeads(inventory));
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testHandleClickWithoutTargetIsNoOp(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player spectator = env.createPlayer(instance);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        List<Player> teleportedTo = new ArrayList<>();
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, (_, t) -> teleportedTo.add(t));
+
+        inventory.handleClick(spectator, 11, null, ItemStack.AIR, _ -> {});
+
+        assertTrue(teleportedTo.isEmpty());
+
+        env.destroyInstance(instance, true);
+    }
+
+    private static long countHeads(SpectatorInventory inventory) {
+        return java.util.Arrays.stream(inventory.getInventory().getItemStacks())
+                .filter(stack -> stack.material() == Material.PLAYER_HEAD)
+                .count();
     }
 }
