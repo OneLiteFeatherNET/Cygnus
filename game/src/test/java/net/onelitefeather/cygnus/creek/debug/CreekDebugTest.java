@@ -142,10 +142,10 @@ class CreekDebugTest {
                 Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1), HuntCooldowns.none());
         patrol.enter(start);
         patrol.tick(start);
-        patrol.tick(new CreekContext(1000L, near, body, Contexts.route(new Pos(30, 40, 0)), SPOTS,
+        patrol.tick(new CreekContext(PatrolState.STARE_MILLIS, near, body, Contexts.route(new Pos(30, 40, 0)), SPOTS,
                 Contexts.NO_ACTIONS, CreekConfig.DEFAULT, new Random(1), HuntCooldowns.none()));
 
         assertEquals("PATROL · select 7s · Steve 0.90",
-                plain(CreekDebug.line(patrol, HERE, near, NAMES::get, "", 4000L)));
+                plain(CreekDebug.line(patrol, HERE, near, NAMES::get, "", PatrolState.STARE_MILLIS + 3000L)));
     }
 }

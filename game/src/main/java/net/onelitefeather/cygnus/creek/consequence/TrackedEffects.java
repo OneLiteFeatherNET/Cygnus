@@ -38,17 +38,25 @@ final class TrackedEffects {
     }
 
     /**
+     * Takes back one effect from one player, if it is still the one handed out here.
+     *
+     * @param player the player
+     * @param effect the effect to take back
+     */
+    void remove(Player player, PotionEffect effect) {
+        TimedPotion given = this.given.remove(new Key(player, effect));
+        if (given != null && Objects.equals(player.getEffect(effect), given)) {
+            player.removeEffect(effect);
+        }
+    }
+
+    /**
      * Takes back every effect handed out that is still running, and forgets them all.
      */
     void removeAll() {
-        for (Map.Entry<Key, TimedPotion> entry : List.copyOf(this.given.entrySet())) {
-            Player player = entry.getKey().player();
-            PotionEffect effect = entry.getKey().effect();
-            if (Objects.equals(player.getEffect(effect), entry.getValue())) {
-                player.removeEffect(effect);
-            }
+        for (Key key : List.copyOf(this.given.keySet())) {
+            this.remove(key.player(), key.effect());
         }
-        this.given.clear();
     }
 
     /**

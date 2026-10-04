@@ -5,20 +5,85 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.network.packet.server.play.FacePlayerPacket;
+import net.minestom.server.network.packet.server.play.SoundEffectPacket;
 import net.minestom.server.potion.PotionEffect;
+import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
+import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Random;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PatrolHelperIntegrationTest extends CygnusPlayerTestBase {
+
+    /** Where the creek's eyes are, a few blocks in front of the survivors at the origin. */
+    private static final Supplier<Pos> CREEK_EYES = () -> new Pos(0, 42.5, 5);
+
+    @Test
+    @DisplayName("The first beat of a stare darkens the target's view")
+    void firstBeatDarkens(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player target = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
+
+        patrol.stareBeat(target, 0, new Pos(0, 40, 5));
+
+        assertTrue(target.hasEffect(PotionEffect.DARKNESS));
+        patrol.cleanUp();
+    }
+
+    @Test
+    @DisplayName("Later beats only sound, they add no darkness")
+    void laterBeatsOnlySound(Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player target = connection.connect(instance, new Pos(0, 40, 0));
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
+
+        patrol.stareBeat(target, 1, new Pos(0, 40, 5));
+
+        assertFalse(target.hasEffect(PotionEffect.DARKNESS));
+        assertFalse(sounds.collect().isEmpty());
+    }
+
+    @Test
+    @DisplayName("A broken stare takes the darkness back at once")
+    void brokenStareLiftsTheDarkness(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player target = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
+        patrol.stareBeat(target, 0, new Pos(0, 40, 5));
+
+        patrol.stareBroken(target);
+
+        assertFalse(target.hasEffect(PotionEffect.DARKNESS));
+    }
+
+    @Test
+    @DisplayName("A stun turns the survivor's head towards the creek")
+    void stunTurnsTheHead(Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player selected = connection.connect(instance, new Pos(0, 40, 0));
+        Collector<FacePlayerPacket> faces = connection.trackIncoming(FacePlayerPacket.class);
+        PatrolHelper patrol = new PatrolHelper(new Random(1));
+
+        patrol.stun(selected, CREEK_EYES, List.of(selected));
+        env.tick();
+
+        assertFalse(faces.collect().isEmpty());
+        patrol.cleanUp();
+    }
 
     @Test
     @DisplayName("A stun slows the selected survivor and does not count as a catch")
@@ -27,7 +92,7 @@ class PatrolHelperIntegrationTest extends CygnusPlayerTestBase {
         Player selected = env.createConnection().connect(instance, new Pos(0, 40, 0));
         PatrolHelper patrol = new PatrolHelper(new Random(1));
 
-        patrol.stun(selected, List.of(selected));
+        patrol.stun(selected, CREEK_EYES, List.of(selected));
 
         assertTrue(selected.hasEffect(PotionEffect.SLOWNESS));
         assertFalse(selected.hasEffect(PotionEffect.BLINDNESS));
@@ -44,7 +109,7 @@ class PatrolHelperIntegrationTest extends CygnusPlayerTestBase {
         Player slender = env.createConnection().connect(instance, new Pos(3, 40, 0));
         PatrolHelper patrol = new PatrolHelper(new Random(1));
 
-        patrol.stun(selected, List.of(selected, near, far));
+        patrol.stun(selected, CREEK_EYES, List.of(selected, near, far));
 
         assertTrue(near.hasEffect(PotionEffect.BLINDNESS));
         assertFalse(far.hasEffect(PotionEffect.BLINDNESS));
@@ -144,7 +209,7 @@ class PatrolHelperIntegrationTest extends CygnusPlayerTestBase {
         // nextBoolean() is false for 0, so selected() tries the fling first.
         PatrolHelper patrol = new PatrolHelper(() -> 0L);
 
-        patrol.selected(selected, new Pos(8.5, 40, 7.5), List.of(selected));
+        patrol.selected(selected, () -> new Pos(8.5, 42.5, 7.5), List.of(selected));
 
         assertEquals(Vec.ZERO, selected.getVelocity());
         assertTrue(selected.hasEffect(PotionEffect.SLOWNESS));
@@ -157,7 +222,7 @@ class PatrolHelperIntegrationTest extends CygnusPlayerTestBase {
         Player selected = env.createConnection().connect(instance, new Pos(0, 40, 0));
         Player near = env.createConnection().connect(instance, new Pos(5, 40, 0));
         PatrolHelper patrol = new PatrolHelper(new Random(1));
-        patrol.stun(selected, List.of(selected, near));
+        patrol.stun(selected, CREEK_EYES, List.of(selected, near));
 
         patrol.cleanUp();
 

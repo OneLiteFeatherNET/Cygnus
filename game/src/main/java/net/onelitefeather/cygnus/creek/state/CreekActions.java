@@ -32,6 +32,22 @@ public interface CreekActions {
     void selected(UUID survivor);
 
     /**
+     * The patrolling creek's heart beats while it stares at a survivor. The first beat comes the
+     * moment it picks them out.
+     *
+     * @param survivor the id of the survivor it stares at
+     * @param beat     which beat this is, counting from 0
+     */
+    void stareBeat(UUID survivor, int beat);
+
+    /**
+     * The survivor the patrolling creek stared at got out of its sight before the stare was over.
+     *
+     * @param survivor the id of the survivor
+     */
+    void stareBroken(UUID survivor);
+
+    /**
      * The creek vanished on purpose, in front of whoever is nearby.
      *
      * @param where where it vanished
