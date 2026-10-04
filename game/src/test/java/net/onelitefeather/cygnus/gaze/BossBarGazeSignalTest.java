@@ -128,7 +128,7 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
         signal.level(survivor, 2);
         assertEquals(BossBarGazeSignal.SIGNAL_BASE + 3, colourOf(signal.barOf(survivor)));
         assertTrue(signal.barOf(survivor).hasFlag(BossBar.Flag.DARKEN_SCREEN),
-                "the world tint needs the bit, the veil alone is not the effect");
+                "the colour shift needs the bit, the veil alone is not the effect");
 
         signal.level(survivor, SlenderGaze.NONE);
         assertEquals(-1, colourOf(signal.barOf(survivor)));
@@ -136,16 +136,51 @@ class BossBarGazeSignalTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("A player attached without the world tint gets the veil and nothing else")
-    void withoutTheWorldTintOnlyTheVeilIsSent(Env env) {
+    @DisplayName("A level signalled without colour shift carries the no-colour-shift flag")
+    void withoutColourShiftTheLevelCarriesTheFlag(Env env) {
         BossBarGazeSignal signal = new BossBarGazeSignal();
         Player slender = connect(env, env.createFlatInstance());
         signal.attach(slender, false);
 
         signal.level(slender, 2);
 
-        assertEquals(BossBarGazeSignal.SIGNAL_BASE + 3, colourOf(signal.barOf(slender)),
-                "the veil is the effect and has to arrive either way");
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE | BossBarGazeSignal.SIGNAL_NO_COLOUR_SHIFT | 3,
+                colourOf(signal.barOf(slender)),
+                "the pack draws the bursts but drops the purple wash when bit 4 is set");
+    }
+
+    @Test
+    @DisplayName("A level signalled with colour shift does not carry the no-colour-shift flag")
+    void withColourShiftTheLevelCarriesNoFlag(Env env) {
+        BossBarGazeSignal signal = new BossBarGazeSignal();
+        Player survivor = connect(env, env.createFlatInstance());
+        signal.attach(survivor, true);
+
+        signal.level(survivor, 2);
+
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE + 3, colourOf(signal.barOf(survivor)),
+                "survivors keep their purple, so the colour stays as it was");
+    }
+
+    @Test
+    @DisplayName("No gaze sends no glyph, with or without colour shift")
+    void noGazeSendsNothingEitherWay() {
+        assertEquals(Component.empty(), BossBarGazeSignal.signalFor(SlenderGaze.NONE, false));
+        assertEquals(Component.empty(), BossBarGazeSignal.signalFor(SlenderGaze.NONE, true));
+    }
+
+    @Test
+    @DisplayName("A player attached without colour shift gets the bursts and nothing else")
+    void withoutColourShiftOnlyTheBurstsAreSent(Env env) {
+        BossBarGazeSignal signal = new BossBarGazeSignal();
+        Player slender = connect(env, env.createFlatInstance());
+        signal.attach(slender, false);
+
+        signal.level(slender, 2);
+
+        assertEquals(BossBarGazeSignal.SIGNAL_BASE | BossBarGazeSignal.SIGNAL_NO_COLOUR_SHIFT | 3,
+                colourOf(signal.barOf(slender)),
+                "the bursts are the effect and have to arrive either way");
         assertFalse(signal.barOf(slender).hasFlag(BossBar.Flag.DARKEN_SCREEN),
                 "darkening the world would take the slender's sight, which is his whole advantage");
     }

@@ -289,8 +289,8 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("The slender keeps his sight: the veil comes without the world tint")
-    void theWorldIsNeverDarkenedForHim(@NotNull Env env) {
+    @DisplayName("The slender gets the glitch alone: no colour shift")
+    void hisGlitchComesWithoutColourShift(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player slender = env.createPlayer(instance);
         RecordingSink sink = new RecordingSink();
@@ -299,8 +299,8 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
 
         EventDispatcher.call(new GameStartEvent());
 
-        assertEquals(List.of(false), sink.worldTints,
-                "darkening the world would blind the hunter, which is the one thing he must not lose");
+        assertEquals(List.of(false), sink.colourShifts,
+                "the purple belongs to the survivors, and darkening the world would blind the hunter");
 
         env.destroyInstance(instance, true);
     }
@@ -345,7 +345,7 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
     private static final class RecordingSink implements GazeSink {
 
         private final List<Player> attached = new ArrayList<>();
-        private final List<Boolean> worldTints = new ArrayList<>();
+        private final List<Boolean> colourShifts = new ArrayList<>();
         private final List<Player> detached = new ArrayList<>();
         private final List<Integer> levels = new ArrayList<>();
         private final List<Player> players = new ArrayList<>();
@@ -356,9 +356,9 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         }
 
         @Override
-        public void attach(Player player, boolean worldTint) {
+        public void attach(Player player, boolean colourShift) {
             this.attached.add(player);
-            this.worldTints.add(worldTint);
+            this.colourShifts.add(colourShift);
         }
 
         @Override

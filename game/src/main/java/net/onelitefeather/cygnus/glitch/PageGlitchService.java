@@ -46,7 +46,7 @@ import java.util.function.Supplier;
  * }</pre>
  *
  * @author TheMeinerLP
- * @version 1.0.1
+ * @version 1.0.2
  * @since 2.15.0
  */
 public final class PageGlitchService implements GameFeature {
@@ -171,8 +171,8 @@ public final class PageGlitchService implements GameFeature {
             // A hand-over, from SlenderReviveEvent. The old slender is a survivor's problem now and
             // must not keep a torn screen; the round's state follows whoever took his place.
             this.release();
-            // Without the world tint: the veil tells him how far the round has got, while darkening
-            // the world on top of it would take the sight he hunts with.
+            // Without the colour shift: the glitch alone tells him how far the round has got, while
+            // the purple wash and a darkened world on top of it would take the sight he hunts with.
             this.sink.attach(currentSlender, false);
             this.attached = currentSlender;
         }

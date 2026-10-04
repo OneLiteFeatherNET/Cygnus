@@ -25,6 +25,11 @@ import org.jetbrains.annotations.Nullable;
  * before any world shader sees it. The two passes cannot talk to each other, so the level travels
  * twice: as a bit for the world tint, as a colour for the veil on top.</p>
  *
+ * <p>Both halves of the purple are one "colour shift" and are left out together for a player who
+ * must not have it. The world tint is simply never raised, and the colour carries
+ * {@link #SIGNAL_NO_COLOUR_SHIFT} in bit 4 of its low byte, which tells the pack to draw the glitch
+ * bursts but drop the permanent purple wash. The low byte's bits 0-3 stay the level.</p>
+ *
  * <p>Night vision and blindness were the other candidates for the bit and are both already used for
  * gameplay - {@code AmbientProvider} puts blindness on survivors periodically, which would fire the
  * effect at random. A per-player biome would carry more than a bit but needs a chunk mesh rebuild on
@@ -45,7 +50,7 @@ import org.jetbrains.annotations.Nullable;
  * shared bar would send every survivor the same level.</p>
  *
  * @author TheMeinerLP
- * @version 4.1.0
+ * @version 4.2.0
  * @since 2.7.3
  */
 public final class BossBarGazeSignal implements GazeSink {
@@ -62,6 +67,9 @@ public final class BossBarGazeSignal implements GazeSink {
     /** Base of the reserved colour range the pack's text shader watches for. */
     static final int SIGNAL_BASE = 0xFE0000;
 
+    /** Bit 4 of the colour's low byte: draw the glitch bursts, but without the purple wash. */
+    static final int SIGNAL_NO_COLOUR_SHIFT = 0x10;
+
 
     /*
      * One carrier, deliberately. A diagnostic round sent the signal over the boss bar title, the
@@ -73,16 +81,18 @@ public final class BossBarGazeSignal implements GazeSink {
      */
     private final PlayerState<BossBar> bars = new PlayerState<>();
 
-    /** Who may have the world darkened along with their veil. */
-    private final PlayerState<Boolean> worldTints = new PlayerState<>();
+    /** Who gets the colour shift: the purple wash and the darkened world. */
+    private final PlayerState<Boolean> colourShifts = new PlayerState<>();
 
     /**
      * Builds the component that carries a level.
      *
-     * @param level the level to encode, {@link SlenderGaze#NONE} for nothing to show
+     * @param level       the level to encode, {@link SlenderGaze#NONE} for nothing to show
+     * @param colourShift whether the purple wash is wanted; without it the pack draws the glitch
+     *                    bursts alone
      * @return the component to put on the wire
      */
-    static Component signalFor(int level) {
+    static Component signalFor(int level, boolean colourShift) {
         // No gaze, no glyph. Sending the reserved colour with a level of zero is not the same as
         // sending nothing: the pack recognises a signal by its colour range alone, and #FE0000 is
         // inside it, so the shader would keep expanding the quad across the whole screen for as
@@ -92,9 +102,14 @@ public final class BossBarGazeSignal implements GazeSink {
             return Component.empty();
         }
 
+        int colour = SIGNAL_BASE + Math.clamp(level + 1, 1, 4);
+        if (!colourShift) {
+            colour |= SIGNAL_NO_COLOUR_SHIFT;
+        }
+
         return Component.text(SIGNAL_GLYPH)
                 .font(SIGNAL_FONT)
-                .color(TextColor.color(SIGNAL_BASE + Math.clamp(level + 1, 1, 4)))
+                .color(TextColor.color(colour))
                 .shadowColor(ShadowColor.none());
     }
 
@@ -110,11 +125,11 @@ public final class BossBarGazeSignal implements GazeSink {
      * {@inheritDoc}
      */
     @Override
-    public void attach(Player player, boolean worldTint) {
+    public void attach(Player player, boolean colourShift) {
         BossBar bar = BossBar.bossBar(
-                signalFor(SlenderGaze.NONE), 1f, CARRIER_COLOR, BossBar.Overlay.PROGRESS);
+                signalFor(SlenderGaze.NONE, colourShift), 1f, CARRIER_COLOR, BossBar.Overlay.PROGRESS);
         this.bars.put(player, bar);
-        this.worldTints.put(player, worldTint);
+        this.colourShifts.put(player, colourShift);
         player.showBossBar(bar);
     }
 
@@ -124,7 +139,7 @@ public final class BossBarGazeSignal implements GazeSink {
     @Override
     public void detach(Player survivor) {
         BossBar bar = this.bars.remove(survivor);
-        this.worldTints.remove(survivor);
+        this.colourShifts.remove(survivor);
         if (bar == null) return;
         survivor.hideBossBar(bar);
     }
@@ -144,10 +159,12 @@ public final class BossBarGazeSignal implements GazeSink {
         // world's lighting - the lightmap is multiplied into vertexColor before any world shader
         // sees it, so a hue rotation there tints everything. The text shader runs in a different
         // pass and cannot tell the lightmap anything, which is why the level has to travel twice.
-        bar.name(signalFor(level));
+        boolean colourShift = Boolean.TRUE.equals(this.colourShifts.get(survivor));
+        bar.name(signalFor(level, colourShift));
 
-        if (!Boolean.TRUE.equals(this.worldTints.get(survivor))) {
-            // Attached without the world tint: the veil above is the whole effect for this player.
+        if (!colourShift) {
+            // Attached without the colour shift: the glitch bursts above are the whole effect for
+            // this player, with neither the purple wash nor the darkened world.
             return;
         }
 
