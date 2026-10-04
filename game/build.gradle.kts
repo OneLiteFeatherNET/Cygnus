@@ -30,6 +30,11 @@ dependencies {
     // Crash reporting. Only ever set up when a DSN is configured, see SentrySupport.
     implementation(libs.sentry)
 
+    // Tracing API only. The javaagent attached in production supplies the SDK and the exporter; the
+    // plain `implementation` keeps the real io.opentelemetry packages in the shadow jar (no
+    // relocation is configured), which is what lets the agent bridge GlobalOpenTelemetry.
+    implementation(libs.opentelemetry.api)
+
     // LuckPerms; guava used to arrive transitively through CloudNet, so bundle it explicitly now.
     implementation(libs.guava)
     compileOnly(libs.luckperms.api) {
@@ -49,6 +54,8 @@ dependencies {
     testImplementation(libs.cyano)
     testImplementation(libs.aves)
     testImplementation(libs.xerus)
+    testImplementation(libs.opentelemetry.sdk)
+    testImplementation(libs.opentelemetry.sdk.testing)
     testImplementation(libs.junit.api)
     testImplementation(libs.junit.params)
     testImplementation(libs.junit.platform.launcher)
