@@ -115,8 +115,8 @@ class PageCalculationTest {
         }
 
         int activePageCount = PageCalculation.calculateActivePageAmount();
-        assertEquals(9, activePageCount,
-                "the active page count at the top of the range must stay below 10");
+        assertEquals(GameConfig.MIN_ACTIVE_PAGE_COUNT + 1, activePageCount,
+                "13 players (12 survivors) add exactly one page on top of the minimum");
 
         env.destroyInstance(instance, true);
     }
