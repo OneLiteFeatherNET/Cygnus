@@ -1,7 +1,12 @@
 package net.onelitefeather.cygnus.resourcepack;
 
 import net.kyori.adventure.resource.ResourcePackStatus;
+import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.Player;
+import net.minestom.server.listener.common.ResourcePackListener;
+import net.minestom.server.network.packet.client.common.ClientResourcePackStatusPacket;
+import net.minestom.server.network.packet.server.common.DisconnectPacket;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.minestom.server.event.player.PlayerResourcePackStatusEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.common.ResourcePackPushPacket;
@@ -24,6 +29,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -137,6 +143,30 @@ class ResourcePackServiceTest extends CygnusPlayerTestBase {
         assertNull(player.getResourcePackFuture(),
                 "a pack that cannot be hashed must not be pushed, and must not kick the player");
         assertTrue(player.isOnline());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testLeavingPlayersDiscardIsNotKickedForDecliningThePack(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        ResourcePackService service = createService();
+        env.process().connection().setPlayerProvider(
+                (connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, service.packId()));
+        env.process().eventHandler().addChild(service.node());
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance);
+        Component leaveMessage = Component.text("leaving");
+        player.kick(leaveMessage);
+        Collector<DisconnectPacket> disconnects = connection.trackIncoming(DisconnectPacket.class);
+
+        ResourcePackListener.listener(
+                new ClientResourcePackStatusPacket(service.packId(), ResourcePackStatus.DISCARDED), player);
+
+        List<DisconnectPacket> sent = disconnects.collect();
+        assertEquals(1, sent.size());
+        assertEquals(leaveMessage, sent.getFirst().message(),
+                "the DISCARDED of a leaving player is the ack of the pop, not a declined pack");
 
         env.destroyInstance(instance, true);
     }

@@ -1,15 +1,18 @@
 package net.onelitefeather.cygnus.player;
 
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.resource.ResourcePackStatus;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
+import net.minestom.server.network.ConnectionState;
 import net.minestom.server.network.packet.server.play.EntityAttributesPacket;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.sound.SoundEvent;
+import net.minestom.server.timer.TaskSchedule;
 import net.onelitefeather.cygnus.common.player.InstanceSwitchChunkPlayer;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +30,8 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     static final AttributeModifier DISABLED_SPRINT_MODIFIER =
             new AttributeModifier(Key.key("cygnus", "sprinting"), 0.0, AttributeOperation.ADD_MULTIPLIED_TOTAL);
 
+    private static final int POP_TIMEOUT_TICKS = 10;           // Half a second for the client to drop the pack
+
     private static final float HEALTH_THRESHOLD = 6.0f; // 3 hearts
     private static final int MAX_INTERVAL_TICKS = 36;   // Every 1.8s (slow, subtle pulse at start)
     private static final int MIN_INTERVAL_TICKS = 12;   // Every 0.6s (fast & tense without sound overlapping)
@@ -43,6 +48,8 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
 
     private final @Nullable UUID resourcePackId;
 
+    private boolean leaving;
+    private @Nullable Component pendingKick;
     private boolean blockedSprinting;
     private int heartbeatTicks;
     private boolean heartbeatActive;
@@ -75,7 +82,8 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     }
 
     /**
-     * Takes this service's ResourcePack off the client, then disconnects the player.
+     * Takes this service's ResourcePack off the client, waits for the client to confirm that, then
+     * disconnects the player.
      *
      * <p>A client drops a pushed pack only when told to. On a bare connection that happens
      * implicitly - leaving the server ends the connection the pack hangs on - but behind a proxy the
@@ -85,6 +93,18 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
      * ahead of anything a listener could still send, and the client acts on the first of the two it
      * reads.</p>
      *
+     * <p>Sending the pop right before the disconnect is not enough, though: nothing guarantees the
+     * client has processed it by the time the proxy reroutes the player. So the disconnect is held
+     * back until the client reports the pack as discarded (see
+     * {@link #onResourcePackStatus(UUID, ResourcePackStatus)}), or {@value #POP_TIMEOUT_TICKS}
+     * ticks have passed - a client that never answers must not stay on the server, and the timeout
+     * stays far below the second a restart waits before it stops the service. While the player is
+     * leaving, further kicks are ignored: the first one decides the message, and the disconnect
+     * happens exactly once.</p>
+     *
+     * <p>Without a pack, or outside the play state (a kick during configuration has no pack on the
+     * client yet and no play packets to wait on), the player is disconnected immediately.</p>
+     *
      * <p>The pop cannot be sent on the other exit either - a proxy switching backends closes this
      * connection without warning, leaving no moment to send anything. Only the lobby can clear the
      * pack for a player who leaves that way.</p>
@@ -93,10 +113,61 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
      */
     @Override
     public void kick(Component component) {
-        if (this.resourcePackId != null) {
-            removeResourcePacks(this.resourcePackId);
+        if (this.leaving) {
+            return;
         }
-        super.kick(component);
+        if (this.resourcePackId == null || !isOnline()
+                || getPlayerConnection().getServerState() != ConnectionState.PLAY) {
+            super.kick(component);
+            return;
+        }
+        this.leaving = true;
+        this.pendingKick = component;
+        removeResourcePacks(this.resourcePackId);
+        scheduler().buildTask(this::completeKick).delay(TaskSchedule.tick(POP_TIMEOUT_TICKS)).schedule();
+    }
+
+    /**
+     * Returns whether this player is being kicked and only waits for the client to drop the pack.
+     *
+     * @return {@code true} while the disconnect is pending, otherwise {@code false}
+     * @since 2.14.1
+     */
+    public boolean isLeaving() {
+        return leaving;
+    }
+
+    /**
+     * Treats the client's report about the popped pack as the confirmation the kick waits for.
+     *
+     * <p>Overridden here rather than listened to on the event bus because the player already holds
+     * the pending kick, and this is called after every listener of
+     * {@code PlayerResourcePackStatusEvent} has run. Minestom itself kicks a required pack that
+     * ends in a non-successful terminal status; for a pop on a pack that finished loading earlier
+     * it has no pending entry and does nothing, and for one still in flight it calls
+     * {@link #kick(Component)}, which is ignored while leaving.</p>
+     *
+     * @param id     the pack the status is about
+     * @param status the reported status
+     * @since 2.14.1
+     */
+    @Override
+    public void onResourcePackStatus(UUID id, ResourcePackStatus status) {
+        if (this.leaving && id.equals(this.resourcePackId) && !status.intermediate()) {
+            completeKick();
+        }
+        super.onResourcePackStatus(id, status);
+    }
+
+    private void completeKick() {
+        Component component = this.pendingKick;
+        if (component == null) {
+            return;
+        }
+        this.pendingKick = null;
+        if (isOnline()) {
+            super.kick(component);
+        }
     }
 
     /**

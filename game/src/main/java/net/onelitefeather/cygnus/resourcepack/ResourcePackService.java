@@ -12,6 +12,7 @@ import net.minestom.server.event.player.PlayerResourcePackStatusEvent;
 import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeoutException;
  * a failure. Inactive unless {@link GameConfig.ResourcePack#url()} is configured.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.2.1
  * @since 1.0.0
  */
 public final class ResourcePackService implements GameFeature {
@@ -143,6 +144,11 @@ public final class ResourcePackService implements GameFeature {
     }
 
     void handleStatus(PlayerResourcePackStatusEvent event) {
+        // A leaving player's DISCARDED answers the pop CygnusPlayer#kick sent; it is the signal
+        // to let the kick through, not a player refusing the pack.
+        if (event.getPlayer() instanceof CygnusPlayer cygnusPlayer && cygnusPlayer.isLeaving()) {
+            return;
+        }
         if (KICK_STATUSES.contains(event.getStatus())) {
             event.getPlayer().kick(KICK_MESSAGE);
         }
