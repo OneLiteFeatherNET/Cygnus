@@ -13,8 +13,9 @@ import java.util.UUID;
 /**
  * The creek on its rounds: it walks its routes, and every survivor can see it.
  * <p>
- * Come within {@link #SELECT_RADIUS} of it and it picks out whoever is closest, stares at them for a
- * second and then freezes them or flings them away. After that it simply walks on and leaves
+ * Come within {@link #SELECT_RADIUS} of it with nothing in between and it picks out whoever is
+ * closest, stares at them for a second and then freezes them or flings them away. Duck behind a
+ * wall during that second and nothing happens. After that it simply walks on and leaves
  * everyone alone for {@link #SELECT_COOLDOWN_MILLIS}. Spot it from farther away and it stops and
  * looks back at you for a moment. At some waypoints it rests for a while, either because the route
  * says so or just by chance; whichever takes longer wins.
@@ -146,8 +147,9 @@ public final class PatrolState implements CreekState {
         UUID target = this.staring;
         if (target == null) return false;
         Optional<SurvivorView> view = ctx.survivor(target);
-        if (view.isEmpty()) {
-            // They left before the stare was over: nothing happens, and no cooldown starts.
+        if (view.isEmpty() || !view.get().inSight()) {
+            // They left or ducked behind a wall before the stare was over: nothing happens, and no
+            // cooldown starts. Anyone still in sight may be picked out right away.
             this.staring = null;
             return false;
         }
@@ -167,7 +169,8 @@ public final class PatrolState implements CreekState {
     }
 
     /**
-     * Picks out the closest survivor within {@link #SELECT_RADIUS} and starts staring at them.
+     * Picks out the closest survivor within {@link #SELECT_RADIUS} with nothing in between and
+     * starts staring at them.
      *
      * @return {@code true} if someone was picked out
      */
@@ -175,6 +178,7 @@ public final class PatrolState implements CreekState {
         SurvivorView nearest = null;
         double best = SELECT_RADIUS;
         for (SurvivorView view : ctx.survivors()) {
+            if (!view.inSight()) continue;
             double distance = view.position().distance(here);
             if (distance <= best) {
                 best = distance;

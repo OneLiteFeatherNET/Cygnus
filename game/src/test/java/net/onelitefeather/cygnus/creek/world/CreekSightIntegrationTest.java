@@ -35,4 +35,26 @@ class CreekSightIntegrationTest extends CygnusPlayerTestBase {
 
         assertFalse(sight.sees(survivor, creek), "a wall hides him");
     }
+
+    @Test
+    @DisplayName("Looking away, he is still in sight until a wall stands between them")
+    void clearIgnoresWhereTheSurvivorLooks(Env env) {
+        Instance instance = env.createFlatInstance();
+        // Looking towards negative Z, away from him.
+        Player survivor = env.createConnection().connect(instance, new Pos(0.5, 40, 0.5, 180, 0));
+        EntityCreature creek = new EntityCreature(EntityType.CREAKING);
+        creek.setInstance(instance, new Pos(0.5, 40, 3.5)).join();
+        CreekSight sight = new CreekSight(48, 35);
+
+        assertFalse(sight.sees(survivor, creek), "he is behind the survivor");
+        assertTrue(sight.clear(survivor, creek), "but nothing stands between them");
+
+        for (int y = 40; y < 44; y++) {
+            for (int x = -2; x <= 2; x++) {
+                instance.setBlock(x, y, 2, Block.STONE);
+            }
+        }
+
+        assertFalse(sight.clear(survivor, creek), "a wall stands between them");
+    }
 }

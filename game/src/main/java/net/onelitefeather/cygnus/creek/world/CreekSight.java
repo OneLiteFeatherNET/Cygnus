@@ -12,7 +12,8 @@ import net.onelitefeather.cygnus.gaze.SlenderGaze;
  * <p>
  * It uses the same view cone as {@link SlenderGaze}: close enough, and not too far off to the side
  * of where the survivor is looking. On top of that it checks the line of sight, because the creek
- * is usually far away and often behind trees.
+ * is usually far away and often behind trees. That line of sight alone tells whether the creek can
+ * reach someone at all, so it can be checked on its own too.
  * </p>
  *
  * @author theEvilReaper
@@ -55,11 +56,26 @@ public final class CreekSight {
      * @return {@code true} if the player can see the creek
      */
     public boolean sees(Player observer, Entity creek) {
-        Instance instance = observer.getInstance();
-        if (instance == null || !instance.equals(creek.getInstance())) return false;
+        if (!sameInstance(observer, creek)) return false;
 
         Pos eyes = observer.getPosition().add(0, observer.getEyeHeight(), 0);
         Pos body = creek.getPosition().add(0, creek.getEyeHeight(), 0);
         return this.inView(eyes, body) && observer.hasLineOfSight(creek);
+    }
+
+    /**
+     * Checks whether no block stands between a player and the creek, wherever the player is looking.
+     *
+     * @param observer the player
+     * @param creek    the creek's entity
+     * @return {@code true} if nothing is in the way
+     */
+    public boolean clear(Player observer, Entity creek) {
+        return sameInstance(observer, creek) && observer.hasLineOfSight(creek);
+    }
+
+    private static boolean sameInstance(Player observer, Entity creek) {
+        Instance instance = observer.getInstance();
+        return instance != null && instance.equals(creek.getInstance());
     }
 }

@@ -85,6 +85,20 @@ class HuntStateTest {
     }
 
     @Test
+    @DisplayName("Close enough but behind a wall, he does not")
+    void noCatchBehindAWall() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 1));
+        List<UUID> caught = new ArrayList<>();
+        SurvivorView hidden = new SurvivorView(TARGET, TARGET_POS, 0.7D, false, false);
+
+        CreekState next = new HuntState(TARGET, 30_000L)
+                .tick(Contexts.context(0L, body, Contexts.route(), caught, hidden));
+
+        assertTrue(caught.isEmpty());
+        assertFalse(next instanceof DoneState);
+    }
+
+    @Test
     @DisplayName("When the time is up he gives up")
     void givesUp() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 10));

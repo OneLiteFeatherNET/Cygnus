@@ -39,6 +39,11 @@ class PatrolStateTest {
         return new SurvivorView(id, new Pos(0, 40, z), 0.0D, false);
     }
 
+    /** Like {@link #at}, but with a wall between them and him. */
+    private static SurvivorView hidden(UUID id, double z) {
+        return new SurvivorView(id, new Pos(0, 40, z), 0.0D, false, false);
+    }
+
     // ---- walking, carried over from the wander behaviour ----
 
     @Test
@@ -311,6 +316,52 @@ class PatrolStateTest {
         assertEquals(Optional.empty(), state.staring());
 
         state.tick(Contexts.selecting(600L, body, Contexts.route(A), selected, at(SECOND, 2), far(FIRST, 0.0D, false)));
+        assertEquals(Optional.of(SECOND), state.staring());
+    }
+
+    @Test
+    @DisplayName("Behind a wall, nobody is selected")
+    void selectsNobodyBehindAWall() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        List<UUID> selected = new ArrayList<>();
+        state.enter(Contexts.selecting(0L, body, Contexts.route(A), selected, hidden(FIRST, 2)));
+
+        state.tick(Contexts.selecting(0L, body, Contexts.route(A), selected, hidden(FIRST, 2)));
+
+        assertEquals(Optional.empty(), state.staring());
+        assertEquals(A, body.goal);
+    }
+
+    @Test
+    @DisplayName("He selects the nearest survivor he can see, not one closer behind a wall")
+    void selectsTheNearestInSight() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        List<UUID> selected = new ArrayList<>();
+        state.enter(Contexts.selecting(0L, body, Contexts.route(A), selected, hidden(FIRST, 2), at(SECOND, 3)));
+
+        state.tick(Contexts.selecting(0L, body, Contexts.route(A), selected, hidden(FIRST, 2), at(SECOND, 3)));
+
+        assertEquals(Optional.of(SECOND), state.staring());
+    }
+
+    @Test
+    @DisplayName("If the selected survivor ducks behind a wall during the stare, nothing happens and no cooldown starts")
+    void dropsTheSelectionWhenSightIsLost() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        List<UUID> selected = new ArrayList<>();
+        state.enter(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2)));
+        state.tick(Contexts.selecting(0L, body, Contexts.route(A), selected, at(SECOND, 2)));
+
+        state.tick(Contexts.selecting(500L, body, Contexts.route(A), selected, hidden(SECOND, 2)));
+        assertEquals(Optional.empty(), state.staring());
+
+        state.tick(Contexts.selecting(1000L, body, Contexts.route(A), selected, hidden(SECOND, 2)));
+        assertTrue(selected.isEmpty());
+
+        state.tick(Contexts.selecting(1100L, body, Contexts.route(A), selected, at(SECOND, 2)));
         assertEquals(Optional.of(SECOND), state.staring());
     }
 
