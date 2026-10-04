@@ -629,4 +629,32 @@ class GameConfigReaderTest {
 
         assertEquals(CreekConfig.DEFAULT, new GameConfigReader(tempDir).getConfig().creek());
     }
+
+    @Test
+    void testMinimapModeDefaultsToDisabled(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), "minPlayers=4\n");
+
+        assertEquals(MinimapConfig.Mode.DISABLED, new GameConfigReader(tempDir).getConfig().minimap().mode());
+    }
+
+    @Test
+    void testMinimapModeIsReadCaseInsensitively(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), "minimap.mode= Fair \n");
+
+        assertEquals(MinimapConfig.Mode.FAIR, new GameConfigReader(tempDir).getConfig().minimap().mode());
+    }
+
+    @Test
+    void testMinimapModeOffIsRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), "minimap.mode=off\n");
+
+        assertEquals(MinimapConfig.Mode.OFF, new GameConfigReader(tempDir).getConfig().minimap().mode());
+    }
+
+    @Test
+    void testAnUnknownMinimapModeFallsBackToTheDefault(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), "minimap.mode=banana\n");
+
+        assertEquals(MinimapConfig.DEFAULT, new GameConfigReader(tempDir).getConfig().minimap());
+    }
 }
