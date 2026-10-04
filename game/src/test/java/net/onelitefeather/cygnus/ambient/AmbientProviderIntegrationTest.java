@@ -21,18 +21,22 @@ import static org.junit.jupiter.api.Assertions.*;
 class AmbientProviderIntegrationTest {
 
     @Test
-    void testCaveSoundAtTickZero(Env env) {
+    void testNoSoundBeforeTheBlackout(Env env) {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         Team team = Team.of(Key.key("cygnus", "test"));
         team.addPlayer(player);
 
-        AmbientProvider provider = new AmbientProvider(team);
+        // The cave sounds moved to the player tick, paced by each survivor's fear.
+        AmbientProvider provider = new AmbientProvider(team, fixedRandom(0));
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
-        provider.tick();
-        assertFalse(sounds.collect().isEmpty(), "Cave sound should have been played at tick 0");
+        for (int i = 0; i < 99; i++) {
+            provider.tick();
+        }
+
+        sounds.assertEmpty();
         env.destroyInstance(instance, true);
     }
 

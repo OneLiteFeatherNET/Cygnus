@@ -35,7 +35,8 @@ import java.util.function.Supplier;
  * tenser towards the end. Every jump also leaves a share that never wears off. The floor and that
  * share together stay below {@link SanityConfig#floorCap()}, so only a fresh scare starts a hunt.
  * The creek reads it as its {@link DreadSource} and reports catches, pick-outs, sightings and
- * stalks back as its {@link CreekWitness}.
+ * stalks back as its {@link CreekWitness}. The survivors' ambient sounds read
+ * it too, to get more frequent the more scared a survivor is.
  * </p>
  * <p>
  * Like {@code SlenderGazeService}, it listens for the round's start and end on its own and drops a
@@ -53,7 +54,6 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     private final EventNode<Event> node = EventNode.all("sanity");
 
     private final SanityConfig config;
-    private final boolean enabled;
     private final DoubleSupplier pageProgress;
     private final long roundMillis;
     private final LongSupplier clock;
@@ -65,27 +65,20 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      * Sets up the service.
      *
      * @param config         the settings
-     * @param enabled        whether the service takes part in the game
      * @param pageProgress   supplies how much of all pages has been found, between {@code 0} and {@code 1}
      * @param roundMillis    how long a round lasts, in milliseconds
      * @param clock          supplies the current time in milliseconds
      * @param roundSurvivors supplies the survivors of the starting round
      */
-    public SanityService(SanityConfig config, boolean enabled, DoubleSupplier pageProgress, long roundMillis,
-                         LongSupplier clock, Supplier<Set<Player>> roundSurvivors) {
+    public SanityService(SanityConfig config, DoubleSupplier pageProgress, long roundMillis, LongSupplier clock,
+                         Supplier<Set<Player>> roundSurvivors) {
         this.config = config;
-        this.enabled = enabled;
         this.pageProgress = pageProgress;
         this.roundMillis = roundMillis;
         this.clock = clock;
         this.roundSurvivors = roundSurvivors;
         this.survivors = new PlayerState<>();
         this.registerListeners();
-    }
-
-    @Override
-    public boolean enabled() {
-        return this.enabled;
     }
 
     @Override
