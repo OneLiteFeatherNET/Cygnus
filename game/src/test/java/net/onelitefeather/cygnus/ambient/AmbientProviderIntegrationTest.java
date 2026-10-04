@@ -131,4 +131,28 @@ class AmbientProviderIntegrationTest {
             }
         };
     }
+
+    @Test
+    void testObserverHearsTheBlackoutWithTheDurationAndTheRolledInterval(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createConnection().connect(instance);
+        Team team = Team.of(Key.key("cygnus", "test"));
+        team.addPlayer(player);
+        java.util.List<Object[]> heard = new java.util.ArrayList<>();
+
+        AmbientProvider provider = new AmbientProvider(team, fixedRandom(0),
+                (affected, duration, next) -> heard.add(new Object[]{affected, duration, next}));
+
+        for (int i = 0; i < 99; i++) {
+            provider.tick();
+        }
+        assertTrue(heard.isEmpty(), "nothing is reported before the blackout");
+        provider.tick();
+
+        assertEquals(1, heard.size());
+        assertEquals(java.util.List.of(player), heard.getFirst()[0]);
+        assertEquals(200, heard.getFirst()[1]);
+        assertEquals(100, heard.getFirst()[2], "the interval just rolled until the next blackout");
+        env.destroyInstance(instance, true);
+    }
 }

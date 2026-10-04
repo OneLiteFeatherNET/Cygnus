@@ -51,6 +51,9 @@ public final class CygnusAttributes {
     public static final String ACTION_SPECTATOR_JOIN = "cygnus.action.spectator.join";
     public static final String ACTION_DISCLAIMER_ACKNOWLEDGE = "cygnus.action.disclaimer.acknowledge";
     public static final String ACTION_DISCLAIMER_DECLINE = "cygnus.action.disclaimer.decline";
+    public static final String ACTION_BLACKOUT = "cygnus.action.blackout";
+    public static final String ACTION_BLACKOUT_PLAYER = "cygnus.action.blackout.player";
+    public static final String ACTION_SANITY_THRESHOLD = "cygnus.action.sanity.threshold";
     public static final String ACTION_CREEK_SIGHTED = "cygnus.action.creek.sighted";
     public static final String ACTION_CREEK_SELECTED = "cygnus.action.creek.selected";
     public static final String ACTION_CREEK_STALK = "cygnus.action.creek.stalk";
@@ -103,6 +106,15 @@ public final class CygnusAttributes {
     public static final AttributeKey<String> KILLER_UUID = AttributeKey.stringKey("cygnus.killer.uuid");
     public static final AttributeKey<String> STAMINA_STATE = AttributeKey.stringKey("cygnus.stamina.state");
     public static final AttributeKey<Long> LINKS_DROPPED = AttributeKey.longKey("cygnus.links.dropped");
+    public static final AttributeKey<String> BLACKOUT_TEAM = AttributeKey.stringKey("cygnus.blackout.team");
+    public static final AttributeKey<Long> BLACKOUT_PLAYERS = AttributeKey.longKey("cygnus.blackout.players");
+    public static final AttributeKey<Long> BLACKOUT_DURATION_TICKS = AttributeKey.longKey("cygnus.blackout.duration_ticks");
+    public static final AttributeKey<Long> BLACKOUT_NEXT_IN_S = AttributeKey.longKey("cygnus.blackout.next_in_s");
+    public static final AttributeKey<Double> SANITY_VALUE = AttributeKey.doubleKey("cygnus.sanity.value");
+    public static final AttributeKey<Double> SANITY_FEAR = AttributeKey.doubleKey("cygnus.sanity.fear");
+    public static final AttributeKey<String> SANITY_BAND = AttributeKey.stringKey("cygnus.sanity.band");
+    public static final AttributeKey<String> SANITY_BAND_FROM = AttributeKey.stringKey("cygnus.sanity.band.from");
+    public static final AttributeKey<String> SANITY_SOURCE = AttributeKey.stringKey("cygnus.sanity.source");
     public static final AttributeKey<String> LINK_KIND = AttributeKey.stringKey("cygnus.link.kind");
 
     /** The link points at the round trace a player's cookie remembered. */

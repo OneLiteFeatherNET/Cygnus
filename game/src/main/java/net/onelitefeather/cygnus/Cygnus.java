@@ -201,7 +201,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             this.scoreboardDisplay = new ScoreboardDisplay(this.teamService.getTeams());
             Team survivorTeam = this.teamService.getTeam(GameConfig.SURVIVOR_KEY)
                     .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
-            this.ambientProvider = new AmbientProvider(survivorTeam);
+            this.ambientProvider = new AmbientProvider(survivorTeam, this.actionTracer.blackoutObserver("survivor"));
             // Only survivors get the hint: the slender hearing it would turn every page into a place to
             // camp at, which is the opposite of what the hint is for.
             this.pageProximityService = new PageProximityService(
@@ -218,7 +218,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                     this.pageProvider::foundShare,
                     this.gameConfig.round().gameTime() * 1000L,
                     System::currentTimeMillis,
-                    () -> TeamHelper.survivorsOf(this.teamService));
+                    () -> TeamHelper.survivorsOf(this.teamService),
+                    this.actionTracer.sanityObserver(Cygnus::survivorActor));
             this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase);
             try (TraceStep ignored = startup.child("cygnus.startup.features")) {
                 this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(

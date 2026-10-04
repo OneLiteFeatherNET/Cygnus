@@ -9,6 +9,8 @@ import net.minestom.server.event.player.PlayerDeathEvent;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;
+import net.onelitefeather.cygnus.ambient.BlackoutObserver;
+import net.onelitefeather.cygnus.sanity.SanityObserver;
 import net.onelitefeather.cygnus.disclaimer.EpilepsyDisclaimer;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
@@ -25,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -60,6 +63,10 @@ public final class ActionTracer {
     // Players who already answered the disclaimer this round: any client can send the click packets
     // at any rate, so a second answer is not an action worth a span.
     private final Set<UUID> answered = ConcurrentHashMap.newKeySet();
+    // The highest band each survivor has been reported in this round. A band is reported once per
+    // survivor and round, going up only: the fear decays on its own, so a survivor hovering around a
+    // boundary would otherwise make a span with every wobble.
+    private final Map<UUID, Integer> peakBands = new ConcurrentHashMap<>();
     private final List<Runnable> resetListeners = new CopyOnWriteArrayList<>();
 
     /**
@@ -89,6 +96,7 @@ public final class ActionTracer {
     private void reset() {
         this.pages.clear();
         this.answered.clear();
+        this.peakBands.clear();
         for (Runnable listener : this.resetListeners) {
             listener.run();
         }
@@ -252,6 +260,112 @@ public final class ActionTracer {
         emit(acknowledged ? CygnusAttributes.ACTION_DISCLAIMER_ACKNOWLEDGE : CygnusAttributes.ACTION_DISCLAIMER_DECLINE,
                 player, step -> {
                 });
+    }
+
+    /** The names of the fear bands, calm first. The last one is the maximum. */
+    static final String[] BANDS = {"calm", "uneasy", "afraid", "terrified", "panic"};
+
+    /** Where each band starts: fear of at least a quarter, a half, three quarters, and the maximum. */
+    private static final double[] BAND_EDGES = {0.25D, 0.5D, 0.75D, 1.0D};
+
+    static int bandOf(double fear) {
+        int band = 0;
+        while (band < BAND_EDGES.length && fear >= BAND_EDGES[band]) {
+            band++;
+        }
+        return band;
+    }
+
+    /**
+     * A survivor's fear jumped. A span is made only when it takes the survivor into a band they have
+     * not been in yet this round, so the number of spans is bounded by the number of bands.
+     *
+     * @param survivor the survivor, where they stood
+     * @param source   what moved the fear
+     * @param before   the fear before the jump, between 0 and 1
+     * @param after    the fear after the jump, between 0 and 1
+     */
+    public void sanityJumped(Actor survivor, String source, double before, double after) {
+        int from = bandOf(before);
+        int to = bandOf(after);
+        if (to <= from) {
+            return;
+        }
+        boolean[] newBand = {false};
+        this.peakBands.compute(survivor.uuid(), (id, peak) -> {
+            int known = peak == null ? from : peak;
+            if (to > known) {
+                newBand[0] = true;
+                return to;
+            }
+            return known;
+        });
+        if (!newBand[0]) {
+            return;
+        }
+        emit(CygnusAttributes.ACTION_SANITY_THRESHOLD, survivor, step -> {
+            step.set(CygnusAttributes.SANITY_FEAR, Math.round(after * 100.0D) / 100.0D);
+            step.set(CygnusAttributes.SANITY_VALUE, Math.round((1.0D - after) * 100.0D) / 100.0D);
+            step.set(CygnusAttributes.SANITY_BAND_FROM, BANDS[from]);
+            step.set(CygnusAttributes.SANITY_BAND, BANDS[to]);
+            step.set(CygnusAttributes.SANITY_SOURCE, source);
+        });
+    }
+
+    /**
+     * A blackout hit a team.
+     *
+     * @param team          the team's name
+     * @param affected      who it hit, where they stood
+     * @param durationTicks how long the blindness lasts
+     * @param nextInSeconds the interval just rolled until the next blackout
+     */
+    public void blackout(String team, List<Actor> affected, int durationTicks, int nextInSeconds) {
+        emit(CygnusAttributes.ACTION_BLACKOUT, null, step -> {
+            step.set(CygnusAttributes.BLACKOUT_TEAM, team);
+            step.set(CygnusAttributes.BLACKOUT_PLAYERS, (long) affected.size());
+            step.set(CygnusAttributes.BLACKOUT_DURATION_TICKS, (long) durationTicks);
+            step.set(CygnusAttributes.BLACKOUT_NEXT_IN_S, (long) nextInSeconds);
+            // One child per hit player: a blackout comes every couple of minutes and the team is a dozen
+            // at most, so this stays small and lets "who was in the dark, where" be searched.
+            String map = this.mapName.get();
+            for (Actor actor : affected) {
+                try (TraceStep child = step.child(CygnusAttributes.ACTION_BLACKOUT_PLAYER)) {
+                    child.set(CygnusAttributes.PLAYER_UUID, actor.uuid().toString());
+                    child.set(CygnusAttributes.PLAYER_ROLE, actor.role());
+                    position(child, actor.x(), actor.y(), actor.z());
+                    if (map != null) {
+                        child.set(CygnusAttributes.MAP, map);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Adapts the blackouts of the ambient provider onto this tracer.
+     *
+     * @param team the team's name, for the span
+     * @return the observer to hand to the provider
+     */
+    public BlackoutObserver blackoutObserver(String team) {
+        return (affected, duration, next) -> safely(() ->
+                blackout(team, affected.stream().map(Actor::of).toList(), duration, next));
+    }
+
+    /**
+     * Adapts the jumps in fear onto this tracer.
+     *
+     * @param survivors resolves a survivor's UUID to who and where they are, or {@code null} if gone
+     * @return the observer to hand to the sanity service
+     */
+    public SanityObserver sanityObserver(Function<UUID, @Nullable Actor> survivors) {
+        return (survivor, source, before, after) -> safely(() -> {
+            Actor actor = survivors.apply(survivor);
+            if (actor != null) {
+                sanityJumped(actor, source, before, after);
+            }
+        });
     }
 
     /**

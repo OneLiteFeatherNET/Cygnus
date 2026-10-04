@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -105,6 +106,16 @@ public final class PlayerState<V> {
     /**
      * @return {@code true} if no player is currently tracked
      */
+    /**
+     * Runs an action for every entry.
+     *
+     * @param action receives the UUID and the value of each entry
+     * @since 2.15.0
+     */
+    public void forEach(BiConsumer<UUID, V> action) {
+        this.values.forEach(action);
+    }
+
     public boolean isEmpty() {
         return this.values.isEmpty();
     }

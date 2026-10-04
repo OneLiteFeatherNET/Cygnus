@@ -102,10 +102,22 @@ player at that moment as `cygnus.position.x/y/z` (rounded to 0.1), plus `cygnus.
 | `cygnus.action.slender.stamina` | `cygnus.stamina.state` (`READY`, `DRAINING`, `REGENERATING`), which is what using the slender's ability changes |
 | `cygnus.action.spectator.join` | |
 | `cygnus.action.disclaimer.acknowledge`, `cygnus.action.disclaimer.decline` | |
+| `cygnus.action.blackout` | `cygnus.blackout.team`, `cygnus.blackout.players`, `cygnus.blackout.duration_ticks`, `cygnus.blackout.next_in_s` (the interval just rolled) |
+| `cygnus.action.blackout.player` | child of a blackout, one per player hit; the player attributes only |
+| `cygnus.action.sanity.threshold` | `cygnus.sanity.band.from`, `cygnus.sanity.band`, `cygnus.sanity.fear` (0 calm, 1 maximum), `cygnus.sanity.value` (1 - fear, as `/creek` shows it), `cygnus.sanity.source` (`page`, `sighting`, `caught`, `selected`, `death`, `stalk`) |
 | `cygnus.action.creek.sighted`, `.selected`, `.stalk` (first step of a stalk only), `.caught` | the survivor's attributes only |
 
 `cygnus.page.out_ms` counts from the moment the page was placed or moved on. A page that has to wait on its
 own spot (no other spot is free) is counted from the moment it was hidden.
+
+### Sanity bands
+
+A survivor's fear is continuous, so only upward crossings of a band are traced: `calm` below 0.25,
+`uneasy` from 0.25, `afraid` from 0.5, `terrified` from 0.75 and `panic` at the maximum, 1.0. The source is
+what caused the jump that crossed the band. Each band is reported once per survivor and round, so a
+survivor hovering around a boundary produces no flood and a round has at most four sanity spans per
+survivor. The fear decaying back down is not traced (it is computed when read, not in a tick), and fear
+cannot bottom out: its floor grows with the pages found and the time played.
 
 ### Not traced
 

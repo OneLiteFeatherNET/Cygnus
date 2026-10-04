@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.telemetry;
 
+import java.util.Set;
+import java.util.List;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.telemetry.ActionTracer.Actor;
@@ -312,5 +314,131 @@ class ActionTracerTest {
         ActionTracer.safely(() -> {
             throw new IllegalStateException("player is mid-disconnect");
         });
+    }
+
+    @Test
+    @DisplayName("A blackout is one span with the team, the players hit, the duration and the next interval")
+    void blackout() {
+        this.actions.blackout("survivor", List.of(survivor(1, 64, 2), new Actor(SLENDER, "survivor", 5, 64, 5)), 200, 137);
+
+        SpanData span = this.telemetry.span(CygnusAttributes.ACTION_BLACKOUT);
+        assertEquals("survivor", span.getAttributes().get(CygnusAttributes.BLACKOUT_TEAM));
+        assertEquals(2L, span.getAttributes().get(CygnusAttributes.BLACKOUT_PLAYERS));
+        assertEquals(200L, span.getAttributes().get(CygnusAttributes.BLACKOUT_DURATION_TICKS));
+        assertEquals(137L, span.getAttributes().get(CygnusAttributes.BLACKOUT_NEXT_IN_S));
+        assertEquals("Cabin", span.getAttributes().get(CygnusAttributes.MAP));
+    }
+
+    @Test
+    @DisplayName("Every player a blackout hit is a child span with their place")
+    void blackoutHasAChildPerPlayer() {
+        this.actions.blackout("survivor", List.of(survivor(1, 64, 2), new Actor(SLENDER, "survivor", 5, 64, 5)), 200, 137);
+
+        SpanData blackout = this.telemetry.span(CygnusAttributes.ACTION_BLACKOUT);
+        List<SpanData> hit = this.telemetry.spans().stream()
+                .filter(span -> span.getName().equals(CygnusAttributes.ACTION_BLACKOUT_PLAYER)).toList();
+        assertEquals(2, hit.size());
+        assertTrue(hit.stream().allMatch(span -> span.getParentSpanId().equals(blackout.getSpanId())));
+        assertEquals(Set.of(SURVIVOR.toString(), SLENDER.toString()), hit.stream()
+                .map(span -> span.getAttributes().get(CygnusAttributes.PLAYER_UUID)).collect(java.util.stream.Collectors.toSet()));
+        assertEquals(5.0D, hit.stream().filter(span -> SLENDER.toString().equals(span.getAttributes().get(CygnusAttributes.PLAYER_UUID)))
+                .findFirst().orElseThrow().getAttributes().get(CygnusAttributes.POSITION_X));
+    }
+
+    @Test
+    @DisplayName("A blackout that hit nobody is still one span")
+    void blackoutWithoutPlayers() {
+        this.actions.blackout("survivor", List.of(), 200, 100);
+
+        assertEquals(0L, this.telemetry.span(CygnusAttributes.ACTION_BLACKOUT).getAttributes().get(CygnusAttributes.BLACKOUT_PLAYERS));
+    }
+
+    @Test
+    @DisplayName("The fear bands start at a quarter, a half, three quarters and the maximum")
+    void bandEdges() {
+        assertEquals(0, ActionTracer.bandOf(0.0D));
+        assertEquals(0, ActionTracer.bandOf(0.249D));
+        assertEquals(1, ActionTracer.bandOf(0.25D));
+        assertEquals(2, ActionTracer.bandOf(0.5D));
+        assertEquals(3, ActionTracer.bandOf(0.75D));
+        assertEquals(3, ActionTracer.bandOf(0.999D));
+        assertEquals(4, ActionTracer.bandOf(1.0D));
+    }
+
+    @Test
+    @DisplayName("Crossing into a higher band is a span with the bands, the value, the source and the place")
+    void sanityCrossing() {
+        this.actions.sanityJumped(survivor(3, 64, 4), "caught", 0.1D, 0.4D);
+
+        SpanData span = this.telemetry.span(CygnusAttributes.ACTION_SANITY_THRESHOLD);
+        assertEquals("calm", span.getAttributes().get(CygnusAttributes.SANITY_BAND_FROM));
+        assertEquals("uneasy", span.getAttributes().get(CygnusAttributes.SANITY_BAND));
+        assertEquals("caught", span.getAttributes().get(CygnusAttributes.SANITY_SOURCE));
+        assertEquals(0.4D, span.getAttributes().get(CygnusAttributes.SANITY_FEAR));
+        assertEquals(0.6D, span.getAttributes().get(CygnusAttributes.SANITY_VALUE));
+        assertEquals(SURVIVOR.toString(), span.getAttributes().get(CygnusAttributes.PLAYER_UUID));
+        assertEquals(3.0D, span.getAttributes().get(CygnusAttributes.POSITION_X));
+        assertEquals("Cabin", span.getAttributes().get(CygnusAttributes.MAP));
+    }
+
+    @Test
+    @DisplayName("A jump that stays inside its band is no span")
+    void sanityInsideABandIsNotTraced() {
+        this.actions.sanityJumped(survivor(0, 0, 0), "page", 0.30D, 0.45D);
+        this.actions.sanityJumped(survivor(0, 0, 0), "page", 0.0D, 0.1D);
+
+        assertTrue(this.telemetry.spans().stream().noneMatch(span -> span.getName().equals(CygnusAttributes.ACTION_SANITY_THRESHOLD)));
+    }
+
+    @Test
+    @DisplayName("A jump that skips bands is one span from the old to the new band")
+    void sanitySkippingBands() {
+        this.actions.sanityJumped(survivor(0, 0, 0), "death", 0.1D, 0.8D);
+
+        SpanData span = this.telemetry.span(CygnusAttributes.ACTION_SANITY_THRESHOLD);
+        assertEquals("calm", span.getAttributes().get(CygnusAttributes.SANITY_BAND_FROM));
+        assertEquals("terrified", span.getAttributes().get(CygnusAttributes.SANITY_BAND));
+    }
+
+    @Test
+    @DisplayName("Reaching the maximum is reported as the last band")
+    void sanityMax() {
+        this.actions.sanityJumped(survivor(0, 0, 0), "caught", 0.9D, 1.0D);
+
+        assertEquals("panic", this.telemetry.span(CygnusAttributes.ACTION_SANITY_THRESHOLD)
+                .getAttributes().get(CygnusAttributes.SANITY_BAND));
+    }
+
+    @Test
+    @DisplayName("Oscillating around a boundary reports the band once")
+    void oscillationIsReportedOnce() {
+        for (int i = 0; i < 50; i++) {
+            this.actions.sanityJumped(survivor(0, 0, 0), "stalk", 0.24D, 0.26D);
+        }
+
+        assertEquals(1, this.telemetry.spans().stream()
+                .filter(span -> span.getName().equals(CygnusAttributes.ACTION_SANITY_THRESHOLD)).count());
+    }
+
+    @Test
+    @DisplayName("A band the survivor was in before is not reported again after the fear fell back")
+    void fallingBackAndCrossingAgainIsNotReported() {
+        this.actions.sanityJumped(survivor(0, 0, 0), "caught", 0.1D, 0.6D);
+        this.actions.sanityJumped(survivor(0, 0, 0), "page", 0.3D, 0.55D);
+
+        assertEquals(1, this.telemetry.spans().stream()
+                .filter(span -> span.getName().equals(CygnusAttributes.ACTION_SANITY_THRESHOLD)).count());
+    }
+
+    @Test
+    @DisplayName("Every survivor has their own bands, and the next round starts over")
+    void bandsArePerSurvivorAndRound() {
+        this.actions.sanityJumped(survivor(0, 0, 0), "caught", 0.1D, 0.6D);
+        this.actions.sanityJumped(new Actor(SLENDER, "survivor", 0, 0, 0), "caught", 0.1D, 0.6D);
+        this.rounds.roundStarted();
+        this.actions.sanityJumped(survivor(0, 0, 0), "caught", 0.1D, 0.6D);
+
+        assertEquals(3, this.telemetry.spans().stream()
+                .filter(span -> span.getName().equals(CygnusAttributes.ACTION_SANITY_THRESHOLD)).count());
     }
 }

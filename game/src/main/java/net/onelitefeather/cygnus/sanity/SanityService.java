@@ -59,6 +59,8 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     private final LongSupplier clock;
     private final Supplier<Set<Player>> roundSurvivors;
     private final PlayerState<Fear> survivors;
+    private final SanityObserver observer;
+    private final boolean observed;
     private volatile long startedAt = NOT_STARTED;
 
     /**
@@ -72,6 +74,24 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      */
     public SanityService(SanityConfig config, DoubleSupplier pageProgress, long roundMillis, LongSupplier clock,
                          Supplier<Set<Player>> roundSurvivors) {
+        this(config, pageProgress, roundMillis, clock, roundSurvivors, SanityObserver.NONE);
+    }
+
+    /**
+     * Creates the service with an observer for the jumps in fear.
+     *
+     * @param config         the settings
+     * @param pageProgress   how far the pages are found, between 0 and 1
+     * @param roundMillis    the length of a round in milliseconds
+     * @param clock          the clock in milliseconds
+     * @param roundSurvivors supplies the survivors of the starting round
+     * @param observer       hears about every jump in fear
+     * @since 2.15.0
+     */
+    public SanityService(SanityConfig config, DoubleSupplier pageProgress, long roundMillis, LongSupplier clock,
+                         Supplier<Set<Player>> roundSurvivors, SanityObserver observer) {
+        this.observer = observer;
+        this.observed = observer != SanityObserver.NONE;
         this.config = config;
         this.pageProgress = pageProgress;
         this.roundMillis = roundMillis;
@@ -124,7 +144,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      * floor.
      */
     private void pageFound(Player finder) {
-        this.scare(this.survivors.get(finder), this.config.pageFoundGain());
+        this.scare(finder.getUuid(), this.survivors.get(finder), this.config.pageFoundGain(), SanityObserver.SOURCE_PAGE);
     }
 
     /**
@@ -147,7 +167,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
         if (fear == null) return;
         long now = this.clock.getAsLong();
         if (fear.trySighting(now, this.config.sightingCooldownSeconds() * 1000L)) {
-            fear.add(this.config.sightingGain(), now, this.floor());
+            this.scare(survivor, fear, this.config.sightingGain(), SanityObserver.SOURCE_SIGHTING);
         }
     }
 
@@ -156,7 +176,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      */
     @Override
     public void caught(UUID survivor) {
-        this.scare(this.survivors.get(survivor), this.config.caughtGain());
+        this.scare(survivor, this.survivors.get(survivor), this.config.caughtGain(), SanityObserver.SOURCE_CAUGHT);
     }
 
     /**
@@ -164,7 +184,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      */
     @Override
     public void selected(UUID survivor) {
-        this.scare(this.survivors.get(survivor), this.config.selectedGain());
+        this.scare(survivor, this.survivors.get(survivor), this.config.selectedGain(), SanityObserver.SOURCE_SELECTED);
     }
 
     /**
@@ -174,7 +194,13 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     public void stalked(UUID survivor) {
         Fear fear = this.survivors.get(survivor);
         if (fear == null) return;
-        fear.stalked(this.config.stalkGainPerSecond(), this.clock.getAsLong(), this.floor());
+        long now = this.clock.getAsLong();
+        double floor = this.floor();
+        double before = this.observed ? fear.read(now, floor) : 0.0D;
+        fear.stalked(this.config.stalkGainPerSecond(), now, floor);
+        if (this.observed) {
+            this.observer.jumped(survivor, SanityObserver.SOURCE_STALK, before, fear.read(now, floor));
+        }
     }
 
     /**
@@ -183,14 +209,20 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      */
     private void died(Player dead) {
         if (this.survivors.remove(dead) == null) return;
-        for (Fear fear : this.survivors.values()) {
-            this.scare(fear, this.config.deathGain());
-        }
+        this.survivors.forEach((id, fear) -> this.scare(id, fear, this.config.deathGain(), SanityObserver.SOURCE_DEATH));
     }
 
-    private void scare(@Nullable Fear fear, double gain) {
+    private void scare(UUID id, @Nullable Fear fear, double gain, String source) {
         if (fear == null) return;
-        fear.add(gain, this.clock.getAsLong(), this.floor());
+        long now = this.clock.getAsLong();
+        double floor = this.floor();
+        // Read around the jump only when somebody listens: the add settles the value first anyway, so
+        // the extra read changes nothing about the fear itself.
+        double before = this.observed ? fear.read(now, floor) : 0.0D;
+        fear.add(gain, now, floor);
+        if (this.observed) {
+            this.observer.jumped(id, source, before, fear.read(now, floor));
+        }
     }
 
     /**
