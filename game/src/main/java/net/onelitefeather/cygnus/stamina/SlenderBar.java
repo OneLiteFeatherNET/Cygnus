@@ -34,7 +34,7 @@ import java.util.function.LongSupplier;
  * appearance onto the next.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -58,6 +58,13 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
      * again, preventing the ability from being immediately re-triggered after it ran dry.
      */
     private static final int MIN_TIME_TO_REACTIVATE = 10;
+
+    /**
+     * Health a survivor in range loses per bar tick (500 ms). Deliberately its own value instead of
+     * {@link #TIME_STEP}: playtesters wanted the slender to hit twice as hard, while the bar speed
+     * and the stamina timing stay as they are.
+     */
+    private static final float DAMAGE_PER_TICK = 2 * TIME_STEP;
 
     private static final int DAMAGE_RANGE = 3;
 
@@ -130,7 +137,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private void handleDraining() {
         currentTime -= TIME_STEP;
         Instance instance = player.getInstance();
-        applyDamage(instance, player.getUuid(), player.getPosition(), DAMAGE_RANGE, TIME_STEP);
+        applyDamage(instance, player.getUuid(), player.getPosition(), DAMAGE_RANGE, DAMAGE_PER_TICK);
         // Hides in the same tick the bar runs dry: one tick later he would stay visible and hit
         // once more with a bar that already shows empty.
         if (currentTime <= 0) {
