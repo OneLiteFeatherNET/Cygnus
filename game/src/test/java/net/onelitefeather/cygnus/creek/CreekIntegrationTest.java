@@ -101,6 +101,33 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("Close by and looking away, a survivor still has him in sight")
+    void closeByIsInSight(Env env) {
+        Instance instance = env.createFlatInstance();
+        // Looking towards negative Z, away from him.
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 3));
+        Creek creek = creek(body, CreekConfig.DEFAULT, new PatrolState());
+        creek.tick(survivors(survivor), 0L);
+
+        SurvivorView view = creek.views(survivors(survivor)).getFirst();
+        assertFalse(view.seesCreek());
+        assertTrue(view.inSight());
+    }
+
+    @Test
+    @DisplayName("Far away and looking away, the line of sight is not checked")
+    void farAwaySkipsTheRay(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, Creek.SIGHT_CHECK_DISTANCE + 2));
+        Creek creek = creek(body, CreekConfig.DEFAULT, new PatrolState());
+        creek.tick(survivors(survivor), 0L);
+
+        assertFalse(creek.views(survivors(survivor)).getFirst().inSight());
+    }
+
+    @Test
     @DisplayName("Someone he is hidden from does not see him, however they look")
     void hiddenFromNonTargets(Env env) {
         Instance instance = env.createFlatInstance();

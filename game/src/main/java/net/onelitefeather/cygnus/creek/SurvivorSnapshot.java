@@ -14,7 +14,7 @@ import java.util.UUID;
  * The survivors of one step: the players and a snapshot of each of them.
  * <p>
  * It is taken once per step and shared by every creek. Where a survivor stands and how scared they
- * are is the same for all of them; only whether they see a creek, and whether a block stands in
+ * are is the same for all of them. Only whether they see a creek, and whether a block stands in
  * between, differs. So every view here says {@code false} for both and each creek fills them in for
  * itself.
  * </p>

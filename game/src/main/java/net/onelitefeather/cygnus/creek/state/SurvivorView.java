@@ -12,7 +12,8 @@ import java.util.UUID;
  * @param dread     how likely the survivor is to be haunted, from 0 to 1
  * @param seesCreek whether the survivor can see the creek right now
  * @param inSight   whether no block stands between the survivor and the creek, wherever the
- *                  survivor is looking
+ *                  survivor is looking. It is only worked out up close. Farther away it is
+ *                  {@code false} unless the survivor sees the creek.
  *
  * @author theEvilReaper
  * @version 1.0.0

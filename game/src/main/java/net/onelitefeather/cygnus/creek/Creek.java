@@ -29,6 +29,12 @@ import java.util.UUID;
  */
 final class Creek {
 
+    /**
+     * How close a survivor has to be before the line of sight to them is checked, in blocks. Only
+     * picking someone out and catching them need it, and both happen well within this.
+     */
+    static final double SIGHT_CHECK_DISTANCE = 8.0D;
+
     private final CreekBody body;
     private final RouteProvider route;
     private final CreekRound round;
@@ -133,6 +139,10 @@ final class Creek {
      * A survivor only counts as seeing the creek if it is shown to them at all. A variant is hidden
      * from everyone but its target, so the others must not be able to scare it off.
      * </p>
+     * <p>
+     * Whether a block stands in between is only worked out within {@link #SIGHT_CHECK_DISTANCE}.
+     * Anyone farther away who does not see the creek counts as not having it in sight.
+     * </p>
      *
      * @param survivors the survivors of this step
      * @return one view per survivor
@@ -141,15 +151,22 @@ final class Creek {
         List<Player> players = survivors.players();
         List<SurvivorView> base = survivors.views();
         List<SurvivorView> views = new ArrayList<>(players.size());
+        double reach = Math.max(SIGHT_CHECK_DISTANCE, this.round.config().catchDistance());
         for (int index = 0; index < players.size(); index++) {
             Player survivor = players.get(index);
             boolean shown = this.body.isVisibleTo(survivor.getUuid());
             boolean sees = shown && this.round.sight().sees(survivor, this.body.entity());
-            // Seeing it already means nothing is in the way, so the ray only runs for the rest.
-            boolean inSight = sees || this.round.sight().clear(survivor, this.body.entity());
+            // Seeing it already means nothing is in the way, so the ray only runs for the rest, and
+            // only for those close enough for it to matter.
+            boolean inSight = sees || (this.closeEnough(base.get(index), reach)
+                    && this.round.sight().clear(survivor, this.body.entity()));
             views.add(base.get(index).withSight(sees, inSight));
         }
         return views;
+    }
+
+    private boolean closeEnough(SurvivorView view, double reach) {
+        return view.position().distance(this.body.position()) <= reach;
     }
 
     /**
