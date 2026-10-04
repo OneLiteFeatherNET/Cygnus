@@ -189,6 +189,39 @@ class GameConfigReaderTest {
     }
 
     @Test
+    void testPageGlitchMaxLevelDefaultsToTheWeakestLevel(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), "minPlayers=4\n");
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(0, config.pageGlitch().maxLevel());
+    }
+
+    @Test
+    void testPageGlitchMaxLevelIsRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageGlitchMaxLevel=2
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(2, config.pageGlitch().maxLevel());
+    }
+
+    @Test
+    void testAPageGlitchMaxLevelOutsideItsRangeIsRejected(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageGlitchMaxLevel=4
+                """);
+
+        GameConfigReader reader = new GameConfigReader(tempDir);
+
+        assertThrows(IllegalArgumentException.class, reader::getConfig);
+    }
+
+    @Test
     void testPageGlitchCanBeTurnedOff(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4

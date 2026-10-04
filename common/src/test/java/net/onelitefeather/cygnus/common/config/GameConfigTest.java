@@ -90,6 +90,19 @@ class GameConfigTest {
                 "a factor of 1 puts the chime's silence exactly at the range's edge");
     }
 
+    @Test
+    void testPageGlitchMaxLevelRejectsValuesOutsideTheAllowedRange() {
+        String expected = "Page glitch max level must be between 0 and " + GameConfig.PageGlitch.MAX_LEVEL;
+        assertRejected(expected, () -> new GameConfig.PageGlitch(true, 3, -1));
+        assertRejected(expected, () -> new GameConfig.PageGlitch(true, 3, GameConfig.PageGlitch.MAX_LEVEL + 1));
+    }
+
+    @Test
+    void testPageGlitchDefaultsToTheWeakestLevel() {
+        assertEquals(0, GameConfig.PageGlitch.DEFAULT.maxLevel());
+        assertEquals(0, new GameConfig.PageGlitch(true, 3).maxLevel());
+    }
+
     private static GameConfig.PageProximity proximityWithFactor(float volumeFactor) {
         return new GameConfig.PageProximity(true, 20, GameConfig.PageProximity.DEFAULT_SOUND, volumeFactor);
     }

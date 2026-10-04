@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
  *     <li>lobbyAtmosphereShare</li>
  *     <li>pageGlitchEnabled</li>
  *     <li>pageGlitchPulseSeconds</li>
+ *     <li>pageGlitchMaxLevel</li>
  *     <li>creek.* (see {@link CreekConfig})</li>
  *     <li>sanity.* (see {@link SanityConfig})</li>
  *     <li>stamina.* (see {@link StaminaConfig})</li>
@@ -53,7 +54,7 @@ import java.util.regex.Pattern;
  * The default values are defined in {@link GameConfig#DEFAULT}.
  *
  * @author theEvilReaper
- * @version 1.5.0
+ * @version 1.5.1
  * @see GameConfig
  * @since 1.0.0
  */
@@ -146,7 +147,8 @@ public final class GameConfigReader {
                 ),
                 new GameConfig.PageGlitch(
                         getBoolean(properties, "pageGlitchEnabled", pageGlitch.enabled()),
-                        getInt(properties, "pageGlitchPulseSeconds", pageGlitch.pulseSeconds())
+                        getInt(properties, "pageGlitchPulseSeconds", pageGlitch.pulseSeconds()),
+                        getInt(properties, "pageGlitchMaxLevel", pageGlitch.maxLevel())
                 ),
                 getCreek(properties),
                 getSanity(properties),

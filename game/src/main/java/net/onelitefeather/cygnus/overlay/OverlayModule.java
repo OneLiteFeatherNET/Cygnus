@@ -14,6 +14,7 @@ import net.onelitefeather.cygnus.gaze.SlenderGazeService;
 import net.onelitefeather.cygnus.glitch.PageGlitchService;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
+import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.onelitefeather.cygnus.tunnelvision.OverlayTunnelVisionRenderer;
 import net.onelitefeather.cygnus.tunnelvision.TunnelVisionService;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
@@ -81,7 +82,8 @@ public final class OverlayModule implements GameFeature {
         this.pageGlitchService = new PageGlitchService(
                 pageGlitch,
                 this.gazeSignal,
-                () -> TeamHelper.slenderOf(teamService));
+                () -> TeamHelper.slenderOf(teamService),
+                VisibilityRules::isHidden);
         this.bloodSplatterService = new BloodSplatterService(
                 screenOverlay,
                 bound -> ThreadLocalRandom.current().nextInt(bound)
