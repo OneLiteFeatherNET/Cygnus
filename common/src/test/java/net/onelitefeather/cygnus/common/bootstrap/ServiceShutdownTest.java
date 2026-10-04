@@ -212,4 +212,33 @@ class ServiceShutdownTest {
 
         assertTrue(exited.await(AWAIT_SECONDS, TimeUnit.SECONDS), "an observer must not be able to block the exit");
     }
+
+    @Test
+    void testAnErrorFromTheObserverStillStartsTheShutdownAndTheWatchdog() throws InterruptedException {
+        CountDownLatch exited = new CountDownLatch(1);
+        CountDownLatch halted = new CountDownLatch(1);
+
+        ServiceShutdown shutdown = new ServiceShutdown(
+                () -> {
+                },
+                _ -> exited.countDown(),
+                _ -> halted.countDown(),
+                Duration.ofMillis(1)
+        );
+        shutdown.setObserver(new ShutdownObserver() {
+            @Override
+            public void requested() {
+                throw new AssertionError("the observer blew up with an Error");
+            }
+
+            @Override
+            public void serverStopped(Throwable failure) {
+                throw new OutOfMemoryError("and again");
+            }
+        });
+
+        assertTrue(shutdown.requestShutdown(), "the request is accepted");
+        assertTrue(exited.await(AWAIT_SECONDS, TimeUnit.SECONDS), "the shutdown thread exists and exits");
+        assertTrue(halted.await(AWAIT_SECONDS, TimeUnit.SECONDS), "the watchdog was started before the observer ran");
+    }
 }

@@ -150,8 +150,10 @@ public final class ServiceShutdown {
             LOGGER.debug("Shutdown already in progress - ignoring the additional request");
             return false;
         }
-        notifyObserver(ShutdownObserver::requested);
+        // After the watchdog, before the shutdown thread: whatever the observer throws is caught, and
+        // the thread cannot report the stop before the observer heard about the request.
         startWatchdog();
+        notifyObserver(ShutdownObserver::requested);
         Thread.ofPlatform().name(SHUTDOWN_THREAD_NAME).start(this::runShutdown);
         return true;
     }
@@ -185,7 +187,7 @@ public final class ServiceShutdown {
     private void notifyObserver(Consumer<ShutdownObserver> call) {
         try {
             call.accept(observer);
-        } catch (RuntimeException exception) {
+        } catch (Throwable exception) {
             LOGGER.warn("The shutdown observer failed - continuing the shutdown", exception);
         }
     }

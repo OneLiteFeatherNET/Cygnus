@@ -111,4 +111,55 @@ class CygnusPlayerKickTracingTest {
             env.destroyInstance(instance, true);
         }
     }
+
+    @Test
+    void testDisconnectDuringTheWaitEndsTheKickSpanAsDisconnected(Env env) {
+        try (TestTelemetry telemetry = new TestTelemetry()) {
+            Instance instance = env.createFlatInstance();
+            useTracedPlayers(env, UUID.randomUUID(), telemetry);
+            Player player = env.createConnection().connect(instance);
+            player.kick(KICK_MESSAGE);
+            assertTrue(telemetry.spans().isEmpty(), "the span stays open during the wait");
+
+            player.remove();
+
+            assertEquals(CygnusAttributes.KICK_BY_DISCONNECTED, telemetry.span(CygnusAttributes.SPAN_PLAYER_KICK)
+                    .getAttributes().get(CygnusAttributes.KICK_COMPLETED_BY));
+            for (int i = 0; i < 11; i++) env.tick();
+            assertEquals(1, telemetry.spans().size(), "the timeout afterwards must not end it again");
+            env.destroyInstance(instance, true);
+        }
+    }
+
+    @Test
+    void testAckAndTimeoutRacingDisconnectOnlyOnce(Env env) throws Exception {
+        try (TestTelemetry telemetry = new TestTelemetry()) {
+            Instance instance = env.createFlatInstance();
+            UUID packId = UUID.randomUUID();
+            useTracedPlayers(env, packId, telemetry);
+            Player player = env.createConnection().connect(instance);
+            player.kick(KICK_MESSAGE);
+
+            // Two threads deliver the ack at the same moment; only one may take the pending kick.
+            java.util.concurrent.CountDownLatch go = new java.util.concurrent.CountDownLatch(1);
+            Runnable ack = () -> {
+                try {
+                    go.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                ResourcePackListener.listener(new ClientResourcePackStatusPacket(packId, ResourcePackStatus.DISCARDED), player);
+            };
+            Thread first = new Thread(ack);
+            Thread second = new Thread(ack);
+            first.start();
+            second.start();
+            go.countDown();
+            first.join();
+            second.join();
+
+            assertEquals(1, telemetry.spans().size(), "the kick span ended exactly once");
+            env.destroyInstance(instance, true);
+        }
+    }
 }

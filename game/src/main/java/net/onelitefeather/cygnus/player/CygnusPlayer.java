@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static net.onelitefeather.cygnus.common.util.Helper.getRandomPitchValue;
 
@@ -53,8 +54,10 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private final KickTracer kickTracer;
 
     private boolean leaving;
-    private @Nullable Component pendingKick;
-    private @Nullable TraceStep kickStep;
+    // Atomic: the ack arrives on the network thread, the timeout on the tick thread, and the
+    // disconnect on whichever closed the connection. Exactly one of them may take the kick.
+    private final AtomicReference<@Nullable Component> pendingKick = new AtomicReference<>();
+    private final AtomicReference<@Nullable TraceStep> kickStep = new AtomicReference<>();
     private boolean blockedSprinting;
     private int heartbeatTicks;
     private boolean heartbeatActive;
@@ -149,8 +152,8 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
             return;
         }
         this.leaving = true;
-        this.pendingKick = component;
-        this.kickStep = this.kickTracer.begin(getUuid(), component);
+        this.kickStep.set(this.kickTracer.begin(getUuid(), component));
+        this.pendingKick.set(component);
         removeResourcePacks(this.resourcePackId);
         scheduler().buildTask(() -> completeKick(CygnusAttributes.KICK_BY_TIMEOUT)).delay(TaskSchedule.tick(POP_TIMEOUT_TICKS)).schedule();
     }
@@ -195,13 +198,11 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
      * @param completedBy what ended the wait, for the kick span
      */
     private void completeKick(String completedBy) {
-        Component component = this.pendingKick;
+        Component component = this.pendingKick.getAndSet(null);
         if (component == null) {
             return;
         }
-        this.pendingKick = null;
-        TraceStep step = this.kickStep;
-        this.kickStep = null;
+        TraceStep step = this.kickStep.getAndSet(null);
         try {
             if (isOnline()) {
                 super.kick(component);
@@ -211,6 +212,23 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
                 this.kickTracer.complete(step, completedBy);
             }
         }
+    }
+
+    /**
+     * Ends the kick span of a client that disconnected on its own during the pack-drop wait, when
+     * neither the ack nor the timeout will find anything to do.
+     *
+     * @param permanent whether the player leaves the server for good
+     */
+    @Override
+    public void remove(boolean permanent) {
+        if (permanent && this.pendingKick.getAndSet(null) != null) {
+            TraceStep step = this.kickStep.getAndSet(null);
+            if (step != null) {
+                this.kickTracer.complete(step, CygnusAttributes.KICK_BY_DISCONNECTED);
+            }
+        }
+        super.remove(permanent);
     }
 
     /**

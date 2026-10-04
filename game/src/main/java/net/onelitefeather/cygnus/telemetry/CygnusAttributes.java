@@ -78,6 +78,8 @@ public final class CygnusAttributes {
     public static final String KICK_BY_ACK = "ack";
     /** The client did not answer within the timeout. */
     public static final String KICK_BY_TIMEOUT = "timeout";
+    /** The client left on its own before it answered. */
+    public static final String KICK_BY_DISCONNECTED = "disconnected";
     /** There was nothing to wait for. */
     public static final String KICK_BY_IMMEDIATE = "immediate";
 
