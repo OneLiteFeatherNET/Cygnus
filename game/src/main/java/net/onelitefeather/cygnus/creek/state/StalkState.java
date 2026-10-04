@@ -23,6 +23,12 @@ import java.util.random.RandomGenerator;
  * {@code huntMinStalkSeconds} and the survivor's last hunt is {@code huntCooldownSeconds} ago.
  * A scared survivor still gets stalked first, and a caught one gets a breather.
  * </p>
+ * <p>
+ * While the survivor does not look at it, it makes itself heard now and then, and more often the
+ * longer the stalk lasts: every {@link #FIRST_GAP_MIN_MILLIS} to {@link #FIRST_GAP_MAX_MILLIS} at
+ * first, every {@link #LAST_GAP_MIN_MILLIS} to {@link #LAST_GAP_MAX_MILLIS} by the end. It is also
+ * heard right after moving to a new spot unseen. Moving away after being looked at stays silent.
+ * </p>
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -36,10 +42,23 @@ public final class StalkState implements CreekState {
     /** How far away it may still be at the end of a stalk, in blocks. */
     static final double END_MAX_DISTANCE = 15.0D;
 
+    /** The shortest gap between two sounds at the start of a stalk, in milliseconds. */
+    static final long FIRST_GAP_MIN_MILLIS = 6000L;
+
+    /** The longest gap between two sounds at the start of a stalk, in milliseconds. */
+    static final long FIRST_GAP_MAX_MILLIS = 10_000L;
+
+    /** The shortest gap between two sounds at the end of a stalk, in milliseconds. */
+    static final long LAST_GAP_MIN_MILLIS = 3000L;
+
+    /** The longest gap between two sounds at the end of a stalk, in milliseconds. */
+    static final long LAST_GAP_MAX_MILLIS = 5000L;
+
     private final UUID target;
     private final long endsAt;
     private long startedAt;
     private long seenSince = -1L;
+    private long nextSoundAt = -1L;
 
     /**
      * Sets up the stalk.
@@ -88,6 +107,7 @@ public final class StalkState implements CreekState {
     @Override
     public void enter(CreekContext ctx) {
         this.startedAt = ctx.now();
+        this.scheduleSound(ctx);
         CreekBody body = ctx.body();
         body.stop();
         body.setAggressive(false);
@@ -111,14 +131,20 @@ public final class StalkState implements CreekState {
             if (this.seenSince < 0) this.seenSince = ctx.now();
             if (ctx.now() - this.seenSince >= config.stalkRevealMillis() && this.relocate(ctx, view)) {
                 this.seenSince = -1L;
+                // Gone without a sound. The next one only comes after a full gap.
+                this.scheduleSound(ctx);
             }
             return this;
         }
         this.seenSince = -1L;
 
         double distance = body.position().distance(view.position());
-        if (distance < this.minDistance(ctx) || distance > this.maxDistance(ctx)) {
-            this.relocate(ctx, view);
+        boolean moved = (distance < this.minDistance(ctx) || distance > this.maxDistance(ctx))
+                && this.relocate(ctx, view);
+        if (this.nextSoundAt < 0) this.scheduleSound(ctx);
+        if (moved || ctx.now() >= this.nextSoundAt) {
+            ctx.actions().stalkSound(this.target, this.progress(ctx.now()));
+            this.scheduleSound(ctx);
         }
         return this;
     }
@@ -131,6 +157,26 @@ public final class StalkState implements CreekState {
         if (view.dread() < config.huntThreshold()) return false;
         if (ctx.now() - this.startedAt < config.huntMinStalkSeconds() * 1000L) return false;
         return ctx.hunts().ready(this.target, ctx.now());
+    }
+
+    /**
+     * Works out when the creek is heard next, from now.
+     */
+    private void scheduleSound(CreekContext ctx) {
+        this.nextSoundAt = ctx.now() + soundGapMillis(this.progress(ctx.now()), ctx.random().nextDouble());
+    }
+
+    /**
+     * How long until the creek is heard again. The gap shrinks the further the stalk is.
+     *
+     * @param progress how far into the stalk it is, from 0 to 1
+     * @param roll     a random number from 0 to 1 that picks the gap within its range
+     * @return the gap in milliseconds
+     */
+    static long soundGapMillis(double progress, double roll) {
+        double min = FIRST_GAP_MIN_MILLIS + (LAST_GAP_MIN_MILLIS - FIRST_GAP_MIN_MILLIS) * progress;
+        double max = FIRST_GAP_MAX_MILLIS + (LAST_GAP_MAX_MILLIS - FIRST_GAP_MAX_MILLIS) * progress;
+        return Math.round(min + (max - min) * roll);
     }
 
     /**

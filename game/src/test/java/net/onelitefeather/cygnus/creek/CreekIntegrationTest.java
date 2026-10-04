@@ -10,6 +10,7 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
+import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.DoneState;
@@ -50,7 +51,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         // nextBoolean() is true for -1, so a selection always ends in the stun.
         PatrolHelper patrol = new PatrolHelper(() -> -1L);
         CreekRound round = new CreekRound(sight, new SpotFinder(sight, Optional::of), _ -> {}, witness, patrol,
-                config, new Random(3), HuntCooldowns.none());
+                new StalkSounds(new Random(3)), config, new Random(3), HuntCooldowns.none());
         return new Creek(body, Contexts.route(), round, initial);
     }
 

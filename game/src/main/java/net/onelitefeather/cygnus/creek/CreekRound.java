@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.creek;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
+import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
@@ -18,6 +19,7 @@ import java.util.random.RandomGenerator;
  * @param consequence what happens on a catch
  * @param witness     hears about catches and sightings
  * @param patrol      what the patrolling creek does to the survivors around it
+ * @param stalk       lets a stalked survivor hear the creek
  * @param config      the settings
  * @param random      the random source
  * @param hunts       when each survivor's last hunt ended
@@ -32,6 +34,7 @@ record CreekRound(
         CatchConsequence consequence,
         CreekWitness witness,
         PatrolHelper patrol,
+        StalkSounds stalk,
         CreekConfig config,
         RandomGenerator random,
         HuntCooldowns hunts

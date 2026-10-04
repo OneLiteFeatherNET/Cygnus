@@ -48,6 +48,14 @@ public interface CreekActions {
     void stareBroken(UUID survivor);
 
     /**
+     * The stalking creek makes itself heard by the survivor it stalks.
+     *
+     * @param survivor the id of the survivor it stalks
+     * @param progress how far into the stalk it is, from 0 at the start to 1 at the end
+     */
+    void stalkSound(UUID survivor, double progress);
+
+    /**
      * The creek vanished on purpose, in front of whoever is nearby.
      *
      * @param where where it vanished

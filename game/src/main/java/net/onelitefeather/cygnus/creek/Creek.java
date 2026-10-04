@@ -244,6 +244,12 @@ final class Creek {
         }
 
         @Override
+        public void stalkSound(UUID survivor, double progress) {
+            Player player = this.survivors.player(survivor);
+            if (player != null) this.round.stalk().play(player, this.body.position(), progress);
+        }
+
+        @Override
         public void vanished(Pos where) {
             // Whoever this creek leaves alone does not see it, so they do not see it vanish either.
             List<Player> noticing = this.survivors.players().stream()

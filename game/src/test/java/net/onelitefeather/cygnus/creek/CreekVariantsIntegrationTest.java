@@ -10,6 +10,7 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
+import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.CreekState;
@@ -46,8 +47,8 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
     private static final PatrolHelper PATROL = new PatrolHelper(new Random(1));
 
     private static BiFunction<Pos, CreekState, Creek> spawner(Instance instance, CreekConfig config, SpotFinder spots) {
-        CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, CreekWitness.NONE, PATROL, config, new Random(3),
-                HuntCooldowns.none());
+        CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, CreekWitness.NONE, PATROL,
+                new StalkSounds(new Random(3)), config, new Random(3), HuntCooldowns.none());
         return (spot, initial) -> new Creek(CreakingBody.spawn(instance, spot), Contexts.route(), round, initial);
     }
 
