@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.telemetry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The tracer of a Cygnus service, handed to everything that creates spans.
@@ -76,5 +78,16 @@ public final class CygnusTracing {
      */
     public TraceStep root(String name) {
         return TraceStep.root(this.tracer, name);
+    }
+
+    /**
+     * Starts a step below the given context. Without one it is the root of its own trace.
+     *
+     * @param name   the span name
+     * @param parent the context of the parent span, or {@code null}
+     * @return the started step
+     */
+    public TraceStep step(String name, @Nullable Context parent) {
+        return TraceStep.start(this.tracer, name, parent);
     }
 }

@@ -1,11 +1,14 @@
 package net.onelitefeather.cygnus.telemetry;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.server.ServerTickMonitorEvent;
 import net.onelitefeather.cygnus.common.config.TelemetryConfig;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -47,6 +50,7 @@ public final class SlowTickTracer {
     private final long thresholdMillis;
     private final Clock clock;
     private final TickSections sections;
+    private final @Nullable RoundTracer rounds;
 
     /**
      * Creates the tracer.
@@ -57,6 +61,21 @@ public final class SlowTickTracer {
      * @param sections the measured services, {@link TickSections#NONE} for none
      */
     public SlowTickTracer(CygnusTracing tracing, TelemetryConfig config, Clock clock, TickSections sections) {
+        this(tracing, null, config, clock, sections);
+    }
+
+    /**
+     * Creates the tracer so that a slow tick hangs below the phase it happened in.
+     *
+     * @param tracing  where the spans go
+     * @param rounds   the round whose current phase is the parent, or {@code null} for roots only
+     * @param config   the telemetry config
+     * @param clock    the clock the end of the tick is read from
+     * @param sections the measured services
+     */
+    public SlowTickTracer(CygnusTracing tracing, @Nullable RoundTracer rounds, TelemetryConfig config,
+                          Clock clock, TickSections sections) {
+        this.rounds = rounds;
         this.tracing = tracing;
         this.thresholdMillis = config.slowTickThresholdMillis();
         this.clock = clock;
@@ -83,8 +102,9 @@ public final class SlowTickTracer {
     private void report(double tickMillis, double acquisitionMillis) {
         Instant end = this.clock.instant();
         Instant start = end.minusNanos((long) (tickMillis * NANOS_PER_MILLI));
-        Span tick = this.tracing.tracer().spanBuilder(CygnusAttributes.SPAN_SLOW_TICK)
-                .setNoParent()
+        Context phase = this.rounds == null ? null : this.rounds.currentContext();
+        SpanBuilder builder = this.tracing.tracer().spanBuilder(CygnusAttributes.SPAN_SLOW_TICK);
+        Span tick = (phase == null ? builder.setNoParent() : builder.setParent(phase))
                 .setStartTimestamp(start)
                 .startSpan();
         try {

@@ -66,7 +66,7 @@ class ActionTracerTest {
     }
 
     @Test
-    @DisplayName("An action is a child of the round span")
+    @DisplayName("An action between two phases is a child of the round span")
     void actionIsAChildOfTheRound() {
         this.actions.slenderRevived(slender(0, 0, 0));
         this.rounds.abort("test");

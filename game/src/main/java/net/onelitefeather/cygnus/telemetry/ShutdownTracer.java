@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.telemetry;
 
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.SpanContext;
 import net.onelitefeather.cygnus.common.bootstrap.ShutdownObserver;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +47,12 @@ public final class ShutdownTracer implements ShutdownObserver {
 
     @Override
     public void requested() {
-        this.step = this.tracing.root(CygnusAttributes.SPAN_SHUTDOWN);
+        TraceStep started = this.tracing.root(CygnusAttributes.SPAN_SHUTDOWN);
+        SpanContext round = this.rounds.latestRoundContext();
+        if (round != null) {
+            started.span().addLink(round, Attributes.of(CygnusAttributes.LINK_KIND, CygnusAttributes.LINK_ROUND));
+        }
+        this.step = started;
     }
 
     @Override
