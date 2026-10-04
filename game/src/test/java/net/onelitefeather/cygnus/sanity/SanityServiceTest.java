@@ -28,15 +28,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SanityServiceTest extends CygnusPlayerTestBase {
 
     private static final double EPSILON = 1.0E-9;
-    /** The defaults without decay, so a test can look at gains alone. */
-    private static final SanityConfig NO_DECAY = new SanityConfig(0.5D, 0.10D, 0.10D, 20, 0.30D, 0.25D, 32, 0.0D);
+    /** The defaults without decay, scars, time floor or cap. So a test can look at gains alone. */
+    private static final SanityConfig NO_DECAY = new SanityConfig(0.5D, 0.10D, 0.10D, 20, 0.30D, 0.25D, 0.0D,
+            0.015D, 0.0D, 0.0D, 1.0D);
+    private static final long ROUND_MILLIS = 600_000L;
 
     private double pageProgress;
     private final AtomicLong clock = new AtomicLong();
     private Set<Player> survivors = Set.of();
 
     private SanityService service(SanityConfig config) {
-        return new SanityService(config, true, () -> this.pageProgress, this.clock::get, () -> this.survivors);
+        return new SanityService(config, true, () -> this.pageProgress, ROUND_MILLIS, this.clock::get,
+                () -> this.survivors);
     }
 
     private static double dread(SanityService service, Player player) {
@@ -128,16 +131,14 @@ class SanityServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("A death scares only the survivors close by, and the dead one is dropped")
-    void deathScaresOnlyNearbySurvivors(Env env) {
+    @DisplayName("A death scares every other survivor, however far, and the dead one is dropped")
+    void deathScaresEveryone(Env env) {
         Instance instance = env.createFlatInstance();
-        Instance elsewhere = env.createFlatInstance();
         Player dead = connect(env, instance, new Pos(0, 40, 0));
         Player near = connect(env, instance, new Pos(10, 40, 0));
-        Player far = connect(env, instance, new Pos(100, 40, 0));
-        Player otherWorld = connect(env, elsewhere, new Pos(0, 40, 0));
+        Player far = connect(env, instance, new Pos(500, 40, 0));
         SanityService service = service(NO_DECAY);
-        this.survivors = Set.of(dead, near, far, otherWorld);
+        this.survivors = Set.of(dead, near, far);
         env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         service.caught(dead.getUuid());
@@ -145,13 +146,12 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new PlayerDeathEvent(dead, Component.empty(), Component.empty()));
 
         assertEquals(0.25D, dread(service, near), EPSILON);
-        assertEquals(0.0D, dread(service, far), EPSILON);
-        assertEquals(0.0D, dread(service, otherWorld), EPSILON);
+        assertEquals(0.25D, dread(service, far), EPSILON);
         assertEquals(0.0D, dread(service, dead), EPSILON, "the dead one reads as the floor");
     }
 
     @Test
-    @DisplayName("Fear wears off with the default decay")
+    @DisplayName("Fear wears off with the default decay, down to the scar the catch left")
     void fearWearsOff(Env env) {
         Instance instance = env.createFlatInstance();
         Player survivor = connect(env, instance, new Pos(0, 40, 0));
@@ -161,7 +161,49 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         service.caught(survivor.getUuid());
         this.clock.set(60_000L);
 
-        assertEquals(0.0D, dread(service, survivor), EPSILON);
+        assertEquals(0.075D, dread(service, survivor), EPSILON);
+    }
+
+    @Test
+    @DisplayName("The floor grows with the time played once the round has started")
+    void timeRaisesTheFloor(Env env) {
+        SanityService service = service(SanityConfig.DEFAULT);
+        env.process().eventHandler().addChild(service.node());
+        this.clock.set(ROUND_MILLIS);
+        assertEquals(0.0D, service.dreadOf(UUID.randomUUID()), EPSILON, "no time floor before the start");
+
+        EventDispatcher.call(new GameStartEvent());
+        this.clock.addAndGet(ROUND_MILLIS / 2);
+
+        assertEquals(0.075D, service.dreadOf(UUID.randomUUID()), EPSILON);
+    }
+
+    @Test
+    @DisplayName("Pages and time together stay below the cap")
+    void floorIsCapped(Env env) {
+        SanityService service = service(SanityConfig.DEFAULT);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+        this.pageProgress = 1.0D;
+        this.clock.addAndGet(ROUND_MILLIS);
+
+        assertEquals(0.55D, service.dreadOf(UUID.randomUUID()), EPSILON);
+    }
+
+    @Test
+    @DisplayName("Being stalked raises the fear over time")
+    void stalkingScares(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        service.track(survivor);
+
+        for (long now = 0L; now <= 10_000L; now += 100L) {
+            this.clock.set(now);
+            service.stalked(survivor.getUuid());
+        }
+
+        assertEquals(0.15D, dread(service, survivor), EPSILON);
     }
 
     @Test
@@ -189,6 +231,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new PageFoundEvent(slender, 1, 8));
         service.caught(slender.getUuid());
         service.sighted(slender.getUuid());
+        service.stalked(slender.getUuid());
 
         assertEquals(0.0D, dread(service, slender), EPSILON);
     }
@@ -246,6 +289,6 @@ class SanityServiceTest extends CygnusPlayerTestBase {
     @DisplayName("The given switch decides whether the service runs")
     void followsSwitch() {
         assertTrue(service(NO_DECAY).enabled());
-        assertFalse(new SanityService(NO_DECAY, false, () -> 0.0D, this.clock::get, Set::of).enabled());
+        assertFalse(new SanityService(NO_DECAY, false, () -> 0.0D, ROUND_MILLIS, this.clock::get, Set::of).enabled());
     }
 }
