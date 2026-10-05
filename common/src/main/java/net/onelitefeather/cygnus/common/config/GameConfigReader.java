@@ -48,13 +48,14 @@ import java.util.regex.Pattern;
  *     <li>stamina.* (see {@link StaminaConfig})</li>
  *     <li>adrenaline.* (see {@link AdrenalineConfig})</li>
  *     <li>telemetry.* (see {@link TelemetryConfig})</li>
+ *     <li>minimap.mode (see {@link MinimapConfig})</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.
  * The default values are defined in {@link GameConfig#DEFAULT}.
  *
  * @author theEvilReaper
- * @version 1.9.0
+ * @version 1.10.0
  * @see GameConfig
  * @since 1.0.0
  */
@@ -72,6 +73,7 @@ public final class GameConfigReader {
     private static final String STAMINA_PREFIX = "stamina.";
     private static final String ADRENALINE_PREFIX = "adrenaline.";
     private static final String TELEMETRY_PREFIX = "telemetry.";
+    private static final String MINIMAP_MODE_KEY = "minimap.mode";
 
     private final Path path;
 
@@ -155,6 +157,7 @@ public final class GameConfigReader {
                 getStamina(properties),
                 getAdrenaline(properties),
                 getTelemetry(properties),
+                getMinimap(properties),
                 getFloat(properties, "lobbyAtmosphereShare", GameConfig.DEFAULT.lobbyAtmosphereShare())
         );
     }
@@ -333,6 +336,27 @@ public final class GameConfigReader {
     private TelemetryConfig getTelemetry(Properties properties) {
         return new TelemetryConfig(getInt(properties, TELEMETRY_PREFIX + "slowTickThresholdMillis",
                 TelemetryConfig.DEFAULT.slowTickThresholdMillis()));
+    }
+
+    /**
+     * Reads the minimap mode. Like every unreadable value, an unknown mode falls back to the default.
+     *
+     * @param properties the loaded properties
+     * @return the minimap settings, never {@code null}
+     */
+    private MinimapConfig getMinimap(Properties properties) {
+        String value = getString(properties, MINIMAP_MODE_KEY);
+        if (value == null) {
+            return MinimapConfig.DEFAULT;
+        }
+        for (MinimapConfig.Mode mode : MinimapConfig.Mode.values()) {
+            if (mode.name().equalsIgnoreCase(value)) {
+                return new MinimapConfig(mode);
+            }
+        }
+        CONFIG_LOGGER.warn("'{}' is not a minimap mode (disabled, fair, off): '{}'. Falling back to default: {}",
+                MINIMAP_MODE_KEY, value, MinimapConfig.DEFAULT.mode());
+        return MinimapConfig.DEFAULT;
     }
 
     /**

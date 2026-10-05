@@ -41,7 +41,7 @@ class GameConfigTest {
         assertRejected("Lobby atmosphere share must be between 0 and 1", () -> new GameConfig(
                 defaults.round(), defaults.teams(), null, defaults.resourcePack(), defaults.pageProximity(),
                 defaults.damageSound(), defaults.glitch(), defaults.pageGlitch(), defaults.creek(),
-                defaults.sanity(), defaults.stamina(), defaults.adrenaline(), defaults.telemetry(), 1.5F));
+                defaults.sanity(), defaults.stamina(), defaults.adrenaline(), defaults.telemetry(), defaults.minimap(), 1.5F));
     }
 
     @Test
@@ -109,5 +109,10 @@ class GameConfigTest {
 
     private static void assertRejected(String message, Executable creation) {
         assertEquals(message, assertThrows(IllegalArgumentException.class, creation).getMessage());
+    }
+
+    @Test
+    void testMinimapModeMustBeSet() {
+        assertRejected("Minimap mode must not be null", () -> new MinimapConfig(null));
     }
 }

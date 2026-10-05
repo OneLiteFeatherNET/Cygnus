@@ -308,3 +308,23 @@ survivorTeamSize=12
 # cygnus.tick.slow span. At least 1; a smaller value is rejected and the service refuses
 # to start. 50 is Minestom's tick budget, so the default flags every tick that ran over.
 #telemetry.slowTickThresholdMillis=50
+
+# --- Minimap ----------------------------------------------------------------
+# Asks client minimap mods to switch themselves off, so nobody finds the slender or the
+# pages on a radar. The request is a line of invisible colour codes in chat, sent after the
+# player spawns and again whenever they spawn into another instance. OPT-IN ONLY: it is
+# honoured by Xaero's Minimap / World Map and by VoxelMap (and mods using its codes), and
+# ignored by modified clients and mods that do not know the convention. It can not be
+# enforced and is no replacement for anti-cheat.
+#
+#   disabled  minimap off where the mod supports it (Xaero), plus radar and cave mode off.
+#             VoxelMap has no "off" code, it only loses radar and cave mode.
+#   fair      the map stays, radar and cave mode are asked to switch off.
+#   off       nothing is sent.
+#
+# LabyMod 4 is asked, after it announces itself on labymod:neo, to deny entity_marker. It has
+# no minimap or radar permission, so every mode but off sends the same thing.
+#
+# JourneyMap (current versions) is not covered: it is controlled by its own server mod.
+# An unknown value is logged and replaced by the default.
+#minimap.mode=disabled
