@@ -42,7 +42,8 @@ for (const language of languages) {
     if (isStill) {
       await renderStill({composition, serveUrl, output, inputProps, browserExecutable});
     } else {
-      await renderMedia({composition, serveUrl, codec: 'h264', crf: 24, outputLocation: output, inputProps, browserExecutable});
+      // Gleiche Einstellungen wie remotion.config.ts (die nur für die CLI gilt): BT.709 in TV-Range, wie es Plattformen erwarten.
+      await renderMedia({composition, serveUrl, codec: 'h264', crf: 24, colorSpace: 'bt709', imageFormat: 'jpeg', outputLocation: output, inputProps, browserExecutable});
     }
     console.log(`${output} (${((Date.now() - started) / 1000).toFixed(0)} s)`);
   }
