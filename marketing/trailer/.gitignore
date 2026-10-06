@@ -1,0 +1,5 @@
+node_modules/
+out/
+# Gameplay-Aufnahmen sind groß und gehören nicht ins Repo, siehe README.
+public/footage/*
+!public/footage/.gitkeep
