@@ -27,7 +27,7 @@ export const RemotionRoot: React.FC = () => (
       fps={FPS}
       width={1080}
       height={1920}
-      defaultProps={defaultProps}
+      defaultProps={{...defaultProps, music: 'music/cygnus-short.ogg'}}
     />
     <Still id="CygnusThumbnail" component={Thumbnail} width={1920} height={1080} defaultProps={defaultProps} />
   </>

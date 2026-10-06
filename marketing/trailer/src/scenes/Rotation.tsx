@@ -63,7 +63,7 @@ export const Rotation: React.FC<{lines: [string, string]; durationInFrames: numb
           style={{position: 'absolute', left: p.x * mapSize - 24 * unit, top: p.y * mapSize - 24 * unit, width: 48 * unit, height: 48 * unit, imageRendering: 'pixelated', opacity: Math.min(1, ttl * 3)}}
         />
       </div>
-      <Noise opacity={0.08} seed="rotation" />
+      <Noise opacity={0.03} seed="rotation" />
       <Scanlines />
       <Caption lines={lines} durationInFrames={durationInFrames} />
     </AbsoluteFill>

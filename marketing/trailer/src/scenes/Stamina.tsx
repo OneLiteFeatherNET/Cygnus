@@ -33,7 +33,7 @@ export const Stamina: React.FC<{lines: [string, string]; src?: string; durationI
           />
         </div>
       </AbsoluteFill>
-      <Noise opacity={0.07} seed="stamina" />
+      <Noise opacity={0.03} seed="stamina" />
       <Scanlines />
       <CameraOverlay startTime="23:45:10" />
       <Caption lines={lines} durationInFrames={durationInFrames} />

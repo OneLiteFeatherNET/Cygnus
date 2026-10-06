@@ -45,7 +45,7 @@ export const Noise: React.FC<{opacity?: number; seed?: string; grain?: number}> 
   );
 };
 
-export const Scanlines: React.FC<{opacity?: number}> = ({opacity = 0.18}) => (
+export const Scanlines: React.FC<{opacity?: number}> = ({opacity = 0.08}) => (
   <AbsoluteFill
     style={{
       opacity,

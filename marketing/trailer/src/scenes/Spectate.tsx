@@ -18,8 +18,8 @@ export const Spectate: React.FC<{lines: [string, string]; src?: string; duration
       <AbsoluteFill style={{filter: `grayscale(${1 - sat}) brightness(${hit ? 0.3 : 0.8})`, transform: `scale(${hit ? 1.08 : 1})`}}>
         <Footage src={src} seed="spectate" />
       </AbsoluteFill>
-      {hit ? <Glitch intensity={2.5} seed="spectate" /> : null}
-      <Noise opacity={hit ? 0.6 : 0.08} seed="spectate" />
+      {hit ? <Glitch intensity={1.5} seed="spectate" /> : null}
+      <Noise opacity={hit ? 0.3 : 0.03} seed="spectate" />
       <Scanlines />
       {!hit ? (
         <AbsoluteFill style={{alignItems: 'center', paddingTop: 110 * unit}}>

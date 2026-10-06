@@ -11,6 +11,7 @@
     "render:thumbnail": "remotion still CygnusThumbnail out/cygnus-thumbnail.png",
     "render:all": "npm run render:teaser && npm run render:short && npm run render:thumbnail",
     "sync-pack": "node scripts/sync-pack-assets.mjs",
+    "music": "python3 scripts/generate_music.py out/music && for n in teaser short; do remotion ffmpeg -y -hide_banner -loglevel error -i out/music/cygnus-$n.wav -c:a libopus -b:a 160k public/music/cygnus-$n.ogg; done",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

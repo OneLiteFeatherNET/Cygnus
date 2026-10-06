@@ -44,7 +44,7 @@ export const Pages: React.FC<{lines: [string, string]; src?: string; durationInF
           {collected}
         </div>
       </AbsoluteFill>
-      <Noise opacity={0.08} seed="pages" />
+      <Noise opacity={0.03} seed="pages" />
       <Scanlines />
       <CameraOverlay startTime="23:43:52" />
       <Caption lines={lines} durationInFrames={durationInFrames} />

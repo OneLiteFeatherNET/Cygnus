@@ -19,9 +19,9 @@ export const Glitch: React.FC<{intensity?: number; seed?: string}> = ({intensity
               left: shift,
               width: '100%',
               height: `${h}%`,
-              background: i % 2 ? 'rgba(236,0,139,0.10)' : 'rgba(39,169,225,0.10)',
+              background: i % 2 ? 'rgba(236,0,139,0.06)' : 'rgba(39,169,225,0.06)',
               mixBlendMode: 'screen',
-              backdropFilter: 'invert(0.15)',
+              backdropFilter: 'invert(0.08)',
             }}
           />
         );

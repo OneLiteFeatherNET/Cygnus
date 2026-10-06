@@ -1,6 +1,5 @@
 // Alles, was sich pro Kampagne ändert, steht hier und kann per `--props` überschrieben werden.
-// Öffentlicher Name ist ausschließlich "Cygnus" (PSR-CYGNUS, Abschnitt 2): Die Spielidee wird
-// beschrieben, die Vorlage wird in keinem Text, Dateinamen oder Hashtag genannt.
+// Öffentlich heißt der Modus "Slender" (Prop `title`); Cygnus ist der Projektname im Code.
 
 export type Language = 'de' | 'en';
 
@@ -22,8 +21,13 @@ export type TrailerProps = {
   // Zeitraum, nicht Datum: der Modus ist laut Blogpost "im Halloween-Zeitraum spielbar".
   availability: string;
   footage: Footage;
-  // Optionale Musik relativ zu public/. Nur selbst produziert oder CC0 (Content-ID, Urheberrecht).
-  music?: string;
+  // Name des Modus in Titel und Thumbnail. Cygnus ist nur der Projektname.
+  title: string;
+  // Musik relativ zu public/, null = ohne. Standard ist die selbst erzeugte Musik aus
+  // scripts/generate_music.py; fremde Musik nur mit eigener Lizenz oder CC0 (Content-ID).
+  music: string | null;
+  // Lautstärke der VHS-Rausch-Sounds aus dem Pack an den Schnitten, 0 = aus.
+  staticVolume: number;
   // Rundentermine statt Dauerbetrieb (PSR-CYGNUS, Abschnitt 4: leere Lobby ist der D1-Killer).
   sessionHint: string;
 };
@@ -34,6 +38,9 @@ export const defaultProps: TrailerProps = {
   discordUrl: 'discord.gg/nachzutragen',
   availability: 'Halloween 2026',
   footage: {},
+  title: 'SLENDER',
+  music: 'music/cygnus-teaser.ogg',
+  staticVolume: 0.35,
   sessionHint: 'Feste Runden-Termine im Discord',
 };
 
@@ -44,7 +51,6 @@ type Copy = {
   stamina: [string, string];
   rotation: [string, string];
   spectate: [string, string];
-  title: string;
   claim: string;
   facts: string[];
   ctaServer: string;
@@ -61,7 +67,6 @@ export const copy: Record<Language, Copy> = {
     stamina: ['Rennen kostet Ausdauer.', 'Leer ist leer.'],
     rotation: ['Die Seiten wandern.', 'Auswendiglernen hilft nicht.'],
     spectate: ['Wer stirbt, schaut zu.', 'Die Leiche bleibt liegen.'],
-    title: 'CYGNUS',
     claim: 'Asymmetrischer Horror in Minecraft',
     facts: ['Kein Mod. Nur ein Resource Pack.', 'Java Edition', 'Open Source'],
     ctaServer: 'Server',
@@ -75,7 +80,6 @@ export const copy: Record<Language, Copy> = {
     stamina: ['Running costs stamina.', 'Empty means empty.'],
     rotation: ['The pages move.', 'Memorising won’t help.'],
     spectate: ['Die, and you watch.', 'Your body stays behind.'],
-    title: 'CYGNUS',
     claim: 'Asymmetric horror in Minecraft',
     facts: ['No mod. Just a resource pack.', 'Java Edition', 'Open source'],
     ctaServer: 'Server',

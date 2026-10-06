@@ -7,6 +7,7 @@ import {Pages} from './scenes/Pages';
 import {Rotation} from './scenes/Rotation';
 import {Spectate} from './scenes/Spectate';
 import {Stamina} from './scenes/Stamina';
+import cuts from './cuts.json';
 import {FPS} from './theme';
 
 // Szenenfolge = Feature-Reihenfolge des Spiels: Rundenlänge, Jäger, Seiten, Ausdauer,
@@ -21,9 +22,9 @@ export type Cut = {
   end: number;
 };
 
-export const teaserCut: Cut = {coldOpen: 2.5, hunter: 4, pages: 4, stamina: 3.5, rotation: 3.5, spectate: 3.5, end: 6};
+export const teaserCut: Cut = cuts.teaser;
 // Short: ohne Rotationsszene, Hook in den ersten zwei Sekunden (Retention auf TikTok/Shorts).
-export const shortCut: Cut = {coldOpen: 2, hunter: 3.5, pages: 3, stamina: 3, rotation: 0, spectate: 3, end: 5};
+export const shortCut: Cut = cuts.short;
 
 export const cutDuration = (cut: Cut) =>
   Object.values(cut).reduce((sum, s) => sum + Math.round(s * FPS), 0);
@@ -37,10 +38,6 @@ const Static: React.FC<{from: number; frames: number; variant: 1 | 2 | 3; volume
 export const Trailer: React.FC<TrailerProps & {cut: Cut; hook?: boolean}> = ({cut, hook, ...props}) => {
   const t = copy[props.language];
   const f = (s: number) => Math.round(s * FPS);
-  const at = {
-    hunter: f(cut.coldOpen),
-    pages: f(cut.coldOpen) + f(cut.hunter),
-  };
   const spectateAt = Object.entries(cut)
     .filter(([k]) => ['coldOpen', 'hunter', 'pages', 'stamina', 'rotation'].includes(k))
     .reduce((sum, [, s]) => sum + f(s), 0);
@@ -75,16 +72,18 @@ export const Trailer: React.FC<TrailerProps & {cut: Cut; hook?: boolean}> = ({cu
         </Series.Sequence>
       </Series>
 
-      {/* Ton: Bandrauschen aus dem Pack an den Schnittkanten, optional Musik darunter. */}
-      <Static from={0} frames={f(1.2)} variant={1} volume={0.7} />
-      <Static from={at.hunter + Math.round(f(cut.hunter) * 0.45)} frames={f(0.8)} variant={2} volume={0.35} />
-      <Static from={at.pages - 4} frames={8} variant={3} volume={0.4} />
-      <Static from={spectateAt} frames={10} variant={1} volume={0.9} />
-      <Static from={endAt - 4} frames={8} variant={2} volume={0.4} />
+      {/* Ton: Musik trägt, das Bandrauschen aus dem Pack setzt nur kurze Akzente an Schnitten. */}
+      {props.staticVolume > 0 ? (
+        <>
+          <Static from={0} frames={f(0.6)} variant={1} volume={0.6 * props.staticVolume} />
+          <Static from={spectateAt} frames={6} variant={1} volume={props.staticVolume} />
+          <Static from={endAt - 3} frames={5} variant={2} volume={0.5 * props.staticVolume} />
+        </>
+      ) : null}
       {props.music ? (
         <Html5Audio
           src={staticFile(props.music)}
-          volume={(frame) => interpolate(frame, [0, 15, total - 30, total], [0, 0.8, 0.8, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}
+          volume={(frame) => interpolate(frame, [0, 6, total - 20, total], [0, 0.9, 0.9, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}
         />
       ) : null}
     </AbsoluteFill>

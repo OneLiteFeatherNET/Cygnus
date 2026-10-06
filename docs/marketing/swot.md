@@ -1,4 +1,4 @@
-# Cygnus: SWOT, TOWS und Trailer-Ableitung
+# Slender (Projekt Cygnus): SWOT, TOWS und Trailer-Ableitung
 
 Stand: 06.10.2026. Grundlage: Konzept *Cygnus* (Outline, Konzepte - MiniGames), *PSR-CYGNUS* (Entwurf),
 Blogpost *Halloween steht vor der Tür*, OLF-*Marketingkonzept* (Netzwerk-SWOT), dieses Repository und `cygnus-pack`.
@@ -66,10 +66,10 @@ beschreiben, was kommt. Der Anchor nennt als Hauptkritik lange, ungewichtete und
 | **SO2** | Hochkant-Short mit Hook in den ersten zwei Sekunden, gebaut aus echten Pack-Assets | S1 × O3, O5 | Komposition `CygnusShort` |
 | **SO3** | Creator-Nacht: Micro-Creator spielt mit eigener Community, wir stellen den Termin und Moderation | S2 × O2 | Abschnitt 3, Supporting Play B |
 | **SO4** | Devlog für Tech-Kanäle: Horror-Effekte nur per Resource Pack, Code offen. Trailer als Aufmacher | S4 × O4 | Nach Launch, optional |
-| **ST1** | Öffentlich nur „Cygnus“. Die Vorlage wird weder genannt noch gehashtagt; die Spielidee wird beschrieben | T1 | Texte in `src/props.ts`, Hashtag `#OLFCygnus` |
+| **ST1** | Öffentlicher Name ist „Slender“ (Entscheidung des Teams, weicht von der PSR-Empfehlung ab). Risiko begrenzen: kein Logo, keine Grafik, kein Sound und kein Figurendesign aus dem Originalspiel, nicht dessen Titel verwenden; alles selbst gebaut. Der Name ist eine Prop und mit einem Render änderbar | T1 | Prop `title` in `src/props.ts` |
 | **ST2** | Andeuten statt zeigen: kein Blut-Overlay, kein Gesicht, kein lauter Jumpscare im Trailer. Spannung über Ton, Rauschen, Silhouette für einzelne Frames | T2 | `scenes/Hunter.tsx`, `scenes/Spectate.tsx` |
 | **ST3** | Verfügbarkeit als Zeitraum kommunizieren („Halloween 2026“), damit niemand im November einen leeren Modus erwartet | T3 | Prop `availability` |
-| **ST4** | Nur eigene oder CC0-Musik; ohne Musik trägt das Pack-Rauschen den Ton | T5 | Prop `music`, README |
+| **ST4** | Musik selbst synthetisieren statt lizenzieren: gehört OLF, kein Content-ID-Risiko, passt per Schnittdatei exakt auf die Szenen | T5 | `scripts/generate_music.py`, `public/music/` |
 | **WO1** | Feste Rundentermine statt Dauerbetrieb. Jeder Call-to-Action führt zum Termin, nicht zu „jetzt joinen“ | W1 × O1, O2 | Prop `sessionHint`, Primary Bet |
 | **WO2** | Szenen funktionieren jetzt mit Platzhaltern und nehmen Aufnahmen auf, sobald es sie gibt | W7 × O5 | Prop `footage`, Shotlist im README |
 | **WO3** | Pro Kanal ein eigener Discord-Invite, gerendert als eigene Variante | W7 × O5 | Prop `discordUrl`, Abschnitt 4 |
@@ -81,7 +81,7 @@ Beides ist Spieldesign. Ein Trailer, der Spieler in eine Runde schickt, in der s
 
 ## 3. Entscheidung: wohin der Aufwand geht
 
-**Primary Bet: Cygnus-Nächte über Discord.** Feste Termine in der Halloween-Woche (Vorschlag: Fr 24.10., Sa 25.10., Fr 31.10., jeweils 20 Uhr).
+**Primary Bet: Slender-Nächte über Discord.** Feste Termine in der Halloween-Woche (Vorschlag: Fr 24.10., Sa 25.10., Fr 31.10., jeweils 20 Uhr).
 Der Teaser (16:9) läuft als Ankündigung im Discord, auf YouTube und im Server-Listing; jeder Call-to-Action zeigt auf den Termin.
 Begründung: W1 hat das höchste Gewicht. Mehr Reichweite in einen leeren Modus verbrennt Erstkontakte.
 
@@ -99,7 +99,7 @@ Bewusst nicht: TikTok, Instagram und Reddit parallel, große Streamer, bezahlte 
 |----------|-----------------|--------|
 | Erstspieler mit zweiter Runde (primär, PSR Abschnitt 5) | Baseline erheben, Ziel ab zweiter Saison | `cygnus.player.join` mit `cygnus.join.outcome=spawned`, je `cygnus.player.uuid` über `cygnus.round.id` zählen |
 | Abbruch beim ersten Join (Pack abgelehnt, W6) | Baseline erheben | `cygnus.player.kick` mit `cygnus.kick.reason`, `cygnus.join.outcome=abandoned` |
-| Runden mit mindestens vier Spielern pro Cygnus-Nacht | mindestens 3 Runden je Termin | `cygnus.round` und zugehörige Joins |
+| Runden mit mindestens vier Spielern pro Slender-Nacht | mindestens 3 Runden je Termin | `cygnus.round` und zugehörige Joins |
 | Discord-Joins pro Kanal | Teaser und Short einzeln ausweisen | eigener Invite pro Variante |
 | Short: Anteil komplett gesehen | über 40 % | Plattform-Statistik |
 
@@ -118,22 +118,21 @@ messbaren Discord-Joins: Short-Form für diese Saison einstellen. Creator: nach 
 | 13.10. | Teaser rendern, im Discord und auf YouTube veröffentlichen, Thumbnail aus `CygnusThumbnail` |
 | 13.–31.10. | Short-Varianten zweimal pro Woche |
 | bis 15.10. | Creator-Anfragen raus |
-| 24., 25., 31.10. | Cygnus-Nächte |
+| 24., 25., 31.10. | Slender-Nächte |
 | 02.11. | Review nach Abschnitt 4 |
 
 ## 6. Offene Punkte
 
 1. Server-Adresse und Discord-Invites je Kanal (Props `serverAddress`, `discordUrl`).
 2. Altersempfehlung und deren Kommunikation (PSR Abschnitt 6). Bis dahin bleibt der Trailer bei Andeutung statt Schock.
-3. Namensentscheidung als ADR festhalten (PSR Abschnitt 2).
+3. Namensentscheidung „Slender“ als ADR festhalten und PSR-CYGNUS Abschnitt 2 anpassen; der Record empfiehlt bisher das Gegenteil.
 4. W3 und W5 im Spieldesign beantworten.
-5. Musik: eigene Produktion oder CC0, sonst ohne.
 
 ## Prompt zum Fortschreiben
 
 Die Analyse lässt sich mit einem LLM aktualisieren, indem man den Anchor beim Namen nennt:
 
-> Aktualisiere die SWOT-Analyse (Semantic Anchor SWOT) für den Minecraft-Spielmodus Cygnus anhand der beigefügten Messwerte.
+> Aktualisiere die SWOT-Analyse (Semantic Anchor SWOT) für den Minecraft-Spielmodus Slender (Projekt Cygnus) anhand der beigefügten Messwerte.
 > Halte Stärken und Schwächen intern und auf den Ist-Zustand bezogen, Chancen und Risiken extern und zukunftsgerichtet.
 > Belege oder markiere jeden Punkt als Annahme, gewichte ihn von 1 bis 3 und leite per TOWS (SO, ST, WO, WT) Maßnahmen ab,
 > die jeweils auf ein Artefakt oder eine Kennzahl verweisen.

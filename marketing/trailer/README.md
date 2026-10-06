@@ -1,6 +1,6 @@
-# Cygnus-Trailer (Remotion)
+# Slender-Trailer (Remotion)
 
-Trailer für den Spielmodus Cygnus, als Code gebaut mit [Remotion](https://github.com/remotion-dev/remotion).
+Trailer für den Spielmodus Slender (Projektname: Cygnus), als Code gebaut mit [Remotion](https://github.com/remotion-dev/remotion).
 Botschaft, Szenenfolge und Kanalwahl sind aus [`docs/marketing/swot.md`](../../docs/marketing/swot.md) abgeleitet.
 
 | Komposition | Format | Länge | Einsatz |
@@ -32,7 +32,7 @@ eigenen Discord-Invite rendern, sonst ist nicht messbar, woher die Joins kommen:
 
 ```bash
 npx remotion render CygnusShort out/short-yt.mp4 \
-  --props='{"language":"de","serverAddress":"play.example.net","discordUrl":"discord.gg/abc123","availability":"Halloween 2026","sessionHint":"Cygnus-Nächte: 24., 25. und 31.10., 20 Uhr","footage":{}}'
+  --props='{"language":"de","serverAddress":"play.example.net","discordUrl":"discord.gg/abc123","availability":"Halloween 2026","sessionHint":"Slender-Nächte: 24., 25. und 31.10., 20 Uhr","footage":{}}'
 ```
 
 `language: "en"` schaltet alle Texte auf Englisch.
@@ -55,11 +55,28 @@ Ton der Aufnahmen wird stummgeschaltet; die Tonspur mischt der Trailer selbst.
 
 ## Regeln für Änderungen
 
-- **Name:** öffentlich nur „Cygnus“. Die Vorlage des Modus taucht in keinem Text, Dateinamen oder Hashtag auf (PSR-CYGNUS, Abschnitt 2).
+- **Name:** öffentlich „Slender“ (Prop `title`), Cygnus ist nur der Projektname. Kein Material aus dem Originalspiel (Logo, Grafiken, Sounds, Figurendesign) und nicht dessen Titel; alles im Trailer ist selbst gebaut. Risiko und Abwägung: SWOT T1/ST1.
 - **Jugendschutz:** andeuten statt zeigen. Kein Blut-Overlay aus dem Pack, kein Gesicht, keine lauten Jumpscares. Bis die Altersempfehlung entschieden ist (PSR Abschnitt 6), bleibt das so.
 - **Behauptungen:** jeder Satz muss sich auf ein vorhandenes Feature stützen. Keine Superlative. „Java Edition“ bleibt drin, solange es keinen Bedrock-Zugang gibt.
 - **Marke:** Farben und Schrift aus `src/theme.ts` (OLF-Palette, Roboto). Das Feder-Logo liegt außerhalb aller Rausch- und Glitch-Ebenen: nicht verzerren, drehen, umfärben, weichzeichnen oder mit Schatten versehen.
-- **Musik:** nur eigene oder CC0-Musik über die Prop `music`, sonst Content-ID-Sperren.
+- **Musik:** nur die selbst erzeugte Musik (siehe unten), eigene Produktionen oder CC0, sonst Content-ID-Sperren.
+
+## Musik
+
+Die Hintergrundmusik ist nicht heruntergeladen, sondern von `scripts/generate_music.py` synthetisiert: Drone mit
+kleiner Sekunde und Tritonus, Wind, Spieluhr-Motiv, ein Herzschlag, der bis zum Schnitt in die Zuschauerszene
+schneller wird, dann Stille und ein tiefer Schlag. Sie gehört damit OneLiteFeather, ohne Lizenzbedingungen,
+Namensnennung oder Content-ID-Risiko.
+
+Die Schnittzeiten kommen aus `src/cuts.json`, das auch `Trailer.tsx` nutzt. Nach einer Änderung an den Szenenlängen
+die Musik neu erzeugen (Python 3 mit numpy):
+
+```bash
+npm run music    # schreibt public/music/cygnus-teaser.ogg und cygnus-short.ogg
+```
+
+Der Generator ist deterministisch, ein erneuter Lauf erzeugt dieselben Samples. `"music": null` rendert ohne Musik,
+`"staticVolume": 0` schaltet das VHS-Rauschen an den Schnitten ab.
 
 ## Assets
 

@@ -1,11 +1,10 @@
 import {AbsoluteFill, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {Noise} from '../components/Noise';
 import {OlfLockup} from '../components/OlfLockup';
 import {copy, TrailerProps} from '../props';
 import {colors, olfGradient, roboto} from '../theme';
 
 // Abschluss auf Charcoal: Titel, Claim, drei belegte Fakten, CTA, Absender.
-// Das Logo steht außerhalb der Rausch-/Glitch-Ebenen, damit es nie verfremdet wird.
+// Bewusst ohne Rauschen: ruhige Fläche, das Logo wird nie verfremdet.
 export const EndCard: React.FC<TrailerProps & {durationInFrames: number}> = (props) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
@@ -19,9 +18,6 @@ export const EndCard: React.FC<TrailerProps & {durationInFrames: number}> = (pro
 
   return (
     <AbsoluteFill style={{background: colors.charcoal, fontFamily: roboto, color: colors.white}}>
-      <AbsoluteFill style={{opacity: 0.5}}>
-        <Noise opacity={0.04} seed="end" />
-      </AbsoluteFill>
       <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: 0, padding: 80 * unit}}>
         <div
           style={{
@@ -34,7 +30,7 @@ export const EndCard: React.FC<TrailerProps & {durationInFrames: number}> = (pro
             transform: `scale(${0.94 + title * 0.06})`,
           }}
         >
-          {t.title}
+          {props.title}
         </div>
         <div style={{width: 360 * unit * title, height: 6 * unit, background: olfGradient, margin: `${28 * unit}px 0`}} />
         <div style={{fontSize: (vertical ? 36 : 44) * unit, fontWeight: 300, letterSpacing: 2, opacity: rest}}>{t.claim}</div>
