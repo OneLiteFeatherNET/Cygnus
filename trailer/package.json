@@ -1,0 +1,33 @@
+{
+  "name": "cygnus-trailer",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Remotion trailers for the Cygnus game mode",
+  "license": "AGPL-3.0",
+  "type": "module",
+  "scripts": {
+    "assets": "node scripts/scan-assets.mjs",
+    "pack-assets": "node scripts/sync-pack-assets.mjs",
+    "studio": "npm run assets && remotion studio",
+    "render": "npm run assets && node scripts/render-all.mjs",
+    "still": "npm run assets && remotion still",
+    "typecheck": "npm run assets && tsc --noEmit",
+    "lint": "npm run typecheck"
+  },
+  "dependencies": {
+    "@fontsource/roboto": "^5.3.0",
+    "@fontsource/roboto-mono": "^5.3.0",
+    "@remotion/cli": "4.0.533",
+    "@remotion/fonts": "4.0.533",
+    "@remotion/media": "4.0.533",
+    "@remotion/zod-types": "4.0.533",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "4.0.533",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}

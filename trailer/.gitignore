@@ -1,0 +1,10 @@
+node_modules/
+out/
+# Written by scripts/scan-assets.mjs before every studio/render run.
+src/generated/
+# Recorded footage and pack audio stay out of git, see README.md.
+public/clips/*
+!public/clips/.gitkeep
+public/pack/
+public/audio/*
+!public/audio/.gitkeep
