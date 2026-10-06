@@ -1,5 +1,0 @@
-{
-  "_comment": "Szenenlängen in Sekunden. Gemeinsame Quelle für Trailer.tsx und scripts/generate_music.py, damit die Musik auf die Schnitte passt.",
-  "teaser": {"coldOpen": 2.5, "hunter": 4, "pages": 4, "stamina": 3.5, "rotation": 3.5, "spectate": 3.5, "end": 6},
-  "short": {"coldOpen": 2, "hunter": 3.5, "pages": 3, "stamina": 3, "rotation": 0, "spectate": 3, "end": 5}
-}

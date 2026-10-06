@@ -12,6 +12,7 @@ const copies = [
   ['textures/font/icons', 'icons', (f) => ['page.png', 'clock.png', 'ghost.png', 'map.png', 'flashlight.png'].includes(f)],
   ['sounds', 'sounds', (f) => f.endsWith('.ogg')],
   ['textures/gui/tunnel_vision', 'tunnel_vision', (f) => ['stage_4.png', 'stage_16.png', 'stage_28.png'].includes(f)],
+  ['../minecraft/textures/environment/celestial/moon', 'moon', (f) => f === 'full_moon.png'],
 ];
 
 for (const [from, to, keep] of copies) {

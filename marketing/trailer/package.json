@@ -6,17 +6,16 @@
   "type": "module",
   "scripts": {
     "studio": "remotion studio",
-    "render:teaser": "remotion render CygnusTeaser out/cygnus-teaser-16x9.mp4",
-    "render:short": "remotion render CygnusShort out/cygnus-short-9x16.mp4",
-    "render:thumbnail": "remotion still CygnusThumbnail out/cygnus-thumbnail.png",
-    "render:all": "npm run render:teaser && npm run render:short && npm run render:thumbnail",
+    "render:all": "node scripts/render-all.mjs",
     "sync-pack": "node scripts/sync-pack-assets.mjs",
-    "music": "python3 scripts/generate_music.py out/music && for n in teaser short; do remotion ffmpeg -y -hide_banner -loglevel error -i out/music/cygnus-$n.wav -c:a libopus -b:a 160k public/music/cygnus-$n.ogg; done",
+    "music": "python3 scripts/generate_music.py out/music && for f in out/music/*.wav; do remotion ffmpeg -y -hide_banner -loglevel error -i $f -c:a libopus -b:a 160k public/music/$(basename $f .wav).ogg; done",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@remotion/bundler": "4.0.533",
     "@remotion/cli": "4.0.533",
     "@remotion/fonts": "4.0.533",
+    "@remotion/renderer": "4.0.533",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "remotion": "4.0.533"

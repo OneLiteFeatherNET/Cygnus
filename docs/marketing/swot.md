@@ -24,6 +24,7 @@ beschreiben, was kommt. Der Anchor nennt als Hauptkritik lange, ungewichtete und
 | S4 | Open Source (AGPL-3.0) und eigene Telemetrie: Erfolg ist messbar, Tech ist vorzeigbar | `LICENSE`, `docs/telemetry.md` | 2 |
 | S5 | Ehrliche Vorgeschichte: Version 2023 scheiterte an Balancing, die Neuauflage benennt das offen | Blogpost | 1 |
 | S6 | Tote bleiben dabei: Zuschauermodus, die Leiche bleibt liegen | README, PSR Abschnitt 3 | 1 |
+| S7 | Der Creek („Manfred“): eine zweite, vom Server gesteuerte Figur. Verfolgt einzelne Überlebende (nur das Opfer sieht ihn), bewegt sich bei der Jagd nur, wenn man wegschaut, wirft Gefangene in die Luft oder tauscht ihren Platz mit einem anderen. Die Mechanik lässt sich in einem Satz erklären und in Sekunden zeigen | `game/…/creek`, `config.properties.example` | 3 |
 
 ### Schwächen (intern, Ist)
 
@@ -35,7 +36,8 @@ beschreiben, was kommt. Der Anchor nennt als Hauptkritik lange, ungewichtete und
 | W4 | Kleines Team, wenig Social-Media-Erfahrung, zwei aktive Streamer | Marketingkonzept | 2 |
 | W5 | Rollen sind zufällig; wer zuerst als Jäger startet, versteht den Modus womöglich nicht | PSR Abschnitt 4 | 2 |
 | W6 | Pack-Ablehnung führt zum Kick. Ohne Vorwarnung wirkt das wie ein Fehler | Blogpost | 2 |
-| W7 | Bisher kein Bewegtbild, keine Server-Adresse und kein Invite pro Kanal | Annahme, in Outline nicht gefunden | 2 |
+| W7 | Bisher kein Gameplay-Material; Trailer laufen mit Platzhaltern. Ein Discord-Link für alle Kanäle (`1lf.link/discord`), Herkunft der Joins nicht unterscheidbar | Stand 06.10. | 2 |
+| W8 | Keine festen Rundenzeiten (Entscheidung des Teams). Wer über einen Post kommt, trifft zufällig auf eine volle oder leere Lobby | Teamentscheidung 06.10. | 3 |
 
 ### Chancen (extern, Zukunft)
 
@@ -63,35 +65,45 @@ beschreiben, was kommt. Der Anchor nennt als Hauptkritik lange, ungewichtete und
 | Feld | Maßnahme | Aus | Umsetzung |
 |------|----------|-----|-----------|
 | **SO1** | Kernbotschaft: Gruppen-Horror ohne Mod, eine Runde unter zehn Minuten, zu Halloween | S1, S2 × O1 | Trailer: Cold Open, Endkarte (`src/props.ts`) |
-| **SO2** | Hochkant-Short mit Hook in den ersten zwei Sekunden, gebaut aus echten Pack-Assets | S1 × O3, O5 | Komposition `CygnusShort` |
-| **SO3** | Creator-Nacht: Micro-Creator spielt mit eigener Community, wir stellen den Termin und Moderation | S2 × O2 | Abschnitt 3, Supporting Play B |
+| **SO2** | Varianten mit je eigenem Hook in den ersten zwei Sekunden, in 9:16, 1:1 und 16:9, gebaut aus echten Pack-Assets | S1, S7 × O3, O5 | `src/variants.json`, `npm run render:all` |
+| **SO5** | Der Creek als Aufhänger: „Es bewegt sich nur, wenn du wegschaust“ ist eine Regel, die man nach einem Satz verstanden hat und selbst ausprobieren will | S7 × O3 | Varianten `creek`, `manfred` |
+| **SO3** | Creator-Runde: Micro-Creator spielt mit der eigenen Community, wir stellen Moderation und beantworten Fragen im Chat | S2, S7 × O2 | Abschnitt 3, Supporting Play |
 | **SO4** | Devlog für Tech-Kanäle: Horror-Effekte nur per Resource Pack, Code offen. Trailer als Aufmacher | S4 × O4 | Nach Launch, optional |
 | **ST1** | Öffentlicher Name ist „Slender“ (Entscheidung des Teams, weicht von der PSR-Empfehlung ab). Risiko begrenzen: kein Logo, keine Grafik, kein Sound und kein Figurendesign aus dem Originalspiel, nicht dessen Titel verwenden; alles selbst gebaut. Der Name ist eine Prop und mit einem Render änderbar | T1 | Prop `title` in `src/props.ts` |
 | **ST2** | Andeuten statt zeigen: kein Blut-Overlay, kein Gesicht, kein lauter Jumpscare im Trailer. Spannung über Ton, Rauschen, Silhouette für einzelne Frames | T2 | `scenes/Hunter.tsx`, `scenes/Spectate.tsx` |
 | **ST3** | Verfügbarkeit als Zeitraum kommunizieren („Halloween 2026“), damit niemand im November einen leeren Modus erwartet | T3 | Prop `availability` |
 | **ST4** | Musik selbst synthetisieren statt lizenzieren: gehört OLF, kein Content-ID-Risiko, passt per Schnittdatei exakt auf die Szenen | T5 | `scripts/generate_music.py`, `public/music/` |
-| **WO1** | Feste Rundentermine statt Dauerbetrieb. Jeder Call-to-Action führt zum Termin, nicht zu „jetzt joinen“ | W1 × O1, O2 | Prop `sessionHint`, Primary Bet |
+| **WO1** | Ankünfte bündeln statt Termine setzen: Posts zur Hauptspielzeit (abends, Wochenende) veröffentlichen, damit Neue auf Spieler treffen; Discord als Ort, an dem man sich zum Spielen findet | W1, W8 × O1, O3 | Abschnitt 3, CTA `discordUrl` |
 | **WO2** | Szenen funktionieren jetzt mit Platzhaltern und nehmen Aufnahmen auf, sobald es sie gibt | W7 × O5 | Prop `footage`, Shotlist im README |
-| **WO3** | Pro Kanal ein eigener Discord-Invite, gerendert als eigene Variante | W7 × O5 | Prop `discordUrl`, Abschnitt 4 |
+| **WO3** | Pro Plattform ein eigener Kurzlink (z. B. `1lf.link/tiktok`), falls der Kurzlink-Dienst Klicks zählt, gerendert per `--props` | W7 × O5 | Prop `discordUrl`, Abschnitt 4 |
 | **WT1** | Erwartungen setzen: „Java Edition“ und „Nur ein Resource Pack“ stehen im Trailer, damit Pack-Kick und Bedrock-Ausschluss nicht überraschen | W2, W6 × T2 | Endkarte, `facts` |
-| **WT2** | Ein Hauptkanal plus zwei Nebenkanäle, kein Rundumschlag | W4 × T3 | Abschnitt 3 |
+| **WT2** | Breit posten ist nur tragbar, weil Varianten nichts kosten außer dem Hochladen. Was nach zwei Wochen nichts bringt, fliegt raus | W4 × T3 | Abschnitt 3, Kill-Kriterien |
 
 Nicht durch den Trailer lösbar und vor dem Launch zu klären: **W3** (Grund für Tag 2) und **W5** (Erstspieler als Jäger).
 Beides ist Spieldesign. Ein Trailer, der Spieler in eine Runde schickt, in der sie als Jäger nichts verstehen, kostet D1.
 
 ## 3. Entscheidung: wohin der Aufwand geht
 
-**Primary Bet: Slender-Nächte über Discord.** Feste Termine in der Halloween-Woche (Vorschlag: Fr 24.10., Sa 25.10., Fr 31.10., jeweils 20 Uhr).
-Der Teaser (16:9) läuft als Ankündigung im Discord, auf YouTube und im Server-Listing; jeder Call-to-Action zeigt auf den Termin.
-Begründung: W1 hat das höchste Gewicht. Mehr Reichweite in einen leeren Modus verbrennt Erstkontakte.
+**Primary Bet: Short-Form breit streuen, mit Varianten statt Einzelvideo.** Das Team will Social Media breit bespielen.
+Mit einem kleinen Team ist das sonst der klassische Fehler; hier ist der Aufwand pro Post aber nur das Hochladen, weil
+`npm run render:all` jede Variante in jedem Format liefert. Kanäle: TikTok, YouTube Shorts, Instagram Reels (9:16),
+Instagram-Feed und X/Mastodon (1:1), YouTube und Discord-Ankündigung (16:9).
 
-**Supporting Play A: Short-Form.** `CygnusShort` auf genau einer Plattform (Vorschlag: YouTube Shorts, weil der Kanal ohnehin für
-den Teaser gebraucht wird), zwei Varianten pro Woche bis 31.10. Variiert wird nur der Hook (`shortHook`), damit der Vergleich aussagekräftig bleibt.
+| Variante | Hook | Aufhänger |
+|----------|------|-----------|
+| `creek` | Es bewegt sich nur, wenn du wegschaust. | Creek: Verfolgen, Jagd, Erwischt (S7) |
+| `manfred` | Das ist Manfred. Hör nicht auf, ihn anzusehen. | Creek mit Namen, Meme-Tonfall |
+| `hunter` | Du hast ihn nicht gesehen. Er dich schon. | Unsichtbarer Jäger (S2) |
+| `pages` | Die Seite war gerade noch da. | Seiten-Rotation (S3) |
+| `teaser` | Eine Runde. Unter zehn Minuten. | Alles, 31 s, für YouTube und Discord |
 
-**Supporting Play B: Creator-Nacht.** Drei bis fünf DACH-Micro-Creator anfragen, Ziel: ein Creator-Abend mit eigener Gruppe.
-Anfragen bis 15.10., sonst ist der Termin vor Halloween nicht mehr planbar.
+Rhythmus bis 31.10.: pro Plattform eine Variante alle zwei bis drei Tage, zur Hauptspielzeit (WO1), Reihenfolge `creek`, `hunter`,
+`manfred`, `pages`, dann die beste wiederholen. Gleichzeitig dieselbe Variante auf allen Plattformen, damit die Plattformen vergleichbar bleiben.
 
-Bewusst nicht: TikTok, Instagram und Reddit parallel, große Streamer, bezahlte Werbung, Gewinnspiele.
+**Supporting Play: Creator.** Drei bis fünf DACH-Micro-Creator anfragen, ob sie eine Runde mit ihrer Community spielen; der Creek ist
+für Streams gemacht, weil der Chat sieht, was der Streamer nicht sieht. Anfragen bis 15.10.
+
+Bewusst nicht: große Streamer, bezahlte Werbung, Gewinnspiele.
 
 ## 4. Messung
 
@@ -99,14 +111,15 @@ Bewusst nicht: TikTok, Instagram und Reddit parallel, große Streamer, bezahlte 
 |----------|-----------------|--------|
 | Erstspieler mit zweiter Runde (primär, PSR Abschnitt 5) | Baseline erheben, Ziel ab zweiter Saison | `cygnus.player.join` mit `cygnus.join.outcome=spawned`, je `cygnus.player.uuid` über `cygnus.round.id` zählen |
 | Abbruch beim ersten Join (Pack abgelehnt, W6) | Baseline erheben | `cygnus.player.kick` mit `cygnus.kick.reason`, `cygnus.join.outcome=abandoned` |
-| Runden mit mindestens vier Spielern pro Slender-Nacht | mindestens 3 Runden je Termin | `cygnus.round` und zugehörige Joins |
-| Discord-Joins pro Kanal | Teaser und Short einzeln ausweisen | eigener Invite pro Variante |
-| Short: Anteil komplett gesehen | über 40 % | Plattform-Statistik |
+| Runden mit mindestens vier Spielern pro Tag | steigend über den Oktober | `cygnus.round` und zugehörige Joins |
+| Discord-Joins pro Plattform | je Plattform ausweisen | eigener Kurzlink pro Plattform (WO3) |
+| Wiedergabe bis zum Ende, je Variante | über 40 % | Plattform-Statistik |
 
 Voraussetzung: Der OpenTelemetry-Agent läuft in der Halloween-Instanz (`docs/telemetry.md`), sonst sind alle Spans No-ops.
 
-**Kill-Kriterien:** Short-Variante unter 20 % Wiedergabe bis zum Ende bei über 1.000 Aufrufen: Hook tauschen. Nach zwei Varianten unter fünf
-messbaren Discord-Joins: Short-Form für diese Saison einstellen. Creator: nach zehn unbeantworteten Anfragen Ansatz ändern, nicht nachfassen.
+**Kill-Kriterien:** Variante unter 20 % Wiedergabe bis zum Ende bei über 1.000 Aufrufen: nicht wiederholen. Plattform nach zwei Wochen unter
+fünf messbaren Discord-Joins: dort aufhören. Variante mit dreifachem Durchschnitt: Hook-Abwandlungen davon rendern (neue Zeile in
+`src/variants.json`, neuer Text in `src/props.ts`). Creator: nach zehn unbeantworteten Anfragen Ansatz ändern, nicht nachfassen.
 
 **Review:** 02.11.2026. Ergebnis fließt in die nächste Fassung dieser Analyse und in PSR-CYGNUS Abschnitt 5.
 
@@ -114,19 +127,20 @@ messbaren Discord-Joins: Short-Form für diese Saison einstellen. Creator: nach 
 
 | Zeitraum | Schritt |
 |----------|---------|
-| bis 12.10. | Gameplay-Aufnahmen nach Shotlist (`marketing/trailer/README.md`), Server-Adresse und Invites je Kanal festlegen, Altersempfehlung entscheiden (PSR Abschnitt 6) |
-| 13.10. | Teaser rendern, im Discord und auf YouTube veröffentlichen, Thumbnail aus `CygnusThumbnail` |
-| 13.–31.10. | Short-Varianten zweimal pro Woche |
+| bis 12.10. | Gameplay-Aufnahmen nach Shotlist (`marketing/trailer/README.md`), Kurzlinks je Plattform anlegen, Altersempfehlung entscheiden (PSR Abschnitt 6) |
+| 13.10. | Alle Varianten neu rendern, `teaser` auf YouTube und im Discord, erste `creek`-Variante auf allen Plattformen |
+| 13.–31.10. | Varianten im Wechsel, alle zwei bis drei Tage, zur Hauptspielzeit |
 | bis 15.10. | Creator-Anfragen raus |
-| 24., 25., 31.10. | Slender-Nächte |
+| 20.10. | Zwischenstand: Kill- und Double-down-Kriterien anwenden |
 | 02.11. | Review nach Abschnitt 4 |
 
 ## 6. Offene Punkte
 
-1. Server-Adresse und Discord-Invites je Kanal (Props `serverAddress`, `discordUrl`).
+1. Kurzlinks je Plattform, falls `1lf.link` Klicks zählt; sonst ist die Herkunft der Joins nicht messbar.
 2. Altersempfehlung und deren Kommunikation (PSR Abschnitt 6). Bis dahin bleibt der Trailer bei Andeutung statt Schock.
 3. Namensentscheidung „Slender“ als ADR festhalten und PSR-CYGNUS Abschnitt 2 anpassen; der Record empfiehlt bisher das Gegenteil.
 4. W3 und W5 im Spieldesign beantworten.
+5. Ob „Manfred“ öffentlich genutzt werden soll; der Name steht bisher nur in `config.properties.example`.
 
 ## Prompt zum Fortschreiben
 

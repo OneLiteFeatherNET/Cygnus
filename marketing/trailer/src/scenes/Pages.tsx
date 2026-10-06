@@ -20,7 +20,7 @@ export const Pages: React.FC<{lines: [string, string]; src?: string; durationInF
       <Footage src={src} seed="pages" />
       <Vignette stage={4} />
       <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', paddingBottom: (vertical ? 260 : 120) * unit}}>
-        <div style={{display: 'grid', gridTemplateColumns: `repeat(${vertical ? 3 : 6}, ${size}px)`, gap: 28 * unit}}>
+        <div style={{display: 'grid', gridTemplateColumns: `repeat(${width < 1500 ? 3 : 6}, ${size}px)`, gap: 28 * unit}}>
           {[1, 2, 3, 4, 5, 6].map((n, i) => {
             const s = spring({frame: frame - 10 - i * 9, fps, config: {damping: 14}});
             const got = i < collected;

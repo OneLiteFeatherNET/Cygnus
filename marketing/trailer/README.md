@@ -3,13 +3,24 @@
 Trailer für den Spielmodus Slender (Projektname: Cygnus), als Code gebaut mit [Remotion](https://github.com/remotion-dev/remotion).
 Botschaft, Szenenfolge und Kanalwahl sind aus [`docs/marketing/swot.md`](../../docs/marketing/swot.md) abgeleitet.
 
-| Komposition | Format | Länge | Einsatz |
-|-------------|--------|-------|---------|
-| `CygnusTeaser` | 1920×1080 | 27 s | Discord-Ankündigung, YouTube, Server-Listing |
-| `CygnusShort` | 1080×1920 | 19,5 s | YouTube Shorts (eine Plattform, siehe SWOT Abschnitt 3) |
-| `CygnusThumbnail` | 1920×1080, PNG | Standbild | YouTube-Thumbnail, Listing-Banner |
+Fünf Varianten, jede in drei Formaten. Die Komposition heißt `<variante>-<format>`, z. B. `creek-vertical`.
 
-Szenen: Cold Open → Jäger → Seiten → Ausdauer → Seiten-Rotation (nur Teaser) → Zuschauer → Endkarte.
+| Variante | Länge | Hook (Cold Open) | Szenen |
+|----------|-------|------------------|--------|
+| `teaser` | 31 s | Eine Runde. Unter zehn Minuten. | Jäger, Seiten, Ausdauer, Creek verfolgt/jagt/erwischt, Zuschauer |
+| `creek` | 18 s | Es bewegt sich nur, wenn du wegschaust. | Creek verfolgt, jagt, erwischt |
+| `manfred` | 17,5 s | Das ist Manfred. Hör nicht auf, ihn anzusehen. | Creek jagt, erwischt, Seiten |
+| `hunter` | 19,5 s | Du hast ihn nicht gesehen. Er dich schon. | Jäger, Seiten, Ausdauer, Zuschauer |
+| `pages` | 20 s | Die Seite war gerade noch da. | Seiten, Rotation, Ausdauer, Zuschauer |
+
+| Format | Größe | Für |
+|--------|-------|-----|
+| `vertical` | 1080×1920 | TikTok, YouTube Shorts, Instagram Reels und Stories |
+| `square` | 1080×1080 | Instagram-Feed, X, Mastodon |
+| `landscape` | 1920×1080 | YouTube, Discord-Ankündigung, Server-Listing |
+
+Dazu `thumbnail-landscape`, `thumbnail-vertical` und `thumbnail-square` als Standbilder (Creek mit glimmenden Augen).
+Jede Variante endet auf der Endkarte mit Server `onelitefeather.net` und Discord `1lf.link/discord`.
 
 ## Starten
 
@@ -18,24 +29,33 @@ Node 20 oder neuer.
 ```bash
 cd marketing/trailer
 npm ci
-npm run studio          # Vorschau im Browser, Props live editierbar
-npm run render:all      # out/cygnus-teaser-16x9.mp4, out/cygnus-short-9x16.mp4, out/cygnus-thumbnail.png
+npm run studio                          # Vorschau im Browser, Props live editierbar
+npm run render:all                      # alles nach out/<sprache>/<komposition>.mp4 bzw. .png
+npm run render:all -- --lang=de --format=vertical --variant=creek
 ```
 
 Remotion lädt beim ersten Render eine Headless-Chrome-Version herunter. Ohne Download-Zugang einen vorhandenen
-Chromium angeben, z. B. `REMOTION_BROWSER_EXECUTABLE=/pfad/zu/headless_shell npm run render:teaser`.
+Chromium angeben: `REMOTION_BROWSER_EXECUTABLE=/pfad/zu/headless_shell npm run render:all`.
 
-## Pro Kanal rendern
+## Neue Variante
 
-Alle Texte und Links stehen in `src/props.ts` und lassen sich pro Render überschreiben. Für jede Plattform einen
-eigenen Discord-Invite rendern, sonst ist nicht messbar, woher die Joins kommen:
+1. Zeile in `src/variants.json`: `id`, `hook`, `hit` (Szene, auf der der Musik-Schlag liegt) und `scenes` mit Sekunden.
+   Verfügbare Szenen: `coldOpen`, `hunter`, `pages`, `stamina`, `rotation`, `creekStalk`, `creekHunt`, `creekCatch`, `spectate`, `end`.
+2. Neuer Hook: Text unter `hooks` in `src/props.ts` (Deutsch und Englisch), Schlüssel in `HookId` in `src/variants.ts`.
+3. `npm run music` erzeugt die passende Musik, dann `npm run render:all -- --variant=<id>`.
+
+## Pro Plattform rendern
+
+Texte und Links stehen in `src/props.ts`. Wer messen will, welche Plattform Spieler bringt, rendert pro Plattform
+einen eigenen Kurzlink:
 
 ```bash
-npx remotion render CygnusShort out/short-yt.mp4 \
-  --props='{"language":"de","serverAddress":"play.example.net","discordUrl":"discord.gg/abc123","availability":"Halloween 2026","sessionHint":"Slender-Nächte: 24., 25. und 31.10., 20 Uhr","footage":{}}'
+echo '{"discordUrl":"1lf.link/tiktok"}' > tiktok.json
+npm run render:all -- --format=vertical --props=tiktok.json
 ```
 
-`language: "en"` schaltet alle Texte auf Englisch.
+Weitere Props: `language` (`de`/`en`), `serverAddress`, `title` (Standard `SLENDER`), `availability` (leer = ausblenden),
+`music` (`null` = ohne), `staticVolume` (0 = kein VHS-Rauschen), `footage`.
 
 ## Gameplay-Aufnahmen einsetzen
 
@@ -49,12 +69,16 @@ Shotlist, 1920×1080, 30 fps, mit aktivem Pack, Replay Mod oder OBS, je 5 bis 8 
 | `hunt` | Überlebender läuft durch enge Gassen, Kamera dreht sich um, nichts zu sehen |
 | `pages` | Seite an einer Wand finden und einsammeln |
 | `stamina` | Sprint, bis die XP-Leiste leer ist, Tunnel-Vision schließt sich |
+| `creekStalk` | Der Creek in der Ferne zwischen Bäumen, beim Hinsehen verschwindet er |
+| `creekHunt` | Der Creek bei der Jagd, Kamera schaut weg und wieder hin, er ist näher; Tab-Liste mit rotem ◆ offen |
+| `creekCatch` | Erwischt werden: Wurf in die Luft (oder Platztausch) |
 | `spectate` | Zuschauersicht über die Karte, die eigene Leiche im Bild |
 
 Ton der Aufnahmen wird stummgeschaltet; die Tonspur mischt der Trailer selbst.
 
 ## Regeln für Änderungen
 
+- **Creek:** im Trailer eine eigene, blockige Silhouette mit glimmenden Augen (`components/CreekFigure.tsx`), angelehnt an den Creaking, den das Spiel benutzt. „Manfred“ steht bisher nur in `config.properties.example`; die Variante `manfred` vor dem Posten freigeben lassen.
 - **Name:** öffentlich „Slender“ (Prop `title`), Cygnus ist nur der Projektname. Kein Material aus dem Originalspiel (Logo, Grafiken, Sounds, Figurendesign) und nicht dessen Titel; alles im Trailer ist selbst gebaut. Risiko und Abwägung: SWOT T1/ST1.
 - **Jugendschutz:** andeuten statt zeigen. Kein Blut-Overlay aus dem Pack, kein Gesicht, keine lauten Jumpscares. Bis die Altersempfehlung entschieden ist (PSR Abschnitt 6), bleibt das so.
 - **Behauptungen:** jeder Satz muss sich auf ein vorhandenes Feature stützen. Keine Superlative. „Java Edition“ bleibt drin, solange es keinen Bedrock-Zugang gibt.
@@ -65,14 +89,14 @@ Ton der Aufnahmen wird stummgeschaltet; die Tonspur mischt der Trailer selbst.
 
 Die Hintergrundmusik ist nicht heruntergeladen, sondern von `scripts/generate_music.py` synthetisiert: Drone mit
 kleiner Sekunde und Tritonus, Wind, Spieluhr-Motiv, ein Herzschlag, der bis zum Schnitt in die Zuschauerszene
-schneller wird, dann Stille und ein tiefer Schlag. Sie gehört damit OneLiteFeather, ohne Lizenzbedingungen,
+schneller wird, dann Stille und ein tiefer Schlag auf der `hit`-Szene. Sie gehört damit OneLiteFeather, ohne Lizenzbedingungen,
 Namensnennung oder Content-ID-Risiko.
 
-Die Schnittzeiten kommen aus `src/cuts.json`, das auch `Trailer.tsx` nutzt. Nach einer Änderung an den Szenenlängen
+Jede Variante hat ihre eigene Musik, abgestimmt auf die Szenen aus `src/variants.json`. Nach einer Änderung dort
 die Musik neu erzeugen (Python 3 mit numpy):
 
 ```bash
-npm run music    # schreibt public/music/cygnus-teaser.ogg und cygnus-short.ogg
+npm run music    # schreibt public/music/<variante>.ogg
 ```
 
 Der Generator ist deterministisch, ein erneuter Lauf erzeugt dieselben Samples. `"music": null` rendert ohne Musik,
@@ -80,7 +104,7 @@ Der Generator ist deterministisch, ein erneuter Lauf erzeugt dieselben Samples. 
 
 ## Assets
 
-`public/pack/` enthält Kopien aus `cygnus-pack` (Seiten-Texturen, Icons, Tunnel-Vision-Masken, VHS-Rauschen).
+`public/pack/` enthält Kopien aus `cygnus-pack` (Seiten-Texturen, Icons, Tunnel-Vision-Masken, Mond, VHS-Rauschen).
 Nach Änderungen am Pack aktualisieren mit `npm run sync-pack -- /pfad/zu/cygnus-pack`.
 `public/fonts/` enthält Roboto und Roboto Mono (SIL Open Font License, `OFL.txt`), lokal eingebunden, damit Renders offline und reproduzierbar laufen.
 `public/brand/olf-logo.png` ist das OneLiteFeather-Feder-Logo.

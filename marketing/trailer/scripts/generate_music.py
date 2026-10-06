@@ -4,14 +4,14 @@ Selbst erzeugt statt heruntergeladen: Die Musik gehört damit OneLiteFeather, es
 Lizenzbedingungen, keine Namensnennung und keine Content-ID-Treffer. Deterministisch (fester Seed),
 ein erneuter Lauf erzeugt dieselben Samples.
 
-Die Schnittzeiten kommen aus src/cuts.json, damit Herzschlag, Anstieg und Schlag auf den Szenen sitzen:
-  Cold Open      Spieluhr-Motiv über Drone
-  Jäger..Rotation  Drone + Wind, Herzschlag wird schneller
-  vor Zuschauer  Anstieg, dann Stille
-  Zuschauer      tiefer Schlag, Drone kehrt verstimmt zurück
-  Endkarte       Spieluhr-Motiv, Ausklang
+Die Szenen jeder Variante kommen aus src/variants.json, damit Herzschlag, Anstieg und Schlag sitzen:
+  erste Szene        Spieluhr-Motiv über Drone
+  bis zum Treffer    Drone + Wind, Herzschlag wird schneller
+  vor dem Treffer    Anstieg, dann Stille
+  Treffer ("hit")    tiefer Schlag, Drone kehrt verstimmt zurück
+  Endkarte           Spieluhr-Motiv, Ausklang
 
-Aufruf: python3 scripts/generate_music.py <ausgabeordner>   (schreibt <name>.wav je Schnitt)
+Aufruf: python3 scripts/generate_music.py <ausgabeordner>   (schreibt <variante>.wav je Variante)
 """
 
 import json
@@ -120,15 +120,16 @@ def music_box(track, at, gain, detune=1.0):
         place(track, bell(freq * detune), at + offset, gain)
 
 
-def compose(cut, rng):
+def compose(variant, rng):
     starts, acc = {}, 0.0
-    for scene in ["coldOpen", "hunter", "pages", "stamina", "rotation", "spectate", "end"]:
-        starts[scene] = acc
-        acc += cut[scene]
+    for scene, seconds in variant["scenes"]:
+        starts.setdefault(scene, acc)
+        acc += seconds
     total = acc
     length = int(total * RATE)
-    hit = starts["spectate"]
+    hit = starts[variant["hit"]]
     end = starts["end"]
+    first_beat = variant["scenes"][0][1]
 
     track = np.zeros(length)
 
@@ -143,10 +144,10 @@ def compose(cut, rng):
 
     music_box(track, 0.2, 0.22)
 
-    # Herzschlag vom Jäger bis kurz vor dem Schlag, Tempo 58 -> 110 bpm.
-    t = starts["hunter"]
+    # Herzschlag nach dem Cold Open bis kurz vor dem Schlag, Tempo 58 -> 110 bpm.
+    t = first_beat
     while t < hit - 0.6:
-        progress = (t - starts["hunter"]) / max(0.1, hit - starts["hunter"])
+        progress = (t - first_beat) / max(0.1, hit - first_beat)
         bpm = 58 + 52 * progress
         place(track, thump(), t, 0.9)
         place(track, thump(freq=46), t + 0.22, 0.6)
@@ -190,11 +191,11 @@ def write_wav(path, stereo):
 def main():
     out_dir = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / "public/music")
     out_dir.mkdir(parents=True, exist_ok=True)
-    cuts = json.loads((ROOT / "src/cuts.json").read_text())
-    for name in ["teaser", "short"]:
-        rng = np.random.default_rng(sum(map(ord, name)))
-        stereo = compose(cuts[name], rng)
-        path = out_dir / f"cygnus-{name}.wav"
+    variants = json.loads((ROOT / "src/variants.json").read_text())["variants"]
+    for variant in variants:
+        rng = np.random.default_rng(sum(map(ord, variant["id"])))
+        stereo = compose(variant, rng)
+        path = out_dir / f"{variant['id']}.wav"
         write_wav(path, stereo)
         print(f"{path} ({len(stereo) / RATE:.1f} s)")
 

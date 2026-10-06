@@ -9,22 +9,33 @@ export const EndCard: React.FC<TrailerProps & {durationInFrames: number}> = (pro
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
   const vertical = height > width;
+  const narrow = width < 1500;
   // Hochkant ist die Fläche schmaler, aber auf dem Handy näher am Auge: Text größer.
   const unit = (Math.min(width, height) / 1080) * (vertical ? 1.3 : 1);
   const t = copy[props.language];
+  // Titelgröße aus der Breite: Roboto Black in Versalien plus Sperrung braucht ~0.88 em pro Zeichen.
+  const titleSize = Math.min(210, (width * 0.82) / (Math.max(4, props.title.length) * 0.88));
   const title = spring({frame, fps, config: {damping: 200}, durationInFrames: 30});
   const rest = interpolate(frame, [20, 40], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const cta = interpolate(frame, [40, 60], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
 
   return (
     <AbsoluteFill style={{background: colors.charcoal, fontFamily: roboto, color: colors.white}}>
-      <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: 0, padding: 80 * unit}}>
+      <AbsoluteFill
+        style={{
+          justifyContent: 'center',
+          alignItems: 'center',
+          textAlign: 'center',
+          padding: 60 * unit,
+          paddingBottom: (vertical ? 260 : narrow ? 170 : 120) * unit,
+        }}
+      >
         <div
           style={{
-            fontSize: (vertical ? 150 : 210) * unit,
+            fontSize: titleSize,
             fontWeight: 900,
-            letterSpacing: (vertical ? 14 : 34) * unit,
-            marginRight: -(vertical ? 14 : 34) * unit,
+            letterSpacing: titleSize * 0.16,
+            marginRight: -titleSize * 0.16,
             lineHeight: 1,
             opacity: title,
             transform: `scale(${0.94 + title * 0.06})`,
@@ -32,14 +43,14 @@ export const EndCard: React.FC<TrailerProps & {durationInFrames: number}> = (pro
         >
           {props.title}
         </div>
-        <div style={{width: 360 * unit * title, height: 6 * unit, background: olfGradient, margin: `${28 * unit}px 0`}} />
-        <div style={{fontSize: (vertical ? 36 : 44) * unit, fontWeight: 300, letterSpacing: 2, opacity: rest}}>{t.claim}</div>
+        <div style={{width: 360 * unit * title, height: 6 * unit, background: olfGradient, margin: `${(narrow ? 22 : 28) * unit}px 0`}} />
+        <div style={{fontSize: (narrow ? 36 : 44) * unit, fontWeight: 300, letterSpacing: 2, opacity: rest}}>{t.claim}</div>
         <div
           style={{
             display: 'flex',
-            flexDirection: vertical ? 'column' : 'row',
-            gap: (vertical ? 14 : 40) * unit,
-            marginTop: 36 * unit,
+            flexDirection: narrow ? 'column' : 'row',
+            gap: (narrow ? 10 : 40) * unit,
+            marginTop: (narrow ? 26 : 36) * unit,
             fontSize: 30 * unit,
             color: colors.text,
             opacity: rest,
@@ -54,12 +65,12 @@ export const EndCard: React.FC<TrailerProps & {durationInFrames: number}> = (pro
         </div>
         <div
           style={{
-            marginTop: 56 * unit,
+            marginTop: (narrow ? 36 : 56) * unit,
             opacity: cta,
             display: 'flex',
-            flexDirection: vertical ? 'column' : 'row',
-            gap: (vertical ? 18 : 64) * unit,
-            fontSize: 38 * unit,
+            flexDirection: narrow ? 'column' : 'row',
+            gap: (narrow ? 12 : 64) * unit,
+            fontSize: 40 * unit,
           }}
         >
           <div>
@@ -71,18 +82,11 @@ export const EndCard: React.FC<TrailerProps & {durationInFrames: number}> = (pro
             <span style={{fontWeight: 700}}>{props.discordUrl}</span>
           </div>
         </div>
-        <div style={{marginTop: 22 * unit, fontSize: 30 * unit, color: colors.text, opacity: cta}}>
-          {vertical ? (
-            <>
-              <div>{props.availability}</div>
-              <div>{props.sessionHint}</div>
-            </>
-          ) : (
-            `${props.availability} · ${props.sessionHint}`
-          )}
-        </div>
+        {props.availability ? (
+          <div style={{marginTop: 20 * unit, fontSize: 30 * unit, color: colors.text, opacity: cta}}>{props.availability}</div>
+        ) : null}
       </AbsoluteFill>
-      <AbsoluteFill style={{justifyContent: 'flex-end', alignItems: 'center', paddingBottom: (vertical ? 160 : 60) * unit, opacity: cta}}>
+      <AbsoluteFill style={{justifyContent: 'flex-end', alignItems: 'center', paddingBottom: (vertical ? 160 : 50) * unit, opacity: cta}}>
         <OlfLockup scale={unit} />
       </AbsoluteFill>
     </AbsoluteFill>

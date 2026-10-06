@@ -1,0 +1,35 @@
+{
+  "_comment": "Varianten fürs Social-Media-Posting. Jede Variante wird in jedem Format gerendert. scenes: [Szene, Sekunden] in Reihenfolge; hit: Szene, auf deren Anfang der tiefe Schlag der Musik fällt; hook: Schlüssel in copy.hooks (Cold-Open-Text). Gemeinsame Quelle für src/ und scripts/generate_music.py.",
+  "variants": [
+    {
+      "id": "teaser",
+      "hook": "round",
+      "hit": "creekCatch",
+      "scenes": [["coldOpen", 2.5], ["hunter", 3.5], ["pages", 3.5], ["stamina", 3], ["creekStalk", 3.5], ["creekHunt", 4], ["creekCatch", 3], ["spectate", 3], ["end", 5]]
+    },
+    {
+      "id": "creek",
+      "hook": "creek",
+      "hit": "creekCatch",
+      "scenes": [["coldOpen", 2.5], ["creekStalk", 3.5], ["creekHunt", 4], ["creekCatch", 3.5], ["end", 4.5]]
+    },
+    {
+      "id": "manfred",
+      "hook": "manfred",
+      "hit": "creekCatch",
+      "scenes": [["coldOpen", 2.5], ["creekHunt", 4], ["creekCatch", 3.5], ["pages", 3], ["end", 4.5]]
+    },
+    {
+      "id": "hunter",
+      "hook": "hunter",
+      "hit": "spectate",
+      "scenes": [["coldOpen", 2.5], ["hunter", 3.5], ["pages", 3], ["stamina", 3], ["spectate", 3], ["end", 4.5]]
+    },
+    {
+      "id": "pages",
+      "hook": "pages",
+      "hit": "spectate",
+      "scenes": [["coldOpen", 2.5], ["pages", 3.5], ["rotation", 3.5], ["stamina", 3], ["spectate", 3], ["end", 4.5]]
+    }
+  ]
+}
