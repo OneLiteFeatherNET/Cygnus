@@ -47,7 +47,7 @@ dependencyResolutionManagement {
             version("guava", "33.7.2-jre")
             version("falco", "3.0.0")
             version("minestom-extensions", "2.2.0")
-            version("sentry", "8.59.0")
+            version("sentry", "8.60.0")
             // The API is the only OpenTelemetry artifact Cygnus ships. Production attaches the
             // opentelemetry-javaagent, which brings the SDK and the OTLP exporter and bridges
             // GlobalOpenTelemetry by exact class name - so this must stay unrelocated, and its
