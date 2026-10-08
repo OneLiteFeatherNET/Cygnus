@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.listener;
 
+import net.minestom.server.entity.GameMode;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.theevilreaper.xerus.api.phase.Phase;
@@ -34,6 +35,7 @@ public final class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
         if (!event.isFirstSpawn()) return;
 
         Player player = event.getPlayer();
+        player.setGameMode(GameMode.ADVENTURE);
         player.setDisplayName(Component.text(player.getUsername()));
 
         if (phaseSupplier.get() instanceof LobbyPhase lobbyPhase) {
