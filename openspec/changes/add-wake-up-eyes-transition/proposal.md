@@ -22,8 +22,9 @@ phases and ships as a single commit on the implementation branch.
 - The camera returns to the player and the spider is removed after exactly 100 server ticks (5 seconds), counted
   with the Minestom scheduler and a tick based `TaskSchedule`.
 - The transition is cancelled early, with the spider removed and no error, when the player disconnects, leaves
-  the instance they were teleported into, or the waiting phase ends before the 100 ticks have passed.
-- Hook the service into `WaitingPhase` directly after the team teleport and into the phase end.
+  the instance they were teleported into, or the round finishes (`GameFinishEvent`) before the 100 ticks have passed.
+  The end of the waiting phase does not cancel it: the camera stays on the spider for the full 100 ticks.
+- Hook the service into `WaitingPhase` directly after the team teleport.
 - No game mode change: the camera packet is sent without touching the player's game mode.
 
 ## Capabilities
@@ -39,9 +40,9 @@ None.
 ## Impact
 
 - `game/src/main/java/net/onelitefeather/cygnus/camera/` (new package with the service and its spider entity).
-- `game/src/main/java/net/onelitefeather/cygnus/phase/WaitingPhase.java` (start after the teleport, cancel on phase end).
+- `game/src/main/java/net/onelitefeather/cygnus/phase/WaitingPhase.java` (start after the teleport; no cancel on phase end).
 - `game/src/main/java/net/onelitefeather/cygnus/Cygnus.java` (creates the service, passes it to the phase and
-  registers its disconnect and instance-change listeners).
+  registers its disconnect, instance-change and game-finish listeners).
 - `game/src/test/java/net/onelitefeather/cygnus/camera/` (tests written before the production code).
 - Requires the resource pack to override `minecraft:post_effect/spider.json`; without the pack the camera change
   is visible as a plain spectator camera on the spider and nothing else.
