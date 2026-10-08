@@ -7,6 +7,9 @@
 - [x] 1.5 Run the new tests before the production change and confirm both fail
 - [x] 1.6 Live test fix: rewrite the camera tests so the switch is awaited by ticks, add the pending, timeout and
   pending disconnect tests, and confirm that the new expectations fail on the previous implementation
+- [x] 1.7 Live test fix 2: add the arrival tests (lobby-to-game regression, leaving the lobby, disconnect while
+  waiting for arrival, never arriving) against the `start(Player, Instance)` signature, and confirm the red step
+  (test compilation fails on the missing signatures)
 
 ## 2. Camera transition
 
@@ -20,16 +23,23 @@
 - [x] 2.7 Live test fix: check readiness every tick, abandon the transition after `PENDING_TIMEOUT_TICKS` ticks
 - [x] 2.8 Live test fix: count the 100 ticks from the camera switch, not from the start
 - [x] 2.9 Live test fix: log INFO lines for spawn, switch, return and abandon
+- [x] 2.10 Live test fix 2: take the target game instance in `start`, and spawn the spider only once the player is in
+  it, at the player's position on arrival
+- [x] 2.11 Live test fix 2: cancel on instance change only after the arrival in the target; leaving the lobby is ignored
+- [x] 2.12 Live test fix 2: count `PENDING_TIMEOUT_TICKS` (now 100) from the start, and log the wait and the arrival
 
 ## 3. Phase wiring
 
 - [x] 3.1 Pass the transition into `WaitingPhase` and start it after the team teleport; the waiting phase end does not cancel it
+- [x] 3.3 Live test fix 2: give `WaitingPhase` a `Supplier<Instance>` of the game instance (`mapProvider.getActiveInstance()`)
+  and pass it to the transition as the target
 - [x] 3.2 Create the transition in `Cygnus` and register its listeners on the global event handler
 
 ## 4. Verification
 
 - [x] 4.1 Run `./gradlew :game:test` and the repo build tasks, and fix any failure
 - [ ] 4.2 Tick off the completed tasks in this file
+- [x] 4.3 Run `openspec validate add-wake-up-eyes-transition --strict` and `./gradlew :game:shadowJar`
 
 ## 5. Pull request
 
