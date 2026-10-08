@@ -111,9 +111,9 @@ player's game mode to do so.
 - **WHEN** the camera has been switched and fewer than 100 ticks have passed since the switch
 - **THEN** the last camera packet sent to the player targets the spider's entity id
 
-### Requirement: Transition ends after exactly 100 ticks from the camera switch
+### Requirement: Open transition ends after exactly 100 ticks from the camera switch
 
-The transition SHALL keep the camera on the spider for exactly 100 server ticks counted from the moment the camera
+An open transition SHALL keep the camera on the spider for exactly 100 server ticks counted from the moment the camera
 is switched, not from the start of the transition. When the time has passed, the system SHALL point the camera back
 at the player and SHALL remove the spider. The duration SHALL be counted in ticks, not wall-clock time.
 
@@ -186,10 +186,85 @@ the spider, and the scheduled checks are cancelled.
 - **WHEN** the transition is registered on an event node and a `GameFinishEvent` is dispatched on that node
 - **THEN** the transition is no longer running for the player
 
+### Requirement: Lobby close keeps the camera until the player leaves the lobby
+
+When the waiting phase starts, the system SHALL start a close transition for every online player with the lobby as
+target, before the instance switch. The close SHALL point the camera at a spider in the lobby, SHALL have no duration,
+and SHALL end only when the player leaves the lobby. Leaving the lobby SHALL remove the lobby spider and return the camera
+to the player without error. The lobby SHALL be read before the active instance switches to the game.
+
+#### Scenario: Close starts with the waiting phase
+
+- **WHEN** the waiting phase starts with a player in the lobby
+- **THEN** a close transition is running for the player and the spider exists in the lobby
+
+#### Scenario: Close does not end by itself
+
+- **WHEN** the close camera is on the lobby spider and 150 ticks pass while the player stays in the lobby
+- **THEN** the camera still targets the lobby spider and the close is still running
+
+#### Scenario: Leaving the lobby ends the close
+
+- **WHEN** the player leaves the lobby while the close camera is on the lobby spider
+- **THEN** the lobby spider is removed, the camera targets the player's own entity id, and the close is no longer running
+
+#### Scenario: Starting the open does not end a running close
+
+- **WHEN** an open transition starts for the player while the close is still running in the lobby
+- **THEN** the close is still running and the camera still targets the lobby spider
+
+### Requirement: Open starts at the game tick
+
+The waiting phase's tick 1 SHALL start an open transition for every online player with the game instance as target,
+after the team teleport. The open SHALL behave as the open transition in the requirements above.
+
+#### Scenario: Tick 1 opens the eyes in the game instance
+
+- **WHEN** the waiting phase reaches tick 1 with a close running for a player who is still in the lobby
+- **THEN** an open transition is running for the player with the game instance as target, and the close is still running
+
+### Requirement: World age is moved into the band of the kind before the first switch
+
+Right before the first camera switch of a batch in an instance, the system SHALL set the world age of that instance to the
+value `worldAgeFor(kind, current)`. The batch SHALL set the world age only once per instance: other players of the same
+batch SHALL NOT move it again. For the close the value SHALL be the next multiple of 24000 not below the current age. For
+the open the value SHALL be the next age not below the current age whose value modulo 24000 is 12000. The world age
+SHALL NOT move backwards. The new world age SHALL be sent to the instance's players at once.
+
+The resource pack reads the world age as follows:
+
+| World age mod 24000 | Animation | Effect                                                              |
+|---------------------|-----------|---------------------------------------------------------------------|
+| `[0, 6000)`         | close     | `t = (age mod 24000) / 20 s`; fully shut by 1.6 s, then held shut   |
+| `[12000, 18000)`    | open      | `t = (age mod 24000 - 12000) / 20 s`; neutral from 4.5 s            |
+| any other value     | none      | no visible effect                                                   |
+
+#### Scenario: Close sets the lobby into the close band
+
+- **WHEN** the lobby world age is 100 at the close switch
+- **THEN** the lobby world age is set to 24000, and the time packet with 24000 is sent to the players in the lobby
+
+#### Scenario: Open sets the game instance into the open band
+
+- **WHEN** the game world age is 100 at the open switch
+- **THEN** the game world age is set to 12000, and the time packet with 12000 is sent to the players in the game instance
+
+#### Scenario: Two players of one batch set the world age once
+
+- **WHEN** two players are started by one close call and both switch the camera in the lobby
+- **THEN** the lobby world age is set exactly once
+
+#### Scenario: Keeping an age that is already in the band
+
+- **WHEN** the world age is already 24000 at the close switch, or 12000 at the open switch
+- **THEN** the world age is set to the same value and does not move
+
 ### Requirement: Transition logging
 
-The system SHALL log each step of a transition at INFO level with the player's name, so that a live test can be
-followed in the server log: `wake-up transition: spider spawned for <name>` when the spider is created,
+The system SHALL log each step of a transition at INFO level with the kind and the player's name, so that a live test
+can be followed in the server log, for example `wake-up transition [open]: spider spawned for <name>`. The steps are:
+`wake-up transition [<kind>]: world age of <instance> set to <n>` when the world age is set, and the lines below with
+`[<kind>]`: `wake-up transition: spider spawned for <name>` when the spider is created,
 `wake-up transition: camera switched to spider for <name>` when the camera switches,
 `wake-up transition: camera returned for <name> (<reason>)` when a switched camera returns, and
 `wake-up transition: abandoned for <name> (<reason>)` when a transition ends without having switched the camera.
@@ -200,9 +275,16 @@ A transition that starts before its player is in the target instance logs
 #### Scenario: Spawn, switch and return are logged
 
 - **WHEN** a transition runs from start to the 100 tick end for a player named Alice who arrives in the game instance
-- **THEN** the log contains, in order, `wake-up transition: waiting for Alice to arrive in the game instance`,
-  `wake-up transition: Alice arrived, spawning spider`, `wake-up transition: spider spawned for Alice`,
-  `wake-up transition: camera switched to spider for Alice`, then `wake-up transition: camera returned for Alice`
+- **THEN** the log contains, in order, `wake-up transition [open]: waiting for Alice to arrive in the game instance`,
+  `wake-up transition [open]: Alice arrived, spawning spider`, `wake-up transition [open]: spider spawned for Alice`,
+  `wake-up transition [open]: world age of <instance> set to 12000`,
+  `wake-up transition [open]: camera switched to spider for Alice`, then `wake-up transition [open]: camera returned for Alice (100 ticks elapsed)`
+
+#### Scenario: Lobby close is logged with the teleport as its end
+
+- **WHEN** a close for a player named Alice switches the camera in the lobby and Alice then leaves the lobby
+- **THEN** the log contains `wake-up transition [close]: camera switched to spider for Alice`, then
+  `wake-up transition [close]: camera returned for Alice (teleported)`
 
 #### Scenario: Abandoned transition is logged with the reason
 
