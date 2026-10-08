@@ -19,8 +19,8 @@ import java.util.function.Predicate;
  * </p>
  *
  * @author Joltra
- * @version 1.1.0
- * @since 2.17.0
+ * @version 1.0.0
+ * @since 2.16.0
  */
 final class Footprint {
 

@@ -9,7 +9,7 @@ import net.minestom.server.coordinate.Pos;
  * @param timeMillis when they were there
  * @author Joltra
  * @version 1.0.0
- * @since 2.17.0
+ * @since 2.16.0
  */
 record TrackPoint(Pos position, long timeMillis) {
 }

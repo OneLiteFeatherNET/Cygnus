@@ -25,7 +25,7 @@ package net.onelitefeather.cygnus.common.config;
  * @param fadeShare              the share of the lifetime at its end that shows the faded stage, from 0 to 1
  * @author Joltra
  * @version 1.0.0
- * @since 2.17.0
+ * @since 2.16.0
  */
 public record FootprintConfig(
         double slenderStepBlocks,
