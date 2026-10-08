@@ -47,7 +47,11 @@ public final class WaitingPhase extends TimedPhase {
         super.onStart();
         // The players arrive on the game map one by one, so whoever lands first could otherwise walk
         // off before the round starts. Looking around stays allowed.
-        MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(AttributeHelper::freeze);
+        var players = MinecraftServer.getConnectionManager().getOnlinePlayers();
+        players.forEach(AttributeHelper::freeze);
+        // The active instance is still the lobby here, so it is read before the switch. The eyes close in the lobby
+        // and stay closed until each player leaves it for the game.
+        this.wakeUpTransition.close(players, this.gameInstance.get());
         this.instanceSwitch.apply();
     }
 
@@ -68,7 +72,7 @@ public final class WaitingPhase extends TimedPhase {
             this.teleportLogic.apply();
             // The players may still be on their way into the game instance (the switch completes later), so the
             // transition names the target and spawns the spider once each player has arrived there
-            this.wakeUpTransition.start(MinecraftServer.getConnectionManager().getOnlinePlayers(), this.gameInstance.get());
+            this.wakeUpTransition.open(MinecraftServer.getConnectionManager().getOnlinePlayers(), this.gameInstance.get());
         }
     }
 }
