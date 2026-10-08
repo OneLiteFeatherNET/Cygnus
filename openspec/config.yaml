@@ -2,31 +2,26 @@ schema: spec-driven
 
 # Project context (optional)
 # This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Cygnus is a Minestom-based minigame server (Java 25, Gradle multi-project build:
+  bridge, common, game, setup, buildSrc). Game logic lives in the game module; tests
+  use JUnit with Minestom's in-process Env and drive ticks explicitly.
+  Commits and pull request titles follow Conventional Commits (lower case, imperative,
+  no trailing period); the allowed types and changelog sections come from
+  release-please-config.json.
 
 # Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Name the Conventional Commits type and scope the change ships under (for example
+      `feat(game)`); a change that mixes types is split into several changes.
+  tasks:
+    - The last task opens the pull request, titled with the Conventional Commit from the proposal.
+    - Test tasks come before the production code they cover (red, then green).
 
 # Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - "Commit one Conventional Commit type per commit; archive commits use 'docs(openspec): archive <change-name>'."
+      - "Run ./gradlew :game:test after each small change."
