@@ -5,6 +5,7 @@ import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
+import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
 import net.minestom.server.network.packet.server.play.CameraPacket;
@@ -165,23 +166,25 @@ class WakeUpTransitionTest {
     }
 
     @Test
-    void testPhaseEndRemovesTheSpiderAndCancelsTheScheduledEnd(Env env) {
+    void testGameFinishRemovesTheSpiderAndCancelsTheScheduledEnd(Env env) {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, SPAWN);
         Collector<CameraPacket> cameras = connection.trackIncoming(CameraPacket.class);
         WakeUpTransition transition = new WakeUpTransition();
+        transition.register(env.process().eventHandler());
         transition.start(player);
         Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
         tick(env, 50);
 
-        transition.cancelAll();
-        int packetsAfterCancel = cameras.collect().size();
+        env.process().eventHandler().call(new GameFinishEvent(GameFinishEvent.Reason.TIME_OVER));
+        int packetsAfterFinish = cameras.collect().size();
         tick(env, 60);
 
-        assertTrue(spider.isRemoved(), "The spider must be removed when the phase ends early");
-        assertEquals(player.getEntityId(), lastCameraTarget(cameras), "The camera must return to the player when the phase ends early");
-        assertEquals(packetsAfterCancel, cameras.collect().size(), "The scheduled end must not run after the phase ended");
+        assertTrue(spider.isRemoved(), "The spider must be removed when the game finishes");
+        assertEquals(player.getEntityId(), lastCameraTarget(cameras), "The camera must return to the player when the game finishes");
+        assertFalse(transition.isRunning(player), "The transition must no longer be running after the game finished");
+        assertEquals(packetsAfterFinish, cameras.collect().size(), "The scheduled end must not run after the game finished");
         env.destroyInstance(instance, true);
     }
 

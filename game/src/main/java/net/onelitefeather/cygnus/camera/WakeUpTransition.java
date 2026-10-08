@@ -12,6 +12,7 @@ import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.timer.Task;
 import net.minestom.server.timer.TaskSchedule;
+import net.onelitefeather.cygnus.event.GameFinishEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,8 +28,10 @@ import java.util.UUID;
  * The game mode is never changed: spectating only switches the camera.
  * </p>
  * <p>
- * The transition ends early, with the spider removed and no error, when the player disconnects, leaves the
- * instance the spider lives in, or when {@link #cancelAll()} is called at the end of the waiting phase.
+ * The transition ends early, with the spider removed and no error, when the player disconnects or leaves the
+ * instance the spider lives in. The end of the waiting phase does not end it: the camera stays on the spider for
+ * the full {@link #DURATION_TICKS} even though the game phase has already started. When the round finishes
+ * ({@link GameFinishEvent}), every running transition is cancelled.
  * </p>
  * <p>
  * Usage:
@@ -37,8 +40,6 @@ import java.util.UUID;
  * WakeUpTransition transition = new WakeUpTransition();
  * transition.register(MinecraftServer.getGlobalEventHandler());
  * transition.start(players);
- * // ... later, on phase end
- * transition.cancelAll();
  * }</pre>
  *
  * @version 1.0.0
@@ -54,11 +55,12 @@ public final class WakeUpTransition {
     private final Map<UUID, Transition> transitions = new HashMap<>();
 
     /**
-     * Registers the listeners which end a transition early.
+     * Registers the listeners which end a transition early, and the cleanup when the round finishes.
      *
      * @param node the node to listen on; the global event handler in production
      */
     public void register(EventNode<Event> node) {
+        node.addListener(GameFinishEvent.class, event -> cancelAll());
         node.addListener(PlayerDisconnectEvent.class, event -> cancel(event.getPlayer()));
         node.addListener(RemoveEntityFromInstanceEvent.class, event -> {
             if (!(event.getEntity() instanceof Player player)) return;
