@@ -1,0 +1,27 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  Cygnus is a Minestom-based minigame server (Java 25, Gradle multi-project build:
+  bridge, common, game, setup, buildSrc). Game logic lives in the game module; tests
+  use JUnit with Minestom's in-process Env and drive ticks explicitly.
+  Commits and pull request titles follow Conventional Commits (lower case, imperative,
+  no trailing period); the allowed types and changelog sections come from
+  release-please-config.json.
+
+# Per-artifact rules (optional)
+rules:
+  proposal:
+    - Name the Conventional Commits type and scope the change ships under (for example
+      `feat(game)`); a change that mixes types is split into several changes.
+  tasks:
+    - The last task opens the pull request, titled with the Conventional Commit from the proposal.
+    - Test tasks come before the production code they cover (red, then green).
+
+# Per-operation guidance (optional)
+operations:
+  apply:
+    guidance:
+      - "Commit one Conventional Commit type per commit; archive commits use 'docs(openspec): archive <change-name>'."
+      - "Run ./gradlew :game:test after each small change."
