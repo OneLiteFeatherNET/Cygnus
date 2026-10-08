@@ -41,6 +41,7 @@ import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.adrenaline.AdrenalineService;
+import net.onelitefeather.cygnus.camera.WakeUpTransition;
 import net.onelitefeather.cygnus.minimap.LabyModPolicy;
 import net.onelitefeather.cygnus.minimap.MinimapPolicy;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
@@ -142,6 +143,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final Optional<ResourcePackService> resourcePackService;
     private final ScoreboardDisplay scoreboardDisplay;
     private final SlenderTakeover slenderTakeover;
+    private final WakeUpTransition wakeUpTransition;
     private final List<GameFeature> features;
 
     private final CygnusTracing tracing;
@@ -247,6 +249,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                                 this.staminaService, tickSections)
                 )).toList();
             }
+            this.wakeUpTransition = new WakeUpTransition();
             try (TraceStep ignored = startup.child("cygnus.startup.phases")) {
                 this.initPhases(sanityService);
             }
@@ -336,6 +339,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
 
         SlenderBarTrigger trigger = new SlenderBarTrigger(this.staminaService::getSlenderBar);
         handler.addListener(PlayerUseItemEvent.class, new SlenderItemListener(trigger));
+        this.wakeUpTransition.register(handler);
         handler.addListener(GameFinishEvent.class, new GameFinishListener());
         handler.addListener(GameStartEvent.class, new GameStartListener(this.teamService, this.ambientProvider, this.staminaService, this.pageProvider, this.pageProximityService));
         handler.addListener(PageSpawnEvent.class, new PageSpawnListener(this.pageProvider, this.mapProvider.getActiveInstance()));
@@ -373,7 +377,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         };
         LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig.round(), this.mapProvider.getActiveInstance());
         this.linearPhaseSeries.add(lobbyPhase);
-        this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer));
+        this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer, this.wakeUpTransition));
         this.linearPhaseSeries.add(new GamePhase(this.view, this::finishGame, this.gameConfig.round().gameTime(), this.jumpscareManager, dreadSource));
         this.linearPhaseSeries.add(new RestartPhase());
     }
