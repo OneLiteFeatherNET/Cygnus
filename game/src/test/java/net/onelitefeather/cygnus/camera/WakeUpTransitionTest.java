@@ -28,21 +28,112 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 class WakeUpTransitionTest {
 
     private static final Pos SPAWN = new Pos(0.5, 41, 0.5, 90F, 20F);
+    private static final Pos GAME_SPAWN = new Pos(10.5, 41, -7.5, -45F, 10F);
     private static final int MAX_TICKS_UNTIL_SWITCH = 20;
 
     @Test
-    void testStartSpawnsASpiderInThePlayersInstance(Env env) {
+    void testStartSpawnsTheSpiderImmediatelyWhenThePlayerIsAlreadyInTheTargetInstance(Env env) {
         Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, SPAWN);
         WakeUpTransition transition = new WakeUpTransition();
 
-        transition.start(player);
+        transition.start(player, instance);
 
-        Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned in the player's instance"));
-        assertSame(instance, spider.getInstance(), "The spider must live in the instance of the player");
+        Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned in the target instance"));
+        assertSame(instance, spider.getInstance(), "The spider must live in the target instance");
         transition.cancel(player);
         env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testStartDoesNotSpawnTheSpiderBeforeThePlayerArrivesInTheTargetInstance(Env env) {
+        Instance lobby = env.createFlatInstance();
+        Instance game = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(lobby, SPAWN);
+        WakeUpTransition transition = new WakeUpTransition();
+
+        transition.start(player, game);
+
+        assertTrue(spiderIn(game).isEmpty(), "No spider may exist in the game instance before the player arrived there");
+        assertTrue(transition.isRunning(player), "The transition must wait for the player to arrive");
+        transition.cancel(player);
+        env.destroyInstance(lobby, true);
+        env.destroyInstance(game, true);
+    }
+
+    @Test
+    void testArrivalInTheTargetInstanceSpawnsTheSpiderAtThePlayersPositionThere(Env env) {
+        Instance lobby = env.createFlatInstance();
+        Instance game = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(lobby, SPAWN);
+        WakeUpTransition transition = new WakeUpTransition();
+        transition.start(player, game);
+
+        player.setInstance(game, GAME_SPAWN).join();
+        env.tick();
+
+        Entity spider = spiderIn(game).orElseThrow(() -> new AssertionError("No spider was spawned after the player arrived"));
+        assertSame(game, player.getInstance(), "The player must be in the game instance");
+        double expectedY = player.getPosition().y() + player.getEyeHeight() - spider.getEyeHeight();
+        assertEquals(player.getPosition().x(), spider.getPosition().x(), 1e-9, "Spider x must match the player's position in the game instance");
+        assertEquals(player.getPosition().z(), spider.getPosition().z(), 1e-9, "Spider z must match the player's position in the game instance");
+        assertEquals(expectedY, spider.getPosition().y(), 1e-9, "Spider eye must sit at the player's eye in the game instance");
+        assertEquals(player.getPosition().yaw(), spider.getPosition().yaw(), 1e-4, "Spider yaw must match the player");
+        assertEquals(player.getPosition().pitch(), spider.getPosition().pitch(), 1e-4, "Spider pitch must match the player");
+        transition.cancel(player);
+        env.destroyInstance(lobby, true);
+        env.destroyInstance(game, true);
+    }
+
+    @Test
+    void testLeavingTheLobbyDoesNotCancelTheTransitionWaitingForTheGameInstance(Env env) {
+        Instance lobby = env.createFlatInstance();
+        Instance game = env.createFlatInstance();
+        Instance otherLobby = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(lobby, SPAWN);
+        WakeUpTransition transition = new WakeUpTransition();
+        transition.register(env.process().eventHandler());
+        transition.start(player, game);
+
+        player.setInstance(otherLobby, SPAWN).join();
+        tick(env, 1);
+
+        assertTrue(transition.isRunning(player), "Leaving the lobby must not cancel the transition");
+        transition.cancel(player);
+        env.destroyInstance(lobby, true);
+        env.destroyInstance(game, true);
+        env.destroyInstance(otherLobby, true);
+    }
+
+    @Test
+    void testRegressionLobbyToGameArrivalKeepsTheTransitionAndSwitchesTheCamera(Env env) {
+        Instance lobby = env.createFlatInstance();
+        Instance game = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(lobby, SPAWN);
+        CameraLog cameras = new CameraLog(connection);
+        WakeUpTransition transition = new WakeUpTransition();
+        transition.register(env.process().eventHandler());
+        transition.start(player, game);
+
+        // The lobby-to-game switch fires RemoveEntityFromInstanceEvent for the lobby, which must not abandon it
+        player.setInstance(game, GAME_SPAWN).join();
+        env.tick();
+        Entity spider = spiderIn(game).orElseThrow(() -> new AssertionError("No spider was spawned after the arrival"));
+        tickUntilCameraSwitch(env, cameras, spider);
+
+        assertTrue(transition.isRunning(player), "The transition must not be abandoned by the lobby exit");
+        assertFalse(spider.isRemoved(), "The spider must still exist after the camera switched");
+        tick(env, WakeUpTransition.DURATION_TICKS);
+        assertEquals(player.getEntityId(), cameras.last(), "The camera must return to the player after the duration");
+        assertTrue(spider.isRemoved(), "The spider must be removed after the duration");
+        assertFalse(transition.isRunning(player), "The transition must end after the duration");
+        env.destroyInstance(lobby, true);
+        env.destroyInstance(game, true);
     }
 
     @Test
@@ -52,7 +143,7 @@ class WakeUpTransitionTest {
         Player player = connection.connect(instance, SPAWN);
         CameraLog cameras = new CameraLog(connection);
         WakeUpTransition transition = new WakeUpTransition();
-        transition.start(player);
+        transition.start(player, instance);
         Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
 
         env.tick();
@@ -69,7 +160,7 @@ class WakeUpTransitionTest {
         Player player = connection.connect(instance, SPAWN);
         CameraLog cameras = new CameraLog(connection);
         WakeUpTransition transition = new WakeUpTransition();
-        transition.start(player);
+        transition.start(player, instance);
         Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
 
         int viewableAt = 0;
@@ -95,7 +186,7 @@ class WakeUpTransitionTest {
         Player bystander = other.connect(instance, new Pos(2.5, 41, 0.5));
         WakeUpTransition transition = new WakeUpTransition();
 
-        transition.start(player);
+        transition.start(player, instance);
         env.tick();
 
         Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
@@ -112,7 +203,7 @@ class WakeUpTransitionTest {
         Player player = connection.connect(instance, SPAWN);
         WakeUpTransition transition = new WakeUpTransition();
 
-        transition.start(player);
+        transition.start(player, instance);
 
         Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
         double expectedY = player.getPosition().y() + player.getEyeHeight() - spider.getEyeHeight();
@@ -132,7 +223,7 @@ class WakeUpTransitionTest {
         Player player = connection.connect(instance, SPAWN);
         CameraLog cameras = new CameraLog(connection);
         WakeUpTransition transition = new WakeUpTransition();
-        transition.start(player);
+        transition.start(player, instance);
         Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
         tickUntilCameraSwitch(env, cameras, spider);
 
@@ -151,7 +242,7 @@ class WakeUpTransitionTest {
         Player player = connection.connect(instance, SPAWN);
         CameraLog cameras = new CameraLog(connection);
         WakeUpTransition transition = new WakeUpTransition();
-        transition.start(player);
+        transition.start(player, instance);
         Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
         tickUntilCameraSwitch(env, cameras, spider);
 
@@ -170,7 +261,7 @@ class WakeUpTransitionTest {
         Player player = connection.connect(instance, SPAWN);
         WakeUpTransition transition = new WakeUpTransition();
         transition.register(env.process().eventHandler());
-        transition.start(player);
+        transition.start(player, instance);
         Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
         CameraLog cameras = new CameraLog(connection);
 
@@ -184,25 +275,60 @@ class WakeUpTransitionTest {
     }
 
     @Test
-    void testPendingTransitionIsAbandonedAfterTheTimeout(Env env) {
-        Instance instance = env.createFlatInstance();
-        Instance otherInstance = env.createFlatInstance();
+    void testDisconnectWhileWaitingForArrivalRemovesEverythingWithoutCameraPackets(Env env) {
+        Instance lobby = env.createFlatInstance();
+        Instance game = env.createFlatInstance();
         TestConnection connection = env.createConnection();
-        Player player = connection.connect(instance, SPAWN);
+        Player player = connection.connect(lobby, SPAWN);
+        WakeUpTransition transition = new WakeUpTransition();
+        transition.register(env.process().eventHandler());
+        transition.start(player, game);
+        CameraLog cameras = new CameraLog(connection);
+
+        env.process().eventHandler().call(new PlayerDisconnectEvent(player));
+        tick(env, WakeUpTransition.PENDING_TIMEOUT_TICKS + 5);
+
+        assertFalse(transition.isRunning(player), "The transition waiting for arrival must be cancelled on disconnect");
+        assertTrue(spiderIn(game).isEmpty(), "No spider may be spawned for a player who disconnected before arriving");
+        assertEquals(0, cameras.count(), "No camera packet may be sent for a transition that never switched the camera");
+        env.destroyInstance(lobby, true);
+        env.destroyInstance(game, true);
+    }
+
+    @Test
+    void testPendingTransitionIsNotAbandonedBeforeTheTimeout(Env env) {
+        Instance lobby = env.createFlatInstance();
+        Instance game = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(lobby, SPAWN);
+        WakeUpTransition transition = new WakeUpTransition();
+        transition.start(player, game);
+
+        tick(env, WakeUpTransition.PENDING_TIMEOUT_TICKS - 1);
+
+        assertTrue(transition.isRunning(player), "The transition must still wait one tick before the timeout");
+        transition.cancel(player);
+        env.destroyInstance(lobby, true);
+        env.destroyInstance(game, true);
+    }
+
+    @Test
+    void testNeverArrivingAbandonsTheTransitionAfterTheTimeout(Env env) {
+        Instance lobby = env.createFlatInstance();
+        Instance game = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(lobby, SPAWN);
         CameraLog cameras = new CameraLog(connection);
         WakeUpTransition transition = new WakeUpTransition();
-        transition.start(player);
-        Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
-        // The player never reaches the spider's instance, so the spider can never be viewable for them
-        player.setInstance(otherInstance, SPAWN).join();
+        transition.start(player, game);
 
         tick(env, WakeUpTransition.PENDING_TIMEOUT_TICKS);
 
-        assertTrue(spider.isRemoved(), "The spider must be removed when the pending transition is abandoned");
-        assertFalse(transition.isRunning(player), "The pending transition must be abandoned after the timeout");
-        assertFalse(cameras.targeted(spider), "The camera must never be switched to a spider that was never viewable");
-        env.destroyInstance(instance, true);
-        env.destroyInstance(otherInstance, true);
+        assertFalse(transition.isRunning(player), "The transition must be abandoned when the player never arrives");
+        assertTrue(spiderIn(game).isEmpty(), "No spider may be spawned when the player never arrives");
+        assertEquals(0, cameras.count(), "The camera must never be switched when the player never arrives");
+        env.destroyInstance(lobby, true);
+        env.destroyInstance(game, true);
     }
 
     @Test
@@ -212,7 +338,7 @@ class WakeUpTransitionTest {
         Player player = connection.connect(instance, SPAWN);
         WakeUpTransition transition = new WakeUpTransition();
         transition.register(env.process().eventHandler());
-        transition.start(player);
+        transition.start(player, instance);
         Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
         CameraLog cameras = new CameraLog(connection);
         tickUntilCameraSwitch(env, cameras, spider);
@@ -229,23 +355,27 @@ class WakeUpTransitionTest {
     }
 
     @Test
-    void testLeavingTheInstanceRemovesTheSpider(Env env) {
-        Instance instance = env.createFlatInstance();
+    void testLeavingTheGameInstanceAfterArrivalRemovesTheSpider(Env env) {
+        Instance lobby = env.createFlatInstance();
+        Instance game = env.createFlatInstance();
         Instance otherInstance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
-        Player player = connection.connect(instance, SPAWN);
+        Player player = connection.connect(lobby, SPAWN);
         WakeUpTransition transition = new WakeUpTransition();
         transition.register(env.process().eventHandler());
-        transition.start(player);
-        Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
+        transition.start(player, game);
+        player.setInstance(game, GAME_SPAWN).join();
+        env.tick();
+        Entity spider = spiderIn(game).orElseThrow(() -> new AssertionError("No spider was spawned after the arrival"));
         tick(env, 50);
 
         player.setInstance(otherInstance, SPAWN).join();
         tick(env, 1);
 
-        assertTrue(spider.isRemoved(), "The spider must be removed when the player leaves its instance");
-        assertFalse(transition.isRunning(player), "The transition must be cancelled when the player leaves the instance");
-        env.destroyInstance(instance, true);
+        assertTrue(spider.isRemoved(), "The spider must be removed when the player leaves the game instance after arriving");
+        assertFalse(transition.isRunning(player), "The transition must be cancelled when the player leaves the game instance");
+        env.destroyInstance(lobby, true);
+        env.destroyInstance(game, true);
         env.destroyInstance(otherInstance, true);
     }
 
@@ -256,7 +386,7 @@ class WakeUpTransitionTest {
         Player player = connection.connect(instance, SPAWN);
         WakeUpTransition transition = new WakeUpTransition();
         transition.register(env.process().eventHandler());
-        transition.start(player);
+        transition.start(player, instance);
         Entity spider = spiderIn(instance).orElseThrow(() -> new AssertionError("No spider was spawned"));
         CameraLog cameras = new CameraLog(connection);
         tickUntilCameraSwitch(env, cameras, spider);

@@ -46,12 +46,14 @@ class WaitingPhaseIntegrationTest extends CygnusPlayerTestBase {
     void preparesRolesRightBeforeTheTeleport(@NotNull Env env) {
         List<String> calls = new ArrayList<>();
         EventNode<Event> node = recordingNode(calls);
+        Instance gameInstance = env.createFlatInstance();
 
-        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> calls.add("teleport"), new WakeUpTransition());
+        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> calls.add("teleport"), () -> gameInstance, new WakeUpTransition());
         phase.setCurrentTicks(1);
         phase.onUpdate();
 
         MinecraftServer.getGlobalEventHandler().removeChild(node);
+        env.destroyInstance(gameInstance, true);
         assertEquals(List.of("prepare", "launch", "teleport"), calls);
     }
 
@@ -61,7 +63,7 @@ class WaitingPhaseIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance, new Pos(0, 42, 0));
 
-        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {}, new WakeUpTransition());
+        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {}, () -> instance, new WakeUpTransition());
         phase.start();
 
         assertEquals(0.0, player.getAttributeValue(Attribute.MOVEMENT_SPEED));
@@ -82,7 +84,7 @@ class WaitingPhaseIntegrationTest extends CygnusPlayerTestBase {
         double jump = player.getAttributeValue(Attribute.JUMP_STRENGTH);
         float fieldView = player.getFieldViewModifier();
 
-        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {}, new WakeUpTransition());
+        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {}, () -> instance, new WakeUpTransition());
         phase.start();
         phase.finish();
 
@@ -98,9 +100,9 @@ class WaitingPhaseIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance, new Pos(0, 42, 0));
         WakeUpTransition transition = new WakeUpTransition();
-        transition.start(player);
+        transition.start(player, instance);
 
-        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {}, transition);
+        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {}, () -> instance, transition);
         phase.start();
         phase.finish();
 
