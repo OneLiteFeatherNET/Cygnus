@@ -5,6 +5,7 @@ import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.attribute.AttributeHelper;
+import net.onelitefeather.cygnus.camera.WakeUpTransition;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
 import net.onelitefeather.cygnus.view.GameView;
@@ -23,8 +24,9 @@ public final class WaitingPhase extends TimedPhase {
     private final GameView gameView;
     private final VoidConsumer instanceSwitch;
     private final VoidConsumer teleportLogic;
+    private final WakeUpTransition wakeUpTransition;
 
-    public WaitingPhase(GameView gameView, VoidConsumer instanceSwitch, VoidConsumer teleportLogic) {
+    public WaitingPhase(GameView gameView, VoidConsumer instanceSwitch, VoidConsumer teleportLogic, WakeUpTransition wakeUpTransition) {
         super("Waiting", ChronoUnit.SECONDS, 1);
         this.setPaused(false);
         this.setCurrentTicks(3);
@@ -32,6 +34,7 @@ public final class WaitingPhase extends TimedPhase {
         this.gameView = gameView;
         this.instanceSwitch = instanceSwitch;
         this.teleportLogic = teleportLogic;
+        this.wakeUpTransition = wakeUpTransition;
     }
 
     @Override
@@ -46,6 +49,7 @@ public final class WaitingPhase extends TimedPhase {
     @Override
     protected void onFinish() {
         MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(AttributeHelper::unfreeze);
+        this.wakeUpTransition.cancelAll();
         this.gameView.addPlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
     }
 
@@ -58,6 +62,8 @@ public final class WaitingPhase extends TimedPhase {
             // Right before the end, so the page counts are based on the players that actually start
             EventDispatcher.call(new GamePreLaunchEvent());
             this.teleportLogic.apply();
+            // Right after the teleport, so every player is already in the game instance the camera looks into
+            this.wakeUpTransition.start(MinecraftServer.getConnectionManager().getOnlinePlayers());
         }
     }
 }

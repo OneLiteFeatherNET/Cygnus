@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.phase;
 
 import net.minestom.server.MinecraftServer;
+import net.onelitefeather.cygnus.camera.WakeUpTransition;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
@@ -45,7 +46,7 @@ class WaitingPhaseIntegrationTest extends CygnusPlayerTestBase {
         List<String> calls = new ArrayList<>();
         EventNode<Event> node = recordingNode(calls);
 
-        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> calls.add("teleport"));
+        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> calls.add("teleport"), new WakeUpTransition());
         phase.setCurrentTicks(1);
         phase.onUpdate();
 
@@ -59,7 +60,7 @@ class WaitingPhaseIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance, new Pos(0, 42, 0));
 
-        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {});
+        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {}, new WakeUpTransition());
         phase.start();
 
         assertEquals(0.0, player.getAttributeValue(Attribute.MOVEMENT_SPEED));
@@ -80,7 +81,7 @@ class WaitingPhaseIntegrationTest extends CygnusPlayerTestBase {
         double jump = player.getAttributeValue(Attribute.JUMP_STRENGTH);
         float fieldView = player.getFieldViewModifier();
 
-        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {});
+        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {}, new WakeUpTransition());
         phase.start();
         phase.finish();
 
