@@ -89,13 +89,73 @@ Logging adds the arrival steps: `wake-up transition: waiting for <name> to arriv
 the player is not in the target yet, and `wake-up transition: <name> arrived, spawning spider` when the spider is
 spawned for the player.
 
+## Lobby close and world age (third change)
+
+Two kinds of transition share the pipeline above (arrival, spawn, viewable plus delay, spectate). `WakeUpTransition.Kind`
+selects the behaviour; `close(players, lobby)` and `open(players, game)` start them.
+
+- `Kind.CLOSE` starts in `WaitingPhase#onStart`, before `instanceSwitch.apply()`. The lobby is read from the
+  `Supplier<Instance>` (`mapProvider.getActiveInstance()`) at that point, which is still the lobby. The supplier is
+  the active instance, so it must be read before `switchToGameMap()`, which moves it to the game. The spider lives in
+  the lobby, and the transition is armed at once because the players are already in it.
+- `Kind.CLOSE` has no duration. It ends when the player leaves the lobby: the existing `RemoveEntityFromInstanceEvent`
+  listener cancels it with the reason `teleported`, which removes the lobby spider and logs
+  `camera returned for <name> (teleported)`.
+- `Kind.OPEN` is unchanged and starts at tick 1 after the team teleport, with `open(players, gameInstance)`.
+- Transitions are keyed by player and kind. `open` does not replace a running `close` of the same player, so the
+  close keeps the camera on the lobby spider until the player actually leaves the lobby. A second `close` or `open`
+  of the same kind does replace the running one.
+
+### World age bands (resource pack contract)
+
+The resource pack computes `GameTime = (worldAge mod 24000) / 24000` and picks the animation from it:
+
+| World age mod 24000 | Animation | Effect                                                              |
+|---------------------|-----------|---------------------------------------------------------------------|
+| `[0, 6000)`         | close     | `t = (age mod 24000) / 20 s`; fully shut by 1.6 s, then held shut   |
+| `[12000, 18000)`    | open      | `t = (age mod 24000 - 12000) / 20 s`; neutral from 4.5 s            |
+| any other value     | none      | no visible effect                                                   |
+
+`WakeUpTransition#worldAgeFor(kind, current)` picks the value to set:
+
+- close: `ceilDiv(current, 24000) * 24000`, the next multiple of 24000 not below the current age, which is in the close
+  band at offset 0.
+- open: `ceilDiv(current - 12000, 24000) * 24000 + 12000`, the next age not below the current one whose offset is the
+  start of the open band.
+
+The world age only moves forward. A close can jump up to 23999 ticks (about 20 minutes) forward if the lobby is just
+past a multiple; this is not a visible time of day because the sky uses the clock time, which is a separate field
+(`Instance#setTime`, used by the lobby time task and `GameMapProvider`, which sets the game clock to the new moon).
+`Instance#setWorldAge` only changes the `GameTime` the pack reads and the time packet's `gameTime`, so the day and night
+cycle does not move. The open band moves the world age of the game instance; the game clock is not touched.
+
+### Once per batch and instance
+
+Each call of `close` or `open` creates a batch. Right before the first camera switch of a batch in an instance, the
+world age of that instance is set (`ensureWorldAge`). The batch remembers the instances it has set, so the other
+players of the batch switch without moving the age again. A later batch in the same instance sets it again.
+
+### Immediate broadcast
+
+`Instance#setWorldAge` calls `refreshTime()`, which sends a `SetTimePacket` with the new age to the instance's players at
+once (Minestom 26.2 sources). The transition does not send an extra packet. The tests assert the packet with the set
+value.
+
+### Other writers of the world age
+
+A search of the repository (`setWorldAge`, `getWorldAge`, `setTime`, `TimeUpdate`, `timeRate`) found no writer of the
+world age apart from this transition. `LobbyTimeTransitionTask` and `GameMapProvider#loadGameMap` write the clock time
+(`setTime`) and the clock rate, which do not change the world age. Minestom itself increments the world age in
+`Instance#tick` on every server tick, regardless of the clock rate.
+
 ## Goals / Non-Goals
 
 **Goals**
 
 - One invisible spider per player, seen only by that player, at the player's eye position and view direction.
-- Exactly 100 ticks until the camera returns, driven only by ticks (no wall clock).
+- Exactly 100 ticks until the open camera returns, driven only by ticks (no wall clock). A close has no duration.
 - Early, quiet cleanup on disconnect and instance change. Cleanup at round finish.
+- The eyes close in the lobby and open in the game, with the world age in the band of each kind.
 - The waiting phase end does not interrupt the transition: the camera stays on the spider for the full 100 ticks.
 
 **Non-Goals**
