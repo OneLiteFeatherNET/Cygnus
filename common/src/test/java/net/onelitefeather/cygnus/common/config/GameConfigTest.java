@@ -41,7 +41,7 @@ class GameConfigTest {
         assertRejected("Lobby atmosphere share must be between 0 and 1", () -> new GameConfig(
                 defaults.round(), defaults.teams(), null, defaults.resourcePack(), defaults.pageProximity(),
                 defaults.damageSound(), defaults.glitch(), defaults.pageGlitch(), defaults.creek(),
-                defaults.sanity(), defaults.stamina(), defaults.adrenaline(), defaults.telemetry(), defaults.minimap(), 1.5F));
+                defaults.sanity(), defaults.stamina(), defaults.adrenaline(), defaults.footprint(), defaults.telemetry(), defaults.minimap(), 1.5F));
     }
 
     @Test
