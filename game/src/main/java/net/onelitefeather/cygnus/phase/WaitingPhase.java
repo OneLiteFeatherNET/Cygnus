@@ -49,7 +49,6 @@ public final class WaitingPhase extends TimedPhase {
     @Override
     protected void onFinish() {
         MinecraftServer.getConnectionManager().getOnlinePlayers().forEach(AttributeHelper::unfreeze);
-        this.wakeUpTransition.cancelAll();
         this.gameView.addPlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
     }
 

@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.phase;
 import net.minestom.server.MinecraftServer;
 import net.onelitefeather.cygnus.camera.WakeUpTransition;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.event.Event;
@@ -88,6 +89,25 @@ class WaitingPhaseIntegrationTest extends CygnusPlayerTestBase {
         assertEquals(speed, player.getAttributeValue(Attribute.MOVEMENT_SPEED));
         assertEquals(jump, player.getAttributeValue(Attribute.JUMP_STRENGTH));
         assertEquals(fieldView, player.getFieldViewModifier());
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("Finishing the waiting phase keeps the wake-up transition running until the round ends")
+    void waitingPhaseEndKeepsTheWakeUpTransitionRunning(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance, new Pos(0, 42, 0));
+        WakeUpTransition transition = new WakeUpTransition();
+        transition.start(player);
+
+        WaitingPhase phase = new WaitingPhase(new GameViewImpl(), () -> {}, () -> {}, transition);
+        phase.start();
+        phase.finish();
+
+        assertTrue(transition.isRunning(player), "The wake-up transition must still run after the waiting phase ended");
+        assertTrue(instance.getEntities().stream().anyMatch(entity -> entity.getEntityType() == EntityType.SPIDER),
+                "The spider must still exist after the waiting phase ended");
+        transition.cancel(player);
         env.destroyInstance(instance, true);
     }
 
