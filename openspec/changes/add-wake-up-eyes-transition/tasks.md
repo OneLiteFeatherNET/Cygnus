@@ -5,6 +5,8 @@
 - [x] 1.3 Replace the phase end test with "game finish removes the spider and cancels the scheduled end"
 - [x] 1.4 Add a waiting phase test: finishing the waiting phase keeps the transition running (red before the fix)
 - [x] 1.5 Run the new tests before the production change and confirm both fail
+- [x] 1.6 Live test fix: rewrite the camera tests so the switch is awaited by ticks, add the pending, timeout and
+  pending disconnect tests, and confirm that the new expectations fail on the previous implementation
 
 ## 2. Camera transition
 
@@ -13,6 +15,11 @@
 - [x] 2.3 Start `Player#spectate`, schedule the 100 tick end, and stop spectating and remove the spider on expiry
 - [x] 2.4 Cancel early on disconnect and instance change without errors
 - [x] 2.5 Cancel every running transition on `GameFinishEvent`, registered in `WakeUpTransition#register`
+- [x] 2.6 Live test fix: switch the camera only once the player is in the spider's instance, the spider's spawn is
+  complete and the spider is a viewer of the player, then after `CAMERA_DELAY_TICKS` ticks
+- [x] 2.7 Live test fix: check readiness every tick, abandon the transition after `PENDING_TIMEOUT_TICKS` ticks
+- [x] 2.8 Live test fix: count the 100 ticks from the camera switch, not from the start
+- [x] 2.9 Live test fix: log INFO lines for spawn, switch, return and abandon
 
 ## 3. Phase wiring
 
