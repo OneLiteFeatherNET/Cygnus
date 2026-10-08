@@ -32,16 +32,23 @@ import java.util.concurrent.CompletableFuture;
  * The game mode is never changed: spectating only switches the camera.
  * </p>
  * <p>
- * The camera is not switched when {@link #start(Player)} is called. The client must first know the spider: the
- * player must be in the spider's instance, the spider must have been spawned and must be a viewer of the player.
- * The switch then waits {@link #CAMERA_DELAY_TICKS} more ticks so that the spider's spawn packets are sent before
- * the camera packet. If the spider is still not viewable after {@link #PENDING_TIMEOUT_TICKS} ticks, the transition
- * is abandoned. The {@link #DURATION_TICKS} are counted from the moment the camera is actually switched.
+ * The transition is started with the game instance the players are teleported to, not with the instance they stand
+ * in now. Minestom applies {@code Player#setInstance} only after the target chunks loaded, so right after the
+ * teleport call the player is still in the lobby. The spider is therefore spawned in the target instance only once
+ * the player has actually arrived there ({@code player.getInstance() == target}), at the player's position at that
+ * moment. Until then the transition waits, and leaving the lobby does not end it.
  * </p>
  * <p>
- * The transition ends early, with the spider removed and no error, when the player disconnects or leaves the
- * instance the spider lives in. The end of the waiting phase does not end it. When the round finishes
- * ({@link GameFinishEvent}), every running transition is cancelled.
+ * The camera is not switched when the transition starts. The client must first know the spider: the player must be
+ * in the spider's instance, the spider must have been spawned and must be a viewer of the player. The switch then
+ * waits {@link #CAMERA_DELAY_TICKS} more ticks so that the spider's spawn packets are sent before the camera packet.
+ * If the transition is still not switched after {@link #PENDING_TIMEOUT_TICKS} ticks counted from its start, it is
+ * abandoned. The {@link #DURATION_TICKS} are counted from the moment the camera is actually switched.
+ * </p>
+ * <p>
+ * The transition ends early, with the spider removed and no error, when the player disconnects, or when the player
+ * leaves the target instance after having arrived there. The end of the waiting phase does not end it. When the
+ * round finishes ({@link GameFinishEvent}), every running transition is cancelled.
  * </p>
  * <p>
  * Usage:
@@ -49,10 +56,10 @@ import java.util.concurrent.CompletableFuture;
  * <pre>{@code
  * WakeUpTransition transition = new WakeUpTransition();
  * transition.register(MinecraftServer.getGlobalEventHandler());
- * transition.start(players);
+ * transition.start(players, gameInstance); // before or after the teleport
  * }</pre>
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.16.0
  */
 public final class WakeUpTransition {
@@ -71,9 +78,13 @@ public final class WakeUpTransition {
     public static final int CAMERA_DELAY_TICKS = 2;
 
     /**
-     * How long a transition may wait for the spider to become viewable, in server ticks.
+     * How long a transition may wait, counted from its start, for the player to arrive in the target instance and
+     * for the spider to become viewable, in server ticks. The lobby-to-game switch is a deferred
+     * {@code Player#setInstance} that loads the game map's chunks and respawns the player, which takes well over the
+     * 2 seconds (40 ticks) the first version allowed. 100 ticks (5 seconds) leaves room for that without keeping a
+     * transition that cannot succeed running for long.
      */
-    public static final int PENDING_TIMEOUT_TICKS = 40;
+    public static final int PENDING_TIMEOUT_TICKS = 100;
 
     private final Map<UUID, Transition> transitions = new HashMap<>();
 
@@ -88,51 +99,72 @@ public final class WakeUpTransition {
         node.addListener(RemoveEntityFromInstanceEvent.class, event -> {
             if (!(event.getEntity() instanceof Player player)) return;
             Transition transition = transitions.get(player.getUuid());
-            if (transition != null && transition.instance == event.getInstance()) {
+            // Only the target instance counts: the lobby the player leaves on the way there is not the spider's place
+            if (transition != null && transition.arrived && transition.instance == event.getInstance()) {
                 cancel(player, "player left the instance");
             }
         });
     }
 
     /**
-     * Starts the transition for every given player who is currently in an instance.
+     * Starts the transition for every given player, see {@link #start(Player, Instance)}.
      *
-     * @param players the players that just entered the game map
+     * @param players the players that are being moved into the game map
+     * @param target  the game instance the players are moved into
      */
-    public void start(Iterable<Player> players) {
+    public void start(Iterable<Player> players, Instance target) {
         for (Player player : players) {
-            start(player);
+            start(player, target);
         }
     }
 
     /**
      * Starts the transition for one player. A transition that is already running for the player is replaced.
-     * Does nothing if the player is not in an instance. The camera switches once the spider is viewable for the
-     * player, see the class documentation.
+     * The player does not have to be in the target yet: the spider is spawned once the player arrives there, at the
+     * player's position at that moment. The camera switches once the spider is viewable for the player, see the class
+     * documentation.
      *
      * @param player the player to point the camera from
+     * @param target the instance the player is moved into, which is where the spider lives
      */
-    public void start(Player player) {
-        Instance instance = player.getInstance();
-        if (instance == null) return;
+    public void start(Player player, Instance target) {
+        Objects.requireNonNull(target, "target");
         cancel(player, "replaced by a new transition");
+
+        Transition transition = new Transition(player, target);
+        transitions.put(player.getUuid(), transition);
+        if (transition.isAtTarget()) {
+            spawnSpider(transition);
+        } else {
+            LOGGER.info("wake-up transition: waiting for {} to arrive in the game instance", player.getUsername());
+        }
+        transition.task = MinecraftServer.getSchedulerManager()
+                .buildTask(() -> tick(player.getUuid()))
+                .repeat(TaskSchedule.tick(1))
+                .schedule();
+    }
+
+    /**
+     * Spawns the spider in the target instance at the player's current eye position and view. Runs once per
+     * transition, when the player is in the target instance for the first time.
+     */
+    private static void spawnSpider(Transition transition) {
+        Player player = transition.player;
+        LOGGER.info("wake-up transition: {} arrived, spawning spider", player.getUsername());
 
         WakeUpSpider spider = new WakeUpSpider();
         Pos eye = player.getPosition();
         double spiderY = eye.y() + player.getEyeHeight() - spider.getEyeHeight();
         Pos spawn = eye.withY(spiderY);
         CompletableFuture<Void> spawned = Objects.requireNonNullElseGet(
-                spider.setInstance(instance, spawn), () -> CompletableFuture.completedFuture(null));
+                spider.setInstance(transition.instance, spawn), () -> CompletableFuture.completedFuture(null));
         spider.setView(spawn.yaw(), spawn.pitch(), spawn.yaw());
         spider.updateViewableRule(viewer -> viewer.getUuid().equals(player.getUuid()));
         LOGGER.info("wake-up transition: spider spawned for {}", player.getUsername());
 
-        Transition transition = new Transition(player, instance, spider, spawned);
-        transition.task = MinecraftServer.getSchedulerManager()
-                .buildTask(() -> tick(player.getUuid()))
-                .repeat(TaskSchedule.tick(1))
-                .schedule();
-        transitions.put(player.getUuid(), transition);
+        transition.spider = spider;
+        transition.spawned = spawned;
+        transition.arrived = true;
     }
 
     /**
@@ -181,7 +213,9 @@ public final class WakeUpTransition {
         } else {
             LOGGER.info("wake-up transition: abandoned for {} ({})", transition.player.getUsername(), reason);
         }
-        transition.spider.remove();
+        if (transition.spider != null) {
+            transition.spider.remove();
+        }
     }
 
     /**
@@ -201,10 +235,16 @@ public final class WakeUpTransition {
         }
 
         transition.pendingTicks++;
+        if (!transition.arrived && transition.isAtTarget()) {
+            spawnSpider(transition);
+        }
         if (!transition.isViewable()) {
             transition.viewableSince = -1;
             if (transition.pendingTicks >= PENDING_TIMEOUT_TICKS) {
-                cancel(transition.player, "spider not viewable after " + PENDING_TIMEOUT_TICKS + " ticks");
+                String reason = transition.arrived
+                        ? "spider not viewable after " + PENDING_TIMEOUT_TICKS + " ticks"
+                        : "player did not arrive in the game instance after " + PENDING_TIMEOUT_TICKS + " ticks";
+                cancel(transition.player, reason);
             }
             return;
         }
@@ -227,27 +267,36 @@ public final class WakeUpTransition {
 
         private final Player player;
         private final Instance instance;
-        private final Entity spider;
-        private final CompletableFuture<Void> spawned;
         private Task task;
+        /** Set once the spider was spawned, which happens on the player's arrival in {@link #instance}. */
+        private boolean arrived;
+        private WakeUpSpider spider;
+        private CompletableFuture<Void> spawned;
         private boolean onSpider;
         private int pendingTicks;
         private int viewableSince = -1;
         private int ticksOnSpider;
 
-        private Transition(Player player, Instance instance, Entity spider, CompletableFuture<Void> spawned) {
+        private Transition(Player player, Instance instance) {
             this.player = player;
             this.instance = instance;
-            this.spider = spider;
-            this.spawned = spawned;
         }
 
         /**
-         * The client can know the spider only when the player is in the spider's instance, the spider's spawn is
-         * complete and the spider is a viewer of the player.
+         * Whether the player is in the target instance right now. Minestom sets the player's instance only when the
+         * deferred switch has completed, so this is the arrival check.
+         */
+        private boolean isAtTarget() {
+            return player.getInstance() == instance;
+        }
+
+        /**
+         * The client can know the spider only when the spider was spawned, the player is in the spider's instance,
+         * the spider's spawn is complete and the spider is a viewer of the player.
          */
         private boolean isViewable() {
-            return player.getInstance() == instance
+            return arrived
+                    && player.getInstance() == instance
                     && spawned.isDone()
                     && !spider.isRemoved()
                     && spider.getViewers().contains(player);

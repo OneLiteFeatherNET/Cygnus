@@ -8,10 +8,12 @@ import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import net.onelitefeather.cygnus.camera.WakeUpTransition;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
+import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.view.GameView;
 
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
+import java.util.function.Supplier;
 
 /**
  * @author theEvilReaper
@@ -24,9 +26,11 @@ public final class WaitingPhase extends TimedPhase {
     private final GameView gameView;
     private final VoidConsumer instanceSwitch;
     private final VoidConsumer teleportLogic;
+    private final Supplier<Instance> gameInstance;
     private final WakeUpTransition wakeUpTransition;
 
-    public WaitingPhase(GameView gameView, VoidConsumer instanceSwitch, VoidConsumer teleportLogic, WakeUpTransition wakeUpTransition) {
+    public WaitingPhase(GameView gameView, VoidConsumer instanceSwitch, VoidConsumer teleportLogic,
+                        Supplier<Instance> gameInstance, WakeUpTransition wakeUpTransition) {
         super("Waiting", ChronoUnit.SECONDS, 1);
         this.setPaused(false);
         this.setCurrentTicks(3);
@@ -34,6 +38,7 @@ public final class WaitingPhase extends TimedPhase {
         this.gameView = gameView;
         this.instanceSwitch = instanceSwitch;
         this.teleportLogic = teleportLogic;
+        this.gameInstance = gameInstance;
         this.wakeUpTransition = wakeUpTransition;
     }
 
@@ -61,8 +66,9 @@ public final class WaitingPhase extends TimedPhase {
             // Right before the end, so the page counts are based on the players that actually start
             EventDispatcher.call(new GamePreLaunchEvent());
             this.teleportLogic.apply();
-            // Right after the teleport, so every player is already in the game instance the camera looks into
-            this.wakeUpTransition.start(MinecraftServer.getConnectionManager().getOnlinePlayers());
+            // The players may still be on their way into the game instance (the switch completes later), so the
+            // transition names the target and spawns the spider once each player has arrived there
+            this.wakeUpTransition.start(MinecraftServer.getConnectionManager().getOnlinePlayers(), this.gameInstance.get());
         }
     }
 }
