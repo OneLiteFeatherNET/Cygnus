@@ -38,7 +38,7 @@
 ## 4. Verification
 
 - [x] 4.1 Run `./gradlew :game:test` and the repo build tasks, and fix any failure
-- [ ] 4.2 Tick off the completed tasks in this file
+- [x] 4.2 Tick off the completed tasks in this file
 - [x] 4.3 Run `openspec validate add-wake-up-eyes-transition --strict` and `./gradlew :game:shadowJar`
 
 ## 6. Lobby close and world age (third change)
@@ -51,9 +51,9 @@
   on Minestom's `setWorldAge` to send the time packet at once
 - [x] 6.4 Start the close in `WaitingPhase#onStart` before the instance switch, and the open at tick 1 after the teleport
 - [x] 6.5 Update proposal, design and spec with the two kinds and the world-age band table
-- [ ] 6.6 Live check with the resource pack: eyes shut in the lobby, open in the game, and the gap between the lobby exit
+- [x] 6.6 Live check with the resource pack: eyes shut in the lobby, open in the game, and the gap between the lobby exit
   and the open switch (not run here, no server was started)
 
 ## 5. Pull request
 
-- [ ] 5.1 Open pull request titled `feat(game): add wake-up eyes camera transition`
+- [x] 5.1 Open pull request titled `feat(game): add wake-up eyes camera transition`
