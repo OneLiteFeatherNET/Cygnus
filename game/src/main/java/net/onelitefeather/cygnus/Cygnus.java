@@ -41,6 +41,7 @@ import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.onelitefeather.cygnus.adrenaline.AdrenalineService;
+import net.onelitefeather.cygnus.footprint.FootprintFeature;
 import net.onelitefeather.cygnus.minimap.LabyModPolicy;
 import net.onelitefeather.cygnus.minimap.MinimapPolicy;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
@@ -243,6 +244,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                                 this.gameConfig.adrenaline(),
                                 () -> TeamHelper.survivorsOf(this.teamService),
                                 System::currentTimeMillis),
+                        new FootprintFeature(this.gameConfig.footprint(), System::currentTimeMillis),
                         new OverlayModule(this.gameConfig.glitch(), this.gameConfig.pageGlitch(), this.teamService,
                                 this.staminaService, tickSections)
                 )).toList();
