@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Covers the crash from switching a {@link Player} to a non-avatar {@link EntityType} (e.g. the
- * Slender disguise, see {@link net.onelitefeather.cygnus.utils.Items#setSlenderEye}): Minestom's
+ * Slender disguise, see {@link net.onelitefeather.cygnus.utils.Items#setSlenderItems}): Minestom's
  * built-in {@link SettingsListener} always casts the entity meta to {@code PlayerMeta}, which
  * blows up with a {@link ClassCastException} the next time the client resends its settings.
  */

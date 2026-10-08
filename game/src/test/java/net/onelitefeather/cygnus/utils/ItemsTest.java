@@ -19,17 +19,21 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class ItemsTest {
 
     @Test
-    void testSlenderEyeSet(@NotNull Env env) {
+    void testSlenderItemsSet(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         assertNotNull(player);
 
-        Items.setSlenderEye(player);
+        Items.setSlenderItems(player);
         ItemStack eye = player.getInventory().getItemStack(0x00);
         assertNotNull(eye);
         assertNotEquals(Material.AIR, eye.material());
         assertEquals(Material.ENDER_EYE, eye.material());
         assertEquals(0x00, eye.getTag(Tags.ITEM_TAG).byteValue());
+
+        ItemStack tracker = player.getInventory().getItemStack(Items.TRACKING_SLOT);
+        assertEquals(Items.TRACKING_MATERIAL, tracker.material());
+        assertEquals(Items.TRACKING_ITEM, tracker.getTag(Tags.ITEM_TAG).byteValue());
 
         env.destroyInstance(instance, true);
     }
