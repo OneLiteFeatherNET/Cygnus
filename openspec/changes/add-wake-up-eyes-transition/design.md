@@ -17,7 +17,8 @@ that `addViewer` / `removeViewer` must not be mixed into that rule, so the spide
 
 - One invisible spider per player, seen only by that player, at the player's eye position and view direction.
 - Exactly 100 ticks until the camera returns, driven only by ticks (no wall clock).
-- Early, quiet cleanup on disconnect, instance change and phase end.
+- Early, quiet cleanup on disconnect and instance change. Cleanup at round finish.
+- The waiting phase end does not interrupt the transition: the camera stays on the spider for the full 100 ticks.
 
 **Non-Goals**
 
@@ -40,17 +41,24 @@ that `addViewer` / `removeViewer` must not be mixed into that rule, so the spide
 - **Lifetime**: state lives per instance of `WakeUpTransition` in a map keyed by player UUID. There is no static
   state, so tests are independent.
 - **Cleanup triggers**: `PlayerDisconnectEvent`, `RemoveEntityFromInstanceEvent` for the player when it leaves the
-  spider's instance, and `WaitingPhase#onFinish`. All cancel through one method that is idempotent.
+  spider's instance, and `GameFinishEvent` (cancels every running transition). All cancel through one method that
+  is idempotent.
+- **Round finish hook**: `GameFinishEvent` is the hook, not `RestartPhase`. The event is dispatched when the game
+  phase reaches a finish condition, before the restart countdown. Other game services (`CreekService`,
+  `AdrenalineService`, `SlenderGazeService`) already clean up on the same event, so the wiring matches the codebase.
+  The listener is registered inside `register(EventNode<Event>)`, so `Cygnus` only calls `register` once.
+- **Waiting phase end**: `WaitingPhase#onFinish` does not touch the transition. It only unfreezes the players and
+  hands them to the game view. The transition is started at the waiting phase's tick 1 and ends by its own tick
+  count, so the full 100 ticks run into the game phase.
 - **Event registration**: `register(EventNode<Event>)` takes the node. Production passes the global handler, tests
   pass the per-environment process handler so listeners do not leak between tests.
 
 ## Risks / Trade-offs
 
-- **The waiting phase ends about 40 ticks after the teleport.** `WaitingPhase` finishes about 4 s after it starts
-  and the teleport happens about 2 s in, so with the phase cleanup as specified the 100-tick transition is cut to
-  roughly 40 ticks (about 2 s), less than the shader's four-second blink. This change follows the requirement as
-  written. Moving the cancel to the start of the game phase (or to the end of the round) would keep the full 100
-  ticks; that is a follow-up decision, not made here.
+- **The camera can stay on the spider while the game has started.** The transition runs for 5 s from the teleport
+  and the game phase starts about 4 s after it. The first seconds of the round therefore show the wake-up effect
+  together with the game phase. This is the agreed product behaviour; the cut happens only at round finish or on
+  disconnect and instance change.
 - A spider entity that is not spawned yet (chunk still loading) receives no camera packet until it is. The
   instance is set synchronously and the chunks around the spawn are already loaded by the lobby-to-map switch, so
   this is expected to be a non-issue in practice.

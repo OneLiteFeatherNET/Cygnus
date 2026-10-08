@@ -59,8 +59,8 @@ back at the player and SHALL remove the spider. The duration SHALL be counted in
 
 ### Requirement: Early cleanup
 
-The transition SHALL end early without error when the player disconnects, when the player leaves the instance the
-spider is in, or when the waiting phase ends. Each early end SHALL remove the spider and cancel the scheduled end.
+The transition SHALL end early without error when the player disconnects or when the player leaves the instance the
+spider is in. Each early end SHALL remove the spider and cancel the scheduled end.
 
 #### Scenario: Disconnect before the end
 
@@ -72,7 +72,34 @@ spider is in, or when the waiting phase ends. Each early end SHALL remove the sp
 - **WHEN** the player leaves the instance the spider is in 50 ticks into the transition
 - **THEN** the spider is removed and the camera is no longer on it
 
-#### Scenario: Phase end before the end
+### Requirement: Transition survives the waiting phase end
+
+The end of the waiting phase SHALL NOT end a running transition. The camera SHALL stay on the spider for the full
+100 ticks even though the game phase has already started.
+
+#### Scenario: Waiting phase ends during the transition
 
 - **WHEN** the waiting phase ends 50 ticks into the transition
-- **THEN** the spider is removed, the camera returns to the player, and no error is raised when the scheduled end would have run
+- **THEN** the camera still targets the spider, the spider still exists, and the transition is still running
+
+#### Scenario: Transition still ends at 100 ticks after the waiting phase ends
+
+- **WHEN** the waiting phase ends 50 ticks into the transition and 100 ticks have passed since the transition started
+- **THEN** the camera returns to the player and the spider is removed, exactly as without the phase end
+
+### Requirement: Cleanup when the round finishes
+
+The transition SHALL end early without error when the round finishes, that is when a `GameFinishEvent` is dispatched.
+Every running transition SHALL be cancelled: the spider is removed, the camera returns to the player, and the
+scheduled end is cancelled.
+
+#### Scenario: Game finish before the end
+
+- **WHEN** a `GameFinishEvent` is dispatched 50 ticks into the transition
+- **THEN** the spider is removed, the camera returns to the player, and no error is raised when the scheduled end
+  would have run
+
+#### Scenario: Game finish is wired through the register method
+
+- **WHEN** the transition is registered on an event node and a `GameFinishEvent` is dispatched on that node
+- **THEN** the transition is no longer running for the player
