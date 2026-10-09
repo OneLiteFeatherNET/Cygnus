@@ -234,44 +234,44 @@ public final class GameConfigReader {
      * @throws IllegalArgumentException if the values do not fit together
      */
     private CreekConfig getCreek(Properties properties) {
-        CreekConfig d = CreekConfig.DEFAULT;
+        CreekConfig defaults = CreekConfig.DEFAULT;
         return new CreekConfig(
-                getBoolean(properties, CREEK_PREFIX + "enabled", d.enabled()),
-                getBoolean(properties, CREEK_PREFIX + "activeWithLastSurvivor", d.activeWithLastSurvivor()),
-                getInt(properties, CREEK_PREFIX + "sightRange", d.sightRange()),
-                getInt(properties, CREEK_PREFIX + "sightViewAngle", d.sightViewAngle()),
-                getInt(properties, CREEK_PREFIX + "wanderPauseMillis", d.wanderPauseMillis()),
-                getDouble(properties, CREEK_PREFIX + "wanderSpeed", d.wanderSpeed()),
-                getDouble(properties, CREEK_PREFIX + "huntSpeed", d.huntSpeed()),
-                getDouble(properties, CREEK_PREFIX + "stalkThreshold", d.stalkThreshold()),
-                getDouble(properties, CREEK_PREFIX + "huntThreshold", d.huntThreshold()),
-                getInt(properties, CREEK_PREFIX + "stalkMinDistance", d.stalkMinDistance()),
-                getInt(properties, CREEK_PREFIX + "stalkMaxDistance", d.stalkMaxDistance()),
-                getInt(properties, CREEK_PREFIX + "stalkMinAngle", d.stalkMinAngle()),
-                getInt(properties, CREEK_PREFIX + "stalkMaxAngle", d.stalkMaxAngle()),
-                getInt(properties, CREEK_PREFIX + "stalkRevealMillis", d.stalkRevealMillis()),
-                getInt(properties, CREEK_PREFIX + "stalkMinSeconds", d.stalkMinSeconds()),
-                getInt(properties, CREEK_PREFIX + "stalkMaxSeconds", d.stalkMaxSeconds()),
-                getInt(properties, CREEK_PREFIX + "huntMaxSeconds", d.huntMaxSeconds()),
-                getInt(properties, CREEK_PREFIX + "huntMinStalkSeconds", d.huntMinStalkSeconds()),
-                getInt(properties, CREEK_PREFIX + "huntCooldownSeconds", d.huntCooldownSeconds()),
-                getDouble(properties, CREEK_PREFIX + "catchDistance", d.catchDistance()),
-                getInt(properties, CREEK_PREFIX + "vanishMinSeconds", d.vanishMinSeconds()),
-                getInt(properties, CREEK_PREFIX + "vanishMaxSeconds", d.vanishMaxSeconds()),
-                getInt(properties, CREEK_PREFIX + "respawnMinDistance", d.respawnMinDistance()),
-                getInt(properties, CREEK_PREFIX + "personalSpace", d.personalSpace()),
-                getInt(properties, CREEK_PREFIX + "stuckMillis", d.stuckMillis()),
-                getInt(properties, CREEK_PREFIX + "betrayalCatchCount", d.betrayalCatchCount()),
-                getDouble(properties, CREEK_PREFIX + "betrayalChance", d.betrayalChance()),
-                getInt(properties, CREEK_PREFIX + "betrayalGlowSeconds", d.betrayalGlowSeconds()),
-                getInt(properties, CREEK_PREFIX + "slownessSeconds", d.slownessSeconds()),
-                getDouble(properties, CREEK_PREFIX + "routeLinkDistance", d.routeLinkDistance()),
-                getDouble(properties, CREEK_PREFIX + "randomStopChance", d.randomStopChance()),
-                getInt(properties, CREEK_PREFIX + "randomStopMinMillis", d.randomStopMinMillis()),
-                getInt(properties, CREEK_PREFIX + "randomStopMaxMillis", d.randomStopMaxMillis()),
-                getDouble(properties, CREEK_PREFIX + "launchHeight", d.launchHeight()),
-                getDouble(properties, CREEK_PREFIX + "swapChance", d.swapChance()),
-                getDouble(properties, CREEK_PREFIX + "launchDamage", d.launchDamage())
+                getBoolean(properties, CREEK_PREFIX + "enabled", defaults.enabled()),
+                getBoolean(properties, CREEK_PREFIX + "activeWithLastSurvivor", defaults.activeWithLastSurvivor()),
+                getInt(properties, CREEK_PREFIX + "sightRange", defaults.sightRange()),
+                getInt(properties, CREEK_PREFIX + "sightViewAngle", defaults.sightViewAngle()),
+                getInt(properties, CREEK_PREFIX + "wanderPauseMillis", defaults.wanderPauseMillis()),
+                getDouble(properties, CREEK_PREFIX + "wanderSpeed", defaults.wanderSpeed()),
+                getDouble(properties, CREEK_PREFIX + "huntSpeed", defaults.huntSpeed()),
+                getDouble(properties, CREEK_PREFIX + "stalkThreshold", defaults.stalkThreshold()),
+                getDouble(properties, CREEK_PREFIX + "huntThreshold", defaults.huntThreshold()),
+                getInt(properties, CREEK_PREFIX + "stalkMinDistance", defaults.stalkMinDistance()),
+                getInt(properties, CREEK_PREFIX + "stalkMaxDistance", defaults.stalkMaxDistance()),
+                getInt(properties, CREEK_PREFIX + "stalkMinAngle", defaults.stalkMinAngle()),
+                getInt(properties, CREEK_PREFIX + "stalkMaxAngle", defaults.stalkMaxAngle()),
+                getInt(properties, CREEK_PREFIX + "stalkRevealMillis", defaults.stalkRevealMillis()),
+                getInt(properties, CREEK_PREFIX + "stalkMinSeconds", defaults.stalkMinSeconds()),
+                getInt(properties, CREEK_PREFIX + "stalkMaxSeconds", defaults.stalkMaxSeconds()),
+                getInt(properties, CREEK_PREFIX + "huntMaxSeconds", defaults.huntMaxSeconds()),
+                getInt(properties, CREEK_PREFIX + "huntMinStalkSeconds", defaults.huntMinStalkSeconds()),
+                getInt(properties, CREEK_PREFIX + "huntCooldownSeconds", defaults.huntCooldownSeconds()),
+                getDouble(properties, CREEK_PREFIX + "catchDistance", defaults.catchDistance()),
+                getInt(properties, CREEK_PREFIX + "vanishMinSeconds", defaults.vanishMinSeconds()),
+                getInt(properties, CREEK_PREFIX + "vanishMaxSeconds", defaults.vanishMaxSeconds()),
+                getInt(properties, CREEK_PREFIX + "respawnMinDistance", defaults.respawnMinDistance()),
+                getInt(properties, CREEK_PREFIX + "personalSpace", defaults.personalSpace()),
+                getInt(properties, CREEK_PREFIX + "stuckMillis", defaults.stuckMillis()),
+                getInt(properties, CREEK_PREFIX + "betrayalCatchCount", defaults.betrayalCatchCount()),
+                getDouble(properties, CREEK_PREFIX + "betrayalChance", defaults.betrayalChance()),
+                getInt(properties, CREEK_PREFIX + "betrayalGlowSeconds", defaults.betrayalGlowSeconds()),
+                getInt(properties, CREEK_PREFIX + "slownessSeconds", defaults.slownessSeconds()),
+                getDouble(properties, CREEK_PREFIX + "routeLinkDistance", defaults.routeLinkDistance()),
+                getDouble(properties, CREEK_PREFIX + "randomStopChance", defaults.randomStopChance()),
+                getInt(properties, CREEK_PREFIX + "randomStopMinMillis", defaults.randomStopMinMillis()),
+                getInt(properties, CREEK_PREFIX + "randomStopMaxMillis", defaults.randomStopMaxMillis()),
+                getDouble(properties, CREEK_PREFIX + "launchHeight", defaults.launchHeight()),
+                getDouble(properties, CREEK_PREFIX + "swapChance", defaults.swapChance()),
+                getDouble(properties, CREEK_PREFIX + "launchDamage", defaults.launchDamage())
         );
     }
 
@@ -287,20 +287,20 @@ public final class GameConfigReader {
      * @throws IllegalArgumentException if a value is out of range
      */
     private SanityConfig getSanity(Properties properties) {
-        SanityConfig d = SanityConfig.DEFAULT;
+        SanityConfig defaults = SanityConfig.DEFAULT;
         return new SanityConfig(
-                getDouble(properties, SANITY_PREFIX + "pageFloorWeight", d.pageFloorWeight()),
-                getDouble(properties, SANITY_PREFIX + "pageFoundGain", d.pageFoundGain()),
-                getDouble(properties, SANITY_PREFIX + "sightingGain", d.sightingGain()),
-                getInt(properties, SANITY_PREFIX + "sightingCooldownSeconds", d.sightingCooldownSeconds()),
-                getDouble(properties, SANITY_PREFIX + "caughtGain", d.caughtGain()),
-                getDouble(properties, SANITY_PREFIX + "selectedGain", d.selectedGain()),
-                getDouble(properties, SANITY_PREFIX + "deathGain", d.deathGain()),
-                getDouble(properties, SANITY_PREFIX + "decayPerSecond", d.decayPerSecond()),
-                getDouble(properties, SANITY_PREFIX + "stalkGainPerSecond", d.stalkGainPerSecond()),
-                getDouble(properties, SANITY_PREFIX + "residualShare", d.residualShare()),
-                getDouble(properties, SANITY_PREFIX + "timeFloorWeight", d.timeFloorWeight()),
-                getDouble(properties, SANITY_PREFIX + "floorCap", d.floorCap())
+                getDouble(properties, SANITY_PREFIX + "pageFloorWeight", defaults.pageFloorWeight()),
+                getDouble(properties, SANITY_PREFIX + "pageFoundGain", defaults.pageFoundGain()),
+                getDouble(properties, SANITY_PREFIX + "sightingGain", defaults.sightingGain()),
+                getInt(properties, SANITY_PREFIX + "sightingCooldownSeconds", defaults.sightingCooldownSeconds()),
+                getDouble(properties, SANITY_PREFIX + "caughtGain", defaults.caughtGain()),
+                getDouble(properties, SANITY_PREFIX + "selectedGain", defaults.selectedGain()),
+                getDouble(properties, SANITY_PREFIX + "deathGain", defaults.deathGain()),
+                getDouble(properties, SANITY_PREFIX + "decayPerSecond", defaults.decayPerSecond()),
+                getDouble(properties, SANITY_PREFIX + "stalkGainPerSecond", defaults.stalkGainPerSecond()),
+                getDouble(properties, SANITY_PREFIX + "residualShare", defaults.residualShare()),
+                getDouble(properties, SANITY_PREFIX + "timeFloorWeight", defaults.timeFloorWeight()),
+                getDouble(properties, SANITY_PREFIX + "floorCap", defaults.floorCap())
         );
     }
 
@@ -316,12 +316,12 @@ public final class GameConfigReader {
      * @throws IllegalArgumentException if a value is out of range
      */
     private StaminaConfig getStamina(Properties properties) {
-        StaminaConfig d = StaminaConfig.DEFAULT;
+        StaminaConfig defaults = StaminaConfig.DEFAULT;
         return new StaminaConfig(
-                getDouble(properties, STAMINA_PREFIX + "sprintResumeShare", d.sprintResumeShare()),
-                getDouble(properties, STAMINA_PREFIX + "regenPerSecond", d.regenPerSecond()),
-                getInt(properties, STAMINA_PREFIX + "slenderReappearCooldownSeconds", d.slenderReappearCooldownSeconds()),
-                getInt(properties, STAMINA_PREFIX + "slenderDamageRange", d.slenderDamageRange())
+                getDouble(properties, STAMINA_PREFIX + "sprintResumeShare", defaults.sprintResumeShare()),
+                getDouble(properties, STAMINA_PREFIX + "regenPerSecond", defaults.regenPerSecond()),
+                getInt(properties, STAMINA_PREFIX + "slenderReappearCooldownSeconds", defaults.slenderReappearCooldownSeconds()),
+                getInt(properties, STAMINA_PREFIX + "slenderDamageRange", defaults.slenderDamageRange())
         );
     }
 
@@ -374,33 +374,33 @@ public final class GameConfigReader {
      * @throws IllegalArgumentException if a value is out of range
      */
     private AdrenalineConfig getAdrenaline(Properties properties) {
-        AdrenalineConfig d = AdrenalineConfig.DEFAULT;
+        AdrenalineConfig defaults = AdrenalineConfig.DEFAULT;
         return new AdrenalineConfig(
-                getInt(properties, ADRENALINE_PREFIX + "radius", d.radius()),
-                getDouble(properties, ADRENALINE_PREFIX + "speedBonus", d.speedBonus()),
-                getInt(properties, ADRENALINE_PREFIX + "durationSeconds", d.durationSeconds()),
-                getInt(properties, ADRENALINE_PREFIX + "cooldownSeconds", d.cooldownSeconds())
+                getInt(properties, ADRENALINE_PREFIX + "radius", defaults.radius()),
+                getDouble(properties, ADRENALINE_PREFIX + "speedBonus", defaults.speedBonus()),
+                getInt(properties, ADRENALINE_PREFIX + "durationSeconds", defaults.durationSeconds()),
+                getInt(properties, ADRENALINE_PREFIX + "cooldownSeconds", defaults.cooldownSeconds())
         );
     }
 
     private FootprintConfig getFootprint(Properties properties) {
-        FootprintConfig d = FootprintConfig.DEFAULT;
+        FootprintConfig defaults = FootprintConfig.DEFAULT;
         return new FootprintConfig(
-                getDouble(properties, FOOTPRINT_PREFIX + "slenderStepBlocks", d.slenderStepBlocks()),
-                getDouble(properties, FOOTPRINT_PREFIX + "slenderChance", d.slenderChance()),
-                getInt(properties, FOOTPRINT_PREFIX + "slenderDelayMinMillis", d.slenderDelayMinMillis()),
-                getInt(properties, FOOTPRINT_PREFIX + "slenderDelayMaxMillis", d.slenderDelayMaxMillis()),
-                getInt(properties, FOOTPRINT_PREFIX + "slenderLifetimeSeconds", d.slenderLifetimeSeconds()),
-                getDouble(properties, FOOTPRINT_PREFIX + "survivorSampleBlocks", d.survivorSampleBlocks()),
-                getInt(properties, FOOTPRINT_PREFIX + "survivorHistorySeconds", d.survivorHistorySeconds()),
-                getInt(properties, FOOTPRINT_PREFIX + "scanRadius", d.scanRadius()),
-                getInt(properties, FOOTPRINT_PREFIX + "scanGapSeconds", d.scanGapSeconds()),
-                getInt(properties, FOOTPRINT_PREFIX + "scanMaxPrints", d.scanMaxPrints()),
-                getInt(properties, FOOTPRINT_PREFIX + "scanLifetimeSeconds", d.scanLifetimeSeconds()),
-                getInt(properties, FOOTPRINT_PREFIX + "scanCooldownSeconds", d.scanCooldownSeconds()),
-                getDouble(properties, FOOTPRINT_PREFIX + "teleportBlocks", d.teleportBlocks()),
-                getDouble(properties, FOOTPRINT_PREFIX + "minSpacing", d.minSpacing()),
-                getDouble(properties, FOOTPRINT_PREFIX + "fadeShare", d.fadeShare())
+                getDouble(properties, FOOTPRINT_PREFIX + "slenderStepBlocks", defaults.slenderStepBlocks()),
+                getDouble(properties, FOOTPRINT_PREFIX + "slenderChance", defaults.slenderChance()),
+                getInt(properties, FOOTPRINT_PREFIX + "slenderDelayMinMillis", defaults.slenderDelayMinMillis()),
+                getInt(properties, FOOTPRINT_PREFIX + "slenderDelayMaxMillis", defaults.slenderDelayMaxMillis()),
+                getInt(properties, FOOTPRINT_PREFIX + "slenderLifetimeSeconds", defaults.slenderLifetimeSeconds()),
+                getDouble(properties, FOOTPRINT_PREFIX + "survivorSampleBlocks", defaults.survivorSampleBlocks()),
+                getInt(properties, FOOTPRINT_PREFIX + "survivorHistorySeconds", defaults.survivorHistorySeconds()),
+                getInt(properties, FOOTPRINT_PREFIX + "scanRadius", defaults.scanRadius()),
+                getInt(properties, FOOTPRINT_PREFIX + "scanGapSeconds", defaults.scanGapSeconds()),
+                getInt(properties, FOOTPRINT_PREFIX + "scanMaxPrints", defaults.scanMaxPrints()),
+                getInt(properties, FOOTPRINT_PREFIX + "scanLifetimeSeconds", defaults.scanLifetimeSeconds()),
+                getInt(properties, FOOTPRINT_PREFIX + "scanCooldownSeconds", defaults.scanCooldownSeconds()),
+                getDouble(properties, FOOTPRINT_PREFIX + "teleportBlocks", defaults.teleportBlocks()),
+                getDouble(properties, FOOTPRINT_PREFIX + "minSpacing", defaults.minSpacing()),
+                getDouble(properties, FOOTPRINT_PREFIX + "fadeShare", defaults.fadeShare())
         );
     }
 

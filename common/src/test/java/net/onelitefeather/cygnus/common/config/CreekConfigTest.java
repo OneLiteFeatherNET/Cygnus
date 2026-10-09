@@ -12,43 +12,43 @@ class CreekConfigTest {
     @Test
     @DisplayName("The defaults are the values from the design")
     void defaultsMatchTheDesign() {
-        CreekConfig config = CreekConfig.DEFAULT;
+        CreekConfig defaults = CreekConfig.DEFAULT;
 
-        assertTrue(config.enabled());
-        assertTrue(config.activeWithLastSurvivor());
-        assertEquals(48, config.sightRange());
-        assertEquals(0.25D, config.stalkThreshold());
-        assertEquals(0.6D, config.huntThreshold());
-        assertEquals(20, config.stalkMinDistance());
-        assertEquals(35, config.stalkMaxDistance());
-        assertEquals(40, config.stalkMinAngle());
-        assertEquals(70, config.stalkMaxAngle());
-        assertEquals(10, config.huntMinStalkSeconds());
-        assertEquals(45, config.huntCooldownSeconds());
-        assertEquals(1.5D, config.catchDistance());
-        assertEquals(15, config.personalSpace());
-        assertEquals(2, config.betrayalCatchCount());
-        assertEquals(0.15D, config.betrayalChance());
-        assertEquals(3.0D, config.routeLinkDistance());
-        assertEquals(0.15D, config.randomStopChance());
-        assertEquals(1500, config.randomStopMinMillis());
-        assertEquals(4000, config.randomStopMaxMillis());
+        assertTrue(defaults.enabled());
+        assertTrue(defaults.activeWithLastSurvivor());
+        assertEquals(48, defaults.sightRange());
+        assertEquals(0.25D, defaults.stalkThreshold());
+        assertEquals(0.6D, defaults.huntThreshold());
+        assertEquals(20, defaults.stalkMinDistance());
+        assertEquals(35, defaults.stalkMaxDistance());
+        assertEquals(40, defaults.stalkMinAngle());
+        assertEquals(70, defaults.stalkMaxAngle());
+        assertEquals(10, defaults.huntMinStalkSeconds());
+        assertEquals(45, defaults.huntCooldownSeconds());
+        assertEquals(1.5D, defaults.catchDistance());
+        assertEquals(15, defaults.personalSpace());
+        assertEquals(2, defaults.betrayalCatchCount());
+        assertEquals(0.15D, defaults.betrayalChance());
+        assertEquals(3.0D, defaults.routeLinkDistance());
+        assertEquals(0.15D, defaults.randomStopChance());
+        assertEquals(1500, defaults.randomStopMinMillis());
+        assertEquals(4000, defaults.randomStopMaxMillis());
     }
 
     @Test
     @DisplayName("The link distance has to be above 0")
     void linkDistanceAboveZero() {
-        CreekConfig config = CreekConfig.DEFAULT;
+        CreekConfig defaults = CreekConfig.DEFAULT;
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new CreekConfig(
-                config.enabled(), config.activeWithLastSurvivor(), config.sightRange(), config.sightViewAngle(),
-                config.wanderPauseMillis(), config.wanderSpeed(), config.huntSpeed(), config.stalkThreshold(), config.huntThreshold(),
-                config.stalkMinDistance(), config.stalkMaxDistance(), config.stalkMinAngle(), config.stalkMaxAngle(),
-                config.stalkRevealMillis(), config.stalkMinSeconds(), config.stalkMaxSeconds(), config.huntMaxSeconds(),
-                config.huntMinStalkSeconds(), config.huntCooldownSeconds(),
-                config.catchDistance(), config.vanishMinSeconds(), config.vanishMaxSeconds(), config.respawnMinDistance(),
-                config.personalSpace(), config.stuckMillis(), config.betrayalCatchCount(),
-                config.betrayalChance(), config.betrayalGlowSeconds(), config.slownessSeconds(), 0.0D,
-                config.randomStopChance(), config.randomStopMinMillis(), config.randomStopMaxMillis(), config.launchHeight(), config.swapChance(), config.launchDamage()));
+                defaults.enabled(), defaults.activeWithLastSurvivor(), defaults.sightRange(), defaults.sightViewAngle(),
+                defaults.wanderPauseMillis(), defaults.wanderSpeed(), defaults.huntSpeed(), defaults.stalkThreshold(), defaults.huntThreshold(),
+                defaults.stalkMinDistance(), defaults.stalkMaxDistance(), defaults.stalkMinAngle(), defaults.stalkMaxAngle(),
+                defaults.stalkRevealMillis(), defaults.stalkMinSeconds(), defaults.stalkMaxSeconds(), defaults.huntMaxSeconds(),
+                defaults.huntMinStalkSeconds(), defaults.huntCooldownSeconds(),
+                defaults.catchDistance(), defaults.vanishMinSeconds(), defaults.vanishMaxSeconds(), defaults.respawnMinDistance(),
+                defaults.personalSpace(), defaults.stuckMillis(), defaults.betrayalCatchCount(),
+                defaults.betrayalChance(), defaults.betrayalGlowSeconds(), defaults.slownessSeconds(), 0.0D,
+                defaults.randomStopChance(), defaults.randomStopMinMillis(), defaults.randomStopMaxMillis(), defaults.launchHeight(), defaults.swapChance(), defaults.launchDamage()));
         assertTrue(exception.getMessage().contains("routeLinkDistance"));
     }
 
@@ -78,17 +78,17 @@ class CreekConfigTest {
 
     private static CreekConfig with(double stalkThreshold, double huntThreshold, int sightViewAngle,
                                       int stalkMinAngle, int personalSpace) {
-        CreekConfig d = CreekConfig.DEFAULT;
+        CreekConfig defaults = CreekConfig.DEFAULT;
         return new CreekConfig(
-                d.enabled(), d.activeWithLastSurvivor(), d.sightRange(), sightViewAngle,
-                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), stalkThreshold, huntThreshold,
-                d.stalkMinDistance(), d.stalkMaxDistance(), stalkMinAngle, d.stalkMaxAngle(),
-                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
-                d.huntMinStalkSeconds(), d.huntCooldownSeconds(),
-                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                personalSpace, d.stuckMillis(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis(), d.launchHeight(), d.swapChance(), d.launchDamage());
+                defaults.enabled(), defaults.activeWithLastSurvivor(), defaults.sightRange(), sightViewAngle,
+                defaults.wanderPauseMillis(), defaults.wanderSpeed(), defaults.huntSpeed(), stalkThreshold, huntThreshold,
+                defaults.stalkMinDistance(), defaults.stalkMaxDistance(), stalkMinAngle, defaults.stalkMaxAngle(),
+                defaults.stalkRevealMillis(), defaults.stalkMinSeconds(), defaults.stalkMaxSeconds(), defaults.huntMaxSeconds(),
+                defaults.huntMinStalkSeconds(), defaults.huntCooldownSeconds(),
+                defaults.catchDistance(), defaults.vanishMinSeconds(), defaults.vanishMaxSeconds(), defaults.respawnMinDistance(),
+                personalSpace, defaults.stuckMillis(), defaults.betrayalCatchCount(),
+                defaults.betrayalChance(), defaults.betrayalGlowSeconds(), defaults.slownessSeconds(), defaults.routeLinkDistance(),
+                defaults.randomStopChance(), defaults.randomStopMinMillis(), defaults.randomStopMaxMillis(), defaults.launchHeight(), defaults.swapChance(), defaults.launchDamage());
     }
 
     @Test
@@ -99,17 +99,17 @@ class CreekConfigTest {
     }
 
     private static CreekConfig withRandomStops(double chance, int minMillis, int maxMillis) {
-        CreekConfig d = CreekConfig.DEFAULT;
+        CreekConfig defaults = CreekConfig.DEFAULT;
         return new CreekConfig(
-                d.enabled(), d.activeWithLastSurvivor(), d.sightRange(), d.sightViewAngle(),
-                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
-                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
-                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
-                d.huntMinStalkSeconds(), d.huntCooldownSeconds(),
-                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                chance, minMillis, maxMillis, d.launchHeight(), d.swapChance(), d.launchDamage());
+                defaults.enabled(), defaults.activeWithLastSurvivor(), defaults.sightRange(), defaults.sightViewAngle(),
+                defaults.wanderPauseMillis(), defaults.wanderSpeed(), defaults.huntSpeed(), defaults.stalkThreshold(), defaults.huntThreshold(),
+                defaults.stalkMinDistance(), defaults.stalkMaxDistance(), defaults.stalkMinAngle(), defaults.stalkMaxAngle(),
+                defaults.stalkRevealMillis(), defaults.stalkMinSeconds(), defaults.stalkMaxSeconds(), defaults.huntMaxSeconds(),
+                defaults.huntMinStalkSeconds(), defaults.huntCooldownSeconds(),
+                defaults.catchDistance(), defaults.vanishMinSeconds(), defaults.vanishMaxSeconds(), defaults.respawnMinDistance(),
+                defaults.personalSpace(), defaults.stuckMillis(), defaults.betrayalCatchCount(),
+                defaults.betrayalChance(), defaults.betrayalGlowSeconds(), defaults.slownessSeconds(), defaults.routeLinkDistance(),
+                chance, minMillis, maxMillis, defaults.launchHeight(), defaults.swapChance(), defaults.launchDamage());
     }
 
     @Test
@@ -134,17 +134,17 @@ class CreekConfigTest {
     }
 
     private static CreekConfig withLaunchHeight(double height) {
-        CreekConfig d = CreekConfig.DEFAULT;
+        CreekConfig defaults = CreekConfig.DEFAULT;
         return new CreekConfig(
-                d.enabled(), d.activeWithLastSurvivor(), d.sightRange(), d.sightViewAngle(),
-                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
-                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
-                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
-                d.huntMinStalkSeconds(), d.huntCooldownSeconds(),
-                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis(), height, d.swapChance(), d.launchDamage());
+                defaults.enabled(), defaults.activeWithLastSurvivor(), defaults.sightRange(), defaults.sightViewAngle(),
+                defaults.wanderPauseMillis(), defaults.wanderSpeed(), defaults.huntSpeed(), defaults.stalkThreshold(), defaults.huntThreshold(),
+                defaults.stalkMinDistance(), defaults.stalkMaxDistance(), defaults.stalkMinAngle(), defaults.stalkMaxAngle(),
+                defaults.stalkRevealMillis(), defaults.stalkMinSeconds(), defaults.stalkMaxSeconds(), defaults.huntMaxSeconds(),
+                defaults.huntMinStalkSeconds(), defaults.huntCooldownSeconds(),
+                defaults.catchDistance(), defaults.vanishMinSeconds(), defaults.vanishMaxSeconds(), defaults.respawnMinDistance(),
+                defaults.personalSpace(), defaults.stuckMillis(), defaults.betrayalCatchCount(),
+                defaults.betrayalChance(), defaults.betrayalGlowSeconds(), defaults.slownessSeconds(), defaults.routeLinkDistance(),
+                defaults.randomStopChance(), defaults.randomStopMinMillis(), defaults.randomStopMaxMillis(), height, defaults.swapChance(), defaults.launchDamage());
     }
 
     @Test
@@ -158,17 +158,17 @@ class CreekConfigTest {
     }
 
     private static CreekConfig withSwapChance(double chance) {
-        CreekConfig d = CreekConfig.DEFAULT;
+        CreekConfig defaults = CreekConfig.DEFAULT;
         return new CreekConfig(
-                d.enabled(), d.activeWithLastSurvivor(), d.sightRange(), d.sightViewAngle(),
-                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
-                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
-                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
-                d.huntMinStalkSeconds(), d.huntCooldownSeconds(),
-                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis(), d.launchHeight(), chance, d.launchDamage());
+                defaults.enabled(), defaults.activeWithLastSurvivor(), defaults.sightRange(), defaults.sightViewAngle(),
+                defaults.wanderPauseMillis(), defaults.wanderSpeed(), defaults.huntSpeed(), defaults.stalkThreshold(), defaults.huntThreshold(),
+                defaults.stalkMinDistance(), defaults.stalkMaxDistance(), defaults.stalkMinAngle(), defaults.stalkMaxAngle(),
+                defaults.stalkRevealMillis(), defaults.stalkMinSeconds(), defaults.stalkMaxSeconds(), defaults.huntMaxSeconds(),
+                defaults.huntMinStalkSeconds(), defaults.huntCooldownSeconds(),
+                defaults.catchDistance(), defaults.vanishMinSeconds(), defaults.vanishMaxSeconds(), defaults.respawnMinDistance(),
+                defaults.personalSpace(), defaults.stuckMillis(), defaults.betrayalCatchCount(),
+                defaults.betrayalChance(), defaults.betrayalGlowSeconds(), defaults.slownessSeconds(), defaults.routeLinkDistance(),
+                defaults.randomStopChance(), defaults.randomStopMinMillis(), defaults.randomStopMaxMillis(), defaults.launchHeight(), chance, defaults.launchDamage());
     }
 
     @Test
@@ -182,16 +182,16 @@ class CreekConfigTest {
     }
 
     private static CreekConfig withLaunchDamage(double damage) {
-        CreekConfig d = CreekConfig.DEFAULT;
+        CreekConfig defaults = CreekConfig.DEFAULT;
         return new CreekConfig(
-                d.enabled(), d.activeWithLastSurvivor(), d.sightRange(), d.sightViewAngle(),
-                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
-                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
-                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
-                d.huntMinStalkSeconds(), d.huntCooldownSeconds(),
-                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis(), d.launchHeight(), d.swapChance(), damage);
+                defaults.enabled(), defaults.activeWithLastSurvivor(), defaults.sightRange(), defaults.sightViewAngle(),
+                defaults.wanderPauseMillis(), defaults.wanderSpeed(), defaults.huntSpeed(), defaults.stalkThreshold(), defaults.huntThreshold(),
+                defaults.stalkMinDistance(), defaults.stalkMaxDistance(), defaults.stalkMinAngle(), defaults.stalkMaxAngle(),
+                defaults.stalkRevealMillis(), defaults.stalkMinSeconds(), defaults.stalkMaxSeconds(), defaults.huntMaxSeconds(),
+                defaults.huntMinStalkSeconds(), defaults.huntCooldownSeconds(),
+                defaults.catchDistance(), defaults.vanishMinSeconds(), defaults.vanishMaxSeconds(), defaults.respawnMinDistance(),
+                defaults.personalSpace(), defaults.stuckMillis(), defaults.betrayalCatchCount(),
+                defaults.betrayalChance(), defaults.betrayalGlowSeconds(), defaults.slownessSeconds(), defaults.routeLinkDistance(),
+                defaults.randomStopChance(), defaults.randomStopMinMillis(), defaults.randomStopMaxMillis(), defaults.launchHeight(), defaults.swapChance(), damage);
     }
 }

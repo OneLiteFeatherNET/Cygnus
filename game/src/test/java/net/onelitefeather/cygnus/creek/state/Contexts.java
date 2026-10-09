@@ -137,22 +137,22 @@ public final class Contexts {
 
     /** The defaults, but the creek sits out the round once only one survivor is left. */
     public static CreekConfig withoutLastSurvivor() {
-        CreekConfig d = CreekConfig.DEFAULT;
-        return copy(false, d.randomStopChance(), d.randomStopMinMillis(), d.randomStopMaxMillis());
+        CreekConfig defaults = CreekConfig.DEFAULT;
+        return copy(false, defaults.randomStopChance(), defaults.randomStopMinMillis(), defaults.randomStopMaxMillis());
     }
 
     private static CreekConfig copy(boolean activeWithLastSurvivor, double chance, int minMillis, int maxMillis) {
-        CreekConfig d = CreekConfig.DEFAULT;
+        CreekConfig defaults = CreekConfig.DEFAULT;
         return new CreekConfig(
-                d.enabled(), activeWithLastSurvivor, d.sightRange(), d.sightViewAngle(),
-                d.wanderPauseMillis(), d.wanderSpeed(), d.huntSpeed(), d.stalkThreshold(), d.huntThreshold(),
-                d.stalkMinDistance(), d.stalkMaxDistance(), d.stalkMinAngle(), d.stalkMaxAngle(),
-                d.stalkRevealMillis(), d.stalkMinSeconds(), d.stalkMaxSeconds(), d.huntMaxSeconds(),
-                d.huntMinStalkSeconds(), d.huntCooldownSeconds(),
-                d.catchDistance(), d.vanishMinSeconds(), d.vanishMaxSeconds(), d.respawnMinDistance(),
-                d.personalSpace(), d.stuckMillis(), d.betrayalCatchCount(),
-                d.betrayalChance(), d.betrayalGlowSeconds(), d.slownessSeconds(), d.routeLinkDistance(),
-                chance, minMillis, maxMillis, d.launchHeight(), d.swapChance(), d.launchDamage());
+                defaults.enabled(), activeWithLastSurvivor, defaults.sightRange(), defaults.sightViewAngle(),
+                defaults.wanderPauseMillis(), defaults.wanderSpeed(), defaults.huntSpeed(), defaults.stalkThreshold(), defaults.huntThreshold(),
+                defaults.stalkMinDistance(), defaults.stalkMaxDistance(), defaults.stalkMinAngle(), defaults.stalkMaxAngle(),
+                defaults.stalkRevealMillis(), defaults.stalkMinSeconds(), defaults.stalkMaxSeconds(), defaults.huntMaxSeconds(),
+                defaults.huntMinStalkSeconds(), defaults.huntCooldownSeconds(),
+                defaults.catchDistance(), defaults.vanishMinSeconds(), defaults.vanishMaxSeconds(), defaults.respawnMinDistance(),
+                defaults.personalSpace(), defaults.stuckMillis(), defaults.betrayalCatchCount(),
+                defaults.betrayalChance(), defaults.betrayalGlowSeconds(), defaults.slownessSeconds(), defaults.routeLinkDistance(),
+                chance, minMillis, maxMillis, defaults.launchHeight(), defaults.swapChance(), defaults.launchDamage());
     }
 
     /** A route that offers the first allowed point at least a block away. */
