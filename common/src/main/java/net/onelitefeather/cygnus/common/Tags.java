@@ -18,6 +18,8 @@ public final class Tags {
     public static final Tag<Byte> ITEM_TAG = Tag.Byte("itemTag");
     public static final Tag<Key> TEAM_KEY = Tag.Transient("teamKey");
     public static final Tag<Byte> HIDDEN = Tag.Byte("hidden");
+    /** Set while the slender looks through the creek's eyes. Never stored, it only lives for one possession. */
+    public static final Tag<Boolean> POSSESSING = Tag.Transient("possessing");
 
     private Tags() {
         // Nothing do to here
