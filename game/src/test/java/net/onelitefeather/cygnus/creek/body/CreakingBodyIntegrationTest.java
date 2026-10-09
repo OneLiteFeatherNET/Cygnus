@@ -192,4 +192,39 @@ class CreakingBodyIntegrationTest extends CygnusPlayerTestBase {
         }
         return highest;
     }
+
+    @Test
+    @DisplayName("An observer sees him, but does not count as someone who sees him")
+    void observerSeesHimApart(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        Player slender = env.createConnection().connect(instance, new Pos(2, 40, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 10));
+
+        body.observe(slender.getUuid());
+
+        assertTrue(body.entity().getViewers().contains(slender));
+        assertFalse(body.isVisibleTo(slender.getUuid()));
+        assertFalse(body.entity().getViewers().contains(survivor));
+
+        body.observe(null);
+
+        assertFalse(body.entity().getViewers().contains(slender));
+    }
+
+    @Test
+    @DisplayName("Choosing other viewers keeps the observer")
+    void observerSurvivesShowTo(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        Player slender = env.createConnection().connect(instance, new Pos(2, 40, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 10));
+        body.observe(slender.getUuid());
+
+        body.showTo(Set.of(survivor.getUuid()));
+        body.showTo(Set.of());
+
+        assertTrue(body.entity().getViewers().contains(slender));
+        assertFalse(body.entity().getViewers().contains(survivor));
+    }
 }

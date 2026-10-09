@@ -90,6 +90,25 @@ class SlenderBarTriggerIntegrationTest extends CygnusPlayerTestBase {
         env.destroyInstance(instance, true);
     }
 
+    @Test
+    void testTriggerIsBlockedWhilePossessing(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        player.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
+        player.setTag(Tags.POSSESSING, true);
+
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
+        slenderBar.start();
+
+        new SlenderBarTrigger(() -> slenderBar).trigger(player);
+
+        assertTrue(VisibilityRules.isHidden(player), "the SlenderEye does nothing while the creek is possessed");
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
     private static boolean soundWasSent(Collector<ServerPacket> collector) {
         return collector.collect().stream().anyMatch(packet -> packet.getClass().getSimpleName().contains("Sound"));
     }

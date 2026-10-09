@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.stamina;
 
+import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
@@ -42,6 +43,12 @@ public final class SlenderBarTrigger {
      */
     public void trigger(Player player) {
         if (!TeamHelper.isSlenderTeam(player)) return;
+        // While possessing, the tag says visible but the bar is still hidden. A status change now
+        // would put the two out of step for good.
+        if (player.hasTag(Tags.POSSESSING)) {
+            player.playSound(ABORT_SOUND);
+            return;
+        }
         SlenderBar slenderBar = (SlenderBar) slenderBarSupplier.get();
         if (slenderBar == null) return;
 

@@ -86,6 +86,7 @@ import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.phase.RestartPhase;
 import net.onelitefeather.cygnus.phase.WaitingPhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.possession.PossessionFeature;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.sanity.SanityService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
@@ -227,6 +228,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                     this.actionTracer.sanityObserver(Cygnus::survivorActor));
             this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase);
             try (TraceStep ignored = startup.child("cygnus.startup.features")) {
+                CreekModule creekModule = new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
+                        sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor),
+                                MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), this.jumpscareManager, this.staminaService, tickSections);
                 this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
                         new EpilepsyDisclaimer(),
                         this.slenderTakeover,
@@ -236,9 +240,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         new MinimapPolicy(this.gameConfig.minimap()),
                         new LabyModPolicy(this.gameConfig.minimap()),
                         new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
-                        new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
-                                sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor),
-                                        MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), this.jumpscareManager, this.staminaService, tickSections),
+                        creekModule,
+                        new PossessionFeature(this.gameConfig.possession(), this.gameConfig.creek().enabled(),
+                                creekModule.possessionTarget(),
+                                () -> TeamHelper.survivorsOf(this.teamService),
+                                () -> TeamHelper.slenderOf(this.teamService),
+                                System::currentTimeMillis),
                         sanityService,
                         new AdrenalineService(
                                 this.gameConfig.adrenaline(),

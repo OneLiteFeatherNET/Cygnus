@@ -11,6 +11,7 @@ import net.onelitefeather.cygnus.creek.state.HuntState;
 import net.onelitefeather.cygnus.creek.state.StalkState;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.state.VanishState;
+import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
 
 import org.jetbrains.annotations.Nullable;
@@ -49,6 +50,7 @@ final class Creek {
     private Set<UUID> seenLastStep = Set.of();
     private boolean entered;
     private @Nullable UUID hunting;
+    private volatile @Nullable CreekSight boostedSight;
 
     /**
      * Sets up a creek.
@@ -181,11 +183,11 @@ final class Creek {
         for (int index = 0; index < players.size(); index++) {
             Player survivor = players.get(index);
             boolean shown = this.body.isVisibleTo(survivor.getUuid());
-            boolean sees = shown && this.round.sight().sees(survivor, this.body.entity());
+            boolean sees = shown && this.sight().sees(survivor, this.body.entity());
             // Seeing it already means nothing is in the way, so the ray only runs for the rest, and
             // only for those close enough for it to matter.
             boolean inSight = sees || (this.closeEnough(base.get(index), reach)
-                    && this.round.sight().clear(survivor, this.body.entity()));
+                    && this.sight().clear(survivor, this.body.entity()));
             views.add(base.get(index).withSight(sees, inSight));
         }
         return views;
@@ -202,6 +204,25 @@ final class Creek {
      */
     List<SurvivorView> lastViews() {
         return this.lastViews;
+    }
+
+    /**
+     * Lets survivors notice this creek with another sight, or with the round's again.
+     *
+     * @param sight the sight to use instead of the round's, or {@code null} for the round's
+     */
+    void boost(@Nullable CreekSight sight) {
+        this.boostedSight = sight;
+    }
+
+    /**
+     * The sight survivors notice this creek with right now.
+     *
+     * @return the boosted sight while there is one, the round's otherwise
+     */
+    CreekSight sight() {
+        CreekSight boosted = this.boostedSight;
+        return boosted != null ? boosted : this.round.sight();
     }
 
     CreekState state() {

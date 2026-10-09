@@ -43,6 +43,7 @@ import java.util.Properties;
  *     <li>stamina.* (see {@link StaminaConfig})</li>
  *     <li>adrenaline.* (see {@link AdrenalineConfig})</li>
  *     <li>footprint.* (see {@link FootprintConfig})</li>
+ *     <li>possession.* (see {@link PossessionConfig})</li>
  *     <li>telemetry.* (see {@link TelemetryConfig})</li>
  *     <li>minimap.mode (see {@link MinimapConfig})</li>
  * </ul>

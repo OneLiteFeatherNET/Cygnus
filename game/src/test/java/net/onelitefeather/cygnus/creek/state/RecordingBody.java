@@ -21,6 +21,7 @@ public final class RecordingBody implements CreekBody {
     int stops;
     final List<Pos> teleports = new ArrayList<>();
     Set<UUID> viewers = Set.of();
+    @Nullable UUID observer;
     boolean aggressive;
     boolean frozen;
     @Nullable Pos lookedAt;
@@ -67,6 +68,11 @@ public final class RecordingBody implements CreekBody {
     @Override
     public boolean isVisibleTo(UUID viewer) {
         return this.viewers.contains(viewer);
+    }
+
+    @Override
+    public void observe(@Nullable UUID observer) {
+        this.observer = observer;
     }
 
     @Override

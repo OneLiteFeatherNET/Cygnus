@@ -453,6 +453,29 @@ class GameConfigReaderTest {
     }
 
     @Test
+    void testPossessionDefaultsWhenNotConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(PossessionConfig.DEFAULT, config.possession());
+    }
+
+    @Test
+    void testPossessionValuesAreRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                possession.maxSeconds=5
+                possession.cooldownSeconds=90
+                possession.sightFactor=2.0
+                """);
+
+        PossessionConfig possession = new GameConfigReader(tempDir).getConfig().possession();
+
+        assertEquals(5, possession.maxSeconds());
+        assertEquals(90, possession.cooldownSeconds());
+        assertEquals(2.0D, possession.sightFactor(), 1.0E-9);
+    }
+
+    @Test
     void testAdrenalineDefaultsWhenNotConfigured() {
         GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
 
