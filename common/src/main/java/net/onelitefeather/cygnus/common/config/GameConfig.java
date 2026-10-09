@@ -113,6 +113,8 @@ public record GameConfig(
      */
     public static final float DEFAULT_LOBBY_ATMOSPHERE_SHARE = 0.3F;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GameConfig.class);
+
     /**
      * The configuration used when there is no config file, or nothing in it can be read.
      * <p>
@@ -146,11 +148,11 @@ public record GameConfig(
     }
 
     /**
-     * Reads the whole config. Every group reads its own keys, see the {@code read} method of each.
+     * Reads the whole config. Every group reads its own keys, see the {@code read} method of each. A group with invalid
+     * values falls back to its defaults with a warning.
      *
      * @param root the whole config
      * @return the game configuration
-     * @throws IllegalArgumentException if a value is out of range or values contradict each other
      */
     public static GameConfig read(ConfigSection root) {
         return new GameConfig(
@@ -169,10 +171,25 @@ public record GameConfig(
                 FootprintConfig.read(root.section("footprint.")),
                 TelemetryConfig.read(root.section("telemetry.")),
                 MinimapConfig.read(root.section("minimap.")),
-                root.getFloat("lobbyAtmosphereShare", DEFAULT_LOBBY_ATMOSPHERE_SHARE)
+                readLobbyAtmosphereShare(root)
         );
     }
 
+    /**
+     * Reads how far the lobby takes on the map's atmosphere. A share outside 0 to 1 falls back to
+     * the default with a warning.
+     *
+     * @param root the whole config
+     * @return the share
+     */
+    private static float readLobbyAtmosphereShare(ConfigSection root) {
+        float share = root.getFloat("lobbyAtmosphereShare", DEFAULT_LOBBY_ATMOSPHERE_SHARE);
+        if (share < 0.0F || share > 1.0F) {
+            LOGGER.warn("Invalid values for lobby atmosphere share: {} is not between 0 and 1. Falling back to its defaults", share);
+            return DEFAULT_LOBBY_ATMOSPHERE_SHARE;
+        }
+        return share;
+    }
 
     /**
      * The player limits and timings of a round.
@@ -197,14 +214,13 @@ public record GameConfig(
          *
          * @param root the whole config
          * @return the round settings
-         * @throws IllegalArgumentException if a value is out of range
          */
         public static Round read(ConfigSection root) {
-            return new Round(
+            return root.orDefault("round", () -> new Round(
                     root.getInt("minPlayers", DEFAULT.minPlayers()),
                     root.getInt("maxPlayers", DEFAULT.maxPlayers()),
                     root.getInt("lobbyTime", DEFAULT.lobbyTime()),
-                    root.getInt("gameTime", DEFAULT.gameTime()));
+                    root.getInt("gameTime", DEFAULT.gameTime())), DEFAULT);
         }
     }
 
@@ -234,12 +250,11 @@ public record GameConfig(
          *
          * @param root the whole config
          * @return the team sizes
-         * @throws IllegalArgumentException if a value is out of range
          */
         public static Teams read(ConfigSection root) {
-            return new Teams(
+            return root.orDefault("teams", () -> new Teams(
                     root.getInt("slenderTeamSize", DEFAULT.slenderSize()),
-                    root.getInt("survivorTeamSize", DEFAULT.survivorSize()));
+                    root.getInt("survivorTeamSize", DEFAULT.survivorSize())), DEFAULT);
         }
     }
 
@@ -352,14 +367,13 @@ public record GameConfig(
          *
          * @param root the whole config
          * @return the page hint settings
-         * @throws IllegalArgumentException if a value is out of range
          */
         public static PageProximity read(ConfigSection root) {
-            return new PageProximity(
+            return root.orDefault("page proximity", () -> new PageProximity(
                     root.getBoolean("pageProximityEnabled", DEFAULT.enabled()),
                     root.getInt("pageProximityRange", DEFAULT.range()),
                     root.getSound("pageProximitySound", DEFAULT.sound()),
-                    root.getFloat("pageProximityVolumeFactor", DEFAULT.volumeFactor()));
+                    root.getFloat("pageProximityVolumeFactor", DEFAULT.volumeFactor())), DEFAULT);
         }
     }
 
@@ -394,13 +408,12 @@ public record GameConfig(
          *
          * @param root the whole config
          * @return the hit sound settings
-         * @throws IllegalArgumentException if a value is out of range
          */
         public static DamageSound read(ConfigSection root) {
-            return new DamageSound(
+            return root.orDefault("damage sound", () -> new DamageSound(
                     root.getBoolean("damageSoundEnabled", DEFAULT.enabled()),
                     root.getInt("damageSoundCooldown", DEFAULT.cooldown()),
-                    root.getSound("damageSound", DEFAULT.sound()));
+                    root.getSound("damageSound", DEFAULT.sound())), DEFAULT);
         }
     }
 
@@ -446,13 +459,12 @@ public record GameConfig(
          *
          * @param root the whole config
          * @return the glitch settings
-         * @throws IllegalArgumentException if a value is out of range
          */
         public static Glitch read(ConfigSection root) {
-            return new Glitch(
+            return root.orDefault("glitch", () -> new Glitch(
                     root.getInt("glitchRange", DEFAULT.range()),
                     root.getInt("glitchCloseRange", DEFAULT.closeRange()),
-                    root.getInt("glitchViewAngle", DEFAULT.viewAngle()));
+                    root.getInt("glitchViewAngle", DEFAULT.viewAngle())), DEFAULT);
         }
     }
 
@@ -518,13 +530,12 @@ public record GameConfig(
          *
          * @param root the whole config
          * @return the page glitch settings
-         * @throws IllegalArgumentException if a value is out of range
          */
         public static PageGlitch read(ConfigSection root) {
-            return new PageGlitch(
+            return root.orDefault("page glitch", () -> new PageGlitch(
                     root.getBoolean("pageGlitchEnabled", DEFAULT.enabled()),
                     root.getInt("pageGlitchPulseSeconds", DEFAULT.pulseSeconds()),
-                    root.getInt("pageGlitchMaxLevel", DEFAULT.maxLevel()));
+                    root.getInt("pageGlitchMaxLevel", DEFAULT.maxLevel())), DEFAULT);
         }
     }
 }

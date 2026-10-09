@@ -43,9 +43,10 @@ public record TelemetryConfig(int slowTickThresholdMillis) {
      *
      * @param section the {@code telemetry.} part of the config
      * @return the telemetry settings
-     * @throws IllegalArgumentException if a value is out of range
      */
     public static TelemetryConfig read(ConfigSection section) {
-        return new TelemetryConfig(section.getInt("slowTickThresholdMillis", DEFAULT.slowTickThresholdMillis()));
+        return section.orDefault("telemetry",
+                () -> new TelemetryConfig(section.getInt("slowTickThresholdMillis", DEFAULT.slowTickThresholdMillis())),
+                DEFAULT);
     }
 }

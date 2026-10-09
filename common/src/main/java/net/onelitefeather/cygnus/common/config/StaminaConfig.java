@@ -70,15 +70,14 @@ public record StaminaConfig(
      *
      * @param section the {@code stamina.} part of the config
      * @return the sprint settings
-     * @throws IllegalArgumentException if a value is out of range
      */
     public static StaminaConfig read(ConfigSection section) {
         StaminaConfig defaults = DEFAULT;
-        return new StaminaConfig(
+        return section.orDefault("stamina", () -> new StaminaConfig(
                 section.getDouble("sprintResumeShare", defaults.sprintResumeShare()),
                 section.getDouble("regenPerSecond", defaults.regenPerSecond()),
                 section.getInt("slenderReappearCooldownSeconds", defaults.slenderReappearCooldownSeconds()),
                 section.getInt("slenderDamageRange", defaults.slenderDamageRange())
-        );
+        ), defaults);
     }
 }

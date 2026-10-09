@@ -53,15 +53,14 @@ public record AdrenalineConfig(
      *
      * @param section the {@code adrenaline.} part of the config
      * @return the adrenaline settings
-     * @throws IllegalArgumentException if a value is out of range
      */
     public static AdrenalineConfig read(ConfigSection section) {
         AdrenalineConfig defaults = DEFAULT;
-        return new AdrenalineConfig(
+        return section.orDefault("adrenaline", () -> new AdrenalineConfig(
                 section.getInt("radius", defaults.radius()),
                 section.getDouble("speedBonus", defaults.speedBonus()),
                 section.getInt("durationSeconds", defaults.durationSeconds()),
                 section.getInt("cooldownSeconds", defaults.cooldownSeconds())
-        );
+        ), defaults);
     }
 }

@@ -75,11 +75,10 @@ public record SanityConfig(
      *
      * @param section the {@code sanity.} part of the config
      * @return the fear settings
-     * @throws IllegalArgumentException if a value is out of range
      */
     public static SanityConfig read(ConfigSection section) {
         SanityConfig defaults = DEFAULT;
-        return new SanityConfig(
+        return section.orDefault("sanity", () -> new SanityConfig(
                 section.getDouble("pageFloorWeight", defaults.pageFloorWeight()),
                 section.getDouble("pageFoundGain", defaults.pageFoundGain()),
                 section.getDouble("sightingGain", defaults.sightingGain()),
@@ -92,7 +91,7 @@ public record SanityConfig(
                 section.getDouble("residualShare", defaults.residualShare()),
                 section.getDouble("timeFloorWeight", defaults.timeFloorWeight()),
                 section.getDouble("floorCap", defaults.floorCap())
-        );
+        ), defaults);
     }
 
     private static void between(String name, double value) {

@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
+import java.util.function.Supplier;
 
 /**
  * A part of the loaded {@code config.properties}: every key below one prefix, such as {@code creek.}.
@@ -177,4 +178,22 @@ public record ConfigSection(Properties properties, String prefix) {
         }
     }
 
+    /**
+     * Builds a group of values and falls back to its defaults if the group rejects them. A value
+     * the operator got wrong is not worth taking the service down for.
+     *
+     * @param group    the group's name for the warning, for example {@code creek stalk}
+     * @param read     builds the group from this section
+     * @param fallback the group's defaults
+     * @param <T>      the group's type
+     * @return the group, or the fallback if its values break a rule
+     */
+    public <T> T orDefault(String group, Supplier<T> read, T fallback) {
+        try {
+            return read.get();
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Invalid values for {}: {}. Falling back to its defaults", group, exception.getMessage());
+            return fallback;
+        }
+    }
 }

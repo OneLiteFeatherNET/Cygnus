@@ -164,18 +164,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testARangeBeyondTheMaximumIsRejected(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=4
-                pageProximityRange=%d
-                """.formatted(GameConfig.PageProximity.MAX_RANGE + 1));
-
-        GameConfigReader reader = new GameConfigReader(tempDir);
-
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
-    }
-
-    @Test
     void testPageGlitchValuesAreReadWhenTheyAreConfigured(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
@@ -210,18 +198,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testAPageGlitchMaxLevelOutsideItsRangeIsRejected(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=4
-                pageGlitchMaxLevel=4
-                """);
-
-        GameConfigReader reader = new GameConfigReader(tempDir);
-
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
-    }
-
-    @Test
     void testPageGlitchCanBeTurnedOff(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
@@ -234,18 +210,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testAPageGlitchPulseOutsideItsRangeIsRejected(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=4
-                pageGlitchPulseSeconds=31
-                """);
-
-        GameConfigReader reader = new GameConfigReader(tempDir);
-
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
-    }
-
-    @Test
     void testLobbyAtmosphereShareIsReadWhenItIsConfigured(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
@@ -255,18 +219,6 @@ class GameConfigReaderTest {
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
         assertEquals(0.6F, config.lobbyAtmosphereShare());
-    }
-
-    @Test
-    void testALobbyAtmosphereShareOutsideItsRangeIsRejected(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=4
-                lobbyAtmosphereShare=1.5
-                """);
-
-        GameConfigReader reader = new GameConfigReader(tempDir);
-
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
     }
 
     @Test
@@ -306,18 +258,6 @@ class GameConfigReaderTest {
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
         assertEquals(GameConfig.DamageSound.DEFAULT_SOUND, config.damageSound().sound());
-    }
-
-    @Test
-    void testADamageSoundCooldownBelowOneTickIsRejected(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=4
-                damageSoundCooldown=0
-                """);
-
-        GameConfigReader reader = new GameConfigReader(tempDir);
-
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
     }
 
     @Test
@@ -502,18 +442,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testCreekRejectsValuesThatDoNotFit(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=2
-                creek.enabled=false
-                creek.stalkThreshold=0.9
-                """);
-        GameConfigReader reader = new GameConfigReader(tempDir);
-
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
-    }
-
-    @Test
     void testAnUnreadableCreekValueFallsBackToTheDefault(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=2
@@ -575,17 +503,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testAdrenalineRejectsValuesOutOfRange(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=2
-                adrenaline.speedBonus=2
-                """);
-
-        GameConfigReader reader = new GameConfigReader(tempDir);
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
-    }
-
-    @Test
     void testStaminaDefaultsWhenNotConfigured() {
         GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
 
@@ -625,28 +542,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testSlenderDamageRangeRejectsValuesOutOfRange(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=2
-                stamina.slenderDamageRange=17
-                """);
-
-        GameConfigReader reader = new GameConfigReader(tempDir);
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
-    }
-
-    @Test
-    void testStaminaRejectsValuesOutOfRange(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=2
-                stamina.regenPerSecond=-1
-                """);
-
-        GameConfigReader reader = new GameConfigReader(tempDir);
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
-    }
-
-    @Test
     void testTelemetryDefaultsWhenNotConfigured() {
         GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
 
@@ -661,17 +556,6 @@ class GameConfigReaderTest {
                 """);
 
         assertEquals(80, new GameConfigReader(tempDir).getConfig().telemetry().slowTickThresholdMillis());
-    }
-
-    @Test
-    void testTelemetryRejectsThresholdOutOfRange(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=2
-                telemetry.slowTickThresholdMillis=0
-                """);
-
-        GameConfigReader reader = new GameConfigReader(tempDir);
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
     }
 
     @Test
@@ -706,14 +590,16 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testSanityRejectsValuesOutOfRange(@TempDir Path tempDir) throws IOException {
+    void testSanityFallsBackWhenOutOfRange(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=2
                 sanity.deathGain=1.5
                 """);
-        GameConfigReader reader = new GameConfigReader(tempDir);
 
-        assertThrows(IllegalArgumentException.class, reader::getConfig);
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(SanityConfig.DEFAULT, config.sanity());
+        assertEquals(2, config.round().minPlayers());
     }
 
     @Test
@@ -764,5 +650,170 @@ class GameConfigReaderTest {
         Files.writeString(tempDir.resolve("config.properties"), "minimap.mode=banana\n");
 
         assertEquals(MinimapConfig.DEFAULT, new GameConfigReader(tempDir).getConfig().minimap());
+    }
+
+    @Test
+    void testARangeBeyondTheMaximumFallsBack(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageProximityRange=%d
+                """.formatted(GameConfig.PageProximity.MAX_RANGE + 1));
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(GameConfig.PageProximity.DEFAULT, config.pageProximity());
+        assertEquals(4, config.round().minPlayers(), "the rest of the file is still read");
+    }
+
+    @Test
+    void testAPageGlitchMaxLevelOutsideItsRangeFallsBack(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageGlitchMaxLevel=4
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(GameConfig.PageGlitch.DEFAULT, config.pageGlitch());
+        assertEquals(4, config.round().minPlayers());
+    }
+
+    @Test
+    void testAPageGlitchPulseOutsideItsRangeFallsBack(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                pageGlitchPulseSeconds=31
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(GameConfig.PageGlitch.DEFAULT, config.pageGlitch());
+        assertEquals(4, config.round().minPlayers());
+    }
+
+    @Test
+    void testALobbyAtmosphereShareOutsideItsRangeFallsBack(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                lobbyAtmosphereShare=1.5
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE, config.lobbyAtmosphereShare());
+        assertEquals(4, config.round().minPlayers());
+    }
+
+    @Test
+    void testADamageSoundCooldownBelowOneTickFallsBack(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                damageSoundCooldown=0
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(GameConfig.DamageSound.DEFAULT, config.damageSound());
+        assertEquals(4, config.round().minPlayers());
+    }
+
+    @Test
+    void testCreekFallsBackWhenGroupsContradict(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.enabled=false
+                creek.stalkThreshold=0.9
+                creek.huntSpeed=0.3
+                """);
+
+        CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
+
+        assertFalse(creek.enabled(), "a creek switched off stays off");
+        assertEquals(CreekConfig.Stalk.DEFAULT, creek.stalk());
+        assertEquals(CreekConfig.Hunt.DEFAULT, creek.hunt(), "the whole creek falls back, not one side of the contradiction");
+    }
+
+    @Test
+    void testCreekGroupFallbackThatContradictsResetsTheCreek(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.enabled=false
+                creek.personalSpace=25
+                creek.stalkMinDistance=30
+                creek.stalkMaxDistance=40
+                creek.stalkMaxAngle=200
+                creek.huntSpeed=0.3
+                """);
+
+        CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
+
+        assertFalse(creek.enabled(), "a creek switched off stays off");
+        assertEquals(CreekConfig.Stalk.DEFAULT, creek.stalk(), "the broken stalk group falls back");
+        assertEquals(CreekConfig.DEFAULT.personalSpace(), creek.personalSpace(),
+                "its defaults contradict personalSpace, so the creek falls back as a whole");
+        assertEquals(CreekConfig.Hunt.DEFAULT, creek.hunt());
+    }
+
+    @Test
+    void testCreekGroupFallsBackAlone(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.stalkMinDistance=50
+                creek.huntSpeed=0.3
+                """);
+
+        CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
+
+        assertEquals(CreekConfig.Stalk.DEFAULT, creek.stalk());
+        assertEquals(0.3D, creek.hunt().speed(), 1.0E-9, "the other groups keep their values");
+    }
+
+    @Test
+    void testAdrenalineFallsBackWhenOutOfRange(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                adrenaline.speedBonus=2
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(AdrenalineConfig.DEFAULT, config.adrenaline());
+        assertEquals(2, config.round().minPlayers());
+    }
+
+    @Test
+    void testSlenderDamageRangeFallsBackWhenOutOfRange(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                stamina.slenderDamageRange=17
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(StaminaConfig.DEFAULT, config.stamina());
+    }
+
+    @Test
+    void testStaminaFallsBackWhenOutOfRange(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                stamina.regenPerSecond=-1
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(StaminaConfig.DEFAULT, config.stamina());
+    }
+
+    @Test
+    void testTelemetryFallsBackWhenOutOfRange(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                telemetry.slowTickThresholdMillis=0
+                """);
+
+        GameConfig config = new GameConfigReader(tempDir).getConfig();
+
+        assertEquals(TelemetryConfig.DEFAULT, config.telemetry());
     }
 }

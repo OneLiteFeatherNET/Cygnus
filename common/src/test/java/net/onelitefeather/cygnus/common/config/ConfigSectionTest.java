@@ -75,4 +75,14 @@ class ConfigSectionTest {
         assertEquals(0.25F, root("f", "0.25").getFloat("f", 0.0F));
     }
 
+    @Test
+    @DisplayName("A group that rejects its values gives its fallback")
+    void rejectedGroupFallsBack() {
+        ConfigSection section = root();
+
+        assertEquals("fallback", section.orDefault("test", () -> {
+            throw new IllegalArgumentException("broken");
+        }, "fallback"));
+        assertEquals("read", section.orDefault("test", () -> "read", "fallback"));
+    }
 }

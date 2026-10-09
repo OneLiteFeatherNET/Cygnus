@@ -64,26 +64,35 @@ public record CreekConfig(
 
     /**
      * Reads the creek settings. The section carries the {@code creek.} prefix. An unreadable value
-     * falls back to its default, while values that contradict each other are rejected.
+     * falls back to its default. A group with invalid values falls back to its defaults. Values that
+     * contradict each other across groups reset everything but {@code enabled} and
+     * {@code activeWithLastSurvivor}. That includes a group whose fallback contradicts the values
+     * of another group.
      *
      * @param section the {@code creek.} part of the config
      * @return the creek settings
-     * @throws IllegalArgumentException if the values do not fit together
      */
     public static CreekConfig read(ConfigSection section) {
-        return new CreekConfig(
-                section.getBoolean("enabled", DEFAULT.enabled()),
-                section.getBoolean("activeWithLastSurvivor", DEFAULT.activeWithLastSurvivor()),
+        boolean enabled = section.getBoolean("enabled", DEFAULT.enabled());
+        boolean activeWithLastSurvivor = section.getBoolean("activeWithLastSurvivor", DEFAULT.activeWithLastSurvivor());
+        Sight sight = Sight.read(section);
+        Wander wander = Wander.read(section);
+        Stalk stalk = Stalk.read(section);
+        Hunt hunt = Hunt.read(section);
+        Vanish vanish = Vanish.read(section);
+        Catch catching = Catch.read(section);
+        // A contradiction between groups does not tell which side is wrong, so everything but the
+        // two switches falls back. A creek the operator switched off has to stay off.
+        CreekConfig fallback = new CreekConfig(enabled, activeWithLastSurvivor, DEFAULT.routeLinkDistance(),
+                DEFAULT.personalSpace(), DEFAULT.stuckMillis(), Sight.DEFAULT, Wander.DEFAULT, Stalk.DEFAULT,
+                Hunt.DEFAULT, Vanish.DEFAULT, Catch.DEFAULT);
+        return section.orDefault("creek", () -> new CreekConfig(
+                enabled,
+                activeWithLastSurvivor,
                 section.getDouble("routeLinkDistance", DEFAULT.routeLinkDistance()),
                 section.getInt("personalSpace", DEFAULT.personalSpace()),
                 section.getInt("stuckMillis", DEFAULT.stuckMillis()),
-                Sight.read(section),
-                Wander.read(section),
-                Stalk.read(section),
-                Hunt.read(section),
-                Vanish.read(section),
-                Catch.read(section)
-        );
+                sight, wander, stalk, hunt, vanish, catching), fallback);
     }
 
     /**
@@ -115,9 +124,9 @@ public record CreekConfig(
          * @return the sight
          */
         public static Sight read(ConfigSection section) {
-            return new Sight(
+            return section.orDefault("creek sight", () -> new Sight(
                     section.getInt("sightRange", DEFAULT.range()),
-                    section.getInt("sightViewAngle", DEFAULT.viewAngle()));
+                    section.getInt("sightViewAngle", DEFAULT.viewAngle())), DEFAULT);
         }
     }
 
@@ -155,12 +164,12 @@ public record CreekConfig(
          * @return the wandering
          */
         public static Wander read(ConfigSection section) {
-            return new Wander(
+            return section.orDefault("creek wander", () -> new Wander(
                     section.getInt("wanderPauseMillis", DEFAULT.pauseMillis()),
                     section.getDouble("wanderSpeed", DEFAULT.speed()),
                     section.getDouble("randomStopChance", DEFAULT.stopChance()),
                     section.getInt("randomStopMinMillis", DEFAULT.stopMinMillis()),
-                    section.getInt("randomStopMaxMillis", DEFAULT.stopMaxMillis()));
+                    section.getInt("randomStopMaxMillis", DEFAULT.stopMaxMillis())), DEFAULT);
         }
     }
 
@@ -204,7 +213,7 @@ public record CreekConfig(
          * @return the stalk
          */
         public static Stalk read(ConfigSection section) {
-            return new Stalk(
+            return section.orDefault("creek stalk", () -> new Stalk(
                     section.getDouble("stalkThreshold", DEFAULT.threshold()),
                     section.getInt("stalkMinDistance", DEFAULT.minDistance()),
                     section.getInt("stalkMaxDistance", DEFAULT.maxDistance()),
@@ -212,7 +221,7 @@ public record CreekConfig(
                     section.getInt("stalkMaxAngle", DEFAULT.maxAngle()),
                     section.getInt("stalkRevealMillis", DEFAULT.revealMillis()),
                     section.getInt("stalkMinSeconds", DEFAULT.minSeconds()),
-                    section.getInt("stalkMaxSeconds", DEFAULT.maxSeconds()));
+                    section.getInt("stalkMaxSeconds", DEFAULT.maxSeconds())), DEFAULT);
         }
     }
 
@@ -254,13 +263,13 @@ public record CreekConfig(
          * @return the hunt
          */
         public static Hunt read(ConfigSection section) {
-            return new Hunt(
+            return section.orDefault("creek hunt", () -> new Hunt(
                     section.getDouble("huntSpeed", DEFAULT.speed()),
                     section.getDouble("huntThreshold", DEFAULT.threshold()),
                     section.getInt("huntMaxSeconds", DEFAULT.maxSeconds()),
                     section.getInt("huntMinStalkSeconds", DEFAULT.minStalkSeconds()),
                     section.getInt("huntCooldownSeconds", DEFAULT.cooldownSeconds()),
-                    section.getDouble("catchDistance", DEFAULT.catchDistance()));
+                    section.getDouble("catchDistance", DEFAULT.catchDistance())), DEFAULT);
         }
     }
 
@@ -294,10 +303,10 @@ public record CreekConfig(
          * @return the vanish
          */
         public static Vanish read(ConfigSection section) {
-            return new Vanish(
+            return section.orDefault("creek vanish", () -> new Vanish(
                     section.getInt("vanishMinSeconds", DEFAULT.minSeconds()),
                     section.getInt("vanishMaxSeconds", DEFAULT.maxSeconds()),
-                    section.getInt("respawnMinDistance", DEFAULT.respawnMinDistance()));
+                    section.getInt("respawnMinDistance", DEFAULT.respawnMinDistance())), DEFAULT);
         }
     }
 
@@ -348,14 +357,14 @@ public record CreekConfig(
          * @return the catch
          */
         public static Catch read(ConfigSection section) {
-            return new Catch(
+            return section.orDefault("creek catch", () -> new Catch(
                     section.getInt("betrayalCatchCount", DEFAULT.betrayalCatchCount()),
                     section.getDouble("betrayalChance", DEFAULT.betrayalChance()),
                     section.getInt("betrayalGlowSeconds", DEFAULT.betrayalGlowSeconds()),
                     section.getInt("slownessSeconds", DEFAULT.slownessSeconds()),
                     section.getDouble("launchHeight", DEFAULT.launchHeight()),
                     section.getDouble("swapChance", DEFAULT.swapChance()),
-                    section.getDouble("launchDamage", DEFAULT.launchDamage()));
+                    section.getDouble("launchDamage", DEFAULT.launchDamage())), DEFAULT);
         }
     }
 

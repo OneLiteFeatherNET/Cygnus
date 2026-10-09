@@ -101,11 +101,10 @@ public record FootprintConfig(
      *
      * @param section the {@code footprint.} part of the config
      * @return the footprint settings
-     * @throws IllegalArgumentException if a value is out of range
      */
     public static FootprintConfig read(ConfigSection section) {
         FootprintConfig defaults = DEFAULT;
-        return new FootprintConfig(
+        return section.orDefault("footprint", () -> new FootprintConfig(
                 section.getDouble("slenderStepBlocks", defaults.slenderStepBlocks()),
                 section.getDouble("slenderChance", defaults.slenderChance()),
                 section.getInt("slenderDelayMinMillis", defaults.slenderDelayMinMillis()),
@@ -121,7 +120,7 @@ public record FootprintConfig(
                 section.getDouble("teleportBlocks", defaults.teleportBlocks()),
                 section.getDouble("minSpacing", defaults.minSpacing()),
                 section.getDouble("fadeShare", defaults.fadeShare())
-        );
+        ), defaults);
     }
 
     private static void positive(String name, double value) {
