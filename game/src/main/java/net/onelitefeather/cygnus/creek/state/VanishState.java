@@ -71,7 +71,7 @@ public final class VanishState implements CreekState {
         if (ctx.now() < this.until) return this;
 
         List<Pos> observers = ctx.observerEyes();
-        double distance = ctx.config().respawnMinDistance();
+        double distance = ctx.config().vanish().respawnMinDistance();
         // Any point of the route will do. Asking the route for its next point would only offer the
         // neighbours of where the creek disappeared, and that is often right next to a survivor.
         // Checking them in random order and taking the first hidden one picks just as fairly as

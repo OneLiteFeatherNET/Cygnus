@@ -64,4 +64,21 @@ public record StaminaConfig(
             throw new IllegalArgumentException("slenderDamageRange (" + slenderDamageRange + ") must be between 1 and " + MAX_SLENDER_DAMAGE_RANGE);
         }
     }
+
+    /**
+     * Reads the sprint settings. The section carries the {@code stamina.} prefix.
+     *
+     * @param section the {@code stamina.} part of the config
+     * @return the sprint settings
+     * @throws IllegalArgumentException if a value is out of range
+     */
+    public static StaminaConfig read(ConfigSection section) {
+        StaminaConfig defaults = DEFAULT;
+        return new StaminaConfig(
+                section.getDouble("sprintResumeShare", defaults.sprintResumeShare()),
+                section.getDouble("regenPerSecond", defaults.regenPerSecond()),
+                section.getInt("slenderReappearCooldownSeconds", defaults.slenderReappearCooldownSeconds()),
+                section.getInt("slenderDamageRange", defaults.slenderDamageRange())
+        );
+    }
 }

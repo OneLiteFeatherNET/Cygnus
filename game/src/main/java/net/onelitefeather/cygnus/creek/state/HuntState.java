@@ -55,7 +55,7 @@ public final class HuntState implements CreekState {
      * @return the state
      */
     static HuntState starting(UUID target, CreekContext ctx) {
-        return new HuntState(target, ctx.now() + ctx.config().huntMaxSeconds() * 1000L);
+        return new HuntState(target, ctx.now() + ctx.config().hunt().maxSeconds() * 1000L);
     }
 
     /**
@@ -103,7 +103,7 @@ public final class HuntState implements CreekState {
         body.setFrozen(false);
 
         double distance = body.position().distance(view.position());
-        if (distance <= config.catchDistance() && view.inSight()) {
+        if (distance <= config.hunt().catchDistance() && view.inSight()) {
             ctx.actions().caught(this.target);
             return this.over(ctx);
         }
@@ -117,7 +117,7 @@ public final class HuntState implements CreekState {
         }
 
         body.lookAt(view.eyes());
-        body.moveTo(view.position(), config.huntSpeed());
+        body.moveTo(view.position(), config.hunt().speed());
         return this;
     }
 
@@ -134,7 +134,7 @@ public final class HuntState implements CreekState {
      */
     private void shortcut(CreekContext ctx, SurvivorView view) {
         ctx.spots()
-                .beside(view.position(), NEAR_MIN, NEAR_MAX, ctx.config().stalkMinAngle(), 180.0D,
+                .beside(view.position(), NEAR_MIN, NEAR_MAX, ctx.config().stalk().minAngle(), 180.0D,
                         List.of(view.eyes()), NEAR_MIN, ctx.random())
                 .ifPresent(ctx.body()::teleport);
         this.bestDistance = Double.MAX_VALUE;

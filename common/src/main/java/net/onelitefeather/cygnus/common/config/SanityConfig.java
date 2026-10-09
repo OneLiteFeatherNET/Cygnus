@@ -70,6 +70,31 @@ public record SanityConfig(
         between("floorCap", floorCap);
     }
 
+    /**
+     * Reads the fear settings. The section carries the {@code sanity.} prefix.
+     *
+     * @param section the {@code sanity.} part of the config
+     * @return the fear settings
+     * @throws IllegalArgumentException if a value is out of range
+     */
+    public static SanityConfig read(ConfigSection section) {
+        SanityConfig defaults = DEFAULT;
+        return new SanityConfig(
+                section.getDouble("pageFloorWeight", defaults.pageFloorWeight()),
+                section.getDouble("pageFoundGain", defaults.pageFoundGain()),
+                section.getDouble("sightingGain", defaults.sightingGain()),
+                section.getInt("sightingCooldownSeconds", defaults.sightingCooldownSeconds()),
+                section.getDouble("caughtGain", defaults.caughtGain()),
+                section.getDouble("selectedGain", defaults.selectedGain()),
+                section.getDouble("deathGain", defaults.deathGain()),
+                section.getDouble("decayPerSecond", defaults.decayPerSecond()),
+                section.getDouble("stalkGainPerSecond", defaults.stalkGainPerSecond()),
+                section.getDouble("residualShare", defaults.residualShare()),
+                section.getDouble("timeFloorWeight", defaults.timeFloorWeight()),
+                section.getDouble("floorCap", defaults.floorCap())
+        );
+    }
+
     private static void between(String name, double value) {
         if (value < 0.0D || value > 1.0D) {
             throw new IllegalArgumentException(name + " (" + value + ") must be between 0.0 and 1.0");

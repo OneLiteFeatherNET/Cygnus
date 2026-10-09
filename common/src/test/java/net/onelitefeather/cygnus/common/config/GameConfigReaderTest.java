@@ -385,7 +385,7 @@ class GameConfigReaderTest {
         GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
 
         assertEquals(CreekConfig.DEFAULT, config.creek());
-        assertEquals(0.5D, config.creek().swapChance(), 1.0E-9, "the swap chance defaults to 0.5");
+        assertEquals(0.5D, config.creek().catching().swapChance(), 1.0E-9, "the swap chance defaults to 0.5");
     }
 
     @Test
@@ -407,16 +407,98 @@ class GameConfigReaderTest {
         CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
 
         assertFalse(creek.enabled());
-        assertEquals(0.7D, creek.huntThreshold(), 1.0E-9);
-        assertEquals(40, creek.stalkMaxDistance());
-        assertEquals(CreekConfig.DEFAULT.stalkMinDistance(), creek.stalkMinDistance());
+        assertEquals(0.7D, creek.hunt().threshold(), 1.0E-9);
+        assertEquals(40, creek.stalk().maxDistance());
+        assertEquals(CreekConfig.DEFAULT.stalk().minDistance(), creek.stalk().minDistance());
         assertEquals(4.5D, creek.routeLinkDistance(), 1.0E-9);
-        assertEquals(0.4D, creek.randomStopChance(), 1.0E-9);
-        assertEquals(500, creek.randomStopMinMillis());
-        assertEquals(900, creek.randomStopMaxMillis());
-        assertEquals(7.5D, creek.launchHeight(), 1.0E-9);
-        assertEquals(0.25D, creek.swapChance(), 1.0E-9);
-        assertEquals(6.0D, creek.launchDamage(), 1.0E-9);
+        assertEquals(0.4D, creek.wander().stopChance(), 1.0E-9);
+        assertEquals(500, creek.wander().stopMinMillis());
+        assertEquals(900, creek.wander().stopMaxMillis());
+        assertEquals(7.5D, creek.catching().launchHeight(), 1.0E-9);
+        assertEquals(0.25D, creek.catching().swapChance(), 1.0E-9);
+        assertEquals(6.0D, creek.catching().launchDamage(), 1.0E-9);
+    }
+
+    @Test
+    void readsEveryCreekKey(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                creek.enabled=false
+                creek.activeWithLastSurvivor=false
+                creek.sightRange=50
+                creek.sightViewAngle=30
+                creek.wanderPauseMillis=1600
+                creek.wanderSpeed=0.08
+                creek.huntSpeed=0.3
+                creek.stalkThreshold=0.2
+                creek.huntThreshold=0.7
+                creek.stalkMinDistance=22
+                creek.stalkMaxDistance=36
+                creek.stalkMinAngle=41
+                creek.stalkMaxAngle=71
+                creek.stalkRevealMillis=800
+                creek.stalkMinSeconds=46
+                creek.stalkMaxSeconds=91
+                creek.huntMaxSeconds=31
+                creek.huntMinStalkSeconds=11
+                creek.huntCooldownSeconds=46
+                creek.catchDistance=1.6
+                creek.vanishMinSeconds=21
+                creek.vanishMaxSeconds=41
+                creek.respawnMinDistance=31
+                creek.personalSpace=16
+                creek.stuckMillis=3100
+                creek.betrayalCatchCount=3
+                creek.betrayalChance=0.2
+                creek.betrayalGlowSeconds=7
+                creek.slownessSeconds=5
+                creek.routeLinkDistance=3.5
+                creek.randomStopChance=0.2
+                creek.randomStopMinMillis=1600
+                creek.randomStopMaxMillis=4100
+                creek.launchHeight=6.0
+                creek.swapChance=0.6
+                creek.launchDamage=5.0
+                """);
+
+        CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
+
+        assertFalse(creek.enabled());
+        assertFalse(creek.activeWithLastSurvivor());
+        assertEquals(50, creek.sight().range());
+        assertEquals(30, creek.sight().viewAngle());
+        assertEquals(1600, creek.wander().pauseMillis());
+        assertEquals(0.08D, creek.wander().speed(), 1.0E-9);
+        assertEquals(0.3D, creek.hunt().speed(), 1.0E-9);
+        assertEquals(0.2D, creek.stalk().threshold(), 1.0E-9);
+        assertEquals(0.7D, creek.hunt().threshold(), 1.0E-9);
+        assertEquals(22, creek.stalk().minDistance());
+        assertEquals(36, creek.stalk().maxDistance());
+        assertEquals(41, creek.stalk().minAngle());
+        assertEquals(71, creek.stalk().maxAngle());
+        assertEquals(800, creek.stalk().revealMillis());
+        assertEquals(46, creek.stalk().minSeconds());
+        assertEquals(91, creek.stalk().maxSeconds());
+        assertEquals(31, creek.hunt().maxSeconds());
+        assertEquals(11, creek.hunt().minStalkSeconds());
+        assertEquals(46, creek.hunt().cooldownSeconds());
+        assertEquals(1.6D, creek.hunt().catchDistance(), 1.0E-9);
+        assertEquals(21, creek.vanish().minSeconds());
+        assertEquals(41, creek.vanish().maxSeconds());
+        assertEquals(31, creek.vanish().respawnMinDistance());
+        assertEquals(16, creek.personalSpace());
+        assertEquals(3100, creek.stuckMillis());
+        assertEquals(3, creek.catching().betrayalCatchCount());
+        assertEquals(0.2D, creek.catching().betrayalChance(), 1.0E-9);
+        assertEquals(7, creek.catching().betrayalGlowSeconds());
+        assertEquals(5, creek.catching().slownessSeconds());
+        assertEquals(3.5D, creek.routeLinkDistance(), 1.0E-9);
+        assertEquals(0.2D, creek.wander().stopChance(), 1.0E-9);
+        assertEquals(1600, creek.wander().stopMinMillis());
+        assertEquals(4100, creek.wander().stopMaxMillis());
+        assertEquals(6.0D, creek.catching().launchHeight(), 1.0E-9);
+        assertEquals(0.6D, creek.catching().swapChance(), 1.0E-9);
+        assertEquals(5.0D, creek.catching().launchDamage(), 1.0E-9);
     }
 
     @Test
@@ -438,8 +520,8 @@ class GameConfigReaderTest {
                 creek.huntThreshold=not-a-number
                 """);
 
-        assertEquals(CreekConfig.DEFAULT.huntThreshold(),
-                new GameConfigReader(tempDir).getConfig().creek().huntThreshold());
+        assertEquals(CreekConfig.DEFAULT.hunt().threshold(),
+                new GameConfigReader(tempDir).getConfig().creek().hunt().threshold());
     }
 
     @Test

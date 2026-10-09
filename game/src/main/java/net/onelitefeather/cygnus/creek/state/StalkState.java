@@ -82,7 +82,7 @@ public final class StalkState implements CreekState {
      * @return the state
      */
     public static StalkState starting(UUID target, long now, CreekConfig config, RandomGenerator random) {
-        long seconds = random.nextLong(config.stalkMinSeconds(), config.stalkMaxSeconds() + 1L);
+        long seconds = random.nextLong(config.stalk().minSeconds(), config.stalk().maxSeconds() + 1L);
         return new StalkState(target, now + seconds * 1000L);
     }
 
@@ -129,7 +129,7 @@ public final class StalkState implements CreekState {
 
         if (view.seesCreek()) {
             if (this.seenSince < 0) this.seenSince = ctx.now();
-            if (ctx.now() - this.seenSince >= config.stalkRevealMillis() && this.relocate(ctx, view)) {
+            if (ctx.now() - this.seenSince >= config.stalk().revealMillis() && this.relocate(ctx, view)) {
                 this.seenSince = -1L;
                 // Gone without a sound. The next one only comes after a full gap.
                 this.scheduleSound(ctx);
@@ -154,8 +154,8 @@ public final class StalkState implements CreekState {
      */
     private boolean mayHunt(CreekContext ctx, SurvivorView view) {
         CreekConfig config = ctx.config();
-        if (view.dread() < config.huntThreshold()) return false;
-        if (ctx.now() - this.startedAt < config.huntMinStalkSeconds() * 1000L) return false;
+        if (view.dread() < config.hunt().threshold()) return false;
+        if (ctx.now() - this.startedAt < config.hunt().minStalkSeconds() * 1000L) return false;
         return ctx.hunts().ready(this.target, ctx.now());
     }
 
@@ -190,7 +190,7 @@ public final class StalkState implements CreekState {
         // The band's own minimum keeps the creek off the survivor. The fixed personal space would
         // find no spot at all once the band comes closer than that.
         Optional<Pos> spot = ctx.spots().beside(view.position(), min, this.maxDistance(ctx),
-                config.stalkMinAngle(), config.stalkMaxAngle(), List.of(view.eyes()), min, ctx.random());
+                config.stalk().minAngle(), config.stalk().maxAngle(), List.of(view.eyes()), min, ctx.random());
         spot.ifPresent(ctx.body()::teleport);
         return spot.isPresent();
     }
@@ -205,12 +205,12 @@ public final class StalkState implements CreekState {
     }
 
     private double minDistance(CreekContext ctx) {
-        double start = ctx.config().stalkMinDistance();
+        double start = ctx.config().stalk().minDistance();
         return start + (END_MIN_DISTANCE - start) * this.progress(ctx.now());
     }
 
     private double maxDistance(CreekContext ctx) {
-        double start = ctx.config().stalkMaxDistance();
+        double start = ctx.config().stalk().maxDistance();
         return start + (END_MAX_DISTANCE - start) * this.progress(ctx.now());
     }
 }

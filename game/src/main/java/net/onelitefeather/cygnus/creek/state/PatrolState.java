@@ -139,7 +139,7 @@ public final class PatrolState implements CreekState {
             body.stop();
             return this;
         }
-        body.moveTo(next.target(), config.wanderSpeed());
+        body.moveTo(next.target(), config.wander().speed());
         return this;
     }
 
@@ -219,7 +219,7 @@ public final class PatrolState implements CreekState {
     private boolean pause(CreekContext ctx, SurvivorView watcher) {
         if (!this.watched) {
             this.watched = true;
-            this.pausedUntil = ctx.now() + ctx.config().wanderPauseMillis();
+            this.pausedUntil = ctx.now() + ctx.config().wander().pauseMillis();
         }
         if (ctx.now() >= this.pausedUntil) return false;
 
@@ -238,9 +238,9 @@ public final class PatrolState implements CreekState {
     private long restMillis(CreekContext ctx, RouteStep reached) {
         CreekConfig config = ctx.config();
         int rest = reached.pauseMillis();
-        if (config.randomStopChance() > 0.0D && ctx.random().nextDouble() < config.randomStopChance()) {
-            int spread = config.randomStopMaxMillis() - config.randomStopMinMillis();
-            rest = Math.max(rest, config.randomStopMinMillis() + ctx.random().nextInt(spread + 1));
+        if (config.wander().stopChance() > 0.0D && ctx.random().nextDouble() < config.wander().stopChance()) {
+            int spread = config.wander().stopMaxMillis() - config.wander().stopMinMillis();
+            rest = Math.max(rest, config.wander().stopMinMillis() + ctx.random().nextInt(spread + 1));
         }
         return rest;
     }

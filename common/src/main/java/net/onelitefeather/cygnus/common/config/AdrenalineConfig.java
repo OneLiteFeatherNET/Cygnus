@@ -47,4 +47,21 @@ public record AdrenalineConfig(
             throw new IllegalArgumentException("cooldownSeconds (" + cooldownSeconds + ") must not be negative");
         }
     }
+
+    /**
+     * Reads the adrenaline settings. The section carries the {@code adrenaline.} prefix.
+     *
+     * @param section the {@code adrenaline.} part of the config
+     * @return the adrenaline settings
+     * @throws IllegalArgumentException if a value is out of range
+     */
+    public static AdrenalineConfig read(ConfigSection section) {
+        AdrenalineConfig defaults = DEFAULT;
+        return new AdrenalineConfig(
+                section.getInt("radius", defaults.radius()),
+                section.getDouble("speedBonus", defaults.speedBonus()),
+                section.getInt("durationSeconds", defaults.durationSeconds()),
+                section.getInt("cooldownSeconds", defaults.cooldownSeconds())
+        );
+    }
 }

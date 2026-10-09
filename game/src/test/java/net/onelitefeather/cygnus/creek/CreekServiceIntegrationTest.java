@@ -188,7 +188,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         AtomicLong clock = new AtomicLong();
         CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), clock);
         service.start();
-        clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);
+        clock.set(CreekConfig.DEFAULT.vanish().maxSeconds() * 1000L + 1L);
         service.tick();
         Creek creek = service.creek();
         assertNotNull(creek);
@@ -301,7 +301,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
                 }, CreekWitness.NONE, consequence,
                 new RoundClock(clock::get), new Random(3), new CreekDebug());
         service.start();
-        clock.set(CreekConfig.DEFAULT.vanishMaxSeconds() * 1000L + 1L);
+        clock.set(CreekConfig.DEFAULT.vanish().maxSeconds() * 1000L + 1L);
         service.tick();
         return new Round(service, scared, other, survivors, dreadCalls);
     }

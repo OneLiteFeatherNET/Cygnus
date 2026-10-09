@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
 
     private static final CreekConfig CONFIG = CreekConfig.DEFAULT;
-    private static final CreekSight SIGHT = new CreekSight(CONFIG.sightRange(), CONFIG.sightViewAngle());
+    private static final CreekSight SIGHT = new CreekSight(CONFIG.sight().range(), CONFIG.sight().viewAngle());
     private static final CatchConsequence NO_CATCH = new CatchConsequence() {
         @Override
         public void apply(Player survivor) {

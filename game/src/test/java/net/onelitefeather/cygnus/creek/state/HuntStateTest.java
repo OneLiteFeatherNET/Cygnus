@@ -58,7 +58,7 @@ class HuntStateTest {
 
         assertFalse(body.frozen);
         assertEquals(TARGET_POS, body.goal);
-        assertEquals(Contexts.CONFIG.huntSpeed(), body.speed);
+        assertEquals(Contexts.CONFIG.hunt().speed(), body.speed);
     }
 
     @Test

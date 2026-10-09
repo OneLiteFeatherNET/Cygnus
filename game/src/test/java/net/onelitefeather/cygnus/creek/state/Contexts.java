@@ -25,7 +25,7 @@ public final class Contexts {
 
     /** The defaults, without random stops, so wandering tests do not depend on chance. */
     static final CreekConfig CONFIG = randomStops(0.0D, 0, 0);
-    static final CreekSight SIGHT = new CreekSight(CONFIG.sightRange(), CONFIG.sightViewAngle());
+    static final CreekSight SIGHT = new CreekSight(CONFIG.sight().range(), CONFIG.sight().viewAngle());
     static final SpotFinder SPOTS = new SpotFinder(SIGHT, Optional::of);
 
     /** Actions that do nothing. */
@@ -132,27 +132,21 @@ public final class Contexts {
 
     /** The defaults with other random stops. */
     static CreekConfig randomStops(double chance, int minMillis, int maxMillis) {
-        return copy(CreekConfig.DEFAULT.activeWithLastSurvivor(), chance, minMillis, maxMillis);
+        CreekConfig.Wander wander = CreekConfig.DEFAULT.wander();
+        return copy(CreekConfig.DEFAULT.activeWithLastSurvivor(),
+                new CreekConfig.Wander(wander.pauseMillis(), wander.speed(), chance, minMillis, maxMillis));
     }
 
     /** The defaults, but the creek sits out the round once only one survivor is left. */
     public static CreekConfig withoutLastSurvivor() {
-        CreekConfig defaults = CreekConfig.DEFAULT;
-        return copy(false, defaults.randomStopChance(), defaults.randomStopMinMillis(), defaults.randomStopMaxMillis());
+        return copy(false, CreekConfig.DEFAULT.wander());
     }
 
-    private static CreekConfig copy(boolean activeWithLastSurvivor, double chance, int minMillis, int maxMillis) {
+    private static CreekConfig copy(boolean activeWithLastSurvivor, CreekConfig.Wander wander) {
         CreekConfig defaults = CreekConfig.DEFAULT;
-        return new CreekConfig(
-                defaults.enabled(), activeWithLastSurvivor, defaults.sightRange(), defaults.sightViewAngle(),
-                defaults.wanderPauseMillis(), defaults.wanderSpeed(), defaults.huntSpeed(), defaults.stalkThreshold(), defaults.huntThreshold(),
-                defaults.stalkMinDistance(), defaults.stalkMaxDistance(), defaults.stalkMinAngle(), defaults.stalkMaxAngle(),
-                defaults.stalkRevealMillis(), defaults.stalkMinSeconds(), defaults.stalkMaxSeconds(), defaults.huntMaxSeconds(),
-                defaults.huntMinStalkSeconds(), defaults.huntCooldownSeconds(),
-                defaults.catchDistance(), defaults.vanishMinSeconds(), defaults.vanishMaxSeconds(), defaults.respawnMinDistance(),
-                defaults.personalSpace(), defaults.stuckMillis(), defaults.betrayalCatchCount(),
-                defaults.betrayalChance(), defaults.betrayalGlowSeconds(), defaults.slownessSeconds(), defaults.routeLinkDistance(),
-                chance, minMillis, maxMillis, defaults.launchHeight(), defaults.swapChance(), defaults.launchDamage());
+        return new CreekConfig(defaults.enabled(), activeWithLastSurvivor, defaults.routeLinkDistance(),
+                defaults.personalSpace(), defaults.stuckMillis(), defaults.sight(), wander, defaults.stalk(),
+                defaults.hunt(), defaults.vanish(), defaults.catching());
     }
 
     /** A route that offers the first allowed point at least a block away. */

@@ -137,7 +137,7 @@ public final class CreekService {
         this.clock = clock;
         this.random = random;
         this.debug = debug;
-        this.sight = new CreekSight(config.sightRange(), config.sightViewAngle());
+        this.sight = new CreekSight(config.sight().range(), config.sight().viewAngle());
         this.ground = new InstanceGround(instance);
         this.spots = new SpotFinder(this.sight, this.ground);
         this.routes = routes;
@@ -169,7 +169,7 @@ public final class CreekService {
         PathRoute pathRoute = new PathRoute(paths);
         CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.witness,
                 new PatrolHelper(this.random), new StalkSounds(this.random), this.config, this.random,
-                new HuntCooldowns(this.config.huntCooldownSeconds() * 1000L));
+                new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L));
         this.round = round;
         List<Pos> points = paths.allPoints();
 
@@ -178,7 +178,7 @@ public final class CreekService {
         CreekBody body = this.bodies.apply(world, this.ground.settle(point).orElse(point));
         // Start hidden. The creek and its variants only show up once the survivors have had time to
         // spread out, the creek somewhere far away from all of them.
-        long showsUp = this.clock.now() + this.config.vanishMinSeconds() * 1000L;
+        long showsUp = this.clock.now() + this.config.vanish().minSeconds() * 1000L;
         this.creek = new Creek(body, pathRoute, round, new VanishState(showsUp));
         this.variants = new CreekVariants(this.config, this.spots, this.random, showsUp,
                 (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state));
