@@ -29,12 +29,13 @@ import java.util.regex.Pattern;
  * @param stamina              the survivors' sprint and the slender's appearing
  * @param adrenaline           the rush a survivor gets when the visible slender comes close
  * @param footprint            the prints the hidden slender leaves and the survivor tracks the slender can reveal
+ * @param possession           the slender's look through the eyes of the creek
  * @param telemetry            the OpenTelemetry traces, which only do anything with the javaagent attached
  * @param minimap              the request to client minimap mods to switch themselves off
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
- * @version 2.4.0
+ * @version 2.5.0
  * @since 1.0.0
  */
 public record GameConfig(
@@ -51,6 +52,7 @@ public record GameConfig(
         StaminaConfig stamina,
         AdrenalineConfig adrenaline,
         FootprintConfig footprint,
+        PossessionConfig possession,
         TelemetryConfig telemetry,
         MinimapConfig minimap,
         float lobbyAtmosphereShare
@@ -136,6 +138,7 @@ public record GameConfig(
             StaminaConfig.DEFAULT,
             AdrenalineConfig.DEFAULT,
             FootprintConfig.DEFAULT,
+            PossessionConfig.DEFAULT,
             TelemetryConfig.DEFAULT,
             MinimapConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
@@ -169,6 +172,7 @@ public record GameConfig(
                 StaminaConfig.read(root.section("stamina.")),
                 AdrenalineConfig.read(root.section("adrenaline.")),
                 FootprintConfig.read(root.section("footprint.")),
+                PossessionConfig.read(root.section("possession.")),
                 TelemetryConfig.read(root.section("telemetry.")),
                 MinimapConfig.read(root.section("minimap.")),
                 readLobbyAtmosphereShare(root)

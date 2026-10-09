@@ -25,6 +25,7 @@ class ConfigReadTest {
         assertEquals(StaminaConfig.DEFAULT, StaminaConfig.read(section("stamina.")));
         assertEquals(AdrenalineConfig.DEFAULT, AdrenalineConfig.read(section("adrenaline.")));
         assertEquals(FootprintConfig.DEFAULT, FootprintConfig.read(section("footprint.")));
+        assertEquals(PossessionConfig.DEFAULT, PossessionConfig.read(section("possession.")));
         assertEquals(TelemetryConfig.DEFAULT, TelemetryConfig.read(section("telemetry.")));
         assertEquals(MinimapConfig.DEFAULT, MinimapConfig.read(section("minimap.")));
     }
@@ -37,6 +38,7 @@ class ConfigReadTest {
         assertEquals(7, StaminaConfig.read(section("stamina.", "stamina.slenderReappearCooldownSeconds", "7")).slenderReappearCooldownSeconds());
         assertEquals(12, AdrenalineConfig.read(section("adrenaline.", "adrenaline.radius", "12")).radius());
         assertEquals(50, FootprintConfig.read(section("footprint.", "footprint.scanRadius", "50")).scanRadius());
+        assertEquals(5, PossessionConfig.read(section("possession.", "possession.maxSeconds", "5")).maxSeconds());
         assertEquals(80, TelemetryConfig.read(section("telemetry.", "telemetry.slowTickThresholdMillis", "80")).slowTickThresholdMillis());
         assertEquals(MinimapConfig.Mode.FAIR, MinimapConfig.read(section("minimap.", "minimap.mode", "fair")).mode());
     }
@@ -45,5 +47,11 @@ class ConfigReadTest {
     @DisplayName("An unknown minimap mode falls back to the default")
     void unknownMinimapModeFallsBack() {
         assertEquals(MinimapConfig.DEFAULT, MinimapConfig.read(section("minimap.", "minimap.mode", "radar")));
+    }
+
+    @Test
+    @DisplayName("A possession setting out of range falls back to the defaults")
+    void invalidPossessionFallsBack() {
+        assertEquals(PossessionConfig.DEFAULT, PossessionConfig.read(section("possession.", "possession.sightFactor", "0.5")));
     }
 }
