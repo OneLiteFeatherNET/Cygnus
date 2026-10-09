@@ -104,8 +104,12 @@ public final class GlowReveal implements SlenderReveal {
      * The flags always go along. Otherwise the client would hold on to the last value it got, which
      * after a reveal is the glow.
      * </p>
+     *
+     * @param survivor the survivor whose flags are sent
+     * @param glowing  whether the glow bit is set
+     * @return the packet, meant for the slender only
      */
-    static EntityMetaDataPacket flagsPacket(Player survivor, boolean glowing) {
+    public static EntityMetaDataPacket flagsPacket(Player survivor, boolean glowing) {
         Metadata.Entry<?> entry = survivor.getMetadataPacket().entries().get(0);
         byte flags = entry != null && entry.value() instanceof Byte value ? value : 0;
         byte sent = glowing ? (byte) (flags | GLOWING) : (byte) (flags & ~GLOWING);
