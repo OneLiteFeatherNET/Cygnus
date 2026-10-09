@@ -60,6 +60,6 @@ public final class SlenderReviveListener implements Consumer<SlenderReviveEvent>
         if (gameMap != null && gameMap.getSlenderSpawn() != null) {
             player.teleport(gameMap.getSlenderSpawn());
         }
-        Items.setSlenderEye(player);
+        Items.setSlenderItems(player);
     }
 }

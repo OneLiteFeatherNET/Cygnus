@@ -23,10 +23,22 @@ public final class Items {
     public static final byte SLENDER_ITEM = (byte) 0x00;
     public static final byte SPECTATE_ITEM = (byte) 0x01;
     public static final byte LEAVE_ITEM = (byte) 0x02;
+    public static final byte TRACKING_ITEM = (byte) 0x03;
+
+    /** The tracker's material, which is also the client's cooldown group for it. */
+    public static final Material TRACKING_MATERIAL = Material.RABBIT_FOOT;
+
+    /** The hotbar slot of the tracker, next to the SlenderEye. */
+    public static final int TRACKING_SLOT = 1;
 
     private static final ItemStack slenderEye = ItemStack.builder(Material.ENDER_EYE)
             .customName(Component.text("SlenderEye").color(TextColor.fromHexString("#ff00d4")))
             .set(Tags.ITEM_TAG, SLENDER_ITEM)
+            .build();
+
+    private static final ItemStack tracker = ItemStack.builder(TRACKING_MATERIAL)
+            .customName(Component.text("Tracker", NamedTextColor.DARK_RED))
+            .set(Tags.ITEM_TAG, TRACKING_ITEM)
             .build();
 
     private static final HotBarLayout SPECTATOR_LAYOUT;
@@ -47,13 +59,14 @@ public final class Items {
     }
 
     /**
-     * Sets the {@link ItemStack} for the SlenderEye to the player inventory.
+     * Gives the player the slender's items, the SlenderEye and the tracker, and the slender's look.
      *
      * @param player who should receive the item
      */
-    public static void setSlenderEye(Player player) {
+    public static void setSlenderItems(Player player) {
         player.getInventory().clear();
         player.getInventory().addItemStack(slenderEye);
+        player.getInventory().setItemStack(TRACKING_SLOT, tracker);
         player.switchEntityType(EntityType.ENDERMAN);
     }
 

@@ -8,7 +8,7 @@ import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
 
 /**
  * Replaces Minestom's built-in {@code SettingsListener}. A disguised {@link Player} (e.g. the
- * Slender player, see {@link net.onelitefeather.cygnus.utils.Items#setSlenderEye}) has its entity
+ * Slender player, see {@link net.onelitefeather.cygnus.utils.Items#setSlenderItems}) has its entity
  * meta swapped to a non-avatar type such as {@code EndermanMeta}. Minestom's own listener always
  * casts the meta to {@link PlayerMeta} and crashes with a {@link ClassCastException} whenever the
  * client resends its settings while disguised, so this guards the cast instead.

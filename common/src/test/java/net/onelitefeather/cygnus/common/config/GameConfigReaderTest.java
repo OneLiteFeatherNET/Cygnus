@@ -467,6 +467,32 @@ class GameConfigReaderTest {
     }
 
     @Test
+    void testFootprintDefaultsWhenNotConfigured() {
+        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
+
+        assertEquals(FootprintConfig.DEFAULT, config.footprint());
+    }
+
+    @Test
+    void testFootprintValuesAreRead(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=2
+                footprint.slenderChance=0.5
+                footprint.scanRadius=25
+                footprint.scanCooldownSeconds=90
+                footprint.fadeShare=0.5
+                """);
+
+        FootprintConfig footprint = new GameConfigReader(tempDir).getConfig().footprint();
+
+        assertEquals(0.5D, footprint.slenderChance(), 1.0E-9);
+        assertEquals(25, footprint.scanRadius());
+        assertEquals(90, footprint.scanCooldownSeconds());
+        assertEquals(0.5D, footprint.fadeShare(), 1.0E-9);
+        assertEquals(FootprintConfig.DEFAULT.scanMaxPrints(), footprint.scanMaxPrints());
+    }
+
+    @Test
     void testAdrenalineRejectsValuesOutOfRange(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=2

@@ -47,6 +47,7 @@ import java.util.regex.Pattern;
  *     <li>sanity.* (see {@link SanityConfig})</li>
  *     <li>stamina.* (see {@link StaminaConfig})</li>
  *     <li>adrenaline.* (see {@link AdrenalineConfig})</li>
+ *     <li>footprint.* (see {@link FootprintConfig})</li>
  *     <li>telemetry.* (see {@link TelemetryConfig})</li>
  *     <li>minimap.mode (see {@link MinimapConfig})</li>
  * </ul>
@@ -55,7 +56,7 @@ import java.util.regex.Pattern;
  * The default values are defined in {@link GameConfig#DEFAULT}.
  *
  * @author theEvilReaper
- * @version 1.10.0
+ * @version 1.11.0
  * @see GameConfig
  * @since 1.0.0
  */
@@ -72,6 +73,7 @@ public final class GameConfigReader {
     private static final String SANITY_PREFIX = "sanity.";
     private static final String STAMINA_PREFIX = "stamina.";
     private static final String ADRENALINE_PREFIX = "adrenaline.";
+    private static final String FOOTPRINT_PREFIX = "footprint.";
     private static final String TELEMETRY_PREFIX = "telemetry.";
     private static final String MINIMAP_MODE_KEY = "minimap.mode";
 
@@ -156,6 +158,7 @@ public final class GameConfigReader {
                 getSanity(properties),
                 getStamina(properties),
                 getAdrenaline(properties),
+                getFootprint(properties),
                 getTelemetry(properties),
                 getMinimap(properties),
                 getFloat(properties, "lobbyAtmosphereShare", GameConfig.DEFAULT.lobbyAtmosphereShare())
@@ -377,6 +380,27 @@ public final class GameConfigReader {
                 getDouble(properties, ADRENALINE_PREFIX + "speedBonus", d.speedBonus()),
                 getInt(properties, ADRENALINE_PREFIX + "durationSeconds", d.durationSeconds()),
                 getInt(properties, ADRENALINE_PREFIX + "cooldownSeconds", d.cooldownSeconds())
+        );
+    }
+
+    private FootprintConfig getFootprint(Properties properties) {
+        FootprintConfig d = FootprintConfig.DEFAULT;
+        return new FootprintConfig(
+                getDouble(properties, FOOTPRINT_PREFIX + "slenderStepBlocks", d.slenderStepBlocks()),
+                getDouble(properties, FOOTPRINT_PREFIX + "slenderChance", d.slenderChance()),
+                getInt(properties, FOOTPRINT_PREFIX + "slenderDelayMinMillis", d.slenderDelayMinMillis()),
+                getInt(properties, FOOTPRINT_PREFIX + "slenderDelayMaxMillis", d.slenderDelayMaxMillis()),
+                getInt(properties, FOOTPRINT_PREFIX + "slenderLifetimeSeconds", d.slenderLifetimeSeconds()),
+                getDouble(properties, FOOTPRINT_PREFIX + "survivorSampleBlocks", d.survivorSampleBlocks()),
+                getInt(properties, FOOTPRINT_PREFIX + "survivorHistorySeconds", d.survivorHistorySeconds()),
+                getInt(properties, FOOTPRINT_PREFIX + "scanRadius", d.scanRadius()),
+                getInt(properties, FOOTPRINT_PREFIX + "scanGapSeconds", d.scanGapSeconds()),
+                getInt(properties, FOOTPRINT_PREFIX + "scanMaxPrints", d.scanMaxPrints()),
+                getInt(properties, FOOTPRINT_PREFIX + "scanLifetimeSeconds", d.scanLifetimeSeconds()),
+                getInt(properties, FOOTPRINT_PREFIX + "scanCooldownSeconds", d.scanCooldownSeconds()),
+                getDouble(properties, FOOTPRINT_PREFIX + "teleportBlocks", d.teleportBlocks()),
+                getDouble(properties, FOOTPRINT_PREFIX + "minSpacing", d.minSpacing()),
+                getDouble(properties, FOOTPRINT_PREFIX + "fadeShare", d.fadeShare())
         );
     }
 

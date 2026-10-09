@@ -295,6 +295,37 @@ survivorTeamSize=12
 #adrenaline.durationSeconds=4
 #adrenaline.cooldownSeconds=20
 
+# --- Footprints ---------------------------------------------------------------
+# While hidden, the slender rolls footprint.slenderChance every
+# footprint.slenderStepBlocks blocks. A hit leaves a print after a random delay
+# between footprint.slenderDelayMinMillis and footprint.slenderDelayMaxMillis,
+# which only survivors see and which fades within footprint.slenderLifetimeSeconds.
+# Survivors leave a recorded point every footprint.survivorSampleBlocks blocks, kept
+# for footprint.survivorHistorySeconds. The slender's tracker shows the points within
+# footprint.scanRadius blocks, without the newest footprint.scanGapSeconds, at most
+# footprint.scanMaxPrints prints for footprint.scanLifetimeSeconds, then waits
+# footprint.scanCooldownSeconds. A single move longer than footprint.teleportBlocks
+# is a teleport and counts as no walking. Revealed prints lie at least
+# footprint.minSpacing blocks apart.
+# For the last footprint.fadeShare of its lifetime a print shows its faded stage.
+# Every key below maps to a field of FootprintConfig. An unreadable value
+# falls back to its default. Values out of range are rejected.
+#footprint.slenderStepBlocks=3.0
+#footprint.slenderChance=0.25
+#footprint.slenderDelayMinMillis=1000
+#footprint.slenderDelayMaxMillis=2000
+#footprint.slenderLifetimeSeconds=12
+#footprint.survivorSampleBlocks=2.0
+#footprint.survivorHistorySeconds=30
+#footprint.scanRadius=40
+#footprint.scanGapSeconds=5
+#footprint.scanMaxPrints=40
+#footprint.scanLifetimeSeconds=15
+#footprint.scanCooldownSeconds=120
+#footprint.teleportBlocks=8.0
+#footprint.minSpacing=0.7
+#footprint.fadeShare=0.33
+
 # --- Telemetry --------------------------------------------------------------
 # Cygnus creates OpenTelemetry traces: one per round with a child per phase, one per
 # player join and kick, the startup and the shutdown. They only go anywhere when the

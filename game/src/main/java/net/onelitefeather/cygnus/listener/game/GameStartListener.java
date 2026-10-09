@@ -56,7 +56,7 @@ public final class GameStartListener implements Consumer<GameStartEvent> {
                 .orElseThrow(() -> new IllegalStateException("Slender team has no assigned player"));
         slenderPlayer.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
         slenderPlayer.sendMessage(Messages.SLENDER_JOIN_PART);
-        Items.setSlenderEye(slenderPlayer);
+        Items.setSlenderItems(slenderPlayer);
 
         // Hiding the slender goes exclusively through the viewable rule. The previous
         // updateOldViewer/broadcastPlayPacket combination only sent packets: it left the viewer bit set
