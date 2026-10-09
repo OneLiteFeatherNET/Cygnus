@@ -33,6 +33,7 @@ public final class CreakingBody implements CreekBody {
 
     private final EntityCreature entity;
     private final Set<UUID> viewers = ConcurrentHashMap.newKeySet();
+    private volatile @Nullable UUID observer;
     private @Nullable Pos goal;
 
     private CreakingBody(EntityCreature entity) {
@@ -50,7 +51,8 @@ public final class CreakingBody implements CreekBody {
         CreakingBody body = new CreakingBody(new EntityCreature(EntityType.CREAKING));
         body.entity.getNavigator().setNodeGenerator(FoliageGroundGenerator::new);
         body.entity.getNavigator().setNodeFollower(() -> new StepFollower(body.entity));
-        body.entity.updateViewableRule(player -> body.viewers.contains(player.getUuid()));
+        body.entity.updateViewableRule(player -> body.viewers.contains(player.getUuid())
+                || player.getUuid().equals(body.observer));
         body.entity.setInstance(instance, position);
         return body;
     }
@@ -113,6 +115,12 @@ public final class CreakingBody implements CreekBody {
     @Override
     public boolean isVisibleTo(UUID viewer) {
         return this.viewers.contains(viewer);
+    }
+
+    @Override
+    public void observe(@Nullable UUID observer) {
+        this.observer = observer;
+        this.entity.updateViewableRule();
     }
 
     @Override

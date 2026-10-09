@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.creek.body;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 import java.util.UUID;
@@ -67,6 +68,15 @@ public interface CreekBody {
      * @return {@code true} if the creek is visible to them
      */
     boolean isVisibleTo(UUID viewer);
+
+    /**
+     * Lets one extra player see the creek, whoever {@link #showTo(Set)} picks. The slender needs this
+     * while he looks through the creek's eyes, since his client has to know the entity. He does not
+     * count as someone who sees the creek, so {@link #isVisibleTo(UUID)} leaves him out.
+     *
+     * @param observer the player, or {@code null} for nobody
+     */
+    void observe(@Nullable UUID observer);
 
     /**
      * Switches the hunting look on or off. For the creaking, that means glowing eyes.
