@@ -22,6 +22,7 @@ import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.map.GameMapProvider;
+import net.onelitefeather.cygnus.possession.PossessionTarget;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.theevilreaper.xerus.api.team.TeamService;
@@ -132,6 +133,15 @@ public final class CreekModule implements GameFeature {
      */
     private void registerListeners() {
         this.service.registerListener(this.node);
+    }
+
+    /**
+     * Returns the creek as the slender possesses it.
+     *
+     * @return the possession target
+     */
+    public PossessionTarget possessionTarget() {
+        return this.service;
     }
 
     @Override

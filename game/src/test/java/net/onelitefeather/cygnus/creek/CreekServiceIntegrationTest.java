@@ -20,6 +20,7 @@ import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.PatrolState;
 import net.onelitefeather.cygnus.creek.state.VanishState;
+import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.PathRoute;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
@@ -279,6 +281,52 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         assertTrue(variants.running().isEmpty());
         assertTrue(variant.body().entity().isRemoved());
         round.service().stop();
+    }
+
+    @Test
+    @DisplayName("A creek that is away can not be possessed")
+    void notPossessableWhileAway(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), new AtomicLong());
+
+        assertNull(service.possessable(), "there is no creek before the start");
+        service.start();
+        service.tick();
+
+        assertNull(service.possessable(), "he starts out of sight");
+        service.stop();
+    }
+
+    @Test
+    @DisplayName("Only the patrolling creek is possessed: the slender sees it, and it is noticed from farther away")
+    void possessionBoostsOnlyThePatrol(Env env) {
+        Round round = this.roundWithVariant(env, CreekConfig.DEFAULT);
+        CreekService service = round.service();
+        Creek creek = service.creek();
+        CreekVariants variants = service.variants();
+        assertNotNull(creek);
+        assertNotNull(variants);
+        Creek variant = variants.running().get(round.scared().getUuid());
+        assertNotNull(variant);
+        Instance instance = round.scared().getInstance();
+        // Next to the route, so the creek is within the slender's view distance.
+        Player slender = env.createConnection().connect(instance, new Pos(15, 40, 0));
+        CreekSight normal = creek.sight();
+
+        assertSame(creek.body().entity(), service.possessable());
+        service.possess(slender.getUuid(), 1.5D);
+
+        assertNotSame(normal, creek.sight());
+        assertSame(normal, variant.sight());
+        assertTrue(creek.body().entity().getViewers().contains(slender));
+        assertEquals(48, service.sightRange());
+
+        service.release();
+
+        assertSame(normal, creek.sight());
+        assertFalse(creek.body().entity().getViewers().contains(slender));
+        service.stop();
     }
 
     /**
