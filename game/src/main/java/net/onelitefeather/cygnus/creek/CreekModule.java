@@ -95,12 +95,12 @@ public final class CreekModule implements GameFeature {
                 witness,
                 new StagedCatchConsequence(
                         new CatchTricks(
-                                new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.slownessSeconds()),
+                                new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.catching().slownessSeconds()),
                                 new CatchSwap(() -> TeamHelper.survivorsOf(teamService), random),
-                                new CatchLaunch(this.config.launchHeight(), new LandingDamage(this.config.launchDamage())),
-                                this.config.swapChance(),
+                                new CatchLaunch(this.config.catching().launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
+                                this.config.catching().swapChance(),
                                 random),
-                        new GlowReveal(this.config.betrayalGlowSeconds()),
+                        new GlowReveal(this.config.catching().betrayalGlowSeconds()),
                         () -> TeamHelper.slenderOf(teamService),
                         this.config,
                         random),

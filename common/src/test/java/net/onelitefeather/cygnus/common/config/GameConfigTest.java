@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.common.config;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
+import java.util.Properties;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class GameConfigTest {
@@ -114,5 +116,40 @@ class GameConfigTest {
     @Test
     void testMinimapModeMustBeSet() {
         assertRejected("Minimap mode must not be null", () -> new MinimapConfig(null));
+    }
+
+    @Test
+    void testReadWithoutKeysGivesTheDefaults() {
+        assertEquals(GameConfig.DEFAULT, GameConfig.read(ConfigSection.root(new Properties())));
+    }
+
+    @Test
+    void testReadTakesEveryGroupFromItsKeys() {
+        Properties properties = new Properties();
+        properties.setProperty("minPlayers", "3");
+        properties.setProperty("survivorTeamSize", "10");
+        properties.setProperty("sentryDsn", "https://key@sentry.example/1");
+        properties.setProperty("resourcePackSha1", "0123456789abcdef0123456789abcdef01234567");
+        properties.setProperty("pageProximityRange", "30");
+        properties.setProperty("damageSoundCooldown", "40");
+        properties.setProperty("glitchRange", "20");
+        properties.setProperty("pageGlitchMaxLevel", "2");
+        properties.setProperty("creek.huntThreshold", "0.7");
+        properties.setProperty("minimap.mode", "fair");
+        properties.setProperty("lobbyAtmosphereShare", "0.5");
+
+        GameConfig config = GameConfig.read(ConfigSection.root(properties));
+
+        assertEquals(3, config.round().minPlayers());
+        assertEquals(10, config.teams().survivorSize());
+        assertEquals("https://key@sentry.example/1", config.sentryDsn());
+        assertEquals("0123456789abcdef0123456789abcdef01234567", config.resourcePack().sha1());
+        assertEquals(30, config.pageProximity().range());
+        assertEquals(40, config.damageSound().cooldown());
+        assertEquals(20, config.glitch().range());
+        assertEquals(2, config.pageGlitch().maxLevel());
+        assertEquals(0.7D, config.creek().hunt().threshold(), 1.0E-9);
+        assertEquals(MinimapConfig.Mode.FAIR, config.minimap().mode());
+        assertEquals(0.5F, config.lobbyAtmosphereShare());
     }
 }

@@ -96,6 +96,33 @@ public record FootprintConfig(
         }
     }
 
+    /**
+     * Reads the footprint settings. The section carries the {@code footprint.} prefix.
+     *
+     * @param section the {@code footprint.} part of the config
+     * @return the footprint settings
+     */
+    public static FootprintConfig read(ConfigSection section) {
+        FootprintConfig defaults = DEFAULT;
+        return section.orDefault("footprint", () -> new FootprintConfig(
+                section.getDouble("slenderStepBlocks", defaults.slenderStepBlocks()),
+                section.getDouble("slenderChance", defaults.slenderChance()),
+                section.getInt("slenderDelayMinMillis", defaults.slenderDelayMinMillis()),
+                section.getInt("slenderDelayMaxMillis", defaults.slenderDelayMaxMillis()),
+                section.getInt("slenderLifetimeSeconds", defaults.slenderLifetimeSeconds()),
+                section.getDouble("survivorSampleBlocks", defaults.survivorSampleBlocks()),
+                section.getInt("survivorHistorySeconds", defaults.survivorHistorySeconds()),
+                section.getInt("scanRadius", defaults.scanRadius()),
+                section.getInt("scanGapSeconds", defaults.scanGapSeconds()),
+                section.getInt("scanMaxPrints", defaults.scanMaxPrints()),
+                section.getInt("scanLifetimeSeconds", defaults.scanLifetimeSeconds()),
+                section.getInt("scanCooldownSeconds", defaults.scanCooldownSeconds()),
+                section.getDouble("teleportBlocks", defaults.teleportBlocks()),
+                section.getDouble("minSpacing", defaults.minSpacing()),
+                section.getDouble("fadeShare", defaults.fadeShare())
+        ), defaults);
+    }
+
     private static void positive(String name, double value) {
         if (value <= 0.0D) {
             throw new IllegalArgumentException(name + " (" + value + ") must be above 0.0");

@@ -50,7 +50,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     }
 
     private static Creek creek(CreekBody body, CreekConfig config, CreekState initial, CreekWitness witness) {
-        CreekSight sight = new CreekSight(config.sightRange(), config.sightViewAngle());
+        CreekSight sight = new CreekSight(config.sight().range(), config.sight().viewAngle());
         // nextBoolean() is true for -1, so a selection always ends in the stun.
         PatrolHelper patrol = new PatrolHelper(() -> -1L);
         CreekRound round = new CreekRound(sight, new SpotFinder(sight, Optional::of), _ -> {}, witness, patrol,

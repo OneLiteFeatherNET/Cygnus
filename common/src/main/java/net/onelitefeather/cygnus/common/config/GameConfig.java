@@ -2,8 +2,11 @@ package net.onelitefeather.cygnus.common.config;
 
 import net.kyori.adventure.key.Key;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.util.regex.Pattern;
 
 /**
  * The configuration of a game, grouped by the feature each value belongs to.
@@ -110,6 +113,8 @@ public record GameConfig(
      */
     public static final float DEFAULT_LOBBY_ATMOSPHERE_SHARE = 0.3F;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GameConfig.class);
+
     /**
      * The configuration used when there is no config file, or nothing in it can be read.
      * <p>
@@ -143,6 +148,50 @@ public record GameConfig(
     }
 
     /**
+     * Reads the whole config. Every group reads its own keys, see the {@code read} method of each. A group with invalid
+     * values falls back to its defaults with a warning.
+     *
+     * @param root the whole config
+     * @return the game configuration
+     */
+    public static GameConfig read(ConfigSection root) {
+        return new GameConfig(
+                Round.read(root),
+                Teams.read(root),
+                root.getString("sentryDsn"),
+                ResourcePack.read(root),
+                PageProximity.read(root),
+                DamageSound.read(root),
+                Glitch.read(root),
+                PageGlitch.read(root),
+                CreekConfig.read(root.section("creek.")),
+                SanityConfig.read(root.section("sanity.")),
+                StaminaConfig.read(root.section("stamina.")),
+                AdrenalineConfig.read(root.section("adrenaline.")),
+                FootprintConfig.read(root.section("footprint.")),
+                TelemetryConfig.read(root.section("telemetry.")),
+                MinimapConfig.read(root.section("minimap.")),
+                readLobbyAtmosphereShare(root)
+        );
+    }
+
+    /**
+     * Reads how far the lobby takes on the map's atmosphere. A share outside 0 to 1 falls back to
+     * the default with a warning.
+     *
+     * @param root the whole config
+     * @return the share
+     */
+    private static float readLobbyAtmosphereShare(ConfigSection root) {
+        float share = root.getFloat("lobbyAtmosphereShare", DEFAULT_LOBBY_ATMOSPHERE_SHARE);
+        if (share < 0.0F || share > 1.0F) {
+            LOGGER.warn("Invalid values for lobby atmosphere share: {} is not between 0 and 1. Falling back to its defaults", share);
+            return DEFAULT_LOBBY_ATMOSPHERE_SHARE;
+        }
+        return share;
+    }
+
+    /**
      * The player limits and timings of a round.
      *
      * @param minPlayers the number of players needed to start the countdown
@@ -158,6 +207,20 @@ public record GameConfig(
             if (lobbyTime <= FORCE_START_TIME) {
                 throw new IllegalArgumentException("Lobby time must be greater than " + FORCE_START_TIME);
             }
+        }
+
+        /**
+         * Reads the player limits and timings, keys without a prefix.
+         *
+         * @param root the whole config
+         * @return the round settings
+         */
+        public static Round read(ConfigSection root) {
+            return root.orDefault("round", () -> new Round(
+                    root.getInt("minPlayers", DEFAULT.minPlayers()),
+                    root.getInt("maxPlayers", DEFAULT.maxPlayers()),
+                    root.getInt("lobbyTime", DEFAULT.lobbyTime()),
+                    root.getInt("gameTime", DEFAULT.gameTime())), DEFAULT);
         }
     }
 
@@ -181,6 +244,18 @@ public record GameConfig(
                 throw new IllegalArgumentException("Survivor team size must be at least " + (MIN_SLENDER_SIZE + 1));
             }
         }
+
+        /**
+         * Reads the team sizes, keys without a prefix.
+         *
+         * @param root the whole config
+         * @return the team sizes
+         */
+        public static Teams read(ConfigSection root) {
+            return root.orDefault("teams", () -> new Teams(
+                    root.getInt("slenderTeamSize", DEFAULT.slenderSize()),
+                    root.getInt("survivorTeamSize", DEFAULT.survivorSize())), DEFAULT);
+        }
     }
 
     /**
@@ -194,6 +269,58 @@ public record GameConfig(
     public record ResourcePack(@Nullable URI url, @Nullable String sha1) {
 
         public static final ResourcePack NONE = new ResourcePack(null, null);
+
+        private static final Logger LOGGER = LoggerFactory.getLogger(ResourcePack.class);
+        private static final Pattern SHA1_PATTERN = Pattern.compile("[0-9a-fA-F]{40}");
+
+        /**
+         * Reads where the pack comes from, keys without a prefix. A broken URL turns the feature
+         * off and a malformed checksum is dropped, instead of failing the start.
+         *
+         * @param root the whole config
+         * @return the pack location
+         */
+        public static ResourcePack read(ConfigSection root) {
+            return new ResourcePack(readUrl(root), readSha1(root));
+        }
+
+        /**
+         * Reads the pack location. A value that is not a valid URI turns the feature off.
+         *
+         * @param root the whole config
+         * @return the parsed URL, or {@code null} if it is absent or unusable
+         */
+        private static @Nullable URI readUrl(ConfigSection root) {
+            String value = root.getString("resourcePackUrl");
+            if (value == null) {
+                return null;
+            }
+            try {
+                return URI.create(value);
+            } catch (IllegalArgumentException exception) {
+                LOGGER.warn("'{}' is not a valid URI: '{}'. Disabling the ResourcePack feature", "resourcePackUrl", value, exception);
+                return null;
+            }
+        }
+
+        /**
+         * Reads the pack checksum. Anything that is not 40 hexadecimal characters is not a SHA-1 and
+         * is dropped, which leaves the checksum to be computed from the pack at runtime.
+         *
+         * @param root the whole config
+         * @return the checksum, or {@code null} if it is absent or malformed
+         */
+        private static @Nullable String readSha1(ConfigSection root) {
+            String value = root.getString("resourcePackSha1");
+            if (value == null) {
+                return null;
+            }
+            if (!SHA1_PATTERN.matcher(value).matches()) {
+                LOGGER.warn("'{}' is not a SHA-1 checksum: '{}'. It will be computed from the pack instead", "resourcePackSha1", value);
+                return null;
+            }
+            return value;
+        }
     }
 
     /**
@@ -234,6 +361,20 @@ public record GameConfig(
                 throw new IllegalArgumentException("Page proximity volume factor must be between 1 and " + MAX_VOLUME_FACTOR);
             }
         }
+
+        /**
+         * Reads the page hint sound, keys without a prefix.
+         *
+         * @param root the whole config
+         * @return the page hint settings
+         */
+        public static PageProximity read(ConfigSection root) {
+            return root.orDefault("page proximity", () -> new PageProximity(
+                    root.getBoolean("pageProximityEnabled", DEFAULT.enabled()),
+                    root.getInt("pageProximityRange", DEFAULT.range()),
+                    root.getSound("pageProximitySound", DEFAULT.sound()),
+                    root.getFloat("pageProximityVolumeFactor", DEFAULT.volumeFactor())), DEFAULT);
+        }
     }
 
     /**
@@ -260,6 +401,19 @@ public record GameConfig(
             if (cooldown < 1) {
                 throw new IllegalArgumentException("Damage sound cooldown must be at least 1 tick");
             }
+        }
+
+        /**
+         * Reads the hit sound, keys without a prefix.
+         *
+         * @param root the whole config
+         * @return the hit sound settings
+         */
+        public static DamageSound read(ConfigSection root) {
+            return root.orDefault("damage sound", () -> new DamageSound(
+                    root.getBoolean("damageSoundEnabled", DEFAULT.enabled()),
+                    root.getInt("damageSoundCooldown", DEFAULT.cooldown()),
+                    root.getSound("damageSound", DEFAULT.sound())), DEFAULT);
         }
     }
 
@@ -298,6 +452,19 @@ public record GameConfig(
                 throw new IllegalArgumentException(
                         "Glitch close range (" + closeRange + ") must be below the glitch range (" + range + ")");
             }
+        }
+
+        /**
+         * Reads how the slender's sight tears a survivor's view, keys without a prefix.
+         *
+         * @param root the whole config
+         * @return the glitch settings
+         */
+        public static Glitch read(ConfigSection root) {
+            return root.orDefault("glitch", () -> new Glitch(
+                    root.getInt("glitchRange", DEFAULT.range()),
+                    root.getInt("glitchCloseRange", DEFAULT.closeRange()),
+                    root.getInt("glitchViewAngle", DEFAULT.viewAngle())), DEFAULT);
         }
     }
 
@@ -356,6 +523,19 @@ public record GameConfig(
                 throw new IllegalArgumentException(
                         "Page glitch pulse must be between 1 and " + MAX_PULSE_SECONDS + " seconds");
             }
+        }
+
+        /**
+         * Reads how the slender's screen tears as pages are found, keys without a prefix.
+         *
+         * @param root the whole config
+         * @return the page glitch settings
+         */
+        public static PageGlitch read(ConfigSection root) {
+            return root.orDefault("page glitch", () -> new PageGlitch(
+                    root.getBoolean("pageGlitchEnabled", DEFAULT.enabled()),
+                    root.getInt("pageGlitchPulseSeconds", DEFAULT.pulseSeconds()),
+                    root.getInt("pageGlitchMaxLevel", DEFAULT.maxLevel())), DEFAULT);
         }
     }
 }

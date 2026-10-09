@@ -1,5 +1,8 @@
 package net.onelitefeather.cygnus.common.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Settings for the request Cygnus sends to client minimap mods to switch themselves off.
  * <p>
@@ -20,6 +23,8 @@ public record MinimapConfig(Mode mode) {
      */
     public static final MinimapConfig DEFAULT = new MinimapConfig(Mode.DISABLED);
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MinimapConfig.class);
+
     /**
      * Checks the values.
      *
@@ -29,6 +34,28 @@ public record MinimapConfig(Mode mode) {
         if (mode == null) {
             throw new IllegalArgumentException("Minimap mode must not be null");
         }
+    }
+
+    /**
+     * Reads the minimap mode. The section carries the {@code minimap.} prefix. Like every
+     * unreadable value, an unknown mode falls back to the default.
+     *
+     * @param section the {@code minimap.} part of the config
+     * @return the minimap settings
+     */
+    public static MinimapConfig read(ConfigSection section) {
+        String value = section.getString("mode");
+        if (value == null) {
+            return DEFAULT;
+        }
+        for (Mode mode : Mode.values()) {
+            if (mode.name().equalsIgnoreCase(value)) {
+                return new MinimapConfig(mode);
+            }
+        }
+        LOGGER.warn("'{}' is not a minimap mode (disabled, fair, off): '{}'. Falling back to default: {}",
+                section.key("mode"), value, DEFAULT.mode());
+        return DEFAULT;
     }
 
     /**

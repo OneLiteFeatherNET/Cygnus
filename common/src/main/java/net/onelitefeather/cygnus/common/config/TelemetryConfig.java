@@ -37,4 +37,16 @@ public record TelemetryConfig(int slowTickThresholdMillis) {
             throw new IllegalArgumentException("slowTickThresholdMillis (" + slowTickThresholdMillis + ") must be at least 1");
         }
     }
+
+    /**
+     * Reads the telemetry settings. The section carries the {@code telemetry.} prefix.
+     *
+     * @param section the {@code telemetry.} part of the config
+     * @return the telemetry settings
+     */
+    public static TelemetryConfig read(ConfigSection section) {
+        return section.orDefault("telemetry",
+                () -> new TelemetryConfig(section.getInt("slowTickThresholdMillis", DEFAULT.slowTickThresholdMillis())),
+                DEFAULT);
+    }
 }

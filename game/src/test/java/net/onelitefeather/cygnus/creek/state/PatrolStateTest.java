@@ -68,7 +68,7 @@ class PatrolStateTest {
 
         assertSame(state, state.tick(ctx));
         assertEquals(A, body.goal);
-        assertEquals(Contexts.CONFIG.wanderSpeed(), body.speed);
+        assertEquals(Contexts.CONFIG.wander().speed(), body.speed);
     }
 
     @Test

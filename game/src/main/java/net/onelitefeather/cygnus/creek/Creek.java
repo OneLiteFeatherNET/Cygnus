@@ -177,7 +177,7 @@ final class Creek {
         List<Player> players = survivors.players();
         List<SurvivorView> base = survivors.views();
         List<SurvivorView> views = new ArrayList<>(players.size());
-        double reach = Math.max(SIGHT_CHECK_DISTANCE, this.round.config().catchDistance());
+        double reach = Math.max(SIGHT_CHECK_DISTANCE, this.round.config().hunt().catchDistance());
         for (int index = 0; index < players.size(); index++) {
             Player survivor = players.get(index);
             boolean shown = this.body.isVisibleTo(survivor.getUuid());

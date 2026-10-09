@@ -91,8 +91,8 @@ final class CreekVariants {
      * @return the breather in milliseconds
      */
     static long cooldownMillis(CreekConfig config, double dread) {
-        double span = config.vanishMaxSeconds() - config.vanishMinSeconds();
-        double seconds = config.vanishMaxSeconds() - span * Math.clamp(dread, 0.0D, 1.0D);
+        double span = config.vanish().maxSeconds() - config.vanish().minSeconds();
+        double seconds = config.vanish().maxSeconds() - span * Math.clamp(dread, 0.0D, 1.0D);
         return Math.round(seconds * 1000.0D);
     }
 
@@ -127,7 +127,7 @@ final class CreekVariants {
         Set<UUID> noSpot = new HashSet<>();
         int free = capacity(views.size()) - this.running.size();
         while (free > 0) {
-            Optional<SurvivorView> target = pick(views, this.config.stalkThreshold(),
+            Optional<SurvivorView> target = pick(views, this.config.stalk().threshold(),
                     id -> this.isFree(id, now) && !noSpot.contains(id));
             if (target.isEmpty()) return;
             if (this.start(target.get(), now)) {
@@ -182,8 +182,8 @@ final class CreekVariants {
      * @return {@code false} if there was no free spot next to them in this step
      */
     private boolean start(SurvivorView view, long now) {
-        Optional<Pos> spot = this.spots.beside(view.position(), config.stalkMinDistance(), config.stalkMaxDistance(),
-                config.stalkMinAngle(), config.stalkMaxAngle(), List.of(view.eyes()), config.personalSpace(),
+        Optional<Pos> spot = this.spots.beside(view.position(), config.stalk().minDistance(), config.stalk().maxDistance(),
+                config.stalk().minAngle(), config.stalk().maxAngle(), List.of(view.eyes()), config.personalSpace(),
                 this.random);
         if (spot.isEmpty()) return false;
 

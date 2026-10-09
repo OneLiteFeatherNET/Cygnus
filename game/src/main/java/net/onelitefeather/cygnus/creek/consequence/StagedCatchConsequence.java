@@ -47,8 +47,8 @@ public final class StagedCatchConsequence implements CatchConsequence {
         this.effects = effects;
         this.reveal = reveal;
         this.slender = slender;
-        this.betrayalCatchCount = config.betrayalCatchCount();
-        this.betrayalChance = config.betrayalChance();
+        this.betrayalCatchCount = config.catching().betrayalCatchCount();
+        this.betrayalChance = config.catching().betrayalChance();
         this.random = random;
     }
 
