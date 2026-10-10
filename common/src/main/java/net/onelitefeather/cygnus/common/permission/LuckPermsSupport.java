@@ -1,9 +1,13 @@
 package net.onelitefeather.cygnus.common.permission;
 
+import me.lucko.luckperms.minestom.app.LuckPermsMinestomHandle;
+import me.lucko.luckperms.minestom.app.LuckPermsMinestomOptions;
 import me.lucko.luckperms.minestom.loader.MinestomLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -24,6 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class LuckPermsSupport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LuckPermsSupport.class);
+    private static final List<String> COMMAND_ALIASES =
+            List.of("luckperms", "lp", "perm", "perms", "permission", "permissions");
     private static final String LOADER_CLASS = "me.lucko.luckperms.minestom.loader.MinestomLoader";
     private static final boolean PRESENT = detect();
     private static final AtomicBoolean FALLBACK_GRANT_LOGGED = new AtomicBoolean(false);
@@ -70,7 +76,14 @@ public final class LuckPermsSupport {
      * {@link #bootstrap()} itself is being verified.
      */
     private static void startLuckPerms() {
-        MinestomLoader.get().load().registerShutdownHook().start();
+        LuckPermsMinestomHandle ignored = MinestomLoader.create(
+                        LuckPermsMinestomOptions.builder()
+                                .dataDirectory(Path.of("data"))
+                                .commandAliases(COMMAND_ALIASES)
+                                .registerShutdownHook(true)
+                                .build())
+                .load()
+                .enable();
     }
 
     /**
