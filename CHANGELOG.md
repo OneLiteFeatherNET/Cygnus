@@ -5,6 +5,20 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.16.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.15.0...v2.16.0) (2026-10-10)
+
+
+### Features
+
+* **footprint:** add footprints for the slender and the survivors ([#322](https://github.com/OneLiteFeatherNET/Cygnus/issues/322)) ([61f8966](https://github.com/OneLiteFeatherNET/Cygnus/commit/61f8966532f3678135fa78deff14ca7c6df05e9c))
+* **possession:** let the slender look through the creek's eyes ([#327](https://github.com/OneLiteFeatherNET/Cygnus/issues/327)) ([45e93d1](https://github.com/OneLiteFeatherNET/Cygnus/commit/45e93d1b6bb2e18747cdda381f4f362e4be7cef4))
+
+
+### Bug Fixes
+
+* **deps:** update dependency net.onelitefeather:aonyx-bom to v0.8.8 ([#328](https://github.com/OneLiteFeatherNET/Cygnus/issues/328)) ([a25bef9](https://github.com/OneLiteFeatherNET/Cygnus/commit/a25bef9d3e466a9bc6a666d8580d281b80d042bd))
+* **deps:** update dependency net.onelitefeather:pica to v0.1.4 ([#329](https://github.com/OneLiteFeatherNET/Cygnus/issues/329)) ([4ec9757](https://github.com/OneLiteFeatherNET/Cygnus/commit/4ec975783a4187e3e8db547e1f3965f29cf494d9))
+
 ## [2.15.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.14.0...v2.15.0) (2026-10-07)
 
 
