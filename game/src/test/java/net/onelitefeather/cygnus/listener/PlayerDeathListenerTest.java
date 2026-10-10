@@ -177,7 +177,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         // During a takeover countdown the slender team is empty
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager(), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
         PlayerDeathListener listener = new PlayerDeathListener(() -> gamePhase, teamService, new JumpScareManager(), new StaminaService(), () -> {});
 
         assertDoesNotThrow(() -> listener.accept(new PlayerDeathEvent(player, null, null)));

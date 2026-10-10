@@ -69,7 +69,7 @@ class PlayerSpawnListenerTest extends CygnusPlayerTestBase {
     void testFirstSpawnWithoutTeamTagTeleportsOutsideLobby(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager(), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
 
         AtomicBoolean spawned = new AtomicBoolean(false);
         PlayerSpawnListener listener = new PlayerSpawnListener(p -> spawned.set(true), () -> gamePhase);
@@ -87,7 +87,7 @@ class PlayerSpawnListenerTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager(), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
 
         AtomicBoolean spawned = new AtomicBoolean(false);
         PlayerSpawnListener listener = new PlayerSpawnListener(p -> spawned.set(true), () -> gamePhase);

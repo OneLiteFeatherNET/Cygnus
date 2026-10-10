@@ -46,8 +46,7 @@ class PlayerLoginListenerTest extends CygnusPlayerTestBase {
     void testKicksWhenPhaseIsNotLobby(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), () -> {
-        }, 600, new JumpScareManager(), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
 
         PlayerLoginListener listener = new PlayerLoginListener(() -> instance, 10, () -> gamePhase, Optional.empty());
         listener.accept(new AsyncPlayerConfigurationEvent(player, true));
