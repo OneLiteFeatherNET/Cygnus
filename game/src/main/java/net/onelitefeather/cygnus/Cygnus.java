@@ -251,7 +251,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                                 this.gameConfig.adrenaline(),
                                 () -> TeamHelper.survivorsOf(this.teamService),
                                 System::currentTimeMillis),
-                        new FootprintFeature(this.gameConfig.footprint(), System::currentTimeMillis),
+                        new FootprintFeature(this.gameConfig.footprint(),
+                                () -> TeamHelper.slenderOf(this.teamService),
+                                System::currentTimeMillis),
                         new OverlayModule(this.gameConfig.glitch(), this.gameConfig.pageGlitch(), this.teamService,
                                 this.staminaService, tickSections)
                 )).toList();
