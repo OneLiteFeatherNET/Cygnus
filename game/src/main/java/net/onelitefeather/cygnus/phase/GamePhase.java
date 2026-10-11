@@ -27,21 +27,18 @@ public final class GamePhase extends TimedPhase {
     private final GameView gameView;
     private final JumpScareManager jumpscareManager;
     private final DreadSource dreadSource;
-    private final Runnable endRunnable;
     private @Nullable GameFinishEvent finishEvent;
 
     /**
      * Creates a new instance from the {@link GamePhase}.
      *
      * @param gameView         the view to update
-     * @param endRunnable      the runnable to execute on end
      * @param gameTime         the game time
      * @param jumpscareManager the jumpscare manager instance
      * @param dreadSource      rates how scared a survivor is, to pace their ambient sounds
      */
     public GamePhase(
             GameView gameView,
-            Runnable endRunnable,
             int gameTime,
             JumpScareManager jumpscareManager,
             DreadSource dreadSource
@@ -53,8 +50,6 @@ public final class GamePhase extends TimedPhase {
         this.gameView = gameView;
         this.jumpscareManager = jumpscareManager;
         this.dreadSource = dreadSource;
-        // Not passed as the finished callback: LinearPhaseSeries replaces that with its own advance call
-        this.endRunnable = endRunnable;
     }
 
     /**
@@ -78,7 +73,6 @@ public final class GamePhase extends TimedPhase {
     protected void onFinish() {
         finishEvent = finishEvent == null ? new GameFinishEvent(GameFinishEvent.Reason.TIME_OVER) : finishEvent;
         MinecraftServer.getGlobalEventHandler().call(finishEvent);
-        this.endRunnable.run();
         this.gameView.removePlayers(new HashSet<>(MinecraftServer.getConnectionManager().getOnlinePlayers()));
     }
 

@@ -51,7 +51,7 @@ class SlenderTakeoverTest extends CygnusPlayerTestBase {
         this.survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
         this.teamService.add(this.slenderTeam);
         this.teamService.add(this.survivorTeam);
-        this.gamePhase = new GamePhase(new GameViewImpl(), () -> {}, 600, new JumpScareManager(), _ -> 0.0D);
+        this.gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
     }
 
     private SlenderTakeover takeover(Env env) {
