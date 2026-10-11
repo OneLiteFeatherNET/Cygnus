@@ -2,12 +2,14 @@ package net.onelitefeather.cygnus.common;
 
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
+import net.minestom.server.event.inventory.InventoryPreClickEvent;
 import net.minestom.server.event.item.ItemDropEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockInteractEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.event.player.PlayerSwapItemEvent;
 import net.minestom.server.event.trait.CancellableEvent;
+import net.minestom.server.inventory.PlayerInventory;
 
 import java.util.function.Consumer;
 
@@ -34,5 +36,19 @@ public interface ListenerHandling {
         eventNode.addListener(ItemDropEvent.class, CANCELLABLE_EVENT::accept);
         eventNode.addListener(PlayerSwapItemEvent.class, CANCELLABLE_EVENT::accept);
         eventNode.addListener(PlayerBlockInteractEvent.class, CANCELLABLE_EVENT::accept);
+    }
+
+    /**
+     * Keeps players from moving the items in their own inventory, so the game items stay in the
+     * slots the game put them in. Clicks in an opened inventory, like the spectator menu, are left
+     * to that inventory. Not part of {@link #registerCancelListener(EventNode)}, the setup needs
+     * its players to move their items.
+     *
+     * @param eventNode the event node to register the listener
+     */
+    default void registerInventoryLock(EventNode<Event> eventNode) {
+        eventNode.addListener(InventoryPreClickEvent.class, event -> {
+            if (event.getInventory() instanceof PlayerInventory) event.setCancelled(true);
+        });
     }
 }
