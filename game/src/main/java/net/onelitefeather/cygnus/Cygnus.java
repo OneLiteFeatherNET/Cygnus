@@ -86,6 +86,7 @@ import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.phase.RestartPhase;
 import net.onelitefeather.cygnus.phase.WaitingPhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.player.InventoryLock;
 import net.onelitefeather.cygnus.possession.PossessionFeature;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.sanity.SanityService;
@@ -233,6 +234,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                                 MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), this.jumpscareManager, this.staminaService, tickSections);
                 this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
                         new EpilepsyDisclaimer(),
+                        new InventoryLock(),
                         this.slenderTakeover,
                         this.spectatorService,
                         // Not part of the OverlayModule: the sound is the feedback a hit owes the player
