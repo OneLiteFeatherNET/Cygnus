@@ -10,8 +10,11 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import net.onelitefeather.cygnus.overlay.OverlayLayer;
 import net.onelitefeather.cygnus.overlay.RecordingScreenOverlay;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @version 1.1.0
  * @since 2.7.0
  */
+@Execution(ExecutionMode.SAME_THREAD)
 class BloodSplatterServiceTest extends CygnusPlayerTestBase {
 
     /** Always picks the first variant, so the expected code points are predictable. */

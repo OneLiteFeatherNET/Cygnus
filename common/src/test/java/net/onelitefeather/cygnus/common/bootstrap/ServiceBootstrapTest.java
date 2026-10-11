@@ -4,12 +4,15 @@ import net.minestom.server.Auth;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+@Execution(ExecutionMode.SAME_THREAD)
 class ServiceBootstrapTest {
 
     @AfterEach

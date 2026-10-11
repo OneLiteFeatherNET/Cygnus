@@ -5,10 +5,13 @@ import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.setup.SetupPlayerTestBase;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@Execution(ExecutionMode.SAME_THREAD)
 class SetupPlayerTest extends SetupPlayerTestBase {
 
     @Test

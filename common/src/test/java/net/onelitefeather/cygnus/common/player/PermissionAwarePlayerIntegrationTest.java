@@ -11,6 +11,8 @@ import net.minestom.testing.extension.MicrotusExtension;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
  * @version 1.0.0
  * @since 2.6.7
  */
+@Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(MicrotusExtension.class)
 class PermissionAwarePlayerIntegrationTest {
 

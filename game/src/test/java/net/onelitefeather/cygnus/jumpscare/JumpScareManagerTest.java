@@ -14,6 +14,8 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.util.List;
 
@@ -28,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Execution(ExecutionMode.SAME_THREAD)
 class JumpScareManagerTest extends CygnusPlayerTestBase {
 
     @Test
