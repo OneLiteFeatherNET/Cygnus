@@ -12,6 +12,8 @@ package net.onelitefeather.cygnus.common.config;
  * @param cooldownSeconds how long the slender waits before he may possess the creek again
  * @param sightFactor     how much farther survivors notice the creek while it is possessed. 1 keeps
  *                        the normal range
+ * @param startDelaySeconds how long the slender waits after the round starts before he may possess
+ *                          the creek the first time
  * @author theEvilReaper
  * @version 1.0.0
  * @since 2.16.0
@@ -19,13 +21,15 @@ package net.onelitefeather.cygnus.common.config;
 public record PossessionConfig(
         int maxSeconds,
         int cooldownSeconds,
-        double sightFactor
+        double sightFactor,
+        int startDelaySeconds
 ) {
 
     /**
-     * The default settings: a short look, a long wait, and half again the normal sight range.
+     * The default settings: a short look, a long wait, half again the normal sight range, and a
+     * locked first minute and a half.
      */
-    public static final PossessionConfig DEFAULT = new PossessionConfig(8, 60, 1.5D);
+    public static final PossessionConfig DEFAULT = new PossessionConfig(8, 60, 1.5D, 90);
 
     /**
      * Checks the values.
@@ -42,6 +46,9 @@ public record PossessionConfig(
         if (sightFactor < 1.0D) {
             throw new IllegalArgumentException("sightFactor (" + sightFactor + ") must be at least 1.0");
         }
+        if (startDelaySeconds < 0) {
+            throw new IllegalArgumentException("startDelaySeconds (" + startDelaySeconds + ") must not be negative");
+        }
     }
 
     /**
@@ -56,7 +63,8 @@ public record PossessionConfig(
         return section.orDefault("possession", () -> new PossessionConfig(
                 section.getInt("maxSeconds", defaults.maxSeconds()),
                 section.getInt("cooldownSeconds", defaults.cooldownSeconds()),
-                section.getDouble("sightFactor", defaults.sightFactor())
+                section.getDouble("sightFactor", defaults.sightFactor()),
+                section.getInt("startDelaySeconds", defaults.startDelaySeconds())
         ), defaults);
     }
 }

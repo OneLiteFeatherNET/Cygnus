@@ -16,9 +16,11 @@ import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.SplittableRandom;
 import java.util.function.LongSupplier;
+import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
 /**
@@ -26,7 +28,8 @@ import java.util.random.RandomGenerator;
  * <p>
  * The hidden slender now and then leaves a print that only survivors see. Survivors are recorded
  * all the time, and the slender reveals their recent tracks around him with his tracker. Moves only
- * count while a round runs, and the round end takes every print and every track away.
+ * count while a round runs, and the round end takes every print and every track away. The tracker
+ * starts each round locked for a while.
  * </p>
  *
  * @author Joltra
@@ -41,26 +44,31 @@ public final class FootprintFeature implements GameFeature {
     private final SurvivorTrackLog log;
     private final SlenderTrail trail;
     private final TrackingScan scan;
+    private final Supplier<@Nullable Player> slender;
     private volatile boolean running;
 
     /**
      * Creates the feature.
      *
-     * @param config the footprint values
-     * @param clock  supplies the current time in milliseconds
+     * @param config  the footprint values
+     * @param slender supplies the slender of the round, or {@code null} while there is none
+     * @param clock   supplies the current time in milliseconds
      */
-    public FootprintFeature(FootprintConfig config, LongSupplier clock) {
-        this(config, clock, new SplittableRandom());
+    public FootprintFeature(FootprintConfig config, Supplier<@Nullable Player> slender, LongSupplier clock) {
+        this(config, slender, clock, new SplittableRandom());
     }
 
     /**
      * Creates the feature with a given random source, for tests.
      *
-     * @param config the footprint values
-     * @param clock  supplies the current time in milliseconds
-     * @param random the source for rolls, delays and facings
+     * @param config  the footprint values
+     * @param slender supplies the slender of the round, or {@code null} while there is none
+     * @param clock   supplies the current time in milliseconds
+     * @param random  the source for rolls, delays and facings
      */
-    FootprintFeature(FootprintConfig config, LongSupplier clock, RandomGenerator random) {
+    FootprintFeature(FootprintConfig config, Supplier<@Nullable Player> slender, LongSupplier clock,
+                     RandomGenerator random) {
+        this.slender = slender;
         this.clock = clock;
         this.spawner = new FootprintSpawner(random, config.fadeShare());
         this.log = new SurvivorTrackLog(config);
@@ -75,7 +83,7 @@ public final class FootprintFeature implements GameFeature {
     }
 
     private void registerListeners() {
-        this.node.addListener(GameStartEvent.class, _ -> this.running = true);
+        this.node.addListener(GameStartEvent.class, _ -> this.started());
         this.node.addListener(PlayerMoveEvent.class, this::moved);
         this.node.addListener(PlayerUseItemEvent.class, this::used);
         this.node.addListener(PlayerChunkLoadEvent.class,
@@ -84,6 +92,16 @@ public final class FootprintFeature implements GameFeature {
         this.node.addListener(PlayerDeathEvent.class, event -> this.died(event.getPlayer()));
         this.node.addListener(PlayerDisconnectEvent.class, event -> this.left(event.getPlayer()));
         this.node.addListener(GameFinishEvent.class, _ -> this.stop());
+    }
+
+    /**
+     * Starts the round with the tracker locked, and shows the slender how long it stays locked.
+     */
+    private void started() {
+        this.running = true;
+        this.scan.start();
+        Player current = this.slender.get();
+        if (current != null) this.scan.showCooldown(current);
     }
 
     private void moved(PlayerMoveEvent event) {

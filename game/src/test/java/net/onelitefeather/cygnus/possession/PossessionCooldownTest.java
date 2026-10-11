@@ -61,4 +61,40 @@ class PossessionCooldownTest extends CygnusPlayerTestBase {
         assertTrue(this.cooldown.isReady(first));
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    @DisplayName("The round start lock holds every player back and is shown on the item")
+    void startLock(Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player slender = connection.connect(instance, new Pos(0, 40, 0));
+        Player other = env.createPlayer(instance, new Pos(2, 40, 0));
+        Collector<SetCooldownPacket> packets = connection.trackIncoming(SetCooldownPacket.class);
+
+        this.cooldown.lock(90);
+        this.clock.set(30_000L);
+        this.cooldown.show(slender);
+
+        assertFalse(this.cooldown.isReady(slender));
+        assertFalse(this.cooldown.isReady(other));
+        List<SetCooldownPacket> sent = packets.collect();
+        assertEquals(1, sent.size());
+        assertEquals(60 * 20, sent.getFirst().cooldownTicks());
+        this.clock.set(90_000L);
+        assertTrue(this.cooldown.isReady(slender));
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("A reset lifts the round start lock")
+    void resetLiftsLock(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance, new Pos(0, 40, 0));
+
+        this.cooldown.lock(90);
+        this.cooldown.reset();
+
+        assertTrue(this.cooldown.isReady(slender));
+        env.destroyInstance(instance, true);
+    }
 }

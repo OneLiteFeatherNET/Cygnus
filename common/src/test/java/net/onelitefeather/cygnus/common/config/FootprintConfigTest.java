@@ -31,6 +31,16 @@ class FootprintConfigTest {
         assertEquals(8.0D, D.teleportBlocks());
         assertEquals(0.7D, D.minSpacing());
         assertEquals(0.33D, D.fadeShare());
+        assertEquals(150, D.scanStartDelaySeconds());
+    }
+
+    @Test
+    @DisplayName("The start delay may be 0 but not negative")
+    void startDelayRange() {
+        assertRejected("scanStartDelaySeconds", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, -1));
+        assertDoesNotThrow(() -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 0));
     }
 
     @Test
@@ -54,46 +64,46 @@ class FootprintConfigTest {
     @DisplayName("The longest delay may not be shorter than the shortest")
     void delayOrder() {
         assertRejected("slenderDelayMaxMillis", () -> new FootprintConfig(3.0D, 0.25D, 2000, 1000, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D));
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
         assertRejected("slenderDelayMinMillis", () -> new FootprintConfig(3.0D, 0.25D, -1, 1000, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D));
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
     }
 
     @Test
     @DisplayName("The gap has to be shorter than the history, or a scan never finds anything")
     void gapShorterThanHistory() {
         assertRejected("scanGapSeconds", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 30, 40, 15, 120, 8.0D, 0.7D, 0.33D));
+                2.0D, 30, 40, 30, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
     }
 
     @Test
     @DisplayName("A teleport has to be longer than a step and a sample")
     void teleportLongerThanSteps() {
         assertRejected("teleportBlocks", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 3.0D, 0.7D, 0.33D));
+                2.0D, 30, 40, 5, 40, 15, 120, 3.0D, 0.7D, 0.33D, 90));
     }
 
     @Test
     @DisplayName("Counts and durations need at least 1")
     void lowerBounds() {
         assertRejected("slenderLifetimeSeconds", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 0,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D));
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
         assertRejected("scanRadius", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 0, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D));
+                2.0D, 30, 0, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
         assertRejected("scanMaxPrints", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 5, 0, 15, 120, 8.0D, 0.7D, 0.33D));
+                2.0D, 30, 40, 5, 0, 15, 120, 8.0D, 0.7D, 0.33D, 90));
         assertRejected("scanCooldownSeconds", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 5, 40, 15, -1, 8.0D, 0.7D, 0.33D));
+                2.0D, 30, 40, 5, 40, 15, -1, 8.0D, 0.7D, 0.33D, 90));
         assertRejected("slenderStepBlocks", () -> new FootprintConfig(0.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D));
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
     }
 
     private static FootprintConfig withChance(double chance) {
-        return new FootprintConfig(3.0D, chance, 1000, 2000, 12, 2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D);
+        return new FootprintConfig(3.0D, chance, 1000, 2000, 12, 2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90);
     }
 
     private static FootprintConfig withFadeShare(double fadeShare) {
-        return new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12, 2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, fadeShare);
+        return new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12, 2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, fadeShare, 90);
     }
 
     private static void assertRejected(String field, Executable executable) {

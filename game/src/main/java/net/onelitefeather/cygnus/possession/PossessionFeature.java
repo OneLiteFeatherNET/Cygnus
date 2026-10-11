@@ -38,7 +38,7 @@ import java.util.function.Supplier;
  * Meanwhile his body stands revealed and frozen. Only {@link Tags#HIDDEN} changes, the slender bar
  * keeps its state, so the body does no damage. Survivors around the creek glow for him, and the
  * creek is noticed from farther away. Sneaking, the maximum time or the creek going away ends it,
- * and then the full cooldown runs.
+ * and then the full cooldown runs. A round starts with the item locked for a while.
  * </p>
  *
  * @author theEvilReaper
@@ -128,22 +128,26 @@ public final class PossessionFeature implements GameFeature {
     }
 
     /**
-     * Starts the round for the possession and hands the slender his item.
+     * Starts the round for the possession with the item locked, and hands the slender his item.
      */
     synchronized void started() {
         this.running = true;
+        this.cooldown.lock(this.config.startDelaySeconds());
         Player current = this.slender.get();
-        if (current != null) giveItem(current);
+        if (current != null) this.giveItem(current);
     }
 
     /**
-     * Hands out the item one tick later. The game's own listeners fill the slender's inventory on
-     * the same event, and they clear it first.
+     * Hands out the item one tick later, together with what is left of its cooldown. The game's own
+     * listeners fill the slender's inventory on the same event, and they clear it first.
      *
      * @param player the slender
      */
-    private static void giveItem(Player player) {
-        MinecraftServer.getSchedulerManager().scheduleNextTick(() -> Items.setPossessionItem(player));
+    private void giveItem(Player player) {
+        MinecraftServer.getSchedulerManager().scheduleNextTick(() -> {
+            Items.setPossessionItem(player);
+            this.cooldown.show(player);
+        });
     }
 
     /**
@@ -255,7 +259,7 @@ public final class PossessionFeature implements GameFeature {
     private synchronized void slenderChanged(Player newSlender) {
         Possession current = this.possession;
         if (current != null && !current.slender().equals(newSlender)) this.end(current, true);
-        giveItem(newSlender);
+        this.giveItem(newSlender);
     }
 
     /**

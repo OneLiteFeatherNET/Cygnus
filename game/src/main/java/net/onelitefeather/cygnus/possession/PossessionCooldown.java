@@ -13,7 +13,8 @@ import java.util.function.LongSupplier;
  * The wait between two possessions, kept per player.
  * <p>
  * It always runs in full once a possession started, also when the slender ended it early. A use
- * that never got into the creek costs nothing.
+ * that never got into the creek costs nothing. On top of that, a lock at the round start holds
+ * every player back until the start delay is over.
  * </p>
  *
  * @author theEvilReaper
@@ -30,6 +31,7 @@ final class PossessionCooldown {
     private final long millis;
     private final LongSupplier clock;
     private final Map<UUID, Long> readyAt = new ConcurrentHashMap<>();
+    private volatile long unlockAt;
 
     /**
      * Creates the cooldown.
@@ -49,7 +51,27 @@ final class PossessionCooldown {
      * @return {@code true} once the cooldown is over or never ran
      */
     boolean isReady(Player player) {
-        return this.clock.getAsLong() >= this.readyAt.getOrDefault(player.getUuid(), 0L);
+        return this.clock.getAsLong() >= this.readyAt(player);
+    }
+
+    /**
+     * Locks the possession for every player, for the start of a round.
+     *
+     * @param seconds how long the lock lasts
+     */
+    void lock(int seconds) {
+        this.unlockAt = this.clock.getAsLong() + seconds * 1000L;
+    }
+
+    /**
+     * Shows a player on the item what is left of his cooldown or of the round start lock.
+     *
+     * @param player the player
+     */
+    void show(Player player) {
+        long left = this.readyAt(player) - this.clock.getAsLong();
+        if (left <= 0L || !player.isOnline()) return;
+        this.send(player, left);
     }
 
     /**
@@ -60,7 +82,7 @@ final class PossessionCooldown {
     void start(Player player) {
         this.readyAt.put(player.getUuid(), this.clock.getAsLong() + this.millis);
         if (this.millis <= 0L || !player.isOnline()) return;
-        player.sendPacket(new SetCooldownPacket(COOLDOWN_GROUP, (int) Math.ceil(this.millis / TICK_MILLIS)));
+        this.send(player, this.millis);
     }
 
     /**
@@ -68,5 +90,14 @@ final class PossessionCooldown {
      */
     void reset() {
         this.readyAt.clear();
+        this.unlockAt = 0L;
+    }
+
+    private long readyAt(Player player) {
+        return Math.max(this.readyAt.getOrDefault(player.getUuid(), 0L), this.unlockAt);
+    }
+
+    private void send(Player player, long millis) {
+        player.sendPacket(new SetCooldownPacket(COOLDOWN_GROUP, (int) Math.ceil(millis / TICK_MILLIS)));
     }
 }

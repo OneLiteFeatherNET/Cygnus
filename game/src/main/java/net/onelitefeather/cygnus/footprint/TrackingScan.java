@@ -22,7 +22,8 @@ import java.util.function.LongSupplier;
  * The newest seconds are left out, so the prints never lead straight to a survivor. A scan that
  * finds nothing still costs the cooldown. That is an answer too, and it keeps the tracker from
  * being a free probe. The cooldown belongs to the slender role, so a new slender after a
- * takeover inherits what is left of it.
+ * takeover inherits what is left of it. A round starts with the tracker locked for a while: all
+ * survivors start at the same spot, and an early scan would show where each of them ran off to.
  * </p>
  *
  * @author Joltra
@@ -90,6 +91,13 @@ final class TrackingScan {
         this.readyAt = now + this.config.scanCooldownSeconds() * 1000L;
         this.sendCooldown(slender, now);
         return true;
+    }
+
+    /**
+     * Locks the tracker for the start delay of a new round.
+     */
+    void start() {
+        this.readyAt = this.clock.getAsLong() + this.config.scanStartDelaySeconds() * 1000L;
     }
 
     /**

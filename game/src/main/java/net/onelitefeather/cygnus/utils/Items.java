@@ -3,12 +3,16 @@ package net.onelitefeather.cygnus.utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.onelitefeather.cygnus.common.Tags;
 import net.theevilreaper.aves.hotbar.HotBarLayout;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The class contains each {@link ItemStack} reference which is required for the game.
@@ -29,8 +33,8 @@ public final class Items {
     /** The tracker's material, which is also the client's cooldown group for it. */
     public static final Material TRACKING_MATERIAL = Material.RABBIT_FOOT;
 
-    /** The hotbar slot of the tracker, next to the SlenderEye. */
-    public static final int TRACKING_SLOT = 1;
+    /** The hotbar slot of the tracker, the second to last one, away from the SlenderEye. */
+    public static final int TRACKING_SLOT = 7;
 
     /**
      * The possession item's material, which is also the client's cooldown group for it. Not a block
@@ -38,21 +42,26 @@ public final class Items {
      */
     public static final Material POSSESSION_MATERIAL = Material.HEART_OF_THE_SEA;
 
-    /** The hotbar slot of the possession item, next to the tracker. */
-    public static final int POSSESSION_SLOT = 2;
+    /** The hotbar slot of the possession item, the last one, next to the tracker. */
+    public static final int POSSESSION_SLOT = 8;
 
     private static final ItemStack slenderEye = ItemStack.builder(Material.ENDER_EYE)
             .customName(Component.text("SlenderEye").color(TextColor.fromHexString("#ff00d4")))
+            .lore(lore("Right click to hide yourself", "or to show yourself again"))
             .set(Tags.ITEM_TAG, SLENDER_ITEM)
             .build();
 
     private static final ItemStack tracker = ItemStack.builder(TRACKING_MATERIAL)
             .customName(Component.text("Tracker", NamedTextColor.DARK_RED))
+            .lore(lore("Right click to reveal where survivors", "walked around you a little while ago",
+                    "Only you can see the tracks"))
             .set(Tags.ITEM_TAG, TRACKING_ITEM)
             .build();
 
     private static final ItemStack possession = ItemStack.builder(POSSESSION_MATERIAL)
             .customName(Component.text("Creek's Eyes", NamedTextColor.DARK_GREEN))
+            .lore(lore("Right click while hidden to look", "through the eyes of the creek",
+                    "Survivors close to it glow for you", "Sneak to return to your body"))
             .set(Tags.ITEM_TAG, POSSESSION_ITEM)
             .build();
 
@@ -102,6 +111,23 @@ public final class Items {
      */
     public static void setSpectatorLayout(Player player) {
         SPECTATOR_LAYOUT.apply(player, true);
+    }
+
+    /**
+     * Builds an item description: gray, upright lines between two empty ones, like the other menus.
+     * The cooldowns are left out, the client draws them on the item itself.
+     *
+     * @param lines the lines of the description
+     * @return the lore
+     */
+    private static List<Component> lore(String... lines) {
+        List<Component> lore = new ArrayList<>(lines.length + 2);
+        lore.add(Component.empty());
+        for (String line : lines) {
+            lore.add(Component.text(line, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+        }
+        lore.add(Component.empty());
+        return lore;
     }
 
     private Items() {

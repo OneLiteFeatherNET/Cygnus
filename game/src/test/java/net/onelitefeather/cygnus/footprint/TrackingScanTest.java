@@ -130,4 +130,20 @@ class TrackingScanTest extends CygnusPlayerTestBase {
                 && cooldown.cooldownTicks() == 100 * 20));
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    @DisplayName("A round starts with the tracker locked for the start delay")
+    void lockedAtStart(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance, new Pos(0.5, 40, 0.5));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+
+        this.scan.start();
+
+        this.clock.set(149_999L);
+        assertFalse(this.scan.use(slender));
+        this.clock.set(150_000L);
+        assertTrue(this.scan.use(slender));
+        env.destroyInstance(instance, true);
+    }
 }

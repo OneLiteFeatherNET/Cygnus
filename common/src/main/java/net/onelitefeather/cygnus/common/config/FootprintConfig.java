@@ -23,6 +23,9 @@ package net.onelitefeather.cygnus.common.config;
  * @param teleportBlocks         a single move longer than this is a teleport and not walked distance
  * @param minSpacing             how close two revealed prints may lie, in blocks
  * @param fadeShare              the share of the lifetime at its end that shows the faded stage, from 0 to 1
+ * @param scanStartDelaySeconds  how long the tracking item stays locked after the round starts. All
+ *                               survivors start at the same spot, so an early scan would show where
+ *                               each of them ran off to
  * @author Joltra
  * @version 1.0.0
  * @since 2.16.0
@@ -42,7 +45,8 @@ public record FootprintConfig(
         int scanCooldownSeconds,
         double teleportBlocks,
         double minSpacing,
-        double fadeShare
+        double fadeShare,
+        int scanStartDelaySeconds
 ) {
 
     /**
@@ -52,7 +56,8 @@ public record FootprintConfig(
             3.0D, 0.25D, 1000, 2000, 12,
             2.0D, 30,
             40, 5, 40, 15, 120,
-            8.0D, 0.7D, 0.33D);
+            8.0D, 0.7D, 0.33D,
+            150);
 
     /**
      * Checks the values.
@@ -94,6 +99,9 @@ public record FootprintConfig(
         if (fadeShare < 0.0D || fadeShare > 1.0D) {
             throw new IllegalArgumentException("fadeShare (" + fadeShare + ") must be between 0.0 and 1.0");
         }
+        if (scanStartDelaySeconds < 0) {
+            throw new IllegalArgumentException("scanStartDelaySeconds (" + scanStartDelaySeconds + ") must not be negative");
+        }
     }
 
     /**
@@ -119,7 +127,8 @@ public record FootprintConfig(
                 section.getInt("scanCooldownSeconds", defaults.scanCooldownSeconds()),
                 section.getDouble("teleportBlocks", defaults.teleportBlocks()),
                 section.getDouble("minSpacing", defaults.minSpacing()),
-                section.getDouble("fadeShare", defaults.fadeShare())
+                section.getDouble("fadeShare", defaults.fadeShare()),
+                section.getInt("scanStartDelaySeconds", defaults.scanStartDelaySeconds())
         ), defaults);
     }
 
