@@ -45,7 +45,7 @@ dependencyResolutionManagement {
             version("luckperms", "5.5")
             version("luckperms-minestom-loader", "5.6-SNAPSHOT")
             version("guava", "33.7.2-jre")
-            version("falco", "3.0.0")
+            version("falco", "3.0.1")
             version("minestom-extensions", "2.2.0")
             version("sentry", "8.60.0")
             // The API is the only OpenTelemetry artifact Cygnus ships. Production attaches the
