@@ -466,6 +466,7 @@ class GameConfigReaderTest {
                 possession.maxSeconds=5
                 possession.cooldownSeconds=90
                 possession.sightFactor=2.0
+                possession.startDelaySeconds=45
                 """);
 
         PossessionConfig possession = new GameConfigReader(tempDir).getConfig().possession();
@@ -473,6 +474,7 @@ class GameConfigReaderTest {
         assertEquals(5, possession.maxSeconds());
         assertEquals(90, possession.cooldownSeconds());
         assertEquals(2.0D, possession.sightFactor(), 1.0E-9);
+        assertEquals(45, possession.startDelaySeconds());
     }
 
     @Test
@@ -514,6 +516,7 @@ class GameConfigReaderTest {
                 footprint.scanRadius=25
                 footprint.scanCooldownSeconds=90
                 footprint.fadeShare=0.5
+                footprint.scanStartDelaySeconds=30
                 """);
 
         FootprintConfig footprint = new GameConfigReader(tempDir).getConfig().footprint();
@@ -522,6 +525,7 @@ class GameConfigReaderTest {
         assertEquals(25, footprint.scanRadius());
         assertEquals(90, footprint.scanCooldownSeconds());
         assertEquals(0.5D, footprint.fadeShare(), 1.0E-9);
+        assertEquals(30, footprint.scanStartDelaySeconds());
         assertEquals(FootprintConfig.DEFAULT.scanMaxPrints(), footprint.scanMaxPrints());
     }
 
