@@ -33,8 +33,8 @@ public final class Items {
     /** The tracker's material, which is also the client's cooldown group for it. */
     public static final Material TRACKING_MATERIAL = Material.RABBIT_FOOT;
 
-    /** The hotbar slot of the tracker, next to the SlenderEye. */
-    public static final int TRACKING_SLOT = 1;
+    /** The hotbar slot of the tracker, the second to last one, away from the SlenderEye. */
+    public static final int TRACKING_SLOT = 7;
 
     /**
      * The possession item's material, which is also the client's cooldown group for it. Not a block
@@ -42,8 +42,8 @@ public final class Items {
      */
     public static final Material POSSESSION_MATERIAL = Material.HEART_OF_THE_SEA;
 
-    /** The hotbar slot of the possession item, next to the tracker. */
-    public static final int POSSESSION_SLOT = 2;
+    /** The hotbar slot of the possession item, the last one, next to the tracker. */
+    public static final int POSSESSION_SLOT = 8;
 
     private static final ItemStack slenderEye = ItemStack.builder(Material.ENDER_EYE)
             .customName(Component.text("SlenderEye").color(TextColor.fromHexString("#ff00d4")))
