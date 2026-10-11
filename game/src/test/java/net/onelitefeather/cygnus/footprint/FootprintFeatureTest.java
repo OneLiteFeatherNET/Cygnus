@@ -38,12 +38,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FootprintFeatureTest extends CygnusPlayerTestBase {
 
     private static final FootprintConfig CONFIG = new FootprintConfig(3.0D, 1.0D, 50, 50, 12,
-            2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D);
+            2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 0);
 
     private final AtomicLong clock = new AtomicLong();
 
     private FootprintFeature feature(Env env) {
-        FootprintFeature feature = new FootprintFeature(CONFIG, this.clock::get, new FixedRandom(0.0D));
+        FootprintFeature feature = new FootprintFeature(CONFIG, () -> null, this.clock::get, new FixedRandom(0.0D));
         env.process().eventHandler().addChild(feature.node());
         return feature;
     }
@@ -121,6 +121,27 @@ class FootprintFeatureTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new PlayerDeathEvent(survivor, Component.empty(), Component.empty()));
 
         assertEquals(0, feature.log().size(survivor.getUuid()));
+        env.process().eventHandler().removeChild(feature.node());
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("The round start shows the slender how long the tracker stays locked")
+    void startShowsLock(Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player slender = connection.connect(instance, new Pos(0.5, 40, 0.5));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        FootprintConfig delayed = new FootprintConfig(3.0D, 1.0D, 50, 50, 12,
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 60);
+        FootprintFeature feature = new FootprintFeature(delayed, () -> slender, this.clock::get, new FixedRandom(0.0D));
+        env.process().eventHandler().addChild(feature.node());
+        Collector<SetCooldownPacket> packets = connection.trackIncoming(SetCooldownPacket.class);
+
+        EventDispatcher.call(new GameStartEvent());
+
+        assertTrue(packets.collect().stream().anyMatch(packet -> packet.cooldownGroup().equals(TrackingScan.COOLDOWN_GROUP)
+                && packet.cooldownTicks() == 60 * 20));
         env.process().eventHandler().removeChild(feature.node());
         env.destroyInstance(instance, true);
     }
