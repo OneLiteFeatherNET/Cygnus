@@ -72,8 +72,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         }
     }
 
+    /** The default values without the round start lock, so the tests can use the item right away. */
+    private static final PossessionConfig CONFIG = new PossessionConfig(8, 60, 1.5D, 0);
+
     private PossessionFeature feature(@Nullable Player slender) {
-        PossessionFeature feature = new PossessionFeature(PossessionConfig.DEFAULT, true, this.target, this.survivors::get,
+        PossessionFeature feature = new PossessionFeature(CONFIG, true, this.target, this.survivors::get,
                 () -> slender, this.clock::get);
         feature.started();
         return feature;
@@ -114,6 +117,24 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         assertEquals(1, sent.size());
         assertEquals(creek.getEntityId(), sent.getFirst().cameraId());
         assertEquals(Set.of(near), feature.glowing());
+        feature.stop();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("The round starts with the possession locked for the start delay")
+    void lockedAtStart(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
+        this.creek(instance);
+        PossessionFeature feature = new PossessionFeature(new PossessionConfig(8, 60, 1.5D, 90), true, this.target,
+                this.survivors::get, () -> slender, this.clock::get);
+        feature.started();
+
+        this.clock.set(89_999L);
+        assertFalse(feature.use(slender));
+        this.clock.set(90_000L);
+        assertTrue(feature.use(slender));
         feature.stop();
         env.destroyInstance(instance, true);
     }
