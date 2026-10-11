@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.gaze;
 
+import net.kyori.adventure.text.Component;
 import net.minestom.server.network.NetworkBuffer;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
@@ -7,7 +8,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -52,9 +55,11 @@ class SignalWireProbeTest {
 
     @Test
     @DisplayName("Without colour shift the level arrives with bit 4 set")
-    void withoutColourShiftBitFourIsSet(Env env) {
-        assertTrue(BossBarGazeSignal.signalFor(0, false).color().value() == 0xFE0011);
-        assertTrue(BossBarGazeSignal.signalFor(3, false).color().value() == 0xFE0014);
+    void withoutColourShiftBitFourIsSet() {
+        Component component = BossBarGazeSignal.signalFor(0, false);
+        assertEquals(0xFE0011, component.color().value());
+        Component anotherSignal = BossBarGazeSignal.signalFor(3, false);
+        assertEquals(0xFE0014, anotherSignal.color().value());
     }
 
     /**

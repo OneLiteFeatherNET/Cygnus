@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.minimap;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerPluginMessageEvent;
-import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.common.PluginMessagePacket;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;

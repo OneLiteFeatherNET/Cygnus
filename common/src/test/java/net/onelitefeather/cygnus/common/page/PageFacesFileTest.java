@@ -47,7 +47,7 @@ class PageFacesFileTest {
     }
 
     @Test
-    void savedPageFacesCanBeLoadedBack(@TempDir Path root) throws IOException {
+    void savedPageFacesCanBeLoadedBack(@TempDir Path root) {
         Path mapFile = root.resolve("map.json");
         PageResource page = new PageResource(new Vec(1, 2, 3), Direction.NORTH);
 

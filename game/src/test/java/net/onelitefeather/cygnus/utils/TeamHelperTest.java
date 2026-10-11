@@ -2,12 +2,13 @@ package net.onelitefeather.cygnus.utils;
 
 import net.onelitefeather.cygnus.team.RoleIcon;
 import net.onelitefeather.cygnus.team.TeamHelper;
+import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import net.minestom.server.coordinate.Pos;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
@@ -17,18 +18,15 @@ import net.onelitefeather.cygnus.team.TeamCreator;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.GameConfigReader;
-import net.onelitefeather.cygnus.common.map.GameMap;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.nio.file.Paths;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-//TODO: Refactor this test
 @ExtendWith(MicrotusExtension.class)
 class TeamHelperTest {
 
@@ -80,50 +77,40 @@ class TeamHelperTest {
     }
 
 
-    @Disabled
     @Test
     void testTeamAllocation(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-
-        for (int i = 0; i <= 3; i++) {
-            env.createPlayer(instance);
+        Set<Player> createdPlayers = new HashSet<>();
+        for (int i = 0; i < 4; i++) {
+            createdPlayers.add(env.createPlayer(instance));
         }
 
+        // The allocation spreads every online player, so the count must not depend on what other tests left behind
+        Set<Player> onlinePlayers = Set.copyOf(MinecraftServer.getConnectionManager().getOnlinePlayers());
+
         Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
-        Team survivor = Team.of(GameConfig.SURVIVOR_KEY, 11);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 11);
 
-        assertNotNull(slenderTeam);
-        assertNotNull(survivor);
+        TeamHelper.TeamAllocation allocation = TeamHelper.prepareTeamAllocation(slenderTeam, survivorTeam);
 
-        TeamHelper.prepareTeamAllocation(slenderTeam, survivor);
+        Player slender = allocation.slender();
+        assertNotNull(slender);
+        assertEquals(Set.of(slender), Set.copyOf(slenderTeam.getPlayers()));
+        assertTrue(TeamHelper.isSlenderTeam(slender));
+        assertTrue(VisibilityRules.isHidden(slender), "the slender must be hidden right after the allocation");
 
-        assertEquals(1, slenderTeam.getPlayers().size());
-        assertEquals(4, survivor.getPlayers().size());
+        assertFalse(allocation.survivors().contains(slender));
+        assertEquals(onlinePlayers.size() - 1, allocation.survivors().size());
+        assertEquals(allocation.survivors(), Set.copyOf(survivorTeam.getPlayers()));
+        allocation.survivors().forEach(survivor -> assertTrue(TeamHelper.isSurvivorTeam(survivor)));
 
-        env.destroyInstance(instance, true);
+        onlinePlayers.forEach(TeamHelperTest::resetRole);
+        createdPlayers.forEach(Entity::remove);
     }
 
-    @Disabled
-    @Test
-    void testSlenderTeleport(@NotNull Env env) {
-        Instance testInstance = env.createFlatInstance();
-        TeamService teamService = TeamService.of();
-        TeamCreator teamCreator = new TeamCreator() {
-        };
-        teamCreator.createTeams(gameConfig.teams(), teamService);
-        Pos slenderSpawn = new Pos(10, 10, 10);
-        GameMap gameMap = new GameMap("Test", Pos.ZERO, slenderSpawn, Set.of(), Set.of(), List.of(), null);
-        assertNotNull(gameMap);
-        assertEquals(slenderSpawn, gameMap.getSlenderSpawn());
-
-        assertEquals(2, teamService.getTeams().size());
-
-        teamService.getTeam(GameConfig.SLENDER_KEY).get().addPlayer(player);
-        TeamHelper.teleportTeams(teamService, gameMap, testInstance);
-
-        assertEquals(slenderSpawn, player.getPosition());
-        player.setInstance(instance);
-        env.destroyInstance(testInstance);
+    private static void resetRole(@NotNull Player player) {
+        player.removeTag(Tags.TEAM_KEY);
+        player.removeTag(Tags.HIDDEN);
+        player.updateViewableRule(null);
     }
 
     @Test
