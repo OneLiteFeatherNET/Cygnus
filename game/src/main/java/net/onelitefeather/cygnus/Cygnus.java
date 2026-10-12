@@ -46,6 +46,7 @@ import net.onelitefeather.cygnus.footprint.FootprintFeature;
 import net.onelitefeather.cygnus.minimap.LabyModPolicy;
 import net.onelitefeather.cygnus.minimap.MinimapPolicy;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
+import net.onelitefeather.cygnus.clientguard.ClientGuard;
 import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.damage.DamageSoundService;
 import net.onelitefeather.cygnus.command.StartCommand;
@@ -252,6 +253,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         // either way, and it needs neither the resource pack nor the overlay gate to be heard.
                         new MinimapPolicy(this.gameConfig.minimap()),
                         new LabyModPolicy(this.gameConfig.minimap()),
+                        new ClientGuard(this.gameConfig.clientGuard()),
                         new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
                         creekModule,
                         new PossessionFeature(this.gameConfig.possession(), this.gameConfig.creek().enabled(),

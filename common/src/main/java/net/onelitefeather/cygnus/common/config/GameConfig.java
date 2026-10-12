@@ -38,6 +38,7 @@ import java.util.regex.Pattern;
  * @param minimap              the request to client minimap mods to switch themselves off
  * @param eightPages           the settings for rounds with only a few survivors
  * @param regeneration         how survivors win back health after an encounter
+ * @param clientGuard          the check on the client's brand and mod channels, which kicks known cheat clients
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
@@ -63,6 +64,7 @@ public record GameConfig(
         MinimapConfig minimap,
         EightPagesConfig eightPages,
         RegenerationConfig regeneration,
+        ClientGuardConfig clientGuard,
         float lobbyAtmosphereShare
 ) {
 
@@ -154,6 +156,7 @@ public record GameConfig(
             MinimapConfig.DEFAULT,
             EightPagesConfig.DEFAULT,
             RegenerationConfig.DEFAULT,
+            ClientGuardConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 
@@ -188,6 +191,7 @@ public record GameConfig(
                 MinimapConfig.read(root.section("minimap.")),
                 EightPagesConfig.read(root.section("eightPages.")),
                 RegenerationConfig.read(root.section("regeneration.")),
+                ClientGuardConfig.read(root.section("client-guard.")),
                 readLobbyAtmosphereShare(root)
         );
     }

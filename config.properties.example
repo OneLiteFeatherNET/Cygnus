@@ -359,3 +359,30 @@ survivorTeamSize=12
 # JourneyMap (current versions) is not covered: it is controlled by its own server mod.
 # An unknown value is logged and replaced by the default.
 #minimap.mode=disabled
+
+# --- Client guard -----------------------------------------------------------
+# Reads what the client says about itself: its brand (minecraft:brand) and the mod channels it
+# registers (minecraft:register). A client that announces a known cheat client is logged and,
+# in kick mode, disconnected. A modified client can leave out or fake both, so this catches
+# the clients that do not bother to hide. It is not a replacement for anti-cheat.
+#
+#   off   nothing is checked.
+#   log   a blocked client is logged once and allowed to stay.
+#   kick  a blocked client is logged once and disconnected.
+#
+# blocked-brands: comma separated fragments. A brand containing one is blocked, so "meteor" also
+#   catches "meteor-client". Case-insensitive. A blank value keeps the default list.
+# blocked-channels: comma separated channel prefixes, case-insensitive. The default only covers
+#   the World Downloader Mod (wdl:). Other cheat channels are not known to be stable yet, so
+#   they are not guessed here; add them when verified. Minimap channels stay out of this list,
+#   the minimap is handled by the minimap settings above.
+# allowed-brands: optional whitelist of exact brands, for example "vanilla,fabric". Empty
+#   (the default) lets every brand that is not blocked join. The whitelist judges a client once
+#   it has named a brand; a client that never sends one is not kicked, since a silent client is
+#   not caught by this check anyway.
+#
+# An unknown mode is logged and replaced by the default (kick).
+#client-guard.mode=kick
+#client-guard.blocked-brands=meteor,wurst,aristois,liquidbounce,impact,future,rusherhack,inertia,bleachhack
+#client-guard.blocked-channels=wdl:
+#client-guard.allowed-brands=
