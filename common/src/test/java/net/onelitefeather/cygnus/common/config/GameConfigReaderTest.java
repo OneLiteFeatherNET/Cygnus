@@ -517,6 +517,9 @@ class GameConfigReaderTest {
                 footprint.scanCooldownSeconds=90
                 footprint.fadeShare=0.5
                 footprint.scanStartDelaySeconds=30
+                footprint.scentPrints=6
+                footprint.scentSpreadDegrees=20
+                footprint.scentCooldownSeconds=25
                 """);
 
         FootprintConfig footprint = new GameConfigReader(tempDir).getConfig().footprint();
@@ -526,6 +529,9 @@ class GameConfigReaderTest {
         assertEquals(90, footprint.scanCooldownSeconds());
         assertEquals(0.5D, footprint.fadeShare(), 1.0E-9);
         assertEquals(30, footprint.scanStartDelaySeconds());
+        assertEquals(6, footprint.scentPrints());
+        assertEquals(20, footprint.scentSpreadDegrees());
+        assertEquals(25, footprint.scentCooldownSeconds());
         assertEquals(FootprintConfig.DEFAULT.scanMaxPrints(), footprint.scanMaxPrints());
     }
 

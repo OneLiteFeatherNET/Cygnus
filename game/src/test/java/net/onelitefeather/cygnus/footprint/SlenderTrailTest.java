@@ -20,7 +20,7 @@ class SlenderTrailTest extends CygnusPlayerTestBase {
 
     /** Default values, but a one tick delay so the tests stay short. */
     private static final FootprintConfig CONFIG = new FootprintConfig(3.0D, 0.25D, 50, 50, 12,
-            2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 0);
+            2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 0, 4, 15, 40);
 
     private static void tick(Env env, int ticks) {
         for (int i = 0; i < ticks; i++) env.tick();

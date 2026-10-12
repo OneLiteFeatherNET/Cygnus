@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FootprintFeatureTest extends CygnusPlayerTestBase {
 
     private static final FootprintConfig CONFIG = new FootprintConfig(3.0D, 1.0D, 50, 50, 12,
-            2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 0);
+            2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 0, 4, 15, 40);
 
     private final AtomicLong clock = new AtomicLong();
 
@@ -133,7 +133,7 @@ class FootprintFeatureTest extends CygnusPlayerTestBase {
         Player slender = connection.connect(instance, new Pos(0.5, 40, 0.5));
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         FootprintConfig delayed = new FootprintConfig(3.0D, 1.0D, 50, 50, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 60);
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 60, 4, 15, 40);
         FootprintFeature feature = new FootprintFeature(delayed, () -> slender, this.clock::get, new FixedRandom(0.0D));
         env.process().eventHandler().addChild(feature.node());
         Collector<SetCooldownPacket> packets = connection.trackIncoming(SetCooldownPacket.class);
