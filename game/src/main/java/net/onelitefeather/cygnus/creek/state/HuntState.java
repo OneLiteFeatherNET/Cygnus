@@ -2,6 +2,8 @@ package net.onelitefeather.cygnus.creek.state;
 
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
+import net.onelitefeather.cygnus.creek.dread.HuntEnd;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +19,7 @@ import java.util.UUID;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 public final class HuntState implements CreekState {
@@ -35,6 +37,7 @@ public final class HuntState implements CreekState {
     private final long endsAt;
     private double bestDistance = Double.MAX_VALUE;
     private long progressSince;
+    private @Nullable HuntEnd end;
 
     /**
      * Sets up the hunt.
@@ -76,6 +79,16 @@ public final class HuntState implements CreekState {
         return this.endsAt;
     }
 
+    /**
+     * Tells how the hunt ended.
+     *
+     * @return the reason, or {@code null} while the hunt goes on or when it was cut short from outside
+     * @since 2.15.0
+     */
+    public @Nullable HuntEnd end() {
+        return this.end;
+    }
+
     @Override
     public void enter(CreekContext ctx) {
         CreekBody body = ctx.body();
@@ -88,7 +101,8 @@ public final class HuntState implements CreekState {
     @Override
     public CreekState tick(CreekContext ctx) {
         Optional<SurvivorView> found = ctx.survivor(this.target);
-        if (found.isEmpty() || ctx.now() >= this.endsAt) return this.over(ctx);
+        if (found.isEmpty()) return this.over(ctx, HuntEnd.GONE);
+        if (ctx.now() >= this.endsAt) return this.over(ctx, HuntEnd.TIMEOUT);
 
         SurvivorView view = found.get();
         CreekConfig config = ctx.config();
@@ -105,7 +119,7 @@ public final class HuntState implements CreekState {
         double distance = body.position().distance(view.position());
         if (distance <= config.catchDistance() && view.inSight()) {
             ctx.actions().caught(this.target);
-            return this.over(ctx);
+            return this.over(ctx, HuntEnd.CAUGHT);
         }
 
         if (distance < this.bestDistance - PROGRESS) {
@@ -124,7 +138,8 @@ public final class HuntState implements CreekState {
     /**
      * Ends the hunt and starts the survivor's breather.
      */
-    private CreekState over(CreekContext ctx) {
+    private CreekState over(CreekContext ctx, HuntEnd how) {
+        this.end = how;
         ctx.hunts().ended(this.target, ctx.now());
         return DoneState.INSTANCE;
     }

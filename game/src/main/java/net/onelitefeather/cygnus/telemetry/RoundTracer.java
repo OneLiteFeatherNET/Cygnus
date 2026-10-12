@@ -36,7 +36,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.15.0
  */
 public final class RoundTracer {
@@ -64,6 +64,7 @@ public final class RoundTracer {
     private final Set<String> linked = new HashSet<>();
     private int droppedLinks;
     private final List<Runnable> boundaryListeners = new CopyOnWriteArrayList<>();
+    private final List<Runnable> endingListeners = new CopyOnWriteArrayList<>();
 
     /**
      * Creates the tracer.
@@ -190,6 +191,12 @@ public final class RoundTracer {
      * Ends the round span after its last phase.
      */
     synchronized void roundEnded() {
+        // Before the spans close, so whatever is still open ends below a parent that is still running.
+        if (this.round != null) {
+            for (Runnable listener : this.endingListeners) {
+                listener.run();
+            }
+        }
         endPhase();
         TraceStep current = this.round;
         this.round = null;
@@ -210,6 +217,15 @@ public final class RoundTracer {
      */
     void onBoundary(Runnable listener) {
         this.boundaryListeners.add(listener);
+    }
+
+    /**
+     * Registers something that has to finish what it holds open before the round and its phase end.
+     *
+     * @param listener called when a running round ends, before its spans close; must be quick
+     */
+    void onRoundEnding(Runnable listener) {
+        this.endingListeners.add(listener);
     }
 
     private void notifyBoundary() {
