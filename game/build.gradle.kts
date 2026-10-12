@@ -44,6 +44,11 @@ dependencies {
         exclude(group = "net.kyori.adventure")
     }
 
+    // Lunar Client's Apollo messages (lunar:apollo, ModSetting overrides), used by the lunar package.
+    // protobuf-java is not relocated; the Apollo classes reference it by its own package names.
+    implementation(libs.apollo.protos)
+    implementation(libs.protobuf.java)
+
     // SLF4J needs a binding at runtime; without one it falls back to NOP and the
     // server logs nothing at all.
     runtimeOnly(libs.slf4j.simple)

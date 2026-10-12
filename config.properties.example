@@ -400,3 +400,16 @@ survivorTeamSize=12
 #
 #client-api.block-world-downloader=true
 #client-api.labymod-disabled-addons=
+# --- Lunar Client -----------------------------------------------------------
+# Asks Lunar Client to switch off mods that could give a survivor an edge. Lunar Client takes
+# the request over its Apollo API (channel lunar:apollo): once the client registers that channel,
+# the server sends one ModSetting override per listed mod, setting the mod's "enabled" option to
+# false. A client courtesy, not an anti-cheat: a modified client or another client ignores it.
+#
+#   disabled-mods  comma separated, from: minimap, waypoints, freelook, zoom, coordinates, directionhud.
+#                  "none" switches off nothing. An unknown name is logged and skipped.
+#   enabled        false turns the request off entirely.
+#
+# Unknown values are logged and replaced by the default.
+#lunar.enabled=true
+#lunar.disabled-mods=minimap,waypoints,freelook,zoom,coordinates,directionhud

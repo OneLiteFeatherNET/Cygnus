@@ -44,6 +44,7 @@ import net.onelitefeather.cygnus.adrenaline.AdrenalineService;
 import net.onelitefeather.cygnus.camera.WakeUpTransition;
 import net.onelitefeather.cygnus.footprint.FootprintFeature;
 import net.onelitefeather.cygnus.clientguard.WorldDownloaderPolicy;
+import net.onelitefeather.cygnus.lunar.LunarModPolicy;
 import net.onelitefeather.cygnus.minimap.LabyModPolicy;
 import net.onelitefeather.cygnus.minimap.MinimapPolicy;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
@@ -255,6 +256,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         new MinimapPolicy(this.gameConfig.minimap()),
                         new LabyModPolicy(this.gameConfig.minimap(), this.gameConfig.clientApi()),
                         new WorldDownloaderPolicy(this.gameConfig.clientApi()),
+                        new LunarModPolicy(this.gameConfig.lunar()),
                         new ClientGuard(this.gameConfig.clientGuard()),
                         new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
                         creekModule,
