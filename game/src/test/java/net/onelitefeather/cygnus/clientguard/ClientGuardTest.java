@@ -30,10 +30,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class ClientGuardTest extends CygnusPlayerTestBase {
 
+    // The shader probe has its own tests, so these configs switch it off.
     private static final ClientGuardConfig KICKING = new ClientGuardConfig(ClientGuardConfig.Mode.KICK,
-            ClientGuardConfig.DEFAULT_BLOCKED_BRANDS, ClientGuardConfig.DEFAULT_BLOCKED_CHANNELS, List.of());
+            ClientGuardConfig.DEFAULT_BLOCKED_BRANDS, ClientGuardConfig.DEFAULT_BLOCKED_CHANNELS, List.of(),
+            false, ClientGuardConfig.DEFAULT_INCOMPATIBLE_MODS, ClientGuardConfig.DEFAULT_LOGGED_MODS,
+            ClientGuardConfig.DEFAULT_SHADER_PROBE_TIMEOUT_TICKS);
     private static final ClientGuardConfig LOGGING = new ClientGuardConfig(ClientGuardConfig.Mode.LOG,
-            ClientGuardConfig.DEFAULT_BLOCKED_BRANDS, ClientGuardConfig.DEFAULT_BLOCKED_CHANNELS, List.of());
+            ClientGuardConfig.DEFAULT_BLOCKED_BRANDS, ClientGuardConfig.DEFAULT_BLOCKED_CHANNELS, List.of(),
+            false, ClientGuardConfig.DEFAULT_INCOMPATIBLE_MODS, ClientGuardConfig.DEFAULT_LOGGED_MODS,
+            ClientGuardConfig.DEFAULT_SHADER_PROBE_TIMEOUT_TICKS);
 
     private Env installedIn;
     private ClientGuard installed;
@@ -129,7 +134,9 @@ class ClientGuardTest extends CygnusPlayerTestBase {
     @DisplayName("A register message before the brand does not kick a whitelisted client")
     void registerBeforeBrandWithWhitelistDoesNotKick(Env env) {
         ClientGuardConfig whitelist = new ClientGuardConfig(ClientGuardConfig.Mode.KICK,
-                ClientGuardConfig.DEFAULT_BLOCKED_BRANDS, ClientGuardConfig.DEFAULT_BLOCKED_CHANNELS, List.of("vanilla"));
+                ClientGuardConfig.DEFAULT_BLOCKED_BRANDS, ClientGuardConfig.DEFAULT_BLOCKED_CHANNELS, List.of("vanilla"),
+                false, ClientGuardConfig.DEFAULT_INCOMPATIBLE_MODS, ClientGuardConfig.DEFAULT_LOGGED_MODS,
+                ClientGuardConfig.DEFAULT_SHADER_PROBE_TIMEOUT_TICKS);
         install(env, whitelist);
         TestConnection connection = env.createConnection();
         Player player = connection.connect(env.createFlatInstance());
@@ -201,7 +208,7 @@ class ClientGuardTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("The off mode is not hooked into the event tree")
     void offModeIsDisabled() {
-        assertFalse(new ClientGuard(new ClientGuardConfig(ClientGuardConfig.Mode.OFF, List.of(), List.of(), List.of()))
-                .enabled(), "the off mode must not be attached");
+        assertFalse(new ClientGuard(new ClientGuardConfig(ClientGuardConfig.Mode.OFF, List.of(), List.of(), List.of(),
+                true, List.of(), List.of(), 100)).enabled(), "the off mode must not be attached");
     }
 }

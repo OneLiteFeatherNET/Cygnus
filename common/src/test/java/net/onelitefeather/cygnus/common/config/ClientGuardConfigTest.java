@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Covers how the {@code client-guard.} keys are read and what a broken value falls back to.
@@ -96,8 +98,82 @@ class ClientGuardConfigTest {
     @DisplayName("A missing mode is rejected by the record")
     void nullModeIsRejected() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> new ClientGuardConfig(null, List.of(), List.of(), List.of()));
+                () -> new ClientGuardConfig(null, List.of(), List.of(), List.of(), true,
+                        List.of(), List.of(), 100));
 
         assertEquals("Client guard mode must not be null", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("The shader probe is on by default")
+    void shaderProbeIsOnByDefault() {
+        assertTrue(ClientGuardConfig.read(section()).shaderProbe(), "the shader probe must be on without any keys");
+    }
+
+    @Test
+    @DisplayName("Iris, OptiFine and Canvas are the incompatible shader mods by default")
+    void incompatibleModsDefaultToTheBreakingOnes() {
+        assertEquals(List.of(ShaderMod.IRIS, ShaderMod.OPTIFINE, ShaderMod.CANVAS),
+                ClientGuardConfig.read(section()).incompatibleMods());
+    }
+
+    @Test
+    @DisplayName("Sodium, Embeddium and Nvidium are only logged by default")
+    void loggedModsDefaultToTheCosmeticOnes() {
+        assertEquals(List.of(ShaderMod.SODIUM, ShaderMod.EMBEDDIUM, ShaderMod.NVIDIUM),
+                ClientGuardConfig.read(section()).loggedMods());
+    }
+
+    @Test
+    @DisplayName("Shader mod ids are read regardless of their case and spacing")
+    void shaderModIdsAreReadLeniently() {
+        ClientGuardConfig config = ClientGuardConfig.read(section("incompatible-mods", " Iris ,OPTIFINE"));
+
+        assertEquals(List.of(ShaderMod.IRIS, ShaderMod.OPTIFINE), config.incompatibleMods());
+    }
+
+    @Test
+    @DisplayName("An unknown shader mod id is skipped and the known ids are kept")
+    void unknownShaderModIsSkipped() {
+        ClientGuardConfig config = ClientGuardConfig.read(section("logged-mods", "sodium,notamod"));
+
+        assertEquals(List.of(ShaderMod.SODIUM), config.loggedMods(), "only the known mod may stay in the list");
+    }
+
+    @Test
+    @DisplayName("A blank shader mod list keeps its default instead of clearing it")
+    void blankShaderModListKeepsDefault() {
+        ClientGuardConfig config = ClientGuardConfig.read(section("incompatible-mods", "  "));
+
+        assertEquals(ClientGuardConfig.DEFAULT_INCOMPATIBLE_MODS, config.incompatibleMods(),
+                "a blank list must keep the default mods");
+    }
+
+    @Test
+    @DisplayName("The shader probe can be switched off")
+    void shaderProbeCanBeSwitchedOff() {
+        assertFalse(ClientGuardConfig.read(section("shader-probe", "false")).shaderProbe(),
+                "shader-probe=false must turn the probe off");
+    }
+
+    @Test
+    @DisplayName("The probe timeout is read in ticks")
+    void probeTimeoutIsReadInTicks() {
+        assertEquals(40, ClientGuardConfig.read(section("shader-probe-timeout-ticks", "40")).shaderProbeTimeoutTicks());
+    }
+
+    @Test
+    @DisplayName("A probe timeout below one tick falls back to the default")
+    void nonPositiveProbeTimeoutFallsBack() {
+        assertEquals(ClientGuardConfig.DEFAULT_SHADER_PROBE_TIMEOUT_TICKS,
+                ClientGuardConfig.read(section("shader-probe-timeout-ticks", "0")).shaderProbeTimeoutTicks());
+    }
+
+    @Test
+    @DisplayName("A probe timeout of zero ticks is rejected by the record")
+    void zeroProbeTimeoutIsRejected() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ClientGuardConfig(ClientGuardConfig.Mode.KICK, List.of(), List.of(), List.of(), true,
+                        List.of(), List.of(), 0));
     }
 }

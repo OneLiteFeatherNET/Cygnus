@@ -25,7 +25,8 @@ class ClientInspectorTest {
     private static final ClientGuardConfig DEFAULTS = ClientGuardConfig.DEFAULT;
 
     private static ClientGuardConfig config(ClientGuardConfig.Mode mode, List<String> allowedBrands) {
-        return new ClientGuardConfig(mode, DEFAULTS.blockedBrands(), DEFAULTS.blockedChannels(), allowedBrands);
+        return new ClientGuardConfig(mode, DEFAULTS.blockedBrands(), DEFAULTS.blockedChannels(), allowedBrands,
+                false, DEFAULTS.incompatibleMods(), DEFAULTS.loggedMods(), DEFAULTS.shaderProbeTimeoutTicks());
     }
 
     private static ClientProfile brand(String brand) {
