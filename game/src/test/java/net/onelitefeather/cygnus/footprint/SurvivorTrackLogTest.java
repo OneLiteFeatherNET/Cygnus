@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,6 +63,22 @@ class SurvivorTrackLogTest {
 
         assertEquals(1, found.size(), "x 4 is too new and x 6 is outside the radius");
         assertEquals(2.0D, found.getFirst().position().x());
+    }
+
+    @Test
+    @DisplayName("The nearest point ignores the radius but keeps the gap and the history")
+    void nearestPoint() {
+        this.log.moved(this.survivor, new Pos(98, 40, 0), new Pos(100, 40, 0), 1_000L);   // point at x 100, t 1 s
+        this.log.moved(this.survivor, new Pos(100, 40, 0), new Pos(102, 40, 0), 1_000L);  // point at x 102, t 1 s
+        UUID other = UUID.randomUUID();
+        this.log.moved(other, new Pos(48, 40, 0), new Pos(50, 40, 0), 9_000L);            // point at x 50, t 9 s
+
+        Optional<TrackPoint> nearest = this.log.nearestPoint(new Pos(0, 40, 0), 5_000L, 10_000L);
+
+        assertTrue(nearest.isPresent());
+        assertEquals(100.0D, nearest.get().position().x(), "x 50 is too new");
+        assertTrue(this.log.nearestPoint(new Pos(0, 40, 0), 5_000L, 40_000L).isEmpty(),
+                "every point is older than the history");
     }
 
     @Test
