@@ -15,13 +15,15 @@ import net.onelitefeather.cygnus.utils.Items;
 
 import java.util.List;
 import java.util.function.LongSupplier;
+import java.util.random.RandomGenerator;
 
 /**
  * The slender's tracker: shows him where survivors walked around him, then needs a cooldown.
  * <p>
- * The newest seconds are left out, so the prints never lead straight to a survivor. A scan that
- * finds nothing still costs the cooldown. That is an answer too, and it keeps the tracker from
- * being a free probe. The cooldown belongs to the slender role, so a new slender after a
+ * The newest seconds are left out, so the prints never lead straight to a survivor. If no track
+ * lies inside the radius, a short scent line points roughly towards the nearest one instead, and
+ * the tracker only needs the shorter scent cooldown. A scan that finds nothing at all costs that
+ * shorter cooldown as well. That is an answer too, and it keeps the tracker from being a free probe. The cooldown belongs to the slender role, so a new slender after a
  * takeover inherits what is left of it. A round starts with the tracker locked for a while: all
  * survivors start at the same spot, and an early scan would show where each of them ran off to.
  * </p>
@@ -44,6 +46,7 @@ final class TrackingScan {
     private final SurvivorTrackLog log;
     private final FootprintSpawner spawner;
     private final LongSupplier clock;
+    private final RandomGenerator random;
     private long readyAt;
 
     /**
@@ -53,12 +56,15 @@ final class TrackingScan {
      * @param log     the recorded survivor points
      * @param spawner places the prints
      * @param clock   supplies the current time in milliseconds
+     * @param random  turns the scent line
      */
-    TrackingScan(FootprintConfig config, SurvivorTrackLog log, FootprintSpawner spawner, LongSupplier clock) {
+    TrackingScan(FootprintConfig config, SurvivorTrackLog log, FootprintSpawner spawner, LongSupplier clock,
+                 RandomGenerator random) {
         this.config = config;
         this.log = log;
         this.spawner = spawner;
         this.clock = clock;
+        this.random = random;
     }
 
     /**
@@ -78,17 +84,18 @@ final class TrackingScan {
 
         long newest = now - this.config.scanGapSeconds() * 1000L;
         List<TrackPoint> points = this.log.pointsNear(slender.getPosition(), this.config.scanRadius(), newest, now);
-        int shown = 0;
-        for (Pos spot : ScanSelection.select(points, this.config.scanMaxPrints(), this.config.minSpacing())) {
-            if (this.spawner.spawn(instance, spot, FootprintKind.SURVIVOR, this.config.scanLifetimeSeconds(),
-                    TeamHelper::isSlenderTeam)) {
-                shown++;
+        if (this.show(instance, ScanSelection.select(points, this.config.scanMaxPrints(), this.config.minSpacing()))) {
+            this.readyAt = now + this.config.scanCooldownSeconds() * 1000L;
+        } else {
+            List<Pos> scent = this.log.nearestPoint(slender.getPosition(), newest, now)
+                    .map(nearest -> ScentTrail.spots(slender.getPosition(), nearest.position(),
+                            this.config.scentPrints(), this.config.scentSpreadDegrees(), this.random))
+                    .orElse(List.of());
+            if (!this.show(instance, scent)) {
+                slender.sendMessage(NOTHING_FOUND);
             }
+            this.readyAt = now + this.config.scentCooldownSeconds() * 1000L;
         }
-        if (shown == 0) {
-            slender.sendMessage(NOTHING_FOUND);
-        }
-        this.readyAt = now + this.config.scanCooldownSeconds() * 1000L;
         this.sendCooldown(slender, now);
         return true;
     }
@@ -114,6 +121,15 @@ final class TrackingScan {
      */
     void reset() {
         this.readyAt = 0L;
+    }
+
+    private boolean show(Instance instance, List<Pos> spots) {
+        boolean shown = false;
+        for (Pos spot : spots) {
+            shown |= this.spawner.spawn(instance, spot, FootprintKind.SURVIVOR, this.config.scanLifetimeSeconds(),
+                    TeamHelper::isSlenderTeam);
+        }
+        return shown;
     }
 
     private void sendCooldown(Player slender, long now) {

@@ -64,7 +64,7 @@ public final class FootprintFeature implements GameFeature {
      * @param config  the footprint values
      * @param slender supplies the slender of the round, or {@code null} while there is none
      * @param clock   supplies the current time in milliseconds
-     * @param random  the source for rolls, delays and facings
+     * @param random  the source for rolls, delays, facings and the scent turn
      */
     FootprintFeature(FootprintConfig config, Supplier<@Nullable Player> slender, LongSupplier clock,
                      RandomGenerator random) {
@@ -73,7 +73,7 @@ public final class FootprintFeature implements GameFeature {
         this.spawner = new FootprintSpawner(random, config.fadeShare());
         this.log = new SurvivorTrackLog(config);
         this.trail = new SlenderTrail(config, random, this.spawner);
-        this.scan = new TrackingScan(config, this.log, this.spawner, clock);
+        this.scan = new TrackingScan(config, this.log, this.spawner, clock, random);
         this.registerListeners();
     }
 

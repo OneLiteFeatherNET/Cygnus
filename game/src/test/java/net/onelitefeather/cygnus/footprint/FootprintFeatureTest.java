@@ -155,7 +155,7 @@ class FootprintFeatureTest extends CygnusPlayerTestBase {
         FootprintFeature feature = feature(env);
         EventDispatcher.call(new GameStartEvent());
         EventDispatcher.call(new PlayerUseItemEvent(first, PlayerHand.MAIN, tracker(), 0L));
-        this.clock.set(30_000L);
+        this.clock.set(10_000L);
         TestConnection connection = env.createConnection();
         Player next = connection.connect(instance, new Pos(2.5, 40, 0.5));
         Collector<ServerPacket> packets = connection.trackIncoming();
@@ -163,7 +163,7 @@ class FootprintFeatureTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new SlenderReviveEvent(next));
 
         assertTrue(packets.collect().stream().anyMatch(packet -> packet instanceof SetCooldownPacket cooldown
-                && cooldown.cooldownTicks() == 90 * 20));
+                && cooldown.cooldownTicks() == 30 * 20));
         env.process().eventHandler().removeChild(feature.node());
         env.destroyInstance(instance, true);
     }
