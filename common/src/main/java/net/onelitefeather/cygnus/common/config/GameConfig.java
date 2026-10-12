@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
  * @param eightPages           the settings for rounds with only a few survivors
  * @param regeneration         how survivors win back health after an encounter
  * @param clientGuard          the check on the client's brand and mod channels, which kicks known cheat clients
+ * @param clientApi            the requests to client mods through their own server APIs (WorldDownloader, LabyMod)
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
@@ -65,6 +66,7 @@ public record GameConfig(
         EightPagesConfig eightPages,
         RegenerationConfig regeneration,
         ClientGuardConfig clientGuard,
+        ClientApiConfig clientApi,
         float lobbyAtmosphereShare
 ) {
 
@@ -157,6 +159,7 @@ public record GameConfig(
             EightPagesConfig.DEFAULT,
             RegenerationConfig.DEFAULT,
             ClientGuardConfig.DEFAULT,
+            ClientApiConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 
@@ -192,6 +195,7 @@ public record GameConfig(
                 EightPagesConfig.read(root.section("eightPages.")),
                 RegenerationConfig.read(root.section("regeneration.")),
                 ClientGuardConfig.read(root.section("client-guard.")),
+                ClientApiConfig.read(root.section("client-api.")),
                 readLobbyAtmosphereShare(root)
         );
     }

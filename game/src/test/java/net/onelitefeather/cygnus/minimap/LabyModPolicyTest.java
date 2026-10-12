@@ -8,6 +8,7 @@ import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
+import net.onelitefeather.cygnus.common.config.ClientApiConfig;
 import net.onelitefeather.cygnus.common.config.MinimapConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LabyModPolicyTest extends CygnusPlayerTestBase {
+
+    /** VarInt 24 (AddonDisablePacket), true, VarInt 1, VarInt 9, "voicechat". */
+    private static final byte[] DISABLE_VOICECHAT = concat(
+            new byte[]{24, 1, 1, 9}, "voicechat".getBytes(StandardCharsets.UTF_8));
 
     /** VarInt 10, VarInt 1, VarInt 13, "entity_marker", false. */
     private static final byte[] DENY_ENTITY_MARKER = concat(
@@ -39,7 +44,11 @@ class LabyModPolicyTest extends CygnusPlayerTestBase {
     }
 
     private LabyModPolicy install(Env env, MinimapConfig.Mode mode) {
-        LabyModPolicy policy = new LabyModPolicy(new MinimapConfig(mode));
+        return install(env, mode, ClientApiConfig.DEFAULT);
+    }
+
+    private LabyModPolicy install(Env env, MinimapConfig.Mode mode, ClientApiConfig clientApi) {
+        LabyModPolicy policy = new LabyModPolicy(new MinimapConfig(mode), clientApi);
         env.process().eventHandler().addChild(policy.node());
         this.installedIn = env;
         this.installed = policy;
@@ -66,6 +75,41 @@ class LabyModPolicyTest extends CygnusPlayerTestBase {
     @DisplayName("The permission packet denying the entity marker has the documented bytes")
     void packetBytes() {
         assertArrayEquals(DENY_ENTITY_MARKER, LabyModPolicy.permissionPacket(List.of("entity_marker")));
+    }
+
+    @Test
+    @DisplayName("The addon packet disabling voicechat has the documented bytes")
+    void addonDisableBytes() {
+        assertArrayEquals(DISABLE_VOICECHAT, LabyModPolicy.addonDisablePacket(List.of("voicechat")));
+    }
+
+    @Test
+    @DisplayName("A configured addon is disabled after the hello, behind the permission packet")
+    void configuredAddonIsDisabledAfterHello(Env env) {
+        install(env, MinimapConfig.Mode.DISABLED, new ClientApiConfig(true, List.of("voicechat")));
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(env.createFlatInstance());
+        Collector<PluginMessagePacket> messages = connection.trackIncoming(PluginMessagePacket.class);
+
+        clientHello(player, "labymod:neo");
+
+        List<PluginMessagePacket> sent = messages.collect();
+        assertEquals(2, sent.size(), "permission packet and addon packet");
+        assertArrayEquals(DENY_ENTITY_MARKER, sent.get(0).data(), "the permission packet comes first");
+        assertArrayEquals(DISABLE_VOICECHAT, sent.get(1).data(), "the addon packet disables voicechat");
+    }
+
+    @Test
+    @DisplayName("Off mode with no addon configured sends nothing on the hello")
+    void noAddonsNoPacketInOffMode(Env env) {
+        install(env, MinimapConfig.Mode.OFF, ClientApiConfig.DEFAULT);
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(env.createFlatInstance());
+        Collector<PluginMessagePacket> messages = connection.trackIncoming(PluginMessagePacket.class);
+
+        clientHello(player, "labymod:neo");
+
+        assertTrue(messages.collect().isEmpty(), "nothing to send without a permission or an addon");
     }
 
     @Test

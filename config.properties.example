@@ -386,3 +386,17 @@ survivorTeamSize=12
 #client-guard.blocked-brands=meteor,wurst,aristois,liquidbounce,impact,future,rusherhack,inertia,bleachhack
 #client-guard.blocked-channels=wdl:
 #client-guard.allowed-brands=
+# --- Client APIs ------------------------------------------------------------
+# Courtesy requests to client mods through the server APIs they provide. A modified client can
+# ignore them, so they are no anti-cheat and no replacement for one.
+#
+#   block-world-downloader   WorldDownloader is told on its init packet (wdl:init) to refuse all
+#                            downloading of the world: no chunks, entities, tile entities or containers.
+#                            Default: true
+#   labymod-disabled-addons  comma separated LabyMod 4 addon namespaces that are force disabled for
+#                            the player after LabyMod announces itself (AddonDisablePacket, id 24).
+#                            Only lower case letters, digits, '.', '-' and '_' are accepted, other
+#                            entries are logged and skipped. Default: empty, nothing is disabled.
+#
+#client-api.block-world-downloader=true
+#client-api.labymod-disabled-addons=

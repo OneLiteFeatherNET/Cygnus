@@ -30,6 +30,7 @@ class ConfigReadTest {
         assertEquals(MinimapConfig.DEFAULT, MinimapConfig.read(section("minimap.")));
         assertEquals(EightPagesConfig.DEFAULT, EightPagesConfig.read(section("eightPages.")));
         assertEquals(RegenerationConfig.DEFAULT, RegenerationConfig.read(section("regeneration.")));
+        assertEquals(ClientApiConfig.DEFAULT, ClientApiConfig.read(section("client-api.")));
     }
 
     @Test

@@ -5,6 +5,7 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerPluginMessageEvent;
 import net.onelitefeather.cygnus.GameFeature;
+import net.onelitefeather.cygnus.common.config.ClientApiConfig;
 import net.onelitefeather.cygnus.common.config.MinimapConfig;
 
 import java.io.ByteArrayOutputStream;
@@ -26,6 +27,16 @@ import java.util.List;
  * a player put a marker on an entity. It is off by default; denying it makes that explicit. Like the
  * minimap lines this is a request that a modified client can ignore.
  * </p>
+ * <p>
+ * The same hello also gets an {@code AddonDisablePacket} (id {@value #ADDON_DISABLE_ID}, client bound) for every
+ * configured addon namespace: a boolean action, {@code true} for disable, then a VarInt count and each namespace
+ * as a VarInt-prefixed UTF-8 string. The layout comes from {@code AddonDisablePacket}, and the id from
+ * {@code registerPacket(24, AddonDisablePacket.class, Direction.CLIENTBOUND)} in {@code LabyModProtocol}, both in
+ * {@code core/src/main/java/net/labymod/serverapi/core} of github.com/LabyMod/labymod4-server-api. The LabyMod documentation
+ * (dev.labymod.net, moderation/disable-addons) only says that the packet forcefully disables addons, and that
+ * it works for addons the user can also disable. Like the permissions this is a request a modified client can
+ * ignore.
+ * </p>
  *
  * @author TheMeinerLP
  * @version 1.0.0
@@ -42,19 +53,25 @@ public final class LabyModPolicy implements GameFeature {
     /** The id of the packet that allows and denies features. */
     public static final int PERMISSION_ID = 10;
 
+    /** The id of the client bound packet that force disables addons. */
+    public static final int ADDON_DISABLE_ID = 24;
+
     /** Lets a player put a marker on an entity. */
     public static final String ENTITY_MARKER = "entity_marker";
 
     private final EventNode<Event> node = EventNode.all("labymod");
     private final MinimapConfig config;
+    private final ClientApiConfig clientApi;
 
     /**
      * Creates the policy.
      *
-     * @param config the mode, shared with the minimap policy
+     * @param config    the mode, shared with the minimap policy
+     * @param clientApi the addon namespaces to disable, see {@link ClientApiConfig#labyModDisabledAddons()}
      */
-    public LabyModPolicy(MinimapConfig config) {
+    public LabyModPolicy(MinimapConfig config, ClientApiConfig clientApi) {
         this.config = config;
+        this.clientApi = clientApi;
         this.node.addListener(PlayerPluginMessageEvent.class, event -> {
             if (CHANNEL.equals(event.getIdentifier()) && isLogin(event.getMessage())) {
                 this.apply(event.getPlayer());
@@ -92,17 +109,38 @@ public final class LabyModPolicy implements GameFeature {
     }
 
     /**
-     * Sends the permissions of the configured mode to a player. Does nothing for
-     * {@link MinimapConfig.Mode#OFF}.
+     * Encodes an {@code AddonDisablePacket} that force disables the given addon namespaces.
+     *
+     * @param namespaces the addon namespaces to disable
+     * @return the payload to send on {@value #CHANNEL}
+     */
+    public static byte[] addonDisablePacket(List<String> namespaces) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        writeVarInt(out, ADDON_DISABLE_ID);
+        out.write(1);
+        writeVarInt(out, namespaces.size());
+        for (String namespace : namespaces) {
+            byte[] bytes = namespace.getBytes(StandardCharsets.UTF_8);
+            writeVarInt(out, bytes.length);
+            out.writeBytes(bytes);
+        }
+        return out.toByteArray();
+    }
+
+    /**
+     * Sends the permissions of the configured mode and the disabled addons to a player. The permissions are
+     * skipped for {@link MinimapConfig.Mode#OFF}, the addon packet when no addon is configured.
      *
      * @param player the LabyMod player
      */
     public void apply(Player player) {
         List<String> denied = denied(this.config.mode());
-        if (denied.isEmpty()) {
-            return;
+        if (!denied.isEmpty()) {
+            player.sendPluginMessage(CHANNEL, permissionPacket(denied));
         }
-        player.sendPluginMessage(CHANNEL, permissionPacket(denied));
+        if (!this.clientApi.labyModDisabledAddons().isEmpty()) {
+            player.sendPluginMessage(CHANNEL, addonDisablePacket(this.clientApi.labyModDisabledAddons()));
+        }
     }
 
     private static boolean isLogin(byte[] message) {
@@ -126,6 +164,6 @@ public final class LabyModPolicy implements GameFeature {
 
     @Override
     public boolean enabled() {
-        return this.config.mode() != MinimapConfig.Mode.OFF;
+        return this.config.mode() != MinimapConfig.Mode.OFF || !this.clientApi.labyModDisabledAddons().isEmpty();
     }
 }
