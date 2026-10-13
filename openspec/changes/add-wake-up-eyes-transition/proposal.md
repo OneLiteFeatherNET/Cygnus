@@ -1,6 +1,6 @@
 ## Why
 
-The round starts with the survivors' eyes closing in the lobby and opening again in the game world. The resource
+The round starts with the players' eyes closing in the lobby and opening again in the game world. The resource
 pack overrides the vanilla `minecraft:post_effect/spider.json` post effect with a "wake-up eyes" shader. The shader
 picks its animation from the client's world age, so the server has to move each instance's world age into the band
 of the animation it wants. Vanilla clients only apply the post effect while their camera spectates a spider, so the
