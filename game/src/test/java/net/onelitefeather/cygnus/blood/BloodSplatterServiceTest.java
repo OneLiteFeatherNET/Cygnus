@@ -99,7 +99,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
         BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT, TickSections.NONE);
         env.process().eventHandler().addChild(service.node());
 
-        EventDispatcher.call(new PlayerDamagedEvent(player, new Pos(0, 40, 6), 1.0F));
+        EventDispatcher.call(new PlayerDamagedEvent(player, new Pos(0, 40, 6)));
 
         assertNull(overlay.of(player, OverlayLayer.TUNNEL_VISION), "only the blood layer belongs to this service");
         assertNotNull(overlay.of(player, OverlayLayer.BLOOD), "a hit has to show blood");

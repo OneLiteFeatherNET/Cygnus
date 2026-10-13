@@ -50,7 +50,6 @@ class SlenderBarHelperDamageTest extends CygnusPlayerTestBase {
         collector.assertSingle(event -> {
             assertEquals(victim, event.getPlayer(), "the victim has to be the one that was hit");
             assertEquals(center, event.getSource(), "the source is what aims the splatter");
-            assertEquals(DAMAGE, event.getAmount(), "the amount travels along for anything that scales with it");
         });
     }
 

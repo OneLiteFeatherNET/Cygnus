@@ -37,6 +37,17 @@ class EightPagesConfigTest {
     }
 
     @Test
+    @DisplayName("A round above the boundary gets no bonus, even if one is configured for its size")
+    void noBonusAboveTheBoundary() {
+        EightPagesConfig config = new EightPagesConfig(1, 30, 20, 10);
+
+        assertEquals(30, config.bonusFor(1));
+        assertEquals(0, config.bonusFor(2));
+        assertEquals(0, config.bonusFor(3));
+        assertEquals(0, new EightPagesConfig(0, 30, 20, 10).bonusFor(1));
+    }
+
+    @Test
     @DisplayName("A bonus on a half heart is rounded to the heart above or below")
     void halfHeartBonusIsRoundedByChance() {
         EightPagesConfig config = EightPagesConfig.DEFAULT;
