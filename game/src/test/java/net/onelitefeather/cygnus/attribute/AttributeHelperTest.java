@@ -69,9 +69,6 @@ class AttributeHelperTest {
         assertEquals(20.0, player.getAttribute(Attribute.MAX_HEALTH).getBaseValue(), 0.0001);
         assertEquals(40.0, player.getAttribute(Attribute.MAX_HEALTH).getValue(), 0.0001);
         assertEquals(40.0f, player.getHealth(), 0.0001f);
-
-        AttributeHelper.removeHealthScale(player);
-        assertEquals(20.0, player.getAttribute(Attribute.MAX_HEALTH).getValue(), 0.0001);
         env.destroyInstance(instance, true);
     }
 

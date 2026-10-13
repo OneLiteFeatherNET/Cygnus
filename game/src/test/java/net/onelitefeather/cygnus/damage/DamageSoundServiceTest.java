@@ -49,7 +49,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         DamageSoundService service = service(config(true, COOLDOWN_TICKS, Key.key("entity.player.hurt")), new AtomicLong());
         env.process().eventHandler().addChild(service.node());
 
-        EventDispatcher.call(new PlayerDamagedEvent(player, SOURCE, 1.0F));
+        EventDispatcher.call(new PlayerDamagedEvent(player, SOURCE));
 
         sounds.assertSingle(packet -> {
             assertEquals(SoundEvent.ENTITY_PLAYER_HURT, packet.soundEvent());
@@ -72,7 +72,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), new AtomicLong());
         env.process().eventHandler().addChild(service.node());
 
-        EventDispatcher.call(new PlayerDamagedEvent(victim, SOURCE, 1.0F));
+        EventDispatcher.call(new PlayerDamagedEvent(victim, SOURCE));
 
         bystanderSounds.assertEmpty();
 
@@ -146,7 +146,7 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         DamageSoundService service = service(config(false, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), new AtomicLong());
         env.process().eventHandler().addChild(service.node());
 
-        EventDispatcher.call(new PlayerDamagedEvent(player, SOURCE, 1.0F));
+        EventDispatcher.call(new PlayerDamagedEvent(player, SOURCE));
 
         sounds.assertEmpty();
 

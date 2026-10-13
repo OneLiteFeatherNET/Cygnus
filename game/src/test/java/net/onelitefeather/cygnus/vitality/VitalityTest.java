@@ -104,7 +104,6 @@ class VitalityTest extends CygnusPlayerTestBase {
         assertEquals(16.0F, player.getHealth());
         collector.assertSingle(event -> {
             assertEquals(source, event.getSource());
-            assertEquals(4.5F, event.getAmount());
         });
     }
 
@@ -113,15 +112,15 @@ class VitalityTest extends CygnusPlayerTestBase {
     void tinyHitsAreNotAnnounced(Env env) {
         CygnusPlayer player = player(env);
         player.vitality().setUp(0);
-        List<Float> hits = new ArrayList<>();
-        env.process().eventHandler().addListener(PlayerDamagedEvent.class, event -> hits.add(event.getAmount()));
+        List<PlayerDamagedEvent> hits = new ArrayList<>();
+        env.process().eventHandler().addListener(PlayerDamagedEvent.class, hits::add);
 
         player.vitality().damage(1.0D, player.getPosition());
         player.vitality().damage(3.0D, player.getPosition());
         assertEquals(List.of(), hits, "20 hearts are still shown, nothing to announce");
 
         player.vitality().damage(1.0D, player.getPosition());
-        assertEquals(List.of(0.2F), hits, "the hit that drops the shown health is announced");
+        assertEquals(1, hits.size(), "the hit that drops the shown health is announced");
         assertEquals(19.0F, player.getHealth());
     }
 

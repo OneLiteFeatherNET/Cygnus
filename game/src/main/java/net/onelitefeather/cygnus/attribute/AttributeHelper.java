@@ -137,15 +137,6 @@ public final class AttributeHelper {
     }
 
     /**
-     * Removes the health scaling bonus from the player.
-     *
-     * @param player the player to remove the health scaling from
-     */
-    public static void removeHealthScale(Player player) {
-        player.getAttribute(Attribute.MAX_HEALTH).removeModifier(HEALTH_SCALING_KEY);
-    }
-
-    /**
      * Applies the player-count-based speed scaling bonus to the player as a modifier on top of the base movement speed.
      *
      * @param player the player to apply the speed scaling to
