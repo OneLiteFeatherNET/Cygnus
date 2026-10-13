@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
  * @param telemetry            the OpenTelemetry traces, which only do anything with the javaagent attached
  * @param minimap              the request to client minimap mods to switch themselves off
  * @param eightPages           the settings for rounds with only a few survivors
+ * @param regeneration         how survivors win back health after an encounter
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
@@ -57,6 +58,7 @@ public record GameConfig(
         TelemetryConfig telemetry,
         MinimapConfig minimap,
         EightPagesConfig eightPages,
+        RegenerationConfig regeneration,
         float lobbyAtmosphereShare
 ) {
 
@@ -139,6 +141,7 @@ public record GameConfig(
             TelemetryConfig.DEFAULT,
             MinimapConfig.DEFAULT,
             EightPagesConfig.DEFAULT,
+            RegenerationConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 
@@ -174,6 +177,7 @@ public record GameConfig(
                 TelemetryConfig.read(root.section("telemetry.")),
                 MinimapConfig.read(root.section("minimap.")),
                 EightPagesConfig.read(root.section("eightPages.")),
+                RegenerationConfig.read(root.section("regeneration.")),
                 readLobbyAtmosphereShare(root)
         );
     }

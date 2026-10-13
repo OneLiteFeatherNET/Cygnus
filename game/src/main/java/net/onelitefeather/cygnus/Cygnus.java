@@ -118,6 +118,7 @@ import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.onelitefeather.cygnus.telemetry.TraceStep;
 import net.onelitefeather.cygnus.telemetry.TracedPhaseSeries;
 
+import net.onelitefeather.cygnus.vitality.RegenerationService;
 
 import java.nio.file.Path;
 import java.time.Clock;
@@ -259,6 +260,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         sanityService,
                         new AdrenalineService(
                                 this.gameConfig.adrenaline(),
+                                () -> TeamHelper.survivorsOf(this.teamService),
+                                System::currentTimeMillis,
+                                tickSections),
+                        new RegenerationService(this.gameConfig.regeneration(),
+                                sanityService,
                                 () -> TeamHelper.survivorsOf(this.teamService),
                                 System::currentTimeMillis,
                                 tickSections),

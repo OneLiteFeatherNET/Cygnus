@@ -34,6 +34,8 @@ public final class TickSectionNames {
     public static final String AMBIENT = "ambient";
     /** The adrenaline rush of hunted survivors. */
     public static final String ADRENALINE = "adrenaline";
+    /** Survivors winning back health after an encounter. */
+    public static final String REGENERATION = "regeneration";
     /** Taking over the slender role when the slender leaves. */
     public static final String SLENDER_TAKEOVER = "slender-takeover";
     /** The stamina bars of the survivors, all added up. */
@@ -49,7 +51,7 @@ public final class TickSectionNames {
 
     /** Every name, for tests and documentation to check against. */
     public static final List<String> ALL = List.of(CREEK, GLOW_REVEAL, SLENDER_GAZE, TUNNEL_VISION, PAGE_GLITCH,
-            BLOOD_SPLATTER, PAGE_PROXIMITY, AMBIENT, ADRENALINE, SLENDER_TAKEOVER, STAMINA, SLENDER_BAR,
+            BLOOD_SPLATTER, PAGE_PROXIMITY, AMBIENT, ADRENALINE, REGENERATION, SLENDER_TAKEOVER, STAMINA, SLENDER_BAR,
             JUMP_SCARE, LOBBY_WAITING, LOBBY_TIME);
 
     private TickSectionNames() {
