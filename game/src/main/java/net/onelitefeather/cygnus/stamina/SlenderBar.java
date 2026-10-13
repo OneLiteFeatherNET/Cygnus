@@ -88,6 +88,8 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private StaminaColors colorState;
     /** The earliest moment the slender may appear again, in milliseconds. */
     private long reappearAt;
+    /** Whether regeneration was held back on the last tick because he looked through the creek. */
+    private boolean paused;
 
     /**
      * Runs its periodic {@link #consume()} at {@link ExecutionType#TICK_END} rather than the default
@@ -152,9 +154,20 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     /**
      * Refills the bar, but not while the slender looks through the creek's eyes: possessing it must
      * not double as a free wait for his next appearance.
+     * <p>
+     * The eye's cooldown overlay counted on the refill going on, so it is sent again once he is back.
+     * </p>
      */
     private void handleRegeneration() {
-        if (player.hasTag(Tags.POSSESSING)) return;
+        if (player.hasTag(Tags.POSSESSING)) {
+            this.paused = true;
+            return;
+        }
+        if (this.paused) {
+            this.paused = false;
+            long reappearIn = Math.max(0L, this.reappearAt - this.clock.getAsLong());
+            this.sendCooldown(Math.max(reappearIn, this.millisUntilReactivation()));
+        }
         if (currentTime < time) {
             currentTime = Math.min(time, currentTime + TIME_STEP);
             this.colorState.sendProgressBar(player, tileChar, currentTime, time);
