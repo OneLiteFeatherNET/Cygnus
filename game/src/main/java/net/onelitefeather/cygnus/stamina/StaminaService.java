@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.stamina;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.entity.Player;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.config.StaminaConfig;
@@ -15,12 +17,13 @@ import java.util.UUID;
  * The class has some abilities to manage all {@link StaminaBar} references which are required in the game.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class StaminaService {
 
     private final StaminaConfig config;
+    private final TickSections sections;
     private final Map<UUID, StaminaBar> staminaBars;
     private @Nullable StaminaBar slenderBar;
 
@@ -37,7 +40,19 @@ public final class StaminaService {
      * @param config the settings every bar is created with
      */
     public StaminaService(StaminaConfig config) {
+        this(config, TickSections.NONE);
+    }
+
+    /**
+     * Creates a new instance from this class with its bars measured for the slow tick report.
+     *
+     * @param config   the settings every bar is created with
+     * @param sections measures how long the bars take, the survivors' together and the slender's apart
+     * @since 2.15.0
+     */
+    public StaminaService(StaminaConfig config, TickSections sections) {
         this.config = config;
+        this.sections = sections;
         this.staminaBars = new HashMap<>();
     }
 
@@ -61,7 +76,8 @@ public final class StaminaService {
             this.slenderBar.stop();
         }
 
-        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player, this.config, System::currentTimeMillis);
+        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player, this.config, System::currentTimeMillis)
+                .measuredBy(this.sections, TickSectionNames.SLENDER_BAR);
         if (!forceStart) return;
         this.slenderBar.start();
     }
@@ -75,7 +91,8 @@ public final class StaminaService {
         Check.argCondition(!staminaBars.isEmpty(), "Unable to load stamina bars twice");
         Check.argCondition(team.isEmpty(), "Can't add players from a team without teams");
         for (Player player : team) {
-            this.staminaBars.put(player.getUuid(), StaminaFactory.createFoodStamina((CygnusPlayer) player, this.config));
+            this.staminaBars.put(player.getUuid(), StaminaFactory.createFoodStamina((CygnusPlayer) player, this.config)
+                    .measuredBy(this.sections, TickSectionNames.STAMINA));
         }
     }
 

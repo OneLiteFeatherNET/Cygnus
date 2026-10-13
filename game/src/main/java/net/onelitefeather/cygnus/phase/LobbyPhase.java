@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.phase;
 
+import net.onelitefeather.cygnus.common.util.Helper;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
@@ -29,7 +31,7 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.FORCE_START_TIM
  * </p>
  *
  * @author theEvilReaper
- * @version 1.4.0
+ * @version 1.5.0
  * @since 1.0.0
  */
 public final class LobbyPhase extends TimedPhase {
@@ -59,6 +61,18 @@ public final class LobbyPhase extends TimedPhase {
      * @param instanceSupplier supplier for the active instance
      */
     public LobbyPhase(GameConfig.Round round, Supplier<Instance> instanceSupplier) {
+        this(round, instanceSupplier, TickSections.NONE);
+    }
+
+    /**
+     * Constructs a new LobbyPhase whose per-tick tasks are measured for the slow tick report.
+     *
+     * @param round            the configured player limits and timings
+     * @param instanceSupplier supplier for the active instance
+     * @param sections         measures how long the waiting display and the time transition take
+     * @since 2.15.0
+     */
+    public LobbyPhase(GameConfig.Round round, Supplier<Instance> instanceSupplier, TickSections sections) {
         super("Lobby", ChronoUnit.SECONDS, 1);
         this.lobbyTime = round.lobbyTime();
         this.minPlayers = round.minPlayers();
@@ -67,9 +81,9 @@ public final class LobbyPhase extends TimedPhase {
         this.setTickDirection(TickDirection.DOWN);
 
         // Instantiate the waiting display and time transition task
-        this.waitingDisplay = new LobbyWaitingTask(this.minPlayers);
+        this.waitingDisplay = new LobbyWaitingTask(this.minPlayers, sections);
         this.waitingDisplay.update(MinecraftServer.getConnectionManager().getOnlinePlayers().size());
-        this.timeTransitionTask = new LobbyTimeTransitionTask(instanceSupplier, TIME_TRANSITION_START_SECONDS);
+        this.timeTransitionTask = new LobbyTimeTransitionTask(instanceSupplier, Helper.MIDNIGHT_TIME, TIME_TRANSITION_START_SECONDS, sections);
         this.countdownSoundTask = new LobbyCountdownSoundTask();
     }
 

@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.creek.consequence;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -27,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 public final class GlowReveal implements SlenderReveal {
@@ -44,6 +46,7 @@ public final class GlowReveal implements SlenderReveal {
 
     private final int durationTicks;
     private final Set<Reveal> running = ConcurrentHashMap.newKeySet();
+    private final TickSections sections;
 
     /**
      * Sets up the reveal.
@@ -51,7 +54,19 @@ public final class GlowReveal implements SlenderReveal {
      * @param seconds how long the glow lasts
      */
     public GlowReveal(int seconds) {
+        this(seconds, TickSections.NONE);
+    }
+
+    /**
+     * Sets up the reveal with its resends measured for the slow tick report.
+     *
+     * @param seconds  how long the glow lasts
+     * @param sections measures how long the resends take
+     * @since 2.15.0
+     */
+    public GlowReveal(int seconds, TickSections sections) {
         this.durationTicks = seconds * 20;
+        this.sections = sections;
     }
 
     @Override
@@ -66,7 +81,7 @@ public final class GlowReveal implements SlenderReveal {
         this.running.add(reveal);
         slender.sendPacket(flagsPacket(survivor, true));
         reveal.task = MinecraftServer.getSchedulerManager()
-                .buildTask(() -> this.step(reveal))
+                .buildTask(this.sections.wrap(TickSectionNames.GLOW_REVEAL, () -> this.step(reveal)))
                 .delay(TaskSchedule.tick(RESEND_TICKS))
                 .repeat(TaskSchedule.tick(RESEND_TICKS))
                 .schedule();

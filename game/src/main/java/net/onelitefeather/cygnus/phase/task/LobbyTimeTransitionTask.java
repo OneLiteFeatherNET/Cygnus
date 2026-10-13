@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.phase.task;
 
+import net.onelitefeather.cygnus.telemetry.TickSectionNames;
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.util.Helper;
@@ -11,7 +13,7 @@ import java.util.function.Supplier;
  * over a specified duration in seconds using tick-aligned linear interpolation.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.7.0
  */
 public final class LobbyTimeTransitionTask {
@@ -46,9 +48,26 @@ public final class LobbyTimeTransitionTask {
      * @param durationSeconds duration of the transition in seconds
      */
     public LobbyTimeTransitionTask(Supplier<Instance> instanceSupplier, long targetTime, int durationSeconds) {
+        this(instanceSupplier, targetTime, durationSeconds, TickSections.NONE);
+    }
+
+    /**
+     * Creates a new instance of {@link LobbyTimeTransitionTask} with its ticks measured for the slow
+     * tick report.
+     *
+     * @param instanceSupplier supplier for the target instance
+     * @param targetTime       the target world time in ticks
+     * @param durationSeconds  duration of the transition in seconds
+     * @param sections         measures how long each tick of the transition takes
+     * @since 2.15.0
+     */
+    public LobbyTimeTransitionTask(Supplier<Instance> instanceSupplier, long targetTime, int durationSeconds,
+                                   TickSections sections) {
         this.instanceSupplier = instanceSupplier;
         this.targetTime = targetTime;
         this.totalTicks = Math.max(1, durationSeconds * TICKS_PER_SECOND);
+
+        Runnable step = sections.wrap(TickSectionNames.LOBBY_TIME, this::advanceTime);
 
         this.tickRunnable = new Runnable() {
             @Override
@@ -57,17 +76,7 @@ public final class LobbyTimeTransitionTask {
                     return;
                 }
 
-                Instance instance = instanceSupplier.get();
-
-                if (!initialized) {
-                    initialTime = instance.getTime();
-                    initialized = true;
-                }
-
-                currentTick++;
-                double progress = Math.min(1.0, (double) currentTick / totalTicks);
-                long calculatedTime = (long) (initialTime + (progress * (targetTime - initialTime)));
-                instance.setTime(calculatedTime);
+                step.run();
 
                 if (currentTick < totalTicks && running) {
                     MinecraftServer.getSchedulerManager().scheduleNextTick(this);
@@ -76,6 +85,23 @@ public final class LobbyTimeTransitionTask {
                 }
             }
         };
+    }
+
+    /**
+     * Moves the world time one tick closer to the target.
+     */
+    private void advanceTime() {
+        Instance instance = this.instanceSupplier.get();
+
+        if (!this.initialized) {
+            this.initialTime = instance.getTime();
+            this.initialized = true;
+        }
+
+        this.currentTick++;
+        double progress = Math.min(1.0, (double) this.currentTick / this.totalTicks);
+        long calculatedTime = (long) (this.initialTime + (progress * (this.targetTime - this.initialTime)));
+        instance.setTime(calculatedTime);
     }
 
     /**

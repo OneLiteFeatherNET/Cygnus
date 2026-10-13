@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.telemetry;
 
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
+import net.onelitefeather.cygnus.creek.dread.HuntEnd;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -21,7 +22,7 @@ import java.util.function.Function;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.15.0
  */
 public final class TracingCreekWitness implements CreekWitness {
@@ -30,6 +31,7 @@ public final class TracingCreekWitness implements CreekWitness {
     private final ActionTracer actions;
     private final Function<UUID, ActionTracer.@Nullable Actor> survivors;
     private final Set<UUID> stalking = ConcurrentHashMap.newKeySet();
+    private final @Nullable HuntTracer hunts;
 
     /**
      * Creates the decorator.
@@ -41,6 +43,21 @@ public final class TracingCreekWitness implements CreekWitness {
      */
     public TracingCreekWitness(CreekWitness delegate, ActionTracer actions,
                                Function<UUID, ActionTracer.@Nullable Actor> survivors) {
+        this(delegate, actions, survivors, null);
+    }
+
+    /**
+     * Creates the decorator so that hunts are measured too.
+     *
+     * @param delegate  the witness that still has to hear everything
+     * @param actions   records the actions
+     * @param survivors resolves a survivor's UUID to who and where they are, or {@code null} if gone
+     * @param hunts     measures the hunts, or {@code null} to leave them alone
+     * @since 2.15.0
+     */
+    public TracingCreekWitness(CreekWitness delegate, ActionTracer actions,
+                               Function<UUID, ActionTracer.@Nullable Actor> survivors, @Nullable HuntTracer hunts) {
+        this.hunts = hunts;
         this.delegate = delegate;
         this.actions = actions;
         this.survivors = survivors;
@@ -78,12 +95,23 @@ public final class TracingCreekWitness implements CreekWitness {
 
     @Override
     public void hunted(UUID survivor) {
+        if (this.hunts != null) {
+            this.hunts.started(survivor);
+        }
         this.delegate.hunted(survivor);
     }
 
     @Override
     public void huntEnded(UUID survivor) {
         this.delegate.huntEnded(survivor);
+    }
+
+    @Override
+    public void huntEnded(UUID survivor, HuntEnd how) {
+        if (this.hunts != null) {
+            this.hunts.ended(survivor, how);
+        }
+        this.delegate.huntEnded(survivor, how);
     }
 
     /**
