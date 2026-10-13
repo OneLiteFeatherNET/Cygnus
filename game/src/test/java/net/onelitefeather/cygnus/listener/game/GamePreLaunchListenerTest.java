@@ -3,9 +3,15 @@ package net.onelitefeather.cygnus.listener.game;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
+import net.minestom.server.event.Event;
+import net.minestom.server.event.EventNode;
+import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.network.packet.server.play.UpdateHealthPacket;
 import net.minestom.server.utils.Direction;
+import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
+import net.minestom.testing.TestConnection;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.config.EightPagesConfig;
 import net.onelitefeather.cygnus.common.config.GameConfig;
@@ -40,7 +46,7 @@ class GamePreLaunchListenerTest {
     void testPreLaunchSetsThePageAmountAndCollectsTheStartPages(@NotNull Env env) {
         PageProvider pageProvider = loadedProvider();
 
-        new GamePreLaunchListener(pageProvider, EightPagesConfig.DEFAULT).accept(new GamePreLaunchEvent());
+        launch(env, pageProvider, EightPagesConfig.DEFAULT);
 
         int pages = pageProvider.getMaxPageAmount();
         assertTrue(pages >= 8 && pages <= 10, "without players the round is an Eight Pages round, was " + pages);
@@ -57,10 +63,34 @@ class GamePreLaunchListenerTest {
         env.createPlayer(instance);
         env.createPlayer(instance);
 
-        new GamePreLaunchListener(loadedProvider(), new EightPagesConfig(3, 30, 20, 10)).accept(new GamePreLaunchEvent());
+        launch(env, loadedProvider(), new EightPagesConfig(3, 30, 20, 10));
 
         assertEquals(120.0D, first.vitality().points(), 1.0E-9);
         assertEquals(24.0D, first.getAttributeValue(Attribute.MAX_HEALTH), 1.0E-9);
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAHalfHeartBonusSendsEverySurvivorTheSameWholeHearts(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection firstConnection = env.createConnection();
+        TestConnection secondConnection = env.createConnection();
+        firstConnection.connect(instance, new Pos(0, 40, 0));
+        secondConnection.connect(instance, new Pos(0, 40, 0));
+        env.createPlayer(instance);
+        Collector<UpdateHealthPacket> first = firstConnection.trackIncoming(UpdateHealthPacket.class);
+        Collector<UpdateHealthPacket> second = secondConnection.trackIncoming(UpdateHealthPacket.class);
+
+        launch(env, loadedProvider(), EightPagesConfig.DEFAULT);
+
+        float[] health = new float[1];
+        first.assertSingle(packet -> {
+            health[0] = packet.health();
+            assertTrue(health[0] == 24.0F || health[0] == 26.0F,
+                    "the 25 bonus points are rounded to a whole heart, the client got " + health[0]);
+        });
+        second.assertSingle(packet -> assertEquals(health[0], packet.health(), "every survivor of the round gets the same bonus"));
 
         env.destroyInstance(instance, true);
     }
@@ -73,7 +103,7 @@ class GamePreLaunchListenerTest {
             env.createPlayer(instance);
         }
 
-        new GamePreLaunchListener(loadedProvider(), EightPagesConfig.DEFAULT).accept(new GamePreLaunchEvent());
+        launch(env, loadedProvider(), EightPagesConfig.DEFAULT);
 
         assertEquals(100.0D, first.vitality().points(), 1.0E-9);
         assertEquals(20.0F, first.getHealth());
@@ -89,7 +119,7 @@ class GamePreLaunchListenerTest {
         }
         PageProvider pageProvider = loadedProvider();
 
-        new GamePreLaunchListener(pageProvider, EightPagesConfig.DEFAULT).accept(new GamePreLaunchEvent());
+        launch(env, pageProvider, EightPagesConfig.DEFAULT);
 
         assertTrue(pageProvider.getMaxPageAmount() <= 10);
 
@@ -104,12 +134,28 @@ class GamePreLaunchListenerTest {
         }
         PageProvider pageProvider = loadedProvider();
 
-        new GamePreLaunchListener(pageProvider, EightPagesConfig.DEFAULT).accept(new GamePreLaunchEvent());
+        launch(env, pageProvider, EightPagesConfig.DEFAULT);
 
         int pages = pageProvider.getMaxPageAmount();
         assertTrue(pages >= 12 && pages <= 16, "was " + pages);
 
         env.destroyInstance(instance, true);
+    }
+
+    /**
+     * Registers the listener on the server's event handler, as the game does, and fires the event
+     * through it. The listener sits in its own node, which is removed again afterwards.
+     */
+    private static void launch(Env env, PageProvider pageProvider, EightPagesConfig eightPages) {
+        EventNode<Event> node = EventNode.all("pre-launch-test");
+        node.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(pageProvider, eightPages));
+        GlobalEventHandler handler = env.process().eventHandler();
+        handler.addChild(node);
+        try {
+            handler.call(new GamePreLaunchEvent());
+        } finally {
+            handler.removeChild(node);
+        }
     }
 
     private static PageProvider loadedProvider() {

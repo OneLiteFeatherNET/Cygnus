@@ -1,10 +1,18 @@
 package net.onelitefeather.cygnus.common.config;
 
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.random.RandomGenerator;
+
 /**
  * Settings for rounds with only a few survivors.
  * <p>
  * Such a round needs only eight pages, and its survivors get extra health. The keys carry the
  * {@code eightPages.} prefix, for example {@code eightPages.bonusOneSurvivor}.
+ * </p>
+ * <p>
+ * A bonus may end on a half heart. The round then gets it rounded to a whole heart, up or down by
+ * chance, see {@link #wholeHeartBonusFor(int)}. On average the survivors still get the configured
+ * bonus.
  * </p>
  *
  * @param maxSurvivors        a round with at most this many survivors at its start needs only eight pages
@@ -22,6 +30,9 @@ public record EightPagesConfig(int maxSurvivors, int bonusOneSurvivor, int bonus
      * always come out in half heart steps.
      */
     private static final int POINTS_PER_HEALTH = 5;
+
+    /** Health points per heart. */
+    private static final int POINTS_PER_HEART = POINTS_PER_HEALTH * 2;
 
     /** The default settings from the design. */
     public static final EightPagesConfig DEFAULT = new EightPagesConfig(3, 50, 25, 0);
@@ -70,6 +81,34 @@ public record EightPagesConfig(int maxSurvivors, int bonusOneSurvivor, int bonus
             case 3 -> this.bonusThreeSurvivors;
             default -> 0;
         };
+    }
+
+    /**
+     * Returns the extra health points for a round with the given number of survivors, as whole hearts.
+     * <p>
+     * A bonus that ends on a half heart is rounded to the heart above or below, each with the same
+     * chance. Called once per round, so every survivor of the round gets the same bonus.
+     * </p>
+     *
+     * @param survivors the survivors at the start of the round
+     * @return the bonus, a multiple of {@value #POINTS_PER_HEART}
+     */
+    public int wholeHeartBonusFor(int survivors) {
+        return wholeHeartBonusFor(survivors, ThreadLocalRandom.current());
+    }
+
+    /**
+     * Returns the bonus as whole hearts with the given random source, see {@link #wholeHeartBonusFor(int)}.
+     *
+     * @param survivors the survivors at the start of the round
+     * @param random    the source that decides between rounding up and down
+     * @return the bonus, a multiple of {@value #POINTS_PER_HEART}
+     */
+    int wholeHeartBonusFor(int survivors, RandomGenerator random) {
+        int bonus = bonusFor(survivors);
+        int halfHeart = bonus % POINTS_PER_HEART;
+        if (halfHeart == 0) return bonus;
+        return random.nextBoolean() ? bonus - halfHeart + POINTS_PER_HEART : bonus - halfHeart;
     }
 
     private static void bonus(String name, int value) {

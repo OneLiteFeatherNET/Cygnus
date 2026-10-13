@@ -4,6 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
+import java.util.Random;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,6 +37,25 @@ class EightPagesConfigTest {
     }
 
     @Test
+    @DisplayName("A bonus on a half heart is rounded to the heart above or below")
+    void halfHeartBonusIsRoundedByChance() {
+        EightPagesConfig config = EightPagesConfig.DEFAULT;
+
+        assertEquals(30, config.wholeHeartBonusFor(2, coin(true)));
+        assertEquals(20, config.wholeHeartBonusFor(2, coin(false)));
+    }
+
+    @Test
+    @DisplayName("A bonus of whole hearts stays as it is")
+    void wholeHeartBonusIsKept() {
+        EightPagesConfig config = new EightPagesConfig(3, 50, 20, 0);
+
+        assertEquals(50, config.wholeHeartBonusFor(1, coin(true)));
+        assertEquals(20, config.wholeHeartBonusFor(2, coin(true)));
+        assertEquals(0, config.wholeHeartBonusFor(4, coin(true)));
+    }
+
+    @Test
     @DisplayName("The boundary must not be negative and a bonus has to be a multiple of 5")
     void valuesAreChecked() {
         assertRejected("maxSurvivors", () -> new EightPagesConfig(-1, 50, 25, 0));
@@ -43,6 +64,15 @@ class EightPagesConfigTest {
         assertRejected("bonusTwoSurvivors", () -> new EightPagesConfig(3, 50, 3, 0));
         assertRejected("bonusThreeSurvivors", () -> new EightPagesConfig(3, 50, 25, 1));
         assertDoesNotThrow(() -> new EightPagesConfig(0, 0, 0, 0));
+    }
+
+    private static Random coin(boolean up) {
+        return new Random() {
+            @Override
+            public boolean nextBoolean() {
+                return up;
+            }
+        };
     }
 
     private static void assertRejected(String field, Executable creation) {
