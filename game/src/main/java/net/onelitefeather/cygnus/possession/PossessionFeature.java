@@ -36,8 +36,8 @@ import java.util.function.Supplier;
  * Lets the hidden slender look through the eyes of the main creek for a few seconds.
  * <p>
  * Meanwhile his body stands revealed and frozen. Only {@link Tags#HIDDEN} changes, the slender bar
- * keeps its state, so the body does no damage. Survivors around the creek glow for him, and the
- * creek is noticed from farther away. Sneaking, the maximum time or the creek going away ends it,
+ * keeps its state, so the body does no damage, but does not refill meanwhile. Survivors around
+ * the creek glow for him, and the creek is noticed from farther away. Sneaking, the maximum time or the creek going away ends it,
  * and then the full cooldown runs. A round starts with the item locked for a while.
  * </p>
  *
