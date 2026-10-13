@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.listener;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -73,9 +74,9 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         spectatorTeam.addPlayer(spectator);
         spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase));
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicBoolean finishFired = new AtomicBoolean(false);
@@ -103,9 +104,9 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(survivor);
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase));
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
@@ -136,9 +137,9 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(survivor2);
         survivor2.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase));
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<SlenderReviveEvent> reviveEvent = new AtomicReference<>();
@@ -169,9 +170,9 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(survivor);
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase));
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();

@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.glitch;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
@@ -180,7 +181,7 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         Player slender = env.createPlayer(instance);
         RecordingSink sink = new RecordingSink();
         AtomicBoolean invisible = new AtomicBoolean(false);
-        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get());
+        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get(), TickSections.NONE);
         env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
 
@@ -200,7 +201,7 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         Player slender = env.createPlayer(instance);
         RecordingSink sink = new RecordingSink();
         AtomicBoolean invisible = new AtomicBoolean(false);
-        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get());
+        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get(), TickSections.NONE);
         env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         EventDispatcher.call(new PageFoundEvent(slender, MIN_ROUND_PAGES, MIN_ROUND_PAGES));
@@ -223,7 +224,7 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player slender = env.createPlayer(instance);
         RecordingSink sink = new RecordingSink();
-        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> true);
+        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> true, TickSections.NONE);
         env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         EventDispatcher.call(new PageFoundEvent(slender, 1, MIN_ROUND_PAGES));
@@ -246,7 +247,7 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         Player slender = env.createPlayer(instance);
         RecordingSink sink = new RecordingSink();
         AtomicBoolean invisible = new AtomicBoolean(false);
-        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get());
+        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get(), TickSections.NONE);
         env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         EventDispatcher.call(new PageFoundEvent(slender, 1, PAGES));

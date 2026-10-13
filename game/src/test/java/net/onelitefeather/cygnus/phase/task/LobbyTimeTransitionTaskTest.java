@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.phase.task;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
@@ -31,7 +32,7 @@ class LobbyTimeTransitionTaskTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         instance.setTime(1000L); // Start at morning time
 
-        LobbyTimeTransitionTask task = new LobbyTimeTransitionTask(() -> instance, Helper.MIDNIGHT_TIME, 1);
+        LobbyTimeTransitionTask task = new LobbyTimeTransitionTask(() -> instance, Helper.MIDNIGHT_TIME, 1, TickSections.NONE);
 
         assertFalse(task.isRunning(), "Task should not be running before start.");
         task.start();
@@ -56,7 +57,7 @@ class LobbyTimeTransitionTaskTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         instance.setTime(6000L); // Noon
 
-        LobbyTimeTransitionTask task = new LobbyTimeTransitionTask(() -> instance, Helper.MIDNIGHT_TIME, 2);
+        LobbyTimeTransitionTask task = new LobbyTimeTransitionTask(() -> instance, Helper.MIDNIGHT_TIME, 2, TickSections.NONE);
         task.start();
 
         tickTicks(env, 10); // Advance halfway through
@@ -76,7 +77,7 @@ class LobbyTimeTransitionTaskTest extends CygnusPlayerTestBase {
 
         GameConfig.Round config = new GameConfig.Round(1, 10, 30, 600);
 
-        LobbyPhase lobbyPhase = new LobbyPhase(config, () -> instance);
+        LobbyPhase lobbyPhase = new LobbyPhase(config, () -> instance, TickSections.NONE);
         lobbyPhase.setCurrentTicks(10);
         lobbyPhase.onUpdate();
 

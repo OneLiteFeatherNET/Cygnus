@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.ambient;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.network.packet.server.play.SoundEffectPacket;
 import net.minestom.server.network.packet.server.play.SystemChatPacket;
@@ -141,7 +142,7 @@ class AmbientProviderIntegrationTest {
         java.util.List<Object[]> heard = new java.util.ArrayList<>();
 
         AmbientProvider provider = new AmbientProvider(team, fixedRandom(0),
-                (affected, duration, next) -> heard.add(new Object[]{affected, duration, next}));
+                (affected, duration, next) -> heard.add(new Object[]{affected, duration, next}), TickSections.NONE);
 
         for (int i = 0; i < 99; i++) {
             provider.tick();

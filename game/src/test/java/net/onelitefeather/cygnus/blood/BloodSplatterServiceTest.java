@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.blood;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
@@ -37,7 +38,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     void hitShowsTheFirstFrame(Env env) {
         RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
-        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
+        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT, TickSections.NONE);
 
         service.splatter(player, BloodDirection.FRONT);
 
@@ -49,7 +50,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     void directionPicksItsOwnFrames(Env env) {
         RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
-        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
+        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT, TickSections.NONE);
 
         service.splatter(player, BloodDirection.LEFT);
 
@@ -62,7 +63,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     void splatterFadesAway(Env env) {
         RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
-        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
+        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT, TickSections.NONE);
         service.splatter(player, BloodDirection.FRONT);
 
         service.tick();
@@ -80,7 +81,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     void secondHitRestarts(Env env) {
         RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
-        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
+        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT, TickSections.NONE);
         service.splatter(player, BloodDirection.FRONT);
         service.tick();
         service.tick();
@@ -95,7 +96,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     void damageEventTriggersTheSplatter(Env env) {
         RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
-        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
+        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT, TickSections.NONE);
         env.process().eventHandler().addChild(service.node());
 
         EventDispatcher.call(new PlayerDamagedEvent(player, new Pos(0, 40, 6), 1.0F));
@@ -109,7 +110,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     void clearingRemovesTheSplatter(Env env) {
         RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
-        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
+        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT, TickSections.NONE);
         service.splatter(player, BloodDirection.FRONT);
 
         service.clear(player);
@@ -122,7 +123,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
     void fadeTaskTracksActiveSplatters(Env env) {
         RecordingScreenOverlay overlay = new RecordingScreenOverlay();
         Player player = spawn(env);
-        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
+        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT, TickSections.NONE);
         assertFalse(service.fadeTask.isRunning(), "nothing is bleeding yet");
 
         service.splatter(player, BloodDirection.FRONT);
@@ -142,7 +143,7 @@ class BloodSplatterServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player first = env.createConnection().connect(instance, new Pos(0, 40, 0));
         Player second = env.createConnection().connect(instance, new Pos(4, 40, 0));
-        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT);
+        BloodSplatterService service = new BloodSplatterService(overlay, FIRST_VARIANT, TickSections.NONE);
 
         service.splatter(first, BloodDirection.FRONT);
         service.tick();

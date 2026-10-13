@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.listener.game;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
@@ -97,7 +98,7 @@ class GameStartListenerTest extends CygnusPlayerTestBase {
                 gameConfig.pageProximity(),
                 survivorTeam::getPlayers,
                 List::of
-        );
+        , TickSections.NONE);
 
         return new GameStartListener(teamService, ambientProvider, staminaService, pageProvider, pageProximityService);
     }

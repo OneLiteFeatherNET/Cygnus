@@ -52,7 +52,7 @@ class SpanHierarchyTest {
         this.joins = new JoinTracer(this.telemetry.tracing(), this.rounds, new AtomicLong()::get, Duration.ofMinutes(1));
         this.kicks = new KickTracer(this.telemetry.tracing(), this.rounds);
         this.slowTicks = new SlowTickTracer(this.telemetry.tracing(), this.rounds, new TelemetryConfig(50),
-                Clock.fixed(Instant.parse("2026-01-01T00:00:10Z"), ZoneOffset.UTC), TickSections.NONE);
+                Clock.fixed(Instant.parse("2026-01-01T00:00:10Z"), ZoneOffset.UTC), TickSections.NONE, TickMetrics.NONE);
         this.connection = new Object();
     }
 

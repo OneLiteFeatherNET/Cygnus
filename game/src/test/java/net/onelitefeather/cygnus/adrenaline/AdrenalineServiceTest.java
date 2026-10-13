@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.adrenaline;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
@@ -33,7 +34,7 @@ class AdrenalineServiceTest extends CygnusPlayerTestBase {
     private Set<Player> survivors = Set.of();
 
     private AdrenalineService service(Env env) {
-        AdrenalineService service = new AdrenalineService(AdrenalineConfig.DEFAULT, () -> this.survivors, this.clock::get);
+        AdrenalineService service = new AdrenalineService(AdrenalineConfig.DEFAULT, () -> this.survivors, this.clock::get, TickSections.NONE);
         env.process().eventHandler().addChild(service.node());
         return service;
     }

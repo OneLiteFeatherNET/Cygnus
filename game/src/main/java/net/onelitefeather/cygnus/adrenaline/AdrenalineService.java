@@ -69,17 +69,6 @@ public final class AdrenalineService implements GameFeature {
     private @Nullable Player visibleSlender;
 
     /**
-     * Creates the service.
-     *
-     * @param config    the radius, the bonus, the duration and the cooldown
-     * @param survivors supplies the survivors of the round
-     * @param clock     supplies the current time in milliseconds
-     */
-    public AdrenalineService(AdrenalineConfig config, Supplier<Set<Player>> survivors, LongSupplier clock) {
-        this(config, survivors, clock, TickSections.NONE);
-    }
-
-    /**
      * Creates the service with its tick measured for the slow tick report.
      *
      * @param config    the radius, the bonus, the duration and the cooldown

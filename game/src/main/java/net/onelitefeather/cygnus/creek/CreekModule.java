@@ -46,23 +46,6 @@ public final class CreekModule implements GameFeature {
     private final CreekService service;
 
     /**
-     * Builds the creek.
-     *
-     * @param config           the creek settings
-     * @param teamService      the teams of the round
-     * @param mapProvider      the maps and the active instance
-     * @param dread            rates how scared each survivor is
-     * @param witness          hears about catches and sightings
-     * @param jumpScareManager plays the jump scare of a catch
-     * @param staminaService   the stamina bars a catch drains
-     */
-    public CreekModule(CreekConfig config, TeamService teamService,
-                       GameMapProvider mapProvider, DreadSource dread, CreekWitness witness,
-                       JumpScareManager jumpScareManager, StaminaService staminaService) {
-        this(config, teamService, mapProvider, dread, witness, jumpScareManager, staminaService, TickSections.NONE);
-    }
-
-    /**
      * Builds the creek, with its step measured for the slow tick report.
      *
      * @param config           the creek settings

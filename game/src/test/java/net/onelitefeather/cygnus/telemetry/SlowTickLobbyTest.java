@@ -40,7 +40,7 @@ class SlowTickLobbyTest {
         this.sections = TickSections.measuring(this.nanos::get);
         this.rounds = new RoundTracer(this.telemetry.tracing(), () -> "round-1");
         this.tracer = new SlowTickTracer(this.telemetry.tracing(), this.rounds, new TelemetryConfig(50),
-                Clock.fixed(Instant.parse("2026-01-01T00:00:10Z"), ZoneOffset.UTC), this.sections);
+                Clock.fixed(Instant.parse("2026-01-01T00:00:10Z"), ZoneOffset.UTC), this.sections, TickMetrics.NONE);
     }
 
     @AfterEach

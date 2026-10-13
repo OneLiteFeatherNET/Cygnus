@@ -69,18 +69,7 @@ public final class AmbientProvider {
      * @param team which is involved
      */
     public AmbientProvider(Team team) {
-        this(team, ThreadLocalRandom.current(), BlackoutObserver.NONE);
-    }
-
-    /**
-     * Creates the provider with an observer for its blackouts.
-     *
-     * @param team     the team the lights go out for
-     * @param observer hears about every blackout
-     * @since 2.15.0
-     */
-    public AmbientProvider(Team team, BlackoutObserver observer) {
-        this(team, ThreadLocalRandom.current(), observer);
+        this(team, ThreadLocalRandom.current(), BlackoutObserver.NONE, TickSections.NONE);
     }
 
     /**
@@ -103,11 +92,7 @@ public final class AmbientProvider {
      * @param random the source used to roll the gap between blackout events
      */
     AmbientProvider(Team team, RandomGenerator random) {
-        this(team, random, BlackoutObserver.NONE);
-    }
-
-    AmbientProvider(Team team, RandomGenerator random, BlackoutObserver observer) {
-        this(team, random, observer, TickSections.NONE);
+        this(team, random, BlackoutObserver.NONE, TickSections.NONE);
     }
 
     AmbientProvider(Team team, RandomGenerator random, BlackoutObserver observer, TickSections sections) {

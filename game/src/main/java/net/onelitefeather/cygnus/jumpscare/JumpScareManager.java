@@ -55,13 +55,6 @@ public final class JumpScareManager {
     private final TickSections sections;
 
     /**
-     * Creates a new instance of the service.
-     */
-    public JumpScareManager() {
-        this(TickSections.NONE);
-    }
-
-    /**
      * Creates a new instance of the service with its delayed despawn measured for the slow tick report.
      *
      * @param sections measures how long the despawn of a jump scare takes

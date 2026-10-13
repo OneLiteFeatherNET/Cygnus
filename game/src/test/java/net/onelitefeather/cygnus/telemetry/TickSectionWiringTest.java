@@ -44,8 +44,8 @@ class TickSectionWiringTest {
         this.telemetry = new TestTelemetry();
         AtomicLong clock = new AtomicLong();
         this.sections = TickSections.measuring(() -> clock.addAndGet(MILLI));
-        this.tracer = new SlowTickTracer(this.telemetry.tracing(), new TelemetryConfig(50),
-                Clock.fixed(Instant.parse("2026-01-01T00:00:10Z"), ZoneOffset.UTC), this.sections);
+        this.tracer = new SlowTickTracer(this.telemetry.tracing(), null, new TelemetryConfig(50),
+                Clock.fixed(Instant.parse("2026-01-01T00:00:10Z"), ZoneOffset.UTC), this.sections, TickMetrics.NONE);
     }
 
     @AfterEach

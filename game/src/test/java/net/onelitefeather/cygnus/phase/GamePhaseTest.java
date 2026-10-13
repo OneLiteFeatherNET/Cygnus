@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.phase;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
@@ -21,7 +22,7 @@ class GamePhaseTest extends CygnusPlayerTestBase {
     @DisplayName("The clean up callback runs and the series still advances")
     void runsCleanUp(@NotNull Env env) {
         AtomicBoolean cleanedUp = new AtomicBoolean();
-        GamePhase phase = new GamePhase(new GameViewImpl(), 10, new JumpScareManager(), _ -> 0.0D);
+        GamePhase phase = new GamePhase(new GameViewImpl(), 10, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
         phase.addFinishedCallback(() -> cleanedUp.set(true));
         Phase nextPhase = new Phase("NextPhase") {
             @Override

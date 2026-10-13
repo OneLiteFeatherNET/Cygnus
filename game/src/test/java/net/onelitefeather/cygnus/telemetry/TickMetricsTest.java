@@ -244,7 +244,7 @@ class TickMetricsTest {
     @DisplayName("Metrics that record nothing leave the tracer working")
     void noneRecordsNothing() {
         SlowTickTracer plain = new SlowTickTracer(this.telemetry.tracing(), this.rounds, new TelemetryConfig((int) THRESHOLD_MS),
-                Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), this.sections);
+                Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), this.sections, TickMetrics.NONE);
 
         plain.onTick(80.0D, 0.0D);
 

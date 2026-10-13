@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.creek.consequence;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Metadata;
 import net.minestom.server.entity.Player;
@@ -29,7 +30,7 @@ class GlowRevealIntegrationTest extends CygnusPlayerTestBase {
         TestConnection slenderConnection = env.createConnection();
         Player slender = slenderConnection.connect(instance, new Pos(5, 40, 0));
         Collector<EntityMetaDataPacket> packets = slenderConnection.trackIncoming(EntityMetaDataPacket.class);
-        GlowReveal reveal = new GlowReveal(6);
+        GlowReveal reveal = new GlowReveal(6, TickSections.NONE);
 
         reveal.reveal(survivor, slender);
 
@@ -44,7 +45,7 @@ class GlowRevealIntegrationTest extends CygnusPlayerTestBase {
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
         TestConnection slenderConnection = env.createConnection();
         Player slender = slenderConnection.connect(instance, new Pos(5, 40, 0));
-        GlowReveal reveal = new GlowReveal(6);
+        GlowReveal reveal = new GlowReveal(6, TickSections.NONE);
         reveal.reveal(survivor, slender);
         Collector<EntityMetaDataPacket> packets = slenderConnection.trackIncoming(EntityMetaDataPacket.class);
 
@@ -68,7 +69,7 @@ class GlowRevealIntegrationTest extends CygnusPlayerTestBase {
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
         TestConnection slenderConnection = env.createConnection();
         Player slender = slenderConnection.connect(instance, new Pos(5, 40, 0));
-        GlowReveal reveal = new GlowReveal(6);
+        GlowReveal reveal = new GlowReveal(6, TickSections.NONE);
         reveal.reveal(survivor, slender);
         Collector<EntityMetaDataPacket> packets = slenderConnection.trackIncoming(EntityMetaDataPacket.class);
 
@@ -88,7 +89,7 @@ class GlowRevealIntegrationTest extends CygnusPlayerTestBase {
         Player survivor = survivorConnection.connect(instance, new Pos(0, 40, 0));
         Player slender = env.createConnection().connect(instance, new Pos(5, 40, 0));
         Collector<SystemChatPacket> messages = survivorConnection.trackIncoming(SystemChatPacket.class);
-        GlowReveal reveal = new GlowReveal(6);
+        GlowReveal reveal = new GlowReveal(6, TickSections.NONE);
 
         reveal.reveal(survivor, slender);
 

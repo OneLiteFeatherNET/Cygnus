@@ -42,8 +42,8 @@ class SlowTickTracerTest {
         this.telemetry = new TestTelemetry();
         this.nanos = new AtomicLong();
         this.sections = TickSections.measuring(this.nanos::get);
-        this.tracer = new SlowTickTracer(this.telemetry.tracing(), new TelemetryConfig((int) THRESHOLD_MS),
-                Clock.fixed(NOW, ZoneOffset.UTC), this.sections);
+        this.tracer = new SlowTickTracer(this.telemetry.tracing(), null, new TelemetryConfig((int) THRESHOLD_MS),
+                Clock.fixed(NOW, ZoneOffset.UTC), this.sections, TickMetrics.NONE);
     }
 
     @AfterEach

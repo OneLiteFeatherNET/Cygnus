@@ -49,15 +49,6 @@ public final class GlowReveal implements SlenderReveal {
     private final TickSections sections;
 
     /**
-     * Sets up the reveal.
-     *
-     * @param seconds how long the glow lasts
-     */
-    public GlowReveal(int seconds) {
-        this(seconds, TickSections.NONE);
-    }
-
-    /**
      * Sets up the reveal with its resends measured for the slow tick report.
      *
      * @param seconds  how long the glow lasts
