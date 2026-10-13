@@ -130,6 +130,79 @@ telemetry.slowTickThresholdMillis=50
 
 A value below 1 is rejected and the service refuses to start.
 
+## Tick metrics
+
+Spans exist only for slow ticks, so a trace cannot say how long a lobby tick usually takes. Metrics are
+recorded for every tick (`ServerTickMonitorEvent`) and every measured section, per phase. The javaagent exports
+them over OTLP together with its own metrics; without the agent they are no-ops.
+
+| Instrument | Kind | Unit | Attributes |
+| --- | --- | --- | --- |
+| `cygnus.tick.duration` | histogram | `ms` | `cygnus.phase.name` |
+| `cygnus.tick.section.duration` | histogram | `ms` | `cygnus.tick.section.name`, `cygnus.phase.name` |
+| `cygnus.tick.slow` | counter | `{tick}` | `cygnus.phase.name` |
+
+- `cygnus.phase.name` is `lobby`, `waiting`, `gamephase`, `restart`, or `none` (no round or between phases).
+- `cygnus.tick.section.name` is one of the names in [Slow ticks](#slow-ticks). A section is recorded for a tick
+  only if it ran in it, with the total of its runs.
+- `cygnus.tick.slow` counts ticks at or above `telemetry.slowTickThresholdMillis`, the same rule as the span.
+- Unit is milliseconds, not the seconds the semantic conventions prefer: Minestom's budget, the threshold and the
+  span attributes are in milliseconds, and a bucket at `50` reads as 50.
+- Explicit buckets (ms): 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200. The SDK
+  default starts at 5 and would put the whole lobby in one bucket.
+- The hot path allocates nothing of its own: attributes per phase and per section/phase pair are built once and
+  reused, values are recorded as primitives.
+
+### In Mimir / Grafana
+
+OTLP to Prometheus translation appends the unit and, for counters, `_total` (checked against the existing
+`jvm_gc_duration_seconds_*` and `jvm_cpu_time_seconds_total` in Mimir). Dots become underscores:
+
+| OTel | Prometheus |
+| --- | --- |
+| `cygnus.tick.duration` | `cygnus_tick_duration_milliseconds_bucket` / `_sum` / `_count` |
+| `cygnus.tick.section.duration` | `cygnus_tick_section_duration_milliseconds_bucket` / `_sum` / `_count` |
+| `cygnus.tick.slow` | `cygnus_tick_slow_total` |
+| `cygnus.phase.name` | label `cygnus_phase_name` |
+| `cygnus.tick.section.name` | label `cygnus_tick_section_name` |
+
+For the Kubernetes-FLUX dashboard `cygnus-traces`, the per-phase and sub-tick panels should query these metrics
+rather than derive them from slow tick spans, which only cover the tail. For example the p99 tick per phase:
+
+```promql
+histogram_quantile(0.99, sum by (le, cygnus_phase_name) (rate(cygnus_tick_duration_milliseconds_bucket[5m])))
+```
+
+and the mean cost of a section: `sum by (cygnus_tick_section_name) (rate(..._section_duration_milliseconds_sum[5m]))
+/ sum by (cygnus_tick_section_name) (rate(..._section_duration_milliseconds_count[5m]))`.
+
+## Hunts
+
+A hunt is the chase of one creek after one survivor. It gets a span of its own, `cygnus.action.creek.hunt`, and a
+metric, so "how long are survivors hunted, and how does it end" can be answered per map.
+
+| Outcome | Meaning |
+| --- | --- |
+| `caught` | The creek caught the survivor (the catch is reported just before the hunt ends). |
+| `timeout` | The hunt ran out of its maximum time. |
+| `gone` | The survivor died, left or turned before it ended. |
+| `escaped` | The creek was sent away for good while it hunted (only one survivor left). |
+| `round_end` | The creek was removed, or the round ended with the hunt still going. Hunts still open when a round ends are closed as `round_end` before the phase span ends. |
+
+| Instrument | Kind | Unit | Attributes |
+| --- | --- | --- | --- |
+| `cygnus.creek.hunt.duration` | histogram | `ms` | `cygnus.creek.hunt.outcome`, `cygnus.map` |
+| `cygnus.creek.hunts` | counter | `{hunt}` | `cygnus.creek.hunt.outcome`, `cygnus.map` |
+
+Buckets (ms): 500, 1000, 2500, 5000, 7500, 10000, 15000, 20000, 30000, 45000, 60000, 90000, 120000. There is no
+player attribute on the metrics (one series per player); the UUID is on the span. In Prometheus:
+`cygnus_creek_hunt_duration_milliseconds_bucket` and `cygnus_creek_hunts_total`, labels `cygnus_creek_hunt_outcome`
+and `cygnus_map`. A hunt that starts while no round runs has no span but is still counted.
+
+The creek reports a hunt by the survivor only, not by itself. Two creeks hunting the same survivor are two spans,
+and each end closes the oldest open one of that survivor: the count is right, which span belongs to which creek
+may not be.
+
 ## Shutdown
 
 `ServiceShutdown` ends the span before it calls `Runtime.exit`. The agent flushes its exporter from a JVM
@@ -162,6 +235,7 @@ player at that moment as `cygnus.position.x/y/z` (rounded to 0.1), plus `cygnus.
 | `cygnus.action.blackout.player` | child of a blackout, one per player hit; the player attributes only |
 | `cygnus.action.sanity.threshold` | `cygnus.sanity.band.from`, `cygnus.sanity.band`, `cygnus.sanity.fear` (0 calm, 1 maximum), `cygnus.sanity.value` (1 - fear, as `/creek` shows it), `cygnus.sanity.source` (`page`, `sighting`, `caught`, `selected`, `death`, `stalk`) |
 | `cygnus.action.creek.sighted`, `.selected`, `.stalk` (first step of a stalk only), `.caught` | the survivor's attributes only |
+| `cygnus.action.creek.hunt` | A hunt, from the creek taking the survivor as its target until it stops. Child of the phase it started in. The survivor's attributes at the start, `cygnus.map`, `cygnus.creek.hunt.outcome` (`caught`, `timeout`, `gone`, `escaped`, `round_end`) and `cygnus.creek.hunt.duration_ms`. |
 
 `cygnus.page.out_ms` counts from the moment the page was placed or moved on. A page that has to wait on its
 own spot (no other spot is free) is counted from the moment it was hidden.

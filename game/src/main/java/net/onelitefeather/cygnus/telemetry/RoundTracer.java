@@ -36,10 +36,13 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.2.0
  * @since 2.15.0
  */
 public final class RoundTracer {
+
+    /** The phase label while no phase runs. */
+    public static final String PHASE_NONE = "none";
 
     private final CygnusTracing tracing;
     private final Supplier<String> roundIds;
@@ -49,6 +52,9 @@ public final class RoundTracer {
     // between phases, null with no round. Written only under the lock, on every change.
     private volatile @Nullable Context current;
     private volatile @Nullable SpanContext latestRound;
+    // The name of the running phase for metric labels; PHASE_NONE outside of one. Precomputed so the
+    // tick thread reads a reference instead of lower-casing a name sixty times a second.
+    private volatile String phaseLabel = PHASE_NONE;
     private @Nullable SpanContext startup;
     // The span API cannot be read back, so whether gameFinished already set the reason is kept here.
     private boolean endReasonSet;
@@ -58,6 +64,7 @@ public final class RoundTracer {
     private final Set<String> linked = new HashSet<>();
     private int droppedLinks;
     private final List<Runnable> boundaryListeners = new CopyOnWriteArrayList<>();
+    private final List<Runnable> endingListeners = new CopyOnWriteArrayList<>();
 
     /**
      * Creates the tracer.
@@ -123,6 +130,16 @@ public final class RoundTracer {
     }
 
     /**
+     * Returns the lower-cased name of the running phase, or {@value #PHASE_NONE} when none runs.
+     * A constant reference per phase, so reading it allocates nothing; safe from any thread.
+     *
+     * @return the label
+     */
+    public String phaseLabel() {
+        return this.phaseLabel;
+    }
+
+    /**
      * Returns the context of the running round, or of the last one when none runs; for a span that
      * only links to it.
      *
@@ -142,9 +159,11 @@ public final class RoundTracer {
         if (this.round == null) {
             return;
         }
-        TraceStep started = this.round.child(CygnusAttributes.SPAN_PHASE_PREFIX + phaseName.toLowerCase(Locale.ROOT))
+        String label = phaseName.toLowerCase(Locale.ROOT);
+        TraceStep started = this.round.child(CygnusAttributes.SPAN_PHASE_PREFIX + label)
                 .set(CygnusAttributes.PHASE_NAME, phaseName);
         this.phase = started;
+        this.phaseLabel = label;
         this.current = Context.root().with(started.span());
     }
 
@@ -172,6 +191,12 @@ public final class RoundTracer {
      * Ends the round span after its last phase.
      */
     synchronized void roundEnded() {
+        // Before the spans close, so whatever is still open ends below a parent that is still running.
+        if (this.round != null) {
+            for (Runnable listener : this.endingListeners) {
+                listener.run();
+            }
+        }
         endPhase();
         TraceStep current = this.round;
         this.round = null;
@@ -192,6 +217,15 @@ public final class RoundTracer {
      */
     void onBoundary(Runnable listener) {
         this.boundaryListeners.add(listener);
+    }
+
+    /**
+     * Registers something that has to finish what it holds open before the round and its phase end.
+     *
+     * @param listener called when a running round ends, before its spans close; must be quick
+     */
+    void onRoundEnding(Runnable listener) {
+        this.endingListeners.add(listener);
     }
 
     private void notifyBoundary() {
@@ -355,6 +389,7 @@ public final class RoundTracer {
     private void endPhase() {
         TraceStep ended = this.phase;
         this.phase = null;
+        this.phaseLabel = PHASE_NONE;
         TraceStep running = this.round;
         // Back to the round first, so nothing created from now on attaches to the closed phase.
         this.current = running == null ? null : Context.root().with(running.span());
