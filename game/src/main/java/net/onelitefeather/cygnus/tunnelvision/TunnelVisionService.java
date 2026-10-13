@@ -60,18 +60,6 @@ public final class TunnelVisionService implements GameFeature {
     private final RepeatingTask task;
 
     /**
-     * Creates a new service.
-     *
-     * @param renderer  the renderer that puts a stage on the screen
-     * @param stamina   supplies a survivor's remaining stamina as a share of a full bar
-     * @param survivors supplies the survivors of the starting round
-     */
-    public TunnelVisionService(TunnelVisionRenderer renderer, ToDoubleFunction<Player> stamina,
-                               Supplier<Set<Player>> survivors) {
-        this(renderer, stamina, survivors, TickSections.NONE);
-    }
-
-    /**
      * Creates a new service whose update is measured for the slow tick report.
      *
      * @param renderer  the renderer that puts a stage on the screen

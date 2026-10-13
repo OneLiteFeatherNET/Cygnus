@@ -69,21 +69,6 @@ public final class PageProximityService {
     private long currentTick;
 
     /**
-     * Creates a new instance of the {@link PageProximityService}.
-     *
-     * @param config       the configuration holding range and sound
-     * @param listeners    supplies the players the hint is played to
-     * @param pageSupplier supplies the proximity page targets that can currently be collected
-     */
-    public PageProximityService(
-            GameConfig.PageProximity config,
-            Supplier<Collection<Player>> listeners,
-            Supplier<? extends Collection<? extends PageProximityTarget>> pageSupplier
-    ) {
-        this(config, listeners, pageSupplier, TickSections.NONE);
-    }
-
-    /**
      * Creates the service with its tick measured for the slow tick report.
      *
      * @param config       the configuration holding range and sound

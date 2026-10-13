@@ -63,16 +63,6 @@ public final class BloodSplatterService implements GameFeature {
     final RepeatingTask fadeTask;
 
     /**
-     * Creates a new service.
-     *
-     * @param overlay       the overlay that owns the player's screen
-     * @param variantPicker picks a variant below the given bound
-     */
-    public BloodSplatterService(ScreenOverlay overlay, IntUnaryOperator variantPicker) {
-        this(overlay, variantPicker, TickSections.NONE);
-    }
-
-    /**
      * Creates a new service with its fade measured for the slow tick report.
      *
      * @param overlay       the overlay that owns the player's screen

@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.phase;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.SoundEffectPacket;
 import net.minestom.server.sound.SoundEvent;
@@ -29,7 +30,7 @@ class LobbyPhaseCountdownSoundIntegrationTest extends CygnusPlayerTestBase {
 
         GameConfig.Round config = new GameConfig.Round(1, 10, 30, 600);
 
-        LobbyPhase lobbyPhase = new LobbyPhase(config, () -> instance);
+        LobbyPhase lobbyPhase = new LobbyPhase(config, () -> instance, TickSections.NONE);
 
         TestConnection connection = env.createConnection();
         connection.connect(instance);
@@ -49,7 +50,7 @@ class LobbyPhaseCountdownSoundIntegrationTest extends CygnusPlayerTestBase {
 
         GameConfig.Round config = new GameConfig.Round(1, 10, 30, 600);
 
-        LobbyPhase lobbyPhase = new LobbyPhase(config, () -> instance);
+        LobbyPhase lobbyPhase = new LobbyPhase(config, () -> instance, TickSections.NONE);
 
         TestConnection connection = env.createConnection();
         connection.connect(instance);

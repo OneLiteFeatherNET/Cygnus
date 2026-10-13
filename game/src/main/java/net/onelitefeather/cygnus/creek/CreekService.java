@@ -85,30 +85,6 @@ public final class CreekService implements PossessionTarget {
     private volatile @Nullable CreekVariants variants;
 
     /**
-     * Sets up the service.
-     *
-     * @param config      the settings
-     * @param survivors   supplies the survivors of the round
-     * @param instance    supplies the instance of the round, or {@code null} while there is none
-     * @param routes      supplies the creek routes of the current map; without any, the creek stays away
-     * @param bodies      puts a creek body into the world
-     * @param dread       rates how scared each survivor is
-     * @param witness     hears about catches and sightings
-     * @param consequence what happens on a catch
-     * @param clock       the round's clock
-     * @param random      the random source
-     * @param debug       the debug line for playtests
-     */
-    public CreekService(CreekConfig config, Supplier<Set<Player>> survivors,
-                          Supplier<? extends @Nullable Instance> instance, Supplier<List<CreekRoute>> routes,
-                          BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread, CreekWitness witness,
-                          CatchConsequence consequence, RoundClock clock, RandomGenerator random,
-                          CreekDebug debug) {
-        this(config, survivors, instance, routes, bodies, dread, witness, consequence, clock, random, debug,
-                TickSections.NONE);
-    }
-
-    /**
      * Sets up the service, with its step measured for the slow tick report.
      *
      * @param config      the settings

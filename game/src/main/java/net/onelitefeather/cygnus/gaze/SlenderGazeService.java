@@ -55,20 +55,6 @@ public final class SlenderGazeService implements GameFeature {
     private final RepeatingTask task;
 
     /**
-     * Creates a new service.
-     *
-     * @param sink      where a survivor's level is signalled to, {@link GazeSink#NONE} to work the
-     *                  levels out without sending them anywhere
-     * @param gaze      the thresholds the levels are worked out from
-     * @param slender   supplies the current slender, or {@code null} while there is none
-     * @param survivors supplies the survivors of the starting round
-     */
-    public SlenderGazeService(GazeSink sink, SlenderGaze gaze, Supplier<@Nullable Player> slender,
-                              Supplier<Set<Player>> survivors) {
-        this(sink, gaze, slender, survivors, TickSections.NONE);
-    }
-
-    /**
      * Creates a new service whose update is measured for the slow tick report.
      *
      * @param sink      where a survivor's level is signalled to, {@link GazeSink#NONE} to work the

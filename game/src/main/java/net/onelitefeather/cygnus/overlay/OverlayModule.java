@@ -42,18 +42,6 @@ public final class OverlayModule implements GameFeature {
     private final TunnelVisionService tunnelVisionService;
 
     /**
-     * Builds the effects.
-     *
-     * @param glitch         the thresholds of the slender gaze
-     * @param pageGlitch     how the slender's own screen tears as pages are found
-     * @param teamService    the teams of the round
-     * @param staminaService the stamina the tunnel vision follows
-     */
-    public OverlayModule(GameConfig.Glitch glitch, GameConfig.PageGlitch pageGlitch, TeamService teamService, StaminaService staminaService) {
-        this(glitch, pageGlitch, teamService, staminaService, TickSections.NONE);
-    }
-
-    /**
      * Builds the effects, with the ones that update on a timer measured for the slow tick report.
      *
      * @param glitch         the thresholds of the slender gaze

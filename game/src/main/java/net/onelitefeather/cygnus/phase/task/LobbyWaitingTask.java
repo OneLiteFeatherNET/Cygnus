@@ -37,15 +37,6 @@ public final class LobbyWaitingTask {
     private boolean running = false;
 
     /**
-     * Creates a new instance of the waiting display and starts the tick-aligned loop.
-     *
-     * @param minPlayers the minimum number of players required to start the game
-     */
-    public LobbyWaitingTask(int minPlayers) {
-        this(minPlayers, TickSections.NONE);
-    }
-
-    /**
      * Creates a new instance of the waiting display with its ticks measured for the slow tick report.
      *
      * @param minPlayers the minimum number of players required to start the game

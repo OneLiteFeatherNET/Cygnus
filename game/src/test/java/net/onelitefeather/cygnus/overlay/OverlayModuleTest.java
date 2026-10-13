@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.overlay;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.testing.extension.MicrotusExtension;
@@ -29,7 +30,7 @@ class OverlayModuleTest {
     }
 
     private static OverlayModule module() {
-        return new OverlayModule(GameConfig.Glitch.DEFAULT, GameConfig.PageGlitch.DEFAULT, TeamService.of(), new StaminaService());
+        return new OverlayModule(GameConfig.Glitch.DEFAULT, GameConfig.PageGlitch.DEFAULT, TeamService.of(), new StaminaService(), TickSections.NONE);
     }
 
     @Test

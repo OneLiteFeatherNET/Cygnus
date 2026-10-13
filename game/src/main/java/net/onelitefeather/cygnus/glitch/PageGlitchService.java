@@ -96,22 +96,7 @@ public final class PageGlitchService implements GameFeature {
      *                invisible
      */
     PageGlitchService(GameConfig.PageGlitch config, GazeSink sink, Supplier<@Nullable Player> slender) {
-        this(config, sink, slender, _ -> true);
-    }
-
-    /**
-     * Creates a new instance of the {@link PageGlitchService}.
-     *
-     * @param config    the configuration holding the switch, the pulse and the cap
-     * @param sink      where the level is signalled to
-     * @param slender   supplies the current slender, or {@code null} while there is none
-     * @param invisible tells whether the given slender is invisible right now; the glitch is only
-     *                  shown while it is
-     * @since 2.14.1
-     */
-    public PageGlitchService(GameConfig.PageGlitch config, GazeSink sink, Supplier<@Nullable Player> slender,
-                             Predicate<Player> invisible) {
-        this(config, sink, slender, invisible, TickSections.NONE);
+        this(config, sink, slender, _ -> true, TickSections.NONE);
     }
 
     /**

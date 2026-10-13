@@ -51,17 +51,7 @@ public final class LobbyPhase extends TimedPhase {
      * @param round the configured player limits and timings
      */
     public LobbyPhase(GameConfig.Round round) {
-        this(round, () -> null);
-    }
-
-    /**
-     * Constructs a new LobbyPhase with an instance supplier for time transitions.
-     *
-     * @param round            the configured player limits and timings
-     * @param instanceSupplier supplier for the active instance
-     */
-    public LobbyPhase(GameConfig.Round round, Supplier<Instance> instanceSupplier) {
-        this(round, instanceSupplier, TickSections.NONE);
+        this(round, () -> null, TickSections.NONE);
     }
 
     /**

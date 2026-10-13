@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.page;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
@@ -195,7 +196,7 @@ class PageProximityServiceTest {
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.75);
-        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target));
+        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target), TickSections.NONE);
         service.tick();
 
         sounds.assertEmpty();
@@ -210,7 +211,7 @@ class PageProximityServiceTest {
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.35);
-        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target));
+        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target), TickSections.NONE);
         service.tick();
 
         sounds.assertSingle(packet -> {
@@ -228,7 +229,7 @@ class PageProximityServiceTest {
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.15);
-        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target));
+        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target), TickSections.NONE);
         service.tick();
 
         sounds.assertSingle(packet -> {
@@ -247,7 +248,7 @@ class PageProximityServiceTest {
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.35);
-        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target));
+        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target), TickSections.NONE);
 
         service.tick(); // First tick: triggers chime
         service.tick(); // Immediate next tick (5 ticks later): throttled by 60-tick warning interval!
@@ -261,6 +262,6 @@ class PageProximityServiceTest {
         List<PageProximityTarget> targets = Arrays.stream(pages)
                 .map(pos -> PageProximityTarget.of(UUID.nameUUIDFromBytes(pos.toString().getBytes()), pos, 0.35))
                 .toList();
-        return new PageProximityService(config, () -> listeners, () -> targets);
+        return new PageProximityService(config, () -> listeners, () -> targets, TickSections.NONE);
     }
 }

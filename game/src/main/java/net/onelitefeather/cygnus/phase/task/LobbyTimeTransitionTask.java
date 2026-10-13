@@ -37,18 +37,7 @@ public final class LobbyTimeTransitionTask {
      * @param durationSeconds duration of the transition in seconds
      */
     public LobbyTimeTransitionTask(Supplier<Instance> instanceSupplier, int durationSeconds) {
-        this(instanceSupplier, Helper.MIDNIGHT_TIME, durationSeconds);
-    }
-
-    /**
-     * Creates a new instance of {@link LobbyTimeTransitionTask}.
-     *
-     * @param instanceSupplier supplier for the target instance
-     * @param targetTime      the target world time in ticks
-     * @param durationSeconds duration of the transition in seconds
-     */
-    public LobbyTimeTransitionTask(Supplier<Instance> instanceSupplier, long targetTime, int durationSeconds) {
-        this(instanceSupplier, targetTime, durationSeconds, TickSections.NONE);
+        this(instanceSupplier, Helper.MIDNIGHT_TIME, durationSeconds, TickSections.NONE);
     }
 
     /**

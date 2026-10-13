@@ -60,38 +60,11 @@ public final class SlowTickTracer {
      * Creates the tracer.
      *
      * @param tracing  where the spans go
+     * @param rounds   the round whose current phase is the parent of a slow tick, or {@code null} for roots only
      * @param config   holds the threshold
      * @param clock    places a slow tick in time
      * @param sections the measured services, {@link TickSections#NONE} for none
-     */
-    public SlowTickTracer(CygnusTracing tracing, TelemetryConfig config, Clock clock, TickSections sections) {
-        this(tracing, null, config, clock, sections);
-    }
-
-    /**
-     * Creates the tracer so that a slow tick hangs below the phase it happened in.
-     *
-     * @param tracing  where the spans go
-     * @param rounds   the round whose current phase is the parent, or {@code null} for roots only
-     * @param config   the telemetry config
-     * @param clock    the clock the end of the tick is read from
-     * @param sections the measured services
-     */
-    public SlowTickTracer(CygnusTracing tracing, @Nullable RoundTracer rounds, TelemetryConfig config,
-                          Clock clock, TickSections sections) {
-        this(tracing, rounds, config, clock, sections, TickMetrics.NONE);
-    }
-
-    /**
-     * Creates the tracer so that every tick is also measured.
-     *
-     * @param tracing  where the spans go
-     * @param rounds   the round whose current phase is the parent, or {@code null} for roots only
-     * @param config   the telemetry config
-     * @param clock    the clock the end of the tick is read from
-     * @param sections the measured services
-     * @param metrics  where the duration of every tick and section goes
-     * @since 2.15.0
+     * @param metrics  where the duration of every tick and section goes, {@link TickMetrics#NONE} for nowhere
      */
     public SlowTickTracer(CygnusTracing tracing, @Nullable RoundTracer rounds, TelemetryConfig config,
                           Clock clock, TickSections sections, TickMetrics metrics) {

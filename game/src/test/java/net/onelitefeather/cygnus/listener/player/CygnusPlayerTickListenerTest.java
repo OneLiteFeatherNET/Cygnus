@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.listener.player;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
@@ -64,7 +65,7 @@ class CygnusPlayerTickListenerTest extends CygnusPlayerTestBase {
         Player victim = victimConnection.connect(instance, VICTIM_POS);
         victim.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        JumpScareManager manager = new JumpScareManager();
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
         DeadPlayerMannequin corpse = registerCorpse(env, manager, instance, corpseOwner);
 
         Collector<SpawnEntityPacket> spawns = victimConnection.trackIncoming(SpawnEntityPacket.class);
@@ -86,7 +87,7 @@ class CygnusPlayerTickListenerTest extends CygnusPlayerTestBase {
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         // Terrified: a sound within at most 120 ticks. A calm survivor would wait at least 240.
-        CygnusPlayerTickListener listener = new CygnusPlayerTickListener(new JumpScareManager(),
+        CygnusPlayerTickListener listener = new CygnusPlayerTickListener(new JumpScareManager(TickSections.NONE),
                 uuid -> uuid.equals(survivor.getUuid()) ? 1.0D : 0.0D);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
@@ -105,7 +106,7 @@ class CygnusPlayerTickListenerTest extends CygnusPlayerTestBase {
         Player slender = connection.connect(instance, VICTIM_POS);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
-        CygnusPlayerTickListener listener = new CygnusPlayerTickListener(new JumpScareManager(), _ -> 1.0D);
+        CygnusPlayerTickListener listener = new CygnusPlayerTickListener(new JumpScareManager(TickSections.NONE), _ -> 1.0D);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         for (int i = 0; i < 600; i++) {
@@ -138,7 +139,7 @@ class CygnusPlayerTickListenerTest extends CygnusPlayerTestBase {
             player.setGameMode(GameMode.SPECTATOR);
         }
 
-        JumpScareManager manager = new JumpScareManager();
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
         DeadPlayerMannequin corpse = registerCorpse(env, manager, instance, corpseOwner);
 
         Collector<SpawnEntityPacket> spawns = connection.trackIncoming(SpawnEntityPacket.class);

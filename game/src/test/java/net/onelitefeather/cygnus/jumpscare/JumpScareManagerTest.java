@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.jumpscare;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
@@ -36,7 +37,7 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         Player player = env.createPlayer(instance);
 
         DeadPlayerMannequin mannequin = DeadPlayerMannequin.sleeping(player);
-        JumpScareManager manager = new JumpScareManager();
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
 
         assertTrue(manager.getActiveMannequins().isEmpty());
 
@@ -58,7 +59,7 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin mannequin = DeadPlayerMannequin.sleeping(player);
         mannequin.setInstance(instance, deathPos);
 
-        JumpScareManager manager = new JumpScareManager();
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
         manager.register(mannequin);
 
         assertEquals(1, manager.getActiveMannequins().size());
@@ -86,7 +87,7 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
         corpse.setInstance(instance, deathPos);
 
-        JumpScareManager manager = new JumpScareManager();
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
         manager.register(corpse);
 
         // Let auto-viewability establish before triggering, so the "before" state is known.
@@ -126,7 +127,7 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
         corpse.setInstance(instance, deathPos);
 
-        JumpScareManager manager = new JumpScareManager();
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
         manager.register(corpse);
 
         for (int i = 0; i < 5; i++) env.tick();
@@ -155,7 +156,7 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
         corpse.setInstance(instance, deathPos);
 
-        JumpScareManager manager = new JumpScareManager();
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
         manager.register(corpse);
 
         for (int i = 0; i < 5; i++) env.tick();
@@ -190,7 +191,7 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
         corpse.setInstance(instance, deathPos);
 
-        JumpScareManager manager = new JumpScareManager();
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
         manager.register(corpse);
 
         for (int i = 0; i < 5; i++) env.tick();
@@ -241,7 +242,7 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
         corpse.setInstance(instance, deathPos);
 
-        JumpScareManager manager = new JumpScareManager();
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
         manager.register(corpse);
 
         for (int i = 0; i < 5; i++) env.tick();
@@ -277,7 +278,7 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
         corpse.setInstance(instance, deathPos);
 
-        JumpScareManager manager = new JumpScareManager();
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
         manager.register(corpse);
 
         for (int i = 0; i < 5; i++) env.tick();

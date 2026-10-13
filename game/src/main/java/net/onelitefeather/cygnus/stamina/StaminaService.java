@@ -31,16 +31,7 @@ public final class StaminaService {
      * Creates a new instance from this class with the default settings.
      */
     public StaminaService() {
-        this(StaminaConfig.DEFAULT);
-    }
-
-    /**
-     * Creates a new instance from this class.
-     *
-     * @param config the settings every bar is created with
-     */
-    public StaminaService(StaminaConfig config) {
-        this(config, TickSections.NONE);
+        this(StaminaConfig.DEFAULT, TickSections.NONE);
     }
 
     /**

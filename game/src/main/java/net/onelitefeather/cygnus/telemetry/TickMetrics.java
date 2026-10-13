@@ -33,7 +33,7 @@ import java.util.function.Supplier;
  * boundary of {@code 50} should read as 50.
  * </p>
  * <p>
- * The tick thread calls this sixty times a second, so the hot path allocates nothing of its own: the
+ * The tick thread calls this twenty times a second, so the hot path allocates nothing of its own: the
  * {@link Attributes} for every phase and every section/phase pair are built the first time they are
  * seen and reused afterwards, and values are recorded as primitives. Cardinality is bounded by the
  * four phases and the fixed section names of {@link TickSectionNames}.

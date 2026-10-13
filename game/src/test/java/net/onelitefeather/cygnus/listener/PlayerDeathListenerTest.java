@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.listener;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerDeathEvent;
@@ -45,7 +46,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(player);
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(TickSections.NONE), new StaminaService(), () -> {});
 
         env.listen(SpectatorAddEvent.class)
                 .followup(event -> assertEquals(player, event.getPlayer()));
@@ -69,7 +70,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(player);
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(TickSections.NONE), new StaminaService(), () -> {});
 
         listener.accept(new PlayerDeathEvent(player, null, null));
 
@@ -95,7 +96,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         slenderTeam.addPlayer(slender);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(TickSections.NONE), new StaminaService(), () -> {});
 
         listener.accept(new PlayerDeathEvent(survivor, null, null));
 
@@ -124,7 +125,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         Pos mapSpawn = new Pos(0, 100, 0);
         player.setRespawnPoint(mapSpawn);
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(TickSections.NONE), new StaminaService(), () -> {});
         listener.accept(new PlayerDeathEvent(player, null, null));
 
         assertNotEquals(mapSpawn.blockY(), player.getRespawnPoint().blockY(),
@@ -154,7 +155,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         staminaService.createStaminaBars(Set.of(player));
         staminaService.start();
 
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), staminaService, () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(TickSections.NONE), staminaService, () -> {});
         listener.accept(new PlayerDeathEvent(player, null, null));
 
         assertNull(staminaService.getFoodBar(player), "a player who left the round must not keep a ticking stamina bar");
@@ -177,8 +178,8 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         // During a takeover countdown the slender team is empty
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
-        PlayerDeathListener listener = new PlayerDeathListener(() -> gamePhase, teamService, new JumpScareManager(), new StaminaService(), () -> {});
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        PlayerDeathListener listener = new PlayerDeathListener(() -> gamePhase, teamService, new JumpScareManager(TickSections.NONE), new StaminaService(), () -> {});
 
         assertDoesNotThrow(() -> listener.accept(new PlayerDeathEvent(player, null, null)));
         assertFalse(gamePhase.isFinished(), "without a slender there is no winner to name");
@@ -197,7 +198,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         teamService.add(survivorTeam);
         survivorTeam.addPlayer(player);
         player.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(TickSections.NONE), new StaminaService(), () -> {});
 
         listener.accept(new PlayerDeathEvent(player, null, null));
 
@@ -214,7 +215,7 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         teamService.add(Team.of(GameConfig.SLENDER_KEY, 1));
         teamService.add(Team.of(GameConfig.SURVIVOR_KEY, 5));
         player.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
-        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(), new StaminaService(), () -> {});
+        PlayerDeathListener listener = new PlayerDeathListener(() -> null, teamService, new JumpScareManager(TickSections.NONE), new StaminaService(), () -> {});
 
         listener.accept(new PlayerDeathEvent(player, null, null));
 

@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.phase.task;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.entity.Player;
@@ -25,7 +26,7 @@ class LobbyWaitingTaskIntegrationTest {
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         Collector<ActionBarPacket> packetCollector = connection.trackIncoming(ActionBarPacket.class);
-        LobbyWaitingTask display = new LobbyWaitingTask(2);
+        LobbyWaitingTask display = new LobbyWaitingTask(2, TickSections.NONE);
 
         display.update(1);
 
@@ -53,7 +54,7 @@ class LobbyWaitingTaskIntegrationTest {
         TestConnection connection = env.createConnection();
         connection.connect(instance);
         Collector<ActionBarPacket> packetCollector = connection.trackIncoming(ActionBarPacket.class);
-        LobbyWaitingTask display = new LobbyWaitingTask(2);
+        LobbyWaitingTask display = new LobbyWaitingTask(2, TickSections.NONE);
         display.update(1);
         int packetsBeforeStop = packetCollector.collect().size();
         assertTrue(packetsBeforeStop > 0);

@@ -89,16 +89,6 @@ public final class SlenderTakeover implements GameFeature {
     private int secondsLeft;
 
     /**
-     * Creates the takeover.
-     *
-     * @param teamService   the teams of the round
-     * @param phaseSupplier supplies the current phase, a takeover only runs during the {@link GamePhase}
-     */
-    public SlenderTakeover(TeamService teamService, Supplier<Phase> phaseSupplier) {
-        this(teamService, phaseSupplier, TickSections.NONE);
-    }
-
-    /**
      * Creates the takeover with its countdown measured for the slow tick report.
      *
      * @param teamService   the teams of the round

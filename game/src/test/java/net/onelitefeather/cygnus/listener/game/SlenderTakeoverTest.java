@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.listener.game;
 
+import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
@@ -51,11 +52,11 @@ class SlenderTakeoverTest extends CygnusPlayerTestBase {
         this.survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
         this.teamService.add(this.slenderTeam);
         this.teamService.add(this.survivorTeam);
-        this.gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(), _ -> 0.0D);
+        this.gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
     }
 
     private SlenderTakeover takeover(Env env) {
-        SlenderTakeover takeover = new SlenderTakeover(this.teamService, () -> this.gamePhase);
+        SlenderTakeover takeover = new SlenderTakeover(this.teamService, () -> this.gamePhase, TickSections.NONE);
         env.process().eventHandler().addChild(takeover.node());
         env.process().eventHandler().addListener(SlenderReviveEvent.class, this.revive::set);
         env.process().eventHandler().addListener(GameFinishEvent.class, this.finish::set);
