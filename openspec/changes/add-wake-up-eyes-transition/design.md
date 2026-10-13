@@ -41,7 +41,7 @@ is checked after the arrival described above:
    - `spider.getViewers().contains(player)`: the player has the spider in its viewer set, so the spawn packets are
      queued for it.
 2. Delay: once the transition is ready, the camera switch happens `CAMERA_DELAY_TICKS = 2` ticks later, so the
-   spawn packets are flushed before the `CameraPacket` (`pendingTicks - viewableSince >= CAMERA_DELAY_TICKS`).
+   spawn packets are flushed before the `CameraPacket` (`viewableTicks >= CAMERA_DELAY_TICKS`, counted from 0 at the first viewable tick).
 3. Timeout: while not ready, the transition counts `pendingTicks`; at `PENDING_TIMEOUT_TICKS = 40` it is
    abandoned, the spider is removed and the camera is never switched. Nothing is sent to the client for it.
 4. Duration: `DURATION_TICKS = 100` is counted from the switch (`ticksOnSpider`), not from the start.
