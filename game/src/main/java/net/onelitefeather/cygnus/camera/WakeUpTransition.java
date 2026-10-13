@@ -77,7 +77,7 @@ import java.util.concurrent.CompletableFuture;
  * transition.open(players, gameInstance);          // waiting phase tick 1, before or after the teleport
  * }</pre>
  *
- * @version 1.3.0
+ * @version 1.0.0
  * @since 2.16.0
  */
 public final class WakeUpTransition {
@@ -124,9 +124,9 @@ public final class WakeUpTransition {
      */
     public enum Kind {
 
-        /** Eyes close in the lobby; the camera stays on the spider until the player leaves the lobby. */
+        /** Eyes close in the lobby. The camera stays on the spider until the player leaves the lobby. */
         CLOSE("close", "the lobby"),
-        /** Eyes open in the game instance; the camera returns {@link #DURATION_TICKS} ticks after the switch. */
+        /** Eyes open in the game instance. The camera returns {@link #DURATION_TICKS} ticks after the switch. */
         OPEN("open", "the game instance");
 
         private final String label;
@@ -142,7 +142,7 @@ public final class WakeUpTransition {
          *
          * @return the lower case name of the kind
          */
-        public String label() {
+        String label() {
             return label;
         }
 
@@ -159,7 +159,7 @@ public final class WakeUpTransition {
     /**
      * Registers the listeners which end a transition early, and the cleanup when the round finishes.
      *
-     * @param node the node to listen on; the global event handler in production
+     * @param node the node to listen on, the global event handler in production
      */
     public void register(EventNode<Event> node) {
         node.addListener(GameFinishEvent.class, event -> cancelAll("game finished"));
@@ -208,7 +208,7 @@ public final class WakeUpTransition {
     }
 
     /**
-     * Starts an {@link Kind#OPEN} transition for one player. An open already running for the player is replaced; a
+     * Starts an {@link Kind#OPEN} transition for one player. An open already running for the player is replaced. A
      * running close is not affected. The player does not have to be in the game instance yet: the spider is spawned
      * once the player arrives there, at the player's position at that moment. The camera switches once the spider is
      * viewable for the player, see the class documentation.
@@ -260,8 +260,7 @@ public final class WakeUpTransition {
         Pos eye = player.getPosition();
         double spiderY = eye.y() + player.getEyeHeight() - spider.getEyeHeight();
         Pos spawn = eye.withY(spiderY);
-        CompletableFuture<Void> spawned = Objects.requireNonNullElseGet(
-                spider.setInstance(transition.instance, spawn), () -> CompletableFuture.completedFuture(null));
+        CompletableFuture<Void> spawned = spider.setInstance(transition.instance, spawn);
         spider.setView(spawn.yaw(), spawn.pitch(), spawn.yaw());
         spider.updateViewableRule(viewer -> viewer.getUuid().equals(player.getUuid()));
         LOGGER.info("wake-up transition [{}]: spider spawned for {}", label, player.getUsername());
