@@ -73,6 +73,20 @@ class PlayerLoginListenerTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    void testSuccessfulLoginDisablesRespawnScreen(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        player.setEnableRespawnScreen(true);
+
+        PlayerLoginListener listener = new PlayerLoginListener(() -> instance, 10, () -> new LobbyPhase(lobbyConfig()), Optional.empty());
+        listener.accept(new AsyncPlayerConfigurationEvent(player, true));
+
+        assertFalse(player.isEnableRespawnScreen());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
     void testSuccessfulLoginSendsResourcePackWhenPresent(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);

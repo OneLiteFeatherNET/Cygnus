@@ -42,6 +42,9 @@ public final class PlayerLoginListener implements Consumer<AsyncPlayerConfigurat
             return;
         }
         event.setSpawningInstance(this.instance.get());
+        // Set before the join packet goes out so the client respawns on its own. The death screen
+        // would only cover the mannequin and the strike at the spot the player just fell.
+        event.getPlayer().setEnableRespawnScreen(false);
         resourcePackService.ifPresent(service -> service.sendTo(event.getPlayer()));
     }
 }
