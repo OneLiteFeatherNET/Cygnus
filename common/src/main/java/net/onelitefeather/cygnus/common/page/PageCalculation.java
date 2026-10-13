@@ -7,34 +7,32 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.random.RandomGenerator;
 
 /**
- * Utility class for calculating the number of pages allocated for the dynamic page system.
- * The page count is based on the number of current online players.
+ * Utility class for calculating how many pages a round needs and how many are active at once.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  */
-
 public final class PageCalculation {
 
-    private static final int PLAYER_SIZE_FOR_DYNAMIC_PAGE_ALLOCATION = 4;
+    /** The pages of an Eight Pages round before its small offset, and the base the normal round builds on. */
+    private static final int EIGHT_PAGES = 8;
+
+    /** The largest amount an Eight Pages round may add on top of its {@value #EIGHT_PAGES} pages. */
+    private static final int EIGHT_PAGES_OFFSET_MAX = 2;
+
+    /** Pages each survivor above the Eight Pages boundary adds. */
+    private static final int PAGES_PER_EXTRA_SURVIVOR = 4;
 
     /**
-     * Pages per survivor once the dynamic allocation applies. Doubled from 2 to 4: playtesters
-     * wanted a round to need twice as many pages.
-     */
-    private static final int PAGE_COUNT_MULTIPLIER = 4;
-
-    /**
-     * The largest amount {@link #calculatePageAmount()} may add on top of the base amount, so the
-     * total can't be worked out in advance from the player count alone.
+     * The largest amount a normal round may add on top of its base amount, so the total can't be
+     * worked out in advance from the player count alone.
      * <p>
      * Not exposed through {@link GameConfig}: unlike the other page settings, this one is
      * deliberately not something a server operator should be able to turn off or tune.
      * </p>
      * <p>
-     * Doubled from 2 to 4 together with the page total (playtesters wanted twice as many pages),
-     * so the unpredictable part stays the same share of the total.
+     * It only applies to normal rounds. An Eight Pages round has its own smaller offset.
      * </p>
      */
     private static final int PAGE_COUNT_JITTER_MAX = 4;
@@ -52,41 +50,42 @@ public final class PageCalculation {
     private static final int ACTIVE_PAGE_COUNT_STEP_SIZE = 3;
 
     /**
-     * Calculates the number of pages to allocate for the dynamic page system.
+     * Calculates the number of pages a round needs.
      * <p>
-     * If the number of online players (excluding one) is less than {@value #PLAYER_SIZE_FOR_DYNAMIC_PAGE_ALLOCATION},
-     * the base amount is {@link GameConfig#MIN_PAGE_COUNT}. Otherwise, it is the adjusted player
-     * count multiplied by {@value #PAGE_COUNT_MULTIPLIER}. A random amount between 0 and
-     * {@value #PAGE_COUNT_JITTER_MAX} is then added on top, re-rolled every call, so the total
-     * can't be derived from the player count alone.
+     * An Eight Pages round has {@value #EIGHT_PAGES} pages plus 0 to {@value #EIGHT_PAGES_OFFSET_MAX}.
+     * A normal round builds on them: {@value #PAGES_PER_EXTRA_SURVIVOR} more for every survivor
+     * above the boundary, plus 0 to {@value #PAGE_COUNT_JITTER_MAX}. Anchored to the boundary, the
+     * step from one mode to the other never jumps, wherever the boundary is set.
+     * </p>
      *
-     * @return the number of pages to allocate, at least {@link GameConfig#MIN_PAGE_COUNT}
+     * @param survivors    the survivors at the start of the round
+     * @param maxSurvivors the most survivors an Eight Pages round may have
+     * @return the number of pages
      */
-    public static int calculatePageAmount() {
-        int currentPlayers = MinecraftServer.getConnectionManager().getOnlinePlayers().size();
-        return calculatePageAmount(currentPlayers, ThreadLocalRandom.current());
+    public static int calculatePageAmount(int survivors, int maxSurvivors) {
+        return calculatePageAmount(survivors, maxSurvivors, ThreadLocalRandom.current());
     }
 
     /**
-     * Calculates the number of pages to allocate for the given player count, see {@link #calculatePageAmount()}.
-     * Exists so the calculation can be driven without a running server and with a fixed random source.
+     * Calculates the number of pages with the given random source, see {@link #calculatePageAmount(int, int)}.
      *
-     * @param onlinePlayers the number of online players
-     * @param random        the source of the jitter added on top of the base amount
-     * @return the number of pages to allocate, at least {@link GameConfig#MIN_PAGE_COUNT}
+     * @param survivors    the survivors at the start of the round
+     * @param maxSurvivors the most survivors an Eight Pages round may have
+     * @param random       the source of the random part
+     * @return the number of pages
      */
-    static int calculatePageAmount(int onlinePlayers, RandomGenerator random) {
-        int baseAmount = onlinePlayers - 1 < PLAYER_SIZE_FOR_DYNAMIC_PAGE_ALLOCATION
-                ? GameConfig.MIN_PAGE_COUNT
-                : (onlinePlayers - 1) * PAGE_COUNT_MULTIPLIER;
-
-        return baseAmount + random.nextInt(PAGE_COUNT_JITTER_MAX + 1);
+    static int calculatePageAmount(int survivors, int maxSurvivors, RandomGenerator random) {
+        if (survivors <= maxSurvivors) {
+            return EIGHT_PAGES + random.nextInt(EIGHT_PAGES_OFFSET_MAX + 1);
+        }
+        return EIGHT_PAGES + (survivors - maxSurvivors) * PAGES_PER_EXTRA_SURVIVOR
+                + random.nextInt(PAGE_COUNT_JITTER_MAX + 1);
     }
 
     /**
      * Calculates how many pages should be concurrently active (spawned in the world at once).
      * <p>
-     * This stays below {@link #calculatePageAmount()} on purpose: it governs how many pages exist
+     * This stays below {@link #calculatePageAmount(int, int)} on purpose: it governs how many pages exist
      * in the world at the same time, not the total pool a round draws from. If the number of online
      * players (excluding one) is less than {@value #PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING},
      * {@link GameConfig#MIN_ACTIVE_PAGE_COUNT} is returned. Otherwise, one page is added for every

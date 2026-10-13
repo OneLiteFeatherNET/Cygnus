@@ -32,6 +32,8 @@ import java.util.regex.Pattern;
  * @param possession           the slender's look through the eyes of the creek
  * @param telemetry            the OpenTelemetry traces, which only do anything with the javaagent attached
  * @param minimap              the request to client minimap mods to switch themselves off
+ * @param eightPages           the settings for rounds with only a few survivors
+ * @param regeneration         how survivors win back health after an encounter
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
@@ -55,6 +57,8 @@ public record GameConfig(
         PossessionConfig possession,
         TelemetryConfig telemetry,
         MinimapConfig minimap,
+        EightPagesConfig eightPages,
+        RegenerationConfig regeneration,
         float lobbyAtmosphereShare
 ) {
 
@@ -104,11 +108,6 @@ public record GameConfig(
     public static final int FORCE_START_TIME = 11;
 
     /**
-     * The fewest pages a round needs to find. Doubled from 8 to 16: playtesters wanted twice as many pages.
-     */
-    public static final int MIN_PAGE_COUNT = 16;
-
-    /**
      * The {@link #lobbyAtmosphereShare()} a configuration gets when it says nothing: enough of the
      * map's haze to be recognised in the distance, while the lobby still reads as the lit room
      * players wait in.
@@ -141,6 +140,8 @@ public record GameConfig(
             PossessionConfig.DEFAULT,
             TelemetryConfig.DEFAULT,
             MinimapConfig.DEFAULT,
+            EightPagesConfig.DEFAULT,
+            RegenerationConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 
@@ -175,6 +176,8 @@ public record GameConfig(
                 PossessionConfig.read(root.section("possession.")),
                 TelemetryConfig.read(root.section("telemetry.")),
                 MinimapConfig.read(root.section("minimap.")),
+                EightPagesConfig.read(root.section("eightPages.")),
+                RegenerationConfig.read(root.section("regeneration.")),
                 readLobbyAtmosphereShare(root)
         );
     }

@@ -2,11 +2,12 @@ package net.onelitefeather.cygnus.creek.consequence;
 
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
-import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.timer.Task;
 import net.minestom.server.timer.TaskSchedule;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.team.TeamHelper;
+import net.onelitefeather.cygnus.vitality.Vitality;
 
 import java.util.List;
 import java.util.Map;
@@ -22,9 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * are thrown again (the new throw replaces the watch) and when the round ends.
  * </p>
  * <p>
- * The damage never kills: at least 1 health point is left. Setting health bypasses Minestom's
- * damage event, so {@link PlayerDamagedEvent} is dispatched by hand, aimed at the landing spot,
- * as for every other hit in Cygnus.
+ * The damage never kills: at least {@value #MINIMUM_POINTS} point is left. It goes through
+ * {@link Vitality}, which announces the hit with {@link PlayerDamagedEvent}, aimed at the landing
+ * spot, as for every other hit in Cygnus.
  * </p>
  *
  * @author TheMeinerLP
@@ -36,8 +37,8 @@ public final class LandingDamage {
     /** How long a throw may take before the damage is forgotten, in ticks. */
     static final int TIMEOUT_TICKS = 100;
 
-    /** The health a landing always leaves. */
-    static final float MINIMUM_HEALTH = 1.0F;
+    /** The points a landing always leaves. */
+    static final double MINIMUM_POINTS = 1.0D;
 
     private final float damage;
     private final Map<Player, Task> watches = new ConcurrentHashMap<>();
@@ -45,7 +46,7 @@ public final class LandingDamage {
     /**
      * Sets up the damage.
      *
-     * @param damage health points lost on landing; 0 or less turns it off
+     * @param damage health points lost on landing, taken as points. 0 or less turns it off
      */
     public LandingDamage(double damage) {
         this.damage = (float) damage;
@@ -102,11 +103,9 @@ public final class LandingDamage {
     }
 
     private void hurt(Player survivor) {
-        float before = survivor.getHealth();
-        float after = Math.max(MINIMUM_HEALTH, before - this.damage);
-        float lost = before - after;
-        if (lost <= 0.0F) return;
-        survivor.setHealth(after);
-        EventDispatcher.call(new PlayerDamagedEvent(survivor, survivor.getPosition(), lost));
+        if (!(survivor instanceof CygnusPlayer player)) return;
+        double lost = Math.min(this.damage * Vitality.POINTS_PER_HEALTH, player.vitality().points() - MINIMUM_POINTS);
+        if (lost <= 0.0D) return;
+        player.vitality().damage(lost, survivor.getPosition());
     }
 }

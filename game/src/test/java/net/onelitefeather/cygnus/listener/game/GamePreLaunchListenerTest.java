@@ -7,11 +7,14 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.common.config.EightPagesConfig;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -23,13 +26,24 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MicrotusExtension.class)
 class GamePreLaunchListenerTest {
 
+    /**
+     * Every test gets its own environment, so the player count the listener reads is exactly the
+     * players a test creates. The class therefore does not share the environment of
+     * {@code CygnusPlayerTestBase}, and makes its players Cygnus players here instead.
+     */
+    @BeforeEach
+    void cygnusPlayers(Env env) {
+        env.process().connection().setPlayerProvider((connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, null));
+    }
+
     @Test
     void testPreLaunchSetsThePageAmountAndCollectsTheStartPages(@NotNull Env env) {
         PageProvider pageProvider = loadedProvider();
 
-        new GamePreLaunchListener(pageProvider).accept(new GamePreLaunchEvent());
+        new GamePreLaunchListener(pageProvider, EightPagesConfig.DEFAULT).accept(new GamePreLaunchEvent());
 
-        assertTrue(pageProvider.getMaxPageAmount() >= GameConfig.MIN_PAGE_COUNT);
+        int pages = pageProvider.getMaxPageAmount();
+        assertTrue(pages >= 8 && pages <= 10, "without players the round is an Eight Pages round, was " + pages);
         assertEquals(GameConfig.MIN_ACTIVE_PAGE_COUNT, pageProvider.interactablePages().size(),
                 "without any players the round starts with the minimum of active pages");
         assertTrue(pageProvider.interactablePages().stream().allMatch(page -> page.getInstance() == null),
@@ -37,16 +51,63 @@ class GamePreLaunchListenerTest {
     }
 
     @Test
-    void testTwoPlayersAlwaysGetTheExtraHearts(@NotNull Env env) {
+    void testTwoSurvivorsGetTheConfiguredBonusAsPoints(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
-        Player survivor = env.createPlayer(instance);
+        CygnusPlayer first = (CygnusPlayer) env.createPlayer(instance);
+        env.createPlayer(instance);
         env.createPlayer(instance);
 
-        new GamePreLaunchListener(loadedProvider()).accept(new GamePreLaunchEvent());
+        new GamePreLaunchListener(loadedProvider(), new EightPagesConfig(3, 30, 20, 10)).accept(new GamePreLaunchEvent());
 
-        // The page count carries a random jitter, so the bonus must not depend on it
-        assertTrue(survivor.getAttributeValue(Attribute.MAX_HEALTH) > 20.0D,
-                "a small lobby must always get the extra hearts");
+        assertEquals(120.0D, first.vitality().points(), 1.0E-9);
+        assertEquals(24.0D, first.getAttributeValue(Attribute.MAX_HEALTH), 1.0E-9);
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testFourSurvivorsGetNoBonus(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer first = (CygnusPlayer) env.createPlayer(instance);
+        for (int i = 0; i < 4; i++) {
+            env.createPlayer(instance);
+        }
+
+        new GamePreLaunchListener(loadedProvider(), EightPagesConfig.DEFAULT).accept(new GamePreLaunchEvent());
+
+        assertEquals(100.0D, first.vitality().points(), 1.0E-9);
+        assertEquals(20.0F, first.getHealth());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testThreeSurvivorsNeedEightToTenPages(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        for (int i = 0; i < 4; i++) {
+            env.createPlayer(instance);
+        }
+        PageProvider pageProvider = loadedProvider();
+
+        new GamePreLaunchListener(pageProvider, EightPagesConfig.DEFAULT).accept(new GamePreLaunchEvent());
+
+        assertTrue(pageProvider.getMaxPageAmount() <= 10);
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testFourSurvivorsNeedTwelveToSixteenPages(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        for (int i = 0; i < 5; i++) {
+            env.createPlayer(instance);
+        }
+        PageProvider pageProvider = loadedProvider();
+
+        new GamePreLaunchListener(pageProvider, EightPagesConfig.DEFAULT).accept(new GamePreLaunchEvent());
+
+        int pages = pageProvider.getMaxPageAmount();
+        assertTrue(pages >= 12 && pages <= 16, "was " + pages);
 
         env.destroyInstance(instance, true);
     }

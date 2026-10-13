@@ -29,6 +29,7 @@ public final class Items {
     public static final byte LEAVE_ITEM = (byte) 0x02;
     public static final byte TRACKING_ITEM = (byte) 0x03;
     public static final byte POSSESSION_ITEM = (byte) 0x04;
+    public static final byte HEAL_ITEM = (byte) 0x05;
 
     /** The tracker's material, which is also the client's cooldown group for it. */
     public static final Material TRACKING_MATERIAL = Material.RABBIT_FOOT;
@@ -44,6 +45,9 @@ public final class Items {
 
     /** The hotbar slot of the possession item, the last one, next to the tracker. */
     public static final int POSSESSION_SLOT = 8;
+
+    /** The hotbar slot of the survivors' painkillers, the last one, away from the pages. */
+    public static final int HEAL_SLOT = 8;
 
     private static final ItemStack slenderEye = ItemStack.builder(Material.ENDER_EYE)
             .customName(Component.text("SlenderEye").color(TextColor.fromHexString("#ff00d4")))
@@ -63,6 +67,13 @@ public final class Items {
             .lore(lore("Right click while hidden to look", "through the eyes of the creek",
                     "Survivors close to it glow for you", "Sneak to return to your body"))
             .set(Tags.ITEM_TAG, POSSESSION_ITEM)
+            .build();
+
+    private static final ItemStack painkillers = ItemStack.builder(Material.SUGAR)
+            .customName(Component.text("Painkillers", NamedTextColor.WHITE))
+            .lore(lore("Right click to win back some health", "Only once per round",
+                    "A hit takes from what they give back"))
+            .set(Tags.ITEM_TAG, HEAL_ITEM)
             .build();
 
     private static final HotBarLayout SPECTATOR_LAYOUT;
@@ -102,6 +113,15 @@ public final class Items {
      */
     public static void setPossessionItem(Player player) {
         player.getInventory().setItemStack(POSSESSION_SLOT, possession);
+    }
+
+    /**
+     * Gives a survivor the painkillers for the round.
+     *
+     * @param player the survivor
+     */
+    public static void setHealItem(Player player) {
+        player.getInventory().setItemStack(HEAL_SLOT, painkillers);
     }
 
     /**
