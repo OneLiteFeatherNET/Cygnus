@@ -118,6 +118,7 @@ import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.onelitefeather.cygnus.telemetry.TraceStep;
 import net.onelitefeather.cygnus.telemetry.TracedPhaseSeries;
 
+
 import java.nio.file.Path;
 import java.time.Clock;
 import java.util.List;
@@ -372,7 +373,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         handler.addListener(PlayerStopSprintingEvent.class, new PlayerStopSprintingListener(this.staminaService::getFoodBar));
         handler.addListener(SlenderReviveEvent.class, new SlenderReviveListener(this.mapProvider::getGameMap, this.staminaService, this.teamService));
         handler.addListener(SlenderReviveEvent.class, _ -> this.scoreboardDisplay.sync(this.teamService));
-        handler.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider));
+        handler.addListener(GamePreLaunchEvent.class, new GamePreLaunchListener(this.pageProvider, this.gameConfig.eightPages()));
         handler.addListener(StaminaStateChangeEvent.class, new StaminaStateChangeListener());
         handler.addListener(PageDiscoveryCompletedEvent.class, new PageDiscoveryCompleteListener(this.linearPhaseSeries));
         handler.addListener(ViewUpdateEvent.class, new ViewUpdateListener(this.view, this.pageProvider));

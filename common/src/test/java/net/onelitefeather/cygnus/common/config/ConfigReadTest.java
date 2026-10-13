@@ -28,6 +28,7 @@ class ConfigReadTest {
         assertEquals(PossessionConfig.DEFAULT, PossessionConfig.read(section("possession.")));
         assertEquals(TelemetryConfig.DEFAULT, TelemetryConfig.read(section("telemetry.")));
         assertEquals(MinimapConfig.DEFAULT, MinimapConfig.read(section("minimap.")));
+        assertEquals(EightPagesConfig.DEFAULT, EightPagesConfig.read(section("eightPages.")));
     }
 
     @Test
@@ -41,6 +42,8 @@ class ConfigReadTest {
         assertEquals(5, PossessionConfig.read(section("possession.", "possession.maxSeconds", "5")).maxSeconds());
         assertEquals(80, TelemetryConfig.read(section("telemetry.", "telemetry.slowTickThresholdMillis", "80")).slowTickThresholdMillis());
         assertEquals(MinimapConfig.Mode.FAIR, MinimapConfig.read(section("minimap.", "minimap.mode", "fair")).mode());
+        assertEquals(40, EightPagesConfig.read(section("eightPages.", "eightPages.bonusOneSurvivor", "40")).bonusOneSurvivor());
+        assertEquals(2, EightPagesConfig.read(section("eightPages.", "eightPages.maxSurvivors", "2")).maxSurvivors());
     }
 
     @Test
@@ -53,5 +56,11 @@ class ConfigReadTest {
     @DisplayName("A possession setting out of range falls back to the defaults")
     void invalidPossessionFallsBack() {
         assertEquals(PossessionConfig.DEFAULT, PossessionConfig.read(section("possession.", "possession.sightFactor", "0.5")));
+    }
+
+    @Test
+    @DisplayName("An Eight Pages bonus that is no multiple of 5 falls back to the defaults")
+    void invalidEightPagesFallsBack() {
+        assertEquals(EightPagesConfig.DEFAULT, EightPagesConfig.read(section("eightPages.", "eightPages.bonusOneSurvivor", "7")));
     }
 }
