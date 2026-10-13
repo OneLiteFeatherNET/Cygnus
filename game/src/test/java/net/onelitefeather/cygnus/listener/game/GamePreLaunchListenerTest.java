@@ -7,8 +7,11 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.network.packet.server.play.UpdateHealthPacket;
 import net.minestom.server.utils.Direction;
+import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
+import net.minestom.testing.TestConnection;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.config.EightPagesConfig;
 import net.onelitefeather.cygnus.common.config.GameConfig;
@@ -64,6 +67,30 @@ class GamePreLaunchListenerTest {
 
         assertEquals(120.0D, first.vitality().points(), 1.0E-9);
         assertEquals(24.0D, first.getAttributeValue(Attribute.MAX_HEALTH), 1.0E-9);
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testAHalfHeartBonusSendsEverySurvivorTheSameWholeHearts(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection firstConnection = env.createConnection();
+        TestConnection secondConnection = env.createConnection();
+        firstConnection.connect(instance, new Pos(0, 40, 0));
+        secondConnection.connect(instance, new Pos(0, 40, 0));
+        env.createPlayer(instance);
+        Collector<UpdateHealthPacket> first = firstConnection.trackIncoming(UpdateHealthPacket.class);
+        Collector<UpdateHealthPacket> second = secondConnection.trackIncoming(UpdateHealthPacket.class);
+
+        launch(env, loadedProvider(), EightPagesConfig.DEFAULT);
+
+        float[] health = new float[1];
+        first.assertSingle(packet -> {
+            health[0] = packet.health();
+            assertTrue(health[0] == 24.0F || health[0] == 26.0F,
+                    "the 25 bonus points are rounded to a whole heart, the client got " + health[0]);
+        });
+        second.assertSingle(packet -> assertEquals(health[0], packet.health(), "every survivor of the round gets the same bonus"));
 
         env.destroyInstance(instance, true);
     }

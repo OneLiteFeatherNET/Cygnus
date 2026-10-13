@@ -35,8 +35,9 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
         // Only picked here, placed into the world once the round starts
         this.pageProvider.collectStartPages(PageCalculation.calculateActivePageAmount());
 
-        // Based on the players, not on the page count: the page count carries a random jitter
-        int bonus = this.eightPages.bonusFor(survivors);
+        // Based on the players, not on the page count: the page count carries a random jitter.
+        // Drawn once, so all survivors of the round get the same whole hearts
+        int bonus = this.eightPages.wholeHeartBonusFor(survivors);
         double adjustedSpeed = SpeedScalingCalculation.getAdditionalSpeed();
 
         for (Player player : connectionManager.getOnlinePlayers()) {
