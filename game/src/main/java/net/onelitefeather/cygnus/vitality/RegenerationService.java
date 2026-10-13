@@ -36,10 +36,10 @@ import java.util.function.Supplier;
  * <p>
  * Taking them heals over a few seconds, at most a share of the maximum health that shrinks with
  * the round, and never more than is missing. Every survivor gets this one chance, even in the middle
- * of a chase. A hit while they work takes its damage off what is still to come, so it counts twice,
- * and the healing goes on with the rest. Fear slows the
- * healing down: a calm survivor regains {@link RegenerationConfig#perSecond()},
- * a terrified one hardly anything.
+ * of a chase, but only with at least {@link RegenerationConfig#minMissing()} points missing, so it is
+ * not spent on a scratch. A hit while they work takes its damage off what is still to come, so it
+ * counts twice, and the healing goes on with the rest. Fear slows the healing down: a calm survivor
+ * regains {@link RegenerationConfig#perSecond()}, a terrified one hardly anything.
  * </p>
  *
  * @author theEvilReaper
@@ -51,7 +51,7 @@ public final class RegenerationService implements GameFeature {
     /** How often a running healing is moved on, in milliseconds. */
     static final long TICK_MILLIS = 100L;
 
-    static final Component NOT_HURT = Component.text("You are not hurt", NamedTextColor.GRAY, TextDecoration.ITALIC);
+    static final Component NOT_HURT = Component.text("You are not hurt badly enough", NamedTextColor.GRAY, TextDecoration.ITALIC);
 
     private final EventNode<Event> node = EventNode.all("regeneration");
     private final RegenerationConfig config;
@@ -128,7 +128,7 @@ public final class RegenerationService implements GameFeature {
         if (this.used.get(survivor) != null) return false;
         Vitality vitality = survivor.vitality();
         double missing = vitality.max() - vitality.points();
-        if (missing <= 0.0D) {
+        if (missing < this.config.minMissing()) {
             survivor.sendActionBar(NOT_HURT);
             return false;
         }

@@ -47,6 +47,7 @@ class ConfigReadTest {
         assertEquals(2, EightPagesConfig.read(section("eightPages.", "eightPages.maxSurvivors", "2")).maxSurvivors());
         assertEquals(6.0D, RegenerationConfig.read(section("regeneration.", "regeneration.perSecond", "6")).perSecond(), 1.0E-9);
         assertEquals(java.util.List.of(0.5D, 0.1D), RegenerationConfig.read(section("regeneration.", "regeneration.shares", "0.5, 0.1")).shares());
+        assertEquals(20, RegenerationConfig.read(section("regeneration.", "regeneration.minMissing", "20")).minMissing());
     }
 
     @Test

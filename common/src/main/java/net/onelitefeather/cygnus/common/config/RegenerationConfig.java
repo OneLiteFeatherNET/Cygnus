@@ -13,23 +13,26 @@ import java.util.List;
  * {@code regeneration.} prefix, for example {@code regeneration.shares=0.4,0.3,0.25,0.2}.
  * </p>
  *
- * @param perSecond points per second regained by a calm survivor, fear slows it down
- * @param shares    the share of the maximum health that comes back, one entry for every
- *                  {@value #SURVIVORS_PER_STEP} survivors, the last one for every bigger round
+ * @param perSecond  points per second regained by a calm survivor, fear slows it down
+ * @param shares     the share of the maximum health that comes back, one entry for every
+ *                   {@value #SURVIVORS_PER_STEP} survivors, the last one for every bigger round
+ * @param minMissing the points a survivor has to miss before the painkillers can be taken, so the
+ *                   one chance is not spent on a scratch. At least 1
  * @author theEvilReaper
  * @version 1.1.0
  * @since 2.17.0
  */
-public record RegenerationConfig(double perSecond, List<Double> shares) {
+public record RegenerationConfig(double perSecond, List<Double> shares, int minMissing) {
 
     /** How many more survivors it takes to move on to the next share. */
     public static final int SURVIVORS_PER_STEP = 3;
 
     /**
      * The default settings: 40 % back with 1 to 3 survivors, 30 % with 4 to 6, 25 % with 7 to 9 and
-     * 20 % from 10 survivors on, at 4 points per second for a calm survivor.
+     * 20 % from 10 survivors on, at 4 points per second for a calm survivor. The painkillers need a
+     * whole missing heart.
      */
-    public static final RegenerationConfig DEFAULT = new RegenerationConfig(4.0D, List.of(0.40D, 0.30D, 0.25D, 0.20D));
+    public static final RegenerationConfig DEFAULT = new RegenerationConfig(4.0D, List.of(0.40D, 0.30D, 0.25D, 0.20D), 10);
 
     /**
      * Checks the values.
@@ -48,6 +51,9 @@ public record RegenerationConfig(double perSecond, List<Double> shares) {
                 throw new IllegalArgumentException("shares (" + shares + ") must all be between 0.0 and 1.0");
             }
         }
+        if (minMissing < 1) {
+            throw new IllegalArgumentException("minMissing (" + minMissing + ") must be at least 1");
+        }
         shares = List.copyOf(shares);
     }
 
@@ -62,7 +68,8 @@ public record RegenerationConfig(double perSecond, List<Double> shares) {
         RegenerationConfig defaults = DEFAULT;
         return section.orDefault("regeneration", () -> new RegenerationConfig(
                 section.getDouble("perSecond", defaults.perSecond()),
-                readShares(section.getString("shares"), defaults.shares())
+                readShares(section.getString("shares"), defaults.shares()),
+                section.getInt("minMissing", defaults.minMissing())
         ), defaults);
     }
 

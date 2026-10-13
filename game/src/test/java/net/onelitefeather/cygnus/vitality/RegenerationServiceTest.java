@@ -134,14 +134,19 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("They can not be taken at full health, and stay in the inventory")
-    void refusedWhenFull(Env env) {
+    @DisplayName("They can not be taken at full health or for a scratch, and stay in the inventory")
+    void refusedWhenFullOrScratched(Env env) {
         Instance instance = env.createFlatInstance();
         CygnusPlayer full = survivor(env, instance);
+        CygnusPlayer scratched = survivor(env, instance);
         RegenerationService service = started(env);
+        hit(scratched, 5.0D);
 
-        assertFalse(service.use(full));
+        assertFalse(service.use(full), "nothing missing");
+        assertFalse(service.use(scratched), "half a heart is less than the minimum");
+
         assertTrue(holdsPainkillers(full));
+        assertTrue(holdsPainkillers(scratched));
     }
 
     @Test

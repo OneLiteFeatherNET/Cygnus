@@ -22,6 +22,7 @@ class RegenerationConfigTest {
 
         assertEquals(4.0D, config.perSecond());
         assertEquals(List.of(0.40D, 0.30D, 0.25D, 0.20D), config.shares());
+        assertEquals(10, config.minMissing());
     }
 
     @Test
@@ -38,12 +39,13 @@ class RegenerationConfigTest {
     }
 
     @Test
-    @DisplayName("A negative rate, an empty list and shares outside 0 to 1 are rejected")
+    @DisplayName("A negative rate, an empty list, shares outside 0 to 1 and no minimum injury are rejected")
     void valuesAreChecked() {
-        assertRejected("perSecond", () -> new RegenerationConfig(-1.0D, List.of(0.4D)));
-        assertRejected("shares", () -> new RegenerationConfig(4.0D, List.of()));
-        assertRejected("shares", () -> new RegenerationConfig(4.0D, List.of(0.4D, 1.5D)));
-        assertDoesNotThrow(() -> new RegenerationConfig(0.0D, List.of(0.0D)));
+        assertRejected("perSecond", () -> new RegenerationConfig(-1.0D, List.of(0.4D), 10));
+        assertRejected("shares", () -> new RegenerationConfig(4.0D, List.of(), 10));
+        assertRejected("shares", () -> new RegenerationConfig(4.0D, List.of(0.4D, 1.5D), 10));
+        assertRejected("minMissing", () -> new RegenerationConfig(4.0D, List.of(0.4D), 0));
+        assertDoesNotThrow(() -> new RegenerationConfig(0.0D, List.of(0.0D), 1));
     }
 
     private static void assertRejected(String field, Executable creation) {
