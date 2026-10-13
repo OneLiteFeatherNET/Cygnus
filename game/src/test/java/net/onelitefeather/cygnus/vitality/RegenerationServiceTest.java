@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -31,13 +30,12 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
     /** What a calm survivor regains in one tick with the defaults. */
     private static final double PER_TICK = 4.0D * RegenerationService.TICK_MILLIS / 1000.0D;
 
-    private final AtomicLong clock = new AtomicLong();
     private double fear;
     private Set<Player> survivors = new HashSet<>();
 
     private RegenerationService started(Env env) {
         RegenerationService service = new RegenerationService(RegenerationConfig.DEFAULT, id -> this.fear,
-                () -> this.survivors, this.clock::get, TickSections.NONE);
+                () -> this.survivors, TickSections.NONE);
         env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         return service;
@@ -51,20 +49,13 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
         return player;
     }
 
-    private void hit(CygnusPlayer survivor, double points, long at) {
-        this.clock.set(at);
+    private static void hit(CygnusPlayer survivor, double points) {
         survivor.vitality().damage(points, survivor.getPosition());
     }
 
-    private boolean use(RegenerationService service, Player survivor, long at) {
-        this.clock.set(at);
-        return service.use(survivor);
-    }
-
-    /** Ticks the service every 100 ms from one moment to another, both included. */
-    private void ticks(RegenerationService service, long from, long to) {
-        for (long now = from; now <= to; now += RegenerationService.TICK_MILLIS) {
-            this.clock.set(now);
+    /** Moves the healing on by the given number of steps. */
+    private static void ticks(RegenerationService service, int steps) {
+        for (int i = 0; i < steps; i++) {
             service.tick();
         }
     }
@@ -91,10 +82,10 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         CygnusPlayer survivor = survivor(env, instance);
         RegenerationService service = started(env);
-        hit(survivor, 60.0D, 0L);
+        hit(survivor, 60.0D);
 
-        assertTrue(use(service, survivor, 3_000L));
-        ticks(service, 3_100L, 30_000L);
+        assertTrue(service.use(survivor));
+        ticks(service, 270);
 
         assertFalse(holdsPainkillers(survivor));
         assertEquals(80.0D, survivor.vitality().points(), EPSILON);
@@ -106,10 +97,10 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         CygnusPlayer survivor = survivor(env, instance);
         RegenerationService service = started(env);
-        hit(survivor, 10.0D, 0L);
+        hit(survivor, 10.0D);
 
-        use(service, survivor, 3_000L);
-        ticks(service, 3_100L, 30_000L);
+        service.use(survivor);
+        ticks(service, 270);
 
         assertEquals(100.0D, survivor.vitality().points(), EPSILON);
     }
@@ -123,27 +114,33 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
             survivor(env, instance);
         }
         RegenerationService service = started(env);
-        hit(survivor, 60.0D, 0L);
+        hit(survivor, 60.0D);
 
-        use(service, survivor, 3_000L);
-        ticks(service, 3_100L, 30_000L);
+        service.use(survivor);
+        ticks(service, 270);
 
         assertEquals(70.0D, survivor.vitality().points(), EPSILON, "four survivors get 30 % back");
     }
 
     @Test
-    @DisplayName("They can not be taken right after a hit or at full health, and stay in the inventory")
-    void refusedWhenHurtOrFull(Env env) {
+    @DisplayName("They can be taken right after a hit")
+    void takenRightAfterAHit(Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer survivor = survivor(env, instance);
+        RegenerationService service = started(env);
+        hit(survivor, 20.0D);
+
+        assertTrue(service.use(survivor));
+    }
+
+    @Test
+    @DisplayName("They can not be taken at full health, and stay in the inventory")
+    void refusedWhenFull(Env env) {
         Instance instance = env.createFlatInstance();
         CygnusPlayer full = survivor(env, instance);
-        CygnusPlayer hurt = survivor(env, instance);
         RegenerationService service = started(env);
-        hit(hurt, 20.0D, 0L);
 
-        assertFalse(use(service, hurt, 1_000L), "hit a second ago");
-        assertFalse(use(service, full, 1_000L), "nothing missing");
-
-        assertTrue(holdsPainkillers(hurt));
+        assertFalse(service.use(full));
         assertTrue(holdsPainkillers(full));
     }
 
@@ -153,12 +150,12 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         CygnusPlayer survivor = survivor(env, instance);
         RegenerationService service = started(env);
-        hit(survivor, 60.0D, 0L);
-        use(service, survivor, 3_000L);
-        ticks(service, 3_100L, 30_000L);
-        hit(survivor, 20.0D, 30_000L);
+        hit(survivor, 60.0D);
+        service.use(survivor);
+        ticks(service, 270);
+        hit(survivor, 20.0D);
 
-        assertFalse(use(service, survivor, 40_000L));
+        assertFalse(service.use(survivor));
     }
 
     @Test
@@ -167,12 +164,12 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         CygnusPlayer survivor = survivor(env, instance);
         RegenerationService service = started(env);
-        hit(survivor, 60.0D, 0L);
-        use(service, survivor, 3_000L);
-        ticks(service, 3_100L, 3_100L);
-        hit(survivor, 5.0D, 3_150L);
+        hit(survivor, 60.0D);
+        service.use(survivor);
+        ticks(service, 1);
+        hit(survivor, 5.0D);
 
-        ticks(service, 3_200L, 30_000L);
+        ticks(service, 269);
 
         // 40 to come, one tick healed, then the hit costs 5 health and 5 of the rest
         assertEquals(40.0D + PER_TICK - 5.0D + (40.0D - PER_TICK - 5.0D), survivor.vitality().points(), EPSILON);
@@ -184,14 +181,31 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         CygnusPlayer survivor = survivor(env, instance);
         RegenerationService service = started(env);
-        hit(survivor, 20.0D, 0L);
-        use(service, survivor, 3_000L);
-        ticks(service, 3_100L, 3_100L);
-        hit(survivor, 25.0D, 3_150L);
+        hit(survivor, 20.0D);
+        service.use(survivor);
+        ticks(service, 1);
+        hit(survivor, 25.0D);
 
-        ticks(service, 3_200L, 30_000L);
+        ticks(service, 269);
 
         assertEquals(80.0D + PER_TICK - 25.0D, survivor.vitality().points(), EPSILON);
+    }
+
+    @Test
+    @DisplayName("A hit too small to show still takes its damage off what is still to come")
+    void smallHitShrinksTheRest(Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer survivor = survivor(env, instance);
+        RegenerationService service = started(env);
+        hit(survivor, 60.0D);
+        service.use(survivor);
+        ticks(service, 1);
+        hit(survivor, 0.2D);
+
+        ticks(service, 300);
+
+        // 40 to come, one tick healed, then the hit costs 0.2 health and 0.2 of the rest
+        assertEquals(40.0D + PER_TICK - 0.2D + (40.0D - PER_TICK - 0.2D), survivor.vitality().points(), EPSILON);
     }
 
     @Test
@@ -201,10 +215,10 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
         CygnusPlayer survivor = survivor(env, instance);
         RegenerationService service = started(env);
         this.fear = 0.5D;
-        hit(survivor, 60.0D, 0L);
+        hit(survivor, 60.0D);
 
-        use(service, survivor, 3_000L);
-        ticks(service, 3_100L, 3_100L);
+        service.use(survivor);
+        ticks(service, 1);
 
         assertEquals(40.0D + PER_TICK / 2.0D, survivor.vitality().points(), EPSILON);
     }
@@ -215,9 +229,9 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         CygnusPlayer survivor = survivor(env, instance);
         RegenerationService service = started(env);
-        hit(survivor, 60.0D, 0L);
+        hit(survivor, 60.0D);
         survivor.setGameMode(GameMode.SPECTATOR);
 
-        assertFalse(use(service, survivor, 3_000L));
+        assertFalse(service.use(survivor));
     }
 }

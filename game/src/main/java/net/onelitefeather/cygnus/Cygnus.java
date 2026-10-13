@@ -266,7 +266,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         new RegenerationService(this.gameConfig.regeneration(),
                                 sanityService,
                                 () -> TeamHelper.survivorsOf(this.teamService),
-                                System::currentTimeMillis,
                                 tickSections),
                         new FootprintFeature(this.gameConfig.footprint(),
                                 () -> TeamHelper.slenderOf(this.teamService),

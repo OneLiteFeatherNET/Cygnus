@@ -13,15 +13,14 @@ import java.util.List;
  * {@code regeneration.} prefix, for example {@code regeneration.shares=0.4,0.3,0.25,0.2}.
  * </p>
  *
- * @param delaySeconds how long a survivor has to take no damage before the painkillers can be taken
- * @param perSecond    points per second regained by a calm survivor, fear slows it down
- * @param shares       the share of the maximum health that comes back, one entry for every
- *                     {@value #SURVIVORS_PER_STEP} survivors, the last one for every bigger round
+ * @param perSecond points per second regained by a calm survivor, fear slows it down
+ * @param shares    the share of the maximum health that comes back, one entry for every
+ *                  {@value #SURVIVORS_PER_STEP} survivors, the last one for every bigger round
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.17.0
  */
-public record RegenerationConfig(int delaySeconds, double perSecond, List<Double> shares) {
+public record RegenerationConfig(double perSecond, List<Double> shares) {
 
     /** How many more survivors it takes to move on to the next share. */
     public static final int SURVIVORS_PER_STEP = 3;
@@ -30,7 +29,7 @@ public record RegenerationConfig(int delaySeconds, double perSecond, List<Double
      * The default settings: 40 % back with 1 to 3 survivors, 30 % with 4 to 6, 25 % with 7 to 9 and
      * 20 % from 10 survivors on, at 4 points per second for a calm survivor.
      */
-    public static final RegenerationConfig DEFAULT = new RegenerationConfig(3, 4.0D, List.of(0.40D, 0.30D, 0.25D, 0.20D));
+    public static final RegenerationConfig DEFAULT = new RegenerationConfig(4.0D, List.of(0.40D, 0.30D, 0.25D, 0.20D));
 
     /**
      * Checks the values.
@@ -38,9 +37,6 @@ public record RegenerationConfig(int delaySeconds, double perSecond, List<Double
      * @throws IllegalArgumentException if a value is out of range
      */
     public RegenerationConfig {
-        if (delaySeconds < 0) {
-            throw new IllegalArgumentException("delaySeconds (" + delaySeconds + ") must not be negative");
-        }
         if (perSecond < 0.0D) {
             throw new IllegalArgumentException("perSecond (" + perSecond + ") must not be negative");
         }
@@ -65,7 +61,6 @@ public record RegenerationConfig(int delaySeconds, double perSecond, List<Double
     public static RegenerationConfig read(ConfigSection section) {
         RegenerationConfig defaults = DEFAULT;
         return section.orDefault("regeneration", () -> new RegenerationConfig(
-                section.getInt("delaySeconds", defaults.delaySeconds()),
                 section.getDouble("perSecond", defaults.perSecond()),
                 readShares(section.getString("shares"), defaults.shares())
         ), defaults);

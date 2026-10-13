@@ -20,7 +20,6 @@ class RegenerationConfigTest {
     void defaults() {
         RegenerationConfig config = RegenerationConfig.DEFAULT;
 
-        assertEquals(3, config.delaySeconds());
         assertEquals(4.0D, config.perSecond());
         assertEquals(List.of(0.40D, 0.30D, 0.25D, 0.20D), config.shares());
     }
@@ -39,13 +38,12 @@ class RegenerationConfigTest {
     }
 
     @Test
-    @DisplayName("Negative values, an empty list and shares outside 0 to 1 are rejected")
+    @DisplayName("A negative rate, an empty list and shares outside 0 to 1 are rejected")
     void valuesAreChecked() {
-        assertRejected("delaySeconds", () -> new RegenerationConfig(-1, 4.0D, List.of(0.4D)));
-        assertRejected("perSecond", () -> new RegenerationConfig(3, -1.0D, List.of(0.4D)));
-        assertRejected("shares", () -> new RegenerationConfig(3, 4.0D, List.of()));
-        assertRejected("shares", () -> new RegenerationConfig(3, 4.0D, List.of(0.4D, 1.5D)));
-        assertDoesNotThrow(() -> new RegenerationConfig(0, 0.0D, List.of(0.0D)));
+        assertRejected("perSecond", () -> new RegenerationConfig(-1.0D, List.of(0.4D)));
+        assertRejected("shares", () -> new RegenerationConfig(4.0D, List.of()));
+        assertRejected("shares", () -> new RegenerationConfig(4.0D, List.of(0.4D, 1.5D)));
+        assertDoesNotThrow(() -> new RegenerationConfig(0.0D, List.of(0.0D)));
     }
 
     private static void assertRejected(String field, Executable creation) {
