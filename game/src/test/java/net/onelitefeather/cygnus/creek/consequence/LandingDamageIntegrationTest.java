@@ -9,6 +9,7 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -171,5 +172,21 @@ class LandingDamageIntegrationTest extends CygnusPlayerTestBase {
         throwAndLand(env, thrown);
 
         assertEquals(16.0F, thrown.getHealth(), 0.0F);
+    }
+
+    @Test
+    @DisplayName("A landing takes points and never the last one")
+    void landingTakesPointsAndLeavesOne(Env env) {
+        CygnusPlayer player = (CygnusPlayer) survivor(env);
+        player.vitality().setUp(0);
+        player.vitality().damage(88.0D, player.getPosition());
+        LandingDamage landing = new LandingDamage(4.0D);
+        player.refreshOnGround(true);
+
+        landing.watch(player);
+        throwAndLand(env, player);
+
+        assertEquals(1.0D, player.vitality().points(), 1.0E-9);
+        assertEquals(1.0F, player.getHealth(), 0.0F);
     }
 }

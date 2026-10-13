@@ -7,10 +7,10 @@ import net.minestom.server.event.trait.PlayerEvent;
 /**
  * Called when a player takes damage from the game.
  * <p>
- * Cygnus applies damage by setting health directly, which never raises Minestom's
- * {@code EntityDamageEvent}. This event fills that gap for everything that needs to react to a
- * hit — the blood splatter above all — and carries where the hit came from, so the reaction can
- * be aimed.
+ * Cygnus applies damage through {@code Vitality}, which sets health directly and so never raises
+ * Minestom's {@code EntityDamageEvent}. This event fills that gap for everything that needs to
+ * react to a hit — the blood splatter above all — and carries where the hit came from, so the
+ * reaction can be aimed. The amount is in health points.
  * </p>
  *
  * @author TheMeinerLP

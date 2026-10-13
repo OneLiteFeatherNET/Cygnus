@@ -10,6 +10,7 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class SlenderBarHelperDamageTest extends CygnusPlayerTestBase {
 
-    private static final float DAMAGE = 0.5F;
+    /** One health point, what the slender's drain takes per tick, enough to drop the shown health. */
+    private static final float DAMAGE = 1.0F;
     private static final int RANGE = 3;
 
     private final SlenderBarHelper helper = new SlenderBarHelper() {
@@ -64,5 +66,21 @@ class SlenderBarHelperDamageTest extends CygnusPlayerTestBase {
         this.helper.applyDamage(instance, attacker.getUuid(), new Pos(0, 40, 0), RANGE, DAMAGE);
 
         collector.assertEmpty();
+    }
+
+    @Test
+    @DisplayName("A hit takes points from a survivor who has a bonus, not raw health")
+    void damageGoesThroughThePoints(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player attacker = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        attacker.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        CygnusPlayer victim = (CygnusPlayer) env.createConnection().connect(instance, new Pos(1, 40, 0));
+        victim.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        victim.vitality().setUp(50);
+
+        this.helper.applyDamage(instance, attacker.getUuid(), new Pos(0, 40, 0), RANGE, 1.0F);
+
+        assertEquals(145.0D, victim.vitality().points(), 1.0E-9);
+        assertEquals(29.0F, victim.getHealth());
     }
 }

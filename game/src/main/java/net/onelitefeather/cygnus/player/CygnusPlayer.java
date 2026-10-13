@@ -17,6 +17,7 @@ import net.onelitefeather.cygnus.common.player.InstanceSwitchChunkPlayer;
 import net.onelitefeather.cygnus.telemetry.CygnusAttributes;
 import net.onelitefeather.cygnus.telemetry.KickTracer;
 import net.onelitefeather.cygnus.telemetry.TraceStep;
+import net.onelitefeather.cygnus.vitality.Vitality;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -59,6 +60,7 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private final AtomicReference<@Nullable Component> pendingKick = new AtomicReference<>();
     private final AtomicReference<@Nullable TraceStep> kickStep = new AtomicReference<>();
     private boolean blockedSprinting;
+    private final Vitality vitality = new Vitality(this);
     private int heartbeatTicks;
     private boolean heartbeatActive;
     private int ambientTicks;
@@ -281,6 +283,15 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
      */
     public boolean hasBlockedSprinting() {
         return blockedSprinting;
+    }
+
+    /**
+     * Returns the player's health as points.
+     *
+     * @return the vitality, the same object for the player's whole connection
+     */
+    public Vitality vitality() {
+        return this.vitality;
     }
 
     /**

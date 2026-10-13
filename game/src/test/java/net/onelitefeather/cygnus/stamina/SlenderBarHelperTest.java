@@ -11,6 +11,8 @@ import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.vitality.Vitality;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -57,13 +59,14 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         Player slender = env.createPlayer(instance, CENTER);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
-        Player survivor = env.createPlayer(instance, CENTER.add(1, 0, 0));
+        CygnusPlayer survivor = (CygnusPlayer) env.createPlayer(instance, CENTER.add(1, 0, 0));
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        float healthBefore = survivor.getHealth();
+        double pointsBefore = survivor.vitality().points();
         helper.applyDamage(instance, slender.getUuid(), CENTER, 3, DAMAGE);
 
-        assertEquals(healthBefore - DAMAGE, survivor.getHealth(), "a survivor must still take slender damage");
+        assertEquals(pointsBefore - DAMAGE * Vitality.POINTS_PER_HEALTH, survivor.vitality().points(), 1.0E-9,
+                "a survivor must still take slender damage");
 
         env.destroyInstance(instance, true);
     }
