@@ -18,11 +18,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -393,7 +391,7 @@ public final class WakeUpTransition {
             spawnSpider(transition);
         }
         if (!transition.isViewable()) {
-            transition.viewableSince = -1;
+            transition.viewableTicks = 0;
             if (transition.pendingTicks >= PENDING_TIMEOUT_TICKS) {
                 String reason = transition.arrived
                         ? "spider not viewable after " + PENDING_TIMEOUT_TICKS + " ticks"
@@ -402,10 +400,8 @@ public final class WakeUpTransition {
             }
             return;
         }
-        if (transition.viewableSince < 0) {
-            transition.viewableSince = transition.pendingTicks;
-        }
-        if (transition.pendingTicks - transition.viewableSince >= CAMERA_DELAY_TICKS) {
+        // The first viewable tick counts as 0, so the switch comes CAMERA_DELAY_TICKS ticks after it
+        if (transition.viewableTicks++ >= CAMERA_DELAY_TICKS) {
             switchCamera(transition);
         }
     }
@@ -420,13 +416,14 @@ public final class WakeUpTransition {
     }
 
     /**
-     * Moves the world age of the transition's instance into the band of its kind, once per batch and instance, right
-     * before the first camera switch of the batch in that instance.
+     * Moves the world age of the transition's instance into the band of its kind, once per batch, right before the
+     * first camera switch of the batch.
      */
     private static void ensureWorldAge(Transition transition) {
         Batch batch = transition.batch;
         Instance instance = transition.instance;
-        if (!batch.agedInstances.add(instance)) return;
+        if (batch.aged) return;
+        batch.aged = true;
 
         long target = worldAgeFor(batch.kind, instance.getWorldAge());
         // Minestom sends the new world age to the instance's players at once
@@ -435,12 +432,12 @@ public final class WakeUpTransition {
     }
 
     /**
-     * The players started by one call of {@link #close} or {@link #open}, which share the world age of an instance.
+     * The players started by one call of {@link #close} or {@link #open}, which share the world age of its instance.
      */
     private static final class Batch {
 
         private final Kind kind;
-        private final Set<Instance> agedInstances = new HashSet<>();
+        private boolean aged;
 
         private Batch(Kind kind) {
             this.kind = kind;
@@ -462,7 +459,8 @@ public final class WakeUpTransition {
         private CompletableFuture<Void> spawned;
         private boolean onSpider;
         private int pendingTicks;
-        private int viewableSince = -1;
+        /** How many ticks in a row the spider has been viewable for the player. */
+        private int viewableTicks;
         private int ticksOnSpider;
 
         private Transition(Batch batch, Player player, Instance instance) {
