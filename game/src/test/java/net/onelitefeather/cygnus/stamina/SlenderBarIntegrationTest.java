@@ -338,6 +338,37 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("The bar does not refill while the slender looks through the creek")
+    void possessionPausesRegeneration(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance);
+        // Without the reappear cooldown, so only the regeneration threshold is under test
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player,
+                new StaminaConfig(0.3D, 1.25D, 0), System::currentTimeMillis);
+        slenderBar.start();
+        slenderBar.changeStatus(); // READY -> DRAINING
+        for (int i = 0; i < 32; i++) {
+            slenderBar.consume(); // runs dry, REGENERATING at 0
+        }
+
+        player.setTag(Tags.POSSESSING, true);
+        for (int i = 0; i < 20; i++) {
+            slenderBar.consume();
+        }
+        player.removeTag(Tags.POSSESSING);
+
+        assertFalse(slenderBar.changeStatus(), "20 ticks inside the creek must not count towards the threshold");
+
+        for (int i = 0; i < 20; i++) {
+            slenderBar.consume();
+        }
+        assertTrue(slenderBar.changeStatus(), "once back, the bar refills as usual");
+
+        slenderBar.stop();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
     @DisplayName("Stopping the bar takes the cooldown off the eye")
     void stopClearsTheCooldown(@NotNull Env env) {
         Instance instance = env.createFlatInstance();

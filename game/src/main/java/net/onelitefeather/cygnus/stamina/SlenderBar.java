@@ -31,7 +31,7 @@ import java.util.function.LongSupplier;
  * Regeneration must reach {@value #MIN_TIME_TO_REACTIVATE} before {@link #changeStatus()} allows draining again,
  * and once hidden the slender stays hidden for at least
  * {@linkplain StaminaConfig#slenderReappearCooldownSeconds() the reappear cooldown}, so he cannot chain one
- * appearance onto the next.
+ * appearance onto the next. While he looks through the creek's eyes, regeneration stands still.
  *
  * @author theEvilReaper
  * @version 1.2.0
@@ -149,7 +149,12 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         this.colorState.sendProgressBar(player, tileChar, currentTime, time);
     }
 
+    /**
+     * Refills the bar, but not while the slender looks through the creek's eyes: possessing it must
+     * not double as a free wait for his next appearance.
+     */
     private void handleRegeneration() {
+        if (player.hasTag(Tags.POSSESSING)) return;
         if (currentTime < time) {
             currentTime = Math.min(time, currentTime + TIME_STEP);
             this.colorState.sendProgressBar(player, tileChar, currentTime, time);
