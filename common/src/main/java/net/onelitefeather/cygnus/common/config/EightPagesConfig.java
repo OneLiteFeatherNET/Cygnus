@@ -20,7 +20,7 @@ import java.util.random.RandomGenerator;
  * @param bonusTwoSurvivors   extra health points for each of two survivors, a multiple of 5
  * @param bonusThreeSurvivors extra health points for each of three survivors, a multiple of 5
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.17.0
  */
 public record EightPagesConfig(int maxSurvivors, int bonusOneSurvivor, int bonusTwoSurvivors, int bonusThreeSurvivors) {
@@ -72,9 +72,12 @@ public record EightPagesConfig(int maxSurvivors, int bonusOneSurvivor, int bonus
      * Returns the extra health points for a round with the given number of survivors.
      *
      * @param survivors the survivors at the start of the round
-     * @return the bonus, {@code 0} for every count without a configured one
+     * @return the bonus, {@code 0} for every count without a configured one and for every round
+     *         with more than {@link #maxSurvivors()} survivors
      */
     public int bonusFor(int survivors) {
+        // Only an Eight Pages round gets a bonus, so a lower boundary also turns the bonus off
+        if (survivors > this.maxSurvivors) return 0;
         return switch (survivors) {
             case 1 -> this.bonusOneSurvivor;
             case 2 -> this.bonusTwoSurvivors;
