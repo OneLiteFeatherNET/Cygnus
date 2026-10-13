@@ -13,6 +13,7 @@ import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.EightPagesConfig;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
@@ -107,6 +108,23 @@ class GamePreLaunchListenerTest {
 
         assertEquals(100.0D, first.vitality().points(), 1.0E-9);
         assertEquals(20.0F, first.getHealth());
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testTheSlenderGetsTheSameSpeedShareInASmallRound(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        Player survivor = env.createPlayer(instance);
+
+        launch(env, loadedProvider(), EightPagesConfig.DEFAULT);
+
+        double survivorShare = survivor.getAttribute(Attribute.MOVEMENT_SPEED).getValue() / 0.065;
+        double slenderShare = slender.getAttribute(Attribute.MOVEMENT_SPEED).getValue() / 0.1;
+        assertTrue(survivorShare > 1.0D, "a lone survivor is sped up");
+        assertEquals(survivorShare, slenderShare, 1.0E-6);
 
         env.destroyInstance(instance, true);
     }

@@ -42,7 +42,13 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
 
         for (Player player : connectionManager.getOnlinePlayers()) {
             AttributeHelper.adjustStepHeightAndJump(player);
-            if (TeamHelper.isSlenderTeam(player)) continue;
+            if (TeamHelper.isSlenderTeam(player)) {
+                // The same share for the slender, so the bonus does not let survivors outwalk him
+                if (adjustedSpeed != 0) {
+                    AttributeHelper.updateSlenderSpeedScale(player, adjustedSpeed);
+                }
+                continue;
+            }
             AttributeHelper.decreaseSpeed(player);
             if (player instanceof CygnusPlayer cygnus) {
                 cygnus.vitality().setUp(bonus);
