@@ -70,7 +70,7 @@ class TraceCookieTest {
         byte[] written = this.cookie.roundCookie();
 
         assertNotNull(written);
-        assertEquals("00-" + round.getTraceId() + "-" + round.getSpanId() + "-0" + (round.isSampled() ? "1" : "0"),
+        assertEquals("00-" + round.getTraceId() + "-" + round.getSpanId() + "-" + round.getTraceFlags().asHex(),
                 new String(written, StandardCharsets.US_ASCII));
     }
 
