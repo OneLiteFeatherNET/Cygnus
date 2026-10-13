@@ -32,15 +32,29 @@ class FootprintConfigTest {
         assertEquals(0.7D, D.minSpacing());
         assertEquals(0.33D, D.fadeShare());
         assertEquals(150, D.scanStartDelaySeconds());
+        assertEquals(4, D.scentPrints());
+        assertEquals(15, D.scentSpreadDegrees());
+        assertEquals(40, D.scentCooldownSeconds());
+    }
+
+    @Test
+    @DisplayName("The scent needs a print, a spread up to 180 degrees and a cooldown that is not negative")
+    void scentRanges() {
+        assertRejected("scentPrints", () -> withScent(0, 15, 40));
+        assertRejected("scentSpreadDegrees", () -> withScent(4, -1, 40));
+        assertRejected("scentSpreadDegrees", () -> withScent(4, 181, 40));
+        assertRejected("scentCooldownSeconds", () -> withScent(4, 15, -1));
+        assertDoesNotThrow(() -> withScent(1, 0, 0));
+        assertDoesNotThrow(() -> withScent(4, 180, 40));
     }
 
     @Test
     @DisplayName("The start delay may be 0 but not negative")
     void startDelayRange() {
         assertRejected("scanStartDelaySeconds", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, -1));
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, -1, 4, 15, 40));
         assertDoesNotThrow(() -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 0));
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 0, 4, 15, 40));
     }
 
     @Test
@@ -64,46 +78,51 @@ class FootprintConfigTest {
     @DisplayName("The longest delay may not be shorter than the shortest")
     void delayOrder() {
         assertRejected("slenderDelayMaxMillis", () -> new FootprintConfig(3.0D, 0.25D, 2000, 1000, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90, 4, 15, 40));
         assertRejected("slenderDelayMinMillis", () -> new FootprintConfig(3.0D, 0.25D, -1, 1000, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90, 4, 15, 40));
     }
 
     @Test
     @DisplayName("The gap has to be shorter than the history, or a scan never finds anything")
     void gapShorterThanHistory() {
         assertRejected("scanGapSeconds", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 30, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
+                2.0D, 30, 40, 30, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90, 4, 15, 40));
     }
 
     @Test
     @DisplayName("A teleport has to be longer than a step and a sample")
     void teleportLongerThanSteps() {
         assertRejected("teleportBlocks", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 3.0D, 0.7D, 0.33D, 90));
+                2.0D, 30, 40, 5, 40, 15, 120, 3.0D, 0.7D, 0.33D, 90, 4, 15, 40));
     }
 
     @Test
     @DisplayName("Counts and durations need at least 1")
     void lowerBounds() {
         assertRejected("slenderLifetimeSeconds", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 0,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90, 4, 15, 40));
         assertRejected("scanRadius", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 0, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
+                2.0D, 30, 0, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90, 4, 15, 40));
         assertRejected("scanMaxPrints", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 5, 0, 15, 120, 8.0D, 0.7D, 0.33D, 90));
+                2.0D, 30, 40, 5, 0, 15, 120, 8.0D, 0.7D, 0.33D, 90, 4, 15, 40));
         assertRejected("scanCooldownSeconds", () -> new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 5, 40, 15, -1, 8.0D, 0.7D, 0.33D, 90));
+                2.0D, 30, 40, 5, 40, 15, -1, 8.0D, 0.7D, 0.33D, 90, 4, 15, 40));
         assertRejected("slenderStepBlocks", () -> new FootprintConfig(0.0D, 0.25D, 1000, 2000, 12,
-                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90));
+                2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90, 4, 15, 40));
     }
 
     private static FootprintConfig withChance(double chance) {
-        return new FootprintConfig(3.0D, chance, 1000, 2000, 12, 2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90);
+        return new FootprintConfig(3.0D, chance, 1000, 2000, 12, 2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90, 4, 15, 40);
     }
 
     private static FootprintConfig withFadeShare(double fadeShare) {
-        return new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12, 2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, fadeShare, 90);
+        return new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12, 2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, fadeShare, 90, 4, 15, 40);
+    }
+
+    private static FootprintConfig withScent(int prints, int spreadDegrees, int cooldownSeconds) {
+        return new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12, 2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90,
+                prints, spreadDegrees, cooldownSeconds);
     }
 
     private static void assertRejected(String field, Executable executable) {

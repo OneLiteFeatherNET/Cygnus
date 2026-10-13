@@ -26,6 +26,9 @@ package net.onelitefeather.cygnus.common.config;
  * @param scanStartDelaySeconds  how long the tracking item stays locked after the round starts. All
  *                               survivors start at the same spot, so an early scan would show where
  *                               each of them ran off to
+ * @param scentPrints            how many prints point towards the nearest track when the radius holds none
+ * @param scentSpreadDegrees     how far the scent may turn away from the true direction, to either side, from 0 to 180
+ * @param scentCooldownSeconds   how long the slender waits after a use that found no tracks in the radius
  * @author Joltra
  * @version 1.0.0
  * @since 2.16.0
@@ -46,7 +49,10 @@ public record FootprintConfig(
         double teleportBlocks,
         double minSpacing,
         double fadeShare,
-        int scanStartDelaySeconds
+        int scanStartDelaySeconds,
+        int scentPrints,
+        int scentSpreadDegrees,
+        int scentCooldownSeconds
 ) {
 
     /**
@@ -57,7 +63,7 @@ public record FootprintConfig(
             2.0D, 30,
             40, 5, 40, 15, 120,
             8.0D, 0.7D, 0.33D,
-            150);
+            150, 4, 15, 40);
 
     /**
      * Checks the values.
@@ -102,6 +108,13 @@ public record FootprintConfig(
         if (scanStartDelaySeconds < 0) {
             throw new IllegalArgumentException("scanStartDelaySeconds (" + scanStartDelaySeconds + ") must not be negative");
         }
+        atLeastOne("scentPrints", scentPrints);
+        if (scentSpreadDegrees < 0 || scentSpreadDegrees > 180) {
+            throw new IllegalArgumentException("scentSpreadDegrees (" + scentSpreadDegrees + ") must be between 0 and 180");
+        }
+        if (scentCooldownSeconds < 0) {
+            throw new IllegalArgumentException("scentCooldownSeconds (" + scentCooldownSeconds + ") must not be negative");
+        }
     }
 
     /**
@@ -128,7 +141,10 @@ public record FootprintConfig(
                 section.getDouble("teleportBlocks", defaults.teleportBlocks()),
                 section.getDouble("minSpacing", defaults.minSpacing()),
                 section.getDouble("fadeShare", defaults.fadeShare()),
-                section.getInt("scanStartDelaySeconds", defaults.scanStartDelaySeconds())
+                section.getInt("scanStartDelaySeconds", defaults.scanStartDelaySeconds()),
+                section.getInt("scentPrints", defaults.scentPrints()),
+                section.getInt("scentSpreadDegrees", defaults.scentSpreadDegrees()),
+                section.getInt("scentCooldownSeconds", defaults.scentCooldownSeconds())
         ), defaults);
     }
 

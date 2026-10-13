@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -85,6 +86,32 @@ final class SurvivorTrackLog {
             }
         }
         return found;
+    }
+
+    /**
+     * Returns the point of any survivor closest to a position, however far away it is.
+     *
+     * @param center       the position to measure from
+     * @param newestMillis the newest time a point may have
+     * @param now          the current time in milliseconds
+     * @return the closest matching point, or empty if there is none
+     */
+    Optional<TrackPoint> nearestPoint(Point center, long newestMillis, long now) {
+        long oldest = now - this.historyMillis;
+        TrackPoint nearest = null;
+        double nearestSquared = Double.MAX_VALUE;
+        for (Track track : this.tracks.values()) {
+            synchronized (track) {
+                for (TrackPoint point : track.points) {
+                    if (point.timeMillis() < oldest || point.timeMillis() > newestMillis) continue;
+                    double distanceSquared = point.position().distanceSquared(center);
+                    if (distanceSquared >= nearestSquared) continue;
+                    nearest = point;
+                    nearestSquared = distanceSquared;
+                }
+            }
+        }
+        return Optional.ofNullable(nearest);
     }
 
     /**
