@@ -63,7 +63,7 @@ class GamePreLaunchListenerTest {
         env.createPlayer(instance);
         env.createPlayer(instance);
 
-        launch(env, loadedProvider(), new EightPagesConfig(3, 30, 20, 10));
+        launch(env, loadedProvider(), new EightPagesConfig(30, 20, 10));
 
         assertEquals(120.0D, first.vitality().points(), 1.0E-9);
         assertEquals(24.0D, first.getAttributeValue(Attribute.MAX_HEALTH), 1.0E-9);

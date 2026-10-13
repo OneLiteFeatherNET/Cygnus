@@ -30,7 +30,7 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
     @Override
     public void accept(GamePreLaunchEvent event) {
         int survivors = Math.max(0, this.connectionManager.getOnlinePlayerCount() - 1);
-        int pageCount = PageCalculation.calculatePageAmount(survivors, this.eightPages.maxSurvivors());
+        int pageCount = PageCalculation.calculatePageAmount(survivors);
         this.pageProvider.setMaxPageAmount(pageCount);
         // Only picked here, placed into the world once the round starts
         this.pageProvider.collectStartPages(PageCalculation.calculateActivePageAmount());

@@ -6,7 +6,8 @@ import java.util.random.RandomGenerator;
 /**
  * Settings for rounds with only a few survivors.
  * <p>
- * Such a round needs only eight pages, and its survivors get extra health. The keys carry the
+ * A round with at most {@link GameConfig#SMALL_ROUND_SURVIVORS} survivors needs only eight pages,
+ * and its survivors get extra health. The keys carry the
  * {@code eightPages.} prefix, for example {@code eightPages.bonusOneSurvivor}.
  * </p>
  * <p>
@@ -15,15 +16,14 @@ import java.util.random.RandomGenerator;
  * bonus.
  * </p>
  *
- * @param maxSurvivors        a round with at most this many survivors at its start needs only eight pages
  * @param bonusOneSurvivor    extra health points for a lone survivor, a multiple of 5
  * @param bonusTwoSurvivors   extra health points for each of two survivors, a multiple of 5
  * @param bonusThreeSurvivors extra health points for each of three survivors, a multiple of 5
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.17.0
  */
-public record EightPagesConfig(int maxSurvivors, int bonusOneSurvivor, int bonusTwoSurvivors, int bonusThreeSurvivors) {
+public record EightPagesConfig(int bonusOneSurvivor, int bonusTwoSurvivors, int bonusThreeSurvivors) {
 
     /**
      * Health points per Minecraft health point. A bonus has to be a multiple of it, so the hearts
@@ -35,7 +35,7 @@ public record EightPagesConfig(int maxSurvivors, int bonusOneSurvivor, int bonus
     private static final int POINTS_PER_HEART = POINTS_PER_HEALTH * 2;
 
     /** The default settings from the design. */
-    public static final EightPagesConfig DEFAULT = new EightPagesConfig(3, 50, 25, 0);
+    public static final EightPagesConfig DEFAULT = new EightPagesConfig(50, 25, 0);
 
     /**
      * Checks the values.
@@ -43,9 +43,6 @@ public record EightPagesConfig(int maxSurvivors, int bonusOneSurvivor, int bonus
      * @throws IllegalArgumentException if a value is out of range
      */
     public EightPagesConfig {
-        if (maxSurvivors < 0) {
-            throw new IllegalArgumentException("maxSurvivors (" + maxSurvivors + ") must not be negative");
-        }
         bonus("bonusOneSurvivor", bonusOneSurvivor);
         bonus("bonusTwoSurvivors", bonusTwoSurvivors);
         bonus("bonusThreeSurvivors", bonusThreeSurvivors);
@@ -61,7 +58,6 @@ public record EightPagesConfig(int maxSurvivors, int bonusOneSurvivor, int bonus
     public static EightPagesConfig read(ConfigSection section) {
         EightPagesConfig defaults = DEFAULT;
         return section.orDefault("eight pages", () -> new EightPagesConfig(
-                section.getInt("maxSurvivors", defaults.maxSurvivors()),
                 section.getInt("bonusOneSurvivor", defaults.bonusOneSurvivor()),
                 section.getInt("bonusTwoSurvivors", defaults.bonusTwoSurvivors()),
                 section.getInt("bonusThreeSurvivors", defaults.bonusThreeSurvivors())
@@ -72,12 +68,10 @@ public record EightPagesConfig(int maxSurvivors, int bonusOneSurvivor, int bonus
      * Returns the extra health points for a round with the given number of survivors.
      *
      * @param survivors the survivors at the start of the round
-     * @return the bonus, {@code 0} for every count without a configured one and for every round
-     *         with more than {@link #maxSurvivors()} survivors
+     * @return the bonus, {@code 0} for every count without a configured one
      */
     public int bonusFor(int survivors) {
-        // Only an Eight Pages round gets a bonus, so a lower boundary also turns the bonus off
-        if (survivors > this.maxSurvivors) return 0;
+        // One case for every survivor count up to GameConfig.SMALL_ROUND_SURVIVORS
         return switch (survivors) {
             case 1 -> this.bonusOneSurvivor;
             case 2 -> this.bonusTwoSurvivors;

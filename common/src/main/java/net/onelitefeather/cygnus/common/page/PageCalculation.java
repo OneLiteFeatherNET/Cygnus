@@ -54,38 +54,36 @@ public final class PageCalculation {
      * <p>
      * An Eight Pages round has {@value #EIGHT_PAGES} pages plus 0 to {@value #EIGHT_PAGES_OFFSET_MAX}.
      * A normal round builds on them: {@value #PAGES_PER_EXTRA_SURVIVOR} more for every survivor
-     * above the boundary, plus 0 to {@value #PAGE_COUNT_JITTER_MAX}. Anchored to the boundary, the
-     * step from one mode to the other never jumps, wherever the boundary is set.
+     * above {@link GameConfig#SMALL_ROUND_SURVIVORS}, plus 0 to {@value #PAGE_COUNT_JITTER_MAX}.
+     * Anchored to the boundary, the step from one mode to the other never jumps.
      * </p>
      *
-     * @param survivors    the survivors at the start of the round
-     * @param maxSurvivors the most survivors an Eight Pages round may have
+     * @param survivors the survivors at the start of the round
      * @return the number of pages
      */
-    public static int calculatePageAmount(int survivors, int maxSurvivors) {
-        return calculatePageAmount(survivors, maxSurvivors, ThreadLocalRandom.current());
+    public static int calculatePageAmount(int survivors) {
+        return calculatePageAmount(survivors, ThreadLocalRandom.current());
     }
 
     /**
-     * Calculates the number of pages with the given random source, see {@link #calculatePageAmount(int, int)}.
+     * Calculates the number of pages with the given random source, see {@link #calculatePageAmount(int)}.
      *
-     * @param survivors    the survivors at the start of the round
-     * @param maxSurvivors the most survivors an Eight Pages round may have
-     * @param random       the source of the random part
+     * @param survivors the survivors at the start of the round
+     * @param random    the source of the random part
      * @return the number of pages
      */
-    static int calculatePageAmount(int survivors, int maxSurvivors, RandomGenerator random) {
-        if (survivors <= maxSurvivors) {
+    static int calculatePageAmount(int survivors, RandomGenerator random) {
+        if (survivors <= GameConfig.SMALL_ROUND_SURVIVORS) {
             return EIGHT_PAGES + random.nextInt(EIGHT_PAGES_OFFSET_MAX + 1);
         }
-        return EIGHT_PAGES + (survivors - maxSurvivors) * PAGES_PER_EXTRA_SURVIVOR
+        return EIGHT_PAGES + (survivors - GameConfig.SMALL_ROUND_SURVIVORS) * PAGES_PER_EXTRA_SURVIVOR
                 + random.nextInt(PAGE_COUNT_JITTER_MAX + 1);
     }
 
     /**
      * Calculates how many pages should be concurrently active (spawned in the world at once).
      * <p>
-     * This stays below {@link #calculatePageAmount(int, int)} on purpose: it governs how many pages exist
+     * This stays below {@link #calculatePageAmount(int)} on purpose: it governs how many pages exist
      * in the world at the same time, not the total pool a round draws from. If the number of online
      * players (excluding one) is less than {@value #PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING},
      * {@link GameConfig#MIN_ACTIVE_PAGE_COUNT} is returned. Otherwise, one page is added for every
