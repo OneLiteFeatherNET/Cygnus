@@ -5,6 +5,15 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.16.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.16.0...v2.16.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency io.sentry:sentry to v8.61.0 ([#371](https://github.com/OneLiteFeatherNET/Cygnus/issues/371)) ([44a6c0d](https://github.com/OneLiteFeatherNET/Cygnus/commit/44a6c0d1bf5d209cd6d5611982b733eb34d90800))
+* **game:** move disable respawn screen usage to the spawn listener ([7b0f250](https://github.com/OneLiteFeatherNET/Cygnus/commit/7b0f250e8d3b664082179a522dddf0b16d29aed3))
+* **regeneration:** make the painkillers worth taking in a chase ([#373](https://github.com/OneLiteFeatherNET/Cygnus/issues/373)) ([c187df8](https://github.com/OneLiteFeatherNET/Cygnus/commit/c187df8d4d90084c21d6abeca0d88431c0e6315c))
+
 ## [2.16.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.15.0...v2.16.0) (2026-10-14)
 
 
