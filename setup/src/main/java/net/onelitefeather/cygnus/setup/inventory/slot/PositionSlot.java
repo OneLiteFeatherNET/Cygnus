@@ -56,7 +56,7 @@ public class PositionSlot extends AbstractDataSlot {
 
         switch (click) {
             case Click.Left _ when position == null ->
-                    EventDispatcher.call(new PositionSetEvent(player, player.getPosition(), type));
+                    EventDispatcher.call(new PositionSetEvent(player, type));
             case Click.Left _ -> {
                 player.closeInventory();
                 player.teleport(position);
