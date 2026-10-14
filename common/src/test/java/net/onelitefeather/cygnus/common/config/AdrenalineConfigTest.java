@@ -2,12 +2,10 @@ package net.onelitefeather.cygnus.common.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
+import static net.onelitefeather.cygnus.common.config.ConfigAssertions.assertRejected;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AdrenalineConfigTest {
 
@@ -41,10 +39,5 @@ class AdrenalineConfigTest {
     void cooldownNotNegative() {
         assertRejected("cooldownSeconds", () -> new AdrenalineConfig(8, 0.2D, 4, -1));
         assertDoesNotThrow(() -> new AdrenalineConfig(8, 0.2D, 4, 0));
-    }
-
-    private static void assertRejected(String field, Executable creation) {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, creation);
-        assertTrue(exception.getMessage().contains(field), exception.getMessage());
     }
 }

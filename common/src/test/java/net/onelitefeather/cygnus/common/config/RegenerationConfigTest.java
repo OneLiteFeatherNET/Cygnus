@@ -2,14 +2,12 @@ package net.onelitefeather.cygnus.common.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
 import java.util.List;
 
+import static net.onelitefeather.cygnus.common.config.ConfigAssertions.assertRejected;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RegenerationConfigTest {
 
@@ -46,10 +44,5 @@ class RegenerationConfigTest {
         assertRejected("shares", () -> new RegenerationConfig(4.0D, List.of(0.4D, 1.5D), 10));
         assertRejected("minMissing", () -> new RegenerationConfig(4.0D, List.of(0.4D), 0));
         assertDoesNotThrow(() -> new RegenerationConfig(0.0D, List.of(0.0D), 1));
-    }
-
-    private static void assertRejected(String field, Executable creation) {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, creation);
-        assertTrue(exception.getMessage().contains(field), exception.getMessage());
     }
 }

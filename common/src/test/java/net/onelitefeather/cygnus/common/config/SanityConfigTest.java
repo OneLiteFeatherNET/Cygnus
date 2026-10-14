@@ -2,11 +2,9 @@ package net.onelitefeather.cygnus.common.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
+import static net.onelitefeather.cygnus.common.config.ConfigAssertions.assertRejected;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SanityConfigTest {
 
@@ -49,10 +47,5 @@ class SanityConfigTest {
     void lowerBounds() {
         assertRejected("sightingCooldownSeconds", () -> new SanityConfig(0.5D, 0.1D, 0.1D, 0, 0.3D, 0.15D, 0.25D, 0.005D, 0.015D, 0.25D, 0.15D, 0.55D));
         assertRejected("decayPerSecond", () -> new SanityConfig(0.5D, 0.1D, 0.1D, 20, 0.3D, 0.15D, 0.25D, -0.001D, 0.015D, 0.25D, 0.15D, 0.55D));
-    }
-
-    private static void assertRejected(String field, Executable creation) {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, creation);
-        assertTrue(exception.getMessage().contains(field), exception.getMessage());
     }
 }

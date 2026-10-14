@@ -4,7 +4,6 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.page.PageResource;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -52,18 +51,6 @@ class GameMapTest {
         assertTrue(mapBuilder.removeSurvivorSpawn(testPos));
         assertTrue(mapBuilder.getSurvivorSpawns().isEmpty());
         assertFalse(mapBuilder.removeSurvivorSpawn(testPos));
-    }
-
-    @Disabled("The function will be reimplemented in a future update")
-    @Test
-    void testHasEnoughSurvivorSpawns() {
-        GameMapBuilder mapBuilder = new GameMapBuilder();
-        assertNotNull(mapBuilder);
-        assertFalse(mapBuilder.hasEnoughSurvivorSpawns());
-        for (int i = 0; i <= 12; i++) {
-            mapBuilder.addSurvivorSpawn(new Pos(i, i, i));
-        }
-        assertTrue(mapBuilder.hasEnoughSurvivorSpawns());
     }
 
     @Test

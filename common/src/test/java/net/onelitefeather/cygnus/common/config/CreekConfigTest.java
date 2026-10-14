@@ -2,8 +2,8 @@ package net.onelitefeather.cygnus.common.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
+import static net.onelitefeather.cygnus.common.config.ConfigAssertions.assertRejected;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,11 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CreekConfigTest {
 
     private static final CreekConfig DEFAULTS = CreekConfig.DEFAULT;
-
-    private static void assertRejected(String field, Executable creation) {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, creation);
-        assertTrue(exception.getMessage().contains(field), exception.getMessage());
-    }
 
     /** The defaults with other top-level values and the given stalk, sight and hunt groups. */
     private static CreekConfig with(double routeLinkDistance, int personalSpace, CreekConfig.Sight sight,

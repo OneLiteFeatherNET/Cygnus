@@ -12,7 +12,6 @@ import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.minestom.testing.extension.MicrotusExtension;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -57,32 +56,6 @@ class InstanceSwitchChunkPlayerIntegrationTest {
 
         env.destroyInstance(target, true);
         env.destroyInstance(source, true);
-    }
-
-    @Disabled(value = "Investigate the flakiness")
-    @Test
-    void testPlainPlayerStillReceivesTheUnloads(Env env) {
-        // The counterpart of the test above: without the override the client is told to unload the
-        // very chunks it is about to be sent again, which is what makes them invisible
-        var connectionManager = env.process().connection();
-        connectionManager.setPlayerProvider(Player::new);
-        try {
-            Instance source = env.createFlatInstance();
-            Instance target = env.createFlatInstance();
-
-            TestConnection connection = env.createConnection();
-            Player player = connection.connect(source, SPAWN);
-
-            Collector<UnloadChunkPacket> unloads = connection.trackIncoming(UnloadChunkPacket.class);
-            player.setInstance(target, SPAWN).join();
-
-            assertFalse(unloads.collect().isEmpty(), "An unpatched player unloads the shared chunks");
-
-            env.destroyInstance(target, true);
-            env.destroyInstance(source, true);
-        } finally {
-            connectionManager.setPlayerProvider(new TestPlayerProvider());
-        }
     }
 
     @Test

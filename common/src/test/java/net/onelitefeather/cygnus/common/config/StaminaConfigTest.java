@@ -2,12 +2,10 @@ package net.onelitefeather.cygnus.common.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
+import static net.onelitefeather.cygnus.common.config.ConfigAssertions.assertRejected;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StaminaConfigTest {
 
@@ -50,10 +48,5 @@ class StaminaConfigTest {
         assertRejected("slenderDamageRange", () -> new StaminaConfig(0.3D, 1.25D, 5, 17));
         assertDoesNotThrow(() -> new StaminaConfig(0.3D, 1.25D, 5, 1));
         assertDoesNotThrow(() -> new StaminaConfig(0.3D, 1.25D, 5, 16));
-    }
-
-    private static void assertRejected(String field, Executable creation) {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, creation);
-        assertTrue(exception.getMessage().contains(field), exception.getMessage());
     }
 }
