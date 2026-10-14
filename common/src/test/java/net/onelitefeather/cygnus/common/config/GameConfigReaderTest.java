@@ -342,8 +342,8 @@ class GameConfigReaderTest {
                 creek.huntThreshold=0.7
                 creek.stalkMinDistance=22
                 creek.stalkMaxDistance=36
-                creek.stalkMinAngle=41
-                creek.stalkMaxAngle=71
+                creek.stalkMinAngle=81
+                creek.stalkMaxAngle=131
                 creek.stalkRevealMillis=800
                 creek.stalkMinSeconds=46
                 creek.stalkMaxSeconds=91
@@ -382,8 +382,8 @@ class GameConfigReaderTest {
         assertEquals(0.7D, creek.hunt().threshold(), 1.0E-9);
         assertEquals(22, creek.stalk().minDistance());
         assertEquals(36, creek.stalk().maxDistance());
-        assertEquals(41, creek.stalk().minAngle());
-        assertEquals(71, creek.stalk().maxAngle());
+        assertEquals(81, creek.stalk().minAngle());
+        assertEquals(131, creek.stalk().maxAngle());
         assertEquals(800, creek.stalk().revealMillis());
         assertEquals(46, creek.stalk().minSeconds());
         assertEquals(91, creek.stalk().maxSeconds());

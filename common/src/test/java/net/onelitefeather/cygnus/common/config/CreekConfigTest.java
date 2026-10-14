@@ -51,8 +51,8 @@ class CreekConfigTest {
         assertEquals(0.6D, DEFAULTS.hunt().threshold());
         assertEquals(20, DEFAULTS.stalk().minDistance());
         assertEquals(35, DEFAULTS.stalk().maxDistance());
-        assertEquals(40, DEFAULTS.stalk().minAngle());
-        assertEquals(70, DEFAULTS.stalk().maxAngle());
+        assertEquals(80, DEFAULTS.stalk().minAngle());
+        assertEquals(130, DEFAULTS.stalk().maxAngle());
         assertEquals(10, DEFAULTS.hunt().minStalkSeconds());
         assertEquals(45, DEFAULTS.hunt().cooldownSeconds());
         assertEquals(1.5D, DEFAULTS.hunt().catchDistance());
@@ -100,9 +100,16 @@ class CreekConfigTest {
     }
 
     @Test
+    @DisplayName("The stalk angles have to reach past the hide angle, or no spot is ever off the screen")
+    void stalkAnglesReachPastTheHideAngle() {
+        assertRejected("stalkMaxAngle",
+                () -> new CreekConfig.Stalk(0.25D, 20, 35, 40, CreekConfig.HIDE_ANGLE, 700, 45, 90));
+    }
+
+    @Test
     @DisplayName("The stalk distance range must not run backwards")
     void stalkDistanceForwards() {
-        assertRejected("stalkMinDistance", () -> new CreekConfig.Stalk(0.25D, 40, 35, 40, 70, 700, 45, 90));
+        assertRejected("stalkMinDistance", () -> new CreekConfig.Stalk(0.25D, 40, 35, 80, 130, 700, 45, 90));
     }
 
     @Test

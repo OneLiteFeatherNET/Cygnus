@@ -84,7 +84,7 @@ class VanishStateTest {
     void stopsAtTheFirstHiddenPoint() {
         RecordingBody body = new RecordingBody(new Pos(50, 40, 50));
         AtomicInteger checked = new AtomicInteger();
-        SpotFinder counting = new SpotFinder(Contexts.SIGHT, candidate -> {
+        SpotFinder counting = new SpotFinder(Contexts.CONFIG.sight().range(), candidate -> {
             checked.incrementAndGet();
             return Optional.of(candidate);
         });
