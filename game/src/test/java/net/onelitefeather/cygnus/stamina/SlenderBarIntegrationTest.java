@@ -9,6 +9,7 @@ import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.network.packet.server.ServerPacket;
 import net.minestom.server.network.packet.server.play.ActionBarPacket;
 import net.minestom.server.network.packet.server.play.SetCooldownPacket;
+import net.minestom.server.network.packet.server.play.SoundEffectPacket;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
@@ -71,6 +72,23 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
             assertEquals("", empty.content(), "no segment should be missing right when draining starts");
         });
 
+        slenderBar.stop();
+    }
+
+    @Test
+    @DisplayName("Even his first appearance of the round is heard")
+    void testTheFirstAppearanceIsHeard(@NotNull Env env) {
+        CygnusPlayer slender = (CygnusPlayer) env.createConnection().connect(instance, new Pos(0, 40, 0));
+        TestConnection survivorConnection = env.createConnection();
+        Player survivor = survivorConnection.connect(instance, new Pos(10, 40, 0));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender);
+        slenderBar.start();
+        Collector<SoundEffectPacket> sounds = survivorConnection.trackIncoming(SoundEffectPacket.class);
+
+        slenderBar.changeStatus(); // READY -> DRAINING, the bar is still full
+
+        sounds.assertSingle(packet -> assertEquals(SlenderBarHelper.SPAWN.name(), packet.soundEvent().key()));
         slenderBar.stop();
     }
 

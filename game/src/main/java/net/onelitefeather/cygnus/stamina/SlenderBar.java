@@ -228,23 +228,21 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         // Holds for READY too: a bar that refilled inside the cooldown must not skip it
         if (state != State.DRAINING && this.clock.getAsLong() < this.reappearAt) return false;
         switch (state) {
-            case READY -> enterDraining(false);
-            case REGENERATING -> enterDraining(true);
+            case READY, REGENERATING -> enterDraining();
             case DRAINING -> enterRegenerating();
         }
         return true;
     }
 
     /**
-     * @param fromRegenerating whether this transition interrupts an ongoing regeneration, which plays a spawn sound
+     * Makes the slender appear. Every appearance is heard, the first one of the round too, so a
+     * survivor nearby gets a chance to react.
      */
-    private void enterDraining(boolean fromRegenerating) {
+    private void enterDraining() {
         state = State.DRAINING;
         colorState = StaminaColors.DRAINING;
         player.setTag(Tags.HIDDEN, VISIBLE);
-        if (fromRegenerating) {
-            this.playSpawnSound(player.getInstance(), player.getPosition(), player.getUuid());
-        }
+        this.playSpawnSound(player.getInstance(), player.getPosition(), player.getUuid());
         this.applyBlindness(player);
         AttributeHelper.applySlenderDrainingSpeed(player);
         player.sendSprintPackets();

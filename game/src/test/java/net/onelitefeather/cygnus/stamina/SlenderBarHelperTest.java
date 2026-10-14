@@ -162,6 +162,52 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("A survivor ten blocks away hears the slender appear and vanish")
+    void testASurvivorTenBlocksAwayHearsTheSlender(@NotNull Env env) {
+        Player slender = env.createPlayer(instance, CENTER);
+        TestConnection connection = env.createConnection();
+        Player survivor = connection.connect(instance, CENTER.add(10, 0, 0));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        helper.playSpawnSound(instance, CENTER, slender.getUuid());
+        helper.playTeleportSound(instance, CENTER, slender.getUuid());
+
+        assertEquals(2, sounds.collect().size(), "the slender has to be heard well before he is close");
+    }
+
+    @Test
+    @DisplayName("A survivor far away does not hear the slender")
+    void testASurvivorFarAwayHearsNothing(@NotNull Env env) {
+        Player slender = env.createPlayer(instance, CENTER);
+        TestConnection connection = env.createConnection();
+        Player survivor = connection.connect(instance, CENTER.add(30, 0, 0));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        helper.playSpawnSound(instance, CENTER, slender.getUuid());
+
+        sounds.assertEmpty();
+    }
+
+    @Test
+    @DisplayName("The sound comes from where the slender stands, so a survivor hears the direction")
+    void testTheSoundComesFromTheSlender(@NotNull Env env) {
+        Player slender = env.createPlayer(instance, CENTER);
+        TestConnection connection = env.createConnection();
+        Player survivor = connection.connect(instance, CENTER.add(10, 0, 0));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        helper.playSpawnSound(instance, CENTER, slender.getUuid());
+
+        sounds.assertSingle(packet -> {
+            assertEquals(CENTER.x(), packet.origin().x(), 0.2D);
+            assertEquals(CENTER.z(), packet.origin().z(), 0.2D);
+        });
+    }
+
+    @Test
     @DisplayName("A damaged player is announced together with where the hit came from")
     void damageIsAnnounced(Env env) {
         Player attacker = env.createConnection().connect(instance, new Pos(0, 40, 0));

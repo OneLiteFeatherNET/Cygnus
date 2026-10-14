@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 /**
  * Turns a stamina state change of the slender into a visibility update.
  * <p>
- * {@code SlenderBar#enterDraining(boolean)} and {@code SlenderBar#enterRegenerating()} flip
+ * {@code SlenderBar#enterDraining()} and {@code SlenderBar#enterRegenerating()} flip
  * {@link net.onelitefeather.cygnus.common.Tags#HIDDEN} and then fire the
  * {@link StaminaStateChangeEvent}. Re-evaluating the viewable rule here is the single mechanism that
  * translates that tag into spawn and destroy packets, and it is reached by the manual toggle
