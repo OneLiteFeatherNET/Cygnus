@@ -52,8 +52,10 @@ public sealed interface DialogContext permits
      * Context implementation to bind a {@link PageResource} to a dialog.
      *
      * @param resource to bind
+     * @param fromList whether the builder came from the page list, which opens again after a delete.
+     *                 A delete started in the world keeps the builder there.
      */
-    record PageContent(PageResource resource) implements DialogContext {
+    record PageContent(PageResource resource, boolean fromList) implements DialogContext {
 
     }
 

@@ -33,7 +33,7 @@ public final class PlayerRemoveDataListener implements Consumer<PlayerRemoveData
 
         switch (context) {
             case DialogContext.PositionContent(Point point) -> setupPlayer.setSurvivorToDelete(point);
-            case DialogContext.PageContent(PageResource resource) -> setupPlayer.setPageResource(resource);
+            case DialogContext.PageContent(PageResource resource, boolean _) -> setupPlayer.setPageResource(resource);
             default -> { }
         }
 

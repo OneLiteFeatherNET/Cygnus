@@ -168,7 +168,7 @@ public final class PagePreview {
     public boolean hit(int entityId) {
         PageResource spot = this.boxes.get(entityId);
         if (spot == null) return false;
-        EventDispatcher.call(new PlayerRemoveDataEvent(this.player, MapDataCategory.PAGE, new DialogContext.PageContent(spot)));
+        EventDispatcher.call(new PlayerRemoveDataEvent(this.player, MapDataCategory.PAGE, new DialogContext.PageContent(spot, false)));
         return true;
     }
 
