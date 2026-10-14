@@ -5,11 +5,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.common.Messages;
-import net.onelitefeather.cygnus.setup.data.GameData;
 import net.onelitefeather.cygnus.setup.data.InstanceSetupData;
-import net.onelitefeather.cygnus.setup.data.LobbyData;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
-import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.onelitefeather.guira.SetupDataService;
 import net.onelitefeather.guira.data.SetupData;
 
@@ -42,24 +39,15 @@ public final class MapSetupSelectListener implements Consumer<MapSetupSelectEven
             return;
         }
 
-        SetupData setupData = switch (event.getSetupMode()) {
-            case GAME -> new GameData(player, event.getMapEntry());
-            case LOBBY -> new LobbyData(player, event.getMapEntry());
-        };
-
-        player.setTag(SetupTags.SETUP_ID_TAG, event.getSetupMode().ordinal());
+        InstanceSetupData setupData = event.createData();
         Component message = Messages.withPrefix(Component.text("You selected the map: ", NamedTextColor.GRAY))
                 .append(Component.text(event.getMapEntry().getDirectoryRoot().getFileName().toString(), NamedTextColor.AQUA));
         player.sendMessage(message);
         player.sendMessage(this.loadingMessage);
         player.getInventory().clear();
         this.dataService.add(player.getUuid(), setupData);
-        MinecraftServer.getSchedulerManager().buildTask(() -> handleTeleport(event.getPlayer(), setupData))
+        MinecraftServer.getSchedulerManager().buildTask(() -> setupData.teleport(player))
                 .delay(Duration.of(3, ChronoUnit.SECONDS))
                 .schedule();
-    }
-
-    private void handleTeleport(Player player, SetupData setupData) {
-        ((InstanceSetupData) setupData).teleport(player);
     }
 }

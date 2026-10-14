@@ -7,7 +7,6 @@ import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
 import net.onelitefeather.cygnus.setup.item.SetupItemId;
-import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.onelitefeather.guira.SetupDataService;
 
 import java.util.function.Consumer;
@@ -34,15 +33,14 @@ public final class SetupItemListener implements Consumer<PlayerUseItemEvent> {
             mapSetupInventory.open(player);
         }
 
-        if (!player.hasTag(SetupTags.SETUP_ID_TAG)) return;
+        if (!(this.dataService.get(player.getUuid()).orElse(null) instanceof InstanceSetupData data)) return;
 
         if (1 == tagValue) {
             EventDispatcher.call(new MapSetupSaveEvent(player));
             return;
         }
 
-        this.dataService.get(player.getUuid()).ifPresent(data ->
-                ((InstanceSetupData) data).handleItemInteraction(player, tagValue));
+        data.handleItemInteraction(player, tagValue);
 
     }
 }
