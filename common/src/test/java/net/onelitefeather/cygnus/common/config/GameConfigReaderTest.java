@@ -58,6 +58,13 @@ class GameConfigReaderTest {
         assertEquals(GameConfig.Glitch.DEFAULT, config.glitch());
         assertEquals(GameConfig.PageGlitch.DEFAULT, config.pageGlitch());
         assertEquals(GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE, config.lobbyAtmosphereShare());
+        assertEquals(CreekConfig.DEFAULT, config.creek());
+        assertEquals(SanityConfig.DEFAULT, config.sanity());
+        assertEquals(StaminaConfig.DEFAULT, config.stamina());
+        assertEquals(AdrenalineConfig.DEFAULT, config.adrenaline());
+        assertEquals(FootprintConfig.DEFAULT, config.footprint());
+        assertEquals(PossessionConfig.DEFAULT, config.possession());
+        assertEquals(TelemetryConfig.DEFAULT, config.telemetry());
     }
 
     @Test
@@ -321,45 +328,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testCreekDefaultsWhenNotConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(CreekConfig.DEFAULT, config.creek());
-        assertEquals(0.5D, config.creek().catching().swapChance(), 1.0E-9, "the swap chance defaults to 0.5");
-    }
-
-    @Test
-    void testCreekValuesAreRead(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=2
-                creek.enabled=false
-                creek.huntThreshold=0.7
-                creek.stalkMaxDistance=40
-                creek.routeLinkDistance=4.5
-                creek.randomStopChance=0.4
-                creek.randomStopMinMillis=500
-                creek.randomStopMaxMillis=900
-                creek.launchHeight=7.5
-                creek.swapChance=0.25
-                creek.launchDamage=6
-                """);
-
-        CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
-
-        assertFalse(creek.enabled());
-        assertEquals(0.7D, creek.hunt().threshold(), 1.0E-9);
-        assertEquals(40, creek.stalk().maxDistance());
-        assertEquals(CreekConfig.DEFAULT.stalk().minDistance(), creek.stalk().minDistance());
-        assertEquals(4.5D, creek.routeLinkDistance(), 1.0E-9);
-        assertEquals(0.4D, creek.wander().stopChance(), 1.0E-9);
-        assertEquals(500, creek.wander().stopMinMillis());
-        assertEquals(900, creek.wander().stopMaxMillis());
-        assertEquals(7.5D, creek.catching().launchHeight(), 1.0E-9);
-        assertEquals(0.25D, creek.catching().swapChance(), 1.0E-9);
-        assertEquals(6.0D, creek.catching().launchDamage(), 1.0E-9);
-    }
-
-    @Test
     void readsEveryCreekKey(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=2
@@ -453,13 +421,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testPossessionDefaultsWhenNotConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(PossessionConfig.DEFAULT, config.possession());
-    }
-
-    @Test
     void testPossessionValuesAreRead(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=2
@@ -478,13 +439,6 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testAdrenalineDefaultsWhenNotConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(AdrenalineConfig.DEFAULT, config.adrenaline());
-    }
-
-    @Test
     void testAdrenalineValuesAreRead(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=2
@@ -499,13 +453,6 @@ class GameConfigReaderTest {
         assertEquals(0.3D, adrenaline.speedBonus(), 1.0E-9);
         assertEquals(30, adrenaline.cooldownSeconds());
         assertEquals(AdrenalineConfig.DEFAULT.durationSeconds(), adrenaline.durationSeconds());
-    }
-
-    @Test
-    void testFootprintDefaultsWhenNotConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(FootprintConfig.DEFAULT, config.footprint());
     }
 
     @Test
@@ -536,49 +483,20 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testStaminaDefaultsWhenNotConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(StaminaConfig.DEFAULT, config.stamina());
-    }
-
-    @Test
     void testStaminaValuesAreRead(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=2
                 stamina.sprintResumeShare=0.5
                 stamina.slenderReappearCooldownSeconds=8
+                stamina.slenderDamageRange=6
                 """);
 
         StaminaConfig stamina = new GameConfigReader(tempDir).getConfig().stamina();
 
         assertEquals(0.5D, stamina.sprintResumeShare(), 1.0E-9);
         assertEquals(8, stamina.slenderReappearCooldownSeconds());
+        assertEquals(6, stamina.slenderDamageRange());
         assertEquals(StaminaConfig.DEFAULT.regenPerSecond(), stamina.regenPerSecond());
-    }
-
-    @Test
-    void testSlenderDamageRangeDefaultsToFour() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(4, config.stamina().slenderDamageRange());
-    }
-
-    @Test
-    void testSlenderDamageRangeIsRead(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=2
-                stamina.slenderDamageRange=6
-                """);
-
-        assertEquals(6, new GameConfigReader(tempDir).getConfig().stamina().slenderDamageRange());
-    }
-
-    @Test
-    void testTelemetryDefaultsWhenNotConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(TelemetryConfig.DEFAULT, config.telemetry());
     }
 
     @Test
@@ -589,13 +507,6 @@ class GameConfigReaderTest {
                 """);
 
         assertEquals(80, new GameConfigReader(tempDir).getConfig().telemetry().slowTickThresholdMillis());
-    }
-
-    @Test
-    void testSanityDefaultsWhenNotConfigured() {
-        GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
-
-        assertEquals(SanityConfig.DEFAULT, config.sanity());
     }
 
     @Test

@@ -2,12 +2,10 @@ package net.onelitefeather.cygnus.common.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
+import static net.onelitefeather.cygnus.common.config.ConfigAssertions.assertRejected;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FootprintConfigTest {
 
@@ -123,10 +121,5 @@ class FootprintConfigTest {
     private static FootprintConfig withScent(int prints, int spreadDegrees, int cooldownSeconds) {
         return new FootprintConfig(3.0D, 0.25D, 1000, 2000, 12, 2.0D, 30, 40, 5, 40, 15, 120, 8.0D, 0.7D, 0.33D, 90,
                 prints, spreadDegrees, cooldownSeconds);
-    }
-
-    private static void assertRejected(String field, Executable executable) {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, executable);
-        assertTrue(exception.getMessage().startsWith(field), exception.getMessage());
     }
 }
