@@ -150,6 +150,21 @@ public final class AttributeHelper {
     }
 
     /**
+     * Applies the survivors' speed scaling bonus to the slender, as the same share of his own speed.
+     * <p>
+     * The slender walks at the vanilla speed, the survivors at the slower game speed. Scaled to his
+     * speed, the bonus speeds both sides up alike, so a walking survivor in a small round is still
+     * caught by the visible slender, as in every other round.
+     * </p>
+     *
+     * @param player        the slender
+     * @param survivorBonus the additional speed the survivors get
+     */
+    public static void updateSlenderSpeedScale(Player player, double survivorBonus) {
+        updateSpeedScale(player, survivorBonus * DEFAULT_MOVE_SPEED / GAME_MOVE_SPEED);
+    }
+
+    /**
      * Removes the speed scaling bonus from the player.
      *
      * @param player the player to remove the speed scaling from

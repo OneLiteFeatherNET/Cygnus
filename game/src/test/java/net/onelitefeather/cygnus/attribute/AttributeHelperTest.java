@@ -130,6 +130,25 @@ class AttributeHelperTest {
     }
 
     @Test
+    void testSlenderSpeedScaleKeepsTheShare(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance);
+        Player survivor = env.createPlayer(instance);
+        AttributeHelper.decreaseSpeed(survivor);
+
+        AttributeHelper.updateSpeedScale(survivor, 0.0075);
+        AttributeHelper.updateSlenderSpeedScale(slender, 0.0075);
+        AttributeHelper.applySlenderDrainingSpeed(slender);
+
+        double survivorShare = survivor.getAttribute(Attribute.MOVEMENT_SPEED).getValue() / 0.065;
+        double slenderShare = slender.getAttribute(Attribute.MOVEMENT_SPEED).getValue() / 0.0669;
+        assertEquals(survivorShare, slenderShare, 0.001, "both sides are sped up by the same share");
+        assertTrue(slender.getAttribute(Attribute.MOVEMENT_SPEED).getValue()
+                > survivor.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), "the visible slender still catches a walking survivor");
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
     void testSlenderDrainingSpeedModifier(@NotNull Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);

@@ -30,7 +30,7 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
     @Override
     public void accept(GamePreLaunchEvent event) {
         int survivors = Math.max(0, this.connectionManager.getOnlinePlayerCount() - 1);
-        int pageCount = PageCalculation.calculatePageAmount(survivors, this.eightPages.maxSurvivors());
+        int pageCount = PageCalculation.calculatePageAmount(survivors);
         this.pageProvider.setMaxPageAmount(pageCount);
         // Only picked here, placed into the world once the round starts
         this.pageProvider.collectStartPages(PageCalculation.calculateActivePageAmount());
@@ -42,7 +42,13 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
 
         for (Player player : connectionManager.getOnlinePlayers()) {
             AttributeHelper.adjustStepHeightAndJump(player);
-            if (TeamHelper.isSlenderTeam(player)) continue;
+            if (TeamHelper.isSlenderTeam(player)) {
+                // The same share for the slender, so the bonus does not let survivors outwalk him
+                if (adjustedSpeed != 0) {
+                    AttributeHelper.updateSlenderSpeedScale(player, adjustedSpeed);
+                }
+                continue;
+            }
             AttributeHelper.decreaseSpeed(player);
             if (player instanceof CygnusPlayer cygnus) {
                 cygnus.vitality().setUp(bonus);

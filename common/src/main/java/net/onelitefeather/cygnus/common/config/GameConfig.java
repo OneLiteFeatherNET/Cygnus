@@ -75,6 +75,16 @@ public record GameConfig(
     public static final int MIN_ACTIVE_PAGE_COUNT = 4;
 
     /**
+     * The most survivors a small round has. Such a round needs only eight pages, and its survivors
+     * get extra hearts and a little extra speed. The healing steps by the same size.
+     * <p>
+     * Not exposed through the config: the bonus hearts, the speed bonus and the healing steps are all
+     * built around it, so a server operator moving it alone would only pull them apart.
+     * </p>
+     */
+    public static final int SMALL_ROUND_SURVIVORS = 3;
+
+    /**
      * How many seconds after a round starts before the first pages spawn.
      * <p>
      * Spawning immediately at {@code GameStartEvent} let survivors grab a page before they had even

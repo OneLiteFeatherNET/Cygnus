@@ -25,7 +25,7 @@ import java.util.List;
 public record RegenerationConfig(double perSecond, List<Double> shares, int minMissing) {
 
     /** How many more survivors it takes to move on to the next share. */
-    public static final int SURVIVORS_PER_STEP = 3;
+    public static final int SURVIVORS_PER_STEP = GameConfig.SMALL_ROUND_SURVIVORS;
 
     /**
      * The default settings: 40 % back with 1 to 3 survivors, 30 % with 4 to 6, 25 % with 7 to 9 and

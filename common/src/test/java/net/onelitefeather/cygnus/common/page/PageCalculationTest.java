@@ -20,8 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(MicrotusExtension.class)
 class PageCalculationTest {
 
-    private static final int MAX_SURVIVORS = 3;
-
     /**
      * A random source that always answers with the highest value of the asked range, or the
      * lowest, and checks that the range is the expected one.
@@ -39,28 +37,21 @@ class PageCalculationTest {
     @Test
     @DisplayName("An Eight Pages round has 8 pages plus 0 to 2")
     void eightPagesRange() {
-        for (int survivors = 0; survivors <= MAX_SURVIVORS; survivors++) {
-            assertEquals(8, PageCalculation.calculatePageAmount(survivors, MAX_SURVIVORS, fixed(3, false)));
-            assertEquals(10, PageCalculation.calculatePageAmount(survivors, MAX_SURVIVORS, fixed(3, true)));
+        for (int survivors = 0; survivors <= GameConfig.SMALL_ROUND_SURVIVORS; survivors++) {
+            assertEquals(8, PageCalculation.calculatePageAmount(survivors, fixed(3, false)));
+            assertEquals(10, PageCalculation.calculatePageAmount(survivors, fixed(3, true)));
         }
     }
 
     @Test
     @DisplayName("A normal round builds on the 8 pages with 4 per survivor above the boundary, plus 0 to 4")
     void normalRange() {
-        assertEquals(12, PageCalculation.calculatePageAmount(4, MAX_SURVIVORS, fixed(5, false)));
-        assertEquals(16, PageCalculation.calculatePageAmount(4, MAX_SURVIVORS, fixed(5, true)));
-        assertEquals(16, PageCalculation.calculatePageAmount(5, MAX_SURVIVORS, fixed(5, false)));
-        assertEquals(28, PageCalculation.calculatePageAmount(8, MAX_SURVIVORS, fixed(5, false)));
-        assertEquals(44, PageCalculation.calculatePageAmount(12, MAX_SURVIVORS, fixed(5, false)));
-        assertEquals(48, PageCalculation.calculatePageAmount(12, MAX_SURVIVORS, fixed(5, true)));
-    }
-
-    @Test
-    @DisplayName("Moving the boundary moves the start of the normal formula with it")
-    void anchoredToTheBoundary() {
-        assertEquals(10, PageCalculation.calculatePageAmount(2, 2, fixed(3, true)));
-        assertEquals(12, PageCalculation.calculatePageAmount(3, 2, fixed(5, false)));
+        assertEquals(12, PageCalculation.calculatePageAmount(4, fixed(5, false)));
+        assertEquals(16, PageCalculation.calculatePageAmount(4, fixed(5, true)));
+        assertEquals(16, PageCalculation.calculatePageAmount(5, fixed(5, false)));
+        assertEquals(28, PageCalculation.calculatePageAmount(8, fixed(5, false)));
+        assertEquals(44, PageCalculation.calculatePageAmount(12, fixed(5, false)));
+        assertEquals(48, PageCalculation.calculatePageAmount(12, fixed(5, true)));
     }
 
     @Test
@@ -68,7 +59,7 @@ class PageCalculationTest {
     void variesAcrossRounds() {
         Set<Integer> observed = new HashSet<>();
         for (int i = 0; i < 50; i++) {
-            observed.add(PageCalculation.calculatePageAmount(12, MAX_SURVIVORS));
+            observed.add(PageCalculation.calculatePageAmount(12));
         }
 
         assertTrue(observed.size() > 1, "observed " + observed);
