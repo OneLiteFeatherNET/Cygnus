@@ -14,8 +14,10 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.utils.PlayerState;
+import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.DoubleSupplier;
@@ -39,17 +41,24 @@ import java.util.function.Supplier;
  * it too, to get more frequent the more scared a survivor is.
  * </p>
  * <p>
+ * Each survivor sees their own sanity as their level, from 100 when calm down to 0 when terrified.
+ * The bar below it stays the sprint bar.
+ * </p>
+ * <p>
  * Like {@code SlenderGazeService}, it listens for the round's start and end on its own and drops a
  * survivor the moment they die or leave.
  * </p>
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.16.0
  */
 public final class SanityService implements GameFeature, DreadSource, CreekWitness {
 
     private static final long NOT_STARTED = Long.MIN_VALUE;
+
+    /** How often the survivors' sanity is put on their level display. */
+    static final long DISPLAY_MILLIS = 250L;
 
     private final EventNode<Event> node = EventNode.all("sanity");
 
@@ -62,6 +71,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     private final SanityObserver observer;
     private final boolean observed;
     private volatile long startedAt = NOT_STARTED;
+    private final RepeatingTask display = new RepeatingTask(this::showSanity);
 
     /**
      * Sets up the service.
@@ -116,13 +126,18 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
             for (Player survivor : this.roundSurvivors.get()) {
                 this.track(survivor);
             }
+            this.display.start(DISPLAY_MILLIS, ChronoUnit.MILLIS);
         });
         this.node.addListener(PageFoundEvent.class, event -> this.pageFound(event.finder()));
         this.node.addListener(PlayerDeathEvent.class, event -> this.died(event.getPlayer()));
         this.node.addListener(PlayerDisconnectEvent.class, event -> this.survivors.remove(event.getPlayer()));
         // A survivor who takes over as the slender is no longer one of the scared.
-        this.node.addListener(SlenderReviveEvent.class, event -> this.survivors.remove(event.getPlayer()));
+        this.node.addListener(SlenderReviveEvent.class, event -> this.forget(event.getPlayer()));
         this.node.addListener(GameFinishEvent.class, _ -> {
+            this.display.stop();
+            for (Player survivor : this.roundSurvivors.get()) {
+                this.forget(survivor);
+            }
             this.survivors.clear();
             this.startedAt = NOT_STARTED;
         });
@@ -208,7 +223,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      * has to be close: on a big map a radius would leave most deaths unnoticed.
      */
     private void died(Player dead) {
-        if (this.survivors.remove(dead) == null) return;
+        if (!this.forget(dead)) return;
         this.survivors.forEach((id, fear) -> this.scare(id, fear, this.config.deathGain(), SanityObserver.SOURCE_DEATH));
     }
 
@@ -223,6 +238,42 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
         if (this.observed) {
             this.observer.jumped(id, source, before, fear.read(now, floor));
         }
+    }
+
+    /**
+     * Puts every tracked survivor's sanity on their level display. Only a changed value is sent, so
+     * the client is not told the same number four times a second.
+     */
+    void showSanity() {
+        for (Player survivor : this.roundSurvivors.get()) {
+            if (this.survivors.get(survivor) == null) continue;
+            int level = sanityLevel(this.dreadOf(survivor.getUuid()));
+            if (survivor.getLevel() != level) {
+                survivor.setLevel(level);
+            }
+        }
+    }
+
+    /**
+     * Turns a dread into the sanity a survivor sees: 100 when calm, 0 when terrified.
+     *
+     * @param dread how scared the survivor is, between {@code 0} and {@code 1}
+     * @return the sanity, between {@code 0} and {@code 100}
+     */
+    static int sanityLevel(double dread) {
+        return (int) Math.round(100.0D * (1.0D - Math.clamp(dread, 0.0D, 1.0D)));
+    }
+
+    /**
+     * Stops following a survivor and takes the sanity off their level display.
+     *
+     * @param player the survivor
+     * @return {@code true} if the survivor was followed until now
+     */
+    private boolean forget(Player player) {
+        if (this.survivors.remove(player) == null) return false;
+        player.setLevel(0);
+        return true;
     }
 
     /**
