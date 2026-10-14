@@ -10,6 +10,7 @@ import net.onelitefeather.cygnus.setup.atmosphere.AtmospherePreviewService;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
+import net.minestom.server.event.player.PlayerPacketEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -25,6 +26,7 @@ import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.listener.InstanceAddListener;
 import net.onelitefeather.cygnus.setup.listener.MapSetupSelectListener;
 import net.onelitefeather.cygnus.setup.listener.PageCreationListener;
+import net.onelitefeather.cygnus.setup.listener.PageHitListener;
 import net.onelitefeather.cygnus.setup.listener.PlayerSpawnListener;
 import net.onelitefeather.cygnus.setup.listener.SetupItemListener;
 import net.onelitefeather.cygnus.setup.listener.CreekRouteListener;
@@ -109,6 +111,7 @@ public class SetupExtension implements ListenerHandling {
         manager.addListener(PlayerCustomClickEvent.class, new DialogPayloadListener(this.dataService, this.previewService));
 
         manager.addListener(PositionSetEvent.class, new PositionSetListener(this.dataService));
+        manager.addListener(PlayerPacketEvent.class, new PageHitListener(this.dataService));
         manager.addListener(PlayerRemoveDataEvent.class, new PlayerRemoveDataListener());
     }
 

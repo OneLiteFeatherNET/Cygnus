@@ -32,6 +32,7 @@ import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.cygnus.common.page.PageFacesFile;
 import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.setup.page.PagePreview;
 import net.onelitefeather.cygnus.setup.player.SetupPlayer;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.theevilreaper.aves.inventory.layout.InventoryLayout;
@@ -55,6 +56,7 @@ public class GameData extends InstanceSetupData {
     private final PageableInventory creekRouteInventory;
     private final List<CreekRouteSlot> creekRouteSlots;
     private final CreekRoutePreview creekRoutePreview;
+    private final PagePreview pagePreview;
     private GameMapBuilder gameMapBuilder;
     private boolean pageMode;
     private boolean survivorMode;
@@ -77,6 +79,7 @@ public class GameData extends InstanceSetupData {
         this.creekRouteInventory = createCreekRouteInventory(player);
         this.creekRoutePreview = new CreekRoutePreview(player, () -> this.gameMapBuilder.getCreekRoutes(),
                 () -> this.activeCreekRoute, CreekConfig.DEFAULT.routeLinkDistance());
+        this.pagePreview = new PagePreview(player, () -> this.gameMapBuilder.getPageFaces());
         this.refreshCreekRoutes();
     }
 
@@ -174,6 +177,7 @@ public class GameData extends InstanceSetupData {
         boolean added = this.gameMapBuilder.addPage(pos, face);
         if (added) {
             this.pageInventory.add(new PageSlot(pageResource));
+            this.pagePreview.refresh();
         }
         return added;
     }
@@ -191,10 +195,26 @@ public class GameData extends InstanceSetupData {
     }
 
     /**
-     * Swaps between area mode and normal mode.
+     * Swaps between page mode and normal mode. In page mode the builder sees every page spot around
+     * them, see {@link PagePreview}.
      */
     public void swapPageMode() {
         this.pageMode = !this.pageMode;
+        if (this.pageMode) {
+            this.pagePreview.show();
+        } else {
+            this.pagePreview.hide();
+        }
+    }
+
+    /**
+     * Handles the builder hitting an entity, see {@link PagePreview#hit(int)}.
+     *
+     * @param entityId the id of the entity the builder hit
+     * @return {@code true} if it was a page of the page preview
+     */
+    public boolean hitPage(int entityId) {
+        return this.pagePreview.hit(entityId);
     }
 
     /**
@@ -599,6 +619,7 @@ public class GameData extends InstanceSetupData {
             if (pageResource != null) {
                 this.gameMapBuilder.removePage(pageResource);
                 this.pageInventory.remove(new PageSlot(pageResource));
+                this.pagePreview.refresh();
             }
         }
     }
@@ -638,6 +659,7 @@ public class GameData extends InstanceSetupData {
         this.pageInventory.unregister();
         this.creekRouteInventory.unregister();
         this.creekRoutePreview.hide();
+        this.pagePreview.hide();
     }
 
     /**

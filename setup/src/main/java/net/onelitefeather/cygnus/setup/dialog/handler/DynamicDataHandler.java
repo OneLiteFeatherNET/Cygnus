@@ -11,10 +11,24 @@ import net.onelitefeather.guira.SetupDataService;
 
 public final class DynamicDataHandler implements DialogHandler{
 
+    /** The payload key that says whether the builder goes back to the list after a delete. */
+    public static final String REOPEN_LIST = "reopen_list";
+
     private final SetupDataService dataService;
 
     public DynamicDataHandler(SetupDataService dataService) {
         this.dataService = dataService;
+    }
+
+    /**
+     * Tells whether the builder goes back to the list after a delete. A payload without the flag is
+     * from a list, like every delete before the page preview.
+     *
+     * @param payload the payload of the confirmed delete
+     * @return {@code true} if the list opens again
+     */
+    public static boolean reopensList(CompoundBinaryTag payload) {
+        return payload.getBoolean(REOPEN_LIST, true);
     }
 
     /**
@@ -45,7 +59,9 @@ public final class DynamicDataHandler implements DialogHandler{
             if (category == MapDataCategory.PAGE) {
                 player.setPageToDelete(null);
                 player.setPageResource(null);
-                setupData.openInventory(InstanceSetupData.InventoryTarget.PAGE);
+                if (reopensList(payload)) {
+                    setupData.openInventory(InstanceSetupData.InventoryTarget.PAGE);
+                }
             }
         });
 

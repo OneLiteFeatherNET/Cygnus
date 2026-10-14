@@ -9,6 +9,7 @@ import net.minestom.server.dialog.DialogAfterAction;
 import net.minestom.server.entity.Player;
 import net.minestom.server.coordinate.Point;
 import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.setup.dialog.handler.DynamicDataHandler;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.cygnus.setup.util.DialogBase;
@@ -100,7 +101,7 @@ public final class MapDialogs extends DialogBase {
     public static void openDeleteDialog(Player player, MapDataCategory mapDataCategory, @Nullable DialogContext context) {
         Point point = switch (context) {
             case DialogContext.PositionContent(Point p) -> p;
-            case DialogContext.PageContent(PageResource resource) -> resource.position();
+            case DialogContext.PageContent(PageResource resource, boolean _) -> resource.position();
             case null, default -> null;
         };
         DialogTemplate dialogTemplate = DialogType.confirm(DYNAMIC_DELETE_KEY)
@@ -125,7 +126,7 @@ public final class MapDialogs extends DialogBase {
                     }
                 })
                 .yesButton(button -> button.width(101).label(Component.text("Save"))
-                        .action(new DialogAction.DynamicCustom(DYNAMIC_DELETE_KEY, getCategoryPayload(mapDataCategory.ordinal())))
+                        .action(new DialogAction.DynamicCustom(DYNAMIC_DELETE_KEY, deletePayload(mapDataCategory, context)))
                 )
                 .noButton(button -> button.width(101).label(NO_COMPONENT))
                 .build();
@@ -133,6 +134,23 @@ public final class MapDialogs extends DialogBase {
     }
 
     private MapDialogs() {
+    }
+
+    /**
+     * Builds the payload of a confirmed delete: the category, and whether the builder goes back to
+     * the list they came from afterwards.
+     *
+     * @param category the category of the data to delete
+     * @param context  what is about to be deleted
+     * @return the payload
+     */
+    @Contract(pure = true)
+    static CompoundBinaryTag deletePayload(MapDataCategory category, @Nullable DialogContext context) {
+        boolean fromList = !(context instanceof DialogContext.PageContent(PageResource _, boolean list)) || list;
+        return CompoundBinaryTag.builder()
+                .putInt("category_id", category.ordinal())
+                .putBoolean(DynamicDataHandler.REOPEN_LIST, fromList)
+                .build();
     }
 
     /**

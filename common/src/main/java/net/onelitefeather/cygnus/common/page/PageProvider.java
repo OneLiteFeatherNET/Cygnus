@@ -47,15 +47,6 @@ public final class PageProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PageProvider.class);
 
-    /** How far around a spot other spots count as crowding it, in blocks. */
-    static final double CROWD_RADIUS = 30.0D;
-
-    /** The least share of an even turn a spot in a crowded part of the map gets. */
-    static final double LEAST_WEIGHT = 0.5D;
-
-    /** The most share of an even turn a spot on its own gets, so no single tree draws the pages. */
-    static final double MOST_WEIGHT = 2.0D;
-
     private final Queue<PageResource> freeSpots = new ConcurrentLinkedQueue<>();
     private final Map<UUID, PageEntity> activePages = new ConcurrentHashMap<>();
     private final AtomicInteger pageNumber = new AtomicInteger(1);
@@ -91,7 +82,7 @@ public final class PageProvider {
      * @return the spots in the order they are handed out
      */
     static List<PageResource> spreadOrder(Collection<PageResource> spots, RandomGenerator random) {
-        Map<PageResource, Double> weights = weights(spots);
+        Map<PageResource, Double> weights = PageCrowding.weights(spots);
         Map<PageResource, Double> keys = new HashMap<>();
         for (PageResource spot : spots) {
             // A weighted random order: the heavier a spot, the closer its key gets to 1.
@@ -100,29 +91,6 @@ public final class PageProvider {
         List<PageResource> order = new ArrayList<>(spots);
         order.sort(Comparator.comparingDouble((PageResource spot) -> keys.get(spot)).reversed());
         return order;
-    }
-
-    /**
-     * Weighs every spot by how crowded its part of the map is: a spot with fewer others within
-     * {@link #CROWD_RADIUS} than usual weighs more, one with more weighs less. The weights stay
-     * between {@link #LEAST_WEIGHT} and {@link #MOST_WEIGHT}.
-     *
-     * @param spots the spots of the map
-     * @return the weight of each spot, {@code 1} for a spot as crowded as the average one
-     */
-    static Map<PageResource, Double> weights(Collection<PageResource> spots) {
-        Map<PageResource, Integer> crowds = new HashMap<>();
-        for (PageResource spot : spots) {
-            int crowd = 0;
-            for (PageResource other : spots) {
-                if (spot.position().distance(other.position()) <= CROWD_RADIUS) crowd++;
-            }
-            crowds.put(spot, crowd);
-        }
-        double average = crowds.values().stream().mapToInt(Integer::intValue).average().orElse(1.0D);
-        Map<PageResource, Double> weights = new HashMap<>();
-        crowds.forEach((spot, crowd) -> weights.put(spot, Math.clamp(average / crowd, LEAST_WEIGHT, MOST_WEIGHT)));
-        return weights;
     }
 
     /**

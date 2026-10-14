@@ -61,7 +61,7 @@ public class PageSlot extends AbstractDataSlot {
                 ));
             }
             case Click.Right _ ->
-                    EventDispatcher.call(new PlayerRemoveDataEvent(player, type, new DialogContext.PageContent(this.pageResource)));
+                    EventDispatcher.call(new PlayerRemoveDataEvent(player, type, new DialogContext.PageContent(this.pageResource, true)));
             default -> {
             }
         }
