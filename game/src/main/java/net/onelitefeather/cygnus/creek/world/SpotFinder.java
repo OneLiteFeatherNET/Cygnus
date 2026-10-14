@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek.world;
 
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.common.config.CreekConfig;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +11,7 @@ import java.util.random.RandomGenerator;
  * Finds spots where the creek can appear without anyone seeing it happen.
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 public final class SpotFinder {
@@ -25,13 +26,14 @@ public final class SpotFinder {
     private final Ground ground;
 
     /**
-     * Sets up the spot finder.
+     * Sets up the spot finder. A spot counts as seen as soon as it is on the observer's screen,
+     * which is a much wider cone than the one in which they notice the creek.
      *
-     * @param sight  the view check a spot has to pass
+     * @param range  how far away the creek can still be seen, in blocks
      * @param ground puts candidates onto a floor
      */
-    public SpotFinder(CreekSight sight, Ground ground) {
-        this.sight = sight;
+    public SpotFinder(int range, Ground ground) {
+        this.sight = new CreekSight(range, CreekConfig.HIDE_ANGLE);
         this.ground = ground;
     }
 
