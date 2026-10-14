@@ -208,7 +208,23 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
         service.use(survivor);
         ticks(service, 1);
 
-        assertEquals(40.0D + PER_TICK / 2.0D, survivor.vitality().points(), EPSILON);
+        // Half the fear, so a quarter less than a calm survivor
+        assertEquals(40.0D + PER_TICK * 0.75D, survivor.vitality().points(), EPSILON);
+    }
+
+    @Test
+    @DisplayName("A terrified survivor still heals at the lowest speed")
+    void terrifiedStillHeals(Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer survivor = survivor(env, instance);
+        RegenerationService service = started(env);
+        this.fear = 1.0D;
+        hit(survivor, 60.0D);
+
+        service.use(survivor);
+        ticks(service, 1);
+
+        assertEquals(40.0D + PER_TICK * RegenerationConfig.DEFAULT.minSpeed(), survivor.vitality().points(), EPSILON);
     }
 
     @Test
