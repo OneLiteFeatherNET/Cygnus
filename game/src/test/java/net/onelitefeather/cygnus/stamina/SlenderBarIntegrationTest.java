@@ -20,6 +20,8 @@ import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.minestom.server.entity.attribute.Attribute;
 import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -37,9 +39,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     void testActivationShowsFullBar(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
 
@@ -59,12 +72,10 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         });
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testRegenerationStopsAtFullBar(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
 
@@ -89,12 +100,10 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         assertEquals("", empty.content());
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testHalfDrainedTickShowsAHalfTileInsteadOfDroppingAWholeTile(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
 
@@ -116,12 +125,10 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         });
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testCannotReactivateTooEarly(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
 
@@ -139,12 +146,10 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         assertFalse(reactivated, "should not be able to hide again before stamina has sufficiently regenerated");
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testCanReactivateAtThreshold(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
 
@@ -166,12 +171,10 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
                 "landing exactly on it should be sufficient, not just exceeding it");
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testAutoDepletionPlaysTeleportSound(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
         TestConnection survivorConnection = env.createConnection();
@@ -196,7 +199,6 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
                         "not just when it's manually cancelled");
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     private static boolean soundWasSent(Collector<ServerPacket> collector) {
@@ -205,7 +207,6 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
 
     @Test
     void testSlenderBarStateTransitionsUseModifiers(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
 
@@ -223,13 +224,11 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue(), 0.001);
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Once hidden, the slender cannot appear again before the cooldown ran out")
     void reappearWaitsForTheCooldown(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance);
         AtomicLong clock = new AtomicLong();
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player, StaminaConfig.DEFAULT, clock::get);
@@ -244,13 +243,11 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         assertTrue(slenderBar.changeStatus());
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A bar that regenerated to full inside the cooldown does not skip it")
     void readyBarStillWaitsForTheCooldown(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance);
         AtomicLong clock = new AtomicLong();
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player, StaminaConfig.DEFAULT, clock::get);
@@ -266,13 +263,11 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         assertFalse(slenderBar.changeStatus());
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The slender hides the moment his bar runs dry")
     void hidesWhenTheBarRunsDry(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance);
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
         slenderBar.start();
@@ -288,13 +283,11 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         assertEquals(SlenderBarHelper.HIDDEN, player.getTag(Tags.HIDDEN));
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Hiding puts the eye on cooldown for the longer of both waits")
     void hidingSendsTheLongerWaitAsCooldown(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
@@ -311,13 +304,11 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         });
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A bar that ran dry shows the time until it reaches the threshold again")
     void runningDrySendsTheRegenerationTime(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
@@ -334,13 +325,11 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         collector.assertSingle(packet -> assertEquals(200, packet.cooldownTicks()));
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The bar does not refill while the slender looks through the creek")
     void possessionPausesRegeneration(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance);
         // Without the reappear cooldown, so only the regeneration threshold is under test
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player,
@@ -365,13 +354,11 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         assertTrue(slenderBar.changeStatus(), "once back, the bar refills as usual");
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Leaving the creek sends the eye the wait that is still left")
     void leavingThePossessionResendsTheCooldown(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
         AtomicLong clock = new AtomicLong();
@@ -394,13 +381,11 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         collector.assertSingle(packet -> assertEquals(200, packet.cooldownTicks()));
 
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Stopping the bar takes the cooldown off the eye")
     void stopClearsTheCooldown(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer player = (CygnusPlayer) connection.connect(instance);
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
@@ -412,13 +397,11 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         slenderBar.stop();
 
         collector.assertSingle(packet -> assertEquals(0, packet.cooldownTicks()));
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Stopping the bar mid drain takes his blindness, slowness and sprint block off")
     void testStopWhileDrainingLiftsTheDrainEffects(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
 
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player);
@@ -431,12 +414,10 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
                 "the blindness must not outlive the round");
         assertFalse(player.getAttribute(Attribute.MOVEMENT_SPEED).modifiers().stream().anyMatch(m -> m.id().equals(AttributeHelper.SLENDER_DRAINING_SPEED_KEY)));
         assertFalse(player.hasBlockedSprinting());
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testDrainTickTakesDoubleTheBarStepFromASurvivorInRange(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         CygnusPlayer slender = (CygnusPlayer) env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(0, 40, 0));
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         Player survivor = env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(1, 40, 0));
@@ -450,12 +431,10 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
 
         assertEquals(19F, survivor.getHealth(), 0.001F, "one 500 ms tick must take 1.0 health, twice the 0.5 bar step");
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testDrainDamageDoesNotChangeTheBarSpeed(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         CygnusPlayer slender = (CygnusPlayer) connection.connect(instance, new net.minestom.server.coordinate.Pos(0, 40, 0));
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
@@ -472,12 +451,10 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
             assertEquals("▍", assertInstanceOf(TextComponent.class, root.children().get(0)).content());
         });
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testDrainDoesNotHurtTheSlenderOrANonSurvivor(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         CygnusPlayer slender = (CygnusPlayer) env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(0, 40, 0));
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         Player spectator = env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(1, 40, 0));
@@ -491,38 +468,31 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         assertEquals(20F, slender.getHealth(), 0.001F, "the slender must not hurt himself");
         assertEquals(20F, spectator.getHealth(), 0.001F, "non-survivors must stay untouched");
         slenderBar.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A survivor 3.5 blocks away is hurt with the default range")
     void survivorInsideTheDefaultRangeIsHurt(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = drainOnce(env, instance, StaminaConfig.DEFAULT, 3.5D);
 
         assertEquals(19.0F, survivor.getHealth(), 0.001F, "one tick takes the damage of one bar step");
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A survivor 4.5 blocks away is left alone with the default range")
     void survivorOutsideTheDefaultRangeIsUntouched(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = drainOnce(env, instance, StaminaConfig.DEFAULT, 4.5D);
 
         assertEquals(20.0F, survivor.getHealth(), 0.001F);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A configured range of 2 leaves a survivor 3 blocks away untouched")
     void configuredRangeIsHonoured(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         StaminaConfig narrow = new StaminaConfig(0.3D, 1.25D, 5, 2);
         Player survivor = drainOnce(env, instance, narrow, 3.0D);
 
         assertEquals(20.0F, survivor.getHealth(), 0.001F);
-        env.destroyInstance(instance, true);
     }
 
     private Player drainOnce(Env env, Instance instance, StaminaConfig config, double distance) {

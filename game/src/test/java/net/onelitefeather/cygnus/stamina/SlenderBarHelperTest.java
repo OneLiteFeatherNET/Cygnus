@@ -16,6 +16,8 @@ import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.vitality.Vitality;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -42,9 +44,20 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
     private final SlenderBarHelper helper = new SlenderBarHelper() {
     };
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     void testSpectatorTakesNoSlenderDamage(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = env.createPlayer(instance, CENTER);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
@@ -56,13 +69,10 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         helper.applyDamage(instance, slender.getUuid(), CENTER, 3, DAMAGE);
 
         assertEquals(healthBefore, spectator.getHealth(), "a spectator must never take slender damage");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testSurvivorTakesSlenderDamage(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = env.createPlayer(instance, CENTER);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
@@ -74,13 +84,10 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
 
         assertEquals(pointsBefore - DAMAGE * Vitality.POINTS_PER_HEALTH, survivor.vitality().points(), 1.0E-9,
                 "a survivor must still take slender damage");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testSlenderTakesNoOwnDamage(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = env.createPlayer(instance, CENTER);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
@@ -93,13 +100,10 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
 
         assertEquals(slenderHealth, slender.getHealth(), "the slender must not damage itself");
         assertEquals(otherHealth, otherSlender.getHealth(), "a slender must never take slender damage");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testUntaggedPlayerTakesNoDamage(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = env.createPlayer(instance, CENTER);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
@@ -109,13 +113,10 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         helper.applyDamage(instance, slender.getUuid(), CENTER, 3, DAMAGE);
 
         assertEquals(healthBefore, untagged.getHealth(), "the damage filter must be fail closed for untagged players");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testOnlySurvivorsHearTheTeleportSound(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = env.createPlayer(instance, CENTER);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
@@ -135,13 +136,10 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
 
         assertTrue(spectatorSounds.collect().isEmpty(), "a spectator must not hear when the slender vanishes");
         assertEquals(1, survivorSounds.collect().size(), "a survivor must still hear the teleport sound");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testOnlySurvivorsHearTheSpawnSound(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = env.createPlayer(instance, CENTER);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
@@ -161,14 +159,11 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
 
         assertTrue(spectatorSounds.collect().isEmpty(), "a spectator must not hear the slender spawn sound");
         assertEquals(1, survivorSounds.collect().size(), "a survivor must still hear the spawn sound");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A damaged player is announced together with where the hit came from")
     void damageIsAnnounced(Env env) {
-        Instance instance = env.createFlatInstance();
         Player attacker = env.createConnection().connect(instance, new Pos(0, 40, 0));
         attacker.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         Player victim = env.createConnection().connect(instance, new Pos(1, 40, 0));
@@ -188,7 +183,6 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("The player dealing the damage is left out")
     void attackerIsNotAnnounced(Env env) {
-        Instance instance = env.createFlatInstance();
         Player attacker = env.createConnection().connect(instance, new Pos(0, 40, 0));
         attacker.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         Collector<PlayerDamagedEvent> collector =
@@ -202,7 +196,6 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A hit takes points from a survivor who has a bonus, not raw health")
     void damageGoesThroughThePoints(Env env) {
-        Instance instance = env.createFlatInstance();
         Player attacker = env.createConnection().connect(instance, new Pos(0, 40, 0));
         attacker.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         CygnusPlayer victim = (CygnusPlayer) env.createConnection().connect(instance, new Pos(1, 40, 0));

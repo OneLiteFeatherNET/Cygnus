@@ -11,6 +11,8 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.theevilreaper.xerus.api.team.Team;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -23,9 +25,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpectatorInventoryTest extends CygnusPlayerTestBase {
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     void testOpenShowsInventoryToPlayer(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
 
@@ -33,13 +46,10 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         inventory.open(player);
 
         assertEquals(inventory.getInventory(), player.getOpenInventory());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testHandleClickInvokesTeleportCallbackWithClickedTarget(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player spectator = env.createPlayer(instance);
         Player target = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
@@ -56,13 +66,10 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
 
         assertEquals(1, teleportedTo.size());
         assertEquals(target, teleportedTo.getFirst());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testHandleClickIsNoOpWhenTargetIsOffline(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player spectator = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
 
@@ -76,13 +83,10 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         inventory.handleClick(spectator, 10, null, headStack, _ -> {});
 
         assertTrue(teleportedTo.isEmpty());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testOpenPopulatesPlayerHeadsEvenWhenSkinIsNull(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player spectator = env.createPlayer(instance);
         Player survivor = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
@@ -96,13 +100,10 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         assertEquals(Material.PLAYER_HEAD, item.material());
         assertEquals(survivor.getUuid(), item.getTag(SpectatorInventory.TARGET_TAG));
         assertEquals(Component.text(survivor.getUsername()), item.get(DataComponents.CUSTOM_NAME));
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testShrinkingSurvivorListClearsStaleHeadInFreedSlot(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player spectator = env.createPlayer(instance);
         Player first = env.createPlayer(instance);
         Player second = env.createPlayer(instance);
@@ -125,13 +126,10 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         assertTrue(inventory.getInventory().getItemStack(11).isAir(), "freed slot must be empty");
         assertNull(inventory.getInventory().getItemStack(11).getTag(SpectatorInventory.TARGET_TAG),
                 "freed slot must not keep a stale target");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testGrowingSurvivorListAddsHeads(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player spectator = env.createPlayer(instance);
         Player first = env.createPlayer(instance);
         Player second = env.createPlayer(instance);
@@ -148,13 +146,10 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         env.tick();
 
         assertEquals(2, countHeads(inventory));
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testHandleClickWithoutTargetIsNoOp(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player spectator = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
         List<Player> teleportedTo = new ArrayList<>();
@@ -163,8 +158,6 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         inventory.handleClick(spectator, 11, null, ItemStack.AIR, _ -> {});
 
         assertTrue(teleportedTo.isEmpty());
-
-        env.destroyInstance(instance, true);
     }
 
     private static long countHeads(SpectatorInventory inventory) {

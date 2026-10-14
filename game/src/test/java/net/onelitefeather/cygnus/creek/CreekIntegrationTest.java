@@ -28,6 +28,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -111,10 +113,21 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         return SurvivorSnapshot.take(List.of(players), _ -> 0.0D);
     }
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     @DisplayName("Wandering, he is seen by the survivors but never by the slender")
     void wanderingIsPublicButNotForTheSlender(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         Player slender = env.createConnection().connect(instance, new Pos(3, 40, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
@@ -128,7 +141,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A survivor looking at him counts as seeing him")
     void lookingCountsAsSeeing(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
         Creek creek = creek(body, CreekConfig.DEFAULT, new PatrolState());
@@ -140,7 +152,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Close by and looking away, a survivor still has him in sight")
     void closeByIsInSight(Env env) {
-        Instance instance = env.createFlatInstance();
         // Looking towards negative Z, away from him.
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 3));
@@ -155,7 +166,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Far away and looking away, the line of sight is not checked")
     void farAwaySkipsTheRay(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, Creek.SIGHT_CHECK_DISTANCE + 2));
         Creek creek = creek(body, CreekConfig.DEFAULT, new PatrolState());
@@ -167,7 +177,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Someone he is hidden from does not see him, however they look")
     void hiddenFromNonTargets(Env env) {
-        Instance instance = env.createFlatInstance();
         Player target = env.createConnection().connect(instance, new Pos(10, 40, 0, 0, 0));
         Player other = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
@@ -183,7 +192,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("When the target leaves mid-hunt he is done")
     void targetLeavesMidHunt(Env env) {
-        Instance instance = env.createFlatInstance();
         Player target = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
         Player other = env.createConnection().connect(instance, new Pos(40, 40, 40));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 10));
@@ -199,7 +207,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Vanishing for good hides him from everyone for the rest of the round")
     void vanishForGood(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 30));
         Creek creek = creek(body, CreekConfig.DEFAULT, new PatrolState());
@@ -217,7 +224,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A state selecting a survivor hands them to the patrol helper")
     void selectionReachesTheConsequence(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
         CreekState selecting = new CreekState() {
@@ -242,7 +248,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Vanishing blinds the survivors nearby, but not the ones the creek leaves alone")
     void vanishSparesTheIgnored(Env env) {
-        Instance instance = env.createFlatInstance();
         Player haunted = env.createConnection().connect(instance, new Pos(0, 40, 0));
         Player other = env.createConnection().connect(instance, new Pos(3, 40, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 2));
@@ -267,7 +272,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A haunted survivor does not see the patrolling creek, everyone else does")
     void patrolIsHiddenFromTheHaunted(Env env) {
-        Instance instance = env.createFlatInstance();
         Player haunted = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         Player other = env.createConnection().connect(instance, new Pos(5, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
@@ -282,7 +286,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("The patrolling creek never picks out a haunted survivor")
     void patrolLeavesTheHauntedAlone(Env env) {
-        Instance instance = env.createFlatInstance();
         Player haunted = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         Player other = env.createConnection().connect(instance, new Pos(0, 40, 60, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 2));
@@ -298,7 +301,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Spotting him is reported once, not for every step he stays in view")
     void sightingIsReportedOnce(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 10));
         RecordingWitness witness = new RecordingWitness();
@@ -315,7 +317,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Looking away and back again is a new sighting")
     void lookingBackIsANewSighting(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 10));
         RecordingWitness witness = new RecordingWitness();
@@ -334,7 +335,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Survivors he leaves alone are not reported as seeing him")
     void ignoredSurvivorsAreNotReported(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
         RecordingWitness witness = new RecordingWitness();
@@ -349,7 +349,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A hunt is reported once when it starts, not for every step")
     void huntIsReportedOnce(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
         RecordingWitness witness = new RecordingWitness();
@@ -365,7 +364,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A stalk is not a hunt")
     void stalkIsNotAHunt(Env env) {
-        Instance instance = env.createFlatInstance();
         Player target = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 25));
         RecordingWitness witness = new RecordingWitness();
@@ -379,7 +377,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A catch ends the hunt")
     void catchEndsTheHunt(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 1));
         RecordingWitness witness = new RecordingWitness();
@@ -395,7 +392,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A hunt that runs out of time ends")
     void timeoutEndsTheHunt(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
         RecordingWitness witness = new RecordingWitness();
@@ -411,7 +407,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A survivor who disappears from the round ends the hunt")
     void goneSurvivorEndsTheHunt(Env env) {
-        Instance instance = env.createFlatInstance();
         Player target = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         Player other = env.createConnection().connect(instance, new Pos(5, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 10));
@@ -428,7 +423,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Removing a creek in the middle of a hunt ends it")
     void removingEndsTheHunt(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
         RecordingWitness witness = new RecordingWitness();
@@ -445,7 +439,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Sending a hunting creek away for good ends the hunt")
     void vanishingEndsTheHunt(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 0, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
         RecordingWitness witness = new RecordingWitness();
@@ -461,7 +454,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Through the creek, the tab name is marked during the hunt and back to normal after the catch")
     void tabNameFollowsTheHunt(Env env) {
-        Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
         Component before = Component.text(survivor.getUsername());
         survivor.setDisplayName(before);
@@ -481,7 +473,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A catch is reported")
     void catchIsReported(Env env) {
-        Instance instance = env.createFlatInstance();
         // Facing away, so the creek is not frozen by being watched.
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 1));
@@ -496,7 +487,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("Every step of a stalk is reported for its target")
     void stalkIsReported(Env env) {
-        Instance instance = env.createFlatInstance();
         Player target = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 25));
         RecordingWitness witness = new RecordingWitness();
@@ -511,7 +501,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     @Test
     @DisplayName("A stalk that ends in this step is not reported")
     void endedStalkIsNotReported(Env env) {
-        Instance instance = env.createFlatInstance();
         Player target = env.createConnection().connect(instance, new Pos(0, 40, 0, 180, 0));
         CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 25));
         RecordingWitness witness = new RecordingWitness();

@@ -12,7 +12,8 @@ import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.view.GameViewImpl;
-import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -30,67 +31,60 @@ class PlayerLoginListenerTest extends CygnusPlayerTestBase {
         return new GameConfig.Round(2, 10, 30, 600);
     }
 
-    @Test
-    void testKicksWhenServerIsFull(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
+    private Instance instance;
+    private Player player;
 
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+        this.player = env.createPlayer(this.instance);
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
+    @Test
+    void testKicksWhenServerIsFull() {
         PlayerLoginListener listener = new PlayerLoginListener(() -> instance, 0, () -> new LobbyPhase(lobbyConfig()), Optional.empty());
         listener.accept(new AsyncPlayerConfigurationEvent(player, true));
 
         assertFalse(player.isOnline());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
-    void testKicksWhenPhaseIsNotLobby(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
+    void testKicksWhenPhaseIsNotLobby() {
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
 
         PlayerLoginListener listener = new PlayerLoginListener(() -> instance, 10, () -> gamePhase, Optional.empty());
         listener.accept(new AsyncPlayerConfigurationEvent(player, true));
 
         assertFalse(player.isOnline());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
-    void testSuccessfulLoginSetsSpawningInstanceAndSkipsResourcePackWhenAbsent(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
-
+    void testSuccessfulLoginSetsSpawningInstanceAndSkipsResourcePackWhenAbsent() {
         PlayerLoginListener listener = new PlayerLoginListener(() -> instance, 10, () -> new LobbyPhase(lobbyConfig()), Optional.empty());
         AsyncPlayerConfigurationEvent event = new AsyncPlayerConfigurationEvent(player, true);
         listener.accept(event);
 
         assertSame(instance, event.getSpawningInstance());
         assertNull(player.getResourcePackFuture());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
-    void testSuccessfulLoginDisablesRespawnScreen(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
+    void testSuccessfulLoginDisablesRespawnScreen() {
         player.setEnableRespawnScreen(true);
 
         PlayerLoginListener listener = new PlayerLoginListener(() -> instance, 10, () -> new LobbyPhase(lobbyConfig()), Optional.empty());
         listener.accept(new AsyncPlayerConfigurationEvent(player, true));
 
         assertFalse(player.isEnableRespawnScreen());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
-    void testSuccessfulLoginSendsResourcePackWhenPresent(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
-
+    void testSuccessfulLoginSendsResourcePackWhenPresent() {
         GameConfig.ResourcePack packConfig = new GameConfig.ResourcePack(URI.create("https://example.com/pack.zip"), "a".repeat(40));
         Optional<ResourcePackService> resourcePackService = ResourcePackService.create(packConfig);
         assertTrue(resourcePackService.isPresent());
@@ -99,7 +93,5 @@ class PlayerLoginListenerTest extends CygnusPlayerTestBase {
         listener.accept(new AsyncPlayerConfigurationEvent(player, true));
 
         assertNotNull(player.getResourcePackFuture());
-
-        env.destroyInstance(instance, true);
     }
 }

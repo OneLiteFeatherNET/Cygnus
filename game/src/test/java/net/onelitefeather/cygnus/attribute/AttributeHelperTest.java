@@ -6,6 +6,8 @@ import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -14,9 +16,20 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MicrotusExtension.class)
 class AttributeHelperTest {
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     void testAttributeAdjustment(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         AttributeHelper.adjustStepHeightAndJump(player);
 
@@ -25,12 +38,10 @@ class AttributeHelperTest {
 
         assertEquals(0.6, player.getAttribute(Attribute.STEP_HEIGHT).getBaseValue(), 0.0001);
         assertEquals(1.0, player.getAttribute(Attribute.STEP_HEIGHT).getValue(), 0.0001);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testAttributeAdjustmentIsIdempotent(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         AttributeHelper.adjustStepHeightAndJump(player);
@@ -38,12 +49,10 @@ class AttributeHelperTest {
 
         assertEquals(0.0, player.getAttribute(Attribute.JUMP_STRENGTH).getValue(), 0.0001);
         assertEquals(1.0, player.getAttribute(Attribute.STEP_HEIGHT).getValue(), 0.0001);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testResetAttributeAdjustments(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         AttributeHelper.adjustStepHeightAndJump(player);
@@ -53,12 +62,10 @@ class AttributeHelperTest {
         AttributeHelper.resetAttributeAdjustments(player);
         assertEquals(0.42, player.getAttribute(Attribute.JUMP_STRENGTH).getValue(), 0.0001);
         assertEquals(0.6, player.getAttribute(Attribute.STEP_HEIGHT).getValue(), 0.0001);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testHealthScaleUpdate(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         assertEquals(20.0, player.getAttribute(Attribute.MAX_HEALTH).getBaseValue());
@@ -69,24 +76,20 @@ class AttributeHelperTest {
         assertEquals(20.0, player.getAttribute(Attribute.MAX_HEALTH).getBaseValue(), 0.0001);
         assertEquals(40.0, player.getAttribute(Attribute.MAX_HEALTH).getValue(), 0.0001);
         assertEquals(40.0f, player.getHealth(), 0.0001f);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testHealthScaleUpdateIsIdempotent(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         AttributeHelper.updateHealthScale(player, 20.0f);
         AttributeHelper.updateHealthScale(player, 20.0f);
 
         assertEquals(40.0, player.getAttribute(Attribute.MAX_HEALTH).getValue(), 0.0001);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testDecreaseAndResetSpeed(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
@@ -97,12 +100,10 @@ class AttributeHelperTest {
 
         AttributeHelper.resetSpeed(player);
         assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testSpeedScaleUpdate(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         AttributeHelper.decreaseSpeed(player);
 
@@ -113,12 +114,10 @@ class AttributeHelperTest {
 
         AttributeHelper.removeSpeedScale(player);
         assertEquals(0.065, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testSpeedScaleUpdateIsIdempotent(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         AttributeHelper.decreaseSpeed(player);
 
@@ -126,12 +125,10 @@ class AttributeHelperTest {
         AttributeHelper.updateSpeedScale(player, 0.01);
 
         assertEquals(0.075, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testSlenderSpeedScaleKeepsTheShare(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = env.createPlayer(instance);
         Player survivor = env.createPlayer(instance);
         AttributeHelper.decreaseSpeed(survivor);
@@ -145,12 +142,10 @@ class AttributeHelperTest {
         assertEquals(survivorShare, slenderShare, 0.001, "both sides are sped up by the same share");
         assertTrue(slender.getAttribute(Attribute.MOVEMENT_SPEED).getValue()
                 > survivor.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), "the visible slender still catches a walking survivor");
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testSlenderDrainingSpeedModifier(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1);
 
@@ -159,12 +154,10 @@ class AttributeHelperTest {
 
         AttributeHelper.removeSlenderDrainingSpeed(player);
         assertEquals(0.1, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.001);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testFieldOfViewFollowsTheWalkingSpeed(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         AttributeHelper.decreaseSpeed(player);
@@ -176,12 +169,10 @@ class AttributeHelperTest {
         AttributeHelper.removeSpeedScale(player);
         AttributeHelper.resetSpeed(player);
         assertEquals(0.1f, player.getFieldViewModifier(), 0.0001);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testFieldOfViewIgnoresSprintAndDraining(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         AttributeHelper.decreaseSpeed(player);
@@ -189,12 +180,10 @@ class AttributeHelperTest {
 
         // Slowing down still narrows the view, the way it does in vanilla
         assertEquals(0.065f, player.getFieldViewModifier(), 0.0001);
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testFreezeKeepsTheFieldOfViewNeutral(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         AttributeHelper.freeze(player);
@@ -206,6 +195,5 @@ class AttributeHelperTest {
         AttributeHelper.unfreeze(player);
         assertEquals(0.075f, player.getFieldViewModifier(), 0.0001);
         assertEquals(0.075, player.getAttribute(Attribute.MOVEMENT_SPEED).getValue(), 0.0001);
-        env.destroyInstance(instance, true);
     }
 }

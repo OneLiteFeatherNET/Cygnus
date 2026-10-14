@@ -14,6 +14,8 @@ import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageProximityTarget;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -40,9 +42,20 @@ class PageProximityServiceTest {
 
     private static final Pos PLAYER_POS = new Pos(0, 64, 0);
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     void testANearbyPageIsAnnouncedAtItsOwnPosition(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -56,13 +69,10 @@ class PageProximityServiceTest {
                     "the sound has to come from the page so the client can place it in 3D");
             assertEquals(page.z(), packet.origin().z(), 0.001);
         });
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testAPageBeyondTheRangeStaysSilent(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -70,13 +80,11 @@ class PageProximityServiceTest {
         service(config(20), player, new Pos(0, 64, 21)).tick();
 
         sounds.assertEmpty();
-        env.destroyInstance(instance, true);
     }
 
     @ParameterizedTest
     @CsvSource({"8, 1.0", "16, 1.0", "32, 2.0", "48, 3.0"})
     void testVolumeCarriesTheSoundAcrossTheWholeRange(int range, float expectedVolume, @NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -86,14 +94,11 @@ class PageProximityServiceTest {
 
         sounds.assertSingle(packet -> assertEquals(expectedVolume, packet.volume(), 0.001F,
                 "a client only hears a sound 16 * volume blocks away, so the volume has to cover the range"));
-
-        env.destroyInstance(instance, true);
     }
 
     @ParameterizedTest
     @CsvSource({"20, 1.0, 1.25", "20, 2.0, 2.5", "20, 4.0, 5.0", "8, 2.0, 2.0"})
     void testTheVolumeFactorStretchesTheFalloff(int range, float factor, float expectedVolume, @NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -102,8 +107,6 @@ class PageProximityServiceTest {
 
         sounds.assertSingle(packet -> assertEquals(expectedVolume, packet.volume(), 0.001F,
                 "the factor has to reach the played sound, not just be stored"));
-
-        env.destroyInstance(instance, true);
     }
 
     /**
@@ -112,7 +115,6 @@ class PageProximityServiceTest {
      */
     @Test
     void testTheDefaultFactorPlaysLouderThanTheRangeAloneWouldNeed(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -122,13 +124,10 @@ class PageProximityServiceTest {
         float rangeAlone = 20 / 16.0F;
         sounds.assertSingle(packet -> assertTrue(packet.volume() > rangeAlone,
                 "the default has to reach past the range, got " + packet.volume()));
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testADisabledServiceNeverStartsItsTask(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -143,12 +142,10 @@ class PageProximityServiceTest {
         sounds.assertEmpty();
 
         service.stopTask();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testAnUnknownSoundKeyFallsBackToTheDefaultChime(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -159,13 +156,10 @@ class PageProximityServiceTest {
 
         sounds.assertSingle(packet -> assertEquals(SoundEvent.BLOCK_AMETHYST_BLOCK_CHIME, packet.soundEvent(),
                 "a key naming no known sound must not leave the hint silent"));
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testTheTaskRunsWhileTheServiceIsEnabled(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
 
@@ -175,8 +169,6 @@ class PageProximityServiceTest {
 
         service.stopTask();
         assertFalse(service.isRunning());
-
-        env.destroyInstance(instance, true);
     }
 
     /** A configuration on the shipped volume factor. */
@@ -190,7 +182,6 @@ class PageProximityServiceTest {
 
     @Test
     void testPhase1SilentAboveFiftyPercentTtl(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -200,12 +191,10 @@ class PageProximityServiceTest {
         service.tick();
 
         sounds.assertEmpty();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testPhase2WarningChimeBetweenTwentyAndFiftyPercent(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -218,12 +207,10 @@ class PageProximityServiceTest {
             assertEquals(PageProximityService.WARNING_PITCH, packet.pitch(), 0.001F);
             assertEquals(SoundEvent.BLOCK_AMETHYST_BLOCK_CHIME, packet.soundEvent());
         });
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testPhase3CriticalChimeBelowTwentyPercent(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -237,12 +224,10 @@ class PageProximityServiceTest {
             float baseVolume = (20 / 16.0F) * GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR;
             assertEquals(baseVolume * PageProximityService.CRITICAL_VOLUME_MULTIPLIER, packet.volume(), 0.001F);
         });
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testChimeIntervalThrottling(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
@@ -254,7 +239,6 @@ class PageProximityServiceTest {
         service.tick(); // Immediate next tick (5 ticks later): throttled by 60-tick warning interval!
 
         assertEquals(1, sounds.collect().size(), "second tick within interval must be throttled");
-        env.destroyInstance(instance, true);
     }
 
     private static PageProximityService service(GameConfig.PageProximity config, Player player, Pos... pages) {

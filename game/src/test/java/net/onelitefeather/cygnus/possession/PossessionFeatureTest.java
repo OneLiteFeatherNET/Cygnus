@@ -21,6 +21,8 @@ import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.utils.Items;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -95,10 +97,21 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         return creek;
     }
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     @DisplayName("Possessing reveals the slender, moves his camera to the creek and lets nearby survivors glow")
     void possessing(Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player slender = slender(connection.connect(instance, new Pos(0, 40, 0)));
         Player near = env.createPlayer(instance, new Pos(25, 40, 0));
@@ -118,13 +131,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         assertEquals(creek.getEntityId(), sent.getFirst().cameraId());
         assertEquals(Set.of(near), feature.glowing());
         feature.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The round starts with the possession locked for the start delay")
     void lockedAtStart(Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
         this.creek(instance);
         PossessionFeature feature = new PossessionFeature(new PossessionConfig(8, 60, 1.5D, 90), true, this.target,
@@ -136,13 +147,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         this.clock.set(90_000L);
         assertTrue(feature.use(slender));
         feature.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("After the maximum time he is hidden again, the camera is back and the full cooldown runs")
     void endsAfterTheMaximum(Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player slender = slender(connection.connect(instance, new Pos(0, 40, 0)));
         this.creek(instance);
@@ -163,13 +172,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         this.clock.set(68_000L);
         assertTrue(feature.use(slender));
         feature.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Sneaking ends it early, and the cooldown is still the full one")
     void sneakingEndsEarly(Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
         this.creek(instance);
         PossessionFeature feature = this.feature(slender);
@@ -184,13 +191,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         this.clock.set(61_000L);
         assertTrue(feature.use(slender));
         feature.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A use that does not get into the creek costs nothing")
     void failedUseIsFree(Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
         PossessionFeature feature = this.feature(slender);
 
@@ -205,13 +210,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         this.creek(instance);
         assertTrue(feature.use(slender), "neither attempt started the cooldown");
         feature.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The creek going away ends it, with the full cooldown")
     void endsWhenTheCreekGoes(Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
         this.creek(instance);
         PossessionFeature feature = this.feature(slender);
@@ -225,13 +228,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         this.creek(instance);
         assertFalse(feature.use(slender), "the cooldown runs");
         feature.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Leaving the game cleans up without a cooldown")
     void leavingCleansUpWithoutCooldown(Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
         this.creek(instance);
         PossessionFeature feature = this.feature(slender);
@@ -244,13 +245,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         assertEquals(1, this.target.releases);
         assertFalse(slender.hasTag(Tags.POSSESSING));
         assertTrue(feature.glowing().isEmpty());
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Only one slender can be in the creek, a second one is turned away for free")
     void oneAtATime(Env env) {
-        Instance instance = env.createFlatInstance();
         Player first = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
         Player second = slender(env.createPlayer(instance, new Pos(2, 40, 0)));
         this.creek(instance);
@@ -265,26 +264,22 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         feature.sneaked(first);
         assertTrue(feature.use(second), "the turned away slender has no cooldown");
         feature.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Without a running round the item does nothing")
     void nothingOutsideTheRound(Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
         this.creek(instance);
         PossessionFeature feature = this.feature(slender);
         feature.stop();
 
         assertFalse(feature.use(slender));
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The round ending brings the camera back and hides the slender, without a cooldown")
     void roundEndWithoutCooldown(Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player slender = slender(connection.connect(instance, new Pos(0, 40, 0)));
         this.creek(instance);
@@ -301,13 +296,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         assertNull(this.target.possessedBy);
         assertEquals(slender.getEntityId(), cameras.collect().getFirst().cameraId());
         assertTrue(cooldowns.collect().isEmpty());
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A slender who dies leaves the creek, with the full cooldown")
     void deathEndsIt(Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
         this.creek(instance);
         PossessionFeature feature = this.feature(slender);
@@ -319,13 +312,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         assertFalse(slender.hasTag(Tags.POSSESSING));
         assertFalse(feature.use(slender), "the cooldown runs");
         feature.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A new slender ends the old one's possession and gets the item")
     void newSlenderTakesOver(Env env) {
-        Instance instance = env.createFlatInstance();
         Player old = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
         Player successor = slender(env.createPlayer(instance, new Pos(2, 40, 0)));
         this.creek(instance);
@@ -341,13 +332,11 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
                 successor.getInventory().getItemStack(Items.POSSESSION_SLOT).getTag(Tags.ITEM_TAG));
         assertTrue(feature.use(successor), "the new slender has no cooldown");
         feature.stop();
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A creek outside the slender's view is too far away, and trying costs nothing")
     void farCreekIsTurnedDown(Env env) {
-        Instance instance = env.createFlatInstance();
         Player slender = slender(env.createPlayer(instance, new Pos(0, 40, 0)));
         EntityCreature creek = this.creek(instance);
         // Beyond the entity view distance, so the slender's client does not know the creek.
@@ -364,6 +353,5 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         creek.teleport(new Pos(20, 40, 0)).join();
         assertTrue(feature.use(slender), "the failed try started no cooldown");
         feature.stop();
-        env.destroyInstance(instance, true);
     }
 }

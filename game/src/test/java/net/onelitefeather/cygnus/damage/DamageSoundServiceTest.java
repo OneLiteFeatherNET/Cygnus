@@ -14,6 +14,8 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -39,10 +41,21 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
     /** The same cooldown expressed in the milliseconds the fake clock counts. */
     private static final long COOLDOWN_MILLIS = COOLDOWN_TICKS * 50L;
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     @DisplayName("A hit plays the configured sound to the player who was hit")
     void aHitPlaysTheSoundToTheVictim(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
@@ -55,14 +68,11 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
             assertEquals(SoundEvent.ENTITY_PLAYER_HURT, packet.soundEvent());
             assertEquals(player.getEntityId(), packet.entityId(), "the sound has to sit on the victim, not on a location");
         });
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Nobody but the player who was hit hears the sound")
     void nobodyElseHearsTheSound(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection victimConnection = env.createConnection();
         Player victim = victimConnection.connect(instance);
         TestConnection bystanderConnection = env.createConnection();
@@ -75,14 +85,11 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new PlayerDamagedEvent(victim, SOURCE));
 
         bystanderSounds.assertEmpty();
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A second hit inside the cooldown stays silent")
     void aSecondHitInsideTheCooldownStaysSilent(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         AtomicLong clock = new AtomicLong();
@@ -94,14 +101,11 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         service.play(player);
 
         sounds.assertEmpty();
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The sound comes back once the cooldown has passed")
     void theSoundComesBackAfterTheCooldown(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         AtomicLong clock = new AtomicLong();
@@ -113,14 +117,11 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         service.play(player);
 
         sounds.assertSingle(packet -> assertEquals(SoundEvent.ENTITY_PLAYER_HURT, packet.soundEvent()));
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The cooldown is kept per player")
     void theCooldownIsKeptPerPlayer(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection firstConnection = env.createConnection();
         Player first = firstConnection.connect(instance);
         TestConnection secondConnection = env.createConnection();
@@ -132,14 +133,11 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         service.play(second);
 
         secondSounds.assertSingle(packet -> assertEquals(SoundEvent.ENTITY_PLAYER_HURT, packet.soundEvent()));
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A turned off feature never plays anything")
     void aTurnedOffFeatureStaysSilent(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
@@ -149,14 +147,11 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new PlayerDamagedEvent(player, SOURCE));
 
         sounds.assertEmpty();
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("An unknown sound key falls back to the default instead of going silent")
     void anUnknownSoundKeyFallsBackToTheDefault(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
@@ -166,14 +161,11 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         service.play(player);
 
         sounds.assertSingle(packet -> assertEquals(SoundEvent.ENTITY_PLAYER_HURT, packet.soundEvent()));
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Clearing a player drops their cooldown")
     void clearingAPlayerDropsTheCooldown(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
         DamageSoundService service = service(config(true, COOLDOWN_TICKS, GameConfig.DamageSound.DEFAULT_SOUND), new AtomicLong());
@@ -184,8 +176,6 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
         service.play(player);
 
         sounds.assertSingle(packet -> assertEquals(SoundEvent.ENTITY_PLAYER_HURT, packet.soundEvent()));
-
-        env.destroyInstance(instance, true);
     }
 
     /**
