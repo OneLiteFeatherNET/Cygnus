@@ -1,5 +1,9 @@
 package net.onelitefeather.cygnus.common.config;
 
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.atLeast;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.notNegative;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.share;
+
 /**
  * Settings for the adrenaline rush of a survivor who sees the slender close by.
  * <p>
@@ -34,18 +38,10 @@ public record AdrenalineConfig(
      * @throws IllegalArgumentException if a value is out of range
      */
     public AdrenalineConfig {
-        if (radius < 1) {
-            throw new IllegalArgumentException("radius (" + radius + ") must be at least 1");
-        }
-        if (speedBonus <= 0.0D || speedBonus > 1.0D) {
-            throw new IllegalArgumentException("speedBonus (" + speedBonus + ") must be above 0.0 and at most 1.0");
-        }
-        if (durationSeconds < 1) {
-            throw new IllegalArgumentException("durationSeconds (" + durationSeconds + ") must be at least 1");
-        }
-        if (cooldownSeconds < 0) {
-            throw new IllegalArgumentException("cooldownSeconds (" + cooldownSeconds + ") must not be negative");
-        }
+        atLeast("radius", radius, 1);
+        share("speedBonus", speedBonus);
+        atLeast("durationSeconds", durationSeconds, 1);
+        notNegative("cooldownSeconds", cooldownSeconds);
     }
 
     /**

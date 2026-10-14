@@ -1,5 +1,8 @@
 package net.onelitefeather.cygnus.common.config;
 
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.atLeast;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.notNegative;
+
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -40,9 +43,7 @@ public record RegenerationConfig(double perSecond, List<Double> shares, int minM
      * @throws IllegalArgumentException if a value is out of range
      */
     public RegenerationConfig {
-        if (perSecond < 0.0D) {
-            throw new IllegalArgumentException("perSecond (" + perSecond + ") must not be negative");
-        }
+        notNegative("perSecond", perSecond);
         if (shares.isEmpty()) {
             throw new IllegalArgumentException("shares must not be empty");
         }
@@ -51,9 +52,7 @@ public record RegenerationConfig(double perSecond, List<Double> shares, int minM
                 throw new IllegalArgumentException("shares (" + shares + ") must all be between 0.0 and 1.0");
             }
         }
-        if (minMissing < 1) {
-            throw new IllegalArgumentException("minMissing (" + minMissing + ") must be at least 1");
-        }
+        atLeast("minMissing", minMissing, 1);
         shares = List.copyOf(shares);
     }
 

@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.common.config;
 
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.atLeast;
+
 /**
  * Settings for the OpenTelemetry traces Cygnus creates.
  * <p>
@@ -33,9 +35,7 @@ public record TelemetryConfig(int slowTickThresholdMillis) {
      * @throws IllegalArgumentException if a value is out of range
      */
     public TelemetryConfig {
-        if (slowTickThresholdMillis < 1) {
-            throw new IllegalArgumentException("slowTickThresholdMillis (" + slowTickThresholdMillis + ") must be at least 1");
-        }
+        atLeast("slowTickThresholdMillis", slowTickThresholdMillis, 1);
     }
 
     /**

@@ -1,5 +1,11 @@
 package net.onelitefeather.cygnus.common.config;
 
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.atLeast;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.below;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.between;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.notAbove;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.positive;
+
 /**
  * Settings for the creek, the second figure next to the slender.
  * <p>
@@ -365,76 +371,6 @@ public record CreekConfig(
                     section.getDouble("launchHeight", DEFAULT.launchHeight()),
                     section.getDouble("swapChance", DEFAULT.swapChance()),
                     section.getDouble("launchDamage", DEFAULT.launchDamage())), DEFAULT);
-        }
-    }
-
-    /**
-     * Rejects a value below a minimum.
-     *
-     * @param name    the key name for the message
-     * @param value   the value
-     * @param minimum the smallest allowed value
-     */
-    private static void atLeast(String name, double value, double minimum) {
-        if (value < minimum) {
-            throw new IllegalArgumentException(name + " (" + value + ") must be at least " + minimum);
-        }
-    }
-
-    /**
-     * Rejects a value of 0 or below.
-     *
-     * @param name  the key name for the message
-     * @param value the value
-     */
-    private static void positive(String name, double value) {
-        if (value <= 0.0D) {
-            throw new IllegalArgumentException(name + " (" + value + ") must be above 0");
-        }
-    }
-
-    /**
-     * Rejects a value outside a range.
-     *
-     * @param name    the key name for the message
-     * @param value   the value
-     * @param minimum the smallest allowed value
-     * @param maximum the largest allowed value
-     */
-    private static void between(String name, double value, double minimum, double maximum) {
-        if (value < minimum || value > maximum) {
-            throw new IllegalArgumentException(
-                    name + " (" + value + ") must be between " + minimum + " and " + maximum);
-        }
-    }
-
-    /**
-     * Rejects a lower value that is not strictly below the upper one.
-     *
-     * @param lowerName the lower key name for the message
-     * @param lower     the lower value
-     * @param upperName the upper key name for the message
-     * @param upper     the upper value
-     */
-    private static void below(String lowerName, double lower, String upperName, double upper) {
-        if (lower >= upper) {
-            throw new IllegalArgumentException(
-                    lowerName + " (" + lower + ") must be below " + upperName + " (" + upper + ")");
-        }
-    }
-
-    /**
-     * Rejects a lower value above the upper one.
-     *
-     * @param lowerName the lower key name for the message
-     * @param lower     the lower value
-     * @param upperName the upper key name for the message
-     * @param upper     the upper value
-     */
-    private static void notAbove(String lowerName, double lower, String upperName, double upper) {
-        if (lower > upper) {
-            throw new IllegalArgumentException(
-                    lowerName + " (" + lower + ") must not be above " + upperName + " (" + upper + ")");
         }
     }
 }
