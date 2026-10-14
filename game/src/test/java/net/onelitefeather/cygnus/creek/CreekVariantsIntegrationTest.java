@@ -54,7 +54,7 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
     }
 
     private static CreekVariants variants(Instance instance, CreekConfig config, Ground ground, long allowedAt) {
-        SpotFinder spots = new SpotFinder(SIGHT, ground);
+        SpotFinder spots = new SpotFinder(CONFIG.sight().range(), ground);
         return new CreekVariants(config, spots, new Random(5), allowedAt, spawner(instance, config, spots), () -> Calm.NONE);
     }
 

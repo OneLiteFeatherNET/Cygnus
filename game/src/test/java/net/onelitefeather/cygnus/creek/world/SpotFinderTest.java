@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek.world;
 
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.common.config.CreekConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,20 +15,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpotFinderTest {
 
-    private static final CreekSight SIGHT = new CreekSight(48, 35);
-    private static final SpotFinder SPOTS = new SpotFinder(SIGHT, Optional::of);
+    /** What the survivor has on screen: a spot in here is seen. */
+    private static final CreekSight SCREEN = new CreekSight(48, CreekConfig.HIDE_ANGLE);
+    private static final SpotFinder SPOTS = new SpotFinder(48, Optional::of);
     private static final Pos TARGET = new Pos(0, 40, 0, 0, 0);
     private static final Pos TARGET_EYES = TARGET.add(0, 1.62, 0);
 
     @Test
-    @DisplayName("A spot beside the view stays in the band and out of the cone")
-    void besideStaysOutOfTheCone() {
+    @DisplayName("A spot beside the view stays in the band and off the screen")
+    void besideStaysOffTheScreen() {
         RandomGenerator random = new Random(1);
         for (int i = 0; i < 50; i++) {
-            Pos spot = SPOTS.beside(TARGET, 20, 35, 40, 70, List.of(TARGET_EYES), 15, random).orElseThrow();
+            Pos spot = SPOTS.beside(TARGET, 20, 35, 80, 130, List.of(TARGET_EYES), 15, random).orElseThrow();
             double distance = spot.distance(TARGET);
             assertTrue(distance >= 20 - 1.0E-6 && distance <= 35 + 1.0E-6, "distance was " + distance);
-            assertFalse(SIGHT.inView(TARGET_EYES, spot.add(0, SpotFinder.BODY_CENTRE, 0)));
+            assertFalse(SCREEN.inView(TARGET_EYES, spot.add(0, SpotFinder.BODY_CENTRE, 0)));
         }
     }
 
@@ -35,6 +37,15 @@ class SpotFinderTest {
     @DisplayName("A spot straight ahead is not hidden")
     void aheadIsNotHidden() {
         assertFalse(SPOTS.isHidden(new Pos(0, 40, 20), List.of(TARGET_EYES), 15));
+    }
+
+    @Test
+    @DisplayName("A spot at the edge of the screen is not hidden")
+    void screenEdgeIsNotHidden() {
+        // 45 degrees off the view centre: outside the cone that notices the creek, but well inside
+        // what a client with the default field of view shows.
+        Pos edge = new Pos(-Math.sin(Math.toRadians(45)) * 20, 40, Math.cos(Math.toRadians(45)) * 20);
+        assertFalse(SPOTS.isHidden(edge, List.of(TARGET_EYES), 15));
     }
 
     @Test
@@ -52,7 +63,7 @@ class SpotFinderTest {
     @Test
     @DisplayName("Without ground there is no spot")
     void noGroundNoSpot() {
-        SpotFinder nowhere = new SpotFinder(SIGHT, _ -> Optional.empty());
-        assertTrue(nowhere.beside(TARGET, 20, 35, 40, 70, List.of(TARGET_EYES), 15, new Random(1)).isEmpty());
+        SpotFinder nowhere = new SpotFinder(48, _ -> Optional.empty());
+        assertTrue(nowhere.beside(TARGET, 20, 35, 80, 130, List.of(TARGET_EYES), 15, new Random(1)).isEmpty());
     }
 }

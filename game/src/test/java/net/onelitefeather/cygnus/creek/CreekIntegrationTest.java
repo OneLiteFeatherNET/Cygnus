@@ -57,7 +57,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         CreekSight sight = new CreekSight(config.sight().range(), config.sight().viewAngle());
         // nextBoolean() is true for -1, so a selection always ends in the stun.
         PatrolHelper patrol = new PatrolHelper(() -> -1L);
-        CreekRound round = new CreekRound(sight, new SpotFinder(sight, Optional::of), _ -> {}, witness, patrol,
+        CreekRound round = new CreekRound(sight, new SpotFinder(CreekConfig.DEFAULT.sight().range(), Optional::of), _ -> {}, witness, patrol,
                 new StalkSounds(new Random(3)), config, new Random(3), HuntCooldowns.none(), () -> Calm.NONE);
         return new Creek(body, Contexts.route(), round, initial);
     }

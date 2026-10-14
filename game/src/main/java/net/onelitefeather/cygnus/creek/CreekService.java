@@ -117,7 +117,7 @@ public final class CreekService implements PossessionTarget {
         this.random = random;
         this.sight = new CreekSight(config.sight().range(), config.sight().viewAngle());
         this.ground = new InstanceGround(instance);
-        this.spots = new SpotFinder(this.sight, this.ground);
+        this.spots = new SpotFinder(config.sight().range(), this.ground);
         this.routes = routes;
     }
 

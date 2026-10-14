@@ -28,7 +28,7 @@ import static net.onelitefeather.cygnus.common.config.ConfigChecks.positive;
  * @param vanish                 how long the creek stays away and where it comes back
  * @param catching               what a catch does
  * @author theEvilReaper
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2.15.0
  */
 public record CreekConfig(
@@ -44,6 +44,14 @@ public record CreekConfig(
         Vanish vanish,
         Catch catching
 ) {
+
+    /**
+     * How far off the view centre a teleport target has to be, in degrees, so the jump does not
+     * happen on the survivor's screen. The client shows about 51 degrees to each side with the
+     * default field of view and up to about 68 with the widest one, so the creek must not appear
+     * inside that. Not a setting: it follows from the client, not from how the creek should play.
+     */
+    public static final int HIDE_ANGLE = 75;
 
     /**
      * The default settings: enabled, and tuned for a round of about fifteen minutes.
@@ -194,8 +202,8 @@ public record CreekConfig(
     public record Stalk(double threshold, int minDistance, int maxDistance, int minAngle, int maxAngle,
                         int revealMillis, int minSeconds, int maxSeconds) {
 
-        /** The default stalk. */
-        public static final Stalk DEFAULT = new Stalk(0.25D, 20, 35, 40, 70, 700, 45, 90);
+        /** The default stalk. It appears beside and behind the survivor's shoulder, off their screen. */
+        public static final Stalk DEFAULT = new Stalk(0.25D, 20, 35, 80, 130, 700, 45, 90);
 
         /**
          * Checks the values.
@@ -207,6 +215,8 @@ public record CreekConfig(
             below("stalkMinDistance", minDistance, "stalkMaxDistance", maxDistance);
             below("stalkMinAngle", minAngle, "stalkMaxAngle", maxAngle);
             between("stalkMaxAngle", maxAngle, 1, 180);
+            // Spots inside the hide angle are never used, so the band has to reach past it.
+            below("hideAngle", HIDE_ANGLE, "stalkMaxAngle", maxAngle);
             atLeast("stalkRevealMillis", revealMillis, 0);
             atLeast("stalkMinSeconds", minSeconds, 1);
             notAbove("stalkMinSeconds", minSeconds, "stalkMaxSeconds", maxSeconds);

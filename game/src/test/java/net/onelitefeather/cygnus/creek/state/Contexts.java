@@ -26,7 +26,7 @@ public final class Contexts {
     /** The defaults, without random stops, so wandering tests do not depend on chance. */
     static final CreekConfig CONFIG = randomStops(0.0D, 0, 0);
     static final CreekSight SIGHT = new CreekSight(CONFIG.sight().range(), CONFIG.sight().viewAngle());
-    static final SpotFinder SPOTS = new SpotFinder(SIGHT, Optional::of);
+    static final SpotFinder SPOTS = new SpotFinder(CONFIG.sight().range(), Optional::of);
 
     /** Actions that do nothing. */
     public static final CreekActions NO_ACTIONS = actions(_ -> {}, _ -> {});
