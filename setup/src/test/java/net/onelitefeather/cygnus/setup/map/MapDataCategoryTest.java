@@ -16,8 +16,6 @@ class MapDataCategoryTest {
 
     @Test
     void testValidEntry() {
-        MapDataCategory category = MapDataCategory.byId(1);
-        assertNotNull(category);
-        assertEquals("Builder", category.getName());
+        assertEquals("Builder", MapDataCategory.byId(1).getName());
     }
 }
