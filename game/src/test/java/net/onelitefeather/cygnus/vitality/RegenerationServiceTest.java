@@ -164,8 +164,8 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("A hit takes its damage off what is still to come, and the healing goes on")
-    void hitShrinksTheRest(Env env) {
+    @DisplayName("A hit costs only its health, the healing goes on in full")
+    void hitKeepsTheRest(Env env) {
         Instance instance = env.createFlatInstance();
         CygnusPlayer survivor = survivor(env, instance);
         RegenerationService service = started(env);
@@ -176,13 +176,13 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
 
         ticks(service, 269);
 
-        // 40 to come, one tick healed, then the hit costs 5 health and 5 of the rest
-        assertEquals(40.0D + PER_TICK - 5.0D + (40.0D - PER_TICK - 5.0D), survivor.vitality().points(), EPSILON);
+        // 40 to come, all of it healed, the hit costs only its 5 health
+        assertEquals(40.0D + 40.0D - 5.0D, survivor.vitality().points(), EPSILON);
     }
 
     @Test
-    @DisplayName("A hit bigger than the rest ends the healing")
-    void bigHitEndsTheHealing(Env env) {
+    @DisplayName("A hit bigger than the rest does not end the healing")
+    void bigHitKeepsTheRest(Env env) {
         Instance instance = env.createFlatInstance();
         CygnusPlayer survivor = survivor(env, instance);
         RegenerationService service = started(env);
@@ -193,24 +193,7 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
 
         ticks(service, 269);
 
-        assertEquals(80.0D + PER_TICK - 25.0D, survivor.vitality().points(), EPSILON);
-    }
-
-    @Test
-    @DisplayName("A hit too small to show still takes its damage off what is still to come")
-    void smallHitShrinksTheRest(Env env) {
-        Instance instance = env.createFlatInstance();
-        CygnusPlayer survivor = survivor(env, instance);
-        RegenerationService service = started(env);
-        hit(survivor, 60.0D);
-        service.use(survivor);
-        ticks(service, 1);
-        hit(survivor, 0.2D);
-
-        ticks(service, 300);
-
-        // 40 to come, one tick healed, then the hit costs 0.2 health and 0.2 of the rest
-        assertEquals(40.0D + PER_TICK - 0.2D + (40.0D - PER_TICK - 0.2D), survivor.vitality().points(), EPSILON);
+        assertEquals(80.0D + 20.0D - 25.0D, survivor.vitality().points(), EPSILON);
     }
 
     @Test
