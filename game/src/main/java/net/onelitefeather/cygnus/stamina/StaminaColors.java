@@ -55,22 +55,4 @@ enum StaminaColors {
         progressBar = progressBar.append(Component.text(tileChar.repeat(emptyTiles), this.emptyColor));
         player.sendActionBar(progressBar);
     }
-
-    /**
-     * Returns the color for the complete bar
-     *
-     * @return the color complete bar color
-     */
-    public NamedTextColor getCompleteColor() {
-        return this.completeColor;
-    }
-
-    /**
-     * Returns the color for the empty bar
-     *
-     * @return the color empty bar color
-     */
-    public NamedTextColor getEmptyColor() {
-        return this.emptyColor;
-    }
 }

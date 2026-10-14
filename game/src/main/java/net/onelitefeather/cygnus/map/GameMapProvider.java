@@ -186,16 +186,6 @@ public final class GameMapProvider extends AbstractMapProvider {
     }
 
     /**
-     * Returns the dimension the game instance runs on.
-     *
-     * @return the registered per-map dimension, or {@link DimensionType#OVERWORLD} if the map
-     *         declares no atmosphere
-     */
-    public RegistryKey<DimensionType> getGameDimension() {
-        return gameDimension;
-    }
-
-    /**
      * Switches the provider over to the game map.
      *
      * <p>This only moves the active references; the lobby instance stays registered so the players
