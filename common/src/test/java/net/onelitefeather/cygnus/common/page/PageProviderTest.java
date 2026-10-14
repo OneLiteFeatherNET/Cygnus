@@ -21,6 +21,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -375,6 +377,58 @@ class PageProviderTest {
         pageProvider.collectStartPages(MIN_ACTIVE_PAGE_COUNT);
         pageProvider.spawn(instance);
         return pageProvider;
+    }
+
+    /** Six spots crowded around one tree. */
+    private static final List<PageResource> CROWDED = IntStream.range(0, 6)
+            .mapToObj(i -> new PageResource(new Pos(i, 40, 0), Direction.NORTH))
+            .toList();
+    /** Six spots, each on its own far away from the rest. */
+    private static final List<PageResource> LONELY = IntStream.range(1, 7)
+            .mapToObj(i -> new PageResource(new Pos(i * 100, 40, 0), Direction.NORTH))
+            .toList();
+
+    private static List<PageResource> map() {
+        List<PageResource> spots = new ArrayList<>(CROWDED);
+        spots.addAll(LONELY);
+        return spots;
+    }
+
+    @Test
+    void testALonelySpotWeighsMoreThanACrowdedOne() {
+        Map<PageResource, Double> weights = PageProvider.weights(map());
+
+        assertTrue(weights.get(LONELY.getFirst()) > weights.get(CROWDED.getFirst()),
+                "a spot among many others must come up less often than one on its own");
+    }
+
+    @Test
+    void testTheWeightsAreCapped() {
+        for (double weight : PageProvider.weights(map()).values()) {
+            assertTrue(weight >= PageProvider.LEAST_WEIGHT && weight <= PageProvider.MOST_WEIGHT,
+                    "weight " + weight + " must stay between the caps");
+        }
+    }
+
+    @Test
+    void testTheSpreadOrderKeepsEverySpotOnce() {
+        List<PageResource> order = PageProvider.spreadOrder(map(), new Random(1));
+
+        assertEquals(map().size(), order.size());
+        assertEquals(Set.copyOf(map()), Set.copyOf(order));
+    }
+
+    @Test
+    void testCrowdedSpotsComeLaterOnAverage() {
+        double crowded = 0.0D;
+        double lonely = 0.0D;
+        for (int seed = 0; seed < 2000; seed++) {
+            List<PageResource> order = PageProvider.spreadOrder(map(), new Random(seed));
+            for (PageResource spot : CROWDED) crowded += order.indexOf(spot);
+            for (PageResource spot : LONELY) lonely += order.indexOf(spot);
+        }
+
+        assertTrue(crowded > lonely, "crowded spots have to wait longer for their turn");
     }
 
     private static Set<PageResource> spots(int count) {
