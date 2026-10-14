@@ -11,11 +11,6 @@ class PageHeaderFormatterTest {
     @Test
     void testFormatter() {
         Component component = PageHeaderFormatter.format(1, 2);
-        assertNotNull(component);
-
-        String componentText = PlainTextComponentSerializer.plainText().serialize(component);
-
-        assertNotNull(componentText);
-        assertEquals("Page 1 of 2", componentText);
+        assertEquals("Page 1 of 2", PlainTextComponentSerializer.plainText().serialize(component));
     }
 }

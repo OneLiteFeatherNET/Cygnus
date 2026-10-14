@@ -7,91 +7,77 @@ import net.minestom.server.item.Material;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.Tags;
-import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(MicrotusExtension.class)
 class SetupItemsTest {
 
-    @Test
-    void testMapSelectionItemSet(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
+    private Instance instance;
+    private Player player;
 
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+        this.player = env.createPlayer(this.instance);
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
+    @Test
+    void testMapSelectionItemSet() {
         SetupItems.setMapSelection(player);
-
-        assertItem(player, SetupItems.SELECTION, (byte) 0x00);
-
-        env.destroyInstance(instance, true);
+        assertItem(SetupItems.SELECTION, SetupItemId.MAP_SELECTION);
     }
 
     @Test
-    void testSaveDataItemSet(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
-
+    void testLobbyLayoutItemSet() {
         SetupItems.setLobbyLayout(player);
-        assertItem(player, 2, (byte) 0x02);
-        assertItem(player, 6, (byte) 0x01);
-
-        env.destroyInstance(instance, true);
+        assertItem(2, SetupItemId.DATA);
+        assertItem(6, SetupItemId.SAVE_DATA);
     }
 
     @Test
-    void testPageItemSet(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
-
+    void testPageItemSet() {
         SetupItems.setPageItems(player);
-        assertItem(player, 2, SetupItemId.PAGES);
-        assertItem(player, 6, SetupItemId.LEAVE_PAGE);
+        assertItem(2, SetupItemId.PAGES);
+        assertItem(6, SetupItemId.LEAVE_PAGE);
+    }
 
-        env.destroyInstance(instance, true);
+    @Test
+    void testCreekRouteOverviewItemSet() {
+        SetupItems.setCreekRouteOverviewItems(player);
+        assertItem(0, SetupItemId.CREEK_NEW);
+        assertItem(4, SetupItemId.CREEK_LIST);
+        assertItem(8, SetupItemId.CREEK_LEAVE);
+    }
+
+    @Test
+    void testCreekRouteEditItemSet() {
+        SetupItems.setCreekRouteEditItems(player);
+        assertItem(0, SetupItemId.CREEK_UNDO);
+        assertItem(2, SetupItemId.CREEK_PAUSE);
+        assertItem(6, SetupItemId.CREEK_FINISH);
+        assertItem(8, SetupItemId.CREEK_LEAVE);
     }
 
     /**
-     * Asserts that the item in the specified slot of the player's inventory matches the expected item ID.
+     * Asserts that the item in the specified slot of the player's inventory carries the expected item id.
      *
-     * @param player the player whose inventory is being checked
      * @param slot   the inventory slot to check
      * @param itemId the expected id from the item
      */
-    private void assertItem(@NotNull Player player, int slot, byte itemId) {
+    private void assertItem(int slot, byte itemId) {
         ItemStack itemStack = player.getInventory().getItemStack(slot);
-        assertNotNull(itemStack);
         assertNotEquals(Material.AIR, itemStack.material());
         assertEquals(itemId, itemStack.getTag(Tags.ITEM_TAG).byteValue());
-    }
-
-    @Test
-    void testCreekRouteOverviewItemSet(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
-
-        SetupItems.setCreekRouteOverviewItems(player);
-        assertItem(player, 0, SetupItemId.CREEK_NEW);
-        assertItem(player, 4, SetupItemId.CREEK_LIST);
-        assertItem(player, 8, SetupItemId.CREEK_LEAVE);
-
-        env.destroyInstance(instance, true);
-    }
-
-    @Test
-    void testCreekRouteEditItemSet(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player player = env.createPlayer(instance);
-
-        SetupItems.setCreekRouteEditItems(player);
-        assertItem(player, 0, SetupItemId.CREEK_UNDO);
-        assertItem(player, 2, SetupItemId.CREEK_PAUSE);
-        assertItem(player, 6, SetupItemId.CREEK_FINISH);
-        assertItem(player, 8, SetupItemId.CREEK_LEAVE);
-
-        env.destroyInstance(instance, true);
     }
 }

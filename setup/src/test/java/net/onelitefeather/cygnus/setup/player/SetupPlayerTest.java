@@ -3,22 +3,28 @@ package net.onelitefeather.cygnus.setup.player;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
-import net.onelitefeather.cygnus.setup.SetupPlayerTestBase;
+import net.minestom.testing.extension.MicrotusExtension;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-class SetupPlayerTest extends SetupPlayerTestBase {
+@ExtendWith(MicrotusExtension.class)
+class SetupPlayerTest {
+
+    @BeforeAll
+    static void setUp(Env env) {
+        env.process().connection().setPlayerProvider(new SetupPlayerProvider());
+    }
 
     @Test
     void testPlayerInstance(Env env) {
         Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
-        assertInstanceOf(SetupPlayer.class, player);
-
-        SetupPlayer setupPlayer = (SetupPlayer) player;
+        SetupPlayer setupPlayer = assertInstanceOf(SetupPlayer.class, player);
         assertNull(setupPlayer.getSurvivorToDelete());
         assertNull(setupPlayer.getPageToDelete());
 
