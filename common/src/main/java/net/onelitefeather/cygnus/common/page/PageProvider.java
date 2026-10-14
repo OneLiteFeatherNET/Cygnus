@@ -211,7 +211,8 @@ public final class PageProvider {
         PageResource oldSpot = page.getResource();
         // Picked first, so the page can't draw its own spot again; queued last, so the spot only
         // comes back once every other one had its turn.
-        PageResource newSpot = pickSpot(this.freeSpots, List.copyOf(this.survivors.get()));
+        SpotPick pick = pickSpot(this.freeSpots, List.copyOf(this.survivors.get()));
+        PageResource newSpot = pick.spot();
         boolean hidden = newSpot == null && !returnOldSpot;
         if (hidden) {
             // Found with nowhere else to go: the spot has to be reused, but not right away
@@ -229,7 +230,7 @@ public final class PageProvider {
         this.activePages.put(page.getHitBoxUUID(), page);
         // A hidden page is announced when it shows up again, see PageEntity#reappear
         if (!hidden) {
-            EventDispatcher.call(new PageSpawnedEvent(page.getHitBoxUUID(), page.spot(), true));
+            EventDispatcher.call(new PageSpawnedEvent(page.getHitBoxUUID(), page.spot(), true, pick.skipped(), pick.watched()));
         }
     }
 
@@ -244,17 +245,28 @@ public final class PageProvider {
      *
      * @param free      the free spots, in the order they are handed out
      * @param survivors where the living survivors stand
-     * @return the spot, or {@code null} if no spot is free
+     * @return the spot, without one if no spot is free, and how the pick went for the telemetry
      */
-    static @Nullable PageResource pickSpot(Queue<PageResource> free, List<? extends Point> survivors) {
+    static SpotPick pickSpot(Queue<PageResource> free, List<? extends Point> survivors) {
         double reach = SPAWN_DISTANCE * SPAWN_DISTANCE;
         for (int attempt = 1; attempt <= SPAWN_ATTEMPTS; attempt++) {
             PageResource spot = free.poll();
-            if (spot == null) return null;
-            if (attempt == SPAWN_ATTEMPTS || !isWatched(spot, survivors, reach)) return spot;
+            if (spot == null) return new SpotPick(null, attempt - 1, false);
+            boolean watched = isWatched(spot, survivors, reach);
+            if (!watched || attempt == SPAWN_ATTEMPTS) return new SpotPick(spot, attempt - 1, watched);
             free.add(spot);
         }
-        return null;
+        return new SpotPick(null, SPAWN_ATTEMPTS, false);
+    }
+
+    /**
+     * The spot a moving page takes.
+     *
+     * @param spot    the spot, or {@code null} if no spot is free
+     * @param skipped how many spots were passed over because a survivor stood next to them
+     * @param watched whether a survivor stands next to the spot anyway
+     */
+    record SpotPick(@Nullable PageResource spot, int skipped, boolean watched) {
     }
 
     private static boolean isWatched(PageResource spot, List<? extends Point> survivors, double reach) {

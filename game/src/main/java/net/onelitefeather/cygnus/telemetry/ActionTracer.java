@@ -148,12 +148,16 @@ public final class ActionTracer {
      * @param pageId    the page
      * @param spot      where it stands
      * @param relocated whether an existing page was moved on, as opposed to the first placement
+     * @param skipped   how many spots it passed over because a survivor stood next to them
+     * @param watched   whether a survivor stands next to the spot anyway
      */
-    public void pageSpawned(UUID pageId, Pos spot, boolean relocated) {
+    public void pageSpawned(UUID pageId, Pos spot, boolean relocated, int skipped, boolean watched) {
         this.pages.put(pageId, new Spawn(this.clock.instant(), spot));
         emit(CygnusAttributes.ACTION_PAGE_SPAWN, null, step -> {
             step.set(CygnusAttributes.PAGE_ID, pageId.toString());
             step.set(CygnusAttributes.PAGE_RELOCATED, relocated);
+            step.set(CygnusAttributes.PAGE_SKIPPED, (long) skipped);
+            step.set(CygnusAttributes.PAGE_WATCHED, watched);
             position(step, spot.x(), spot.y(), spot.z());
         });
     }
@@ -391,7 +395,8 @@ public final class ActionTracer {
      */
     public void register(EventNode<? super Event> node, Supplier<@Nullable Player> slender) {
         node.addListener(PageSpawnedEvent.class,
-                event -> safely(() -> pageSpawned(event.pageId(), event.position(), event.relocated())));
+                event -> safely(() -> pageSpawned(event.pageId(), event.position(), event.relocated(),
+                        event.skipped(), event.watched())));
         node.addListener(PageFoundEvent.class, event -> safely(() ->
                 pageFound(Actor.of(event.finder()), event.pageId(), event.foundCount(), event.maxPages())));
         node.addListener(PageExpiredEvent.class, event -> safely(() -> pageExpired(event.entity().getHitBoxUUID())));
