@@ -39,7 +39,7 @@ import java.util.function.Supplier;
  * of a chase, but only with at least {@link RegenerationConfig#minMissing()} points missing, so it is
  * not spent on a scratch. A hit while they work only costs its health, the painkillers still give
  * all they have left, so they stay worth taking in a chase. Fear slows the healing down: a calm survivor
- * regains {@link RegenerationConfig#perSecond()}, a terrified one hardly anything.
+ * regains {@link RegenerationConfig#perSecond()}, a terrified one only {@link RegenerationConfig#minSpeed()} of it.
  * </p>
  *
  * @author theEvilReaper
@@ -150,8 +150,8 @@ public final class RegenerationService implements GameFeature {
             }
             Vitality vitality = survivor.vitality();
             double rest = entry.getValue();
-            double calm = 1.0D - Math.clamp(this.dread.dreadOf(survivor.getUuid()), 0.0D, 1.0D);
-            double step = Math.min(rest, this.config.perSecond() * calm * TICK_MILLIS / 1000.0D);
+            double speed = this.config.speedFor(this.dread.dreadOf(survivor.getUuid()));
+            double step = Math.min(rest, speed * TICK_MILLIS / 1000.0D);
             rest -= vitality.heal(step);
             // Done, or full already with nothing more to give
             if (rest <= 0.0D || vitality.points() >= vitality.max()) {
