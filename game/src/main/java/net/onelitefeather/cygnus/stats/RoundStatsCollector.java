@@ -15,24 +15,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
- * Collects what every participant does in a round and hands it to the {@link StatsRepository} when
- * the round ends.
+ * The game-side adapter of the statistics: translates the game's events into calls on the
+ * {@link RoundStatsTracker} and hands the finished round to the {@link StatsRepository}.
  * <p>
  * Everything between {@link #roundStarted(Map)} and {@link #gameFinished(GameFinishEvent.Reason)}
- * only touches an in-memory map, so event handling never does I/O; the repository moves the write off
- * the tick thread. Only players on a team at the start are tracked, a spectator who joins later gets
- * no row. The methods that take plain values are what the tests drive, {@link #register} adapts the
- * game's events onto them.
+ * only touches the tracker's in-memory state, so event handling never does I/O; the repository moves
+ * the write off the tick thread. Only players on a team at the start are tracked, a spectator who
+ * joins later gets no row. {@link #register} adapts the game's events onto these methods.
  * </p>
  *
  * @author TheMeinerLP
@@ -44,10 +39,8 @@ public final class RoundStatsCollector {
     private static final Logger LOGGER = LoggerFactory.getLogger(RoundStatsCollector.class);
 
     private final StatsRepository repository;
-    private final Clock clock;
-    private final ZoneId zone;
+    private final RoundStatsTracker tracker;
     private final Supplier<@Nullable String> roundIds;
-    private final Map<UUID, RoundStats.Builder> participants = new HashMap<>();
 
     /**
      * Creates the collector.
@@ -59,8 +52,7 @@ public final class RoundStatsCollector {
      */
     public RoundStatsCollector(StatsRepository repository, Clock clock, ZoneId zone, Supplier<@Nullable String> roundIds) {
         this.repository = repository;
-        this.clock = clock;
-        this.zone = zone;
+        this.tracker = new RoundStatsTracker(clock, zone);
         this.roundIds = roundIds;
     }
 
@@ -69,108 +61,24 @@ public final class RoundStatsCollector {
      *
      * @param players every member of the Slender and Survivor teams with the role they start in
      */
-    public synchronized void roundStarted(Map<UUID, Role> players) {
-        this.participants.clear();
-        Instant started = this.clock.instant();
-        players.forEach((uuid, role) -> this.participants.put(uuid, new RoundStats.Builder(uuid, role, started)));
+    public void roundStarted(Map<UUID, Role> players) {
+        this.tracker.roundStarted(players);
     }
 
     /**
-     * Counts a found page for its finder.
-     *
-     * @param finder the survivor who found it
-     * @param found  how many pages were found including this one
-     * @param max    how many pages the round needs
-     */
-    public synchronized void pageFound(UUID finder, int found, int max) {
-        RoundStats.Builder builder = active(finder);
-        if (builder != null) {
-            builder.pageFound(found >= max);
-        }
-    }
-
-    /**
-     * Records a death and credits the kill.
-     *
-     * @param victim the player who died
-     * @param killer the Slender who gets the credit, or {@code null} for nobody
-     */
-    public synchronized void playerDied(UUID victim, @Nullable UUID killer) {
-        RoundStats.Builder dead = active(victim);
-        if (dead == null || dead.role() != Role.SURVIVOR) {
-            return;
-        }
-        dead.died(this.clock.instant());
-        if (killer != null) {
-            RoundStats.Builder credited = active(killer);
-            if (credited != null) {
-                credited.kill();
-            }
-        }
-    }
-
-    /**
-     * Adds damage a participant took.
-     *
-     * @param player the player who was hit
-     * @param points the vitality points lost
-     */
-    public synchronized void damageTaken(UUID player, double points) {
-        RoundStats.Builder builder = active(player);
-        if (builder != null) {
-            builder.damage(points);
-        }
-    }
-
-    /**
-     * Counts a painkiller a participant took.
-     *
-     * @param player the player who took it
-     */
-    public synchronized void painkillerUsed(UUID player) {
-        RoundStats.Builder builder = active(player);
-        if (builder != null) {
-            builder.painkiller();
-        }
-    }
-
-    /**
-     * Freezes a participant who quit before the round ended: their outcome is
-     * {@link RoundStats.Outcome#ABANDONED} and their play time ends now.
-     *
-     * @param player the player who left
-     */
-    public synchronized void playerLeft(UUID player) {
-        RoundStats.Builder builder = active(player);
-        if (builder != null) {
-            builder.left(this.clock.instant());
-        }
-    }
-
-    /**
-     * Ends the round: resolves every outcome, hands the round to the repository and clears the state.
-     * A failing repository is logged and does not reach the caller.
+     * Ends the round: hands it to the repository and clears the state. A failing repository is logged
+     * and does not reach the caller.
      *
      * @param reason why the round ended
      */
-    public synchronized void gameFinished(GameFinishEvent.Reason reason) {
-        if (this.participants.isEmpty()) {
-            return;
-        }
-        Instant finished = this.clock.instant();
-        int pagesAgainst = this.participants.values().stream()
-                .filter(builder -> builder.role() == Role.SURVIVOR)
-                .mapToInt(RoundStats.Builder::pagesFound)
-                .sum();
-        List<RoundStats> stats = new ArrayList<>(this.participants.size());
-        this.participants.values().forEach(builder -> stats.add(builder.build(reason, finished, pagesAgainst)));
-        this.participants.clear();
-        UUID roundId = roundId(this.roundIds.get());
-        try {
-            this.repository.saveRound(new FinishedRound(roundId, finished, finished.atZone(this.zone).getYear(), stats));
-        } catch (RuntimeException exception) {
-            LOGGER.error("Handing round {} to the statistics failed", roundId, exception);
-        }
+    public void gameFinished(GameFinishEvent.Reason reason) {
+        this.tracker.finish(FinishReason.valueOf(reason.name()), () -> roundId(this.roundIds.get())).ifPresent(round -> {
+            try {
+                this.repository.saveRound(round);
+            } catch (RuntimeException exception) {
+                LOGGER.error("Handing round {} to the statistics failed", round.roundId(), exception);
+            }
+        });
     }
 
     /**
@@ -189,12 +97,14 @@ public final class RoundStatsCollector {
         node.addListener(GameStartEvent.class, _ -> roundStarted(participants.get()));
         node.addListener(GameFinishEvent.class, event -> gameFinished(event.reason()));
         node.addListener(PageFoundEvent.class,
-                event -> pageFound(event.finder().getUuid(), event.foundCount(), event.maxPages()));
-        node.addListener(PlayerDeathEvent.class, event -> playerDied(event.getPlayer().getUuid(), slender.get()));
-        node.addListener(PlayerDisconnectEvent.class, event -> playerLeft(event.getPlayer().getUuid()));
+                event -> this.tracker.pageFound(event.finder().getUuid(), event.foundCount(), event.maxPages()));
+        node.addListener(PlayerDeathEvent.class,
+                event -> this.tracker.playerDied(event.getPlayer().getUuid(), slender.get()));
+        node.addListener(PlayerDisconnectEvent.class, event -> this.tracker.playerLeft(event.getPlayer().getUuid()));
         node.addListener(PlayerDamagedEvent.class,
-                event -> damageTaken(event.getPlayer().getUuid(), event.getPoints()));
-        node.addListener(PainkillerUsedEvent.class, event -> painkillerUsed(event.getPlayer().getUuid()));
+                event -> this.tracker.damageTaken(event.getPlayer().getUuid(), event.getPoints()));
+        node.addListener(PainkillerUsedEvent.class,
+                event -> this.tracker.painkillerUsed(event.getPlayer().getUuid()));
     }
 
     /**
@@ -213,13 +123,5 @@ public final class RoundStatsCollector {
             }
         }
         return UUID.randomUUID();
-    }
-
-    /**
-     * Reads a participant who is still counting: one who is not tracked or who quit counts nothing.
-     */
-    private RoundStats.@Nullable Builder active(UUID player) {
-        RoundStats.Builder builder = this.participants.get(player);
-        return builder == null || builder.frozen() ? null : builder;
     }
 }

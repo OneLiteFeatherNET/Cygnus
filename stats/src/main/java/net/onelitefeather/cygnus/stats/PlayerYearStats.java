@@ -6,7 +6,6 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import net.onelitefeather.cygnus.event.GameFinishEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
@@ -170,7 +169,7 @@ public class PlayerYearStats {
                             : Math.min(this.fastestWinSeconds, stats.playTimeSeconds());
                 } else {
                     this.winsSurvivor++;
-                    if (stats.finishReason() == GameFinishEvent.Reason.ALL_PAGES_FOUND && stats.pagesFound() > 0) {
+                    if (stats.finishReason() == FinishReason.ALL_PAGES_FOUND && stats.pagesFound() > 0) {
                         this.allPagesContributions++;
                     }
                 }
@@ -179,7 +178,7 @@ public class PlayerYearStats {
         }
     }
 
-    private void mergeWinReason(GameFinishEvent.Reason reason) {
+    private void mergeWinReason(FinishReason reason) {
         switch (reason) {
             case TIME_OVER -> this.winsTimeOver++;
             case ALL_PAGES_FOUND -> this.winsAllPagesFound++;

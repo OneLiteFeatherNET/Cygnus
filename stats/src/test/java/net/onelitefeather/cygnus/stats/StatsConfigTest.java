@@ -1,8 +1,12 @@
-package net.onelitefeather.cygnus.common.config;
+package net.onelitefeather.cygnus.stats;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.ZoneId;
 import java.util.Map;
 import java.util.Properties;
@@ -27,7 +31,7 @@ class StatsConfigTest {
     private static StatsConfig read(Map<String, String> entries, Function<String, String> env) {
         Properties properties = new Properties();
         entries.forEach(properties::setProperty);
-        return StatsConfig.read(ConfigSection.root(properties).section("stats."), env);
+        return StatsConfig.read(properties, env);
     }
 
     @Test
@@ -113,13 +117,26 @@ class StatsConfigTest {
     }
 
     @Test
-    @DisplayName("The whole config reads the stats section")
-    void gameConfigReadsStatsSection() {
-        Properties properties = new Properties();
-        properties.setProperty("stats.jdbc-url", "jdbc:postgresql://db/cygnus");
+    @DisplayName("The config file of the game directory is read")
+    void loadReadsTheConfigFile(@TempDir Path directory) throws IOException {
+        Files.writeString(directory.resolve("config.properties"), "stats.jdbc-url=jdbc:postgresql://db/cygnus\n");
 
-        GameConfig config = GameConfig.read(ConfigSection.root(properties));
+        StatsConfig config = StatsConfig.load(directory, NO_ENV);
 
-        assertTrue(config.stats().enabled());
+        assertTrue(config.enabled(), "the stats.jdbc-url of the file must enable the statistics");
+    }
+
+    @Test
+    @DisplayName("Without a config file the statistics are disabled")
+    void loadWithoutFileDisablesStatistics(@TempDir Path directory) {
+        assertEquals(StatsConfig.DISABLED, StatsConfig.load(directory, NO_ENV));
+    }
+
+    @Test
+    @DisplayName("A pool size that is not a number falls back to the default")
+    void unreadablePoolSizeFallsBack() {
+        StatsConfig config = read(Map.of("stats.jdbc-url", "jdbc:postgresql://db/cygnus", "stats.pool-size", "many"), NO_ENV);
+
+        assertEquals(StatsConfig.DEFAULT_POOL_SIZE, config.poolSize());
     }
 }

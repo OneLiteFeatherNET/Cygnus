@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.stats;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import net.onelitefeather.cygnus.common.config.StatsConfig;
 import org.flywaydb.core.Flyway;
 import org.hibernate.SessionFactory;
 

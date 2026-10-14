@@ -95,6 +95,13 @@ import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.sanity.SanityService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
+import net.onelitefeather.cygnus.stats.NoOpStatsRepository;
+import net.onelitefeather.cygnus.stats.RoundStats;
+import net.onelitefeather.cygnus.stats.RoundStatsCollector;
+import net.onelitefeather.cygnus.stats.StatsConfig;
+import net.onelitefeather.cygnus.stats.StatsMetrics;
+import net.onelitefeather.cygnus.stats.StatsRepositories;
+import net.onelitefeather.cygnus.stats.StatsRepository;
 import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
@@ -108,6 +115,8 @@ import net.onelitefeather.cygnus.creek.tab.HuntedTabWitness;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.onelitefeather.cygnus.telemetry.CygnusTracing;
 import net.onelitefeather.cygnus.telemetry.JoinTracer;
 import net.onelitefeather.cygnus.telemetry.KickTracer;
@@ -124,15 +133,6 @@ import net.onelitefeather.cygnus.telemetry.TracedPhaseSeries;
 import net.onelitefeather.cygnus.vitality.RegenerationService;
 
 import java.nio.file.Path;
-import net.onelitefeather.cygnus.stats.NoOpStatsRepository;
-import net.onelitefeather.cygnus.stats.RoundStats;
-import net.onelitefeather.cygnus.stats.RoundStatsCollector;
-import net.onelitefeather.cygnus.stats.StatsMetrics;
-import net.onelitefeather.cygnus.stats.StatsRepositories;
-import net.onelitefeather.cygnus.stats.StatsRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
@@ -149,6 +149,8 @@ import java.util.stream.Stream;
  **/
 @SuppressWarnings("java:S3252")
 public final class Cygnus implements TeamCreator, ListenerHandling {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Cygnus.class);
 
     private final TeamService teamService;
     private final LinearPhaseSeries<TimedPhase> linearPhaseSeries;
@@ -168,8 +170,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final List<GameFeature> features;
 
     private final CygnusTracing tracing;
-    private static final Logger LOGGER = LoggerFactory.getLogger(Cygnus.class);
-
     private final RoundTracer roundTracer;
     private final JoinTracer joinTracer;
     private final SlowTickTracer slowTickTracer;
@@ -209,10 +209,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             }
             // Opened as early as possible, the schema check fails fast; a database that is down only
             // costs the statistics, never the start. Drained on shutdown so a queued round is written.
-            StatsRepository statsRepository = openStatistics(this.gameConfig, StatsMetrics.fromGlobal(serviceVersion()));
+            StatsConfig statsConfig = StatsConfig.load(path, System::getenv);
+            StatsRepository statsRepository = openStatistics(statsConfig,
+                    StatsMetrics.fromGlobal(CygnusAttributes.INSTRUMENTATION_NAME, serviceVersion()));
             MinecraftServer.getSchedulerManager().buildShutdownTask(statsRepository::close);
             this.roundStatsCollector = new RoundStatsCollector(statsRepository, Clock.systemUTC(),
-                    this.gameConfig.stats().timeZone(), this.roundTracer::currentRoundId);
+                    statsConfig.timeZone(), this.roundTracer::currentRoundId);
             this.slowTickTracer = new SlowTickTracer(this.tracing, this.roundTracer, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections,
                     TickMetrics.fromGlobal(serviceVersion(), this.roundTracer::phaseLabel));
             this.staminaService = new StaminaService(this.gameConfig.stamina(), tickSections);
@@ -327,13 +329,13 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
      * Opens the statistics repository. The game runs without statistics when the database cannot be
      * reached or its schema does not validate: the failure is logged and counted, not rethrown.
      *
-     * @param config  the game config with the statistics settings
+     * @param config  the statistics settings
      * @param metrics counts failures
      * @return the repository, a no-op one when statistics are off or could not be opened
      */
-    private static StatsRepository openStatistics(GameConfig config, StatsMetrics metrics) {
+    private static StatsRepository openStatistics(StatsConfig config, StatsMetrics metrics) {
         try {
-            return StatsRepositories.create(config.stats(), metrics);
+            return StatsRepositories.create(config, metrics);
         } catch (RuntimeException exception) {
             LOGGER.error("Opening the statistics database failed, the game runs without statistics", exception);
             return new NoOpStatsRepository();

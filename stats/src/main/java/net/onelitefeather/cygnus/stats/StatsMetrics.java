@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.stats;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
-import net.onelitefeather.cygnus.telemetry.CygnusAttributes;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -38,12 +37,13 @@ public final class StatsMetrics {
     /**
      * Builds the metrics from the global OpenTelemetry instance. Called once, by the composition root.
      *
-     * @param version the version of the running service, reported with the instrumentation scope
+     * @param instrumentationName the name of the instrumentation scope the instrument is reported under
+     * @param version             the version of the running service, reported with the instrumentation scope
      * @return the metrics
      */
-    public static StatsMetrics fromGlobal(String version) {
+    public static StatsMetrics fromGlobal(String instrumentationName, String version) {
         return of(GlobalOpenTelemetry.get().getMeterProvider()
-                .meterBuilder(CygnusAttributes.INSTRUMENTATION_NAME)
+                .meterBuilder(instrumentationName)
                 .setInstrumentationVersion(version)
                 .build());
     }

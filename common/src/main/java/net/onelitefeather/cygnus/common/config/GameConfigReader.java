@@ -46,7 +46,6 @@ import java.util.Properties;
  *     <li>possession.* (see {@link PossessionConfig})</li>
  *     <li>telemetry.* (see {@link TelemetryConfig})</li>
  *     <li>minimap.mode (see {@link MinimapConfig})</li>
- *     <li>stats.* (see {@link StatsConfig})</li>
  * </ul>
  * <p>
  * If a property can not be found in the file, the default value will be used.

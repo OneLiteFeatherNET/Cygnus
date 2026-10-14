@@ -1,6 +1,5 @@
 package net.onelitefeather.cygnus.stats;
 
-import net.onelitefeather.cygnus.event.GameFinishEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -33,7 +32,7 @@ public record RoundStats(
         UUID playerUuid,
         Role role,
         Outcome outcome,
-        GameFinishEvent.Reason finishReason,
+        FinishReason finishReason,
         int pagesFound,
         int kills,
         boolean died,
@@ -71,7 +70,7 @@ public record RoundStats(
      * @param role   a side
      * @return {@code true} if that side won
      */
-    public static boolean wins(GameFinishEvent.Reason reason, Role role) {
+    public static boolean wins(FinishReason reason, Role role) {
         boolean slenderWon = switch (reason) {
             case ALL_SURVIVOR_DEAD, SURVIVOR_LEFT -> true;
             case TIME_OVER, ALL_PAGES_FOUND, SLENDER_LEFT -> false;
@@ -199,7 +198,7 @@ public record RoundStats(
          * @param pagesAgainst pages all survivors found, kept for the Slender
          * @return the snapshot
          */
-        public RoundStats build(GameFinishEvent.Reason reason, Instant finished, int pagesAgainst) {
+        public RoundStats build(FinishReason reason, Instant finished, int pagesAgainst) {
             Instant end = this.left != null ? this.left : finished;
             Outcome outcome = this.left != null ? Outcome.ABANDONED
                     : wins(reason, this.role) ? Outcome.WIN : Outcome.LOSS;

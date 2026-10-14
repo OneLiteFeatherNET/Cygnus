@@ -4,7 +4,6 @@ import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import net.onelitefeather.cygnus.event.GameFinishEvent.Reason;
 import net.onelitefeather.cygnus.stats.RoundStats.Outcome;
 import net.onelitefeather.cygnus.stats.RoundStats.Role;
 import org.flywaydb.core.Flyway;
@@ -91,12 +90,12 @@ class HibernateStatsRepositoryIntegrationTest {
         Flyway.configure().dataSource(source).locations("classpath:db/migration").load().migrate();
     }
 
-    private static RoundStats survivor(UUID player, Outcome outcome, Reason reason, int pages, boolean died, long timeSurvived) {
+    private static RoundStats survivor(UUID player, Outcome outcome, FinishReason reason, int pages, boolean died, long timeSurvived) {
         return new RoundStats(player, Role.SURVIVOR, outcome, reason, pages, 0, died, !died && outcome != Outcome.ABANDONED,
                 false, 600L, timeSurvived, 0.0D, 0, 0);
     }
 
-    private static RoundStats slender(UUID player, Outcome outcome, Reason reason, int kills, long playTime) {
+    private static RoundStats slender(UUID player, Outcome outcome, FinishReason reason, int kills, long playTime) {
         return new RoundStats(player, Role.SLENDER, outcome, reason, 0, kills, false, false, false, playTime, 0L, 0.0D, 0, 3);
     }
 
@@ -155,9 +154,9 @@ class HibernateStatsRepositoryIntegrationTest {
     void roundRowsAreWritten() {
         UUID roundId = UUID.randomUUID();
         this.repository.saveRound(round(roundId, 2026,
-                slender(SLENDER, Outcome.LOSS, Reason.TIME_OVER, 0, 900),
-                survivor(ALICE, Outcome.WIN, Reason.TIME_OVER, 2, false, 900),
-                survivor(BOB, Outcome.WIN, Reason.TIME_OVER, 1, false, 900)));
+                slender(SLENDER, Outcome.LOSS, FinishReason.TIME_OVER, 0, 900),
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 2, false, 900),
+                survivor(BOB, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
 
         assertEquals(3, number("select count(*) from player_round_stats where round_id = ?", roundId));
         assertEquals(2, number("select pages_found from player_round_stats where round_id = ? and player_uuid = ?", roundId, ALICE));
@@ -166,7 +165,7 @@ class HibernateStatsRepositoryIntegrationTest {
     @Test
     @DisplayName("The first round of a year creates the aggregate with one round played")
     void firstRoundCreatesTheAggregate() {
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, Reason.TIME_OVER, 2, false, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 2, false, 900)));
 
         assertEquals(1, yearValue("rounds_played", ALICE, 2026));
         assertEquals(1, yearValue("rounds_survivor", ALICE, 2026));
@@ -176,8 +175,8 @@ class HibernateStatsRepositoryIntegrationTest {
     @Test
     @DisplayName("Further rounds add up and the best round keeps the maximum")
     void furtherRoundsAddUp() {
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, Reason.ALL_SURVIVOR_DEAD, 3, 500)));
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, Reason.ALL_SURVIVOR_DEAD, 2, 400)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.ALL_SURVIVOR_DEAD, 3, 500)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.ALL_SURVIVOR_DEAD, 2, 400)));
 
         assertEquals(5, yearValue("kills", SLENDER, 2026));
         assertEquals(3, yearValue("best_kills_round", SLENDER, 2026), "the best round must not drop to the later, smaller one");
@@ -187,9 +186,9 @@ class HibernateStatsRepositoryIntegrationTest {
     @Test
     @DisplayName("The fastest win keeps the minimum and ignores a slower later win")
     void fastestWinKeepsTheMinimum() {
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, Reason.ALL_SURVIVOR_DEAD, 1, 500)));
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, Reason.SURVIVOR_LEFT, 1, 700)));
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, Reason.ALL_SURVIVOR_DEAD, 1, 300)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.ALL_SURVIVOR_DEAD, 1, 500)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.SURVIVOR_LEFT, 1, 700)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.ALL_SURVIVOR_DEAD, 1, 300)));
 
         assertEquals(300, yearValue("fastest_win_seconds", SLENDER, 2026));
     }
@@ -197,7 +196,7 @@ class HibernateStatsRepositoryIntegrationTest {
     @Test
     @DisplayName("A loss and an abandoned round never set the fastest win")
     void lossDoesNotSetTheFastestWin() {
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.LOSS, Reason.TIME_OVER, 0, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.LOSS, FinishReason.TIME_OVER, 0, 900)));
 
         assertEquals(1, number("select count(*) from player_year_stats where player_uuid = ? and fastest_win_seconds is null", SLENDER),
                 "fastest_win_seconds stays null without a win");
@@ -206,9 +205,9 @@ class HibernateStatsRepositoryIntegrationTest {
     @Test
     @DisplayName("Wins, losses, abandoned rounds and wins by reason are counted per role")
     void outcomesAreCounted() {
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, Reason.ALL_PAGES_FOUND, 3, false, 900)));
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.LOSS, Reason.ALL_SURVIVOR_DEAD, 1, true, 300)));
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.ABANDONED, Reason.TIME_OVER, 0, false, 120)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.ALL_PAGES_FOUND, 3, false, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.LOSS, FinishReason.ALL_SURVIVOR_DEAD, 1, true, 300)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.ABANDONED, FinishReason.TIME_OVER, 0, false, 120)));
 
         assertEquals(1, yearValue("wins_survivor", ALICE, 2026));
         assertEquals(1, yearValue("losses_survivor", ALICE, 2026));
@@ -224,8 +223,8 @@ class HibernateStatsRepositoryIntegrationTest {
     @Test
     @DisplayName("Each year has its own aggregate")
     void yearsAreSeparate() {
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, Reason.TIME_OVER, 1, false, 900)));
-        this.repository.saveRound(round(UUID.randomUUID(), 2027, survivor(ALICE, Outcome.WIN, Reason.TIME_OVER, 1, false, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2027, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
 
         assertEquals(1, yearValue("rounds_played", ALICE, 2026));
         assertEquals(1, yearValue("rounds_played", ALICE, 2027));
@@ -234,7 +233,7 @@ class HibernateStatsRepositoryIntegrationTest {
     @Test
     @DisplayName("A lost optimistic-lock race is retried and both rounds end up in the aggregate")
     void optimisticLockRaceIsRetried() {
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, Reason.ALL_SURVIVOR_DEAD, 2, 500)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.ALL_SURVIVOR_DEAD, 2, 500)));
         AtomicInteger calls = new AtomicInteger();
         HibernateStatsRepository racing = repository(Runnable::run, () -> {
             if (calls.incrementAndGet() == 1) {
@@ -242,7 +241,7 @@ class HibernateStatsRepositoryIntegrationTest {
             }
         });
 
-        racing.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, Reason.ALL_SURVIVOR_DEAD, 3, 500)));
+        racing.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.ALL_SURVIVOR_DEAD, 3, 500)));
 
         assertEquals(2, calls.get(), "the first attempt lost the race and the second one won it");
         assertEquals(15, yearValue("kills", SLENDER, 2026), "2 earlier + 10 from the other server + 3 of this round");
@@ -260,7 +259,7 @@ class HibernateStatsRepositoryIntegrationTest {
             }
         });
 
-        racing.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, Reason.ALL_SURVIVOR_DEAD, 3, 500)));
+        racing.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.ALL_SURVIVOR_DEAD, 3, 500)));
 
         assertEquals(1, number("select count(*) from player_year_stats where player_uuid = ?", SLENDER), "exactly one aggregate must exist");
         assertEquals(7, yearValue("kills", SLENDER, 2026), "4 from the other server + 3 of this round");
@@ -272,14 +271,14 @@ class HibernateStatsRepositoryIntegrationTest {
     @Test
     @DisplayName("A write that keeps losing the race is counted as failed after three attempts and does not throw")
     void exhaustedRetriesAreCounted() {
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, Reason.ALL_SURVIVOR_DEAD, 2, 500)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.ALL_SURVIVOR_DEAD, 2, 500)));
         AtomicInteger calls = new AtomicInteger();
         HibernateStatsRepository racing = repository(Runnable::run, () -> {
             calls.incrementAndGet();
             otherServerAddsKills(1);
         });
 
-        racing.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, Reason.ALL_SURVIVOR_DEAD, 3, 500)));
+        racing.saveRound(round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.ALL_SURVIVOR_DEAD, 3, 500)));
 
         assertEquals(HibernateStatsRepository.MAX_ATTEMPTS, calls.get());
         assertEquals(1, failures());
@@ -288,7 +287,7 @@ class HibernateStatsRepositoryIntegrationTest {
     @Test
     @DisplayName("Saving the same round twice fails the second time and does not count it twice")
     void duplicateRoundIsRejected() {
-        FinishedRound round = round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, Reason.TIME_OVER, 1, false, 900));
+        FinishedRound round = round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900));
         this.repository.saveRound(round);
 
         this.repository.saveRound(round);
@@ -302,7 +301,7 @@ class HibernateStatsRepositoryIntegrationTest {
     void unavailableDatabaseIsCounted() {
         this.sessionFactory.close();
 
-        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, Reason.TIME_OVER, 1, false, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
 
         assertEquals(1, failures());
     }
@@ -314,7 +313,7 @@ class HibernateStatsRepositoryIntegrationTest {
         HibernateStatsRepository queued = repository(queue::add, () -> {
         });
 
-        queued.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, Reason.TIME_OVER, 1, false, 900)));
+        queued.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
 
         assertEquals(1, queue.size(), "the write must be queued, not run by the caller");
         assertEquals(0, number("select count(*) from player_round_stats"), "nothing is written before the executor runs");
@@ -326,9 +325,9 @@ class HibernateStatsRepositoryIntegrationTest {
     @DisplayName("Deleting a player removes their round rows and year rows and nobody else's")
     void deleteByPlayerRemovesOnlyThatPlayer() {
         this.repository.saveRound(round(UUID.randomUUID(), 2026,
-                survivor(ALICE, Outcome.WIN, Reason.TIME_OVER, 1, false, 900),
-                survivor(BOB, Outcome.WIN, Reason.TIME_OVER, 1, false, 900)));
-        this.repository.saveRound(round(UUID.randomUUID(), 2027, survivor(ALICE, Outcome.WIN, Reason.TIME_OVER, 1, false, 900)));
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900),
+                survivor(BOB, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2027, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
 
         int removed = this.repository.deleteByPlayer(ALICE);
 

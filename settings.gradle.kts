@@ -66,7 +66,7 @@ dependencyResolutionManagement {
             // above that ceiling. Raise it together with the agent, never ahead of it. Without the
             // agent every call lands on the no-op implementation.
             version("opentelemetry", "1.67.0")
-            // Yearly player statistics (stats package in :game). Hibernate runs on a Hikari pool, Flyway owns
+            // Yearly player statistics (the :stats module). Hibernate runs on a Hikari pool, Flyway owns
             // the schema, PostgreSQL is the production database and H2 (PostgreSQL mode) backs the tests.
             version("hibernate", "7.4.13.Final")
             version("hikari", "7.1.0")
@@ -89,6 +89,7 @@ dependencyResolutionManagement {
             library("flyway.postgresql", "org.flywaydb", "flyway-database-postgresql").versionRef("flyway")
             library("postgresql", "org.postgresql", "postgresql").versionRef("postgresql")
             library("h2", "com.h2database", "h2").versionRef("h2")
+            library("jetbrains.annotations", "org.jetbrains", "annotations").version("26.0.2")
             library("luckperms.api", "net.luckperms", "api").versionRef("luckperms")
             library("luckperms.minestom.loader", "net.luckperms", "minestom-loader").versionRef("luckperms-minestom-loader")
             library("apollo.protos", "com.lunarclient", "apollo-protos").versionRef("apollo-protos")
@@ -137,5 +138,6 @@ dependencyResolutionManagement {
 
 include("common")
 include("setup")
+include("stats")
 include("game")
 include("bridge")

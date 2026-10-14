@@ -7,7 +7,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
-import net.onelitefeather.cygnus.event.GameFinishEvent;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -50,7 +49,7 @@ public class PlayerRoundStats {
     private RoundStats.Outcome outcome;
     @Enumerated(EnumType.STRING)
     @Column(name = "finish_reason", nullable = false)
-    private GameFinishEvent.Reason finishReason;
+    private FinishReason finishReason;
     @Column(name = "pages_found", nullable = false)
     private int pagesFound;
     @Column(nullable = false)
