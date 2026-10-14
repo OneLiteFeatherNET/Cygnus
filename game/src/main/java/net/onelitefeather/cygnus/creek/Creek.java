@@ -48,7 +48,6 @@ final class Creek {
     private final RouteProvider route;
     private final CreekRound round;
     private CreekState state;
-    private List<SurvivorView> lastViews = List.of();
     private Set<UUID> seenLastStep = Set.of();
     private boolean entered;
     private volatile @Nullable CreekSight boostedSight;
@@ -82,9 +81,6 @@ final class Creek {
     /**
      * Runs one step, leaving some survivors out of it. The patrolling creek uses this for everyone
      * who is haunted by a variant: they do not see it, and it does not pick them out.
-     * <p>
-     * The snapshots in {@link #lastViews()} still cover every survivor.
-     * </p>
      *
      * @param survivors the survivors of this step
      * @param ignored   the survivors this creek leaves alone in this step
@@ -162,9 +158,9 @@ final class Creek {
      * Fills in who sees this creek and builds the context for the states.
      */
     private CreekContext context(SurvivorSnapshot survivors, Set<UUID> ignored, long now) {
-        this.lastViews = this.views(survivors);
-        List<SurvivorView> noticed = ignored.isEmpty() ? this.lastViews
-                : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
+        List<SurvivorView> views = this.views(survivors);
+        List<SurvivorView> noticed = ignored.isEmpty() ? views
+                : views.stream().filter(view -> !ignored.contains(view.id())).toList();
         return new CreekContext(now, noticed, this.body, this.route, this.round.spots(),
                 new Actions(this.round, survivors, ignored, this.body),
                 this.round.config(), this.round.random(), this.round.hunts());
@@ -205,15 +201,6 @@ final class Creek {
 
     private boolean closeEnough(SurvivorView view, double reach) {
         return view.position().distance(this.body.position()) <= reach;
-    }
-
-    /**
-     * The survivor snapshots from the last step.
-     *
-     * @return the views, empty before the first step
-     */
-    List<SurvivorView> lastViews() {
-        return this.lastViews;
     }
 
     /**

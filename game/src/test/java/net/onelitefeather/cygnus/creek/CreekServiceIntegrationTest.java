@@ -6,17 +6,13 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.network.packet.server.play.ActionBarPacket;
 import net.minestom.server.potion.PotionEffect;
-import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
-import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
-import net.onelitefeather.cygnus.creek.debug.CreekDebug;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.PatrolState;
@@ -61,7 +57,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
 
     private CreekService service(Instance instance, Set<Player> survivors, List<CreekRoute> routes, AtomicLong clock) {
         return new CreekService(CreekConfig.DEFAULT, () -> survivors, () -> instance, () -> routes,
-                CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, consequence, clock::get, new Random(3), new CreekDebug(), TickSections.NONE);
+                CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, consequence, clock::get, new Random(3), TickSections.NONE);
     }
 
     @Test
@@ -91,30 +87,6 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         service.start();
 
         assertNull(service.creek());
-    }
-
-    @Test
-    @DisplayName("Only players watching the debug get the line")
-    void debugGoesToWatchersOnly(Env env) {
-        Instance instance = env.createFlatInstance();
-        TestConnection watcherConnection = env.createConnection();
-        Player watcher = watcherConnection.connect(instance, new Pos(0, 40, 0));
-        TestConnection otherConnection = env.createConnection();
-        Player other = otherConnection.connect(instance, new Pos(3, 40, 0));
-        CreekDebug debug = new CreekDebug();
-        debug.toggle(watcher.getUuid());
-        CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(watcher, other), () -> instance,
-                () -> List.of(ROUTE), CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, consequence,
-                new AtomicLong()::get, new Random(3), debug, TickSections.NONE);
-        Collector<ActionBarPacket> watched = watcherConnection.trackIncoming(ActionBarPacket.class);
-        Collector<ActionBarPacket> unwatched = otherConnection.trackIncoming(ActionBarPacket.class);
-
-        service.start();
-        service.tick();
-
-        assertFalse(watched.collect().isEmpty());
-        assertTrue(unwatched.collect().isEmpty());
-        service.stop();
     }
 
     @Test
@@ -330,7 +302,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
                     dreadCalls.incrementAndGet();
                     return id.equals(scared.getUuid()) ? 0.5D : 0.0D;
                 }, CreekWitness.NONE, consequence,
-                clock::get, new Random(3), new CreekDebug(), TickSections.NONE);
+                clock::get, new Random(3), TickSections.NONE);
         service.start();
         clock.set(CreekConfig.DEFAULT.vanish().maxSeconds() * 1000L + 1L);
         service.tick();

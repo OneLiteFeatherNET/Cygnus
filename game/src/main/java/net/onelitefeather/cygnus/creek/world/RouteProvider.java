@@ -38,13 +38,4 @@ public interface RouteProvider {
     default List<Pos> points() {
         return List.of();
     }
-
-    /**
-     * Describes where the creek is on this route, for the debug line.
-     *
-     * @return a short description, or an empty string if there is nothing to show
-     */
-    default String describe() {
-        return "";
-    }
 }

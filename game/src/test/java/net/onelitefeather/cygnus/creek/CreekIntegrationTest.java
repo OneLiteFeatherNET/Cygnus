@@ -292,7 +292,6 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         creek.tick(survivors(haunted, other), Set.of(haunted.getUuid()), 1000L);
 
         assertFalse(haunted.hasEffect(PotionEffect.SLOWNESS));
-        assertEquals(2, creek.lastViews().size(), "the snapshots still cover every survivor");
     }
 
     @Test
