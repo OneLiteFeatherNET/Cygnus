@@ -80,27 +80,4 @@ public record CreekContext(
     public List<Pos> observerEyes() {
         return this.survivors.stream().map(SurvivorView::eyes).toList();
     }
-
-    /**
-     * The highest dread among the survivors.
-     *
-     * @return the dread, {@code 0} without survivors
-     */
-    public double highestDread() {
-        return this.survivors.stream().mapToDouble(SurvivorView::dread).max().orElse(0.0D);
-    }
-
-    /**
-     * Checks that no survivor is closer to a point than the given distance.
-     *
-     * @param point    the point to check
-     * @param distance the distance to keep, in blocks
-     * @return {@code true} if every survivor is at least that far away
-     */
-    public boolean farFromAll(Pos point, double distance) {
-        for (SurvivorView view : this.survivors) {
-            if (view.position().distance(point) < distance) return false;
-        }
-        return true;
-    }
 }

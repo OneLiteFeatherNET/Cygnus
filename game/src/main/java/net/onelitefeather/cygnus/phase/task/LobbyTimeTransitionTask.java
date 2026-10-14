@@ -141,13 +141,4 @@ public final class LobbyTimeTransitionTask {
     public boolean isRunning() {
         return running;
     }
-
-    /**
-     * Returns the target world time.
-     *
-     * @return target world time in ticks
-     */
-    public long getTargetTime() {
-        return targetTime;
-    }
 }

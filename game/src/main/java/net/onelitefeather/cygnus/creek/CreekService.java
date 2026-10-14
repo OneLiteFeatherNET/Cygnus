@@ -153,7 +153,6 @@ public final class CreekService implements PossessionTarget {
         this.round = round;
         List<Pos> points = paths.allPoints();
 
-        this.clock.start();
         Pos point = points.get(this.random.nextInt(points.size()));
         CreekBody body = this.bodies.apply(world, this.ground.settle(point).orElse(point));
         // Start hidden. The creek and its variants only show up once the survivors have had time to
@@ -219,7 +218,6 @@ public final class CreekService implements PossessionTarget {
         if (currentVariants != null) currentVariants.stop();
         Creek current = this.creek;
         this.creek = null;
-        this.clock.reset();
         if (current != null) current.remove();
         this.consequence.cleanUp();
         CreekRound currentRound = this.round;

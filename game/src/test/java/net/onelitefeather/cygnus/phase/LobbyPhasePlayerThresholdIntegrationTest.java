@@ -63,7 +63,7 @@ class LobbyPhasePlayerThresholdIntegrationTest extends CygnusPlayerTestBase {
         assertFalse(lobbyPhase.isPaused(), "Lobby phase should unpause when minimum player threshold is met.");
 
         player2.remove(); // Removes the player from connection manager
-        lobbyPhase.checkStopCondition();
+        lobbyPhase.checkPlayerRequirements();
 
         assertTrue(lobbyPhase.isPaused(), "Lobby phase should pause when player count drops below threshold.");
         assertEquals(30, lobbyPhase.getCurrentTicks(), "Lobby ticks should reset to lobby time.");

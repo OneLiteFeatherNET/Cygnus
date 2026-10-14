@@ -94,24 +94,6 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("The round time counts from the start")
-    void roundTimeCountsFromTheStart(Env env) {
-        Instance instance = env.createFlatInstance();
-        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        AtomicLong clock = new AtomicLong(1000L);
-        RoundClock roundClock = new RoundClock(clock::get);
-        CreekService service = new CreekService(CreekConfig.DEFAULT, () -> Set.of(survivor), () -> instance,
-                () -> List.of(ROUTE), CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, consequence, roundClock, new Random(3), new CreekDebug(), TickSections.NONE);
-
-        service.start();
-        clock.set(4000L);
-
-        assertEquals(3000L, roundClock.elapsedMillis());
-        service.stop();
-        assertEquals(0L, roundClock.elapsedMillis());
-    }
-
-    @Test
     @DisplayName("Only players watching the debug get the line")
     void debugGoesToWatchersOnly(Env env) {
         Instance instance = env.createFlatInstance();

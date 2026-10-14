@@ -93,27 +93,6 @@ public final class LobbyPhase extends TimedPhase {
         }
     }
 
-    /**
-     * Checks if the countdown should stop when players leave the server.
-     * Re-activates the waiting display if the player count drops below the requirement.
-     */
-    public void checkStopCondition() {
-        int onlineCount = MinecraftServer.getConnectionManager().getOnlinePlayers().size();
-
-        if (onlineCount - 1 < this.minPlayers) {
-            this.setPaused(true);
-            this.setCurrentTicks(this.lobbyTime);
-            this.forceStarted = false;
-            this.setLevel();
-
-            this.timeTransitionTask.reset();
-            this.countdownSoundTask.reset();
-            // Simply restart the existing display instead of allocating a new one
-            this.waitingDisplay.start();
-            this.waitingDisplay.update(onlineCount);
-        }
-    }
-
     @Override
     public void start() {
         super.start();
