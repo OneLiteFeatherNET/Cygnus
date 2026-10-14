@@ -34,6 +34,12 @@ public interface SlenderBarHelper {
     Sound TELEPORT = Sound.sound(SoundEvent.ENTITY_ENDERMAN_TELEPORT, Sound.Source.MASTER, 1F, 0.2F);
     Sound SPAWN = Sound.sound(SoundEvent.ENTITY_WITHER_SPAWN, Sound.Source.MASTER, 0.4F, 0F);
 
+    /**
+     * How far away a survivor hears the slender appear and vanish, in blocks. Minecraft fades a quiet
+     * sound out over this distance anyway, so further away nobody would hear it.
+     */
+    int SOUND_RANGE = 16;
+
     TimedPotion BLINDNESS = new TimedPotion(new Potion(PotionEffect.BLINDNESS, (byte) 1, -1), 0);
 
     BiPredicate<UUID, UUID> UUID_COMPARATOR = UUID::equals;
@@ -122,7 +128,8 @@ public interface SlenderBarHelper {
     }
 
     /**
-     * Plays a sound to all players in the given range.
+     * Plays a sound to every survivor within {@link #SOUND_RANGE}. It comes from where the slender
+     * stands, so a survivor hears from which side he appears, and quieter the further away he is.
      *
      * @param instance the instance where the entities are located
      * @param center   the center position where the sound should be played
@@ -130,7 +137,7 @@ public interface SlenderBarHelper {
      * @param spawn    if the sound should be a spawn sound
      */
     private void playToSound(Instance instance, Pos center, UUID uuid, boolean spawn) {
-        Collection<Entity> nearbyEntities = instance.getNearbyEntities(center, 2);
+        Collection<Entity> nearbyEntities = instance.getNearbyEntities(center, SOUND_RANGE);
         if (nearbyEntities.isEmpty()) return;
 
         for (Entity nearbyEntity : nearbyEntities) {
@@ -139,7 +146,7 @@ public interface SlenderBarHelper {
             // The teleport sound fires exactly when the slender turns invisible, so it would tell a
             // spectator both the position and the state of the slender. Only survivors may hear it.
             if (!TeamHelper.isSurvivorTeam(target)) continue;
-            target.playSound(spawn ? SPAWN : TELEPORT, target.getPosition());
+            target.playSound(spawn ? SPAWN : TELEPORT, center);
         }
     }
 }
