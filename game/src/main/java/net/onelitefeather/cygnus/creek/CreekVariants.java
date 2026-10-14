@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.creek;
 
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.creek.state.Calm;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.DoneState;
 import net.onelitefeather.cygnus.creek.state.StalkState;
@@ -20,6 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
 /**
@@ -50,6 +52,7 @@ final class CreekVariants {
     private final BiFunction<Pos, CreekState, Creek> spawner;
     private final Map<UUID, Creek> running;
     private final Map<UUID, Long> cooldowns;
+    private final Supplier<Calm> calm;
 
     /**
      * Sets up the variants for a round.
@@ -59,9 +62,10 @@ final class CreekVariants {
      * @param random    the random source
      * @param allowedAt the earliest time a variant may show up, in milliseconds
      * @param spawner   creates a variant's creek at a spot, starting in the given state
+     * @param calm      how far the round has thinned out right now
      */
     CreekVariants(CreekConfig config, SpotFinder spots, RandomGenerator random, long allowedAt,
-                  BiFunction<Pos, CreekState, Creek> spawner) {
+                  BiFunction<Pos, CreekState, Creek> spawner, Supplier<Calm> calm) {
         this.config = config;
         this.spots = spots;
         this.random = random;
@@ -69,6 +73,7 @@ final class CreekVariants {
         this.spawner = spawner;
         this.running = new LinkedHashMap<>();
         this.cooldowns = new HashMap<>();
+        this.calm = calm;
     }
 
     /**
@@ -84,16 +89,18 @@ final class CreekVariants {
 
     /**
      * How long a survivor's breather after a variant lasts: {@code vanishMaxSeconds} for a calm
-     * survivor, down to {@code vanishMinSeconds} for one who is scared to death.
+     * survivor, down to {@code vanishMinSeconds} for one who is scared to death. A thinned out round
+     * stretches it, so the last survivors are not haunted one after the other.
      *
      * @param config the settings
      * @param dread  the survivor's dread
+     * @param calm   how far the round has thinned out
      * @return the breather in milliseconds
      */
-    static long cooldownMillis(CreekConfig config, double dread) {
+    static long cooldownMillis(CreekConfig config, double dread, Calm calm) {
         double span = config.vanish().maxSeconds() - config.vanish().minSeconds();
         double seconds = config.vanish().maxSeconds() - span * Math.clamp(dread, 0.0D, 1.0D);
-        return Math.round(seconds * 1000.0D);
+        return calm.stretch(Math.round(seconds * 1000.0D));
     }
 
     /**
@@ -167,7 +174,7 @@ final class CreekVariants {
             if (!(variant.state() instanceof DoneState)) continue;
             variant.remove();
             iterator.remove();
-            long cooldown = cooldownMillis(this.config, dreadOf(survivors.views(), entry.getKey()));
+            long cooldown = cooldownMillis(this.config, dreadOf(survivors.views(), entry.getKey()), this.calm.get());
             this.cooldowns.put(entry.getKey(), now + cooldown);
         }
     }
