@@ -122,6 +122,31 @@ class HuntStateTest {
     }
 
     @Test
+    @DisplayName("Late in a thinned out round he closes in more slowly")
+    void closesInSlowerLate() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 10));
+        new HuntState(TARGET, 30_000L).tick(Contexts.calm(at(0L, body, new ArrayList<>(), false), new Calm(1.0D)));
+
+        assertEquals(Contexts.CONFIG.hunt().speed() * 0.8D, body.speed, 1.0E-9);
+    }
+
+    @Test
+    @DisplayName("Late in a thinned out round he waits longer before taking a shortcut")
+    void takesAShortcutLaterLate() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 10));
+        HuntState state = new HuntState(TARGET, 30_000L);
+        Calm calm = new Calm(1.0D);
+        state.enter(Contexts.calm(at(0L, body, new ArrayList<>(), false), calm));
+
+        state.tick(Contexts.calm(at(0L, body, new ArrayList<>(), false), calm));
+        state.tick(Contexts.calm(at(3000L, body, new ArrayList<>(), false), calm));
+        assertTrue(body.teleports.isEmpty(), "three seconds stuck are not enough any more");
+
+        state.tick(Contexts.calm(at(4500L, body, new ArrayList<>(), false), calm));
+        assertEquals(1, body.teleports.size());
+    }
+
+    @Test
     @DisplayName("A catch starts the survivor's breather")
     void catchStartsTheCooldown() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 1));
@@ -129,8 +154,8 @@ class HuntStateTest {
 
         new HuntState(TARGET, 30_000L).tick(Contexts.hunting(5_000L, body, hunts, new ArrayList<>(), target(false)));
 
-        assertFalse(hunts.ready(TARGET, 49_999L));
-        assertTrue(hunts.ready(TARGET, 50_000L));
+        assertFalse(hunts.ready(TARGET, 49_999L, Calm.NONE));
+        assertTrue(hunts.ready(TARGET, 50_000L, Calm.NONE));
     }
 
     @Test
@@ -143,7 +168,7 @@ class HuntStateTest {
                 .tick(Contexts.hunting(30_000L, body, hunts, new ArrayList<>(), target(false)));
 
         assertSame(DoneState.INSTANCE, next);
-        assertFalse(hunts.ready(TARGET, 74_999L));
+        assertFalse(hunts.ready(TARGET, 74_999L, Calm.NONE));
     }
 
     @Test
@@ -154,7 +179,7 @@ class HuntStateTest {
 
         new HuntState(TARGET, 30_000L).tick(Contexts.hunting(0L, body, hunts, new ArrayList<>(), target(false)));
 
-        assertTrue(hunts.ready(TARGET, 0L));
+        assertTrue(hunts.ready(TARGET, 0L, Calm.NONE));
     }
 
     @Test
