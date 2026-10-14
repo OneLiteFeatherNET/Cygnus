@@ -1,8 +1,8 @@
 ## 1. Build and configuration
 
 - [x] 1.1 Add Hibernate ORM 7, HikariCP, Flyway and the PostgreSQL JDBC driver to the version catalog in
-  `settings.gradle.kts` and to `game/build.gradle.kts`; add H2 as a test dependency
-- [x] 1.2 Add the `stats.*` keys to `config.properties.example` and read them in `GameConfigReader` (test first:
+  `settings.gradle.kts` and to `stats/build.gradle.kts`; add H2 as a test dependency
+- [x] 1.2 Add the `stats.*` keys to `config.properties.example` and read them in `StatsConfig` (test first:
   missing URL yields "disabled", password falls back to `CYGNUS_STATS_PASSWORD`)
 
 ## 2. Collector (tests first)
@@ -23,11 +23,18 @@
   executor, retry and failure metric
 - [x] 3.4 Wire repository, executor and collector in the `Cygnus` constructor; drain the executor on shutdown
 
-## 4. Verification
+## 4. Module extraction
 
-- [x] 4.1 Run `./gradlew :game:test` and `./gradlew build`
-- [ ] 4.2 Live test: play one round against a local database and check both tables
+- [x] 4.1 Move the statistics into the `stats` module (`game -> stats`, `common` untouched): extract the
+  game-independent `RoundStatsTracker` and `FinishReason`, let `StatsConfig` read the `stats.*` keys itself, move the
+  database dependencies and the migration, keep `RoundStatsCollector` as the event adapter in `game`; tests move with
+  their code
 
-## 5. Pull request
+## 5. Verification
 
-- [x] 5.1 Open the pull request titled `feat(stats): persist yearly player statistics with hibernate`
+- [x] 5.1 Run `./gradlew :game:test` and `./gradlew build`
+- [ ] 5.2 Live test: play one round against a local database and check both tables
+
+## 6. Pull request
+
+- [x] 6.1 Open the pull request titled `feat(stats): persist yearly player statistics with hibernate`

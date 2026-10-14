@@ -16,10 +16,12 @@ belong to the feature and ship in the same commit. The OpenSpec documents are a 
 
 ## What Changes
 
-- Add a `stats` package in the `game` module with a `RoundStatsCollector` that listens to the existing game events
+- Add a Gradle module `stats` (package `net.onelitefeather.cygnus.stats`) that owns the domain, the per-round
+  bookkeeping (`RoundStatsTracker`), the persistence and the `stats.*` config. It does not depend on `game`.
+- Add a thin adapter `RoundStatsCollector` in the `game` module that listens to the existing game events
   (`GameStartEvent`, `PageFoundEvent`, `PlayerDeathListener` kill credit, `PlayerDamagedEvent`, painkiller use,
-  `SlenderReviveEvent`, creek hunt ends, quits, `GameFinishEvent`) and builds one in-memory `RoundStats` snapshot per
-  participant.
+  `SlenderReviveEvent`, creek hunt ends, quits, `GameFinishEvent`) and feeds the tracker, which builds one in-memory
+  `RoundStats` snapshot per participant.
 - On `GameFinishEvent` the collector hands the finished snapshots to a `StatsRepository`, which writes them off the
   tick thread in one transaction:
   - one `PlayerRoundStats` row per participant (source of truth, allows recomputation),
@@ -44,10 +46,14 @@ belong to the feature and ship in the same commit. The OpenSpec documents are a 
 
 ## Impact
 
-- `game` module: new `stats` package, wiring in the `Cygnus` constructor, round id exposed from `RoundTracer`.
-- `common` module: `GameConfig`/`GameConfigReader` read the `stats.*` keys.
-- Build: Hibernate ORM, HikariCP, Flyway and the PostgreSQL JDBC driver in the version catalog in `settings.gradle.kts`; H2 as a
-  test dependency for the repository integration tests.
+- New `stats` module: domain, tracker, repository, entities, Flyway migration and `StatsConfig`. All database
+  dependencies live here; the module depends on neither `game` nor `common`.
+- `game` module: depends on `stats`, holds the event adapter `RoundStatsCollector`, the wiring in the `Cygnus`
+  constructor and the round id exposed from `RoundTracer`.
+- `common` module: untouched, it knows nothing about the statistics.
+- Build: `stats` is included in `settings.gradle.kts`; Hibernate ORM, HikariCP, Flyway and the PostgreSQL JDBC driver
+  are in the version catalog and used by `stats` only (bundled into the game shadow jar through `game -> stats`); H2 is
+  a test dependency of `stats`.
 - Operations: one PostgreSQL database per environment, shared by all Cygnus servers of that environment; credentials
   via `config.properties` or environment variables. Data is kept with no automatic pruning.
 - Privacy: stored data is the Minecraft UUID plus game counters, no names or IPs. A deletion by UUID is part of the

@@ -7,6 +7,26 @@ The game is an asymmetric Slender round: one Slender, the rest Survivors who col
 
 There is no persistence layer yet and no DI framework; `Cygnus` builds everything in its constructor.
 
+## Module layout
+
+The statistics live in their own Gradle module `stats`; the dependency direction is `game -> stats`. `common` and
+`setup` do not know about it, and `stats` depends on neither `game` nor `common` (and needs no Minestom).
+
+- `stats` owns everything that is not wiring to game events: the domain (`RoundStats`, `FinishedRound`,
+  `FinishReason`), the per-round bookkeeping in `RoundStatsTracker` (participants, counting, quits frozen as
+  `ABANDONED`, `WIN`/`LOSS` per finish reason, year from the injected `Clock` and zone), the persistence
+  (`StatsRepository`, `NoOpStatsRepository`, `HibernateStatsRepository`, the entities, `StatsRepositories`,
+  `StatsMetrics`), the Flyway migration under `db/migration`, and `StatsConfig`, which reads the `stats.*` keys
+  from the same `config.properties` itself.
+- `game` keeps a thin adapter, `RoundStatsCollector`: it registers on the Minestom event node, translates the game's
+  events and `GameFinishEvent.Reason` into tracker calls and hands the finished round to the repository. The hooks
+  in `PainkillerUsedEvent`, `PlayerDamagedEvent` and `RoundTracer.currentRoundId()` stay in `game`.
+- `FinishReason` mirrors the game's reasons by name, so the stored values are unchanged and the module does not
+  import the game's event class.
+- All database dependencies (Hibernate, HikariCP, Flyway with its PostgreSQL plugin, the PostgreSQL driver) belong to
+  `stats`; H2 is a test dependency there. `game` reaches them through `implementation(project(":stats"))`, so they
+  end up in the game shadow jar.
+
 ## Statistics
 
 Counted per round, stored in `PlayerRoundStats`, summed (or maxed / minned) into `PlayerYearStats`.
@@ -114,8 +134,9 @@ stats.time-zone=Europe/Berlin
 
 ## Testing
 
-- Unit (Fast, Independent): `RoundStatsCollector` against an in-memory `StatsRepository` fake and a fixed `Clock`;
-  events are fired through a Minestom `Env` with `env.tick()`. Year resolution is tested at the turn of the year
+- Unit (Fast, Independent): `RoundStatsTracker` as plain JUnit with a hand-driven `Clock` (in `stats`); the game-side
+  `RoundStatsCollector` against an in-memory `StatsRepository` fake (round id, hand-over, reason mapping) and through a
+  Minestom `Env` for the event adapter. Year resolution is tested at the turn of the year
   (`2026-12-31T23:30Z` is already 2027 in `Europe/Berlin`).
 - Integration: `HibernateStatsRepository` against H2 in-memory in PostgreSQL compatibility mode
   (`MODE=PostgreSQL`), a fresh database per test, Flyway migrations applied. The migrations use only SQL that both
