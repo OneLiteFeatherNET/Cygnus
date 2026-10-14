@@ -14,10 +14,15 @@ import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import net.onelitefeather.cygnus.common.config.AdrenalineConfig;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.stamina.FoodBar;
 import net.onelitefeather.cygnus.stamina.StaminaBar;
+import net.onelitefeather.cygnus.stamina.StaminaFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -31,10 +36,12 @@ class AdrenalineServiceTest extends CygnusPlayerTestBase {
     private static final double EPSILON = 1.0E-6;
 
     private final AtomicLong clock = new AtomicLong();
+    private final Map<Player, FoodBar> bars = new HashMap<>();
     private Set<Player> survivors = Set.of();
 
     private AdrenalineService service(Env env) {
-        AdrenalineService service = new AdrenalineService(AdrenalineConfig.DEFAULT, () -> this.survivors, this.clock::get, TickSections.NONE);
+        AdrenalineService service = new AdrenalineService(AdrenalineConfig.DEFAULT, () -> this.survivors,
+                this.bars::get, this.clock::get, TickSections.NONE);
         env.process().eventHandler().addChild(service.node());
         return service;
     }
@@ -45,6 +52,13 @@ class AdrenalineServiceTest extends CygnusPlayerTestBase {
 
     private static void slenderBecomes(Player slender, StaminaBar.State state) {
         EventDispatcher.call(new StaminaStateChangeEvent(slender, state));
+    }
+
+    private FoodBar emptyBar(Player survivor) {
+        FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina((CygnusPlayer) survivor);
+        bar.drain();
+        this.bars.put(survivor, bar);
+        return bar;
     }
 
     private static boolean rushing(Player player) {
@@ -173,5 +187,41 @@ class AdrenalineServiceTest extends CygnusPlayerTestBase {
         assertFalse(rushing(survivor));
         assertNull(survivor.getTag(AdrenalineService.RUSH_UNTIL));
         assertNull(survivor.getTag(AdrenalineService.COOLDOWN_UNTIL));
+    }
+
+    @Test
+    @DisplayName("The rush lifts an empty sprint bar to the resume share")
+    void rushRefillsAnEmptyBar(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = connect(env, instance, new Pos(0, 40, 0));
+        Player survivor = connect(env, instance, new Pos(5, 40, 0));
+        this.survivors = Set.of(survivor);
+        FoodBar bar = emptyBar(survivor);
+        AdrenalineService service = service(env);
+
+        slenderBecomes(slender, StaminaBar.State.DRAINING);
+        service.tick();
+
+        assertEquals(0.3f, bar.remainingShare(), 1.0E-6f);
+        assertTrue(bar.canConsume());
+    }
+
+    @Test
+    @DisplayName("A survivor in the cooldown gets no refill")
+    void noRefillDuringCooldown(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = connect(env, instance, new Pos(0, 40, 0));
+        Player survivor = connect(env, instance, new Pos(5, 40, 0));
+        this.survivors = Set.of(survivor);
+        FoodBar bar = emptyBar(survivor);
+        AdrenalineService service = service(env);
+        slenderBecomes(slender, StaminaBar.State.DRAINING);
+        service.tick();
+
+        bar.drain();
+        this.clock.set(10_000);
+        service.tick();
+
+        assertEquals(0.0f, bar.remainingShare(), 1.0E-6f);
     }
 }

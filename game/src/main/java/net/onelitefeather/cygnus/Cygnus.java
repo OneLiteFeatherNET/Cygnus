@@ -261,6 +261,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         new AdrenalineService(
                                 this.gameConfig.adrenaline(),
                                 () -> TeamHelper.survivorsOf(this.teamService),
+                                this.staminaService::getFoodBar,
                                 System::currentTimeMillis,
                                 tickSections),
                         new RegenerationService(this.gameConfig.regeneration(),

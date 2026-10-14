@@ -18,6 +18,7 @@ import net.onelitefeather.cygnus.common.config.AdrenalineConfig;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.event.StaminaStateChangeEvent;
+import net.onelitefeather.cygnus.stamina.FoodBar;
 import net.onelitefeather.cygnus.stamina.StaminaBar;
 import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.jetbrains.annotations.Nullable;
@@ -26,14 +27,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 /**
  * Gives a survivor an adrenaline rush when the visible slender comes close.
  * <p>
- * For a few seconds the survivor moves faster, which is enough to get away even with an empty
- * sprint bar. Once a rush is over, the same survivor has to wait out a cooldown before the next
+ * For a few seconds the survivor moves faster. A sprint bar below the resume share is lifted to it,
+ * so a survivor caught with an empty bar can still sprint away. Once a rush is over, the same survivor has to wait out a cooldown before the next
  * one. When a rush ends and when the next one may start is kept on the player as transient tags.
  * </p>
  * <p>
@@ -42,7 +44,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.16.0
  */
 public final class AdrenalineService implements GameFeature {
@@ -63,6 +65,7 @@ public final class AdrenalineService implements GameFeature {
 
     private final AdrenalineConfig config;
     private final Supplier<Set<Player>> survivors;
+    private final Function<Player, @Nullable FoodBar> staminaBars;
     private final LongSupplier clock;
     private final RepeatingTask task;
     private final Set<Player> rushing = new HashSet<>();
@@ -71,17 +74,20 @@ public final class AdrenalineService implements GameFeature {
     /**
      * Creates the service with its tick measured for the slow tick report.
      *
-     * @param config    the radius, the bonus, the duration and the cooldown
-     * @param survivors supplies the survivors of the round
-     * @param clock     supplies the current time in milliseconds
-     * @param sections  measures how long each run takes
+     * @param config      the radius, the bonus, the duration and the cooldown
+     * @param survivors   supplies the survivors of the round
+     * @param staminaBars looks up the sprint bar of a survivor
+     * @param clock       supplies the current time in milliseconds
+     * @param sections    measures how long each run takes
      * @since 2.15.0
      */
-    public AdrenalineService(AdrenalineConfig config, Supplier<Set<Player>> survivors, LongSupplier clock,
+    public AdrenalineService(AdrenalineConfig config, Supplier<Set<Player>> survivors,
+                             Function<Player, @Nullable FoodBar> staminaBars, LongSupplier clock,
                              TickSections sections) {
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.ADRENALINE, this::tick));
         this.config = config;
         this.survivors = survivors;
+        this.staminaBars = staminaBars;
         this.clock = clock;
         this.registerListeners();
     }
@@ -154,6 +160,8 @@ public final class AdrenalineService implements GameFeature {
         // The cooldown starts once the rush is over, not when it begins.
         survivor.setTag(COOLDOWN_UNTIL, ends + this.config.cooldownSeconds() * 1000L);
         AttributeHelper.applyAdrenaline(survivor, this.config.speedBonus());
+        FoodBar bar = this.staminaBars.apply(survivor);
+        if (bar != null) bar.refillToResume();
         survivor.playSound(HEARTBEAT, Sound.Emitter.self());
         this.rushing.add(survivor);
     }
