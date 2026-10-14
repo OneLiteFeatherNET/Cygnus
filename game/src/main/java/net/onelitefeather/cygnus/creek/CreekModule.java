@@ -64,8 +64,6 @@ public final class CreekModule implements GameFeature {
         this.config = config;
         this.mapProvider = mapProvider;
         this.debug = new CreekDebug();
-        // One clock for the service: it starts it with the round and stops it at the end.
-        RoundClock roundClock = new RoundClock(System::currentTimeMillis);
         // Every step and every catch runs on the scheduler thread, but Random is thread-safe
         // anyway, which keeps a stray call from elsewhere harmless.
         Random random = new Random();
@@ -88,7 +86,7 @@ public final class CreekModule implements GameFeature {
                         () -> TeamHelper.slenderOf(teamService),
                         this.config,
                         random),
-                roundClock,
+                System::currentTimeMillis,
                 random,
                 this.debug,
                 sections);

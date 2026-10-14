@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
@@ -72,7 +73,7 @@ public final class CreekService implements PossessionTarget {
     private final DreadSource dread;
     private final CreekWitness witness;
     private final CatchConsequence consequence;
-    private final RoundClock clock;
+    private final LongSupplier clock;
     private final RandomGenerator random;
     private final CreekDebug debug;
     private final CreekSight sight;
@@ -95,7 +96,7 @@ public final class CreekService implements PossessionTarget {
      * @param dread       rates how scared each survivor is
      * @param witness     hears about catches and sightings
      * @param consequence what happens on a catch
-     * @param clock       the round's clock
+     * @param clock       supplies the current time in milliseconds
      * @param random      the random source
      * @param debug       the debug line for playtests
      * @param sections    measures how long each step takes
@@ -104,7 +105,7 @@ public final class CreekService implements PossessionTarget {
     public CreekService(CreekConfig config, Supplier<Set<Player>> survivors,
                           Supplier<? extends @Nullable Instance> instance, Supplier<List<CreekRoute>> routes,
                           BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread, CreekWitness witness,
-                          CatchConsequence consequence, RoundClock clock, RandomGenerator random,
+                          CatchConsequence consequence, LongSupplier clock, RandomGenerator random,
                           CreekDebug debug, TickSections sections) {
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.CREEK, this::tick));
         this.config = config;
@@ -157,7 +158,7 @@ public final class CreekService implements PossessionTarget {
         CreekBody body = this.bodies.apply(world, this.ground.settle(point).orElse(point));
         // Start hidden. The creek and its variants only show up once the survivors have had time to
         // spread out, the creek somewhere far away from all of them.
-        long showsUp = this.clock.now() + this.config.vanish().minSeconds() * 1000L;
+        long showsUp = this.clock.getAsLong() + this.config.vanish().minSeconds() * 1000L;
         this.creek = new Creek(body, pathRoute, round, new VanishState(showsUp));
         this.variants = new CreekVariants(this.config, this.spots, this.random, showsUp,
                 (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state));
@@ -178,7 +179,7 @@ public final class CreekService implements PossessionTarget {
         if (current == null) return;
         // One snapshot for every creek: where the survivors are and how scared they are is the same for all.
         SurvivorSnapshot survivors = SurvivorSnapshot.take(this.survivors.get(), this.dread);
-        long now = this.clock.now();
+        long now = this.clock.getAsLong();
         CreekVariants currentVariants = this.variants;
         // Count every survivor here: hiding the patrol from the haunted is not being down to the last one.
         if (!this.config.activeWithLastSurvivor() && survivors.size() <= 1) {
