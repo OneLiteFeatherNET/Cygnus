@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.creek;
 
 import net.onelitefeather.cygnus.telemetry.TickSectionNames;
 import net.onelitefeather.cygnus.telemetry.TickSections;
-import net.kyori.adventure.text.Component;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
@@ -15,13 +14,11 @@ import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
-import net.onelitefeather.cygnus.creek.debug.CreekDebug;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.DoneState;
-import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.state.VanishState;
 import net.onelitefeather.cygnus.creek.world.CreekPaths;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
@@ -42,7 +39,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
@@ -72,9 +69,8 @@ public final class CreekService implements PossessionTarget {
     private final DreadSource dread;
     private final CreekWitness witness;
     private final CatchConsequence consequence;
-    private final RoundClock clock;
+    private final LongSupplier clock;
     private final RandomGenerator random;
-    private final CreekDebug debug;
     private final CreekSight sight;
     private final Ground ground;
     private final SpotFinder spots;
@@ -95,17 +91,16 @@ public final class CreekService implements PossessionTarget {
      * @param dread       rates how scared each survivor is
      * @param witness     hears about catches and sightings
      * @param consequence what happens on a catch
-     * @param clock       the round's clock
+     * @param clock       supplies the current time in milliseconds
      * @param random      the random source
-     * @param debug       the debug line for playtests
      * @param sections    measures how long each step takes
      * @since 2.15.0
      */
     public CreekService(CreekConfig config, Supplier<Set<Player>> survivors,
                           Supplier<? extends @Nullable Instance> instance, Supplier<List<CreekRoute>> routes,
                           BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread, CreekWitness witness,
-                          CatchConsequence consequence, RoundClock clock, RandomGenerator random,
-                          CreekDebug debug, TickSections sections) {
+                          CatchConsequence consequence, LongSupplier clock, RandomGenerator random,
+                          TickSections sections) {
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.CREEK, this::tick));
         this.config = config;
         this.survivors = survivors;
@@ -116,7 +111,6 @@ public final class CreekService implements PossessionTarget {
         this.consequence = consequence;
         this.clock = clock;
         this.random = random;
-        this.debug = debug;
         this.sight = new CreekSight(config.sight().range(), config.sight().viewAngle());
         this.ground = new InstanceGround(instance);
         this.spots = new SpotFinder(this.sight, this.ground);
@@ -157,11 +151,10 @@ public final class CreekService implements PossessionTarget {
         CreekBody body = this.bodies.apply(world, this.ground.settle(point).orElse(point));
         // Start hidden. The creek and its variants only show up once the survivors have had time to
         // spread out, the creek somewhere far away from all of them.
-        long showsUp = this.clock.now() + this.config.vanish().minSeconds() * 1000L;
+        long showsUp = this.clock.getAsLong() + this.config.vanish().minSeconds() * 1000L;
         this.creek = new Creek(body, pathRoute, round, new VanishState(showsUp));
         this.variants = new CreekVariants(this.config, this.spots, this.random, showsUp,
                 (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state));
-        this.debug.setActive(true);
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }
 
@@ -178,7 +171,7 @@ public final class CreekService implements PossessionTarget {
         if (current == null) return;
         // One snapshot for every creek: where the survivors are and how scared they are is the same for all.
         SurvivorSnapshot survivors = SurvivorSnapshot.take(this.survivors.get(), this.dread);
-        long now = this.clock.now();
+        long now = this.clock.getAsLong();
         CreekVariants currentVariants = this.variants;
         // Count every survivor here: hiding the patrol from the haunted is not being down to the last one.
         if (!this.config.activeWithLastSurvivor() && survivors.size() <= 1) {
@@ -190,22 +183,6 @@ public final class CreekService implements PossessionTarget {
             current.tick(survivors, haunted, now);
             if (currentVariants != null) currentVariants.tick(survivors, now);
         }
-        if (this.debug.hasWatchers()) {
-            Function<UUID, String> names = id -> nameOf(survivors, id);
-            List<SurvivorView> views = current.lastViews();
-            Component line = CreekDebug.line(current.state(), current.body().position(), views, names,
-                    current.route().describe(), now);
-            if (currentVariants != null) {
-                List<CreekState> states = currentVariants.running().values().stream().map(Creek::state).toList();
-                line = line.append(CreekDebug.variants(states, CreekVariants.capacity(views.size()), names, now));
-            }
-            this.debug.show(line);
-        }
-    }
-
-    private static String nameOf(SurvivorSnapshot survivors, UUID id) {
-        Player player = survivors.player(id);
-        return player != null ? player.getUsername() : id.toString().substring(0, 8);
     }
 
     /**
@@ -223,7 +200,6 @@ public final class CreekService implements PossessionTarget {
         CreekRound currentRound = this.round;
         this.round = null;
         if (currentRound != null) currentRound.patrol().cleanUp();
-        this.debug.setActive(false);
     }
 
     @Override

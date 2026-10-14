@@ -64,14 +64,6 @@ public final class PathRoute implements RouteProvider {
         return Optional.empty();
     }
 
-    @Override
-    public String describe() {
-        Cursor last = this.cursor;
-        if (last == null) return "";
-        return this.paths.route(last.route()).name() + " " + (last.index() + 1) + "/" + this.paths.pointCount(last.route())
-                + " " + (last.direction() > 0 ? "→" : "←");
-    }
-
     private Optional<RouteStep> rejoin(Pos current, Predicate<Pos> allowed, RandomGenerator random) {
         CreekLinks.Node best = null;
         double bestDistance = Double.MAX_VALUE;

@@ -1,11 +1,9 @@
 package net.onelitefeather.cygnus.creek;
 
 import net.onelitefeather.cygnus.telemetry.TickSections;
-import net.minestom.server.command.CommandManager;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.onelitefeather.cygnus.GameFeature;
-import net.onelitefeather.cygnus.command.CreekCommand;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.map.GameMap;
@@ -17,7 +15,6 @@ import net.onelitefeather.cygnus.creek.consequence.CatchTricks;
 import net.onelitefeather.cygnus.creek.consequence.GlowReveal;
 import net.onelitefeather.cygnus.creek.consequence.LandingDamage;
 import net.onelitefeather.cygnus.creek.consequence.StagedCatchConsequence;
-import net.onelitefeather.cygnus.creek.debug.CreekDebug;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
@@ -31,10 +28,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Wires the creek: its service, the debug line and the {@code /creek} command.
- * <p>
- * The command is registered even when the creek is switched off, the listeners are not.
- * </p>
+ * Wires the creek: its service and the listeners that start and stop it with the round.
  */
 public final class CreekModule implements GameFeature {
 
@@ -42,7 +36,6 @@ public final class CreekModule implements GameFeature {
 
     private final CreekConfig config;
     private final GameMapProvider mapProvider;
-    private final CreekDebug debug;
     private final CreekService service;
 
     /**
@@ -63,9 +56,6 @@ public final class CreekModule implements GameFeature {
                        JumpScareManager jumpScareManager, StaminaService staminaService, TickSections sections) {
         this.config = config;
         this.mapProvider = mapProvider;
-        this.debug = new CreekDebug();
-        // One clock for the service: it starts it with the round and stops it at the end.
-        RoundClock roundClock = new RoundClock(System::currentTimeMillis);
         // Every step and every catch runs on the scheduler thread, but Random is thread-safe
         // anyway, which keeps a stray call from elsewhere harmless.
         Random random = new Random();
@@ -88,9 +78,8 @@ public final class CreekModule implements GameFeature {
                         () -> TeamHelper.slenderOf(teamService),
                         this.config,
                         random),
-                roundClock,
+                System::currentTimeMillis,
                 random,
-                this.debug,
                 sections);
         this.registerListeners();
     }
@@ -125,11 +114,6 @@ public final class CreekModule implements GameFeature {
      */
     public PossessionTarget possessionTarget() {
         return this.service;
-    }
-
-    @Override
-    public void registerCommands(CommandManager manager) {
-        manager.register(new CreekCommand(this.debug));
     }
 
     /**

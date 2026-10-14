@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * One creek in the round: its body, what it is doing right now, and the step that moves it on.
@@ -47,10 +48,8 @@ final class Creek {
     private final RouteProvider route;
     private final CreekRound round;
     private CreekState state;
-    private List<SurvivorView> lastViews = List.of();
     private Set<UUID> seenLastStep = Set.of();
     private boolean entered;
-    private @Nullable UUID hunting;
     private volatile @Nullable CreekSight boostedSight;
     private @Nullable HuntState huntState;
 
@@ -82,9 +81,6 @@ final class Creek {
     /**
      * Runs one step, leaving some survivors out of it. The patrolling creek uses this for everyone
      * who is haunted by a variant: they do not see it, and it does not pick them out.
-     * <p>
-     * The snapshots in {@link #lastViews()} still cover every survivor.
-     * </p>
      *
      * @param survivors the survivors of this step
      * @param ignored   the survivors this creek leaves alone in this step
@@ -130,14 +126,13 @@ final class Creek {
      */
     private void syncHunt(HuntEnd otherwise) {
         HuntState hunt = this.state instanceof HuntState current ? current : null;
-        UUID now = hunt == null ? null : hunt.target();
-        UUID before = this.hunting;
-        if (Objects.equals(now, before)) return;
         HuntState ended = this.huntState;
-        this.hunting = now;
+        UUID now = hunt == null ? null : hunt.target();
+        UUID before = ended == null ? null : ended.target();
+        if (Objects.equals(now, before)) return;
         this.huntState = hunt;
-        if (before != null) {
-            HuntEnd how = ended != null && ended.end() != null ? ended.end() : otherwise;
+        if (ended != null) {
+            HuntEnd how = ended.end() != null ? ended.end() : otherwise;
             this.round.witness().huntEnded(before, how);
         }
         if (now != null) this.round.witness().hunted(now);
@@ -163,9 +158,9 @@ final class Creek {
      * Fills in who sees this creek and builds the context for the states.
      */
     private CreekContext context(SurvivorSnapshot survivors, Set<UUID> ignored, long now) {
-        this.lastViews = this.views(survivors);
-        List<SurvivorView> noticed = ignored.isEmpty() ? this.lastViews
-                : this.lastViews.stream().filter(view -> !ignored.contains(view.id())).toList();
+        List<SurvivorView> views = this.views(survivors);
+        List<SurvivorView> noticed = ignored.isEmpty() ? views
+                : views.stream().filter(view -> !ignored.contains(view.id())).toList();
         return new CreekContext(now, noticed, this.body, this.route, this.round.spots(),
                 new Actions(this.round, survivors, ignored, this.body),
                 this.round.config(), this.round.random(), this.round.hunts());
@@ -209,15 +204,6 @@ final class Creek {
     }
 
     /**
-     * The survivor snapshots from the last step.
-     *
-     * @return the views, empty before the first step
-     */
-    List<SurvivorView> lastViews() {
-        return this.lastViews;
-    }
-
-    /**
      * Lets survivors notice this creek with another sight, or with the round's again.
      *
      * @param sight the sight to use instead of the round's, or {@code null} for the round's
@@ -249,10 +235,9 @@ final class Creek {
     }
 
     void remove() {
-        UUID before = this.hunting;
-        this.hunting = null;
+        HuntState ended = this.huntState;
         this.huntState = null;
-        if (before != null) this.round.witness().huntEnded(before, HuntEnd.REMOVED);
+        if (ended != null) this.round.witness().huntEnded(ended.target(), HuntEnd.REMOVED);
         this.body.remove();
     }
 
@@ -275,36 +260,33 @@ final class Creek {
 
         @Override
         public void caught(UUID survivor) {
-            Player player = this.survivors.player(survivor);
-            if (player == null) return;
-            this.round.consequence().apply(player);
-            this.round.witness().caught(survivor);
+            this.with(survivor, player -> {
+                this.round.consequence().apply(player);
+                this.round.witness().caught(survivor);
+            });
         }
 
         @Override
         public void selected(UUID survivor) {
-            Player player = this.survivors.player(survivor);
-            if (player == null) return;
-            this.round.patrol().selected(player, this::eyes, this.survivors.players());
-            this.round.witness().selected(survivor);
+            this.with(survivor, player -> {
+                this.round.patrol().selected(player, this::eyes, this.survivors.players());
+                this.round.witness().selected(survivor);
+            });
         }
 
         @Override
         public void stareBeat(UUID survivor, int beat) {
-            Player player = this.survivors.player(survivor);
-            if (player != null) this.round.patrol().stareBeat(player, beat, this.body.position());
+            this.with(survivor, player -> this.round.patrol().stareBeat(player, beat, this.body.position()));
         }
 
         @Override
         public void stareBroken(UUID survivor) {
-            Player player = this.survivors.player(survivor);
-            if (player != null) this.round.patrol().stareBroken(player);
+            this.with(survivor, this.round.patrol()::stareBroken);
         }
 
         @Override
         public void stalkSound(UUID survivor, double progress) {
-            Player player = this.survivors.player(survivor);
-            if (player != null) this.round.stalk().play(player, this.body.position(), progress);
+            this.with(survivor, player -> this.round.stalk().play(player, this.body.position(), progress));
         }
 
         @Override
@@ -314,6 +296,14 @@ final class Creek {
                     .filter(player -> !this.ignored.contains(player.getUuid()))
                     .toList();
             this.round.patrol().vanished(where, noticing);
+        }
+
+        /**
+         * Runs the action for a survivor who is still part of the step, and does nothing otherwise.
+         */
+        private void with(UUID survivor, Consumer<Player> action) {
+            Player player = this.survivors.player(survivor);
+            if (player != null) action.accept(player);
         }
 
         /**

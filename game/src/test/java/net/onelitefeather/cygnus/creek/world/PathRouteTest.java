@@ -72,7 +72,6 @@ class PathRouteTest {
         PathRoute route = route(A);
 
         assertEquals(new Pos(10, 40, 0), next(route, new Pos(9, 41, 1), fixed(0)));
-        assertEquals("A 2/3 →", route.describe());
     }
 
     @Test
@@ -96,7 +95,6 @@ class PathRouteTest {
         at = next(route, at, fixed(0));
 
         assertEquals(new Pos(10, 40, 0), next(route, at, fixed(0)));
-        assertEquals("A 2/3 ←", route.describe());
     }
 
     @Test
@@ -161,9 +159,8 @@ class PathRouteTest {
     }
 
     @Test
-    @DisplayName("Before it joined there is nothing to describe")
-    void emptyDescriptionBeforeJoining() {
-        assertEquals("", route(A).describe());
+    @DisplayName("It offers the points of every route")
+    void offersThePointsOfEveryRoute() {
         assertEquals(5, route(A, B).points().size());
     }
 
