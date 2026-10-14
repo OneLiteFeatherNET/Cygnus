@@ -50,18 +50,17 @@ public record EightPagesConfig(int bonusOneSurvivor, int bonusTwoSurvivors, int 
 
     /**
      * Reads the settings. The section carries the {@code eightPages.} prefix. Invalid values fall
-     * back to the defaults.
+     * back to the DEFAULT.
      *
      * @param section the {@code eightPages.} part of the config
      * @return the settings
      */
     public static EightPagesConfig read(ConfigSection section) {
-        EightPagesConfig defaults = DEFAULT;
         return section.orDefault("eight pages", () -> new EightPagesConfig(
-                section.getInt("bonusOneSurvivor", defaults.bonusOneSurvivor()),
-                section.getInt("bonusTwoSurvivors", defaults.bonusTwoSurvivors()),
-                section.getInt("bonusThreeSurvivors", defaults.bonusThreeSurvivors())
-        ), defaults);
+                section.getInt("bonusOneSurvivor", DEFAULT.bonusOneSurvivor()),
+                section.getInt("bonusTwoSurvivors", DEFAULT.bonusTwoSurvivors()),
+                section.getInt("bonusThreeSurvivors", DEFAULT.bonusThreeSurvivors())
+        ), DEFAULT);
     }
 
     /**

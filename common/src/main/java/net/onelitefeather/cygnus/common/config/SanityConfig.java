@@ -80,20 +80,19 @@ public record SanityConfig(
      * @return the fear settings
      */
     public static SanityConfig read(ConfigSection section) {
-        SanityConfig defaults = DEFAULT;
         return section.orDefault("sanity", () -> new SanityConfig(
-                section.getDouble("pageFloorWeight", defaults.pageFloorWeight()),
-                section.getDouble("pageFoundGain", defaults.pageFoundGain()),
-                section.getDouble("sightingGain", defaults.sightingGain()),
-                section.getInt("sightingCooldownSeconds", defaults.sightingCooldownSeconds()),
-                section.getDouble("caughtGain", defaults.caughtGain()),
-                section.getDouble("selectedGain", defaults.selectedGain()),
-                section.getDouble("deathGain", defaults.deathGain()),
-                section.getDouble("decayPerSecond", defaults.decayPerSecond()),
-                section.getDouble("stalkGainPerSecond", defaults.stalkGainPerSecond()),
-                section.getDouble("residualShare", defaults.residualShare()),
-                section.getDouble("timeFloorWeight", defaults.timeFloorWeight()),
-                section.getDouble("floorCap", defaults.floorCap())
-        ), defaults);
+                section.getDouble("pageFloorWeight", DEFAULT.pageFloorWeight()),
+                section.getDouble("pageFoundGain", DEFAULT.pageFoundGain()),
+                section.getDouble("sightingGain", DEFAULT.sightingGain()),
+                section.getInt("sightingCooldownSeconds", DEFAULT.sightingCooldownSeconds()),
+                section.getDouble("caughtGain", DEFAULT.caughtGain()),
+                section.getDouble("selectedGain", DEFAULT.selectedGain()),
+                section.getDouble("deathGain", DEFAULT.deathGain()),
+                section.getDouble("decayPerSecond", DEFAULT.decayPerSecond()),
+                section.getDouble("stalkGainPerSecond", DEFAULT.stalkGainPerSecond()),
+                section.getDouble("residualShare", DEFAULT.residualShare()),
+                section.getDouble("timeFloorWeight", DEFAULT.timeFloorWeight()),
+                section.getDouble("floorCap", DEFAULT.floorCap())
+        ), DEFAULT);
     }
 }

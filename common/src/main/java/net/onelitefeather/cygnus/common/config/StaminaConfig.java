@@ -69,12 +69,11 @@ public record StaminaConfig(
      * @return the sprint settings
      */
     public static StaminaConfig read(ConfigSection section) {
-        StaminaConfig defaults = DEFAULT;
         return section.orDefault("stamina", () -> new StaminaConfig(
-                section.getDouble("sprintResumeShare", defaults.sprintResumeShare()),
-                section.getDouble("regenPerSecond", defaults.regenPerSecond()),
-                section.getInt("slenderReappearCooldownSeconds", defaults.slenderReappearCooldownSeconds()),
-                section.getInt("slenderDamageRange", defaults.slenderDamageRange())
-        ), defaults);
+                section.getDouble("sprintResumeShare", DEFAULT.sprintResumeShare()),
+                section.getDouble("regenPerSecond", DEFAULT.regenPerSecond()),
+                section.getInt("slenderReappearCooldownSeconds", DEFAULT.slenderReappearCooldownSeconds()),
+                section.getInt("slenderDamageRange", DEFAULT.slenderDamageRange())
+        ), DEFAULT);
     }
 }

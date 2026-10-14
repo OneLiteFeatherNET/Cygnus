@@ -114,27 +114,26 @@ public record FootprintConfig(
      * @return the footprint settings
      */
     public static FootprintConfig read(ConfigSection section) {
-        FootprintConfig defaults = DEFAULT;
         return section.orDefault("footprint", () -> new FootprintConfig(
-                section.getDouble("slenderStepBlocks", defaults.slenderStepBlocks()),
-                section.getDouble("slenderChance", defaults.slenderChance()),
-                section.getInt("slenderDelayMinMillis", defaults.slenderDelayMinMillis()),
-                section.getInt("slenderDelayMaxMillis", defaults.slenderDelayMaxMillis()),
-                section.getInt("slenderLifetimeSeconds", defaults.slenderLifetimeSeconds()),
-                section.getDouble("survivorSampleBlocks", defaults.survivorSampleBlocks()),
-                section.getInt("survivorHistorySeconds", defaults.survivorHistorySeconds()),
-                section.getInt("scanRadius", defaults.scanRadius()),
-                section.getInt("scanGapSeconds", defaults.scanGapSeconds()),
-                section.getInt("scanMaxPrints", defaults.scanMaxPrints()),
-                section.getInt("scanLifetimeSeconds", defaults.scanLifetimeSeconds()),
-                section.getInt("scanCooldownSeconds", defaults.scanCooldownSeconds()),
-                section.getDouble("teleportBlocks", defaults.teleportBlocks()),
-                section.getDouble("minSpacing", defaults.minSpacing()),
-                section.getDouble("fadeShare", defaults.fadeShare()),
-                section.getInt("scanStartDelaySeconds", defaults.scanStartDelaySeconds()),
-                section.getInt("scentPrints", defaults.scentPrints()),
-                section.getInt("scentSpreadDegrees", defaults.scentSpreadDegrees()),
-                section.getInt("scentCooldownSeconds", defaults.scentCooldownSeconds())
-        ), defaults);
+                section.getDouble("slenderStepBlocks", DEFAULT.slenderStepBlocks()),
+                section.getDouble("slenderChance", DEFAULT.slenderChance()),
+                section.getInt("slenderDelayMinMillis", DEFAULT.slenderDelayMinMillis()),
+                section.getInt("slenderDelayMaxMillis", DEFAULT.slenderDelayMaxMillis()),
+                section.getInt("slenderLifetimeSeconds", DEFAULT.slenderLifetimeSeconds()),
+                section.getDouble("survivorSampleBlocks", DEFAULT.survivorSampleBlocks()),
+                section.getInt("survivorHistorySeconds", DEFAULT.survivorHistorySeconds()),
+                section.getInt("scanRadius", DEFAULT.scanRadius()),
+                section.getInt("scanGapSeconds", DEFAULT.scanGapSeconds()),
+                section.getInt("scanMaxPrints", DEFAULT.scanMaxPrints()),
+                section.getInt("scanLifetimeSeconds", DEFAULT.scanLifetimeSeconds()),
+                section.getInt("scanCooldownSeconds", DEFAULT.scanCooldownSeconds()),
+                section.getDouble("teleportBlocks", DEFAULT.teleportBlocks()),
+                section.getDouble("minSpacing", DEFAULT.minSpacing()),
+                section.getDouble("fadeShare", DEFAULT.fadeShare()),
+                section.getInt("scanStartDelaySeconds", DEFAULT.scanStartDelaySeconds()),
+                section.getInt("scentPrints", DEFAULT.scentPrints()),
+                section.getInt("scentSpreadDegrees", DEFAULT.scentSpreadDegrees()),
+                section.getInt("scentCooldownSeconds", DEFAULT.scentCooldownSeconds())
+        ), DEFAULT);
     }
 }

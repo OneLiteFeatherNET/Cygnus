@@ -58,18 +58,17 @@ public record RegenerationConfig(double perSecond, List<Double> shares, int minM
 
     /**
      * Reads the settings. The section carries the {@code regeneration.} prefix. Invalid values fall
-     * back to the defaults.
+     * back to the DEFAULT.
      *
      * @param section the {@code regeneration.} part of the config
      * @return the settings
      */
     public static RegenerationConfig read(ConfigSection section) {
-        RegenerationConfig defaults = DEFAULT;
         return section.orDefault("regeneration", () -> new RegenerationConfig(
-                section.getDouble("perSecond", defaults.perSecond()),
-                readShares(section.getString("shares"), defaults.shares()),
-                section.getInt("minMissing", defaults.minMissing())
-        ), defaults);
+                section.getDouble("perSecond", DEFAULT.perSecond()),
+                readShares(section.getString("shares"), DEFAULT.shares()),
+                section.getInt("minMissing", DEFAULT.minMissing())
+        ), DEFAULT);
     }
 
     /**

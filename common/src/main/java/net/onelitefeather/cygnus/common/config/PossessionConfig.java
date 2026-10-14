@@ -54,12 +54,11 @@ public record PossessionConfig(
      * @return the possession settings
      */
     public static PossessionConfig read(ConfigSection section) {
-        PossessionConfig defaults = DEFAULT;
         return section.orDefault("possession", () -> new PossessionConfig(
-                section.getInt("maxSeconds", defaults.maxSeconds()),
-                section.getInt("cooldownSeconds", defaults.cooldownSeconds()),
-                section.getDouble("sightFactor", defaults.sightFactor()),
-                section.getInt("startDelaySeconds", defaults.startDelaySeconds())
-        ), defaults);
+                section.getInt("maxSeconds", DEFAULT.maxSeconds()),
+                section.getInt("cooldownSeconds", DEFAULT.cooldownSeconds()),
+                section.getDouble("sightFactor", DEFAULT.sightFactor()),
+                section.getInt("startDelaySeconds", DEFAULT.startDelaySeconds())
+        ), DEFAULT);
     }
 }

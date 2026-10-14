@@ -51,12 +51,11 @@ public record AdrenalineConfig(
      * @return the adrenaline settings
      */
     public static AdrenalineConfig read(ConfigSection section) {
-        AdrenalineConfig defaults = DEFAULT;
         return section.orDefault("adrenaline", () -> new AdrenalineConfig(
-                section.getInt("radius", defaults.radius()),
-                section.getDouble("speedBonus", defaults.speedBonus()),
-                section.getInt("durationSeconds", defaults.durationSeconds()),
-                section.getInt("cooldownSeconds", defaults.cooldownSeconds())
-        ), defaults);
+                section.getInt("radius", DEFAULT.radius()),
+                section.getDouble("speedBonus", DEFAULT.speedBonus()),
+                section.getInt("durationSeconds", DEFAULT.durationSeconds()),
+                section.getInt("cooldownSeconds", DEFAULT.cooldownSeconds())
+        ), DEFAULT);
     }
 }
