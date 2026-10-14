@@ -129,7 +129,7 @@ public final class StalkState implements CreekState {
 
         if (view.seesCreek()) {
             if (this.seenSince < 0) this.seenSince = ctx.now();
-            if (ctx.now() - this.seenSince >= ctx.calm().stretch((long) config.stalk().revealMillis()) && this.relocate(ctx, view)) {
+            if (ctx.now() - this.seenSince >= ctx.calm().stretch(config.stalk().revealMillis()) && this.relocate(ctx, view)) {
                 this.seenSince = -1L;
                 // Gone without a sound. The next one only comes after a full gap.
                 this.scheduleSound(ctx);

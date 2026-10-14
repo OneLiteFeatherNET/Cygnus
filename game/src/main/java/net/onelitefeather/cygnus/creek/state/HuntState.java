@@ -125,7 +125,7 @@ public final class HuntState implements CreekState {
         if (distance < this.bestDistance - PROGRESS) {
             this.bestDistance = distance;
             this.progressSince = ctx.now();
-        } else if (ctx.now() - this.progressSince >= ctx.calm().stretch((long) config.stuckMillis())) {
+        } else if (ctx.now() - this.progressSince >= ctx.calm().stretch(config.stuckMillis())) {
             this.shortcut(ctx, view);
             return this;
         }
