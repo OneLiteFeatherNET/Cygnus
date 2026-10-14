@@ -17,7 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -27,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.random.RandomGenerator;
 
 /**
  * Handles the logic to manage and spawn pages during the {@link GamePhase}.
@@ -36,13 +39,22 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.3.0
+ * @version 1.4.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
 public final class PageProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PageProvider.class);
+
+    /** How far around a spot other spots count as crowding it, in blocks. */
+    static final double CROWD_RADIUS = 30.0D;
+
+    /** The least share of an even turn a spot in a crowded part of the map gets. */
+    static final double LEAST_WEIGHT = 0.5D;
+
+    /** The most share of an even turn a spot on its own gets, so no single tree draws the pages. */
+    static final double MOST_WEIGHT = 2.0D;
 
     private final Queue<PageResource> freeSpots = new ConcurrentLinkedQueue<>();
     private final Map<UUID, PageEntity> activePages = new ConcurrentHashMap<>();
@@ -53,6 +65,7 @@ public final class PageProvider {
     /**
      * Loads the required page data from the given set of {@link PageResource}s.
      * The resources are shuffled once so the queue can be drained without picking a random index on every access.
+     * Spots in crowded parts of the map tend to come later, see {@link #spreadOrder(Collection, RandomGenerator)}.
      *
      * @param resources given set of page resources
      */
@@ -62,9 +75,54 @@ public final class PageProvider {
         if (resources.isEmpty()) {
             throw new IllegalStateException("Can't load a map without any pages");
         }
-        List<PageResource> shuffled = new ArrayList<>(resources);
-        Collections.shuffle(shuffled);
-        this.freeSpots.addAll(shuffled);
+        this.freeSpots.addAll(spreadOrder(resources, ThreadLocalRandom.current()));
+    }
+
+    /**
+     * Shuffles the spots so that crowded parts of the map do not get more pages than the rest.
+     * <p>
+     * An even shuffle gives every spot the same chance, so a part of the map with many spots draws
+     * pages over and over while the pages keep moving on. Here a spot comes earlier the more it
+     * weighs, see {@link #weights(Collection)}. Every spot still comes exactly once.
+     * </p>
+     *
+     * @param spots  the spots of the map
+     * @param random the random source
+     * @return the spots in the order they are handed out
+     */
+    static List<PageResource> spreadOrder(Collection<PageResource> spots, RandomGenerator random) {
+        Map<PageResource, Double> weights = weights(spots);
+        Map<PageResource, Double> keys = new HashMap<>();
+        for (PageResource spot : spots) {
+            // A weighted random order: the heavier a spot, the closer its key gets to 1.
+            keys.put(spot, Math.pow(random.nextDouble(), 1.0D / weights.get(spot)));
+        }
+        List<PageResource> order = new ArrayList<>(spots);
+        order.sort(Comparator.comparingDouble((PageResource spot) -> keys.get(spot)).reversed());
+        return order;
+    }
+
+    /**
+     * Weighs every spot by how crowded its part of the map is: a spot with fewer others within
+     * {@link #CROWD_RADIUS} than usual weighs more, one with more weighs less. The weights stay
+     * between {@link #LEAST_WEIGHT} and {@link #MOST_WEIGHT}.
+     *
+     * @param spots the spots of the map
+     * @return the weight of each spot, {@code 1} for a spot as crowded as the average one
+     */
+    static Map<PageResource, Double> weights(Collection<PageResource> spots) {
+        Map<PageResource, Integer> crowds = new HashMap<>();
+        for (PageResource spot : spots) {
+            int crowd = 0;
+            for (PageResource other : spots) {
+                if (spot.position().distance(other.position()) <= CROWD_RADIUS) crowd++;
+            }
+            crowds.put(spot, crowd);
+        }
+        double average = crowds.values().stream().mapToInt(Integer::intValue).average().orElse(1.0D);
+        Map<PageResource, Double> weights = new HashMap<>();
+        crowds.forEach((spot, crowd) -> weights.put(spot, Math.clamp(average / crowd, LEAST_WEIGHT, MOST_WEIGHT)));
+        return weights;
     }
 
     /**
