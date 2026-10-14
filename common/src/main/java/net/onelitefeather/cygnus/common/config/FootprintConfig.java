@@ -1,5 +1,11 @@
 package net.onelitefeather.cygnus.common.config;
 
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.atLeast;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.between;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.notNegative;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.positive;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.share;
+
 /**
  * Settings for the footprints both sides leave behind.
  * <p>
@@ -72,49 +78,33 @@ public record FootprintConfig(
      */
     public FootprintConfig {
         positive("slenderStepBlocks", slenderStepBlocks);
-        if (slenderChance <= 0.0D || slenderChance > 1.0D) {
-            throw new IllegalArgumentException("slenderChance (" + slenderChance + ") must be above 0.0 and at most 1.0");
-        }
-        if (slenderDelayMinMillis < 0) {
-            throw new IllegalArgumentException("slenderDelayMinMillis (" + slenderDelayMinMillis + ") must not be negative");
-        }
+        share("slenderChance", slenderChance);
+        notNegative("slenderDelayMinMillis", slenderDelayMinMillis);
         if (slenderDelayMaxMillis < slenderDelayMinMillis) {
             throw new IllegalArgumentException("slenderDelayMaxMillis (" + slenderDelayMaxMillis
                     + ") must be at least slenderDelayMinMillis (" + slenderDelayMinMillis + ")");
         }
-        atLeastOne("slenderLifetimeSeconds", slenderLifetimeSeconds);
+        atLeast("slenderLifetimeSeconds", slenderLifetimeSeconds, 1);
         positive("survivorSampleBlocks", survivorSampleBlocks);
-        atLeastOne("survivorHistorySeconds", survivorHistorySeconds);
-        atLeastOne("scanRadius", scanRadius);
+        atLeast("survivorHistorySeconds", survivorHistorySeconds, 1);
+        atLeast("scanRadius", scanRadius, 1);
         if (scanGapSeconds < 0 || scanGapSeconds >= survivorHistorySeconds) {
             throw new IllegalArgumentException("scanGapSeconds (" + scanGapSeconds
                     + ") must be at least 0 and below survivorHistorySeconds (" + survivorHistorySeconds + ")");
         }
-        atLeastOne("scanMaxPrints", scanMaxPrints);
-        atLeastOne("scanLifetimeSeconds", scanLifetimeSeconds);
-        if (scanCooldownSeconds < 0) {
-            throw new IllegalArgumentException("scanCooldownSeconds (" + scanCooldownSeconds + ") must not be negative");
-        }
+        atLeast("scanMaxPrints", scanMaxPrints, 1);
+        atLeast("scanLifetimeSeconds", scanLifetimeSeconds, 1);
+        notNegative("scanCooldownSeconds", scanCooldownSeconds);
         if (teleportBlocks <= Math.max(slenderStepBlocks, survivorSampleBlocks)) {
             throw new IllegalArgumentException("teleportBlocks (" + teleportBlocks
                     + ") must be longer than slenderStepBlocks and survivorSampleBlocks");
         }
-        if (minSpacing < 0.0D) {
-            throw new IllegalArgumentException("minSpacing (" + minSpacing + ") must not be negative");
-        }
-        if (fadeShare < 0.0D || fadeShare > 1.0D) {
-            throw new IllegalArgumentException("fadeShare (" + fadeShare + ") must be between 0.0 and 1.0");
-        }
-        if (scanStartDelaySeconds < 0) {
-            throw new IllegalArgumentException("scanStartDelaySeconds (" + scanStartDelaySeconds + ") must not be negative");
-        }
-        atLeastOne("scentPrints", scentPrints);
-        if (scentSpreadDegrees < 0 || scentSpreadDegrees > 180) {
-            throw new IllegalArgumentException("scentSpreadDegrees (" + scentSpreadDegrees + ") must be between 0 and 180");
-        }
-        if (scentCooldownSeconds < 0) {
-            throw new IllegalArgumentException("scentCooldownSeconds (" + scentCooldownSeconds + ") must not be negative");
-        }
+        notNegative("minSpacing", minSpacing);
+        between("fadeShare", fadeShare, 0.0D, 1.0D);
+        notNegative("scanStartDelaySeconds", scanStartDelaySeconds);
+        atLeast("scentPrints", scentPrints, 1);
+        between("scentSpreadDegrees", scentSpreadDegrees, 0, 180);
+        notNegative("scentCooldownSeconds", scentCooldownSeconds);
     }
 
     /**
@@ -124,39 +114,26 @@ public record FootprintConfig(
      * @return the footprint settings
      */
     public static FootprintConfig read(ConfigSection section) {
-        FootprintConfig defaults = DEFAULT;
         return section.orDefault("footprint", () -> new FootprintConfig(
-                section.getDouble("slenderStepBlocks", defaults.slenderStepBlocks()),
-                section.getDouble("slenderChance", defaults.slenderChance()),
-                section.getInt("slenderDelayMinMillis", defaults.slenderDelayMinMillis()),
-                section.getInt("slenderDelayMaxMillis", defaults.slenderDelayMaxMillis()),
-                section.getInt("slenderLifetimeSeconds", defaults.slenderLifetimeSeconds()),
-                section.getDouble("survivorSampleBlocks", defaults.survivorSampleBlocks()),
-                section.getInt("survivorHistorySeconds", defaults.survivorHistorySeconds()),
-                section.getInt("scanRadius", defaults.scanRadius()),
-                section.getInt("scanGapSeconds", defaults.scanGapSeconds()),
-                section.getInt("scanMaxPrints", defaults.scanMaxPrints()),
-                section.getInt("scanLifetimeSeconds", defaults.scanLifetimeSeconds()),
-                section.getInt("scanCooldownSeconds", defaults.scanCooldownSeconds()),
-                section.getDouble("teleportBlocks", defaults.teleportBlocks()),
-                section.getDouble("minSpacing", defaults.minSpacing()),
-                section.getDouble("fadeShare", defaults.fadeShare()),
-                section.getInt("scanStartDelaySeconds", defaults.scanStartDelaySeconds()),
-                section.getInt("scentPrints", defaults.scentPrints()),
-                section.getInt("scentSpreadDegrees", defaults.scentSpreadDegrees()),
-                section.getInt("scentCooldownSeconds", defaults.scentCooldownSeconds())
-        ), defaults);
-    }
-
-    private static void positive(String name, double value) {
-        if (value <= 0.0D) {
-            throw new IllegalArgumentException(name + " (" + value + ") must be above 0.0");
-        }
-    }
-
-    private static void atLeastOne(String name, int value) {
-        if (value < 1) {
-            throw new IllegalArgumentException(name + " (" + value + ") must be at least 1");
-        }
+                section.getDouble("slenderStepBlocks", DEFAULT.slenderStepBlocks()),
+                section.getDouble("slenderChance", DEFAULT.slenderChance()),
+                section.getInt("slenderDelayMinMillis", DEFAULT.slenderDelayMinMillis()),
+                section.getInt("slenderDelayMaxMillis", DEFAULT.slenderDelayMaxMillis()),
+                section.getInt("slenderLifetimeSeconds", DEFAULT.slenderLifetimeSeconds()),
+                section.getDouble("survivorSampleBlocks", DEFAULT.survivorSampleBlocks()),
+                section.getInt("survivorHistorySeconds", DEFAULT.survivorHistorySeconds()),
+                section.getInt("scanRadius", DEFAULT.scanRadius()),
+                section.getInt("scanGapSeconds", DEFAULT.scanGapSeconds()),
+                section.getInt("scanMaxPrints", DEFAULT.scanMaxPrints()),
+                section.getInt("scanLifetimeSeconds", DEFAULT.scanLifetimeSeconds()),
+                section.getInt("scanCooldownSeconds", DEFAULT.scanCooldownSeconds()),
+                section.getDouble("teleportBlocks", DEFAULT.teleportBlocks()),
+                section.getDouble("minSpacing", DEFAULT.minSpacing()),
+                section.getDouble("fadeShare", DEFAULT.fadeShare()),
+                section.getInt("scanStartDelaySeconds", DEFAULT.scanStartDelaySeconds()),
+                section.getInt("scentPrints", DEFAULT.scentPrints()),
+                section.getInt("scentSpreadDegrees", DEFAULT.scentSpreadDegrees()),
+                section.getInt("scentCooldownSeconds", DEFAULT.scentCooldownSeconds())
+        ), DEFAULT);
     }
 }

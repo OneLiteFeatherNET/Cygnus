@@ -21,26 +21,26 @@ class GameConfigTest {
 
     @Test
     void testInvalidTeamSizes() {
-        assertRejected("Slender team size must be at least 1", () -> new GameConfig.Teams(0, 12));
-        assertRejected("Survivor team size must be at least 2", () -> new GameConfig.Teams(1, 0));
+        assertRejected("slenderTeamSize (0) must be at least 1", () -> new GameConfig.Teams(0, 12));
+        assertRejected("survivorTeamSize (0) must be at least 2", () -> new GameConfig.Teams(1, 0));
     }
 
     @Test
     void testInvalidLobbyTime() {
-        assertRejected("Lobby time must be greater than " + GameConfig.FORCE_START_TIME,
+        assertRejected("lobbyTime (" + GameConfig.FORCE_START_TIME + ") must be at least " + (GameConfig.FORCE_START_TIME + 1),
                 () -> new GameConfig.Round(2, 10, GameConfig.FORCE_START_TIME, 600));
     }
 
     @Test
     void testInvalidDamageSoundCooldown() {
-        assertRejected("Damage sound cooldown must be at least 1 tick",
+        assertRejected("damageSoundCooldown (0) must be at least 1",
                 () -> new GameConfig.DamageSound(true, 0, GameConfig.DamageSound.DEFAULT_SOUND));
     }
 
     @Test
     void testInvalidLobbyAtmosphereShare() {
         GameConfig defaults = GameConfig.DEFAULT;
-        assertRejected("Lobby atmosphere share must be between 0 and 1", () -> new GameConfig(
+        assertRejected("lobbyAtmosphereShare (1.5) must be between 0 and 1", () -> new GameConfig(
                 defaults.round(), defaults.teams(), null, defaults.resourcePack(), defaults.pageProximity(),
                 defaults.damageSound(), defaults.glitch(), defaults.pageGlitch(), defaults.creek(),
                 defaults.sanity(), defaults.stamina(), defaults.adrenaline(), defaults.footprint(), defaults.possession(), defaults.telemetry(), defaults.minimap(), defaults.eightPages(), defaults.regeneration(), 1.5F));
@@ -48,21 +48,21 @@ class GameConfigTest {
 
     @Test
     void testGlitchRangeRejectsValuesOutsideTheAllowedRange() {
-        String expected = "Glitch range must be between 1 and " + GameConfig.Glitch.MAX_RANGE;
-        assertRejected(expected, () -> new GameConfig.Glitch(0, 4, 30));
-        assertRejected(expected, () -> new GameConfig.Glitch(GameConfig.Glitch.MAX_RANGE + 1, 4, 30));
+        int max = GameConfig.Glitch.MAX_RANGE;
+        assertRejected("glitchRange (0) must be between 1 and " + max, () -> new GameConfig.Glitch(0, 4, 30));
+        assertRejected("glitchRange (" + (max + 1) + ") must be between 1 and " + max, () -> new GameConfig.Glitch(max + 1, 4, 30));
     }
 
     @Test
     void testGlitchCloseRangeRejectsValuesBelowOne() {
-        assertRejected("Glitch close range must be at least 1 block", () -> new GameConfig.Glitch(12, 0, 30));
+        assertRejected("glitchCloseRange (0) must be at least 1", () -> new GameConfig.Glitch(12, 0, 30));
     }
 
     @Test
     void testGlitchViewAngleRejectsValuesOutsideTheAllowedRange() {
-        String expected = "Glitch view angle must be between 1 and " + GameConfig.Glitch.MAX_VIEW_ANGLE + " degrees";
-        assertRejected(expected, () -> new GameConfig.Glitch(12, 4, 0));
-        assertRejected(expected, () -> new GameConfig.Glitch(12, 4, GameConfig.Glitch.MAX_VIEW_ANGLE + 1));
+        int max = GameConfig.Glitch.MAX_VIEW_ANGLE;
+        assertRejected("glitchViewAngle (0) must be between 1 and " + max, () -> new GameConfig.Glitch(12, 4, 0));
+        assertRejected("glitchViewAngle (" + (max + 1) + ") must be between 1 and " + max, () -> new GameConfig.Glitch(12, 4, max + 1));
     }
 
     /**
@@ -71,15 +71,15 @@ class GameConfigTest {
      */
     @Test
     void testGlitchCloseRangeMustStayBelowTheGlitchRange() {
-        assertRejected("Glitch close range (12) must be below the glitch range (12)", () -> new GameConfig.Glitch(12, 12, 30));
-        assertRejected("Glitch close range (16) must be below the glitch range (8)", () -> new GameConfig.Glitch(8, 16, 30));
+        assertRejected("glitchCloseRange (12) must be below glitchRange (12)", () -> new GameConfig.Glitch(12, 12, 30));
+        assertRejected("glitchCloseRange (16) must be below glitchRange (8)", () -> new GameConfig.Glitch(8, 16, 30));
     }
 
     @Test
     void testPageProximityVolumeFactorRejectsValuesOutsideTheAllowedRange() {
-        String expected = "Page proximity volume factor must be between 1 and " + GameConfig.PageProximity.MAX_VOLUME_FACTOR;
-        assertRejected(expected, () -> proximityWithFactor(0.5F));
-        assertRejected(expected, () -> proximityWithFactor(GameConfig.PageProximity.MAX_VOLUME_FACTOR + 1));
+        assertRejected("pageProximityVolumeFactor (0.5) must be between 1 and 8", () -> proximityWithFactor(0.5F));
+        assertRejected("pageProximityVolumeFactor (9) must be between 1 and 8",
+                () -> proximityWithFactor(GameConfig.PageProximity.MAX_VOLUME_FACTOR + 1));
     }
 
     /**
@@ -94,9 +94,9 @@ class GameConfigTest {
 
     @Test
     void testPageGlitchMaxLevelRejectsValuesOutsideTheAllowedRange() {
-        String expected = "Page glitch max level must be between 0 and " + GameConfig.PageGlitch.MAX_LEVEL;
-        assertRejected(expected, () -> new GameConfig.PageGlitch(true, 3, -1));
-        assertRejected(expected, () -> new GameConfig.PageGlitch(true, 3, GameConfig.PageGlitch.MAX_LEVEL + 1));
+        int max = GameConfig.PageGlitch.MAX_LEVEL;
+        assertRejected("pageGlitchMaxLevel (-1) must be between 0 and " + max, () -> new GameConfig.PageGlitch(true, 3, -1));
+        assertRejected("pageGlitchMaxLevel (" + (max + 1) + ") must be between 0 and " + max, () -> new GameConfig.PageGlitch(true, 3, max + 1));
     }
 
     @Test

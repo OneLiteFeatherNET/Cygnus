@@ -1,5 +1,10 @@
 package net.onelitefeather.cygnus.common.config;
 
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.between;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.notNegative;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.positive;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.share;
+
 /**
  * Settings for the sprint of the survivors and the appearing of the slender.
  * <p>
@@ -51,18 +56,10 @@ public record StaminaConfig(
      * @throws IllegalArgumentException if a value is out of range
      */
     public StaminaConfig {
-        if (sprintResumeShare <= 0.0D || sprintResumeShare > 1.0D) {
-            throw new IllegalArgumentException("sprintResumeShare (" + sprintResumeShare + ") must be above 0.0 and at most 1.0");
-        }
-        if (regenPerSecond <= 0.0D) {
-            throw new IllegalArgumentException("regenPerSecond (" + regenPerSecond + ") must be above 0.0");
-        }
-        if (slenderReappearCooldownSeconds < 0) {
-            throw new IllegalArgumentException("slenderReappearCooldownSeconds (" + slenderReappearCooldownSeconds + ") must not be negative");
-        }
-        if (slenderDamageRange < 1 || slenderDamageRange > MAX_SLENDER_DAMAGE_RANGE) {
-            throw new IllegalArgumentException("slenderDamageRange (" + slenderDamageRange + ") must be between 1 and " + MAX_SLENDER_DAMAGE_RANGE);
-        }
+        share("sprintResumeShare", sprintResumeShare);
+        positive("regenPerSecond", regenPerSecond);
+        notNegative("slenderReappearCooldownSeconds", slenderReappearCooldownSeconds);
+        between("slenderDamageRange", slenderDamageRange, 1, MAX_SLENDER_DAMAGE_RANGE);
     }
 
     /**
@@ -72,12 +69,11 @@ public record StaminaConfig(
      * @return the sprint settings
      */
     public static StaminaConfig read(ConfigSection section) {
-        StaminaConfig defaults = DEFAULT;
         return section.orDefault("stamina", () -> new StaminaConfig(
-                section.getDouble("sprintResumeShare", defaults.sprintResumeShare()),
-                section.getDouble("regenPerSecond", defaults.regenPerSecond()),
-                section.getInt("slenderReappearCooldownSeconds", defaults.slenderReappearCooldownSeconds()),
-                section.getInt("slenderDamageRange", defaults.slenderDamageRange())
-        ), defaults);
+                section.getDouble("sprintResumeShare", DEFAULT.sprintResumeShare()),
+                section.getDouble("regenPerSecond", DEFAULT.regenPerSecond()),
+                section.getInt("slenderReappearCooldownSeconds", DEFAULT.slenderReappearCooldownSeconds()),
+                section.getInt("slenderDamageRange", DEFAULT.slenderDamageRange())
+        ), DEFAULT);
     }
 }

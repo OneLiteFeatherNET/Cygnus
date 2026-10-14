@@ -1,5 +1,8 @@
 package net.onelitefeather.cygnus.common.config;
 
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.atLeast;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.between;
+
 /**
  * Settings for the survivors' fear.
  * <p>
@@ -56,18 +59,18 @@ public record SanityConfig(
      * @throws IllegalArgumentException if a value is out of range
      */
     public SanityConfig {
-        between("pageFloorWeight", pageFloorWeight);
-        between("pageFoundGain", pageFoundGain);
-        between("sightingGain", sightingGain);
+        between("pageFloorWeight", pageFloorWeight, 0.0D, 1.0D);
+        between("pageFoundGain", pageFoundGain, 0.0D, 1.0D);
+        between("sightingGain", sightingGain, 0.0D, 1.0D);
         atLeast("sightingCooldownSeconds", sightingCooldownSeconds, 1);
-        between("caughtGain", caughtGain);
-        between("selectedGain", selectedGain);
-        between("deathGain", deathGain);
+        between("caughtGain", caughtGain, 0.0D, 1.0D);
+        between("selectedGain", selectedGain, 0.0D, 1.0D);
+        between("deathGain", deathGain, 0.0D, 1.0D);
         atLeast("decayPerSecond", decayPerSecond, 0.0D);
-        between("stalkGainPerSecond", stalkGainPerSecond);
-        between("residualShare", residualShare);
-        between("timeFloorWeight", timeFloorWeight);
-        between("floorCap", floorCap);
+        between("stalkGainPerSecond", stalkGainPerSecond, 0.0D, 1.0D);
+        between("residualShare", residualShare, 0.0D, 1.0D);
+        between("timeFloorWeight", timeFloorWeight, 0.0D, 1.0D);
+        between("floorCap", floorCap, 0.0D, 1.0D);
     }
 
     /**
@@ -77,32 +80,19 @@ public record SanityConfig(
      * @return the fear settings
      */
     public static SanityConfig read(ConfigSection section) {
-        SanityConfig defaults = DEFAULT;
         return section.orDefault("sanity", () -> new SanityConfig(
-                section.getDouble("pageFloorWeight", defaults.pageFloorWeight()),
-                section.getDouble("pageFoundGain", defaults.pageFoundGain()),
-                section.getDouble("sightingGain", defaults.sightingGain()),
-                section.getInt("sightingCooldownSeconds", defaults.sightingCooldownSeconds()),
-                section.getDouble("caughtGain", defaults.caughtGain()),
-                section.getDouble("selectedGain", defaults.selectedGain()),
-                section.getDouble("deathGain", defaults.deathGain()),
-                section.getDouble("decayPerSecond", defaults.decayPerSecond()),
-                section.getDouble("stalkGainPerSecond", defaults.stalkGainPerSecond()),
-                section.getDouble("residualShare", defaults.residualShare()),
-                section.getDouble("timeFloorWeight", defaults.timeFloorWeight()),
-                section.getDouble("floorCap", defaults.floorCap())
-        ), defaults);
-    }
-
-    private static void between(String name, double value) {
-        if (value < 0.0D || value > 1.0D) {
-            throw new IllegalArgumentException(name + " (" + value + ") must be between 0.0 and 1.0");
-        }
-    }
-
-    private static void atLeast(String name, double value, double minimum) {
-        if (value < minimum) {
-            throw new IllegalArgumentException(name + " (" + value + ") must be at least " + minimum);
-        }
+                section.getDouble("pageFloorWeight", DEFAULT.pageFloorWeight()),
+                section.getDouble("pageFoundGain", DEFAULT.pageFoundGain()),
+                section.getDouble("sightingGain", DEFAULT.sightingGain()),
+                section.getInt("sightingCooldownSeconds", DEFAULT.sightingCooldownSeconds()),
+                section.getDouble("caughtGain", DEFAULT.caughtGain()),
+                section.getDouble("selectedGain", DEFAULT.selectedGain()),
+                section.getDouble("deathGain", DEFAULT.deathGain()),
+                section.getDouble("decayPerSecond", DEFAULT.decayPerSecond()),
+                section.getDouble("stalkGainPerSecond", DEFAULT.stalkGainPerSecond()),
+                section.getDouble("residualShare", DEFAULT.residualShare()),
+                section.getDouble("timeFloorWeight", DEFAULT.timeFloorWeight()),
+                section.getDouble("floorCap", DEFAULT.floorCap())
+        ), DEFAULT);
     }
 }

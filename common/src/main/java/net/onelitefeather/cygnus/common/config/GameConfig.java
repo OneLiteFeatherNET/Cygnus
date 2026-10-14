@@ -1,5 +1,9 @@
 package net.onelitefeather.cygnus.common.config;
 
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.atLeast;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.below;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.between;
+
 import net.kyori.adventure.key.Key;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -124,8 +128,6 @@ public record GameConfig(
      */
     public static final float DEFAULT_LOBBY_ATMOSPHERE_SHARE = 0.3F;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GameConfig.class);
-
     /**
      * The configuration used when there is no config file, or nothing in it can be read.
      * <p>
@@ -156,9 +158,7 @@ public record GameConfig(
     );
 
     public GameConfig {
-        if (lobbyAtmosphereShare < 0.0F || lobbyAtmosphereShare > 1.0F) {
-            throw new IllegalArgumentException("Lobby atmosphere share must be between 0 and 1");
-        }
+        between("lobbyAtmosphereShare", lobbyAtmosphereShare, 0.0D, 1.0D);
     }
 
     /**
@@ -200,12 +200,11 @@ public record GameConfig(
      * @return the share
      */
     private static float readLobbyAtmosphereShare(ConfigSection root) {
-        float share = root.getFloat("lobbyAtmosphereShare", DEFAULT_LOBBY_ATMOSPHERE_SHARE);
-        if (share < 0.0F || share > 1.0F) {
-            LOGGER.warn("Invalid values for lobby atmosphere share: {} is not between 0 and 1. Falling back to its defaults", share);
-            return DEFAULT_LOBBY_ATMOSPHERE_SHARE;
-        }
-        return share;
+        return root.orDefault("lobby atmosphere share", () -> {
+            float share = root.getFloat("lobbyAtmosphereShare", DEFAULT_LOBBY_ATMOSPHERE_SHARE);
+            between("lobbyAtmosphereShare", share, 0.0D, 1.0D);
+            return share;
+        }, DEFAULT_LOBBY_ATMOSPHERE_SHARE);
     }
 
     /**
@@ -221,9 +220,7 @@ public record GameConfig(
         public static final Round DEFAULT = new Round(2, 13, 30, 900);
 
         public Round {
-            if (lobbyTime <= FORCE_START_TIME) {
-                throw new IllegalArgumentException("Lobby time must be greater than " + FORCE_START_TIME);
-            }
+            atLeast("lobbyTime", lobbyTime, FORCE_START_TIME + 1);
         }
 
         /**
@@ -254,12 +251,8 @@ public record GameConfig(
         public static final Teams DEFAULT = new Teams(1, 12);
 
         public Teams {
-            if (slenderSize < MIN_SLENDER_SIZE) {
-                throw new IllegalArgumentException("Slender team size must be at least " + MIN_SLENDER_SIZE);
-            }
-            if (survivorSize < MIN_SLENDER_SIZE + 1) {
-                throw new IllegalArgumentException("Survivor team size must be at least " + (MIN_SLENDER_SIZE + 1));
-            }
+            atLeast("slenderTeamSize", slenderSize, MIN_SLENDER_SIZE);
+            atLeast("survivorTeamSize", survivorSize, MIN_SLENDER_SIZE + 1);
         }
 
         /**
@@ -371,12 +364,8 @@ public record GameConfig(
         public static final PageProximity DEFAULT = new PageProximity(true, 20, DEFAULT_SOUND, DEFAULT_VOLUME_FACTOR);
 
         public PageProximity {
-            if (range < 1 || range > MAX_RANGE) {
-                throw new IllegalArgumentException("Page proximity range must be between 1 and " + MAX_RANGE);
-            }
-            if (volumeFactor < 1.0F || volumeFactor > MAX_VOLUME_FACTOR) {
-                throw new IllegalArgumentException("Page proximity volume factor must be between 1 and " + MAX_VOLUME_FACTOR);
-            }
+            between("pageProximityRange", range, 1, MAX_RANGE);
+            between("pageProximityVolumeFactor", volumeFactor, 1.0D, MAX_VOLUME_FACTOR);
         }
 
         /**
@@ -415,9 +404,7 @@ public record GameConfig(
         public static final DamageSound DEFAULT = new DamageSound(true, 20, DEFAULT_SOUND);
 
         public DamageSound {
-            if (cooldown < 1) {
-                throw new IllegalArgumentException("Damage sound cooldown must be at least 1 tick");
-            }
+            atLeast("damageSoundCooldown", cooldown, 1);
         }
 
         /**
@@ -456,19 +443,10 @@ public record GameConfig(
         public static final Glitch DEFAULT = new Glitch(12, 4, 30);
 
         public Glitch {
-            if (range < 1 || range > MAX_RANGE) {
-                throw new IllegalArgumentException("Glitch range must be between 1 and " + MAX_RANGE);
-            }
-            if (closeRange < 1) {
-                throw new IllegalArgumentException("Glitch close range must be at least 1 block");
-            }
-            if (viewAngle < 1 || viewAngle > MAX_VIEW_ANGLE) {
-                throw new IllegalArgumentException("Glitch view angle must be between 1 and " + MAX_VIEW_ANGLE + " degrees");
-            }
-            if (closeRange >= range) {
-                throw new IllegalArgumentException(
-                        "Glitch close range (" + closeRange + ") must be below the glitch range (" + range + ")");
-            }
+            between("glitchRange", range, 1, MAX_RANGE);
+            atLeast("glitchCloseRange", closeRange, 1);
+            between("glitchViewAngle", viewAngle, 1, MAX_VIEW_ANGLE);
+            below("glitchCloseRange", closeRange, "glitchRange", range);
         }
 
         /**
@@ -533,13 +511,8 @@ public record GameConfig(
         }
 
         public PageGlitch {
-            if (maxLevel < 0 || maxLevel > MAX_LEVEL) {
-                throw new IllegalArgumentException("Page glitch max level must be between 0 and " + MAX_LEVEL);
-            }
-            if (pulseSeconds < 1 || pulseSeconds > MAX_PULSE_SECONDS) {
-                throw new IllegalArgumentException(
-                        "Page glitch pulse must be between 1 and " + MAX_PULSE_SECONDS + " seconds");
-            }
+            between("pageGlitchMaxLevel", maxLevel, 0, MAX_LEVEL);
+            between("pageGlitchPulseSeconds", pulseSeconds, 1, MAX_PULSE_SECONDS);
         }
 
         /**

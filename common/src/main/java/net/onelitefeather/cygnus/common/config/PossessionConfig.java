@@ -1,5 +1,8 @@
 package net.onelitefeather.cygnus.common.config;
 
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.atLeast;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.notNegative;
+
 /**
  * Settings for the slender's look through the eyes of the creek.
  * <p>
@@ -37,18 +40,10 @@ public record PossessionConfig(
      * @throws IllegalArgumentException if a value is out of range
      */
     public PossessionConfig {
-        if (maxSeconds < 1) {
-            throw new IllegalArgumentException("maxSeconds (" + maxSeconds + ") must be at least 1");
-        }
-        if (cooldownSeconds < 0) {
-            throw new IllegalArgumentException("cooldownSeconds (" + cooldownSeconds + ") must not be negative");
-        }
-        if (sightFactor < 1.0D) {
-            throw new IllegalArgumentException("sightFactor (" + sightFactor + ") must be at least 1.0");
-        }
-        if (startDelaySeconds < 0) {
-            throw new IllegalArgumentException("startDelaySeconds (" + startDelaySeconds + ") must not be negative");
-        }
+        atLeast("maxSeconds", maxSeconds, 1);
+        notNegative("cooldownSeconds", cooldownSeconds);
+        atLeast("sightFactor", sightFactor, 1.0D);
+        notNegative("startDelaySeconds", startDelaySeconds);
     }
 
     /**
@@ -59,12 +54,11 @@ public record PossessionConfig(
      * @return the possession settings
      */
     public static PossessionConfig read(ConfigSection section) {
-        PossessionConfig defaults = DEFAULT;
         return section.orDefault("possession", () -> new PossessionConfig(
-                section.getInt("maxSeconds", defaults.maxSeconds()),
-                section.getInt("cooldownSeconds", defaults.cooldownSeconds()),
-                section.getDouble("sightFactor", defaults.sightFactor()),
-                section.getInt("startDelaySeconds", defaults.startDelaySeconds())
-        ), defaults);
+                section.getInt("maxSeconds", DEFAULT.maxSeconds()),
+                section.getInt("cooldownSeconds", DEFAULT.cooldownSeconds()),
+                section.getDouble("sightFactor", DEFAULT.sightFactor()),
+                section.getInt("startDelaySeconds", DEFAULT.startDelaySeconds())
+        ), DEFAULT);
     }
 }

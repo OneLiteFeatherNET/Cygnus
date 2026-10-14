@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -80,16 +81,7 @@ public record ConfigSection(Properties properties, String prefix) {
      * @return the parsed value
      */
     public int getInt(String key, int fallback) {
-        String value = this.getString(key);
-        if (value == null) {
-            return fallback;
-        }
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException _) {
-            LOGGER.warn("Failed to parse integer config value for key '{}': '{}'. Falling back to default: {}", this.key(key), value, fallback);
-            return fallback;
-        }
+        return this.parse(key, fallback, Integer::parseInt, "integer");
     }
 
     /**
@@ -100,16 +92,7 @@ public record ConfigSection(Properties properties, String prefix) {
      * @return the parsed value
      */
     public float getFloat(String key, float fallback) {
-        String value = this.getString(key);
-        if (value == null) {
-            return fallback;
-        }
-        try {
-            return Float.parseFloat(value);
-        } catch (NumberFormatException _) {
-            LOGGER.warn("Failed to parse decimal config value for key '{}': '{}'. Falling back to default: {}", this.key(key), value, fallback);
-            return fallback;
-        }
+        return this.parse(key, fallback, Float::parseFloat, "decimal");
     }
 
     /**
@@ -121,16 +104,7 @@ public record ConfigSection(Properties properties, String prefix) {
      * @return the parsed value
      */
     public double getDouble(String key, double fallback) {
-        String value = this.getString(key);
-        if (value == null) {
-            return fallback;
-        }
-        try {
-            return Double.parseDouble(value);
-        } catch (NumberFormatException _) {
-            LOGGER.warn("Failed to parse decimal config value for key '{}': '{}'. Falling back to default: {}", this.key(key), value, fallback);
-            return fallback;
-        }
+        return this.parse(key, fallback, Double::parseDouble, "decimal");
     }
 
     /**
@@ -143,18 +117,15 @@ public record ConfigSection(Properties properties, String prefix) {
      * @return the parsed flag
      */
     public boolean getBoolean(String key, boolean fallback) {
-        String value = this.getString(key);
-        if (value == null) {
-            return fallback;
-        }
-        if ("true".equalsIgnoreCase(value)) {
-            return true;
-        }
-        if ("false".equalsIgnoreCase(value)) {
-            return false;
-        }
-        LOGGER.warn("Failed to parse boolean config value for key '{}': '{}'. Falling back to default: {}", this.key(key), value, fallback);
-        return fallback;
+        return this.parse(key, fallback, value -> {
+            if ("true".equalsIgnoreCase(value)) {
+                return true;
+            }
+            if ("false".equalsIgnoreCase(value)) {
+                return false;
+            }
+            throw new IllegalArgumentException(value);
+        }, "boolean");
     }
 
     /**
@@ -166,14 +137,48 @@ public record ConfigSection(Properties properties, String prefix) {
      * @return the parsed sound key
      */
     public Key getSound(String key, Key fallback) {
+        return this.parse(key, fallback, Key::key, "sound key");
+    }
+
+    /**
+     * Reads a constant of an enum, ignoring case.
+     *
+     * @param key      the key inside this section
+     * @param fallback the constant to use when the key is absent or names no constant
+     * @param <E>      the enum's type
+     * @return the parsed constant
+     */
+    public <E extends Enum<E>> E getEnum(String key, E fallback) {
+        return this.parse(key, fallback, value -> {
+            for (E constant : fallback.getDeclaringClass().getEnumConstants()) {
+                if (constant.name().equalsIgnoreCase(value)) {
+                    return constant;
+                }
+            }
+            throw new IllegalArgumentException(value);
+        }, fallback.getDeclaringClass().getSimpleName());
+    }
+
+    /**
+     * Reads a value with the given parser. Every getter shares this: a missing key gives the
+     * fallback, an unreadable one gives it too, with a warning.
+     *
+     * @param key      the key inside this section
+     * @param fallback the value to use when the key is absent or unreadable
+     * @param parser   turns the trimmed value into the result, throwing if it cannot
+     * @param kind     what the value should be, for the warning
+     * @param <T>      the value's type
+     * @return the parsed value
+     */
+    private <T> T parse(String key, T fallback, Function<String, T> parser, String kind) {
         String value = this.getString(key);
         if (value == null) {
             return fallback;
         }
         try {
-            return Key.key(value);
-        } catch (InvalidKeyException exception) {
-            LOGGER.warn("'{}' is not a valid sound key: '{}'. Falling back to default: {}", this.key(key), value, fallback, exception);
+            return parser.apply(value);
+        } catch (IllegalArgumentException | InvalidKeyException _) {
+            LOGGER.warn("Failed to parse {} config value for key '{}': '{}'. Falling back to default: {}", kind, this.key(key), value, fallback);
             return fallback;
         }
     }
