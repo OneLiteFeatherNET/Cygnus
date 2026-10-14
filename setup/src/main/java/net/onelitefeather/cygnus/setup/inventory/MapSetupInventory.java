@@ -12,13 +12,16 @@ import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.onelitefeather.cygnus.setup.data.GameData;
+import net.onelitefeather.cygnus.setup.data.InstanceSetupData;
+import net.onelitefeather.cygnus.setup.data.LobbyData;
 import net.onelitefeather.cygnus.setup.event.MapSetupSelectEvent;
-import net.onelitefeather.cygnus.setup.util.SetupMode;
 import net.theevilreaper.aves.map.MapEntry;
 import org.jetbrains.annotations.Contract;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 /**
@@ -82,8 +85,8 @@ public class MapSetupInventory extends GlobalInventoryBuilder {
         result.accept(ClickHolder.cancelClick());
 
         if (clickType instanceof Click.Left || clickType instanceof Click.Right) {
-            var mode = clickType instanceof Click.Left ? SetupMode.LOBBY : SetupMode.GAME;
-            EventDispatcher.callCancellable(new MapSetupSelectEvent(player, currentMap, mode), player::closeInventory);
+            BiFunction<Player, MapEntry, InstanceSetupData> dataFactory = clickType instanceof Click.Left ? LobbyData::new : GameData::new;
+            EventDispatcher.callCancellable(new MapSetupSelectEvent(player, currentMap, dataFactory), player::closeInventory);
 
         }
     }

@@ -5,7 +5,6 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.event.EventListener;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.instance.AddEntityToInstanceEvent;
-import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.onelitefeather.cygnus.setup.atmosphere.AtmospherePreviewService;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
@@ -24,7 +23,6 @@ import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.inventory.MapSetupInventory;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.listener.InstanceAddListener;
-import net.onelitefeather.cygnus.setup.listener.InstanceRemoveListener;
 import net.onelitefeather.cygnus.setup.listener.MapSetupSelectListener;
 import net.onelitefeather.cygnus.setup.listener.PageCreationListener;
 import net.onelitefeather.cygnus.setup.listener.PlayerSpawnListener;
@@ -37,7 +35,6 @@ import net.onelitefeather.cygnus.setup.listener.dialog.DialogRequestListener;
 import net.onelitefeather.cygnus.setup.listener.map.MapSetupSaveListener;
 import net.onelitefeather.cygnus.setup.listener.position.PositionSetListener;
 import net.onelitefeather.cygnus.setup.map.SetupMapProvider;
-import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.theevilreaper.aves.util.functional.PlayerConsumer;
 import net.onelitefeather.guira.SetupDataService;
 import net.onelitefeather.guira.data.SetupData;
@@ -104,8 +101,7 @@ public class SetupExtension implements ListenerHandling {
                 .ignoreCancelled(false)
                 .handler(new CreekRouteListener(this.dataService))
                 .build());
-        manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceUUID));
-        manager.addListener(RemoveEntityFromInstanceEvent.class, new InstanceRemoveListener(instanceUUID));
+        manager.addListener(AddEntityToInstanceEvent.class, new InstanceAddListener(instanceUUID, this.dataService));
         registerCancelListener(manager);
 
         //Dialog listener
@@ -125,7 +121,6 @@ public class SetupExtension implements ListenerHandling {
             this.mapProvider.teleportToSpawn(player, true);
             SetupItems.setMapSelection(player);
             player.setGameMode(GameMode.SURVIVAL);
-            player.removeTag(SetupTags.SETUP_ID_TAG);
         };
         node.addListener(MapSetupSaveEvent.class, new MapSetupSaveListener(this.dataService, teleport));
     }

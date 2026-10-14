@@ -1,7 +1,6 @@
 package net.onelitefeather.cygnus.setup.listener;
 
 import net.onelitefeather.cygnus.setup.data.GameData;
-import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.onelitefeather.guira.SetupDataService;
 import net.onelitefeather.guira.data.SetupData;
 import net.theevilreaper.aves.util.Components;
@@ -32,8 +31,6 @@ public final class PageCreationListener implements Consumer<PlayerBlockBreakEven
         event.setCancelled(true);
 
         Player player = event.getPlayer();
-
-        if (!player.hasTag(SetupTags.SETUP_ID_TAG)) return;
 
         SetupData setupData = this.setupData.get(player.getUuid()).orElse(null);
 

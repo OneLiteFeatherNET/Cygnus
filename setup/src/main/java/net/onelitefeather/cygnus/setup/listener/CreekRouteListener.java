@@ -7,7 +7,6 @@ import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.instance.block.Block;
 import net.onelitefeather.cygnus.setup.data.GameData;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
-import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.onelitefeather.guira.SetupDataService;
 import net.onelitefeather.guira.data.SetupData;
 
@@ -34,8 +33,6 @@ public final class CreekRouteListener implements Consumer<PlayerBlockBreakEvent>
         event.setCancelled(true);
 
         Player player = event.getPlayer();
-
-        if (!player.hasTag(SetupTags.SETUP_ID_TAG)) return;
 
         SetupData setupData = this.setupService.get(player.getUuid()).orElse(null);
 

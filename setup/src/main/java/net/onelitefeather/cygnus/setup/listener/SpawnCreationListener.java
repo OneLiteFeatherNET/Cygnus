@@ -11,7 +11,6 @@ import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.setup.data.GameData;
 import net.onelitefeather.cygnus.setup.data.InstanceSetupData;
-import net.onelitefeather.cygnus.setup.util.SetupTags;
 import net.onelitefeather.guira.SetupDataService;
 import net.onelitefeather.guira.data.SetupData;
 import net.theevilreaper.aves.util.Components;
@@ -31,8 +30,6 @@ public class SpawnCreationListener implements Consumer<PlayerBlockBreakEvent> {
         event.setCancelled(true);
 
         Player player = event.getPlayer();
-
-        if (!player.hasTag(SetupTags.SETUP_ID_TAG)) return;
 
         SetupData setupData = this.setupService.get(player.getUuid()).orElse(null);
 
