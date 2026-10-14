@@ -23,22 +23,22 @@ class StaminaConfigTest {
     @Test
     @DisplayName("The resume share has to be above 0 and at most 1")
     void resumeShareRange() {
-        assertRejected("sprintResumeShare", () -> new StaminaConfig(0.0D, 1.25D, 5));
-        assertRejected("sprintResumeShare", () -> new StaminaConfig(1.1D, 1.25D, 5));
-        assertDoesNotThrow(() -> new StaminaConfig(1.0D, 1.25D, 5));
+        assertRejected("sprintResumeShare", () -> new StaminaConfig(0.0D, 1.25D, 5, StaminaConfig.DEFAULT_SLENDER_DAMAGE_RANGE));
+        assertRejected("sprintResumeShare", () -> new StaminaConfig(1.1D, 1.25D, 5, StaminaConfig.DEFAULT_SLENDER_DAMAGE_RANGE));
+        assertDoesNotThrow(() -> new StaminaConfig(1.0D, 1.25D, 5, StaminaConfig.DEFAULT_SLENDER_DAMAGE_RANGE));
     }
 
     @Test
     @DisplayName("The bar has to regenerate at all")
     void regenAboveZero() {
-        assertRejected("regenPerSecond", () -> new StaminaConfig(0.3D, 0.0D, 5));
+        assertRejected("regenPerSecond", () -> new StaminaConfig(0.3D, 0.0D, 5, StaminaConfig.DEFAULT_SLENDER_DAMAGE_RANGE));
     }
 
     @Test
     @DisplayName("A cooldown of 0 turns it off, below that is rejected")
     void cooldownNotNegative() {
-        assertRejected("slenderReappearCooldownSeconds", () -> new StaminaConfig(0.3D, 1.25D, -1));
-        assertDoesNotThrow(() -> new StaminaConfig(0.3D, 1.25D, 0));
+        assertRejected("slenderReappearCooldownSeconds", () -> new StaminaConfig(0.3D, 1.25D, -1, StaminaConfig.DEFAULT_SLENDER_DAMAGE_RANGE));
+        assertDoesNotThrow(() -> new StaminaConfig(0.3D, 1.25D, 0, StaminaConfig.DEFAULT_SLENDER_DAMAGE_RANGE));
     }
 
     @Test

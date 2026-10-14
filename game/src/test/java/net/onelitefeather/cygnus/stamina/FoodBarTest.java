@@ -96,7 +96,7 @@ class FoodBarTest extends CygnusPlayerTestBase {
     void usesTheGivenConfig(Env env) {
         Instance instance = env.createFlatInstance();
         CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance, new Pos(0, 40, 0));
-        FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina(player, new StaminaConfig(0.5D, 2.0D, 5));
+        FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina(player, new StaminaConfig(0.5D, 2.0D, 5, StaminaConfig.DEFAULT_SLENDER_DAMAGE_RANGE));
         bar.drain();
 
         for (int i = 0; i < 4; i++) {

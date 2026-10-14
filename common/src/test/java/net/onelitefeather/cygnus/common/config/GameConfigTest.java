@@ -102,7 +102,6 @@ class GameConfigTest {
     @Test
     void testPageGlitchDefaultsToTheWeakestLevel() {
         assertEquals(0, GameConfig.PageGlitch.DEFAULT.maxLevel());
-        assertEquals(0, new GameConfig.PageGlitch(true, 3).maxLevel());
     }
 
     private static GameConfig.PageProximity proximityWithFactor(float volumeFactor) {

@@ -39,18 +39,6 @@ public record StaminaConfig(
     public static final StaminaConfig DEFAULT = new StaminaConfig(0.3D, 1.25D, 5, DEFAULT_SLENDER_DAMAGE_RANGE);
 
     /**
-     * Creates the settings with the default damage range.
-     *
-     * @param sprintResumeShare              how full a survivor's bar must be to sprint again
-     * @param regenPerSecond                 how many points of the survivor's bar come back per second
-     * @param slenderReappearCooldownSeconds how long the slender stays hidden at least once he vanished
-     * @since 2.15.0
-     */
-    public StaminaConfig(double sprintResumeShare, double regenPerSecond, int slenderReappearCooldownSeconds) {
-        this(sprintResumeShare, regenPerSecond, slenderReappearCooldownSeconds, DEFAULT_SLENDER_DAMAGE_RANGE);
-    }
-
-    /**
      * Checks the values.
      *
      * @throws IllegalArgumentException if a value is out of range

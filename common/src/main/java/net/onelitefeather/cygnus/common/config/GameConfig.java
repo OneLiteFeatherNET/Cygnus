@@ -500,16 +500,6 @@ public record GameConfig(
 
         public static final PageGlitch DEFAULT = new PageGlitch(true, DEFAULT_PULSE_SECONDS, DEFAULT_MAX_LEVEL);
 
-        /**
-         * Creates a page glitch with the default cap.
-         *
-         * @param enabled      whether the slender's screen tears at all
-         * @param pulseSeconds how long a single find holds the pulse, in seconds
-         */
-        public PageGlitch(boolean enabled, int pulseSeconds) {
-            this(enabled, pulseSeconds, DEFAULT_MAX_LEVEL);
-        }
-
         public PageGlitch {
             between("pageGlitchMaxLevel", maxLevel, 0, MAX_LEVEL);
             between("pageGlitchPulseSeconds", pulseSeconds, 1, MAX_PULSE_SECONDS);

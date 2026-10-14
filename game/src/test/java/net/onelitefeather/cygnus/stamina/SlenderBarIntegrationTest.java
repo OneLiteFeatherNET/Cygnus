@@ -150,7 +150,7 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
 
         // Without the reappear cooldown, so only the regeneration threshold is under test
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player,
-                new StaminaConfig(0.3D, 1.25D, 0), System::currentTimeMillis);
+                new StaminaConfig(0.3D, 1.25D, 0, StaminaConfig.DEFAULT_SLENDER_DAMAGE_RANGE), System::currentTimeMillis);
         slenderBar.start();
         slenderBar.changeStatus(); // READY -> DRAINING
 
@@ -344,7 +344,7 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance);
         // Without the reappear cooldown, so only the regeneration threshold is under test
         SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(player,
-                new StaminaConfig(0.3D, 1.25D, 0), System::currentTimeMillis);
+                new StaminaConfig(0.3D, 1.25D, 0, StaminaConfig.DEFAULT_SLENDER_DAMAGE_RANGE), System::currentTimeMillis);
         slenderBar.start();
         slenderBar.changeStatus(); // READY -> DRAINING
         for (int i = 0; i < 32; i++) {
