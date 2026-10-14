@@ -3,7 +3,9 @@ package net.onelitefeather.cygnus.glitch;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.Event;
 import net.minestom.server.event.EventDispatcher;
+import net.minestom.server.event.EventNode;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
@@ -16,6 +18,8 @@ import net.onelitefeather.cygnus.stamina.StaminaBar;
 import net.onelitefeather.cygnus.gaze.GazeSink;
 import net.onelitefeather.cygnus.gaze.SlenderGaze;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -49,161 +53,118 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
     /** The strongest level there is. */
     private static final int WORST = SlenderGaze.LEVELS - 1;
 
+    private final List<EventNode<Event>> nodes = new ArrayList<>();
+    private final RecordingSink sink = new RecordingSink();
+    private Env env;
+    private Instance instance;
+    private Player slender;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.env = env;
+        this.instance = env.createFlatInstance();
+        this.slender = env.createPlayer(this.instance);
+    }
+
+    @AfterEach
+    void tearDown() {
+        this.nodes.forEach(this.env.process().eventHandler()::removeChild);
+        this.env.destroyInstance(this.instance, true);
+    }
+
     @Test
     @DisplayName("Six of eight pages hold the screen at the first level once the pulse is gone")
-    void sixOfEightPagesHoldTheFirstLevel(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(true), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void sixOfEightPagesHoldTheFirstLevel() {
+        PageGlitchService service = start(config(true));
 
         EventDispatcher.call(new PageFoundEvent(slender, 6, MIN_ROUND_PAGES));
         tick(service, PULSE_SECONDS);
 
         assertEquals(1, sink.lastLevel(), "the glitch has to start slowly, three quarters in is still only the first level");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A find at six of eight pages pulses to the second level, not the worst")
-    void aFindAtSixOfEightDoesNotHitTheWorst(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(true), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void aFindAtSixOfEightDoesNotHitTheWorst() {
+        start(config(true));
 
         EventDispatcher.call(new PageFoundEvent(slender, 6, MIN_ROUND_PAGES));
 
         assertEquals(2, sink.lastLevel(), "the worst level is for the end of the round, not for the sixth page");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The last page of the smallest round still reaches the worst level")
-    void theLastOfEightPagesIsTheWorst(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(true), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void theLastOfEightPagesIsTheWorst() {
+        PageGlitchService service = start(config(true));
 
         EventDispatcher.call(new PageFoundEvent(slender, MIN_ROUND_PAGES, MIN_ROUND_PAGES));
         tick(service, PULSE_SECONDS);
 
         assertEquals(WORST, sink.lastLevel(), "the curve may start slowly but it has to arrive");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("With the default cap every page count settles at the weakest level")
-    void theDefaultCapHoldsEveryBaselineAtTheWeakestLevel(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(cappedConfig(), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void theDefaultCapHoldsEveryBaselineAtTheWeakestLevel() {
+        PageGlitchService service = start(cappedConfig());
 
         for (int found = 1; found <= MIN_ROUND_PAGES; found++) {
             EventDispatcher.call(new PageFoundEvent(slender, found, MIN_ROUND_PAGES));
             tick(service, PULSE_SECONDS);
             assertEquals(0, sink.lastLevel(), "baseline after " + found + " of " + MIN_ROUND_PAGES + " pages");
         }
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("With the default cap a find's pulse never rises above the weakest level")
-    void theDefaultCapHoldsEveryPulseAtTheWeakestLevel(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(cappedConfig(), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void theDefaultCapHoldsEveryPulseAtTheWeakestLevel() {
+        PageGlitchService service = start(cappedConfig());
 
         for (int found = 1; found <= MIN_ROUND_PAGES; found++) {
             EventDispatcher.call(new PageFoundEvent(slender, found, MIN_ROUND_PAGES));
             assertEquals(0, sink.lastLevel(), "pulse at " + found + " of " + MIN_ROUND_PAGES + " pages");
             tick(service, PULSE_SECONDS);
         }
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("With the default cap the screen is still clean before the first page")
-    void theDefaultCapKeepsTheScreenCleanBeforeTheFirstPage(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(cappedConfig(), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-
-        EventDispatcher.call(new GameStartEvent());
+    void theDefaultCapKeepsTheScreenCleanBeforeTheFirstPage() {
+        PageGlitchService service = start(cappedConfig());
         service.tick();
 
         assertEquals(List.of(), sink.levels, "the cap lowers levels, it does not invent one before a page goes");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A cap of one limits the last page to the second level")
-    void aCapOfOneLimitsTheLastPage(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(new GameConfig.PageGlitch(true, PULSE_SECONDS, 1), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void aCapOfOneLimitsTheLastPage() {
+        start(new GameConfig.PageGlitch(true, PULSE_SECONDS, 1));
 
         EventDispatcher.call(new PageFoundEvent(slender, MIN_ROUND_PAGES, MIN_ROUND_PAGES));
 
         assertEquals(1, sink.lastLevel(), "neither the baseline nor the pulse may pass the cap");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("While he is visible his screen stays clean, however many pages are gone")
-    void aVisibleSlenderGetsNoGlitch(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
+    void aVisibleSlenderGetsNoGlitch() {
         AtomicBoolean invisible = new AtomicBoolean(false);
-        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get(), TickSections.NONE);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+        PageGlitchService service = start(new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get(), TickSections.NONE));
 
         EventDispatcher.call(new PageFoundEvent(slender, 2, MIN_ROUND_PAGES));
         tick(service, PULSE_SECONDS);
         EventDispatcher.call(new PageFoundEvent(slender, MIN_ROUND_PAGES, MIN_ROUND_PAGES));
 
         assertEquals(List.of(), sink.levels, "a hunting slender must not lose sight to his own glitch");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Turning invisible shows the level the round has reached, turning visible clears it at once")
-    void theToggleMovesTheGlitchImmediately(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
+    void theToggleMovesTheGlitchImmediately() {
         AtomicBoolean invisible = new AtomicBoolean(false);
-        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get(), TickSections.NONE);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+        PageGlitchService service = start(new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get(), TickSections.NONE));
         EventDispatcher.call(new PageFoundEvent(slender, MIN_ROUND_PAGES, MIN_ROUND_PAGES));
         tick(service, PULSE_SECONDS);
 
@@ -214,19 +175,12 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         invisible.set(false);
         EventDispatcher.call(new StaminaStateChangeEvent(slender, StaminaBar.State.DRAINING));
         assertEquals(SlenderGaze.NONE, sink.lastLevel(), "no tick may pass with a glitch up while he hunts");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A toggle after the round has ended does not bring the carrier back")
-    void aToggleAfterTheRoundStaysAway(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> true, TickSections.NONE);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void aToggleAfterTheRoundStaysAway() {
+        PageGlitchService service = start(new PageGlitchService(config(true), sink, () -> slender, _ -> true, TickSections.NONE));
         EventDispatcher.call(new PageFoundEvent(slender, 1, MIN_ROUND_PAGES));
         service.stop();
         sink.attached.clear();
@@ -236,20 +190,13 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
 
         assertEquals(List.of(), sink.attached, "a finished round must not attach the carrier again");
         assertEquals(List.of(), sink.levels, "a finished round has nothing to draw");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A pulse keeps counting down while he is visible")
-    void thePulseRunsOnWhileHeIsVisible(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
+    void thePulseRunsOnWhileHeIsVisible() {
         AtomicBoolean invisible = new AtomicBoolean(false);
-        PageGlitchService service = new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get(), TickSections.NONE);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+        PageGlitchService service = start(new PageGlitchService(config(true), sink, () -> slender, _ -> invisible.get(), TickSections.NONE));
         EventDispatcher.call(new PageFoundEvent(slender, 1, PAGES));
         tick(service, PULSE_SECONDS);
 
@@ -257,8 +204,6 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new StaminaStateChangeEvent(slender, StaminaBar.State.REGENERATING));
 
         assertEquals(0, sink.lastLevel(), "the pulse ran out while he was visible, only the baseline is left");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
@@ -273,49 +218,29 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
 
     @Test
     @DisplayName("The slender's screen is clean until the first page goes")
-    void beforeTheFirstPageTheScreenIsClean(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(true), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-
-        EventDispatcher.call(new GameStartEvent());
+    void beforeTheFirstPageTheScreenIsClean() {
+        PageGlitchService service = start(config(true));
         service.tick();
 
         assertEquals(List.of(slender), sink.attached, "he has to be attached, ready for a level");
         assertEquals(List.of(), sink.levels, "an untouched round is not worth a single frame of tearing");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The last page leaves his screen at its worst")
-    void theLastPageIsTheWorstItGets(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(true), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void theLastPageIsTheWorstItGets() {
+        PageGlitchService service = start(config(true));
 
         EventDispatcher.call(new PageFoundEvent(slender, PAGES, PAGES));
         tick(service, PULSE_SECONDS);
 
         assertEquals(WORST, sink.lastLevel(), "every page gone has to read as the worst level there is");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A find pulses one level above where the round stands")
-    void aFindPulsesAboveTheBaseline(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(true), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void aFindPulsesAboveTheBaseline() {
+        PageGlitchService service = start(config(true));
 
         EventDispatcher.call(new PageFoundEvent(slender, 1, PAGES));
 
@@ -324,19 +249,12 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         int baseline = sink.lastLevel();
 
         assertTrue(pulse > baseline, "the moment a page goes has to hit harder than the state it leaves behind");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The pulse holds for the configured seconds")
-    void thePulseHoldsForItsSeconds(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(true), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void thePulseHoldsForItsSeconds() {
+        PageGlitchService service = start(config(true));
         EventDispatcher.call(new PageFoundEvent(slender, 1, PAGES));
         int pulse = sink.lastLevel();
 
@@ -345,62 +263,42 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         tick(service, 1);
 
         assertTrue(sink.lastLevel() < pulse, "once its seconds are up the pulse has to fall back");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("An unchanged level is never sent twice")
-    void anUnchangedLevelIsNeverRepeated(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(true), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void anUnchangedLevelIsNeverRepeated() {
+        PageGlitchService service = start(config(true));
         EventDispatcher.call(new PageFoundEvent(slender, PAGES, PAGES));
 
         tick(service, PULSE_SECONDS + 5);
 
         assertEquals(sink.levels.stream().distinct().toList(), sink.levels,
                 "a sink is only ever told about a change, repeating one costs the client for nothing");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A new slender takes the glitch over from the old one")
     void aNewSlenderTakesItOver(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player first = env.createPlayer(instance);
-        Player second = env.createPlayer(instance, new Pos(4, 40, 0));
-        AtomicReference<Player> slender = new AtomicReference<>(first);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = new PageGlitchService(config(true), sink, slender::get);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+        Player first = this.slender;
+        Player second = env.createPlayer(this.instance, new Pos(4, 40, 0));
+        AtomicReference<Player> current = new AtomicReference<>(first);
+        PageGlitchService service = start(new PageGlitchService(config(true), sink, current::get));
         EventDispatcher.call(new PageFoundEvent(first, PAGES, PAGES));
 
-        slender.set(second);
+        current.set(second);
         service.tick();
 
         assertEquals(List.of(first), sink.detached, "the old slender must not keep a screen full of tearing");
         assertEquals(List.of(first, second), sink.attached);
         assertSame(second, sink.lastPlayer(), "the round's state belongs to whoever is the slender now");
         assertEquals(WORST, sink.lastLevel(), "the pages stay found across a hand-over");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The end of the round takes the glitch off his screen")
-    void theEndOfTheRoundClearsHisScreen(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(true), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-        EventDispatcher.call(new GameStartEvent());
+    void theEndOfTheRoundClearsHisScreen() {
+        PageGlitchService service = start(config(true));
         EventDispatcher.call(new PageFoundEvent(slender, PAGES, PAGES));
 
         EventDispatcher.call(new GameFinishEvent(GameFinishEvent.Reason.ALL_PAGES_FOUND));
@@ -410,61 +308,36 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
         EventDispatcher.call(new GameStartEvent());
         service.tick();
         assertEquals(List.of(), sink.levels, "a fresh round starts with the pages unfound again");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A turned off feature never touches his screen")
-    void aTurnedOffFeatureStaysAway(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(false), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-
-        EventDispatcher.call(new GameStartEvent());
+    void aTurnedOffFeatureStaysAway() {
+        PageGlitchService service = start(config(false));
         EventDispatcher.call(new PageFoundEvent(slender, PAGES, PAGES));
         tick(service, PULSE_SECONDS + 1);
 
         assertEquals(List.of(), sink.attached);
         assertEquals(List.of(), sink.levels);
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Without a slender there is no screen to tear")
-    void withoutASlenderNothingHappens(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = new PageGlitchService(config(true), sink, () -> null);
-        env.process().eventHandler().addChild(service.node());
-
-        EventDispatcher.call(new GameStartEvent());
+    void withoutASlenderNothingHappens() {
+        PageGlitchService service = start(new PageGlitchService(config(true), sink, () -> null));
         tick(service, PULSE_SECONDS + 1);
 
         assertEquals(List.of(), sink.attached);
         assertEquals(List.of(), sink.levels);
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The slender gets the glitch alone: no colour shift")
-    void hisGlitchComesWithoutColourShift(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
-        Player slender = env.createPlayer(instance);
-        RecordingSink sink = new RecordingSink();
-        PageGlitchService service = service(config(true), sink, slender);
-        env.process().eventHandler().addChild(service.node());
-
-        EventDispatcher.call(new GameStartEvent());
+    void hisGlitchComesWithoutColourShift() {
+        start(config(true));
 
         assertEquals(List.of(false), sink.colourShifts,
                 "the purple belongs to the survivors, and darkening the world would blind the hunter");
-
-        env.destroyInstance(instance, true);
     }
 
     /**
@@ -480,15 +353,26 @@ class PageGlitchServiceTest extends CygnusPlayerTestBase {
     }
 
     /**
-     * Builds a service for a slender who never changes.
+     * Builds a service for the slender who never changes, registers it and starts the round.
      *
-     * @param config  the configuration to run with
-     * @param sink    where the levels go
-     * @param slender the slender
+     * @param config the configuration to run with
      * @return the service under test
      */
-    private static PageGlitchService service(GameConfig.PageGlitch config, GazeSink sink, Player slender) {
-        return new PageGlitchService(config, sink, () -> slender);
+    private PageGlitchService start(GameConfig.PageGlitch config) {
+        return this.start(new PageGlitchService(config, this.sink, () -> this.slender));
+    }
+
+    /**
+     * Registers a service and starts the round.
+     *
+     * @param service the service under test
+     * @return the same service
+     */
+    private PageGlitchService start(PageGlitchService service) {
+        this.nodes.add(service.node());
+        this.env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+        return service;
     }
 
     /**

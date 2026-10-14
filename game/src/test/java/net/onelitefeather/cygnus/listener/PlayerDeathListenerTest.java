@@ -18,6 +18,8 @@ import net.onelitefeather.cygnus.view.GameViewImpl;
  import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -32,9 +34,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerDeathListenerTest extends CygnusPlayerTestBase {
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     void testDyingSurvivorFiresSpectatorAddEventForThemselves(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         TeamService teamService = TeamService.of();
@@ -52,13 +65,10 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
                 .followup(event -> assertEquals(player, event.getPlayer()));
 
         listener.accept(new PlayerDeathEvent(player, null, null));
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testDyingSurvivorIsMarkedAsDied(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
 
         TeamService teamService = TeamService.of();
@@ -75,13 +85,10 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         listener.accept(new PlayerDeathEvent(player, null, null));
 
         assertTrue(player.hasDied());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testDyingSurvivorIncrementsSlenderKills(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         CygnusPlayer survivor = (CygnusPlayer) env.createPlayer(instance);
         CygnusPlayer slender = (CygnusPlayer) env.createPlayer(instance);
 
@@ -101,13 +108,10 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         listener.accept(new PlayerDeathEvent(survivor, null, null));
 
         assertEquals(1, slender.getKills());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testDyingPlayerRespawnsWhereTheyFell(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Pos deathPos = new Pos(17.5, 64.0, -23.5, 90f, 10f);
         Player player = env.createPlayer(instance, deathPos);
 
@@ -133,13 +137,10 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         assertEquals(deathPos.blockX(), player.getRespawnPoint().blockX());
         assertEquals(deathPos.blockY(), player.getRespawnPoint().blockY());
         assertEquals(deathPos.blockZ(), player.getRespawnPoint().blockZ());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testDyingSurvivorLosesTheirStaminaBar(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         CygnusPlayer player = (CygnusPlayer) env.createPlayer(instance);
 
         TeamService teamService = TeamService.of();
@@ -159,14 +160,11 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         listener.accept(new PlayerDeathEvent(player, null, null));
 
         assertNull(staminaService.getFoodBar(player), "a player who left the round must not keep a ticking stamina bar");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("The last survivor dying while nobody is the slender leaves the end to the takeover")
     void lastDeathWithoutSlender(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         TeamService teamService = TeamService.of();
@@ -183,14 +181,11 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
 
         assertDoesNotThrow(() -> listener.accept(new PlayerDeathEvent(player, null, null)));
         assertFalse(gamePhase.isFinished(), "without a slender there is no winner to name");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("A dying survivor is struck by lightning")
     void dyingSurvivorIsStruck(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         TeamService teamService = TeamService.of();
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
@@ -203,13 +198,11 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         listener.accept(new PlayerDeathEvent(player, null, null));
 
         assertEquals(1, DeathStrikeTest.bolts(instance).size());
-        env.destroyInstance(instance, true);
     }
 
     @Test
     @DisplayName("Anyone else dying is not struck by lightning")
     void othersAreNotStruck(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         TeamService teamService = TeamService.of();
         teamService.add(Team.of(GameConfig.SLENDER_KEY, 1));
@@ -220,6 +213,5 @@ class PlayerDeathListenerTest extends CygnusPlayerTestBase {
         listener.accept(new PlayerDeathEvent(player, null, null));
 
         assertTrue(DeathStrikeTest.bolts(instance).isEmpty());
-        env.destroyInstance(instance, true);
     }
 }

@@ -14,6 +14,8 @@ import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -31,9 +33,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class JumpScareManagerTest extends CygnusPlayerTestBase {
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     void testRegisterAndUnregisterMannequin(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
 
         DeadPlayerMannequin mannequin = DeadPlayerMannequin.sleeping(player);
@@ -46,13 +59,10 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
 
         manager.unregister(mannequin);
         assertTrue(manager.getActiveMannequins().isEmpty());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testCleanUp(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Player player = env.createPlayer(instance);
         Pos deathPos = new Pos(10, 64, 10);
 
@@ -67,12 +77,10 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         manager.cleanUp();
 
         assertTrue(manager.getActiveMannequins().isEmpty());
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testJumpScarePhantomOnlySentToVictim(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Pos deathPos = new Pos(10, 41, 10);
 
         TestConnection corpseOwnerConn = env.createConnection();
@@ -106,13 +114,10 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         assertEquals(1, victimPackets.size(), "the victim must receive exactly the phantom's spawn packet");
         assertEquals(EntityType.MANNEQUIN, victimPackets.getFirst().type());
         assertTrue(bystanderPackets.isEmpty(), "a bystander must never receive the phantom's spawn packet");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testJumpScareHidesOriginalCorpseOnlyFromVictim(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Pos deathPos = new Pos(10, 41, 10);
 
         TestConnection corpseOwnerConn = env.createConnection();
@@ -138,13 +143,10 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
 
         assertFalse(corpse.isViewer(victim), "the victim must not see the resting corpse while the phantom stands behind them");
         assertTrue(corpse.isViewer(bystander), "a bystander must keep seeing the resting corpse untouched");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testCorpseVisibilityRestoredAfterJumpScareDespawn(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Pos deathPos = new Pos(10, 41, 10);
 
         TestConnection corpseOwnerConn = env.createConnection();
@@ -170,13 +172,10 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
 
         assertTrue(corpse.isViewer(victim), "the victim should see the real corpse again once the phantom despawns");
         assertFalse(destroyPackets.collect().isEmpty(), "the victim should receive a destroy packet for the despawned phantom");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testConcurrentJumpScaresAgainstSameCorpseDoNotLeakVisibility(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Pos deathPos = new Pos(10, 41, 10);
 
         TestConnection corpseOwnerConn = env.createConnection();
@@ -219,13 +218,10 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         for (int i = 0; i < 10; i++) env.tick();
 
         assertTrue(corpse.isViewer(victimB), "victim B should see the corpse again once their own scare despawns");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testPhantomSpawnClampsBeforeSolidWall(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Pos deathPos = new Pos(10, 41, 10);
 
         // Wall directly in the victim's forward direction (yaw 0 -> +Z), one block away,
@@ -255,13 +251,10 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
 
         assertTrue(spawnDistance < 2.2, "the phantom must not spawn past the wall at the full 2.2 block distance");
         assertEquals(0.8, spawnDistance, 0.01, "the phantom should clamp to the last free spot before the wall");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testJumpScareSkippedWhenVictimStandsFlushAgainstWall(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         Pos deathPos = new Pos(10, 41, 10);
 
         // Wall right in front of the victim (less than one collision-check step away), so there
@@ -288,7 +281,5 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         assertFalse(manager.force(victim), "the scare must not fire when there is no free spot for the phantom");
         assertTrue(victimSpawns.collect().isEmpty(), "no phantom spawn packet should be sent when the scare is skipped");
         assertTrue(corpse.isViewer(victim), "the real corpse must stay visible since no scare actually started");
-
-        env.destroyInstance(instance, true);
     }
 }

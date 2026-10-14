@@ -15,6 +15,8 @@ import net.minestom.testing.TestConnection;
 import net.minestom.testing.extension.MicrotusExtension;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -69,9 +71,20 @@ class CygnusPlayerResourcePackKickTest {
         return -1;
     }
 
+    private Instance instance;
+
+    @BeforeEach
+    void setUp(Env env) {
+        this.instance = env.createFlatInstance();
+    }
+
+    @AfterEach
+    void tearDown(Env env) {
+        env.destroyInstance(this.instance, true);
+    }
+
     @Test
     void testKickPopsThePackAndDoesNotDisconnectYet(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         UUID packId = UUID.randomUUID();
         useResourcePackId(env, packId);
         TestConnection connection = env.createConnection();
@@ -85,13 +98,10 @@ class CygnusPlayerResourcePackKickTest {
         assertEquals(-1, indexOfDisconnect(sent),
                 "the disconnect has to wait until the client confirmed the pop, otherwise the proxy may move it first");
         assertTrue(player.isOnline(), "the player stays connected while the client drops the pack");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testDiscardedAckDisconnectsWithTheOriginalMessage(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         UUID packId = UUID.randomUUID();
         useResourcePackId(env, packId);
         TestConnection connection = env.createConnection();
@@ -105,13 +115,10 @@ class CygnusPlayerResourcePackKickTest {
         assertEquals(1, sent.size(), "the ack has to disconnect the player exactly once");
         assertEquals(KICK_MESSAGE, sent.getFirst().message(), "the original kick message has to be kept");
         assertFalse(player.isOnline());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testAckOfAnotherPackDoesNotDisconnect(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         useResourcePackId(env, UUID.randomUUID());
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
@@ -121,13 +128,10 @@ class CygnusPlayerResourcePackKickTest {
                 new ClientResourcePackStatusPacket(UUID.randomUUID(), ResourcePackStatus.DISCARDED), player);
 
         assertTrue(player.isOnline(), "only the pop of our own pack is the ack the kick waits for");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testTimeoutDisconnectsAfterTenTicksAndNotBefore(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         useResourcePackId(env, UUID.randomUUID());
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
@@ -141,13 +145,10 @@ class CygnusPlayerResourcePackKickTest {
 
         assertEquals(1, disconnects.collect().size(), "a client that never answers is disconnected after the timeout");
         assertFalse(player.isOnline());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testAckAndTimeoutDisconnectOnlyOnce(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         UUID packId = UUID.randomUUID();
         useResourcePackId(env, packId);
         TestConnection connection = env.createConnection();
@@ -160,13 +161,10 @@ class CygnusPlayerResourcePackKickTest {
         for (int i = 0; i < 15; i++) env.tick();
 
         assertEquals(1, disconnects.collect().size(), "repeated kicks, the ack and the timeout must not disconnect twice");
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testKickWithoutPackIdStaysImmediate(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         useResourcePackId(env, null);
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
@@ -176,13 +174,10 @@ class CygnusPlayerResourcePackKickTest {
 
         assertEquals(1, disconnects.collect().size(), "without a pack there is nothing to wait for");
         assertFalse(player.isOnline());
-
-        env.destroyInstance(instance, true);
     }
 
     @Test
     void testKickPopsNothingWithoutAResourcePack(@NotNull Env env) {
-        Instance instance = env.createFlatInstance();
         useResourcePackId(env, null);
         TestConnection connection = env.createConnection();
         Player player = connection.connect(instance);
@@ -191,7 +186,5 @@ class CygnusPlayerResourcePackKickTest {
         player.kick(KICK_MESSAGE);
 
         assertEquals(List.of(), pops.collect(), "a service without a ResourcePack must not pop one");
-
-        env.destroyInstance(instance, true);
     }
 }

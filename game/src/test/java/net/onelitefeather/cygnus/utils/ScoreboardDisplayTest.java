@@ -52,7 +52,6 @@ class ScoreboardDisplayTest {
         team.add(TeamNameComponent.class, new TeamNameComponent("Test"));
         teamService.add(team);
         ScoreboardDisplay scoreboardDisplay = new ScoreboardDisplay(teamService.getTeams());
-        assertNotNull(scoreboardDisplay);
         TeamManager teamManager = env.process().team();
         assertEquals(1, teamManager.getTeams().size());
         net.minestom.server.scoreboard.Team testTeam = teamManager.getTeam("Test");
@@ -77,7 +76,6 @@ class ScoreboardDisplayTest {
         Player testPlayer = env.createPlayer(instance);
 
         ScoreboardDisplay scoreboardDisplay = new ScoreboardDisplay(teamService.getTeams());
-        assertNotNull(scoreboardDisplay);
 
         TeamManager teamManager = env.process().team();
         scoreboardDisplay.addPlayer(testPlayer, GameConfig.SLENDER_KEY);
