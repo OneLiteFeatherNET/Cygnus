@@ -208,6 +208,16 @@ public class GameData extends InstanceSetupData {
     }
 
     /**
+     * Handles the builder hitting an entity, see {@link PagePreview#hit(int)}.
+     *
+     * @param entityId the id of the entity the builder hit
+     * @return {@code true} if it was a page of the page preview
+     */
+    public boolean hitPage(int entityId) {
+        return this.pagePreview.hit(entityId);
+    }
+
+    /**
      * Swaps to the survivor mode.
      */
     public void swapSurvivorMode() {
