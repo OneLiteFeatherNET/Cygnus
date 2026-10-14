@@ -425,7 +425,7 @@ class PageProviderTest {
     void testASpotNextToASurvivorIsSkipped() {
         Queue<PageResource> free = new ArrayDeque<>(List.of(NEAR_SURVIVOR, AWAY));
 
-        assertEquals(AWAY, PageProvider.pickSpot(free, SURVIVOR_AT_ORIGIN));
+        assertEquals(new PageProvider.SpotPick(AWAY, 1, false), PageProvider.pickSpot(free, SURVIVOR_AT_ORIGIN));
         assertEquals(List.of(NEAR_SURVIVOR), List.copyOf(free), "the skipped spot waits at the end of the queue");
     }
 
@@ -433,7 +433,7 @@ class PageProviderTest {
     void testWithoutSurvivorsTheNextSpotIsTaken() {
         Queue<PageResource> free = new ArrayDeque<>(List.of(NEAR_SURVIVOR, AWAY));
 
-        assertEquals(NEAR_SURVIVOR, PageProvider.pickSpot(free, List.of()));
+        assertEquals(new PageProvider.SpotPick(NEAR_SURVIVOR, 0, false), PageProvider.pickSpot(free, List.of()));
     }
 
     @Test
@@ -443,13 +443,17 @@ class PageProviderTest {
                 .toList());
         int before = free.size();
 
-        assertNotNull(PageProvider.pickSpot(free, SURVIVOR_AT_ORIGIN), "a page must never stay away");
+        PageProvider.SpotPick pick = PageProvider.pickSpot(free, SURVIVOR_AT_ORIGIN);
+
+        assertNotNull(pick.spot(), "a page must never stay away");
+        assertEquals(PageProvider.SPAWN_ATTEMPTS - 1, pick.skipped());
+        assertTrue(pick.watched(), "the telemetry has to see that this page landed next to a survivor");
         assertEquals(before - 1, free.size());
     }
 
     @Test
     void testAnEmptyQueueHasNoSpot() {
-        assertNull(PageProvider.pickSpot(new ArrayDeque<>(), SURVIVOR_AT_ORIGIN));
+        assertNull(PageProvider.pickSpot(new ArrayDeque<>(), SURVIVOR_AT_ORIGIN).spot());
     }
 
     private static Set<PageResource> spots(int count) {
