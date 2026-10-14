@@ -223,7 +223,7 @@ player at that moment as `cygnus.position.x/y/z` (rounded to 0.1), plus `cygnus.
 
 | Span | Extra attributes |
 | --- | --- |
-| `cygnus.action.page.spawn` | `cygnus.page.id`, `cygnus.page.relocated`; the position is the spot of the page |
+| `cygnus.action.page.spawn` | `cygnus.page.id`, `cygnus.page.relocated`, `cygnus.page.skipped` (spots passed over because a survivor stood within 16 blocks), `cygnus.page.watched` (landed next to a survivor anyway, every spot it tried was); the position is the spot of the page |
 | `cygnus.action.page.found` | `cygnus.page.id`, `cygnus.page.index` (found, including this one), `cygnus.pages.max`, `cygnus.page.out_ms` (time since it appeared), `cygnus.page.spot.x/y/z`, `cygnus.distance` (finder to page) |
 | `cygnus.action.page.expired` | `cygnus.page.id`, `cygnus.page.out_ms`; the position is the spot of the page |
 | `cygnus.action.player.death` | for a survivor with a slender in the round: `cygnus.killer.uuid` and `cygnus.distance` to the slender |

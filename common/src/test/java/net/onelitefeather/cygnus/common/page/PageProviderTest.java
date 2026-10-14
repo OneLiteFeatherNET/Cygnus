@@ -18,10 +18,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.reflect.Field;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -413,6 +415,45 @@ class PageProviderTest {
         }
 
         assertTrue(crowded > lonely, "crowded spots have to wait longer for their turn");
+    }
+
+    private static final PageResource NEAR_SURVIVOR = new PageResource(new Pos(0, 40, 5), Direction.NORTH);
+    private static final PageResource AWAY = new PageResource(new Pos(0, 40, 80), Direction.NORTH);
+    private static final List<Pos> SURVIVOR_AT_ORIGIN = List.of(new Pos(0, 40, 0));
+
+    @Test
+    void testASpotNextToASurvivorIsSkipped() {
+        Queue<PageResource> free = new ArrayDeque<>(List.of(NEAR_SURVIVOR, AWAY));
+
+        assertEquals(new PageProvider.SpotPick(AWAY, 1, false), PageProvider.pickSpot(free, SURVIVOR_AT_ORIGIN));
+        assertEquals(List.of(NEAR_SURVIVOR), List.copyOf(free), "the skipped spot waits at the end of the queue");
+    }
+
+    @Test
+    void testWithoutSurvivorsTheNextSpotIsTaken() {
+        Queue<PageResource> free = new ArrayDeque<>(List.of(NEAR_SURVIVOR, AWAY));
+
+        assertEquals(new PageProvider.SpotPick(NEAR_SURVIVOR, 0, false), PageProvider.pickSpot(free, List.of()));
+    }
+
+    @Test
+    void testWhenEverySpotIsWatchedOneIsTakenAnyway() {
+        Queue<PageResource> free = new ArrayDeque<>(IntStream.range(0, PageProvider.SPAWN_ATTEMPTS + 2)
+                .mapToObj(i -> new PageResource(new Pos(i, 40, 2), Direction.NORTH))
+                .toList());
+        int before = free.size();
+
+        PageProvider.SpotPick pick = PageProvider.pickSpot(free, SURVIVOR_AT_ORIGIN);
+
+        assertNotNull(pick.spot(), "a page must never stay away");
+        assertEquals(PageProvider.SPAWN_ATTEMPTS - 1, pick.skipped());
+        assertTrue(pick.watched(), "the telemetry has to see that this page landed next to a survivor");
+        assertEquals(before - 1, free.size());
+    }
+
+    @Test
+    void testAnEmptyQueueHasNoSpot() {
+        assertNull(PageProvider.pickSpot(new ArrayDeque<>(), SURVIVOR_AT_ORIGIN).spot());
     }
 
     private static Set<PageResource> spots(int count) {

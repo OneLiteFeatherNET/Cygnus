@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.common.page;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
@@ -13,6 +14,7 @@ import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;
 import net.theevilreaper.aves.util.Broadcaster;
 import net.theevilreaper.xerus.api.phase.GamePhase;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
 /**
@@ -39,7 +42,7 @@ import java.util.random.RandomGenerator;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.4.0
+ * @version 1.5.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
@@ -47,11 +50,34 @@ public final class PageProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PageProvider.class);
 
+    /** How close a survivor may be to a spot before a moving page looks for another one, in blocks. */
+    static final double SPAWN_DISTANCE = 16.0D;
+
+    /** How many spots a moving page tries before it takes the next one, watched or not. */
+    static final int SPAWN_ATTEMPTS = 5;
+
     private final Queue<PageResource> freeSpots = new ConcurrentLinkedQueue<>();
     private final Map<UUID, PageEntity> activePages = new ConcurrentHashMap<>();
     private final AtomicInteger pageNumber = new AtomicInteger(1);
     private final AtomicInteger foundPages = new AtomicInteger();
     private int maxPageAmount;
+    private final Supplier<? extends Collection<? extends Point>> survivors;
+
+    /**
+     * Creates a provider that does not know where the survivors are, so pages move on to any spot.
+     */
+    public PageProvider() {
+        this(List::of);
+    }
+
+    /**
+     * Creates a provider that keeps a moving page away from the survivors.
+     *
+     * @param survivors supplies where the living survivors stand right now
+     */
+    public PageProvider(Supplier<? extends Collection<? extends Point>> survivors) {
+        this.survivors = survivors;
+    }
 
     /**
      * Loads the required page data from the given set of {@link PageResource}s.
@@ -183,9 +209,10 @@ public final class PageProvider {
      */
     private void relocate(PageEntity page, boolean returnOldSpot) {
         PageResource oldSpot = page.getResource();
-        // Polled first, so the page can't draw its own spot again; queued last, so the spot only
+        // Picked first, so the page can't draw its own spot again; queued last, so the spot only
         // comes back once every other one had its turn.
-        PageResource newSpot = this.freeSpots.poll();
+        SpotPick pick = pickSpot(this.freeSpots, List.copyOf(this.survivors.get()));
+        PageResource newSpot = pick.spot();
         boolean hidden = newSpot == null && !returnOldSpot;
         if (hidden) {
             // Found with nowhere else to go: the spot has to be reused, but not right away
@@ -203,8 +230,50 @@ public final class PageProvider {
         this.activePages.put(page.getHitBoxUUID(), page);
         // A hidden page is announced when it shows up again, see PageEntity#reappear
         if (!hidden) {
-            EventDispatcher.call(new PageSpawnedEvent(page.getHitBoxUUID(), page.spot(), true));
+            EventDispatcher.call(new PageSpawnedEvent(page.getHitBoxUUID(), page.spot(), true, pick.skipped(), pick.watched()));
         }
+    }
+
+    /**
+     * Takes the next free spot that no survivor stands next to. A page that pops up beside a survivor
+     * is found without a search, and seen appearing out of nowhere. A spot that is too close goes to
+     * the end of the queue. After {@link #SPAWN_ATTEMPTS} tries the next spot is taken anyway, so a
+     * page never stays away because the survivors stand all over the map.
+     * <p>
+     * It runs only when a page moves, and costs a few distance checks against a handful of survivors.
+     * </p>
+     *
+     * @param free      the free spots, in the order they are handed out
+     * @param survivors where the living survivors stand
+     * @return the spot, without one if no spot is free, and how the pick went for the telemetry
+     */
+    static SpotPick pickSpot(Queue<PageResource> free, List<? extends Point> survivors) {
+        double reach = SPAWN_DISTANCE * SPAWN_DISTANCE;
+        for (int attempt = 1; attempt <= SPAWN_ATTEMPTS; attempt++) {
+            PageResource spot = free.poll();
+            if (spot == null) return new SpotPick(null, attempt - 1, false);
+            boolean watched = isWatched(spot, survivors, reach);
+            if (!watched || attempt == SPAWN_ATTEMPTS) return new SpotPick(spot, attempt - 1, watched);
+            free.add(spot);
+        }
+        return new SpotPick(null, SPAWN_ATTEMPTS, false);
+    }
+
+    /**
+     * The spot a moving page takes.
+     *
+     * @param spot    the spot, or {@code null} if no spot is free
+     * @param skipped how many spots were passed over because a survivor stood next to them
+     * @param watched whether a survivor stands next to the spot anyway
+     */
+    record SpotPick(@Nullable PageResource spot, int skipped, boolean watched) {
+    }
+
+    private static boolean isWatched(PageResource spot, List<? extends Point> survivors, double reach) {
+        for (Point survivor : survivors) {
+            if (spot.position().distanceSquared(survivor) < reach) return true;
+        }
+        return false;
     }
 
     private static int respawnDelay() {

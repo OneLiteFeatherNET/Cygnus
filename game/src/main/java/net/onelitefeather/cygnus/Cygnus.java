@@ -204,7 +204,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             UUID resourcePackId = this.resourcePackService.map(ResourcePackService::packId).orElse(null);
             MinecraftServer.getConnectionManager().setPlayerProvider(
                     (connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, resourcePackId, kickTracer));
-            this.pageProvider = new PageProvider();
+            // A moving page keeps away from the survivors, so it is not handed to one for free.
+            this.pageProvider = new PageProvider(
+                    () -> TeamHelper.survivorsOf(this.teamService).stream().map(Player::getPosition).toList());
             try (TraceStep ignored = startup.child("cygnus.startup.maps")) {
                 this.mapProvider = new GameMapProvider(path, this.gameConfig.lobbyAtmosphereShare());
             }

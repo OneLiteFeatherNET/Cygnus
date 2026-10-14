@@ -100,6 +100,10 @@ public final class CygnusAttributes {
     public static final AttributeKey<String> PAGE_ID = AttributeKey.stringKey("cygnus.page.id");
     public static final AttributeKey<Long> PAGE_INDEX = AttributeKey.longKey("cygnus.page.index");
     public static final AttributeKey<Boolean> PAGE_RELOCATED = AttributeKey.booleanKey("cygnus.page.relocated");
+    /** How many spots a moving page passed over because a survivor stood next to them. */
+    public static final AttributeKey<Long> PAGE_SKIPPED = AttributeKey.longKey("cygnus.page.skipped");
+    /** Whether a moving page landed next to a survivor anyway, since every spot it tried was. */
+    public static final AttributeKey<Boolean> PAGE_WATCHED = AttributeKey.booleanKey("cygnus.page.watched");
     public static final AttributeKey<Long> PAGE_OUT_MS = AttributeKey.longKey("cygnus.page.out_ms");
     public static final AttributeKey<Double> PAGE_SPOT_X = AttributeKey.doubleKey("cygnus.page.spot.x");
     public static final AttributeKey<Double> PAGE_SPOT_Y = AttributeKey.doubleKey("cygnus.page.spot.y");

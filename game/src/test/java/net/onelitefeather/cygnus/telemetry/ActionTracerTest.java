@@ -116,7 +116,7 @@ class ActionTracerTest {
     @Test
     @DisplayName("A page spawn names the page, its spot and whether it was moved")
     void pageSpawn() {
-        this.actions.pageSpawned(PAGE, new Pos(1.26, 65, 2), true);
+        this.actions.pageSpawned(PAGE, new Pos(1.26, 65, 2), true, 0, false);
 
         SpanData span = this.telemetry.span(CygnusAttributes.ACTION_PAGE_SPAWN);
         assertEquals(PAGE.toString(), span.getAttributes().get(CygnusAttributes.PAGE_ID));
@@ -125,9 +125,19 @@ class ActionTracerTest {
     }
 
     @Test
+    @DisplayName("A page spawn tells how many spots were skipped for a survivor nearby and whether one stands close anyway")
+    void pageSpawnNearSurvivors() {
+        this.actions.pageSpawned(PAGE, new Pos(0, 64, 0), true, 4, true);
+
+        SpanData span = this.telemetry.span(CygnusAttributes.ACTION_PAGE_SPAWN);
+        assertEquals(4L, span.getAttributes().get(CygnusAttributes.PAGE_SKIPPED));
+        assertEquals(Boolean.TRUE, span.getAttributes().get(CygnusAttributes.PAGE_WATCHED));
+    }
+
+    @Test
     @DisplayName("A found page records who, where, the index, the maximum, the time it was out and the distance")
     void pageFound() {
-        this.actions.pageSpawned(PAGE, new Pos(0, 64, 0), false);
+        this.actions.pageSpawned(PAGE, new Pos(0, 64, 0), false, 0, false);
         this.clock.advance(Duration.ofMillis(4500));
 
         this.actions.pageFound(survivor(3, 64, 4), PAGE, 2, 8);
@@ -164,7 +174,7 @@ class ActionTracerTest {
     @Test
     @DisplayName("A page that expired records how long it was out")
     void pageExpired() {
-        this.actions.pageSpawned(PAGE, new Pos(5, 64, 5), false);
+        this.actions.pageSpawned(PAGE, new Pos(5, 64, 5), false, 0, false);
         this.clock.advance(Duration.ofSeconds(60));
 
         this.actions.pageExpired(PAGE);
@@ -297,7 +307,7 @@ class ActionTracerTest {
     @Test
     @DisplayName("The pages of a finished round are forgotten, so they cannot date a page of the next one")
     void pagesAreForgottenWhenARoundEnds() {
-        this.actions.pageSpawned(PAGE, new Pos(0, 64, 0), false);
+        this.actions.pageSpawned(PAGE, new Pos(0, 64, 0), false, 0, false);
         this.rounds.abort("test");
         this.rounds.roundStarted();
         this.clock.advance(Duration.ofSeconds(30));

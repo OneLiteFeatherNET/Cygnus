@@ -20,9 +20,23 @@ import java.util.UUID;
  * @param position  the spot the page stands on
  * @param relocated {@code false} for the first placement of the round, {@code true} when an existing
  *                  page was moved on
+ * @param skipped   how many spots the page passed over because a survivor stood next to them
+ * @param watched   whether a survivor stands next to the spot anyway, since every spot it tried was
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
-public record PageSpawnedEvent(UUID pageId, Pos position, boolean relocated) implements Event {
+public record PageSpawnedEvent(UUID pageId, Pos position, boolean relocated, int skipped, boolean watched)
+        implements Event {
+
+    /**
+     * Creates the event for a page whose spot was not checked against the survivors.
+     *
+     * @param pageId    the id of the page
+     * @param position  the spot the page stands on
+     * @param relocated whether an existing page was moved on
+     */
+    public PageSpawnedEvent(UUID pageId, Pos position, boolean relocated) {
+        this(pageId, position, relocated, 0, false);
+    }
 }
