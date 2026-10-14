@@ -203,4 +203,31 @@ class SlowTickTracerTest {
 
         assertSame(action, TickSections.NONE.wrap("creek", action));
     }
+
+    @Test
+    @DisplayName("A slow lobby tick has the lobby's tasks as children and none of the game's")
+    void lobbyTickHasTheLobbyTasksAsChildren() {
+        RoundTracer rounds = new RoundTracer(this.telemetry.tracing(), () -> "round-1");
+        SlowTickTracer lobbyTracer = new SlowTickTracer(this.telemetry.tracing(), rounds,
+                new TelemetryConfig((int) THRESHOLD_MS), Clock.fixed(NOW, ZoneOffset.UTC), this.sections, TickMetrics.NONE);
+        // Every service registers once at startup, whether or not it runs in this phase.
+        TickSectionNames.ALL.forEach(name -> this.sections.wrap(name, () -> {
+        }));
+        rounds.roundStarted();
+        rounds.phaseStarted("Lobby");
+
+        runFor(TickSectionNames.LOBBY_WAITING, 2);
+        this.sections.wrap(TickSectionNames.LOBBY_TIME, () -> this.nanos.addAndGet(MILLI / 2)).run();
+        lobbyTracer.onTick(59.0D, 0.0D);
+        rounds.roundEnded();
+
+        SpanData tick = this.telemetry.span(CygnusAttributes.SPAN_SLOW_TICK);
+        List<SpanData> children = this.telemetry.spans().stream()
+                .filter(span -> span.getName().equals(CygnusAttributes.SPAN_TICK_SECTION)).toList();
+        assertEquals(List.of(TickSectionNames.LOBBY_WAITING, TickSectionNames.LOBBY_TIME),
+                children.stream().map(span -> span.getAttributes().get(CygnusAttributes.TICK_SECTION_NAME)).toList());
+        children.forEach(child -> assertEquals(tick.getSpanId(), child.getParentSpanId()));
+        assertEquals(this.telemetry.span("cygnus.phase.lobby").getSpanId(), tick.getParentSpanId(),
+                "the slow tick stays parented to the phase it happened in");
+    }
 }

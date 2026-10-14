@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.creek.dread.HuntEnd;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -154,5 +155,46 @@ class HuntStateTest {
         new HuntState(TARGET, 30_000L).tick(Contexts.hunting(0L, body, hunts, new ArrayList<>(), target(false)));
 
         assertTrue(hunts.ready(TARGET, 0L));
+    }
+
+    @Test
+    @DisplayName("A running hunt has no end yet")
+    void runningHuntHasNoEnd() {
+        HuntState hunt = new HuntState(TARGET, 30_000L);
+
+        hunt.tick(at(0L, new RecordingBody(new Pos(0, 40, 10)), new ArrayList<>(), false));
+
+        assertNull(hunt.end());
+    }
+
+    @Test
+    @DisplayName("A catch ends the hunt as caught")
+    void catchEndsAsCaught() {
+        HuntState hunt = new HuntState(TARGET, 30_000L);
+
+        hunt.tick(at(0L, new RecordingBody(new Pos(0, 40, 1)), new ArrayList<>(), false));
+
+        assertEquals(HuntEnd.CAUGHT, hunt.end());
+    }
+
+    @Test
+    @DisplayName("Running out of time ends the hunt as a timeout")
+    void timeoutEndsAsTimeout() {
+        HuntState hunt = new HuntState(TARGET, 30_000L);
+
+        hunt.tick(at(30_000L, new RecordingBody(new Pos(0, 40, 10)), new ArrayList<>(), false));
+
+        assertEquals(HuntEnd.TIMEOUT, hunt.end());
+    }
+
+    @Test
+    @DisplayName("A target that is no longer among the survivors ends the hunt as gone")
+    void missingTargetEndsAsGone() {
+        HuntState hunt = new HuntState(TARGET, 30_000L);
+        SurvivorView someoneElse = new SurvivorView(UUID.randomUUID(), TARGET_POS, 0.7D, false);
+
+        hunt.tick(Contexts.context(0L, new RecordingBody(new Pos(0, 40, 10)), Contexts.route(), new ArrayList<>(), someoneElse));
+
+        assertEquals(HuntEnd.GONE, hunt.end());
     }
 }
