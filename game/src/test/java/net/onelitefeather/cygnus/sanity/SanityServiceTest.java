@@ -7,7 +7,10 @@ import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.network.packet.server.play.SetExperiencePacket;
+import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
+import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.SanityConfig;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
@@ -347,5 +350,106 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         plain.caught(survivor.getUuid());
 
         assertEquals(dread(plain, survivor), dread(observed, survivor), EPSILON);
+    }
+
+    // ---- the sanity on the level display ----
+
+    @Test
+    @DisplayName("The level shows the sanity: 100 when calm, 0 when terrified")
+    void sanityLevelFollowsTheDread() {
+        assertEquals(100, SanityService.sanityLevel(0.0D));
+        assertEquals(70, SanityService.sanityLevel(0.3D));
+        assertEquals(0, SanityService.sanityLevel(1.0D));
+        assertEquals(0, SanityService.sanityLevel(1.4D));
+        assertEquals(100, SanityService.sanityLevel(-0.1D));
+    }
+
+    @Test
+    @DisplayName("Every survivor sees their own sanity as their level")
+    void showsTheSanityOfEverySurvivor(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        this.survivors = Set.of(survivor);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+
+        service.caught(survivor.getUuid());
+        service.showSanity();
+
+        assertEquals(70, survivor.getLevel());
+        env.process().eventHandler().removeChild(service.node());
+    }
+
+    @Test
+    @DisplayName("An unchanged sanity is not sent again")
+    void anUnchangedSanityIsNotSentAgain(Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player survivor = connection.connect(instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        this.survivors = Set.of(survivor);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+        service.showSanity();
+        Collector<SetExperiencePacket> packets = connection.trackIncoming(SetExperiencePacket.class);
+
+        service.showSanity();
+
+        packets.assertEmpty();
+        env.process().eventHandler().removeChild(service.node());
+    }
+
+    @Test
+    @DisplayName("A dead survivor's level goes back to 0 and stays there")
+    void aDeadSurvivorShowsNoSanity(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        this.survivors = Set.of(survivor);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+        service.showSanity();
+
+        EventDispatcher.call(new PlayerDeathEvent(survivor, Component.empty(), Component.empty()));
+        service.showSanity();
+
+        assertEquals(0, survivor.getLevel());
+        env.process().eventHandler().removeChild(service.node());
+    }
+
+    @Test
+    @DisplayName("A survivor who takes over as the slender loses the sanity level")
+    void theNewSlenderShowsNoSanity(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        this.survivors = Set.of(survivor);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+        service.showSanity();
+
+        EventDispatcher.call(new SlenderReviveEvent(survivor));
+
+        assertEquals(0, survivor.getLevel());
+        env.process().eventHandler().removeChild(service.node());
+    }
+
+    @Test
+    @DisplayName("The end of the round takes the sanity off the level")
+    void theRoundEndClearsTheSanity(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        this.survivors = Set.of(survivor);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+        service.showSanity();
+        assertEquals(100, survivor.getLevel());
+
+        EventDispatcher.call(new GameFinishEvent(GameFinishEvent.Reason.TIME_OVER));
+
+        assertEquals(0, survivor.getLevel());
+        env.process().eventHandler().removeChild(service.node());
     }
 }
