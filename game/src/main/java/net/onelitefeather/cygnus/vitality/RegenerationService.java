@@ -37,13 +37,13 @@ import java.util.function.Supplier;
  * Taking them heals over a few seconds, at most a share of the maximum health that shrinks with
  * the round, and never more than is missing. Every survivor gets this one chance, even in the middle
  * of a chase, but only with at least {@link RegenerationConfig#minMissing()} points missing, so it is
- * not spent on a scratch. A hit while they work takes its damage off what is still to come, so it
- * counts twice, and the healing goes on with the rest. Fear slows the healing down: a calm survivor
- * regains {@link RegenerationConfig#perSecond()}, a terrified one hardly anything.
+ * not spent on a scratch. A hit while they work only costs its health, the painkillers still give
+ * all they have left, so they stay worth taking in a chase. Fear slows the healing down: a calm survivor
+ * regains {@link RegenerationConfig#perSecond()}, a terrified one only {@link RegenerationConfig#minSpeed()} of it.
  * </p>
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.17.0
  */
 public final class RegenerationService implements GameFeature {
@@ -59,7 +59,7 @@ public final class RegenerationService implements GameFeature {
     private final Supplier<Set<Player>> survivors;
     private final RepeatingTask task;
     private final PlayerState<Boolean> used = new PlayerState<>();
-    private final Map<CygnusPlayer, Healing> healing = new ConcurrentHashMap<>();
+    private final Map<CygnusPlayer, Double> healing = new ConcurrentHashMap<>();
     private volatile double share;
 
     /**
@@ -134,55 +134,36 @@ public final class RegenerationService implements GameFeature {
         }
         this.used.put(survivor, true);
         survivor.getInventory().setItemStack(Items.HEAL_SLOT, ItemStack.AIR);
-        this.healing.put(survivor, new Healing(Math.min(missing, this.share * vitality.max()), vitality.points()));
+        this.healing.put(survivor, Math.min(missing, this.share * vitality.max()));
         return true;
     }
 
     /**
      * Moves every running healing on by one step.
-     * <p>
-     * The points a survivor lost since the last step come off the rest first. The painkillers are
-     * the only healing, so every lost point is a hit. Counting the points catches even a hit too
-     * small to show, which {@code PlayerDamagedEvent} leaves out.
-     * </p>
      */
     void tick() {
-        for (Map.Entry<CygnusPlayer, Healing> entry : Map.copyOf(this.healing).entrySet()) {
+        for (Map.Entry<CygnusPlayer, Double> entry : Map.copyOf(this.healing).entrySet()) {
             CygnusPlayer survivor = entry.getKey();
             if (!affected(survivor)) {
                 this.healing.remove(survivor);
                 continue;
             }
             Vitality vitality = survivor.vitality();
-            Healing healing = entry.getValue();
-            double rest = healing.rest() - Math.max(0.0D, healing.points() - vitality.points());
-            if (rest <= 0.0D) {
-                this.healing.remove(survivor);
-                continue;
-            }
-            double calm = 1.0D - Math.clamp(this.dread.dreadOf(survivor.getUuid()), 0.0D, 1.0D);
-            double step = Math.min(rest, this.config.perSecond() * calm * TICK_MILLIS / 1000.0D);
+            double rest = entry.getValue();
+            double speed = this.config.speedFor(this.dread.dreadOf(survivor.getUuid()));
+            double step = Math.min(rest, speed * TICK_MILLIS / 1000.0D);
             rest -= vitality.heal(step);
             // Done, or full already with nothing more to give
             if (rest <= 0.0D || vitality.points() >= vitality.max()) {
                 this.healing.remove(survivor);
             } else {
-                this.healing.put(survivor, new Healing(rest, vitality.points()));
+                this.healing.put(survivor, rest);
             }
         }
     }
 
     private void forget(Player player) {
         this.healing.remove(player);
-    }
-
-    /**
-     * A running healing.
-     *
-     * @param rest   the points the painkillers still have to give
-     * @param points the points the survivor had after the last step
-     */
-    private record Healing(double rest, double points) {
     }
 
     /**
