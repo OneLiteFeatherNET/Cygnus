@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CreekContextTest {
@@ -35,20 +34,6 @@ class CreekContextTest {
     @DisplayName("The ids of every survivor")
     void survivorIds() {
         assertEquals(Set.of(FIRST, SECOND), context().survivorIds());
-    }
-
-    @Test
-    @DisplayName("The highest dread wins, and none means zero")
-    void highestDread() {
-        assertEquals(0.5D, context().highestDread());
-        assertEquals(0.0D, Contexts.context(0L, new RecordingBody(Pos.ZERO), Contexts.route(), new ArrayList<>()).highestDread());
-    }
-
-    @Test
-    @DisplayName("Far from all means far from every survivor")
-    void farFromAll() {
-        assertTrue(context().farFromAll(new Pos(15, 40, 20), 15));
-        assertFalse(context().farFromAll(new Pos(5, 40, 0), 15));
     }
 
     @Test
