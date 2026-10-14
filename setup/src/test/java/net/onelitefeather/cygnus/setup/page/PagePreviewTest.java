@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.setup.page;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.Event;
+import net.minestom.server.event.EventNode;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
 import net.minestom.server.network.packet.server.play.SpawnEntityPacket;
@@ -12,6 +14,9 @@ import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.setup.event.PlayerRemoveDataEvent;
+import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
+import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MicrotusExtension.class)
 class PagePreviewTest {
@@ -58,7 +65,8 @@ class PagePreviewTest {
 
         this.preview.show();
 
-        spawns.assertSingle(packet -> assertEquals(EntityType.ITEM_DISPLAY, packet.type()));
+        assertEquals(List.of(EntityType.ITEM_DISPLAY, EntityType.INTERACTION), types(spawns),
+                "the near spot gets its page and the box to click it, the far one nothing");
     }
 
     @Test
@@ -95,12 +103,12 @@ class PagePreviewTest {
 
         this.builder.teleport(new Pos(-100, 40, 0)).join();
         this.preview.update();
-        destroys.assertSingle(packet -> assertEquals(1, packet.entityIds().size()));
+        destroys.assertSingle(packet -> assertEquals(2, packet.entityIds().size()));
 
         Collector<SpawnEntityPacket> spawns = this.connection.trackIncoming(SpawnEntityPacket.class);
         this.builder.teleport(BUILDER).join();
         this.preview.update();
-        spawns.assertSingle(packet -> assertEquals(EntityType.ITEM_DISPLAY, packet.type()));
+        assertEquals(List.of(EntityType.ITEM_DISPLAY, EntityType.INTERACTION), types(spawns));
     }
 
     @Test
@@ -112,7 +120,7 @@ class PagePreviewTest {
 
         this.preview.hide();
 
-        destroys.assertSingle(packet -> assertEquals(2, packet.entityIds().size()));
+        destroys.assertSingle(packet -> assertEquals(4, packet.entityIds().size()));
     }
 
     @Test
@@ -124,7 +132,55 @@ class PagePreviewTest {
         this.spots.add(NEAR);
         this.preview.refresh();
 
-        spawns.assertSingle(packet -> assertEquals(EntityType.ITEM_DISPLAY, packet.type()));
+        assertEquals(List.of(EntityType.ITEM_DISPLAY, EntityType.INTERACTION), types(spawns));
+    }
+
+    @Test
+    @DisplayName("Hitting a page asks to delete its spot")
+    void hittingAPageAsksToDeleteIt(Env env) {
+        this.spots.add(NEAR);
+        Collector<SpawnEntityPacket> spawns = this.connection.trackIncoming(SpawnEntityPacket.class);
+        this.preview.show();
+        int box = spawns.collect().stream().filter(packet -> packet.type() == EntityType.INTERACTION)
+                .findFirst().orElseThrow().entityId();
+        List<PlayerRemoveDataEvent> asked = new ArrayList<>();
+        EventNode<Event> node = EventNode.all("page-preview-test");
+        node.addListener(PlayerRemoveDataEvent.class, asked::add);
+        env.process().eventHandler().addChild(node);
+
+        assertTrue(this.preview.hit(box));
+
+        env.process().eventHandler().removeChild(node);
+        assertEquals(1, asked.size());
+        assertEquals(MapDataCategory.PAGE, asked.getFirst().getMapDataCategory());
+        assertEquals(new DialogContext.PageContent(NEAR), asked.getFirst().getContext());
+    }
+
+    @Test
+    @DisplayName("Hitting anything that is not a shown page does nothing")
+    void hittingSomethingElseDoesNothing() {
+        this.spots.add(NEAR);
+        this.preview.show();
+
+        assertFalse(this.preview.hit(-1));
+    }
+
+    @Test
+    @DisplayName("A hidden preview has nothing to hit")
+    void aHiddenPreviewHasNothingToHit() {
+        this.spots.add(NEAR);
+        Collector<SpawnEntityPacket> spawns = this.connection.trackIncoming(SpawnEntityPacket.class);
+        this.preview.show();
+        int box = spawns.collect().stream().filter(packet -> packet.type() == EntityType.INTERACTION)
+                .findFirst().orElseThrow().entityId();
+
+        this.preview.hide();
+
+        assertFalse(this.preview.hit(box));
+    }
+
+    private static List<EntityType> types(Collector<SpawnEntityPacket> spawns) {
+        return spawns.collect().stream().map(SpawnEntityPacket::type).toList();
     }
 
     @Test
