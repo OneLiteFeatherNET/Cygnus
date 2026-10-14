@@ -37,6 +37,7 @@ public final class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
         Player player = event.getPlayer();
         player.setGameMode(GameMode.ADVENTURE);
         player.setDisplayName(Component.text(player.getUsername()));
+        player.setEnableRespawnScreen(false);
 
         if (phaseSupplier.get() instanceof LobbyPhase lobbyPhase) {
             if (player instanceof PermissionAwarePlayer permissionAwarePlayer) {
