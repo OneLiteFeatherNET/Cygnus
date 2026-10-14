@@ -5,12 +5,15 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.instance.Instance;
+import net.minestom.testing.Collector;
+import net.minestom.server.event.EventFilter;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.config.RegenerationConfig;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.PainkillerUsedEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.onelitefeather.cygnus.utils.Items;
@@ -89,6 +92,22 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
 
         assertFalse(holdsPainkillers(survivor));
         assertEquals(80.0D, survivor.vitality().points(), EPSILON);
+    }
+
+    @Test
+    @DisplayName("Taking the painkillers announces it once, and a refused take does not")
+    void takingThemIsAnnounced(Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer survivor = survivor(env, instance);
+        RegenerationService service = started(env);
+        Collector<PainkillerUsedEvent> collector = env.trackEvent(PainkillerUsedEvent.class, EventFilter.PLAYER, survivor);
+
+        service.use(survivor);
+        hit(survivor, 60.0D);
+        service.use(survivor);
+        service.use(survivor);
+
+        collector.assertSingle(event -> assertEquals(survivor, event.getPlayer()));
     }
 
     @Test

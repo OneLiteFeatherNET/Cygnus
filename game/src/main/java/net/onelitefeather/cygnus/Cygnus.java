@@ -124,8 +124,19 @@ import net.onelitefeather.cygnus.telemetry.TracedPhaseSeries;
 import net.onelitefeather.cygnus.vitality.RegenerationService;
 
 import java.nio.file.Path;
+import net.onelitefeather.cygnus.stats.NoOpStatsRepository;
+import net.onelitefeather.cygnus.stats.RoundStats;
+import net.onelitefeather.cygnus.stats.RoundStatsCollector;
+import net.onelitefeather.cygnus.stats.StatsMetrics;
+import net.onelitefeather.cygnus.stats.StatsRepositories;
+import net.onelitefeather.cygnus.stats.StatsRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Clock;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -157,11 +168,14 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final List<GameFeature> features;
 
     private final CygnusTracing tracing;
+    private static final Logger LOGGER = LoggerFactory.getLogger(Cygnus.class);
+
     private final RoundTracer roundTracer;
     private final JoinTracer joinTracer;
     private final SlowTickTracer slowTickTracer;
     private final ActionTracer actionTracer;
     private final TraceCookie traceCookie;
+    private final RoundStatsCollector roundStatsCollector;
 
     /**
      * Wires the game together.
@@ -193,6 +207,12 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             try (TraceStep ignored = startup.child("cygnus.startup.config")) {
                 this.gameConfig = new GameConfigReader(path).getConfig();
             }
+            // Opened as early as possible, the schema check fails fast; a database that is down only
+            // costs the statistics, never the start. Drained on shutdown so a queued round is written.
+            StatsRepository statsRepository = openStatistics(this.gameConfig, StatsMetrics.fromGlobal(serviceVersion()));
+            MinecraftServer.getSchedulerManager().buildShutdownTask(statsRepository::close);
+            this.roundStatsCollector = new RoundStatsCollector(statsRepository, Clock.systemUTC(),
+                    this.gameConfig.stats().timeZone(), this.roundTracer::currentRoundId);
             this.slowTickTracer = new SlowTickTracer(this.tracing, this.roundTracer, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections,
                     TickMetrics.fromGlobal(serviceVersion(), this.roundTracer::phaseLabel));
             this.staminaService = new StaminaService(this.gameConfig.stamina(), tickSections);
@@ -303,6 +323,23 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         }
     }
 
+    /**
+     * Opens the statistics repository. The game runs without statistics when the database cannot be
+     * reached or its schema does not validate: the failure is logged and counted, not rethrown.
+     *
+     * @param config  the game config with the statistics settings
+     * @param metrics counts failures
+     * @return the repository, a no-op one when statistics are off or could not be opened
+     */
+    private static StatsRepository openStatistics(GameConfig config, StatsMetrics metrics) {
+        try {
+            return StatsRepositories.create(config.stats(), metrics);
+        } catch (RuntimeException exception) {
+            LOGGER.error("Opening the statistics database failed, the game runs without statistics", exception);
+            return new NoOpStatsRepository();
+        }
+    }
+
     private @Nullable String activeMapName() {
         GameMap activeMap = this.mapProvider.getGameMap();
         return activeMap == null ? null : activeMap.name();
@@ -330,11 +367,32 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     }
 
 
+    /**
+     * Reads everyone on the Slender or Survivor team with the role they play, for the statistics.
+     */
+    private Map<UUID, RoundStats.Role> statsParticipants() {
+        Map<UUID, RoundStats.Role> participants = new HashMap<>();
+        TeamHelper.survivorsOf(this.teamService)
+                .forEach(player -> participants.put(player.getUuid(), RoundStats.Role.SURVIVOR));
+        Player slender = TeamHelper.slenderOf(this.teamService);
+        if (slender != null) {
+            participants.put(slender.getUuid(), RoundStats.Role.SLENDER);
+        }
+        return participants;
+    }
+
     private void initListener(Team spectatorTeam) {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         var manager = MinecraftServer.getGlobalEventHandler();
         // First, so the join span exists before any listener below can turn the player away.
         this.joinTracer.register(manager);
+        // Before the quit and death listeners below: either can end the round from inside its handler,
+        // and the collector must have counted the quit or the death by then.
+        this.roundStatsCollector.register(manager, this::statsParticipants,
+                () -> {
+                    Player slender = TeamHelper.slenderOf(this.teamService);
+                    return slender == null ? null : slender.getUuid();
+                });
         this.traceCookie.register(manager, TraceCookie.DEFAULT_TIMEOUT);
         manager.addListener(GameMapLoadedEvent.class, event ->
                 this.pageProvider.loadPageData(event.gameMap().getPageFaces())

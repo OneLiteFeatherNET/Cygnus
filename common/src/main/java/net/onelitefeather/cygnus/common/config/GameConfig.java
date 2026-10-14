@@ -41,10 +41,11 @@ import java.util.regex.Pattern;
  * @param clientGuard          the check on the client's brand and mod channels, which kicks known cheat clients
  * @param clientApi            the requests to client mods through their own server APIs (WorldDownloader, LabyMod)
  * @param lunar                the request to Lunar Client to switch off mods that give a survivor an edge
+ * @param stats                the yearly player statistics, off unless a database is configured
  * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the map's own: {@code 0}
  *                             leaves the vanilla overworld, {@code 1} is exactly the map's atmosphere
  * @author theEvilReaper
- * @version 2.5.0
+ * @version 2.6.0
  * @since 1.0.0
  */
 public record GameConfig(
@@ -69,6 +70,7 @@ public record GameConfig(
         ClientGuardConfig clientGuard,
         ClientApiConfig clientApi,
         LunarConfig lunar,
+        StatsConfig stats,
         float lobbyAtmosphereShare
 ) {
 
@@ -163,6 +165,7 @@ public record GameConfig(
             ClientGuardConfig.DEFAULT,
             ClientApiConfig.DEFAULT,
             LunarConfig.DEFAULT,
+            StatsConfig.DISABLED,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 
@@ -200,6 +203,7 @@ public record GameConfig(
                 ClientGuardConfig.read(root.section("client-guard.")),
                 ClientApiConfig.read(root.section("client-api.")),
                 LunarConfig.read(root.section("lunar.")),
+                StatsConfig.read(root.section("stats."), System::getenv),
                 readLobbyAtmosphereShare(root)
         );
     }

@@ -36,7 +36,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.15.0
  */
 public final class RoundTracer {
@@ -52,6 +52,8 @@ public final class RoundTracer {
     // between phases, null with no round. Written only under the lock, on every change.
     private volatile @Nullable Context current;
     private volatile @Nullable SpanContext latestRound;
+    // The id of the latest round, kept for whoever has to tie its own records to the round trace.
+    private volatile @Nullable String roundId;
     // The name of the running phase for metric labels; PHASE_NONE outside of one. Precomputed so the
     // tick thread reads a reference instead of lower-casing a name sixty times a second.
     private volatile String phaseLabel = PHASE_NONE;
@@ -96,8 +98,10 @@ public final class RoundTracer {
         this.linked.clear();
         this.droppedLinks = 0;
         notifyBoundary();
+        String id = this.roundIds.get();
+        this.roundId = id;
         TraceStep started = this.tracing.root(CygnusAttributes.SPAN_ROUND)
-                .set(CygnusAttributes.ROUND_ID, this.roundIds.get());
+                .set(CygnusAttributes.ROUND_ID, id);
         this.round = started;
         this.latestRound = started.span().getSpanContext();
         this.current = Context.root().with(started.span());
@@ -106,6 +110,16 @@ public final class RoundTracer {
             this.startup = null;
             started.span().addLink(wiredBy, Attributes.of(CygnusAttributes.LINK_KIND, CygnusAttributes.LINK_STARTUP));
         }
+    }
+
+    /**
+     * Returns the id the latest round carries on its span, so records outside the trace - the player
+     * statistics - can share it.
+     *
+     * @return the id, or {@code null} before the first round started
+     */
+    public @Nullable String currentRoundId() {
+        return this.roundId;
     }
 
     /**

@@ -444,3 +444,28 @@ survivorTeamSize=12
 # Unknown values are logged and replaced by the default.
 #lunar.enabled=true
 #lunar.disabled-mods=minimap,waypoints,freelook,zoom,coordinates,directionhud
+
+# --- Statistics -------------------------------------------------------------
+# Yearly player statistics. Every finished round is written to a PostgreSQL database: one row
+# per player and round, plus one aggregate per player and calendar year. The schema is created
+# by Flyway on start. All Cygnus servers of an environment may share one database.
+#
+# OFF unless a JDBC URL is set: nothing connects anywhere and the game runs as without it.
+# The write happens after the round ended, off the tick thread; a failed write is logged and
+# counted in the metric cygnus.stats.write.failures and never affects the round or the restart.
+# Stored are the Minecraft UUID and game counters, no names and no IPs.
+
+# JDBC URL of the database.
+#stats.jdbc-url=jdbc:postgresql://localhost:5432/cygnus
+
+#stats.username=cygnus
+
+# Leave it out to read the password from the environment variable CYGNUS_STATS_PASSWORD.
+#stats.password=
+
+# Connections the pool may hold. At least 1.
+#stats.pool-size=4
+
+# The zone whose calendar decides which year a round counts for. A round that ends on
+# New Year's Eve at 00:30 in this zone counts for the new year.
+#stats.time-zone=Europe/Berlin

@@ -35,6 +35,13 @@ dependencies {
     // relocation is configured), which is what lets the agent bridge GlobalOpenTelemetry.
     implementation(libs.opentelemetry.api)
 
+    // Yearly player statistics. Only opened when stats.jdbc-url is configured, see the stats package.
+    implementation(libs.hibernate.core)
+    implementation(libs.hikari)
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.postgresql)
+    runtimeOnly(libs.postgresql)
+
     // LuckPerms; guava used to arrive transitively through CloudNet, so bundle it explicitly now.
     implementation(libs.guava)
     compileOnly(libs.luckperms.api) {
@@ -59,6 +66,7 @@ dependencies {
     testImplementation(libs.cyano)
     testImplementation(libs.aves)
     testImplementation(libs.xerus)
+    testImplementation(libs.h2)
     testImplementation(libs.opentelemetry.sdk)
     testImplementation(libs.opentelemetry.sdk.testing)
     testImplementation(libs.junit.api)
