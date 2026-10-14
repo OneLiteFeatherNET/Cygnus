@@ -129,7 +129,7 @@ public final class StalkState implements CreekState {
 
         if (view.seesCreek()) {
             if (this.seenSince < 0) this.seenSince = ctx.now();
-            if (ctx.now() - this.seenSince >= config.stalk().revealMillis() && this.relocate(ctx, view)) {
+            if (ctx.now() - this.seenSince >= ctx.calm().stretch(config.stalk().revealMillis()) && this.relocate(ctx, view)) {
                 this.seenSince = -1L;
                 // Gone without a sound. The next one only comes after a full gap.
                 this.scheduleSound(ctx);
@@ -139,7 +139,7 @@ public final class StalkState implements CreekState {
         this.seenSince = -1L;
 
         double distance = body.position().distance(view.position());
-        boolean moved = (distance < this.minDistance(ctx) || distance > this.maxDistance(ctx))
+        boolean moved = (distance < this.minDistance(ctx) || distance > ctx.calm().stretch(this.maxDistance(ctx)))
                 && this.relocate(ctx, view);
         if (this.nextSoundAt < 0) this.scheduleSound(ctx);
         if (moved || ctx.now() >= this.nextSoundAt) {
@@ -156,7 +156,7 @@ public final class StalkState implements CreekState {
         CreekConfig config = ctx.config();
         if (view.dread() < config.hunt().threshold()) return false;
         if (ctx.now() - this.startedAt < config.hunt().minStalkSeconds() * 1000L) return false;
-        return ctx.hunts().ready(this.target, ctx.now());
+        return ctx.hunts().ready(this.target, ctx.now(), ctx.calm());
     }
 
     /**

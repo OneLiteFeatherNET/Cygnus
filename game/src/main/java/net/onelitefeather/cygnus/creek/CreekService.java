@@ -14,6 +14,7 @@ import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
+import net.onelitefeather.cygnus.creek.state.Calm;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
@@ -79,6 +80,9 @@ public final class CreekService implements PossessionTarget {
     private final RepeatingTask task;
     private volatile @Nullable Creek creek;
     private volatile @Nullable CreekVariants variants;
+    /** The most survivors the round has had so far, which is what its calm is measured against. */
+    private int started;
+    private volatile Calm calm = Calm.NONE;
 
     /**
      * Sets up the service, with its step measured for the slow tick report.
@@ -143,7 +147,7 @@ public final class CreekService implements PossessionTarget {
         PathRoute pathRoute = new PathRoute(paths);
         CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.witness,
                 new PatrolHelper(this.random), new StalkSounds(this.random), this.config, this.random,
-                new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L));
+                new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L), () -> this.calm);
         this.round = round;
         List<Pos> points = paths.allPoints();
 
@@ -154,7 +158,8 @@ public final class CreekService implements PossessionTarget {
         long showsUp = this.clock.getAsLong() + this.config.vanish().minSeconds() * 1000L;
         this.creek = new Creek(body, pathRoute, round, new VanishState(showsUp));
         this.variants = new CreekVariants(this.config, this.spots, this.random, showsUp,
-                (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state));
+                (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state),
+                () -> this.calm);
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }
 
@@ -172,6 +177,9 @@ public final class CreekService implements PossessionTarget {
         // One snapshot for every creek: where the survivors are and how scared they are is the same for all.
         SurvivorSnapshot survivors = SurvivorSnapshot.take(this.survivors.get(), this.dread);
         long now = this.clock.getAsLong();
+        // Measured against the fullest the round has been: survivors may still be joining in its first steps.
+        this.started = Math.max(this.started, survivors.size());
+        this.calm = Calm.of(this.started, survivors.size());
         CreekVariants currentVariants = this.variants;
         // Count every survivor here: hiding the patrol from the haunted is not being down to the last one.
         if (!this.config.activeWithLastSurvivor() && survivors.size() <= 1) {
@@ -200,6 +208,8 @@ public final class CreekService implements PossessionTarget {
         CreekRound currentRound = this.round;
         this.round = null;
         if (currentRound != null) currentRound.patrol().cleanUp();
+        this.started = 0;
+        this.calm = Calm.NONE;
     }
 
     @Override

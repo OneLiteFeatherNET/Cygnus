@@ -54,10 +54,11 @@ public final class HuntCooldowns {
      *
      * @param survivor the survivor to check
      * @param now      the current time in milliseconds
+     * @param calm     how far the round has thinned out; a calmer round stretches the breather
      * @return {@code true} if they were never hunted or the breather is over
      */
-    public boolean ready(UUID survivor, long now) {
+    public boolean ready(UUID survivor, long now, Calm calm) {
         Long ended = this.endedAt.get(survivor);
-        return ended == null || now - ended >= this.cooldownMillis;
+        return ended == null || now - ended >= calm.stretch(this.cooldownMillis);
     }
 }

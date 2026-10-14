@@ -125,6 +125,46 @@ class StalkStateTest {
     }
 
     @Test
+    @DisplayName("Late in a thinned out round he stays visible longer before moving out of sight")
+    void lingersLongerLate() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        Calm calm = new Calm(1.0D);
+
+        state.tick(Contexts.calm(at(0L, body, target(0.3D, true)), calm));
+        state.tick(Contexts.calm(at(1049L, body, target(0.3D, true)), calm));
+        assertTrue(body.teleports.isEmpty(), "the moment he lingers is half as long again");
+
+        state.tick(Contexts.calm(at(1050L, body, target(0.3D, true)), calm));
+        assertEquals(1, body.teleports.size());
+    }
+
+    @Test
+    @DisplayName("Late in a thinned out round he lets the target get further away before following")
+    void followsLaterLate() {
+        // 45 blocks away: beyond the band of 35, but within one and a half times it.
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -45));
+        new StalkState(TARGET, 60_000L).tick(Contexts.calm(at(0L, body, target(0.3D, false)), new Calm(1.0D)));
+
+        assertTrue(body.teleports.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Late in a thinned out round the breather before the next hunt lasts longer")
+    void huntCooldownGrowsLate() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        HuntCooldowns hunts = new HuntCooldowns(45_000L);
+        hunts.ended(TARGET, 0L);
+        StalkState state = new StalkState(TARGET, 120_000L);
+        Calm calm = new Calm(1.0D);
+        state.enter(Contexts.calm(Contexts.hunting(0L, body, hunts, new ArrayList<>(), target(0.9D, false)), calm));
+
+        assertSame(state, state.tick(Contexts.calm(Contexts.hunting(67_499L, body, hunts, new ArrayList<>(), target(0.9D, false)), calm)));
+        assertInstanceOf(HuntState.class,
+                state.tick(Contexts.calm(Contexts.hunting(67_500L, body, hunts, new ArrayList<>(), target(0.9D, false)), calm)));
+    }
+
+    @Test
     @DisplayName("When the target comes too close he moves back into the band")
     void relocatesWhenTooClose() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, -10));
