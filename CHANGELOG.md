@@ -5,6 +5,51 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.16.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.15.0...v2.16.0) (2026-10-14)
+
+
+### Features
+
+* **adrenaline:** lift an empty sprint bar to the resume share on a rush ([#366](https://github.com/OneLiteFeatherNET/Cygnus/issues/366)) ([d96bbfa](https://github.com/OneLiteFeatherNET/Cygnus/commit/d96bbfad97ddb44420c6824aa33ff430ceee71a3))
+* **creek:** calm the creek down as the round thins out ([#364](https://github.com/OneLiteFeatherNET/Cygnus/issues/364)) ([f2859cf](https://github.com/OneLiteFeatherNET/Cygnus/commit/f2859cf9782a7ae033dcdc7df4899b098848b57e))
+* **death:** respawn players immediately without the death screen ([#347](https://github.com/OneLiteFeatherNET/Cygnus/issues/347)) ([aa26fe0](https://github.com/OneLiteFeatherNET/Cygnus/commit/aa26fe04d84fecab98ecad10689924dfe60b9d22))
+* **footprint:** add footprints for the slender and the survivors ([#322](https://github.com/OneLiteFeatherNET/Cygnus/issues/322)) ([61f8966](https://github.com/OneLiteFeatherNET/Cygnus/commit/61f8966532f3678135fa78deff14ca7c6df05e9c))
+* **footprint:** improve usage when no players are around ([#339](https://github.com/OneLiteFeatherNET/Cygnus/issues/339)) ([2187e94](https://github.com/OneLiteFeatherNET/Cygnus/commit/2187e94a545e4ce0958d30c2e6a61db3429625de))
+* **game:** add wake-up eyes camera transition ([#323](https://github.com/OneLiteFeatherNET/Cygnus/issues/323)) ([d2312b7](https://github.com/OneLiteFeatherNET/Cygnus/commit/d2312b771f401938badfaf897f19202db3850d82))
+* **health:** update health scale system to a point based system ([#341](https://github.com/OneLiteFeatherNET/Cygnus/issues/341)) ([28fea54](https://github.com/OneLiteFeatherNET/Cygnus/commit/28fea54f6bcc67c15728aeb73269d6627c8a186f))
+* **items:** lock and describe the slender items and delay the tracker and the creek's eyes ([#334](https://github.com/OneLiteFeatherNET/Cygnus/issues/334)) ([d9e114f](https://github.com/OneLiteFeatherNET/Cygnus/commit/d9e114f454a1179c6de911347f8a5868a6f0d5c4))
+* **page:** hand out crowded spots less often so pages spread over the map ([#368](https://github.com/OneLiteFeatherNET/Cygnus/issues/368)) ([1481df9](https://github.com/OneLiteFeatherNET/Cygnus/commit/1481df989ea4c41ba8a4563a7acb37e016acf06e))
+* **page:** keep a moving page away from the survivors ([#370](https://github.com/OneLiteFeatherNET/Cygnus/issues/370)) ([667dc7f](https://github.com/OneLiteFeatherNET/Cygnus/commit/667dc7f18c720d938a40258c88ce6503e480f573))
+* **possession:** let the slender look through the creek's eyes ([#327](https://github.com/OneLiteFeatherNET/Cygnus/issues/327)) ([45e93d1](https://github.com/OneLiteFeatherNET/Cygnus/commit/45e93d1b6bb2e18747cdda381f4f362e4be7cef4))
+* **sanity:** show each survivor's sanity on their level display ([#365](https://github.com/OneLiteFeatherNET/Cygnus/issues/365)) ([a9ae056](https://github.com/OneLiteFeatherNET/Cygnus/commit/a9ae056efcadbc10c6e2292121598286ad03fdca))
+* **setup:** show the page spots around the builder, glowing red where crowded ([#369](https://github.com/OneLiteFeatherNET/Cygnus/issues/369)) ([6ac754f](https://github.com/OneLiteFeatherNET/Cygnus/commit/6ac754f8e2d74fe840eea86d135d2a08016734d2))
+* **stamina:** pause slender bar regeneration while possessing the creek ([#345](https://github.com/OneLiteFeatherNET/Cygnus/issues/345)) ([fe3dd64](https://github.com/OneLiteFeatherNET/Cygnus/commit/fe3dd6485e591627b726ac07b0fc756138012ccd))
+* **vitality:** give every survivor one painkiller chance without a hit delay ([#352](https://github.com/OneLiteFeatherNET/Cygnus/issues/352)) ([a910e47](https://github.com/OneLiteFeatherNET/Cygnus/commit/a910e47e7b2518ace121e2d4d2c3a1248a7614d9))
+
+
+### Bug Fixes
+
+* **creek:** keep teleport targets off the survivor's screen ([#363](https://github.com/OneLiteFeatherNET/Cygnus/issues/363)) ([33a8d86](https://github.com/OneLiteFeatherNET/Cygnus/commit/33a8d8632aaaa5b922eb6fc77e8ead9f7bebe2eb))
+* **deps:** update dependency net.luckperms:api to v6 ([#156](https://github.com/OneLiteFeatherNET/Cygnus/issues/156)) ([d09e4ab](https://github.com/OneLiteFeatherNET/Cygnus/commit/d09e4ab10729063d3e81dfee72e5a1df95f7d2ff))
+* **deps:** update dependency net.luckperms:api to v6.0.2 ([#337](https://github.com/OneLiteFeatherNET/Cygnus/issues/337)) ([dfe35da](https://github.com/OneLiteFeatherNET/Cygnus/commit/dfe35daf93d8b7d32e37d8dc36fbe90b0991160b))
+* **deps:** update dependency net.onelitefeather:aonyx-bom to v0.8.8 ([#328](https://github.com/OneLiteFeatherNET/Cygnus/issues/328)) ([a25bef9](https://github.com/OneLiteFeatherNET/Cygnus/commit/a25bef9d3e466a9bc6a666d8580d281b80d042bd))
+* **deps:** update dependency net.onelitefeather:aonyx-bom to v0.8.9 ([#333](https://github.com/OneLiteFeatherNET/Cygnus/issues/333)) ([1b1a0fc](https://github.com/OneLiteFeatherNET/Cygnus/commit/1b1a0fcdc578aa5f1db0b25a35ad6b805f36cae6))
+* **deps:** update dependency net.onelitefeather:falco-bom to v3.0.1 ([#332](https://github.com/OneLiteFeatherNET/Cygnus/issues/332)) ([b85dd69](https://github.com/OneLiteFeatherNET/Cygnus/commit/b85dd693b2fec6034d2348dd818285b2aec4001c))
+* **deps:** update dependency net.onelitefeather:pica to v0.1.4 ([#329](https://github.com/OneLiteFeatherNET/Cygnus/issues/329)) ([4ec9757](https://github.com/OneLiteFeatherNET/Cygnus/commit/4ec975783a4187e3e8db547e1f3965f29cf494d9))
+* **deps:** update luckperms minestom-loader to 6.0.2 ([#331](https://github.com/OneLiteFeatherNET/Cygnus/issues/331)) ([d949557](https://github.com/OneLiteFeatherNET/Cygnus/commit/d949557398438cd08c3dc8ecd17a980ae7e986fe))
+* **deps:** update opentelemetry to v1.60.0 ([#314](https://github.com/OneLiteFeatherNET/Cygnus/issues/314)) ([fb9d2c3](https://github.com/OneLiteFeatherNET/Cygnus/commit/fb9d2c3845ed1bdd3beb7dbcdb66c3562db908be))
+* **deps:** update opentelemetry to v1.60.1 ([#342](https://github.com/OneLiteFeatherNET/Cygnus/issues/342)) ([ead975d](https://github.com/OneLiteFeatherNET/Cygnus/commit/ead975d11300987c9711b7a70d06a9ca61465638))
+* **deps:** update opentelemetry to v1.61.0 ([#344](https://github.com/OneLiteFeatherNET/Cygnus/issues/344)) ([2f2e428](https://github.com/OneLiteFeatherNET/Cygnus/commit/2f2e4286e802571286fd0e7a79235ea54e4a9878))
+* **deps:** update opentelemetry to v1.62.0 ([#346](https://github.com/OneLiteFeatherNET/Cygnus/issues/346)) ([6fd0028](https://github.com/OneLiteFeatherNET/Cygnus/commit/6fd0028e560ba8553de1e9702b61ff7aee21b0b7))
+* **deps:** update opentelemetry to v1.63.0 ([#348](https://github.com/OneLiteFeatherNET/Cygnus/issues/348)) ([7fce40f](https://github.com/OneLiteFeatherNET/Cygnus/commit/7fce40fb20474792bc74270527b409869f89ad98))
+* **deps:** update opentelemetry to v1.64.0 ([#349](https://github.com/OneLiteFeatherNET/Cygnus/issues/349)) ([71fa093](https://github.com/OneLiteFeatherNET/Cygnus/commit/71fa093956ae93a60d2a0d7c6f37def595903777))
+* **deps:** update opentelemetry to v1.65.0 ([#350](https://github.com/OneLiteFeatherNET/Cygnus/issues/350)) ([c69275e](https://github.com/OneLiteFeatherNET/Cygnus/commit/c69275e134af39d6d53abf1fef10f34579c61eae))
+* **deps:** update opentelemetry to v1.66.0 ([#351](https://github.com/OneLiteFeatherNET/Cygnus/issues/351)) ([52ff918](https://github.com/OneLiteFeatherNET/Cygnus/commit/52ff9183f0bd3aef8d7c87dc1df06af253d7610b))
+* **deps:** update opentelemetry to v1.67.0 ([#353](https://github.com/OneLiteFeatherNET/Cygnus/issues/353)) ([826717a](https://github.com/OneLiteFeatherNET/Cygnus/commit/826717a7411a0acd7bdde83efd4a9c60c3b57d08))
+* **health:** round half heart bonuses to whole hearts by chance ([#343](https://github.com/OneLiteFeatherNET/Cygnus/issues/343)) ([454fc6b](https://github.com/OneLiteFeatherNET/Cygnus/commit/454fc6bc55a28cc979774902c6e2643b35859c8c))
+* **slender:** let survivors hear the slender appear and vanish ([#367](https://github.com/OneLiteFeatherNET/Cygnus/issues/367)) ([2642f3b](https://github.com/OneLiteFeatherNET/Cygnus/commit/2642f3b862968f2e5ab81d842991ecedfc07cd7e))
+* **telemetry:** give slow ticks their section children ([#316](https://github.com/OneLiteFeatherNET/Cygnus/issues/316)) ([678555a](https://github.com/OneLiteFeatherNET/Cygnus/commit/678555ae8081dd60668bd2629844134ea7729f43))
+
 ## [2.15.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.14.0...v2.15.0) (2026-10-07)
 
 
