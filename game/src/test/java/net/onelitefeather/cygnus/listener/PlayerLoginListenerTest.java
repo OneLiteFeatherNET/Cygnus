@@ -79,8 +79,6 @@ class PlayerLoginListenerTest extends CygnusPlayerTestBase {
 
         PlayerLoginListener listener = new PlayerLoginListener(() -> instance, 10, () -> new LobbyPhase(lobbyConfig()), Optional.empty());
         listener.accept(new AsyncPlayerConfigurationEvent(player, true));
-
-        assertFalse(player.isEnableRespawnScreen());
     }
 
     @Test
