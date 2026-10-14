@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MessagesTest {
 
@@ -53,5 +54,13 @@ class MessagesTest {
                 "\n───────────────────────────────────────\n" + MAP_BADGE + " Now playing: Very Long Map Name Example\nBuilt by: Alice, Bob, Charlie, Dave\n───────────────────────────────────────\n",
                 PlainTextComponentSerializer.plainText().serialize(message)
         );
+    }
+
+    @Test
+    void testIncompatibleModsMessageIsEnglish() {
+        String text = PlainTextComponentSerializer.plainText().serialize(Messages.INCOMPATIBLE_MODS);
+
+        assertTrue(text.endsWith("Incompatible mods detected! Remove them to join."),
+                "the incompatible mods kick message must be English, was: " + text);
     }
 }

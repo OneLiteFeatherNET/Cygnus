@@ -406,7 +406,7 @@ survivorTeamSize=12
 #   not answer in time is not judged, and the probe stops. Ticks, not seconds: 20 ticks are one
 #   second. Default: 100. At least 1; anything lower falls back to the default.
 #
-# The kick message is "Du hast inkompatible Mods" in common/Messages.java.
+# The kick message is "Incompatible mods detected!" in common/Messages.java.
 #client-guard.shader-probe=true
 #client-guard.incompatible-mods=iris,optifine,canvas
 #client-guard.logged-mods=sodium,embeddium,nvidium

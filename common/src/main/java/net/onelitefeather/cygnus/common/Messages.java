@@ -78,7 +78,7 @@ public final class Messages {
         SERVER_FULL = withMiniPrefix("<red>The server is full! Unable to join!");
         GAME_ALREADY_STARTED = withMiniPrefix("<red>The game has already started! Unable to join!");
         CLIENT_BLOCKED = withMiniPrefix("<red>Unsupported client detected! Remove your modifications to join.");
-        INCOMPATIBLE_MODS = withMiniPrefix("<red>Du hast inkompatible Mods! Entferne sie, um beizutreten.");
+        INCOMPATIBLE_MODS = withMiniPrefix("<red>Incompatible mods detected! Remove them to join.");
 
         SURVIVOR_JOIN_PART_UPPER = withMiniPrefix("<yellow>You are a Survivor! Find various <red>Pages").append(Component.space());
 
