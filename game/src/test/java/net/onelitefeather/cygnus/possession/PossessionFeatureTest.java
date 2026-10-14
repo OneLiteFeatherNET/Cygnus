@@ -7,6 +7,7 @@ import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.item.Material;
 import net.minestom.server.network.packet.server.play.CameraPacket;
 import net.minestom.server.network.packet.server.play.SetCooldownPacket;
 import net.minestom.testing.Collector;
@@ -16,6 +17,7 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.PossessionConfig;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.event.PossessionEndEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.utils.Items;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -130,6 +133,46 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         assertEquals(1, sent.size());
         assertEquals(creek.getEntityId(), sent.getFirst().cameraId());
         assertEquals(Set.of(near), feature.glowing());
+        feature.stop();
+    }
+
+    @Test
+    @DisplayName("Possessing locks the SlenderEye and the tracker for the maximum time and the offset")
+    void possessingLocksTheOtherItems(Env env) {
+        TestConnection connection = env.createConnection();
+        Player slender = slender(connection.connect(instance, new Pos(0, 40, 0)));
+        this.creek(instance);
+        PossessionFeature feature = this.feature(slender);
+        Collector<SetCooldownPacket> cooldowns = connection.trackIncoming(SetCooldownPacket.class);
+
+        feature.use(slender);
+
+        assertEquals(List.of(new SetCooldownPacket(Material.ENDER_EYE.key().asString(), 8 * 20 + PossessionFeature.LOCK_OFFSET_TICKS),
+                        new SetCooldownPacket(Items.TRACKING_MATERIAL.key().asString(), 8 * 20 + PossessionFeature.LOCK_OFFSET_TICKS)),
+                cooldowns.collect());
+        feature.stop();
+    }
+
+    @Test
+    @DisplayName("Ending early unlocks the other items after the offset and tells them so")
+    void endingUnlocksAfterTheOffset(Env env) {
+        TestConnection connection = env.createConnection();
+        Player slender = slender(connection.connect(instance, new Pos(0, 40, 0)));
+        this.creek(instance);
+        PossessionFeature feature = this.feature(slender);
+        feature.use(slender);
+        List<Player> ended = new ArrayList<>();
+        env.process().eventHandler().addListener(PossessionEndEvent.class, event -> ended.add(event.getPlayer()));
+        Collector<SetCooldownPacket> cooldowns = connection.trackIncoming(SetCooldownPacket.class);
+
+        this.clock.set(1_000L);
+        feature.sneaked(slender);
+
+        List<SetCooldownPacket> sent = cooldowns.collect();
+        for (String group : PossessionFeature.LOCKED_GROUPS) {
+            assertTrue(sent.contains(new SetCooldownPacket(group, PossessionFeature.LOCK_OFFSET_TICKS)), group);
+        }
+        assertEquals(List.of(slender), ended);
         feature.stop();
     }
 
