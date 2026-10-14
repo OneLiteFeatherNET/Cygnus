@@ -153,7 +153,8 @@ class PagePreviewTest {
         env.process().eventHandler().removeChild(node);
         assertEquals(1, asked.size());
         assertEquals(MapDataCategory.PAGE, asked.getFirst().getMapDataCategory());
-        assertEquals(new DialogContext.PageContent(NEAR), asked.getFirst().getContext());
+        assertEquals(new DialogContext.PageContent(NEAR, false), asked.getFirst().getContext(),
+                "a hit in the world must not send the builder back to the page list");
     }
 
     @Test
