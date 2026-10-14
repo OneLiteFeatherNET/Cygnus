@@ -18,7 +18,7 @@ import java.time.temporal.ChronoUnit;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  */
 public non-sealed class FoodBar extends StaminaBar {
@@ -170,5 +170,22 @@ public non-sealed class FoodBar extends StaminaBar {
         }
         player.setBlockedSprinting(true);
         state = State.REGENERATING;
+    }
+
+    /**
+     * Lifts the bar to the {@linkplain StaminaConfig#sprintResumeShare() resume share} and allows
+     * sprinting again.
+     * <p>
+     * Used when an adrenaline rush kicks in, so a survivor caught with an empty bar can still
+     * sprint away. A bar that is already fuller stays as it is. The state stays too: a running
+     * sprint goes on, an empty bar keeps regenerating from the share on.
+     * </p>
+     */
+    public void refillToResume() {
+        float resume = (float) (this.config.sprintResumeShare() * MAX_FOOD);
+        if (this.currentSpeedCount >= resume) return;
+        this.currentSpeedCount = resume;
+        player.setExp(normalize(this.currentSpeedCount));
+        player.setBlockedSprinting(false);
     }
 }

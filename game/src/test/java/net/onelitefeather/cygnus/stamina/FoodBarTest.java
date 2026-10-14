@@ -92,6 +92,54 @@ class FoodBarTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("Refilling an empty bar lifts it to the resume share and allows sprinting again")
+    void refillLiftsAnEmptyBar(Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance, new Pos(0, 40, 0));
+        FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina(player);
+        bar.drain();
+
+        bar.refillToResume();
+
+        assertEquals(0.3f, bar.remainingShare(), 1.0E-6f);
+        assertFalse(player.hasBlockedSprinting());
+        assertTrue(bar.canConsume());
+    }
+
+    @Test
+    @DisplayName("Refilling leaves a bar above the resume share as it is")
+    void refillNeverLowersTheBar(Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance, new Pos(0, 40, 0));
+        FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina(player);
+        bar.startConsume();
+        for (int i = 0; i < 5; i++) {
+            bar.consume(); // 20 - 5 x 2 = 10 of 20
+        }
+
+        bar.refillToResume();
+
+        assertEquals(0.5f, bar.remainingShare(), 1.0E-6f);
+    }
+
+    @Test
+    @DisplayName("Refilling while sprinting keeps the sprint going from the resume share")
+    void refillWhileSprintingKeepsDraining(Env env) {
+        Instance instance = env.createFlatInstance();
+        CygnusPlayer player = (CygnusPlayer) env.createConnection().connect(instance, new Pos(0, 40, 0));
+        FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina(player);
+        bar.startConsume();
+        for (int i = 0; i < 9; i++) {
+            bar.consume(); // 20 - 9 x 2 = 2 of 20
+        }
+
+        bar.refillToResume();
+
+        assertEquals(0.3f, bar.remainingShare(), 1.0E-6f);
+        assertEquals(StaminaBar.State.DRAINING, bar.state);
+    }
+
+    @Test
     @DisplayName("The configured values replace the defaults")
     void usesTheGivenConfig(Env env) {
         Instance instance = env.createFlatInstance();
