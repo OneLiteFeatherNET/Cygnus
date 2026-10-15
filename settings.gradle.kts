@@ -15,6 +15,11 @@ dependencyResolutionManagement {
             name = "OneLiteFeatherReleases"
             url = uri("https://repo.onelitefeather.dev/releases")
         }
+        // Lunar Client publishes the Apollo protocol classes (apollo-protos) here. Public, no credentials.
+        maven {
+            name = "lunarclient"
+            url = uri("https://repo.lunarclient.dev")
+        }
         maven("https://central.sonatype.com/repository/maven-snapshots/")
         maven("https://repository.derklaro.dev/snapshots/")
         maven("https://repository.derklaro.dev/releases/")
@@ -44,6 +49,9 @@ dependencyResolutionManagement {
             version("slf4j", "2.0.20")
             version("luckperms", "6.0.2")
             version("luckperms-minestom-loader", "6.0.2")
+            // Lunar Client's Apollo protobuf messages. 0.2.7 is the newest release; it needs protobuf-java 3.25.0 or later.
+            version("apollo-protos", "0.2.7")
+            version("protobuf", "3.25.5")
             version("guava", "33.7.2-jre")
             version("falco", "3.0.1")
             version("minestom-extensions", "2.2.0")
@@ -70,6 +78,8 @@ dependencyResolutionManagement {
             library("opentelemetry.sdk.testing", "io.opentelemetry", "opentelemetry-sdk-testing").versionRef("opentelemetry")
             library("luckperms.api", "net.luckperms", "api").versionRef("luckperms")
             library("luckperms.minestom.loader", "net.luckperms", "minestom-loader").versionRef("luckperms-minestom-loader")
+            library("apollo.protos", "com.lunarclient", "apollo-protos").versionRef("apollo-protos")
+            library("protobuf.java", "com.google.protobuf", "protobuf-java").versionRef("protobuf")
 
             library("minestom", "net.minestom", "minestom").withoutVersion()
             // OneLiteFeather fork of the archived hollow-cube/minestom-ce-extensions. Same

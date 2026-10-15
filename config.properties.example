@@ -359,3 +359,88 @@ survivorTeamSize=12
 # JourneyMap (current versions) is not covered: it is controlled by its own server mod.
 # An unknown value is logged and replaced by the default.
 #minimap.mode=disabled
+
+# --- Client guard -----------------------------------------------------------
+# Reads what the client says about itself: its brand (minecraft:brand) and the mod channels it
+# registers (minecraft:register). A client that announces a known cheat client is logged and,
+# in kick mode, disconnected. A modified client can leave out or fake both, so this catches
+# the clients that do not bother to hide. It is not a replacement for anti-cheat.
+#
+#   off   nothing is checked.
+#   log   a blocked client is logged once and allowed to stay.
+#   kick  a blocked client is logged once and disconnected.
+#
+# blocked-brands: comma separated fragments. A brand containing one is blocked, so "meteor" also
+#   catches "meteor-client". Case-insensitive. A blank value keeps the default list.
+# blocked-channels: comma separated channel prefixes, case-insensitive. The default only covers
+#   the World Downloader Mod (wdl:). Other cheat channels are not known to be stable yet, so
+#   they are not guessed here; add them when verified. Minimap channels stay out of this list,
+#   the minimap is handled by the minimap settings above.
+# allowed-brands: optional whitelist of exact brands, for example "vanilla,fabric". Empty
+#   (the default) lets every brand that is not blocked join. The whitelist judges a client once
+#   it has named a brand; a client that never sends one is not kicked, since a silent client is
+#   not caught by this check anyway.
+#
+# --- Shader probe ------------------------------------------------------------
+# The shader probe asks each player's client, on the first spawn, which shader mods it has. These
+# mods register no channel and no brand, so the probe makes the client show translatable texts
+# that only they can translate: it opens a sign editor on a sign that exists for that one player
+# only, and the answer shows which keys resolved. The sign editor is opened and closed by the
+# server without any player input. The real instance is never changed.
+#
+# Caveats: blocker mods (ExploitPreventer, OpSec) answer with the fallbacks, so a client without
+# any detected mod is not proof of a vanilla client. Iris is kicked even when no shader pack is
+# active, since the server cannot see that. A client that does not answer within the timeout is
+# not kicked. Other clients may react differently; closing the editor is what makes the client send
+# its answer, see the Javadoc of ShaderModProbe.
+#
+# shader-probe: false turns the probe off, and no sign is sent to any client.
+# incompatible-mods: shader mods whose presence kicks the client in kick mode and is logged in log
+#   mode. Known ids: iris, optifine, canvas, sodium, embeddium, nvidium. Default: iris,optifine,canvas.
+#   A mod listed here and in logged-mods counts as incompatible.
+# logged-mods: shader mods that are only logged and recorded, never kicked. They only lose the
+#   cosmetic terrain fog of the resource pack. Default: sodium,embeddium,nvidium.
+#   An unknown id is logged and skipped. A blank list keeps the default; use shader-probe=false to
+#   turn the probe off.
+# shader-probe-timeout-ticks: server ticks a client has to answer one probe sign. A client that does
+#   not answer in time is not judged, and the probe stops. Ticks, not seconds: 20 ticks are one
+#   second. Default: 100. At least 1; anything lower falls back to the default.
+#
+# The kick message is "Incompatible mods detected!" in common/Messages.java.
+#client-guard.shader-probe=true
+#client-guard.incompatible-mods=iris,optifine,canvas
+#client-guard.logged-mods=sodium,embeddium,nvidium
+#client-guard.shader-probe-timeout-ticks=100
+#
+# An unknown mode is logged and replaced by the default (kick).
+#client-guard.mode=kick
+#client-guard.blocked-brands=meteor,wurst,aristois,liquidbounce,impact,future,rusherhack,inertia,bleachhack
+#client-guard.blocked-channels=wdl:
+#client-guard.allowed-brands=
+# --- Client APIs ------------------------------------------------------------
+# Courtesy requests to client mods through the server APIs they provide. A modified client can
+# ignore them, so they are no anti-cheat and no replacement for one.
+#
+#   block-world-downloader   WorldDownloader is told on its init packet (wdl:init) to refuse all
+#                            downloading of the world: no chunks, entities, tile entities or containers.
+#                            Default: true
+#   labymod-disabled-addons  comma separated LabyMod 4 addon namespaces that are force disabled for
+#                            the player after LabyMod announces itself (AddonDisablePacket, id 24).
+#                            Only lower case letters, digits, '.', '-' and '_' are accepted, other
+#                            entries are logged and skipped. Default: empty, nothing is disabled.
+#
+#client-api.block-world-downloader=true
+#client-api.labymod-disabled-addons=
+# --- Lunar Client -----------------------------------------------------------
+# Asks Lunar Client to switch off mods that could give a survivor an edge. Lunar Client takes
+# the request over its Apollo API (channel lunar:apollo): once the client registers that channel,
+# the server sends one ModSetting override per listed mod, setting the mod's "enabled" option to
+# false. A client courtesy, not an anti-cheat: a modified client or another client ignores it.
+#
+#   disabled-mods  comma separated, from: minimap, waypoints, freelook, zoom, coordinates, directionhud.
+#                  "none" switches off nothing. An unknown name is logged and skipped.
+#   enabled        false turns the request off entirely.
+#
+# Unknown values are logged and replaced by the default.
+#lunar.enabled=true
+#lunar.disabled-mods=minimap,waypoints,freelook,zoom,coordinates,directionhud

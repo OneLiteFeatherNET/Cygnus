@@ -38,6 +38,8 @@ public final class Messages {
     public static final Component ONLY_PLAYERS_CAN_PREVIEW;
     public static final Component SERVER_FULL;
     public static final Component GAME_ALREADY_STARTED;
+    public static final Component CLIENT_BLOCKED;
+    public static final Component INCOMPATIBLE_MODS;
     private static final Component PAGE_FOUND_PART;
     private static final Component LEAVE_PART;
     private static final Component JOIN_PART;
@@ -75,6 +77,8 @@ public final class Messages {
         ONLY_PLAYERS_CAN_PREVIEW = withMiniPrefix("<red>Only players can preview the tunnel vision.");
         SERVER_FULL = withMiniPrefix("<red>The server is full! Unable to join!");
         GAME_ALREADY_STARTED = withMiniPrefix("<red>The game has already started! Unable to join!");
+        CLIENT_BLOCKED = withMiniPrefix("<red>Unsupported client detected! Remove your modifications to join.");
+        INCOMPATIBLE_MODS = withMiniPrefix("<red>Incompatible mods detected! Remove them to join.");
 
         SURVIVOR_JOIN_PART_UPPER = withMiniPrefix("<yellow>You are a Survivor! Find various <red>Pages").append(Component.space());
 
