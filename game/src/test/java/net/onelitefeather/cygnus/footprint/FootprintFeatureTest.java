@@ -23,6 +23,7 @@ import net.onelitefeather.cygnus.common.config.FootprintConfig;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.PossessionEndEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.utils.Items;
@@ -164,6 +165,53 @@ class FootprintFeatureTest extends CygnusPlayerTestBase {
 
         assertTrue(packets.collect().stream().anyMatch(packet -> packet instanceof SetCooldownPacket cooldown
                 && cooldown.cooldownTicks() == 30 * 20));
+        env.process().eventHandler().removeChild(feature.node());
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("The tracker does not work while the slender looks through the creek's eyes")
+    void trackerLockedWhilePossessing(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = env.createPlayer(instance, new Pos(0.5, 40, 5.5));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        slender.setTag(Tags.POSSESSING, true);
+        Player survivor = env.createPlayer(instance, new Pos(0.5, 40, 0.5));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        FootprintFeature feature = feature(env);
+        EventDispatcher.call(new GameStartEvent());
+        walk(survivor, 6);
+        this.clock.set(10_000L);
+
+        EventDispatcher.call(new PlayerUseItemEvent(slender, PlayerHand.MAIN, tracker(), 0L));
+        tick(env, 2);
+        assertEquals(0, feature.spawner().live().size());
+
+        slender.removeTag(Tags.POSSESSING);
+        EventDispatcher.call(new PlayerUseItemEvent(slender, PlayerHand.MAIN, tracker(), 0L));
+        tick(env, 2);
+        assertTrue(feature.spawner().live().size() > 0, "the locked use cost no cooldown");
+        env.process().eventHandler().removeChild(feature.node());
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    @DisplayName("Back from the creek's eyes, the slender sees the tracker's own cooldown again")
+    void possessionEndShowsCooldown(Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player slender = connection.connect(instance, new Pos(0.5, 40, 0.5));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        FootprintFeature feature = feature(env);
+        EventDispatcher.call(new GameStartEvent());
+        EventDispatcher.call(new PlayerUseItemEvent(slender, PlayerHand.MAIN, tracker(), 0L));
+        this.clock.set(10_000L);
+        Collector<SetCooldownPacket> packets = connection.trackIncoming(SetCooldownPacket.class);
+
+        EventDispatcher.call(new PossessionEndEvent(slender));
+
+        assertTrue(packets.collect().stream().anyMatch(packet -> packet.cooldownGroup().equals(TrackingScan.COOLDOWN_GROUP)
+                && packet.cooldownTicks() == 30 * 20));
         env.process().eventHandler().removeChild(feature.node());
         env.destroyInstance(instance, true);
     }

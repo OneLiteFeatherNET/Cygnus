@@ -13,6 +13,7 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.FootprintConfig;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.PossessionEndEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
@@ -33,7 +34,7 @@ import java.util.random.RandomGenerator;
  * </p>
  *
  * @author Joltra
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.16.0
  */
 public final class FootprintFeature implements GameFeature {
@@ -89,6 +90,7 @@ public final class FootprintFeature implements GameFeature {
         this.node.addListener(PlayerChunkLoadEvent.class,
                 event -> this.spawner.resend(event.getPlayer(), event.getChunkX(), event.getChunkZ()));
         this.node.addListener(SlenderReviveEvent.class, event -> this.slenderChanged(event.getPlayer()));
+        this.node.addListener(PossessionEndEvent.class, event -> this.possessionEnded(event.getPlayer()));
         this.node.addListener(PlayerDeathEvent.class, event -> this.died(event.getPlayer()));
         this.node.addListener(PlayerDisconnectEvent.class, event -> this.left(event.getPlayer()));
         this.node.addListener(GameFinishEvent.class, _ -> this.stop());
@@ -137,13 +139,29 @@ public final class FootprintFeature implements GameFeature {
         this.spawner.refreshViewers();
     }
 
+    /**
+     * Scans with the tracker. Not while the slender looks through the creek's eyes: the scan would
+     * run around his frozen body, far from where he is looking.
+     *
+     * @param event the item use
+     */
     private void used(PlayerUseItemEvent event) {
         if (!this.running) return;
         Byte tag = event.getItemStack().getTag(Tags.ITEM_TAG);
         if (tag == null || tag != Items.TRACKING_ITEM) return;
         Player player = event.getPlayer();
         if (!TeamHelper.isSlenderTeam(player)) return;
+        if (player.hasTag(Tags.POSSESSING)) return;
         this.scan.use(player);
+    }
+
+    /**
+     * Shows the slender the tracker's own cooldown again, the possession locked it meanwhile.
+     *
+     * @param slender the slender who is back in his body
+     */
+    private void possessionEnded(Player slender) {
+        if (this.running) this.scan.showCooldown(slender);
     }
 
     /**

@@ -8,17 +8,21 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
+import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerInputEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
+import net.minestom.server.item.Material;
+import net.minestom.server.network.packet.server.play.SetCooldownPacket;
 import net.minestom.server.sound.SoundEvent;
 import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.PossessionConfig;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.PossessionEndEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.team.TeamHelper;
@@ -28,6 +32,7 @@ import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Set;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
@@ -38,11 +43,13 @@ import java.util.function.Supplier;
  * Meanwhile his body stands revealed and frozen. Only {@link Tags#HIDDEN} changes, the slender bar
  * keeps its state, so the body does no damage, but does not refill meanwhile. Survivors around
  * the creek glow for him, and the creek is noticed from farther away. Sneaking, the maximum time or the creek going away ends it,
- * and then the full cooldown runs. A round starts with the item locked for a while.
+ * and then the full cooldown runs. A round starts with the item locked for a while. His other items
+ * stay locked meanwhile and {@value #LOCK_OFFSET_TICKS} ticks longer, so a click meant for the
+ * return does not fire them.
  * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.16.0
  */
 public final class PossessionFeature implements GameFeature {
@@ -54,6 +61,15 @@ public final class PossessionFeature implements GameFeature {
     static final Component CREEK_AWAY = Component.text("The creek is not around", NamedTextColor.GRAY, TextDecoration.ITALIC);
     static final Component TOO_FAR = Component.text("The creek is too far away", NamedTextColor.GRAY, TextDecoration.ITALIC);
     static final Component OCCUPIED = Component.text("Someone else is in the creek", NamedTextColor.GRAY, TextDecoration.ITALIC);
+
+    /** How many ticks the other slender items stay locked after he is back in his body. */
+    static final int LOCK_OFFSET_TICKS = 10;
+
+    /** The cooldown groups of the items locked while he looks through the creek's eyes. */
+    static final List<String> LOCKED_GROUPS = List.of(Material.ENDER_EYE.key().asString(),
+            Items.TRACKING_MATERIAL.key().asString());
+
+    private static final int TICKS_PER_SECOND = 20;
 
     private static final Sound DENIED = Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_BASS, Sound.Source.MASTER, 0.6F, 0.5F);
 
@@ -201,7 +217,7 @@ public final class PossessionFeature implements GameFeature {
 
     /**
      * Starts the possession of a creek the slender's client already knows: reveals the slender,
-     * blocks his SlenderEye, moves his camera to the creek and lets the survivors around it glow.
+     * locks his other items, moves his camera to the creek and lets the survivors around it glow.
      *
      * @param player the slender
      * @param creek  the creek's entity
@@ -210,6 +226,7 @@ public final class PossessionFeature implements GameFeature {
         player.setTag(Tags.POSSESSING, true);
         player.setTag(Tags.HIDDEN, SlenderBarHelper.VISIBLE);
         VisibilityRules.refresh(player);
+        lockItems(player, this.config.maxSeconds() * TICKS_PER_SECOND + LOCK_OFFSET_TICKS);
         player.spectate(creek);
         this.possession = Possession.start(player, this.clock.getAsLong(), this.config.maxSeconds());
         this.glow.update(player, Possession.inRange(creek, this.glowRange(), this.survivors.get()));
@@ -290,7 +307,9 @@ public final class PossessionFeature implements GameFeature {
 
     /**
      * Ends the possession for an online slender: camera back, glow off, creek released and the
-     * slender hidden again.
+     * slender hidden again. His other items unlock {@value #LOCK_OFFSET_TICKS} ticks later, or show
+     * their own cooldown again if it lasts longer. At the round's end they are left alone, the
+     * items go anyway.
      *
      * @param current      the running possession
      * @param withCooldown whether the full cooldown starts
@@ -305,7 +324,23 @@ public final class PossessionFeature implements GameFeature {
         player.removeTag(Tags.POSSESSING);
         player.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
         VisibilityRules.refresh(player);
-        if (withCooldown) this.cooldown.start(player);
+        if (withCooldown) {
+            this.cooldown.start(player);
+            lockItems(player, LOCK_OFFSET_TICKS);
+            EventDispatcher.call(new PossessionEndEvent(player));
+        }
+    }
+
+    /**
+     * Shows the other slender items as cooling down, which keeps the client from using them.
+     *
+     * @param player the slender
+     * @param ticks  how long they stay locked
+     */
+    private static void lockItems(Player player, int ticks) {
+        for (String group : LOCKED_GROUPS) {
+            player.sendPacket(new SetCooldownPacket(group, ticks));
+        }
     }
 
     /**
