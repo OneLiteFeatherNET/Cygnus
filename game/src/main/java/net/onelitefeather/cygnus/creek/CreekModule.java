@@ -12,7 +12,7 @@ import net.onelitefeather.cygnus.creek.consequence.CatchEffects;
 import net.onelitefeather.cygnus.creek.consequence.CatchLaunch;
 import net.onelitefeather.cygnus.creek.consequence.CatchSwap;
 import net.onelitefeather.cygnus.creek.consequence.CatchTricks;
-import net.onelitefeather.cygnus.creek.consequence.GlowReveal;
+import net.onelitefeather.cygnus.creek.consequence.LocatorReveal;
 import net.onelitefeather.cygnus.creek.consequence.LandingDamage;
 import net.onelitefeather.cygnus.creek.consequence.StagedCatchConsequence;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
@@ -74,7 +74,7 @@ public final class CreekModule implements GameFeature {
                                 new CatchLaunch(this.config.catching().launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
                                 this.config.catching().swapChance(),
                                 random),
-                        new GlowReveal(this.config.catching().betrayalGlowSeconds(), sections),
+                        new LocatorReveal(this.config.catching().betrayalGlowSeconds(), sections),
                         () -> TeamHelper.slenderOf(teamService),
                         this.config,
                         random),

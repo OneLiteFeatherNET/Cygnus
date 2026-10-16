@@ -106,7 +106,7 @@ The measured services, with the name each reports as `cygnus.tick.section.name` 
 | `lobby-waiting` | The lobby's waiting action bar |
 | `lobby-time` | The lobby's slide of the world time |
 | `creek` | The creek's step |
-| `glow-reveal` | The betrayal glow resend |
+| `locator-reveal` | The betrayal waypoint update |
 | `slender-gaze` | The slender's gaze check |
 | `tunnel-vision` | The tunnel vision overlay |
 | `page-glitch` | The page glitch overlay |

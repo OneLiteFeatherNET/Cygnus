@@ -113,7 +113,7 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("Possessing reveals the slender, moves his camera to the creek and lets nearby survivors glow")
+    @DisplayName("Possessing reveals the slender, moves his camera to the creek and puts nearby survivors on his locator bar")
     void possessing(Env env) {
         TestConnection connection = env.createConnection();
         Player slender = slender(connection.connect(instance, new Pos(0, 40, 0)));
@@ -132,7 +132,7 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         List<CameraPacket> sent = cameras.collect();
         assertEquals(1, sent.size());
         assertEquals(creek.getEntityId(), sent.getFirst().cameraId());
-        assertEquals(Set.of(near), feature.glowing());
+        assertEquals(Set.of(near), feature.tracked());
         feature.stop();
     }
 
@@ -210,7 +210,7 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         assertFalse(slender.hasTag(Tags.POSSESSING));
         assertNull(this.target.possessedBy);
         assertEquals(slender.getEntityId(), cameras.collect().getFirst().cameraId());
-        assertTrue(feature.glowing().isEmpty());
+        assertTrue(feature.tracked().isEmpty());
         assertFalse(feature.use(slender), "the cooldown runs");
         this.clock.set(68_000L);
         assertTrue(feature.use(slender));
@@ -287,7 +287,7 @@ class PossessionFeatureTest extends CygnusPlayerTestBase {
         assertNull(this.target.possessedBy);
         assertEquals(1, this.target.releases);
         assertFalse(slender.hasTag(Tags.POSSESSING));
-        assertTrue(feature.glowing().isEmpty());
+        assertTrue(feature.tracked().isEmpty());
     }
 
     @Test

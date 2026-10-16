@@ -7,7 +7,7 @@ import static net.onelitefeather.cygnus.common.config.ConfigChecks.notNegative;
  * Settings for the slender's look through the eyes of the creek.
  * <p>
  * While he possesses the creek, his own body stands revealed and frozen, survivors around the
- * creek glow for him, and the creek is noticed from farther away. It only exists together with the
+ * creek show on his locator bar, and the creek is noticed from farther away. It only exists together with the
  * creek, so {@link CreekConfig#enabled()} switches it off as well.
  * </p>
  *

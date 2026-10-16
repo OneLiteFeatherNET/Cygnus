@@ -331,7 +331,7 @@ public record CreekConfig(
      *
      * @param betrayalCatchCount  from this catch on, a survivor is always revealed to the slender
      * @param betrayalChance      chance of a reveal on earlier catches
-     * @param betrayalGlowSeconds how long a revealed survivor glows for the slender
+     * @param betrayalGlowSeconds how long a revealed survivor shows on the slender's locator bar
      * @param slownessSeconds     how long a caught survivor is slowed
      * @param launchHeight        how high a caught survivor is thrown into the air, in blocks. 0 turns the launch off
      * @param swapChance          chance that a catch swaps two survivors instead of throwing the caught one.
