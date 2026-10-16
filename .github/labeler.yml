@@ -1,0 +1,40 @@
+"area: common":
+  - changed-files:
+      - any-glob-to-any-file: "common/**"
+
+"area: game":
+  - changed-files:
+      - any-glob-to-any-file: "game/**"
+
+"area: setup":
+  - changed-files:
+      - any-glob-to-any-file: "setup/**"
+
+"area: bridge":
+  - changed-files:
+      - any-glob-to-any-file: "bridge/**"
+
+"area: ci":
+  - changed-files:
+      - any-glob-to-any-file: ".github/**"
+
+"area: build":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "buildSrc/**"
+          - "gradle/**"
+          - "**/*.gradle.kts"
+          - "gradle.properties"
+
+"area: docs":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "openspec/**"
+          - "**/*.md"
+
+"feature: creek":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "game/src/**/creek/**"
+          - "game/src/**/possession/**"
