@@ -6,7 +6,6 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.blood.BloodSplatterService;
-import net.onelitefeather.cygnus.command.GlitchCommand;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.gaze.BossBarGazeSignal;
 import net.onelitefeather.cygnus.gaze.SlenderGaze;
@@ -108,7 +107,6 @@ public final class OverlayModule implements GameFeature {
 
     @Override
     public void registerCommands(CommandManager manager) {
-        // Outside the overlay gate: the command drives the signal directly, see GlitchCommand.
-        manager.register(new GlitchCommand(this.gazeSignal));
+        // Nothing to do here
     }
 }
