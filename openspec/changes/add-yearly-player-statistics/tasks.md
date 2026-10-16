@@ -36,6 +36,20 @@
   `(player_uuid, finished_at)`, edit V1 in place; tests first in the tracker, the repository integration test and the
   collector event test. The balancing itself is a separate later change
 
+## 4b. Player display
+
+- [x] 4b.1 Add `player_names` to V1 (edited in place), the `PlayerName` entity, `KnownPlayer`, `YearStatsView` with the
+  derived values, and the names in `FinishedRound` and `RoundStatsTracker`; tests first in the tracker, the view and the
+  repository integration test (rename, name reuse, late write, deletion)
+- [x] 4b.2 Give `StatsRepository` the reads `findYear`, `findPlayerByName`, `availableYears` and let `saveRound` complete
+  with the merged year rows; update `NoOpStatsRepository`, `HibernateStatsRepository` and the callers and tests
+- [x] 4b.3 Add `StatsOverview`, `StatsMessages`, `StatsMenu`, `PlayerStatsService` and `StatsCommand` in
+  `net.onelitefeather.cygnus.stats.display`; tests first with a `FakeStatsRepository` and a Minestom `Env`
+- [x] 4b.4 Add the lobby item (`Items.STATS_ITEM`) and `StatsDisplayFeature`: given in the lobby and waiting phase,
+  removed at the game start, locked, not given while statistics are off
+- [x] 4b.5 Hand the committed totals from `RoundStatsCollector` to the round-end line and wire everything in `Cygnus`
+- [x] 4b.6 Update the OpenSpec documents for the display
+
 ## 5. Verification
 
 - [x] 5.1 Run `./gradlew :game:test` and `./gradlew build`

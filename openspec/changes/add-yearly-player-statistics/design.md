@@ -132,18 +132,69 @@ the old V1 needs a `flyway clean` or a dropped schema.
 2. A quit before the finish freezes that player's builder with outcome `ABANDONED`.
 3. At `GameFinishEvent` the collector resolves win/loss from the reason and role, builds immutable `RoundStats`
    records and clears the map.
-4. `StatsRepository.saveRound(roundId, finishedAt, List<RoundStats>)` runs on a dedicated single-thread executor
-   (virtual thread is fine). In one transaction it inserts the round rows and merges each year row
-   (load-or-create, add, keep max/min). Several Cygnus servers write to the same database, so two rounds can touch
+4. `StatsRepository.saveRound(FinishedRound)` runs on a dedicated single-thread executor
+   (virtual thread is fine). In one transaction it inserts the round rows, merges each year row
+   (load-or-create, add, keep max/min) and upserts the players' last known names. Several Cygnus servers write to the same database, so two rounds can touch
    the same year row at once: an `OptimisticLockException` (another server updated the row) or a unique-key
    violation (another server created the row first) rolls back and retries the whole transaction up to three times.
    The round rows cannot collide because every round id is unique.
-5. A failure is logged with the round id, counted in an OpenTelemetry counter `cygnus.stats.write.failures`, and does
-   not affect the round end or the restart.
+5. After the commit the returned future completes with the merged year rows (`Map<UUID, YearStatsView>`), copied into
+   immutable views inside the transaction. A failure is logged with the round id, counted in an OpenTelemetry counter
+   `cygnus.stats.write.failures`, completes the future exceptionally, and does not affect the round end or the restart.
 6. On shutdown the executor is drained with a timeout before the `EntityManagerFactory` closes.
 
 Writing only at the round end keeps the database load at one transaction per round and means a crash mid-round
 loses that round's numbers, which is acceptable.
+
+## Player display
+
+Players see the statistics through a command, a menu and a lobby item; the round summary adds a line. The code lives
+in `net.onelitefeather.cygnus.stats.display` in `game`, `common` stays free of anything statistics. Everything a player
+can read is English.
+
+- **Command `/stats [player] [year]`** (`StatsCommand`, no permission): prints a compact overview in chat (header,
+  General, Survivor and Slender sections). Derived values (win rate, K/D, pages per round, average survival) come from
+  `YearStatsView`, which answers `0` instead of dividing by zero; K/D is the kill count when there is no death. The
+  year defaults to the current calendar year in `StatsConfig.timeZone()`, taken from the injected `Clock`; it is read as
+  text and must be a number between 2000 and 9999, otherwise the usage message is shown. The overview ends with a
+  clickable `[Open the menu]` that runs `/stats open-menu <player> <year>`. The literal contains a hyphen on purpose:
+  it cannot be a Minecraft name, so no player is shadowed by it. The console may look at a named player, but has no
+  statistics of its own.
+- **Menu** (`StatsMenu`): a chest inventory with the player's head and one item per area (general, survivor, Slender)
+  whose lore lists the same lines as the chat. It is its own `Inventory` subclass, so `StatsDisplayFeature` recognises
+  it and cancels every `InventoryPreClickEvent` in it (all click types, drags included) and in the player's own
+  inventory while it is open. The menu is built from an immutable view and never changes while open.
+- **Lobby item**: `StatsDisplayFeature` gives a book tagged `Items.STATS_ITEM` (`Tags.ITEM_TAG`, hotbar slot 4) on the
+  first spawn while the running phase is `LobbyPhase` or `WaitingPhase`. A right click (`PlayerUseItemEvent`) opens the
+  player's own current-year menu. The item is removed on `GameStartEvent` by its tag, so the survivors' painkillers
+  stay, and it cannot be dropped, swapped or moved. The feature is disabled while statistics are off, so no item is
+  given; the command stays registered to answer "Statistics are not available on this server."
+- **Round-end line**: `saveRound` completes with the committed year rows. `RoundStatsCollector` hands them to
+  `PlayerStatsService.roundSaved` once the write is committed, which hops to the server thread through the scheduler
+  and sends every online participant one line, `Your <year> totals: <rounds> rounds, <wins> wins, <pages> pages,
+  <kills> kills`. The line follows the existing round summary, which is sent immediately and so cannot wait for the
+  database. If the write fails or statistics are off nothing is shown, the existing failure log and metric stay.
+- **Name table**: `player_names (player_uuid PK, name, name_lower, updated_at)` with an index on `name_lower`, in V1
+  (edited in place). The tracker reads the names of the participants at the round start (a player who quits is gone
+  at the end) and `FinishedRound` carries them; the repository upserts them in the transaction of `saveRound`, with
+  the round's finish time as `updated_at`. The newest write wins on a rename, and a round that another server writes
+  late does not bring an old name back. A lookup lowercases the name and, when several players have carried it, takes
+  the most recently updated row. `deleteByPlayer` deletes the name row too.
+- **Read API**: `findYear(UUID, int)` returns `Optional<YearStatsView>`, `findPlayerByName(String)` returns
+  `Optional<KnownPlayer>` (UUID and last name) and `availableYears(UUID)` returns the years, newest first; it is only
+  used to tell a player which years exist when the asked year is empty. All return `CompletableFuture` and run on the
+  statistics executor, never on the tick thread; they return immutable records, never entities.
+  `NoOpStatsRepository` returns empty results and `enabled()` is `false`. Online players are resolved by name through
+  Minestom before the database is asked.
+- **Caching**: `PlayerStatsService` loads a player's current year asynchronously when they join and keeps it until they
+  leave. A round end drops the cache and discards loads that started before it; the committed totals of the round then
+  refill it. The cache only holds players who are online, and a load that completes after the player left is dropped.
+  A click without a cached view sends "Loading statistics…" and opens the menu when the view is there; a player without
+  a round in the year gets a menu of zeros. Answers are sent and menus opened on the server thread.
+- **Errors**: statistics off: "Statistics are not available on this server."; unknown player: "No statistics found for
+  <name>."; a known player without rows in the year: "<name> has no statistics for <year>." with the years that exist;
+  database error: "Could not load statistics, please try again later." and a log line with the cause; invalid year: the
+  usage message.
 
 ## Configuration
 
@@ -166,6 +217,11 @@ stats.time-zone=Europe/Berlin
   PostgreSQL and the H2 mode accept (no PostgreSQL-only types; UUIDs as `UUID`). Covers insert, aggregate merge, max/min handling, the optimistic
   retry and the deletion by UUID.
 - No sleeps: the repository executor is injected, tests pass a direct (same-thread) executor.
+- Display: the repository reads, the name upsert and lookup (rename, name reuse, late write, deletion) and the merged
+  views of `saveRound` run against H2 in `stats`; `YearStatsView` is tested for division by zero. In `game` a
+  `FakeStatsRepository` (completed futures, or reads the test completes itself) drives the command parsing, the cache,
+  the overview formatting, the menu, the lobby item and the round-end line through a Minestom `Env`; the server thread
+  is the injected scheduler and `env.tick()` runs it.
 
 ## Decisions
 
@@ -176,6 +232,10 @@ stats.time-zone=Europe/Berlin
 - **Both round rows and year aggregate** instead of only one: round rows alone make every profile read a
   `GROUP BY`; aggregates alone make mistakes unrecoverable.
 - **Feature off without a JDBC URL**: local development and tests do not need a database.
+- **Last known name in the database instead of the Mojang API**: offline lookups need no external service and no
+  rate limit; the price is that a player who never finished a round has no name row.
+- **Chat overview plus menu plus lobby item**: the command is the fast, copyable view and works for anyone; the menu
+  and the item are for players who do not type commands.
 
 ## Resolved questions
 

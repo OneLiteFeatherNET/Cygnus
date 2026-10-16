@@ -149,9 +149,130 @@ When no `stats.jdbc-url` is configured, the system SHALL run without a database 
 
 ### Requirement: A player's statistics can be deleted
 
-The repository SHALL delete all round records and yearly aggregates of a given player UUID in one transaction.
+The repository SHALL delete all round records, yearly aggregates and the stored name of a given player UUID in one
+transaction.
 
 #### Scenario: Deletion by UUID
 
 - **WHEN** the statistics of a player are deleted
-- **THEN** no round record and no yearly aggregate with that UUID remains
+- **THEN** no round record, no yearly aggregate and no name with that UUID remains
+
+### Requirement: Players can see statistics
+
+The system SHALL let every player look at the statistics of every player, including players who are offline and
+played before. `/stats [player] [year]` SHALL print a compact overview in chat with a general, a Survivor and a Slender
+section; the year SHALL default to the current calendar year in the configured time zone. Win rate, K/D and averages
+SHALL be computed when read and SHALL be `0` instead of a division by zero.
+
+#### Scenario: Own statistics
+
+- **WHEN** a player runs `/stats`
+- **THEN** the overview of their current year is printed
+
+#### Scenario: Another player, online or offline
+
+- **WHEN** a player runs `/stats Name 2025`
+- **THEN** the overview of that player for 2025 is printed, whether the player is online or only known by their stored name
+
+#### Scenario: Unknown player or empty year
+
+- **WHEN** nobody was ever seen with the name, or the player has no rounds in the year
+- **THEN** the sender is told so, and in the second case also which years have statistics
+
+#### Scenario: Invalid year
+
+- **WHEN** the year is not a number between 2000 and 9999
+- **THEN** the usage message is shown and nothing is looked up
+
+#### Scenario: No rounds, no division by zero
+
+- **WHEN** the overview of a year without rounds is formatted
+- **THEN** every rate, ratio and average is shown as zero
+
+### Requirement: The overview opens a menu
+
+The chat overview SHALL carry a clickable part that opens a read-only chest menu for the same player and year, with
+one item per area. Every click and drag in the menu SHALL be cancelled.
+
+#### Scenario: Click on the overview
+
+- **WHEN** the player clicks the clickable part
+- **THEN** the menu of the same player and year opens
+
+#### Scenario: Menu is read-only
+
+- **WHEN** a player clicks, drags or shift-clicks in the open menu or their own inventory
+- **THEN** the click is cancelled and nothing moves
+
+### Requirement: A lobby item opens the player's own menu
+
+While the lobby or the waiting phase runs, a player SHALL carry a hotbar item whose right click opens their own
+current-year menu. The item SHALL be removed when the round starts, SHALL NOT be droppable, swappable or movable, and
+SHALL NOT be given while statistics are disabled. The player's current year SHALL be loaded asynchronously on join and
+cached until they leave or a round finishes; without a cached view the player SHALL be told that it loads.
+
+#### Scenario: Item in the lobby
+
+- **WHEN** a player joins during the lobby phase
+- **THEN** the item is in their hotbar and their year is loading
+
+#### Scenario: Item removed at the start
+
+- **WHEN** the round starts
+- **THEN** no player carries the item any more and the other items are unchanged
+
+#### Scenario: Statistics disabled
+
+- **WHEN** statistics are disabled
+- **THEN** no item is given and `/stats` answers that statistics are not available
+
+#### Scenario: Cache miss
+
+- **WHEN** a player right-clicks the item before their year is loaded
+- **THEN** they see "Loading statistics…" and the menu opens once the year is loaded
+
+### Requirement: The round summary shows the updated totals
+
+After a round was committed, every online participant SHALL get one extra line with their updated totals of the year
+(rounds, wins, pages, kills). The line SHALL be sent on the server thread. When the write fails or statistics are
+disabled the line SHALL be left out and the round end SHALL be unaffected.
+
+#### Scenario: Committed totals
+
+- **WHEN** the round was written and the transaction committed
+- **THEN** each online participant receives their year totals including the round
+
+#### Scenario: Failed write
+
+- **WHEN** the write failed
+- **THEN** no line is sent and the failure is logged and counted as before
+
+### Requirement: The last known name is stored
+
+The system SHALL store the last known name of each participant, case-insensitively searchable, in the transaction that
+stores the round. The newest write SHALL win on a rename, and a name that moved to another player SHALL resolve to the
+most recently updated row. Deleting a player SHALL delete the name as well. Lookups SHALL run off the tick thread.
+
+#### Scenario: Rename
+
+- **WHEN** a player is seen with a new name
+- **THEN** the new name finds the player and the old name no longer does
+
+#### Scenario: Name reuse
+
+- **WHEN** a name stored for one player is now used by another
+- **THEN** a lookup returns the player whose name was seen last
+
+#### Scenario: Deletion
+
+- **WHEN** the statistics of a player are deleted
+- **THEN** the stored name is deleted with them
+
+### Requirement: Failures of a lookup are reported without details
+
+A failed read SHALL be logged and SHALL tell the player only that statistics could not be loaded.
+
+#### Scenario: Database error
+
+- **WHEN** reading the statistics fails
+- **THEN** the player sees "Could not load statistics, please try again later." and the cause is in the log
