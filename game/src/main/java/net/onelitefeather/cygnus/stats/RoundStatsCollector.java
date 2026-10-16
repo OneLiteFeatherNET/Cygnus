@@ -9,6 +9,7 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.event.PainkillerUsedEvent;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
+import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.stats.RoundStats.Role;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -105,6 +106,8 @@ public final class RoundStatsCollector {
                 event -> this.tracker.damageTaken(event.getPlayer().getUuid(), event.getPoints()));
         node.addListener(PainkillerUsedEvent.class,
                 event -> this.tracker.painkillerUsed(event.getPlayer().getUuid()));
+        node.addListener(SlenderReviveEvent.class,
+                event -> this.tracker.slenderTakenOver(event.getPlayer().getUuid()));
     }
 
     /**

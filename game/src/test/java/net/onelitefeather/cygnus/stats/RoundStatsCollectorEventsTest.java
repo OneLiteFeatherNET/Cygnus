@@ -13,6 +13,7 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.event.PainkillerUsedEvent;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
+import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.stats.RoundStats.Outcome;
 import net.onelitefeather.cygnus.stats.RoundStats.Role;
 import net.minestom.server.event.Event;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -121,5 +123,25 @@ class RoundStatsCollectorEventsTest extends CygnusPlayerTestBase {
 
         assertEquals(Outcome.ABANDONED, statsOf(bob).outcome());
         assertEquals(Outcome.WIN, statsOf(alice).outcome());
+    }
+
+    @Test
+    @DisplayName("A Slender revive marks the survivor as taken over and keeps the start role")
+    void reviveMarksTheTakeover(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player slender = player(env, instance);
+        Player alice = player(env, instance);
+        Player bob = player(env, instance);
+        registered(env, slender, alice, bob);
+
+        EventDispatcher.call(new GameStartEvent());
+        EventDispatcher.call(new SlenderReviveEvent(alice));
+        env.tick();
+        EventDispatcher.call(new GameFinishEvent(GameFinishEvent.Reason.TIME_OVER));
+
+        assertTrue(statsOf(alice).takenOver(), "Alice became the Slender");
+        assertEquals(Role.SURVIVOR, statsOf(alice).role(), "the role stays the start role");
+        assertFalse(statsOf(bob).takenOver(), "Bob did not take over");
+        assertEquals(3, statsOf(bob).participants(), "the lobby had three participants");
     }
 }

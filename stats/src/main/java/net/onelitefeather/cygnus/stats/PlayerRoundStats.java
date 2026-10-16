@@ -70,6 +70,10 @@ public class PlayerRoundStats {
     private int painkillersUsed;
     @Column(name = "pages_against", nullable = false)
     private int pagesAgainst;
+    @Column(nullable = false)
+    private int participants;
+    @Column(name = "taken_over", nullable = false)
+    private boolean takenOver;
 
     /**
      * For Hibernate.
@@ -100,5 +104,7 @@ public class PlayerRoundStats {
         this.damageTaken = stats.damageTaken();
         this.painkillersUsed = stats.painkillersUsed();
         this.pagesAgainst = stats.pagesAgainst();
+        this.participants = stats.participants();
+        this.takenOver = stats.takenOver();
     }
 }

@@ -83,6 +83,69 @@ class RoundStatsTrackerTest {
     }
 
     @Test
+    @DisplayName("Every row carries the number of participants of the round")
+    void everyRowCarriesTheLobbySize() {
+        startRound();
+        finish(this.tracker, FinishReason.TIME_OVER);
+
+        assertTrue(this.rounds.getFirst().players().stream().allMatch(stats -> stats.participants() == 4),
+                "all four rows must say the lobby had four participants");
+    }
+
+    @Test
+    @DisplayName("A player who quit still counts towards the lobby size")
+    void leaversCountTowardsTheLobbySize() {
+        startRound();
+        this.tracker.playerLeft(BOB);
+        finish(this.tracker, FinishReason.TIME_OVER);
+
+        assertEquals(4, statsOf(ALICE).participants(), "the lobby size is fixed at the start");
+    }
+
+    @Test
+    @DisplayName("Only the survivor who took over is flagged")
+    void onlyTheTakenOverSurvivorIsFlagged() {
+        startRound();
+        this.tracker.slenderTakenOver(ALICE);
+        finish(this.tracker, FinishReason.TIME_OVER);
+
+        assertTrue(statsOf(ALICE).takenOver(), "Alice became the Slender");
+        assertFalse(statsOf(BOB).takenOver(), "Bob stayed a survivor");
+        assertFalse(statsOf(SLENDER).takenOver(), "the original Slender did not take over");
+    }
+
+    @Test
+    @DisplayName("A takeover keeps the start role")
+    void takeoverKeepsTheStartRole() {
+        startRound();
+        this.tracker.slenderTakenOver(ALICE);
+        finish(this.tracker, FinishReason.TIME_OVER);
+
+        assertEquals(Role.SURVIVOR, statsOf(ALICE).role(), "the role column stays the role of the round start");
+    }
+
+    @Test
+    @DisplayName("Nobody is flagged without a takeover")
+    void noTakeoverNoFlag() {
+        startRound();
+        finish(this.tracker, FinishReason.TIME_OVER);
+
+        assertTrue(this.rounds.getFirst().players().stream().noneMatch(RoundStats::takenOver),
+                "no row may be flagged when nobody took over");
+    }
+
+    @Test
+    @DisplayName("A takeover of a player who is not a participant is ignored")
+    void takeoverOfAnOutsiderIsIgnored() {
+        startRound();
+        this.tracker.slenderTakenOver(UUID.randomUUID());
+        finish(this.tracker, FinishReason.TIME_OVER);
+
+        assertEquals(4, this.rounds.getFirst().players().size(), "no row appears for the outsider");
+        assertTrue(this.rounds.getFirst().players().stream().noneMatch(RoundStats::takenOver));
+    }
+
+    @Test
     @DisplayName("A player who is not a participant gets no statistics")
     void spectatorsAreNotTracked() {
         startRound();

@@ -97,6 +97,8 @@ public class PlayerYearStats {
     private @Nullable Long fastestWinSeconds;
     @Column(name = "pages_against", nullable = false)
     private int pagesAgainst;
+    @Column(nullable = false)
+    private int takeovers;
     @Version
     @Column(nullable = false)
     private long version;
@@ -149,6 +151,9 @@ public class PlayerYearStats {
         this.kills += stats.kills();
         this.bestKillsRound = Math.max(this.bestKillsRound, stats.kills());
         this.pagesAgainst += stats.pagesAgainst();
+        if (stats.takenOver()) {
+            this.takeovers++;
+        }
     }
 
     private void mergeOutcome(RoundStats stats, boolean slender) {

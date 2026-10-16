@@ -92,11 +92,16 @@ class HibernateStatsRepositoryIntegrationTest {
 
     private static RoundStats survivor(UUID player, Outcome outcome, FinishReason reason, int pages, boolean died, long timeSurvived) {
         return new RoundStats(player, Role.SURVIVOR, outcome, reason, pages, 0, died, !died && outcome != Outcome.ABANDONED,
-                false, 600L, timeSurvived, 0.0D, 0, 0);
+                false, 600L, timeSurvived, 0.0D, 0, 0, 3, false);
+    }
+
+    private static RoundStats takenOverSurvivor(UUID player, int participants) {
+        return new RoundStats(player, Role.SURVIVOR, Outcome.LOSS, FinishReason.TIME_OVER, 0, 0, false, true,
+                false, 600L, 600L, 0.0D, 0, 0, participants, true);
     }
 
     private static RoundStats slender(UUID player, Outcome outcome, FinishReason reason, int kills, long playTime) {
-        return new RoundStats(player, Role.SLENDER, outcome, reason, 0, kills, false, false, false, playTime, 0L, 0.0D, 0, 3);
+        return new RoundStats(player, Role.SLENDER, outcome, reason, 0, kills, false, false, false, playTime, 0L, 0.0D, 0, 3, 4, false);
     }
 
     private static FinishedRound round(UUID roundId, int year, RoundStats... players) {
@@ -113,6 +118,17 @@ class HibernateStatsRepositoryIntegrationTest {
                 assertTrue(result.next(), "no row for " + sql);
                 return result.getLong(1);
             }
+        } catch (SQLException exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    private String text(String sql) {
+        try (Connection connection = this.dataSource.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery(sql)) {
+            assertTrue(result.next(), "no row for " + sql);
+            return result.getString(1);
         } catch (SQLException exception) {
             throw new AssertionError(exception);
         }
@@ -143,7 +159,7 @@ class HibernateStatsRepositoryIntegrationTest {
     private void otherServerCreatesYearRow(int year, int kills) {
         try (Connection connection = this.dataSource.getConnection(); Statement statement = connection.createStatement()) {
             statement.executeUpdate("insert into player_year_stats values ('" + SLENDER + "', " + year + ", 1, 1, 0, 0, 0, 1, 0, 0, 600,"
-                    + " 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0, " + kills + ", " + kills + ", null, 0, 0)");
+                    + " 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0, " + kills + ", " + kills + ", null, 0, 0, 0)");
         } catch (SQLException exception) {
             throw new AssertionError(exception);
         }
@@ -160,6 +176,46 @@ class HibernateStatsRepositoryIntegrationTest {
 
         assertEquals(3, number("select count(*) from player_round_stats where round_id = ?", roundId));
         assertEquals(2, number("select pages_found from player_round_stats where round_id = ? and player_uuid = ?", roundId, ALICE));
+    }
+
+    @Test
+    @DisplayName("The lobby size and the takeover flag are stored on every row of the round")
+    void lobbySizeAndTakeoverArePersisted() {
+        UUID roundId = UUID.randomUUID();
+        this.repository.saveRound(round(roundId, 2026,
+                slender(SLENDER, Outcome.LOSS, FinishReason.SLENDER_LEFT, 0, 900),
+                takenOverSurvivor(ALICE, 4),
+                survivor(BOB, Outcome.WIN, FinishReason.SLENDER_LEFT, 0, false, 900)));
+
+        assertEquals(4, number("select participants from player_round_stats where round_id = ? and player_uuid = ?", roundId, SLENDER));
+        assertEquals(4, number("select participants from player_round_stats where round_id = ? and player_uuid = ?", roundId, ALICE));
+        assertEquals(1, number("select count(*) from player_round_stats where round_id = ? and taken_over", roundId),
+                "only the survivor who became Slender is flagged");
+        assertEquals(1, number("select count(*) from player_round_stats where round_id = ? and player_uuid = ? and taken_over and role = 'SURVIVOR'",
+                roundId, ALICE), "the role column keeps the start role");
+    }
+
+    @Test
+    @DisplayName("Takeovers are summed in the year row")
+    void takeoversAreSummed() {
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, takenOverSurvivor(ALICE, 4)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, takenOverSurvivor(ALICE, 5)));
+
+        assertEquals(2, yearValue("takeovers", ALICE, 2026));
+        assertEquals(3, yearValue("rounds_played", ALICE, 2026));
+    }
+
+    @Test
+    @DisplayName("The migration creates the recent-history index on player and finish time")
+    void recentHistoryIndexExists() {
+        assertEquals(1, number("select count(*) from information_schema.indexes"
+                + " where lower(table_name) = 'player_round_stats' and lower(index_name) = 'idx_player_round_stats_player_finished'"),
+                "the index for the last-N-rounds reads must exist");
+        assertEquals("player_uuid,finished_at", text("select listagg(lower(column_name), ',') within group (order by ordinal_position)"
+                + " from information_schema.index_columns"
+                + " where lower(table_name) = 'player_round_stats' and lower(index_name) = 'idx_player_round_stats_player_finished'"),
+                "the index must lead with the player and then the finish time");
     }
 
     @Test

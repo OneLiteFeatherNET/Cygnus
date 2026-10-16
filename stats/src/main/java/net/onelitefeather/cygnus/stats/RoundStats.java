@@ -24,6 +24,8 @@ import java.util.UUID;
  * @param damageTaken        vitality points lost to hits
  * @param painkillersUsed    painkillers taken
  * @param pagesAgainst       pages the survivors found in the round, counted for the Slender only, {@code 0} otherwise
+ * @param participants       tracked participants of the round (Slender and Survivors at the start), the same on every row of the round
+ * @param takenOver          whether this survivor became the Slender after the original one left; {@code role} stays the start role
  * @author TheMeinerLP
  * @version 1.0.0
  * @since 2.16.0
@@ -42,7 +44,9 @@ public record RoundStats(
         long timeSurvivedSeconds,
         double damageTaken,
         int painkillersUsed,
-        int pagesAgainst
+        int pagesAgainst,
+        int participants,
+        boolean takenOver
 ) {
 
     /**
@@ -90,6 +94,7 @@ public record RoundStats(
         private int pagesFound;
         private int kills;
         private boolean finisher;
+        private boolean takenOver;
         private double damageTaken;
         private int painkillersUsed;
         private @Nullable Instant died;
@@ -146,6 +151,13 @@ public record RoundStats(
         }
 
         /**
+         * Marks that this survivor became the Slender after the original one left.
+         */
+        public void takenOver() {
+            this.takenOver = true;
+        }
+
+        /**
          * Counts a kill credit.
          */
         public void kill() {
@@ -196,9 +208,10 @@ public record RoundStats(
          * @param reason       why the round ended
          * @param finished     when it ended
          * @param pagesAgainst pages all survivors found, kept for the Slender
+         * @param participants how many participants the round had at its start
          * @return the snapshot
          */
-        public RoundStats build(FinishReason reason, Instant finished, int pagesAgainst) {
+        public RoundStats build(FinishReason reason, Instant finished, int pagesAgainst, int participants) {
             Instant end = this.left != null ? this.left : finished;
             Outcome outcome = this.left != null ? Outcome.ABANDONED
                     : wins(reason, this.role) ? Outcome.WIN : Outcome.LOSS;
@@ -218,7 +231,9 @@ public record RoundStats(
                     survivor ? seconds(this.started, lifeEnd) : 0L,
                     this.damageTaken,
                     this.painkillersUsed,
-                    this.role == Role.SLENDER ? pagesAgainst : 0);
+                    this.role == Role.SLENDER ? pagesAgainst : 0,
+                    participants,
+                    this.takenOver);
         }
 
         private static long seconds(Instant from, Instant to) {

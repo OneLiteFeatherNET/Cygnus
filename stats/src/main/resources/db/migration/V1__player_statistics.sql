@@ -22,10 +22,20 @@ CREATE TABLE player_round_stats (
     damage_taken          DOUBLE PRECISION         NOT NULL,
     painkillers_used      INTEGER                  NOT NULL,
     pages_against         INTEGER                  NOT NULL,
+    participants          INTEGER                  NOT NULL,
+    taken_over            BOOLEAN                  NOT NULL,
     PRIMARY KEY (round_id, player_uuid)
 );
 
+-- participants is the number of tracked participants (Slender and Survivors at the round start), the same
+-- on every row of the round. role stays the role at the start; taken_over marks the survivor who became
+-- the Slender when the original one left. Both are kept for a later role balancing.
+
+-- Yearly reads and rebuilds of one player's rounds.
 CREATE INDEX idx_player_round_stats_player_year ON player_round_stats (player_uuid, stats_year);
+
+-- Recent history: the last N rounds of a player ordered by finish time, across all servers.
+CREATE INDEX idx_player_round_stats_player_finished ON player_round_stats (player_uuid, finished_at);
 
 -- One row per player and calendar year, for fast profile and leaderboard reads. Counters are summed,
 -- best_* and longest_* keep the maximum, fastest_win_seconds the minimum. version is the optimistic lock
@@ -61,6 +71,7 @@ CREATE TABLE player_year_stats (
     best_kills_round         INTEGER          NOT NULL,
     fastest_win_seconds      BIGINT,
     pages_against            INTEGER          NOT NULL,
+    takeovers                INTEGER          NOT NULL,
     version                  BIGINT           NOT NULL,
     PRIMARY KEY (player_uuid, stats_year)
 );

@@ -70,6 +70,19 @@ public final class RoundStatsTracker {
     }
 
     /**
+     * Records that a survivor became the Slender because the original one left. The round row keeps
+     * the start role and only gets the takeover flag.
+     *
+     * @param player the survivor who took over
+     */
+    public synchronized void slenderTakenOver(UUID player) {
+        RoundStats.Builder builder = active(player);
+        if (builder != null) {
+            builder.takenOver();
+        }
+    }
+
+    /**
      * Records a death and credits the kill.
      *
      * @param victim the player who died
@@ -143,8 +156,9 @@ public final class RoundStatsTracker {
                 .filter(builder -> builder.role() == Role.SURVIVOR)
                 .mapToInt(RoundStats.Builder::pagesFound)
                 .sum();
-        List<RoundStats> stats = new ArrayList<>(this.participants.size());
-        this.participants.values().forEach(builder -> stats.add(builder.build(reason, finished, pagesAgainst)));
+        int lobbySize = this.participants.size();
+        List<RoundStats> stats = new ArrayList<>(lobbySize);
+        this.participants.values().forEach(builder -> stats.add(builder.build(reason, finished, pagesAgainst, lobbySize)));
         this.participants.clear();
         return Optional.of(new FinishedRound(roundId.get(), finished, finished.atZone(this.zone).getYear(), stats));
     }
