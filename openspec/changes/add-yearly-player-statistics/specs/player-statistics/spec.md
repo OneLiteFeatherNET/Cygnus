@@ -100,6 +100,34 @@ the maximum and the fastest win SHALL keep the minimum.
 - **WHEN** two servers finish a round for the same player at the same time and no aggregate for that year exists yet
 - **THEN** exactly one aggregate exists afterwards and it includes both rounds
 
+### Requirement: Round rows carry the lobby size and the takeover flag
+
+Every round row SHALL carry `participants`, the number of tracked participants (Slender and Survivors at the round
+start), with the same value on every row of the round. When a survivor becomes the Slender because the original Slender
+left, the row of that survivor SHALL have `taken_over` set while `role` keeps the role at the round start. The yearly
+aggregate SHALL sum the takeovers in `takeovers`.
+
+#### Scenario: Lobby size on every row
+
+- **WHEN** a round with one Slender and three Survivors finishes
+- **THEN** all four rows have `participants` 4, also the row of a player who quit during the round
+
+#### Scenario: Survivor takes over as Slender
+
+- **WHEN** the Slender leaves and a survivor becomes the Slender (`SlenderReviveEvent`)
+- **THEN** only that survivor's row has `taken_over` set and its `role` is still `SURVIVOR`
+- **AND** the `takeovers` of that player's yearly aggregate increases by one
+
+#### Scenario: Round without takeover
+
+- **WHEN** a round finishes and no survivor took over
+- **THEN** no row of the round has `taken_over` set
+
+#### Scenario: Recent history reads use an index
+
+- **WHEN** the database schema is migrated
+- **THEN** an index on `player_round_stats (player_uuid, finished_at)` exists
+
 ### Requirement: Persistence failures do not affect the game
 
 A failed write SHALL be logged with the round id and counted in the metric `cygnus.stats.write.failures`. It SHALL

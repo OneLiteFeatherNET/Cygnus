@@ -30,6 +30,12 @@
   database dependencies and the migration, keep `RoundStatsCollector` as the event adapter in `game`; tests move with
   their code
 
+## 4a. Data for a later role balancing
+
+- [x] 4a.1 Record `participants` and `taken_over` per round row and `takeovers` per year row, add the index
+  `(player_uuid, finished_at)`, edit V1 in place; tests first in the tracker, the repository integration test and the
+  collector event test. The balancing itself is a separate later change
+
 ## 5. Verification
 
 - [x] 5.1 Run `./gradlew :game:test` and `./gradlew build`

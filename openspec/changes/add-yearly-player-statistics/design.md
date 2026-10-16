@@ -41,6 +41,7 @@ Counted per round, stored in `PlayerRoundStats`, summed (or maxed / minned) into
 | Abandoned rounds | quit before `GameFinishEvent` | sum |
 | Play time | `GameStartEvent` until finish or quit | sum (seconds) |
 | Win by reason | reason of won rounds | sum per reason (`TIME_OVER`, `ALL_PAGES_FOUND`, ...) |
+| Lobby size (`participants`) | tracked participants at `GameStartEvent` | none, per-round value only |
 
 ### Survivor
 
@@ -56,7 +57,7 @@ Counted per round, stored in `PlayerRoundStats`, summed (or maxed / minned) into
 | Painkillers used | `RegenerationService` heal item use | sum |
 | Creek hunts survived / caught | `CreekWitness` hunt end `TIMEOUT`/`GONE`/`SENT_AWAY` vs `CAUGHT` | sum each |
 | Jump scares received | `JumpScareManager` | sum |
-| Taken over as Slender | `SlenderReviveEvent` (chosen survivor) | sum |
+| Taken over as Slender | `SlenderReviveEvent` (chosen survivor), flag `taken_over` per round | sum (`takeovers`) |
 
 ### Slender
 
@@ -101,6 +102,28 @@ play_time_seconds, ...
   leaderboards (`ORDER BY kills DESC WHERE year = ?`), and each new statistic is a conscious Flyway migration.
 - `player_round_stats` is the source of truth. If an aggregate is ever wrong, `player_year_stats` can be rebuilt
   with one `INSERT ... SELECT ... GROUP BY player_uuid, year`.
+
+## Data for a later role balancing
+
+A later change will use the statistics to assign roles more fairly: players who were recently Slender are picked less
+often, players who were mostly Survivor recently are picked more often. That balancing is **not** part of this change;
+`TeamHelper.selectSlenderPlayer()` still picks at random. This change only collects what the later change needs, so it
+can ship without a schema rework and without a gap in the history:
+
+- **`participants`** (`player_round_stats`): the number of tracked participants (Slender and Survivors at the round
+  start), the same value on every row of the round. A player's fair share of Slender rounds is 1/n, so a weighted
+  lottery needs the lobby size of each past round. Players who quit later still count, the value is fixed at the start.
+- **`taken_over`** (`player_round_stats`) and **`takeovers`** (`player_year_stats`, summed): when the Slender leaves,
+  `SlenderTakeover` turns a survivor into the Slender and fires `SlenderReviveEvent` for exactly that player. `role`
+  keeps the start role, so the flag is the only trace that the survivor also played Slender in that round. The adapter
+  sets it on that event.
+- **Index `(player_uuid, finished_at)`** (`idx_player_round_stats_player_finished`): serves "the last N rounds of a
+  player ordered by `finished_at`" for all players of a lobby, across all servers sharing the database. The older index
+  `(player_uuid, stats_year)` stays: it serves the yearly reads and the rebuild of an aggregate, which filter by
+  `stats_year`, something the new index cannot do without scanning all rounds of the player.
+
+V1 is edited in place: it has not been applied to the production database. A development database that already ran
+the old V1 needs a `flyway clean` or a dropped schema.
 
 ## Write path
 
