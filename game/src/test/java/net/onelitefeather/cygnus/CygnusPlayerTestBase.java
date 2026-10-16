@@ -5,6 +5,7 @@ import net.minestom.server.network.PlayerProvider;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -22,5 +23,11 @@ public abstract class CygnusPlayerTestBase {
     @BeforeAll
     static void init(Env env) {
         env.process().connection().setPlayerProvider((connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, null));
+    }
+
+    // MicrotusExtension never cleans up an Env resolved at class level, so stop its server process here
+    @AfterAll
+    static void stopProcess(Env env) {
+        env.process().stop();
     }
 }

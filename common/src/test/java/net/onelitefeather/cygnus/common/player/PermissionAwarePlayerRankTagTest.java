@@ -8,6 +8,7 @@ import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.rank.RankTag;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,12 @@ class PermissionAwarePlayerRankTagTest {
     @BeforeAll
     static void setUp(Env env) {
         env.process().connection().setPlayerProvider(TestPlayer::new);
+    }
+
+    // MicrotusExtension never cleans up an Env resolved at class level, so stop its server process here
+    @AfterAll
+    static void stopProcess(Env env) {
+        env.process().stop();
     }
 
     @Test
