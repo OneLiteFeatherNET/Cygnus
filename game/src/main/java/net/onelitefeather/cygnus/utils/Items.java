@@ -30,6 +30,7 @@ public final class Items {
     public static final byte TRACKING_ITEM = (byte) 0x03;
     public static final byte POSSESSION_ITEM = (byte) 0x04;
     public static final byte HEAL_ITEM = (byte) 0x05;
+    public static final byte STATS_ITEM = (byte) 0x06;
 
     /** The tracker's material, which is also the client's cooldown group for it. */
     public static final Material TRACKING_MATERIAL = Material.RABBIT_FOOT;
@@ -48,6 +49,9 @@ public final class Items {
 
     /** The hotbar slot of the survivors' painkillers, the last one, away from the pages. */
     public static final int HEAL_SLOT = 8;
+
+    /** The hotbar slot of the lobby's statistics item, the middle one. */
+    public static final int STATS_SLOT = 4;
 
     private static final ItemStack slenderEye = ItemStack.builder(Material.ENDER_EYE)
             .customName(Component.text("SlenderEye").color(TextColor.fromHexString("#ff00d4")))
@@ -74,6 +78,12 @@ public final class Items {
             .lore(lore("Right click to win back some health", "Only once per round",
                     "A hit takes from what they give back"))
             .set(Tags.ITEM_TAG, HEAL_ITEM)
+            .build();
+
+    private static final ItemStack statistics = ItemStack.builder(Material.BOOK)
+            .customName(Component.text("Statistics", NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false))
+            .lore(lore("Right click to open your", "statistics of this year"))
+            .set(Tags.ITEM_TAG, STATS_ITEM)
             .build();
 
     private static final HotBarLayout SPECTATOR_LAYOUT;
@@ -122,6 +132,57 @@ public final class Items {
      */
     public static void setHealItem(Player player) {
         player.getInventory().setItemStack(HEAL_SLOT, painkillers);
+    }
+
+    /**
+     * Gives the player the lobby's statistics item.
+     *
+     * @param player who should receive the item
+     */
+    public static void setStatsItem(Player player) {
+        player.getInventory().setItemStack(STATS_SLOT, statistics);
+    }
+
+    /**
+     * Takes the statistics item out of the player's inventory, wherever it ended up. Everything else,
+     * the painkillers included, stays.
+     *
+     * @param player who should lose the item
+     */
+    public static void removeStatsItem(Player player) {
+        var inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            if (isStatsItem(inventory.getItemStack(slot))) {
+                inventory.setItemStack(slot, ItemStack.AIR);
+            }
+        }
+    }
+
+    /**
+     * Tells whether the stack is the statistics item.
+     *
+     * @param stack the stack to look at
+     * @return {@code true} if the stack carries the statistics tag
+     */
+    public static boolean isStatsItem(ItemStack stack) {
+        Byte tag = stack.getTag(Tags.ITEM_TAG);
+        return tag != null && tag == STATS_ITEM;
+    }
+
+    /**
+     * Tells whether the player carries the statistics item anywhere in their inventory.
+     *
+     * @param player the player to look at
+     * @return {@code true} if one slot holds it
+     */
+    public static boolean hasStatsItem(Player player) {
+        var inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            if (isStatsItem(inventory.getItemStack(slot))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

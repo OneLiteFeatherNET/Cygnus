@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.stats;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.OptimisticLockException;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.StaleStateException;
 import org.hibernate.boot.MetadataSources;
@@ -13,11 +14,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * Stores finished rounds through Hibernate.
@@ -28,10 +37,13 @@ import java.util.concurrent.TimeUnit;
  * {@code version} column turns a lost race into an {@link OptimisticLockException}, a year row another
  * server created first into a unique-key violation; both roll the transaction back and it is tried again,
  * up to {@value #MAX_ATTEMPTS} times. The round rows themselves cannot collide, every round id is unique.
+ * The last known name of every participant is upserted in the same transaction, and the merged year rows
+ * are copied into views before the commit that the future hands out afterwards.
  * </p>
  * <p>
  * A write that still fails is logged with the round id and counted in the failure metric; it never
- * reaches the caller. Hibernate runs with {@code hbm2ddl.auto=validate} against a schema Flyway owns.
+ * throws into the caller, the returned future completes exceptionally instead. The reads run on the same
+ * executor and fail their future without a log line, the caller decides what to tell the player. Hibernate runs with {@code hbm2ddl.auto=validate} against a schema Flyway owns.
  * </p>
  *
  * @author TheMeinerLP
@@ -96,6 +108,7 @@ public final class HibernateStatsRepository implements StatsRepository {
             return new MetadataSources(registry)
                     .addAnnotatedClass(PlayerRoundStats.class)
                     .addAnnotatedClass(PlayerYearStats.class)
+                    .addAnnotatedClass(PlayerName.class)
                     .buildMetadata()
                     .buildSessionFactory();
         } catch (RuntimeException exception) {
@@ -108,42 +121,132 @@ public final class HibernateStatsRepository implements StatsRepository {
      * Queues the write on the executor and returns at once.
      *
      * @param round the finished round
+     * @return completes after the commit with the merged year row of every participant; a write that
+     * still failed after the retries, or that the executor refused, completes it exceptionally after it
+     * was logged and counted
      */
     @Override
-    public void saveRound(FinishedRound round) {
+    public CompletableFuture<Map<UUID, YearStatsView>> saveRound(FinishedRound round) {
+        CompletableFuture<Map<UUID, YearStatsView>> result = new CompletableFuture<>();
         try {
-            this.executor.execute(() -> write(round));
+            this.executor.execute(() -> {
+                try {
+                    result.complete(write(round));
+                } catch (RuntimeException exception) {
+                    fail(round, exception);
+                    result.completeExceptionally(exception);
+                }
+            });
         } catch (RejectedExecutionException exception) {
             fail(round, exception);
+            result.completeExceptionally(exception);
         }
+        return result;
     }
 
-    private void write(FinishedRound round) {
-        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    private Map<UUID, YearStatsView> write(FinishedRound round) {
+        for (int attempt = 1; ; attempt++) {
             try {
-                this.sessionFactory.inTransaction(session -> {
-                    round.players().forEach(stats -> session.persist(new PlayerRoundStats(round, stats)));
-                    for (RoundStats stats : round.players()) {
-                        PlayerYearStats.Key key = new PlayerYearStats.Key(stats.playerUuid(), round.year());
-                        PlayerYearStats year = session.find(PlayerYearStats.class, key);
-                        if (year == null) {
-                            year = new PlayerYearStats(key);
-                            session.persist(year);
-                        }
-                        year.merge(stats);
-                    }
-                    this.afterYearRowsLoaded.run();
-                });
-                return;
+                return this.sessionFactory.fromTransaction(session -> mergeRound(session, round));
             } catch (RuntimeException exception) {
                 if (attempt < MAX_ATTEMPTS && conflict(exception)) {
                     LOGGER.debug("Statistics of round {} collided with another write, attempt {}", round.roundId(), attempt);
                     continue;
                 }
-                fail(round, exception);
-                return;
+                throw exception;
             }
         }
+    }
+
+    private Map<UUID, YearStatsView> mergeRound(Session session, FinishedRound round) {
+        round.players().forEach(stats -> session.persist(new PlayerRoundStats(round, stats)));
+        List<PlayerYearStats> years = new ArrayList<>();
+        for (RoundStats stats : round.players()) {
+            PlayerYearStats.Key key = new PlayerYearStats.Key(stats.playerUuid(), round.year());
+            PlayerYearStats year = session.find(PlayerYearStats.class, key);
+            if (year == null) {
+                year = new PlayerYearStats(key);
+                session.persist(year);
+            }
+            year.merge(stats);
+            years.add(year);
+        }
+        round.names().forEach((uuid, name) -> {
+            PlayerName stored = session.find(PlayerName.class, uuid);
+            if (stored == null) {
+                session.persist(new PlayerName(uuid, name, round.finishedAt()));
+            } else {
+                stored.rename(name, round.finishedAt());
+            }
+        });
+        this.afterYearRowsLoaded.run();
+        Map<UUID, YearStatsView> merged = new HashMap<>();
+        years.forEach(year -> {
+            YearStatsView view = year.toView();
+            merged.put(view.playerUuid(), view);
+        });
+        return merged;
+    }
+
+    /**
+     * Reads one year of a player on the executor.
+     *
+     * @param playerUuid the player
+     * @param year       the calendar year
+     * @return the year, empty without rounds in it; exceptionally when the read failed
+     */
+    @Override
+    public CompletableFuture<Optional<YearStatsView>> findYear(UUID playerUuid, int year) {
+        return read(session -> Optional.ofNullable(session.find(PlayerYearStats.class,
+                new PlayerYearStats.Key(playerUuid, year))).map(PlayerYearStats::toView));
+    }
+
+    /**
+     * Finds the player who was last seen with the name on the executor, ignoring case.
+     *
+     * @param name the name to look for
+     * @return the player, empty for an unknown name; exceptionally when the read failed
+     */
+    @Override
+    public CompletableFuture<Optional<KnownPlayer>> findPlayerByName(String name) {
+        String lower = name.toLowerCase(Locale.ROOT);
+        return read(session -> session
+                .createSelectionQuery("from PlayerName n where n.nameLower = :name order by n.updatedAt desc, n.playerUuid",
+                        PlayerName.class)
+                .setParameter("name", lower)
+                .setMaxResults(1)
+                .getResultList().stream().findFirst().map(PlayerName::toKnownPlayer));
+    }
+
+    /**
+     * Lists the years of a player on the executor.
+     *
+     * @param playerUuid the player
+     * @return the years, newest first; exceptionally when the read failed
+     */
+    @Override
+    public CompletableFuture<List<Integer>> availableYears(UUID playerUuid) {
+        return read(session -> session
+                .createSelectionQuery("select y.id.year from PlayerYearStats y where y.id.playerUuid = :player order by y.id.year desc",
+                        Integer.class)
+                .setParameter("player", playerUuid)
+                .getResultList());
+    }
+
+    private <T> CompletableFuture<T> read(Function<Session, T> query) {
+        CompletableFuture<T> result = new CompletableFuture<>();
+        try {
+            this.executor.execute(() -> {
+                try {
+                    result.complete(this.sessionFactory.fromSession(query));
+                } catch (RuntimeException exception) {
+                    result.completeExceptionally(exception);
+                }
+            });
+        } catch (RejectedExecutionException exception) {
+            result.completeExceptionally(exception);
+        }
+        return result;
     }
 
     private void fail(FinishedRound round, RuntimeException exception) {
@@ -180,7 +283,10 @@ public final class HibernateStatsRepository implements StatsRepository {
             int years = session.createMutationQuery("delete from PlayerYearStats y where y.id.playerUuid = :player")
                     .setParameter("player", playerUuid)
                     .executeUpdate();
-            return rounds + years;
+            int names = session.createMutationQuery("delete from PlayerName n where n.playerUuid = :player")
+                    .setParameter("player", playerUuid)
+                    .executeUpdate();
+            return rounds + years + names;
         });
     }
 

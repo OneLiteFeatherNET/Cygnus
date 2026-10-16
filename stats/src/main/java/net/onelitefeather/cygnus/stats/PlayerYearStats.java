@@ -156,6 +156,20 @@ public class PlayerYearStats {
         }
     }
 
+    /**
+     * Copies the row into an immutable view.
+     *
+     * @return the view of this row
+     */
+    public YearStatsView toView() {
+        return new YearStatsView(this.id.playerUuid(), this.id.year(), this.roundsPlayed, this.roundsSlender,
+                this.roundsSurvivor, this.winsSlender, this.winsSurvivor, this.lossesSlender, this.lossesSurvivor,
+                this.abandoned, this.playTimeSeconds, this.pagesFound, this.bestPagesRound, this.roundsSurvived,
+                this.deaths, this.timeSurvivedSeconds, this.longestSurvivedSeconds, this.allPagesContributions,
+                this.lastPagesFound, this.damageTaken, this.painkillersUsed, this.kills, this.bestKillsRound,
+                this.fastestWinSeconds, this.pagesAgainst, this.takeovers);
+    }
+
     private void mergeOutcome(RoundStats stats, boolean slender) {
         switch (stats.outcome()) {
             case ABANDONED -> this.abandoned++;

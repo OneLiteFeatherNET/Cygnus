@@ -33,13 +33,13 @@ class RoundStatsCollectorTest {
     private static final UUID ALICE = UUID.fromString("00000000-0000-0000-0000-0000000000a1");
     private static final String ROUND_ID = "6f9619ff-8b86-d011-b42d-00c04fc964ff";
 
+    private FakeStatsRepository repository;
     private List<FinishedRound> rounds;
-    private StatsRepository repository;
 
     @BeforeEach
     void setUp() {
-        this.rounds = new ArrayList<>();
-        this.repository = new RepositoryStub(this.rounds, false);
+        this.repository = new FakeStatsRepository();
+        this.rounds = this.repository.rounds;
     }
 
     private RoundStatsCollector collector(StatsRepository target, String roundId) {
@@ -78,7 +78,8 @@ class RoundStatsCollectorTest {
     @Test
     @DisplayName("A failing repository does not escape into the game")
     void repositoryFailureDoesNotEscape() {
-        RoundStatsCollector collector = collector(new RepositoryStub(this.rounds, true), ROUND_ID);
+        this.repository.saveThrows = new IllegalStateException("database is gone");
+        RoundStatsCollector collector = collector(this.repository, ROUND_ID);
         collector.roundStarted(Map.of(ALICE, Role.SURVIVOR));
 
         assertDoesNotThrow(() -> collector.gameFinished(GameFinishEvent.Reason.TIME_OVER),
@@ -98,24 +99,57 @@ class RoundStatsCollectorTest {
         }
     }
 
-    /** Keeps the rounds it was given, or throws on every write. */
-    private record RepositoryStub(List<FinishedRound> rounds, boolean failing) implements StatsRepository {
+    @Test
+    @DisplayName("The names of the participants are read at the start and stored with the round")
+    void namesAreStoredWithTheRound() {
+        RoundStatsCollector collector = new RoundStatsCollector(this.repository, CLOCK, ZoneOffset.UTC,
+                () -> ROUND_ID, uuid -> uuid.equals(ALICE) ? "Alice" : null, _ -> {
+        });
+        collector.roundStarted(Map.of(ALICE, Role.SURVIVOR));
+        collector.gameFinished(GameFinishEvent.Reason.TIME_OVER);
 
-        @Override
-        public void saveRound(FinishedRound round) {
-            if (this.failing) {
-                throw new IllegalStateException("database is gone");
-            }
-            this.rounds.add(round);
-        }
+        assertEquals(Map.of(ALICE, "Alice"), this.rounds.getFirst().names(), "the name must travel with the round");
+    }
 
-        @Override
-        public int deleteByPlayer(UUID playerUuid) {
-            return 0;
-        }
+    @Test
+    @DisplayName("The committed totals are handed on once the write is done")
+    void committedTotalsAreHandedOn() {
+        YearStatsView committed = YearStatsView.empty(ALICE, 2026);
+        this.repository.totals = _ -> Map.of(ALICE, committed);
+        List<Map<UUID, YearStatsView>> handed = new ArrayList<>();
+        RoundStatsCollector collector = new RoundStatsCollector(this.repository, CLOCK, ZoneOffset.UTC,
+                () -> ROUND_ID, _ -> null, handed::add);
+        collector.roundStarted(Map.of(ALICE, Role.SURVIVOR));
 
-        @Override
-        public void close() {
-        }
+        collector.gameFinished(GameFinishEvent.Reason.TIME_OVER);
+
+        assertEquals(List.of(Map.of(ALICE, committed)), handed, "the handler must get the totals the repository committed");
+    }
+
+    @Test
+    @DisplayName("A write that fails hands nothing on and does not escape")
+    void failedWriteHandsNothingOn() {
+        this.repository.saveFails = new IllegalStateException("database is gone");
+        List<Map<UUID, YearStatsView>> handed = new ArrayList<>();
+        RoundStatsCollector collector = new RoundStatsCollector(this.repository, CLOCK, ZoneOffset.UTC,
+                () -> ROUND_ID, _ -> null, handed::add);
+        collector.roundStarted(Map.of(ALICE, Role.SURVIVOR));
+
+        assertDoesNotThrow(() -> collector.gameFinished(GameFinishEvent.Reason.TIME_OVER));
+
+        assertTrue(handed.isEmpty(), "without a commit there are no totals to show");
+    }
+
+    @Test
+    @DisplayName("A handler that throws does not escape into the game")
+    void throwingHandlerDoesNotEscape() {
+        RoundStatsCollector collector = new RoundStatsCollector(this.repository, CLOCK, ZoneOffset.UTC,
+                () -> ROUND_ID, _ -> null, _ -> {
+            throw new IllegalStateException("broken display");
+        });
+        collector.roundStarted(Map.of(ALICE, Role.SURVIVOR));
+
+        assertDoesNotThrow(() -> collector.gameFinished(GameFinishEvent.Reason.TIME_OVER),
+                "a display failure must never reach the game");
     }
 }

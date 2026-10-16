@@ -32,6 +32,7 @@ public final class RoundStatsTracker {
     private final Clock clock;
     private final ZoneId zone;
     private final Map<UUID, RoundStats.Builder> participants = new HashMap<>();
+    private final Map<UUID, String> names = new HashMap<>();
 
     /**
      * Creates the tracker.
@@ -50,9 +51,27 @@ public final class RoundStatsTracker {
      * @param players every participant with the role they start in
      */
     public synchronized void roundStarted(Map<UUID, Role> players) {
+        roundStarted(players, Map.of());
+    }
+
+    /**
+     * Starts tracking the given players and remembers their names. A round still tracked from before is
+     * dropped. The names are read now because a player who quits is gone by the round end.
+     *
+     * @param players every participant with the role they start in
+     * @param names   the name of each participant; a name for anyone who is not a participant is dropped
+     */
+    public synchronized void roundStarted(Map<UUID, Role> players, Map<UUID, String> names) {
         this.participants.clear();
+        this.names.clear();
         Instant started = this.clock.instant();
-        players.forEach((uuid, role) -> this.participants.put(uuid, new RoundStats.Builder(uuid, role, started)));
+        players.forEach((uuid, role) -> {
+            this.participants.put(uuid, new RoundStats.Builder(uuid, role, started));
+            String name = names.get(uuid);
+            if (name != null) {
+                this.names.put(uuid, name);
+            }
+        });
     }
 
     /**
@@ -160,7 +179,10 @@ public final class RoundStatsTracker {
         List<RoundStats> stats = new ArrayList<>(lobbySize);
         this.participants.values().forEach(builder -> stats.add(builder.build(reason, finished, pagesAgainst, lobbySize)));
         this.participants.clear();
-        return Optional.of(new FinishedRound(roundId.get(), finished, finished.atZone(this.zone).getYear(), stats));
+        Map<UUID, String> roundNames = Map.copyOf(this.names);
+        this.names.clear();
+        return Optional.of(new FinishedRound(roundId.get(), finished, finished.atZone(this.zone).getYear(), stats,
+                roundNames));
     }
 
     /**

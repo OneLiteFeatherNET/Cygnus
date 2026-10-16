@@ -71,6 +71,39 @@ class RoundStatsTrackerTest {
     }
 
     @Test
+    @DisplayName("The names handed over at the start travel with the finished round")
+    void namesTravelWithTheRound() {
+        Map<UUID, Role> participants = Map.of(ALICE, Role.SURVIVOR, BOB, Role.SURVIVOR);
+        this.tracker.roundStarted(participants, Map.of(ALICE, "Alice", BOB, "Bob"));
+        this.tracker.playerLeft(BOB);
+
+        finish(this.tracker, FinishReason.TIME_OVER);
+
+        assertEquals(Map.of(ALICE, "Alice", BOB, "Bob"), this.rounds.getFirst().names(),
+                "a player who quit keeps the name they had at the start");
+    }
+
+    @Test
+    @DisplayName("A name for a player who is not a participant is dropped")
+    void namesOfStrangersAreDropped() {
+        this.tracker.roundStarted(Map.of(ALICE, Role.SURVIVOR), Map.of(ALICE, "Alice", CAROL, "Carol"));
+
+        finish(this.tracker, FinishReason.TIME_OVER);
+
+        assertEquals(Map.of(ALICE, "Alice"), this.rounds.getFirst().names(), "only participants get a name row");
+    }
+
+    @Test
+    @DisplayName("Starting without names yields a round without names")
+    void noNamesByDefault() {
+        startRound();
+
+        finish(this.tracker, FinishReason.TIME_OVER);
+
+        assertTrue(this.rounds.getFirst().names().isEmpty(), "no names were handed over");
+    }
+
+    @Test
     @DisplayName("Every team member becomes a participant with the role they started in")
     void teamMembersBecomeParticipants() {
         startRound();

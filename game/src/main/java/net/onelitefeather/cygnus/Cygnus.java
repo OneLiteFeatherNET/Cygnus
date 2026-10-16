@@ -96,6 +96,8 @@ import net.onelitefeather.cygnus.sanity.SanityService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.stats.NoOpStatsRepository;
+import net.onelitefeather.cygnus.stats.display.PlayerStatsService;
+import net.onelitefeather.cygnus.stats.display.StatsDisplayFeature;
 import net.onelitefeather.cygnus.stats.RoundStats;
 import net.onelitefeather.cygnus.stats.RoundStatsCollector;
 import net.onelitefeather.cygnus.stats.StatsConfig;
@@ -213,8 +215,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             StatsRepository statsRepository = openStatistics(statsConfig,
                     StatsMetrics.fromGlobal(CygnusAttributes.INSTRUMENTATION_NAME, serviceVersion()));
             MinecraftServer.getSchedulerManager().buildShutdownTask(statsRepository::close);
+            PlayerStatsService playerStats = new PlayerStatsService(statsRepository, Clock.systemUTC(),
+                    statsConfig.timeZone(), MinecraftServer.getConnectionManager(),
+                    task -> MinecraftServer.getSchedulerManager().scheduleNextTick(task));
             this.roundStatsCollector = new RoundStatsCollector(statsRepository, Clock.systemUTC(),
-                    statsConfig.timeZone(), this.roundTracer::currentRoundId);
+                    statsConfig.timeZone(), this.roundTracer::currentRoundId, Cygnus::onlineName, playerStats::roundSaved);
             this.slowTickTracer = new SlowTickTracer(this.tracing, this.roundTracer, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections,
                     TickMetrics.fromGlobal(serviceVersion(), this.roundTracer::phaseLabel));
             this.staminaService = new StaminaService(this.gameConfig.stamina(), tickSections);
@@ -273,6 +278,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         new EpilepsyDisclaimer(),
                         this.slenderTakeover,
                         this.spectatorService,
+                        new StatsDisplayFeature(playerStats, this.linearPhaseSeries::getCurrentPhase,
+                                MinecraftServer.getConnectionManager()),
                         // Not part of the OverlayModule: the sound is the feedback a hit owes the player
                         // either way, and it needs neither the resource pack nor the overlay gate to be heard.
                         new MinimapPolicy(this.gameConfig.minimap()),
@@ -345,6 +352,11 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private @Nullable String activeMapName() {
         GameMap activeMap = this.mapProvider.getGameMap();
         return activeMap == null ? null : activeMap.name();
+    }
+
+    private static @Nullable String onlineName(UUID uuid) {
+        Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid);
+        return player == null ? null : player.getUsername();
     }
 
     private static ActionTracer.@Nullable Actor survivorActor(UUID uuid) {

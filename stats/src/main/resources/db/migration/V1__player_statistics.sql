@@ -37,6 +37,19 @@ CREATE INDEX idx_player_round_stats_player_year ON player_round_stats (player_uu
 -- Recent history: the last N rounds of a player ordered by finish time, across all servers.
 CREATE INDEX idx_player_round_stats_player_finished ON player_round_stats (player_uuid, finished_at);
 
+-- The last name a player was seen with, so a player who is offline can be found by name. Minecraft names
+-- are public. Written with the round, deleted with the player's statistics. name_lower is what lookups
+-- compare; a name can pass to another player after a rename, so a lookup takes the newest updated_at.
+CREATE TABLE player_names (
+    player_uuid UUID                     NOT NULL,
+    name        VARCHAR(16)              NOT NULL,
+    name_lower  VARCHAR(16)              NOT NULL,
+    updated_at  TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (player_uuid)
+);
+
+CREATE INDEX idx_player_names_name_lower ON player_names (name_lower);
+
 -- One row per player and calendar year, for fast profile and leaderboard reads. Counters are summed,
 -- best_* and longest_* keep the maximum, fastest_win_seconds the minimum. version is the optimistic lock
 -- several servers writing to the same row rely on.

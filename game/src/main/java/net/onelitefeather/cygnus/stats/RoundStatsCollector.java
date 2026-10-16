@@ -17,8 +17,11 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -42,9 +45,11 @@ public final class RoundStatsCollector {
     private final StatsRepository repository;
     private final RoundStatsTracker tracker;
     private final Supplier<@Nullable String> roundIds;
+    private final Function<UUID, @Nullable String> names;
+    private final Consumer<Map<UUID, YearStatsView>> totalsHandler;
 
     /**
-     * Creates the collector.
+     * Creates the collector without names and without a hand-over of the committed totals.
      *
      * @param repository where finished rounds go
      * @param clock      the source of every timestamp
@@ -52,9 +57,29 @@ public final class RoundStatsCollector {
      * @param roundIds   the id of the running round as the round telemetry knows it
      */
     public RoundStatsCollector(StatsRepository repository, Clock clock, ZoneId zone, Supplier<@Nullable String> roundIds) {
+        this(repository, clock, zone, roundIds, _ -> null, _ -> {
+        });
+    }
+
+    /**
+     * Creates the collector.
+     *
+     * @param repository    where finished rounds go
+     * @param clock         the source of every timestamp
+     * @param zone          the zone whose calendar decides the year of a round
+     * @param roundIds      the id of the running round as the round telemetry knows it
+     * @param names         reads the name of a participant when the round starts, {@code null} for an unknown one
+     * @param totalsHandler receives the year totals the repository committed for the round's participants. It
+     *                      runs on the thread that finished the write, not on the tick thread, and is not called
+     *                      when the write failed
+     */
+    public RoundStatsCollector(StatsRepository repository, Clock clock, ZoneId zone, Supplier<@Nullable String> roundIds,
+                               Function<UUID, @Nullable String> names, Consumer<Map<UUID, YearStatsView>> totalsHandler) {
         this.repository = repository;
         this.tracker = new RoundStatsTracker(clock, zone);
         this.roundIds = roundIds;
+        this.names = names;
+        this.totalsHandler = totalsHandler;
     }
 
     /**
@@ -63,23 +88,43 @@ public final class RoundStatsCollector {
      * @param players every member of the Slender and Survivor teams with the role they start in
      */
     public void roundStarted(Map<UUID, Role> players) {
-        this.tracker.roundStarted(players);
+        Map<UUID, String> started = new HashMap<>();
+        players.keySet().forEach(uuid -> {
+            String name = this.names.apply(uuid);
+            if (name != null) {
+                started.put(uuid, name);
+            }
+        });
+        this.tracker.roundStarted(players, started);
     }
 
     /**
      * Ends the round: hands it to the repository and clears the state. A failing repository is logged
-     * and does not reach the caller.
+     * and does not reach the caller. Once the write is committed, the totals go to the totals handler;
+     * a failed write has been logged and counted by the repository and is skipped here.
      *
      * @param reason why the round ended
      */
     public void gameFinished(GameFinishEvent.Reason reason) {
         this.tracker.finish(FinishReason.valueOf(reason.name()), () -> roundId(this.roundIds.get())).ifPresent(round -> {
             try {
-                this.repository.saveRound(round);
+                this.repository.saveRound(round).whenComplete((totals, failure) -> {
+                    if (failure == null) {
+                        handOn(totals);
+                    }
+                });
             } catch (RuntimeException exception) {
                 LOGGER.error("Handing round {} to the statistics failed", round.roundId(), exception);
             }
         });
+    }
+
+    private void handOn(Map<UUID, YearStatsView> totals) {
+        try {
+            this.totalsHandler.accept(totals);
+        } catch (RuntimeException exception) {
+            LOGGER.error("Showing the committed statistics failed", exception);
+        }
     }
 
     /**

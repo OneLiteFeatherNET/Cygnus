@@ -23,11 +23,16 @@ import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -106,6 +111,14 @@ class HibernateStatsRepositoryIntegrationTest {
 
     private static FinishedRound round(UUID roundId, int year, RoundStats... players) {
         return new FinishedRound(roundId, FINISHED, year, List.of(players));
+    }
+
+    private static FinishedRound namedRound(Instant finishedAt, Map<UUID, String> names, RoundStats... players) {
+        return new FinishedRound(UUID.randomUUID(), finishedAt, 2026, List.of(players), names);
+    }
+
+    private static FinishedRound namedRound(Map<UUID, String> names, RoundStats... players) {
+        return namedRound(FINISHED, names, players);
     }
 
     private long number(String sql, Object... parameters) {
@@ -404,7 +417,7 @@ class HibernateStatsRepositoryIntegrationTest {
     }
 
     @Test
-    @DisplayName("The migration creates exactly the two statistics tables")
+    @DisplayName("The migration creates exactly the statistics tables")
     void migrationCreatesTheTables() {
         List<String> tables = new ArrayList<>();
         try (Connection connection = this.dataSource.getConnection();
@@ -417,6 +430,197 @@ class HibernateStatsRepositoryIntegrationTest {
             throw new AssertionError(exception);
         }
 
-        assertEquals(List.of("PLAYER_ROUND_STATS", "PLAYER_YEAR_STATS"), tables.stream().sorted().toList());
+        assertEquals(List.of("PLAYER_NAMES", "PLAYER_ROUND_STATS", "PLAYER_YEAR_STATS"), tables.stream().sorted().toList());
+    }
+
+    @Test
+    @DisplayName("Saving a round completes with the merged year row of every participant")
+    void saveRoundCompletesWithMergedViews() {
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 2, false, 900))).join();
+
+        Map<UUID, YearStatsView> views = this.repository.saveRound(round(UUID.randomUUID(), 2026,
+                survivor(ALICE, Outcome.LOSS, FinishReason.ALL_SURVIVOR_DEAD, 1, true, 300),
+                survivor(BOB, Outcome.WIN, FinishReason.TIME_OVER, 4, false, 900))).join();
+
+        assertEquals(Set.of(ALICE, BOB), views.keySet(), "one view per participant of the round");
+        assertEquals(2, views.get(ALICE).roundsPlayed(), "Alice's total includes the earlier round");
+        assertEquals(3, views.get(ALICE).pagesFound(), "pages of both rounds are summed");
+        assertEquals(1, views.get(BOB).roundsPlayed());
+        assertEquals(2026, views.get(BOB).year());
+    }
+
+    @Test
+    @DisplayName("A failed write completes the future exceptionally and still counts the failure")
+    void failedWriteFailsTheFuture() {
+        this.sessionFactory.close();
+
+        var future = this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
+
+        assertTrue(future.isCompletedExceptionally(), "the caller must be able to tell the write failed");
+        assertEquals(1, failures());
+    }
+
+    @Test
+    @DisplayName("A rejected write completes the future exceptionally")
+    void rejectedWriteFailsTheFuture() {
+        HibernateStatsRepository rejecting = repository(task -> {
+            throw new RejectedExecutionException("closed");
+        }, () -> {
+        });
+
+        var future = rejecting.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
+
+        assertTrue(future.isCompletedExceptionally(), "a rejected write is a failed write");
+        assertEquals(1, failures());
+    }
+
+    private FinishedRound slenderRound(int kills, long playTime) {
+        return round(UUID.randomUUID(), 2026, slender(SLENDER, Outcome.WIN, FinishReason.ALL_SURVIVOR_DEAD, kills, playTime));
+    }
+
+    @Test
+    @DisplayName("findYear returns the stored year as a view")
+    void findYearReturnsTheView() {
+        this.repository.saveRound(slenderRound(3, 500)).join();
+
+        YearStatsView view = this.repository.findYear(SLENDER, 2026).join().orElseThrow();
+
+        assertEquals(SLENDER, view.playerUuid());
+        assertEquals(3, view.kills());
+        assertEquals(1, view.roundsSlender());
+        assertEquals(500L, view.fastestWinSeconds());
+    }
+
+    @Test
+    @DisplayName("findYear is empty for a year or a player without statistics")
+    void findYearIsEmptyWithoutRows() {
+        this.repository.saveRound(slenderRound(3, 500)).join();
+
+        assertEquals(Optional.empty(), this.repository.findYear(SLENDER, 2025).join(), "another year");
+        assertEquals(Optional.empty(), this.repository.findYear(ALICE, 2026).join(), "another player");
+    }
+
+    @Test
+    @DisplayName("Reads are queued on the executor, not run by the caller")
+    void readsRunOnTheExecutor() {
+        Queue<Runnable> queue = new ArrayDeque<>();
+        HibernateStatsRepository queued = repository(queue::add, () -> {
+        });
+
+        var future = queued.findYear(ALICE, 2026);
+
+        assertEquals(1, queue.size(), "the read must be queued");
+        assertFalse(future.isDone(), "nothing is read before the executor runs");
+        queue.remove().run();
+        assertTrue(future.isDone(), "the future completes once the executor ran the read");
+    }
+
+    @Test
+    @DisplayName("A failing read completes the future exceptionally")
+    void failingReadFailsTheFuture() {
+        this.sessionFactory.close();
+
+        assertTrue(this.repository.findYear(ALICE, 2026).isCompletedExceptionally(), "findYear");
+        assertTrue(this.repository.findPlayerByName("Alice").isCompletedExceptionally(), "findPlayerByName");
+        assertTrue(this.repository.availableYears(ALICE).isCompletedExceptionally(), "availableYears");
+    }
+
+    @Test
+    @DisplayName("availableYears lists the years with statistics, newest first")
+    void availableYearsListsTheYears() {
+        this.repository.saveRound(round(UUID.randomUUID(), 2025, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2027, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2026, survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
+        this.repository.saveRound(round(UUID.randomUUID(), 2024, survivor(BOB, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900)));
+
+        assertEquals(List.of(2027, 2026, 2025), this.repository.availableYears(ALICE).join());
+        assertEquals(List.of(), this.repository.availableYears(SLENDER).join(), "a player without rows has no years");
+    }
+
+    @Test
+    @DisplayName("A round stores the last known name of every participant that has one")
+    void roundStoresNames() {
+        this.repository.saveRound(namedRound(Map.of(ALICE, "Alice"),
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900),
+                survivor(BOB, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900))).join();
+
+        assertEquals("Alice", text("select name from player_names where player_uuid = '" + ALICE + "'"));
+        assertEquals("alice", text("select name_lower from player_names where player_uuid = '" + ALICE + "'"));
+        assertEquals(0, number("select count(*) from player_names where player_uuid = ?", BOB), "no name, no row");
+    }
+
+    @Test
+    @DisplayName("findPlayerByName finds a player case-insensitively with the stored spelling")
+    void findPlayerByNameIgnoresCase() {
+        this.repository.saveRound(namedRound(Map.of(ALICE, "AliceMC"),
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900))).join();
+
+        KnownPlayer found = this.repository.findPlayerByName("alicemc").join().orElseThrow();
+
+        assertEquals(new KnownPlayer(ALICE, "AliceMC"), found);
+        assertEquals(Optional.empty(), this.repository.findPlayerByName("nobody").join());
+    }
+
+    @Test
+    @DisplayName("A rename replaces the stored name and the old name no longer resolves")
+    void renameReplacesTheName() {
+        this.repository.saveRound(namedRound(Map.of(ALICE, "OldName"),
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900))).join();
+        this.repository.saveRound(namedRound(FINISHED.plusSeconds(3600), Map.of(ALICE, "NewName"),
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900))).join();
+
+        assertEquals(1, number("select count(*) from player_names where player_uuid = ?", ALICE), "one row per player");
+        assertEquals(Optional.empty(), this.repository.findPlayerByName("OldName").join());
+        assertEquals(ALICE, this.repository.findPlayerByName("NewName").join().orElseThrow().uuid());
+    }
+
+    @Test
+    @DisplayName("A round older than the stored name does not bring the old name back")
+    void olderRoundDoesNotOverwriteTheName() {
+        this.repository.saveRound(namedRound(FINISHED.plusSeconds(3600), Map.of(ALICE, "NewName"),
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900))).join();
+        this.repository.saveRound(namedRound(FINISHED, Map.of(ALICE, "OldName"),
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900))).join();
+
+        assertEquals("NewName", text("select name from player_names where player_uuid = '" + ALICE + "'"),
+                "another server writing late must not undo the newer name");
+    }
+
+    @Test
+    @DisplayName("A name another player now uses resolves to the most recently updated row")
+    void reusedNameResolvesToTheNewestRow() {
+        this.repository.saveRound(namedRound(FINISHED, Map.of(ALICE, "Shared"),
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900))).join();
+        this.repository.saveRound(namedRound(FINISHED.plusSeconds(86_400), Map.of(BOB, "shared"),
+                survivor(BOB, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900))).join();
+
+        KnownPlayer found = this.repository.findPlayerByName("SHARED").join().orElseThrow();
+
+        assertEquals(BOB, found.uuid(), "Alice's row is older, Bob has the name now");
+        assertEquals("shared", found.name());
+    }
+
+    @Test
+    @DisplayName("Deleting a player also removes the stored name")
+    void deleteRemovesTheName() {
+        this.repository.saveRound(namedRound(Map.of(ALICE, "Alice", BOB, "Bob"),
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900),
+                survivor(BOB, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900))).join();
+
+        int removed = this.repository.deleteByPlayer(ALICE);
+
+        assertEquals(3, removed, "round row, year row and name row");
+        assertEquals(Optional.empty(), this.repository.findPlayerByName("Alice").join());
+        assertEquals(BOB, this.repository.findPlayerByName("Bob").join().orElseThrow().uuid(), "Bob keeps his name");
+    }
+
+    @Test
+    @DisplayName("A name longer than the column allows is cut instead of failing the round")
+    void longNamesAreCut() {
+        this.repository.saveRound(namedRound(Map.of(ALICE, "ThisNameIsFarTooLongForMinecraft"),
+                survivor(ALICE, Outcome.WIN, FinishReason.TIME_OVER, 1, false, 900))).join();
+
+        assertEquals("ThisNameIsFarToo", text("select name from player_names where player_uuid = '" + ALICE + "'"));
+        assertEquals(1, number("select count(*) from player_round_stats"), "the round itself is written");
     }
 }

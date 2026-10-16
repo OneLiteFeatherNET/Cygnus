@@ -43,22 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class RoundStatsCollectorEventsTest extends CygnusPlayerTestBase {
 
-    private final List<FinishedRound> rounds = new ArrayList<>();
-    private final StatsRepository repository = new StatsRepository() {
-        @Override
-        public void saveRound(FinishedRound round) {
-            RoundStatsCollectorEventsTest.this.rounds.add(round);
-        }
-
-        @Override
-        public int deleteByPlayer(UUID playerUuid) {
-            return 0;
-        }
-
-        @Override
-        public void close() {
-        }
-    };
+    private final FakeStatsRepository repository = new FakeStatsRepository();
+    private final List<FinishedRound> rounds = this.repository.rounds;
 
     private Player player(Env env, Instance instance) {
         return env.createConnection().connect(instance, new Pos(0, 40, 0));
