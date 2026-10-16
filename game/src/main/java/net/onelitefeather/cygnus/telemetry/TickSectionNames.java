@@ -18,8 +18,8 @@ public final class TickSectionNames {
 
     /** The creek's step. */
     public static final String CREEK = "creek";
-    /** The reveal that makes a betrayed survivor glow for the slender. */
-    public static final String GLOW_REVEAL = "glow-reveal";
+    /** The reveal that puts a betrayed survivor on the slender's locator bar. */
+    public static final String LOCATOR_REVEAL = "locator-reveal";
     /** The slender's gaze check. */
     public static final String SLENDER_GAZE = "slender-gaze";
     /** The tunnel vision overlay. */
@@ -50,7 +50,7 @@ public final class TickSectionNames {
     public static final String LOBBY_TIME = "lobby-time";
 
     /** Every name, for tests and documentation to check against. */
-    public static final List<String> ALL = List.of(CREEK, GLOW_REVEAL, SLENDER_GAZE, TUNNEL_VISION, PAGE_GLITCH,
+    public static final List<String> ALL = List.of(CREEK, LOCATOR_REVEAL, SLENDER_GAZE, TUNNEL_VISION, PAGE_GLITCH,
             BLOOD_SPLATTER, PAGE_PROXIMITY, AMBIENT, ADRENALINE, REGENERATION, SLENDER_TAKEOVER, STAMINA, SLENDER_BAR,
             JUMP_SCARE, LOBBY_WAITING, LOBBY_TIME);
 

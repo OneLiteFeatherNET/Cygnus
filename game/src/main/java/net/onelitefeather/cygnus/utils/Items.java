@@ -65,7 +65,7 @@ public final class Items {
     private static final ItemStack possession = ItemStack.builder(POSSESSION_MATERIAL)
             .customName(Component.text("Creek's Eyes", NamedTextColor.DARK_GREEN))
             .lore(lore("Right click while hidden to look", "through the eyes of the creek",
-                    "Survivors close to it glow for you", "Sneak to return to your body"))
+                    "Survivors close to it show on your locator bar", "Sneak to return to your body"))
             .set(Tags.ITEM_TAG, POSSESSION_ITEM)
             .build();
 
