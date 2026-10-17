@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -33,7 +34,7 @@ public final class CreekRoutesFile {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CreekRoutesFile.class);
     private static final String FILE_NAME = "creek.json";
-    private static final String WHAT = "creek routes";
+    private static final String ROUTE_KEY = "creek routes";
     private static final String ROUTES_KEY = "routes";
     private static final Type ROUTES_TYPE = TypeToken.getParameterized(List.class, CreekRoute.class).getType();
 
@@ -78,18 +79,18 @@ public final class CreekRoutesFile {
      *
      * @param mapFile the map file the settings belong to
      * @return the settings, {@link CreekSettings#DEFAULT} for a missing file and filled up with
-     *         defaults for every key the file leaves out
+     * defaults for every key the file leaves out
      * @throws IllegalArgumentException if a value is out of range or two values contradict each other, naming the file
      */
     public static CreekSettings loadSettings(Path mapFile) {
         Path file = resolve(mapFile);
-        return MapSideFile.settings(MapSideFile.parse(WHAT, file), file, CreekSettings.class, CreekSettings.DEFAULT);
+        return MapSideFile.settings(MapSideFile.parse(ROUTE_KEY, file), file, CreekSettings.class, CreekSettings.DEFAULT);
     }
 
     /**
      * Writes the routes to the sibling {@code creek.json} with the default creek settings.
      *
-     * @param mapFile the map file the routes belong to
+     * @param mapFile where the routes belong to
      * @param routes  the routes to write
      */
     public static void save(Path mapFile, List<CreekRoute> routes) {
@@ -99,12 +100,12 @@ public final class CreekRoutesFile {
     /**
      * Writes the routes and the creek settings to the sibling {@code creek.json}.
      *
-     * @param mapFile  the map file the routes belong to
+     * @param mapFile  where the routes belong to
      * @param routes   the routes to write
      * @param settings the creek values the map sets for itself
      */
     public static void save(Path mapFile, List<CreekRoute> routes, CreekSettings settings) {
-        MapSideFile.write(WHAT, resolve(mapFile), ROUTES_KEY, GsonHelper.GSON.toJsonTree(routes, ROUTES_TYPE), settings);
+        MapSideFile.write(ROUTE_KEY, resolve(mapFile), ROUTES_KEY, GsonHelper.GSON.toJsonTree(routes, ROUTES_TYPE), settings);
     }
 
     /**
@@ -119,16 +120,16 @@ public final class CreekRoutesFile {
     }
 
     private static List<CreekRoute> read(Path file) {
-        JsonElement element = MapSideFile.data(MapSideFile.parse(WHAT, file), ROUTES_KEY);
+        JsonElement element = MapSideFile.data(MapSideFile.parse(ROUTE_KEY, file), ROUTES_KEY);
         if (element == null) return List.of();
         List<CreekRoute> routes;
         try {
             routes = GsonHelper.GSON.fromJson(element, ROUTES_TYPE);
         } catch (JsonSyntaxException exception) {
-            throw new JsonSyntaxException("Failed to parse " + WHAT + " from " + file + ": " + exception.getMessage(), exception);
+            throw new JsonSyntaxException("Failed to parse " + ROUTE_KEY + " from " + file + ": " + exception.getMessage(), exception);
         }
         if (routes == null) return List.of();
-        return routes.stream().filter(route -> route != null).toList();
+        return routes.stream().filter(Objects::nonNull).toList();
     }
 
     private static List<CreekRoute> valid(List<CreekRoute> routes, Path file) {
