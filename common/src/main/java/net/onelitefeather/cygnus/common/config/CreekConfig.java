@@ -13,7 +13,7 @@ import static net.onelitefeather.cygnus.common.config.ConfigChecks.positive;
  * <p>
  * All numbers that control the creek's behavior live here, so they can be tuned in a playtest
  * without changing code. They are sorted into groups, but the keys in {@code config.properties}
- * stay flat, for example {@code creek.stalkMinDistance}. Each group rejects values that break it,
+ * stay flat, for example {@code creek.stalkMinAngle}. Each group rejects values that break it,
  * and this record rejects the combinations that span groups, for example a hiding spot inside the
  * view cone.
  * </p>
