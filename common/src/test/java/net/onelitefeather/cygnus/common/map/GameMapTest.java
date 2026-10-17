@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.common.map;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import org.junit.jupiter.api.Test;
 
@@ -130,5 +132,47 @@ class GameMapTest {
         assertEquals(new Pos(1, 2, 3), copy.getSlenderSpawn());
         assertEquals(Set.of(new Pos(4, 5, 6)), copy.getSurvivorSpawns());
         assertEquals(List.of("Builder"), copy.builders());
+    }
+
+    @Test
+    void testSettingsDefaultWithoutAFileOfTheirOwn() {
+        GameMap map = new GameMap("Test", Pos.ZERO, Pos.ZERO, Set.of(), Set.of(), List.of(), null);
+
+        assertEquals(PageSettings.DEFAULT, map.getPageSettings());
+        assertEquals(CreekSettings.DEFAULT, map.getCreekSettings());
+    }
+
+    @Test
+    void testWithSettingsKeepsTheRest() {
+        PageSettings pages = new PageSettings(30, 5, 90, 20);
+        CreekSettings creek = new CreekSettings(30, 18, 28, 20, 2.0D, 10, 0.0D);
+        GameMap map = new GameMap("Test", Pos.ZERO, Pos.ZERO, Set.of(), Set.of(), List.of(), null)
+                .withPageSettings(pages)
+                .withCreekSettings(creek)
+                .withPageFaces(Set.of())
+                .withCreekRoutes(List.of());
+
+        assertEquals(pages, map.getPageSettings(), "withPageFaces and withCreekRoutes keep the settings");
+        assertEquals(creek, map.getCreekSettings());
+        assertEquals("Test", map.name());
+    }
+
+    @Test
+    void testBuilderCarriesTheSettingsBothWays() {
+        PageSettings pages = new PageSettings(30, 5, 90, 20);
+        CreekSettings creek = new CreekSettings(30, 18, 28, 20, 2.0D, 10, 0.0D);
+        GameMap map = new GameMap("Test", Pos.ZERO, Pos.ZERO, Set.of(), Set.of(), List.of(), null)
+                .withPageSettings(pages)
+                .withCreekSettings(creek);
+
+        GameMapBuilder builder = new GameMapBuilder(map);
+        assertEquals(pages, builder.getPageSettings());
+        assertEquals(creek, builder.getCreekSettings());
+
+        builder.setCreekSettings(CreekSettings.DEFAULT);
+        GameMap built = builder.build();
+        assertEquals(pages, built.getPageSettings());
+        assertEquals(CreekSettings.DEFAULT, built.getCreekSettings());
+        assertEquals(PageSettings.DEFAULT, new GameMapBuilder().getPageSettings());
     }
 }

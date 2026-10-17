@@ -4,6 +4,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,7 @@ class PageCalculationTest {
             env.createPlayer(instance);
         }
 
-        assertEquals(GameConfig.MIN_ACTIVE_PAGE_COUNT, PageCalculation.calculateActivePageAmount());
+        assertEquals(PageSettings.DEFAULT.minActivePages(), PageCalculation.calculateActivePageAmount(PageSettings.DEFAULT.minActivePages()));
 
         env.destroyInstance(instance, true);
     }
@@ -85,7 +86,7 @@ class PageCalculationTest {
             env.createPlayer(instance);
         }
 
-        assertEquals(GameConfig.MIN_ACTIVE_PAGE_COUNT, PageCalculation.calculateActivePageAmount(),
+        assertEquals(PageSettings.DEFAULT.minActivePages(), PageCalculation.calculateActivePageAmount(PageSettings.DEFAULT.minActivePages()),
                 "the active page count must still be at the minimum just below the top of the range");
 
         env.destroyInstance(instance, true);
@@ -98,8 +99,20 @@ class PageCalculationTest {
             env.createPlayer(instance);
         }
 
-        assertEquals(GameConfig.MIN_ACTIVE_PAGE_COUNT + 1, PageCalculation.calculateActivePageAmount(),
+        assertEquals(PageSettings.DEFAULT.minActivePages() + 1, PageCalculation.calculateActivePageAmount(PageSettings.DEFAULT.minActivePages()),
                 "13 players (12 survivors) add exactly one page on top of the minimum");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testActivePageMinimumComesFromTheMap(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        for (int i = 0; i < 3; i++) {
+            env.createPlayer(instance);
+        }
+
+        assertEquals(7, PageCalculation.calculateActivePageAmount(7));
 
         env.destroyInstance(instance, true);
     }

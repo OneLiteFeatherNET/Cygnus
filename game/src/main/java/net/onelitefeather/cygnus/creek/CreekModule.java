@@ -7,6 +7,7 @@ import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchEffects;
 import net.onelitefeather.cygnus.creek.consequence.CatchLaunch;
@@ -42,6 +43,7 @@ public final class CreekModule implements GameFeature {
      * Builds the creek, with its step measured for the slow tick report.
      *
      * @param config           the creek settings
+     * @param settings         the distances the map sets for the creek
      * @param teamService      the teams of the round
      * @param mapProvider      the maps and the active instance
      * @param dread            rates how scared each survivor is
@@ -51,7 +53,7 @@ public final class CreekModule implements GameFeature {
      * @param sections         measures how long each step takes
      * @since 2.15.0
      */
-    public CreekModule(CreekConfig config, TeamService teamService,
+    public CreekModule(CreekConfig config, CreekSettings settings, TeamService teamService,
                        GameMapProvider mapProvider, DreadSource dread, CreekWitness witness,
                        JumpScareManager jumpScareManager, StaminaService staminaService, TickSections sections) {
         this.config = config;
@@ -61,6 +63,7 @@ public final class CreekModule implements GameFeature {
         Random random = new Random();
         this.service = new CreekService(
                 this.config,
+                settings,
                 () -> TeamHelper.survivorsOf(teamService),
                 mapProvider.getActiveInstance(),
                 this::routes,
@@ -71,7 +74,7 @@ public final class CreekModule implements GameFeature {
                         new CatchTricks(
                                 new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.catching().slownessSeconds()),
                                 new CatchSwap(() -> TeamHelper.survivorsOf(teamService), random),
-                                new CatchLaunch(this.config.catching().launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
+                                new CatchLaunch(settings.launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
                                 this.config.catching().swapChance(),
                                 random),
                         new LocatorReveal(this.config.catching().betrayalGlowSeconds(), sections),

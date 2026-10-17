@@ -8,6 +8,8 @@ import net.onelitefeather.cygnus.setup.dialog.MapDialogs;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
+import net.onelitefeather.cygnus.setup.dialog.settings.SettingsDialog;
+import net.onelitefeather.cygnus.setup.dialog.settings.SettingsForms;
 
 import java.util.function.Consumer;
 
@@ -40,6 +42,16 @@ public class DialogRequestListener implements Consumer<DialogRequestEvent> {
             case ATMOSPHERE_VALUES -> {
                 if (context instanceof DialogContext.AtmosphereContext(var atmosphere)) {
                     AtmosphereDialogs.openValueDialog(player, atmosphere);
+                }
+            }
+            case PAGE_SETTINGS -> {
+                if (context instanceof DialogContext.SettingsValues(var values)) {
+                    SettingsDialog.open(player, SettingsForms.PAGES, values);
+                }
+            }
+            case CREEK_SETTINGS -> {
+                if (context instanceof DialogContext.SettingsValues(var values)) {
+                    SettingsDialog.open(player, SettingsForms.CREEK, values);
                 }
             }
             case AUTHOR_INPUT -> {

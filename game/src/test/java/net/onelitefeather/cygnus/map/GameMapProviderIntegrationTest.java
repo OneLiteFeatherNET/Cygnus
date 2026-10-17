@@ -12,6 +12,9 @@ import net.onelitefeather.cygnus.common.creek.CreekRoutesFile;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.dimension.StaticDimensionPreset;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
+import net.onelitefeather.cygnus.common.page.PageFacesFile;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.falco.anvil.FalcoAnvilLoader;
 import net.theevilreaper.aves.map.BaseMap;
@@ -229,6 +232,25 @@ class GameMapProviderIntegrationTest {
         env.destroyInstance(gameInstance, true);
     }
 
+    @Test
+    void settingsAreKnownRightAfterTheProviderIsBuilt(Env env, @TempDir Path root) throws IOException {
+        Path mapFile = root.resolve("game").resolve("maps").resolve(ARENA_NAME).resolve("map.json");
+        PageSettings pages = new PageSettings(30, 6, 90, 20);
+        CreekSettings creek = new CreekSettings(30, 18, 28, 20, 2.0D, 10, 0.0D);
+        // The side files have to be there before the provider reads the map in its constructor.
+        writeLayout(root, null);
+        PageFacesFile.save(mapFile, Set.of(), pages);
+        CreekRoutesFile.save(mapFile, List.of(), creek);
+
+        GameMapProvider provider = new GameMapProvider(root);
+
+        assertEquals(pages, provider.pageSettings());
+        assertEquals(creek, provider.creekSettings());
+        InstanceContainer lobbyInstance = (InstanceContainer) provider.getActiveInstance().get();
+        provider.close();
+        env.destroyInstance(lobbyInstance, true);
+    }
+
     /**
      * Creates a map directory layout the provider accepts and returns a provider reading it.
      *
@@ -250,6 +272,19 @@ class GameMapProviderIntegrationTest {
      * @throws IOException if the layout cannot be written
      */
     private GameMapProvider createProvider(Path root, MapAtmosphere atmosphere) throws IOException {
+        writeLayout(root, atmosphere);
+        return new GameMapProvider(root);
+    }
+
+    /**
+     * Writes a map directory layout the provider accepts, without reading it yet.
+     *
+     * @param root       the directory the {@code game/maps} tree is written below
+     * @param atmosphere the atmosphere written into the game map's {@code map.json}, or
+     *                   {@code null} for a map file without an {@code atmosphere} block
+     * @throws IOException if the layout cannot be written
+     */
+    private void writeLayout(Path root, MapAtmosphere atmosphere) throws IOException {
         Path maps = root.resolve("game").resolve("maps");
         writeMap(maps.resolve("lobby"), new BaseMap("lobby", Pos.ZERO, List.of()), false);
         writeMap(
@@ -257,7 +292,6 @@ class GameMapProviderIntegrationTest {
                 new GameMap(ARENA_NAME, Pos.ZERO, new Pos(1, 1, 1), Set.of(), Set.of(new Pos(2, 2, 2)), List.of(), atmosphere),
                 true
         );
-        return new GameMapProvider(root);
     }
 
     /**

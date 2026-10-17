@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -53,7 +54,7 @@ public final class CreekRoutePreview {
     private final Player player;
     private final Supplier<List<CreekRoute>> routes;
     private final Supplier<@Nullable String> active;
-    private final double linkDistance;
+    private final DoubleSupplier linkDistance;
     private final List<Entity> labels = new ArrayList<>();
     private @Nullable Task task;
 
@@ -63,10 +64,10 @@ public final class CreekRoutePreview {
      * @param player       the player who sees it
      * @param routes       supplies the current routes
      * @param active       supplies the name of the route being edited, or {@code null}
-     * @param linkDistance how close an end has to be to a point of another route to link to it, in blocks
+     * @param linkDistance supplies how close an end has to be to a point of another route to link to it, in blocks
      */
     public CreekRoutePreview(Player player, Supplier<List<CreekRoute>> routes, Supplier<@Nullable String> active,
-                             double linkDistance) {
+                             DoubleSupplier linkDistance) {
         this.player = player;
         this.routes = routes;
         this.active = active;
@@ -135,7 +136,7 @@ public final class CreekRoutePreview {
                 line(points.get(i), points.get(i + 1), LINE_STEP).forEach(spot -> this.particle(LINE_PARTICLE, spot));
             }
         }
-        linkedPoints(route, routes, this.linkDistance).forEach(point -> this.particle(LINK_PARTICLE, point.add(0, 0.5, 0)));
+        linkedPoints(route, routes, this.linkDistance.getAsDouble()).forEach(point -> this.particle(LINK_PARTICLE, point.add(0, 0.5, 0)));
     }
 
     private @Nullable CreekRoute activeRoute(List<CreekRoute> routes) {

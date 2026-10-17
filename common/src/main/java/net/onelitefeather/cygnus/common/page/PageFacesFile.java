@@ -1,27 +1,32 @@
 package net.onelitefeather.cygnus.common.page;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.map.MapSideFile;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Reads and writes the {@code pages.json} file that sits next to a map's {@code map.json} and
  * holds every {@link PageResource} for that map, so the map file itself stays free of the
  * (potentially very long) page list.
+ *
+ * <p>The file holds the list under {@code pages} and the page values the map sets for itself under
+ * {@code settings}. A file in the old layout is the bare list and leaves every setting at its default.</p>
  */
 public final class PageFacesFile {
 
     private static final String FILE_NAME = "pages.json";
+    private static final String WHAT = "page faces";
+    private static final String PAGES_KEY = "pages";
     private static final Type PAGE_FACES_TYPE = TypeToken.getParameterized(Set.class, PageResource.class).getType();
 
     private PageFacesFile() {
@@ -46,57 +51,96 @@ public final class PageFacesFile {
      */
     public static Set<PageResource> load(Path mapFile) {
         Path pagesFile = resolve(mapFile);
-        if (!Files.exists(pagesFile)) {
-            return Set.of();
-        }
-
-        try (var reader = Files.newBufferedReader(pagesFile, StandardCharsets.UTF_8)) {
-            Set<PageResource> pageFaces;
-            try {
-                pageFaces = GsonHelper.GSON.fromJson(reader, PAGE_FACES_TYPE);
-            } catch (JsonSyntaxException exception) {
-                throw new JsonSyntaxException("Failed to parse page faces from " + pagesFile + ": " + exception.getMessage(), exception);
-            }
+        JsonElement pages = MapSideFile.data(MapSideFile.parse(WHAT, pagesFile), PAGES_KEY);
+        if (pages == null) return Set.of();
+        try {
+            Set<PageResource> pageFaces = GsonHelper.GSON.fromJson(pages, PAGE_FACES_TYPE);
             return pageFaces != null ? pageFaces : Set.of();
-        } catch (IOException exception) {
-            throw new UncheckedIOException("Failed to load page faces from " + pagesFile, exception);
+        } catch (JsonSyntaxException exception) {
+            throw new JsonSyntaxException("Failed to parse " + WHAT + " from " + pagesFile + ": " + exception.getMessage(), exception);
         }
     }
 
     /**
-     * Writes the given page faces to the sibling {@code pages.json}, creating parent directories
-     * as needed.
+     * Loads the page values the map sets for itself from the sibling {@code pages.json}.
+     *
+     * @param mapFile the map file the settings belong to
+     * @return the settings, {@link PageSettings#DEFAULT} for a missing file and filled up with
+     *         defaults for every key the file leaves out
+     * @throws IllegalArgumentException if a value is out of range, naming the file
+     */
+    public static PageSettings loadSettings(Path mapFile) {
+        Path pagesFile = resolve(mapFile);
+        return MapSideFile.settings(MapSideFile.parse(WHAT, pagesFile), pagesFile, PageSettings.class, PageSettings.DEFAULT);
+    }
+
+    /**
+     * Loads the page values like {@link #loadSettings(Path)}, but falls back to
+     * {@link PageSettings#DEFAULT} if they are broken. Meant for the setup, which has to open a
+     * broken map so it can be fixed.
+     *
+     * @param mapFile   the map file the settings belong to
+     * @param onInvalid receives the reason if the settings were broken and the defaults are used
+     * @return the settings, or the defaults if they are broken
+     */
+    public static PageSettings loadSettingsOrDefaults(Path mapFile, Consumer<String> onInvalid) {
+        Path pagesFile = resolve(mapFile);
+        return MapSideFile.settingsOrDefaults(MapSideFile.parse(WHAT, pagesFile), pagesFile, PageSettings.class,
+                PageSettings.DEFAULT, onInvalid);
+    }
+
+    /**
+     * Writes the given page faces to the sibling {@code pages.json} with the default page settings.
      *
      * @param mapFile   the map file the page faces belong to
      * @param pageFaces the page faces to persist
      */
     public static void save(Path mapFile, Set<PageResource> pageFaces) {
-        Path pagesFile = resolve(mapFile);
-        try {
-            if (pagesFile.getParent() != null) {
-                Files.createDirectories(pagesFile.getParent());
-            }
-            try (var writer = Files.newBufferedWriter(pagesFile, StandardCharsets.UTF_8)) {
-                GsonHelper.GSON.toJson(pageFaces, PAGE_FACES_TYPE, writer);
-            }
-        } catch (IOException exception) {
-            throw new UncheckedIOException("Failed to save page faces to " + pagesFile, exception);
-        }
+        save(mapFile, pageFaces, PageSettings.DEFAULT);
+    }
+
+    /**
+     * Writes the page faces and the page settings to the sibling {@code pages.json}, creating
+     * parent directories as needed.
+     *
+     * @param mapFile   the map file the page faces belong to
+     * @param pageFaces the page faces to persist
+     * @param settings  the page values the map sets for itself
+     */
+    public static void save(Path mapFile, Set<PageResource> pageFaces, PageSettings settings) {
+        MapSideFile.write(WHAT, resolve(mapFile), PAGES_KEY, GsonHelper.GSON.toJsonTree(pageFaces, PAGE_FACES_TYPE), settings);
     }
 
     /**
      * Returns a copy of the given map whose page faces are the union of its own page faces
      * (e.g. read from an old-style {@code map.json} that still inlines them) and whatever the
-     * sibling {@code pages.json} holds.
+     * sibling {@code pages.json} holds, together with the page settings from that file.
      *
      * @param mapFile the map file {@code map} was loaded from
      * @param map     the map to merge page faces into
-     * @return a new {@link GameMap} carrying the merged page faces
+     * @return a new {@link GameMap} carrying the merged page faces and the page settings
      */
     public static GameMap loadInto(Path mapFile, GameMap map) {
+        return withMergedFaces(mapFile, map).withPageSettings(loadSettings(mapFile));
+    }
+
+    /**
+     * Works like {@link #loadInto(Path, GameMap)}, but falls back to {@link PageSettings#DEFAULT}
+     * if the page settings are broken. Meant for the setup, which has to open a broken map so it
+     * can be fixed.
+     *
+     * @param mapFile   the map file {@code map} was loaded from
+     * @param map       the map to merge page faces into
+     * @param onInvalid receives the reason if the settings were broken and the defaults are used
+     * @return a new {@link GameMap} carrying the merged page faces and the page settings
+     */
+    public static GameMap loadInto(Path mapFile, GameMap map, Consumer<String> onInvalid) {
+        return withMergedFaces(mapFile, map).withPageSettings(loadSettingsOrDefaults(mapFile, onInvalid));
+    }
+
+    private static GameMap withMergedFaces(Path mapFile, GameMap map) {
         Set<PageResource> merged = new HashSet<>(map.getPageFaces());
         merged.addAll(load(mapFile));
-
         return map.withPageFaces(merged);
     }
 }

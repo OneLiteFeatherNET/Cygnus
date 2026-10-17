@@ -3,13 +3,13 @@ package net.onelitefeather.cygnus.common.config;
 /**
  * The range checks the config records share. Each one throws an {@link IllegalArgumentException}
  * naming the key, which {@link ConfigSection#orDefault} turns into a warning and the group's
- * defaults.
+ * defaults. The settings a map sets for itself use them as well.
  *
  * @author theEvilReaper
  * @version 1.0.0
  * @since 2.17.0
  */
-final class ConfigChecks {
+public final class ConfigChecks {
 
     private ConfigChecks() {
     }
@@ -21,7 +21,7 @@ final class ConfigChecks {
      * @param value   the value
      * @param minimum the smallest allowed value
      */
-    static void atLeast(String name, double value, double minimum) {
+    public static void atLeast(String name, double value, double minimum) {
         if (value < minimum) {
             throw new IllegalArgumentException(name + " (" + format(value) + ") must be at least " + format(minimum));
         }
@@ -33,7 +33,7 @@ final class ConfigChecks {
      * @param name  the key name for the message
      * @param value the value
      */
-    static void notNegative(String name, double value) {
+    public static void notNegative(String name, double value) {
         if (value < 0.0D) {
             throw new IllegalArgumentException(name + " (" + format(value) + ") must not be negative");
         }
@@ -45,7 +45,7 @@ final class ConfigChecks {
      * @param name  the key name for the message
      * @param value the value
      */
-    static void positive(String name, double value) {
+    public static void positive(String name, double value) {
         if (value <= 0.0D) {
             throw new IllegalArgumentException(name + " (" + format(value) + ") must be above 0");
         }
@@ -59,7 +59,7 @@ final class ConfigChecks {
      * @param minimum the smallest allowed value
      * @param maximum the largest allowed value
      */
-    static void between(String name, double value, double minimum, double maximum) {
+    public static void between(String name, double value, double minimum, double maximum) {
         if (value < minimum || value > maximum) {
             throw new IllegalArgumentException(
                     name + " (" + format(value) + ") must be between " + format(minimum) + " and " + format(maximum));
@@ -72,7 +72,7 @@ final class ConfigChecks {
      * @param name  the key name for the message
      * @param value the value
      */
-    static void share(String name, double value) {
+    public static void share(String name, double value) {
         if (value <= 0.0D || value > 1.0D) {
             throw new IllegalArgumentException(name + " (" + format(value) + ") must be above 0 and at most 1");
         }
@@ -86,7 +86,7 @@ final class ConfigChecks {
      * @param upperName the upper key name for the message
      * @param upper     the upper value
      */
-    static void below(String lowerName, double lower, String upperName, double upper) {
+    public static void below(String lowerName, double lower, String upperName, double upper) {
         if (lower >= upper) {
             throw new IllegalArgumentException(
                     lowerName + " (" + format(lower) + ") must be below " + upperName + " (" + format(upper) + ")");
@@ -101,7 +101,7 @@ final class ConfigChecks {
      * @param upperName the upper key name for the message
      * @param upper     the upper value
      */
-    static void notAbove(String lowerName, double lower, String upperName, double upper) {
+    public static void notAbove(String lowerName, double lower, String upperName, double upper) {
         if (lower > upper) {
             throw new IllegalArgumentException(
                     lowerName + " (" + format(lower) + ") must not be above " + upperName + " (" + format(upper) + ")");

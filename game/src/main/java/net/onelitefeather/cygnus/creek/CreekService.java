@@ -10,6 +10,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
@@ -64,6 +65,7 @@ public final class CreekService implements PossessionTarget {
     static final int TICK_MILLIS = 100;
 
     private final CreekConfig config;
+    private final CreekSettings settings;
     private final Supplier<Set<Player>> survivors;
     private final Supplier<? extends @Nullable Instance> instance;
     private final BiFunction<Instance, Pos, CreekBody> bodies;
@@ -88,6 +90,7 @@ public final class CreekService implements PossessionTarget {
      * Sets up the service, with its step measured for the slow tick report.
      *
      * @param config      the settings
+     * @param settings    the distances the map sets for the creek
      * @param survivors   supplies the survivors of the round
      * @param instance    supplies the instance of the round, or {@code null} while there is none
      * @param routes      supplies the creek routes of the current map; without any, the creek stays away
@@ -100,13 +103,14 @@ public final class CreekService implements PossessionTarget {
      * @param sections    measures how long each step takes
      * @since 2.15.0
      */
-    public CreekService(CreekConfig config, Supplier<Set<Player>> survivors,
+    public CreekService(CreekConfig config, CreekSettings settings, Supplier<Set<Player>> survivors,
                           Supplier<? extends @Nullable Instance> instance, Supplier<List<CreekRoute>> routes,
                           BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread, CreekWitness witness,
                           CatchConsequence consequence, LongSupplier clock, RandomGenerator random,
                           TickSections sections) {
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.CREEK, this::tick));
         this.config = config;
+        this.settings = settings;
         this.survivors = survivors;
         this.instance = instance;
         this.bodies = bodies;
@@ -115,9 +119,9 @@ public final class CreekService implements PossessionTarget {
         this.consequence = consequence;
         this.clock = clock;
         this.random = random;
-        this.sight = new CreekSight(config.sight().range(), config.sight().viewAngle());
+        this.sight = new CreekSight(settings.sightRange(), config.sight().viewAngle());
         this.ground = new InstanceGround(instance);
-        this.spots = new SpotFinder(config.sight().range(), this.ground);
+        this.spots = new SpotFinder(settings.sightRange(), this.ground);
         this.routes = routes;
     }
 
@@ -138,7 +142,7 @@ public final class CreekService implements PossessionTarget {
         if (this.creek != null) return;
 
         Instance world = this.instance.get();
-        CreekPaths paths = CreekPaths.of(this.routes.get(), this.config.routeLinkDistance());
+        CreekPaths paths = CreekPaths.of(this.routes.get(), this.settings.routeLinkDistance());
         if (world == null || paths.isEmpty()) {
             LOGGER.warn("The map has no usable creek routes, so the creek stays away this round");
             return;
@@ -146,7 +150,7 @@ public final class CreekService implements PossessionTarget {
         // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
         CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.witness,
-                new PatrolHelper(this.random), new StalkSounds(this.random), this.config, this.random,
+                new PatrolHelper(this.random), new StalkSounds(this.random), this.config, this.settings, this.random,
                 new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L), () -> this.calm);
         this.round = round;
         List<Pos> points = paths.allPoints();
@@ -157,7 +161,7 @@ public final class CreekService implements PossessionTarget {
         // spread out, the creek somewhere far away from all of them.
         long showsUp = this.clock.getAsLong() + this.config.vanish().minSeconds() * 1000L;
         this.creek = new Creek(body, pathRoute, round, new VanishState(showsUp));
-        this.variants = new CreekVariants(this.config, this.spots, this.random, showsUp,
+        this.variants = new CreekVariants(this.config, this.settings, this.spots, this.random, showsUp,
                 (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state),
                 () -> this.calm);
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
@@ -226,7 +230,7 @@ public final class CreekService implements PossessionTarget {
         Creek current = this.creek;
         if (current == null) return;
         // The variants keep the normal sight. They haunt one survivor each and are none of the slender's business.
-        int range = (int) Math.round(this.config.sight().range() * sightFactor);
+        int range = (int) Math.round(this.settings.sightRange() * sightFactor);
         current.body().observe(slender);
         current.boost(new CreekSight(range, this.config.sight().viewAngle()));
     }
@@ -241,7 +245,7 @@ public final class CreekService implements PossessionTarget {
 
     @Override
     public int sightRange() {
-        return this.config.sight().range();
+        return this.settings.sightRange();
     }
 
     @Nullable Creek creek() {

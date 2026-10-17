@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.common.page;
 
 import net.minestom.server.utils.Direction;
 import net.minestom.server.utils.validate.Check;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import org.jetbrains.annotations.Contract;
 
 /**
@@ -27,6 +28,22 @@ public final class PageFactory {
         Direction direction = resource.face();
         Check.argCondition(direction == Direction.UP || direction == Direction.DOWN, "The direction " + direction + " is not supported");
         Check.argCondition(pageCount < 1, "The page count can't be zero or negative");
-        return new PageEntity(resource, pageCount);
+        return createPage(resource, pageCount, PageSettings.DEFAULT.ttlSeconds());
+    }
+
+    /**
+     * Creates a page that moves on after the given time.
+     *
+     * @param resource   the spot the page should stand on
+     * @param pageCount  the current count of the page
+     * @param ttlSeconds how long the page stays in one spot, in seconds
+     * @return the created entity reference
+     */
+    @Contract(value = "_, _, _ -> new", pure = true)
+    public static PageEntity createPage(PageResource resource, int pageCount, int ttlSeconds) {
+        Direction direction = resource.face();
+        Check.argCondition(direction == Direction.UP || direction == Direction.DOWN, "The direction " + direction + " is not supported");
+        Check.argCondition(pageCount < 1, "The page count can't be zero or negative");
+        return new PageEntity(resource, pageCount, ttlSeconds);
     }
 }

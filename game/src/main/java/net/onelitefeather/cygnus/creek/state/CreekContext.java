@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
@@ -27,6 +28,7 @@ import java.util.random.RandomGenerator;
  * @param spots     finds places where nobody can see the creek
  * @param actions   what the states can do to a survivor
  * @param config    the settings
+ * @param settings  the distances the map sets for the creek
  * @param random    the random source
  * @param hunts     when each survivor's last hunt ended, shared by every creek of the round
  * @param calm      how far the round has thinned out, which makes the creek slower and more patient
@@ -43,6 +45,7 @@ public record CreekContext(
         SpotFinder spots,
         CreekActions actions,
         CreekConfig config,
+        CreekSettings settings,
         RandomGenerator random,
         HuntCooldowns hunts,
         Calm calm

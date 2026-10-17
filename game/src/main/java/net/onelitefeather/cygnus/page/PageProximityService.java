@@ -71,7 +71,8 @@ public final class PageProximityService {
     /**
      * Creates the service with its tick measured for the slow tick report.
      *
-     * @param config       the configuration holding range and sound
+     * @param config       the configuration holding switch and sound
+     * @param range        how far away a page can still be heard, in blocks, from the map's page settings
      * @param listeners    supplies the players the hint is played to
      * @param pageSupplier supplies the proximity page targets that can currently be collected
      * @param sections     measures how long each run takes
@@ -79,6 +80,7 @@ public final class PageProximityService {
      */
     public PageProximityService(
             GameConfig.PageProximity config,
+            int range,
             Supplier<Collection<Player>> listeners,
             Supplier<? extends Collection<? extends PageProximityTarget>> pageSupplier,
             TickSections sections
@@ -87,10 +89,10 @@ public final class PageProximityService {
         this.config = config;
         this.listeners = listeners;
         this.pageSupplier = pageSupplier;
-        this.rangeSquared = (double) config.range() * config.range();
+        this.rangeSquared = (double) range * range;
 
         SoundEvent soundEvent = resolveSound(config.sound());
-        float baseVolume = volumeFor(config.range(), config.volumeFactor());
+        float baseVolume = volumeFor(range, config.volumeFactor());
 
         this.warningSound = Sound.sound(soundEvent, Sound.Source.MASTER, baseVolume, WARNING_PITCH);
         this.criticalSound = Sound.sound(soundEvent, Sound.Source.MASTER, baseVolume * CRITICAL_VOLUME_MULTIPLIER, CRITICAL_PITCH);
