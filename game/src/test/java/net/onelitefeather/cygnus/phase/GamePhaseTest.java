@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.phase;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
+import net.onelitefeather.cygnus.common.event.RoundInGameEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 import net.theevilreaper.xerus.api.phase.LinearPhaseSeries;
@@ -12,7 +13,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -39,5 +42,20 @@ class GamePhaseTest extends CygnusPlayerTestBase {
 
         assertTrue(cleanedUp.get());
         assertSame(nextPhase, series.getCurrentPhase());
+    }
+
+    @Test
+    @DisplayName("Starting the phase signals the round as in game exactly once")
+    void signalsRoundInGameOnce(@NotNull Env env) {
+        AtomicInteger signals = new AtomicInteger();
+        env.process().eventHandler().addListener(RoundInGameEvent.class, _ -> signals.incrementAndGet());
+        GamePhase phase = new GamePhase(new GameViewImpl(), 10, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        LinearPhaseSeries<Phase> series = new LinearPhaseSeries<>("TestSeries");
+        series.add(phase);
+
+        series.start();
+        env.tick();
+
+        assertEquals(1, signals.get(), "the round must be signalled once per start");
     }
 }
