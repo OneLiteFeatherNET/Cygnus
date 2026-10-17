@@ -71,4 +71,21 @@ class CreekSettingsAdapterTest {
                 "routeLinkDistance", "personalSpace", "launchHeight"), written.keySet());
         assertEquals(settings, GsonHelper.GSON.fromJson(written, CreekSettings.class));
     }
+
+    @Test
+    @DisplayName("A value equal to its default is not written")
+    void defaultIsLeftOut() {
+        CreekSettings settings = new CreekSettings(48, 20, 35, 30, 3.0D, 15, 0.0D);
+
+        JsonObject written = GsonHelper.GSON.toJsonTree(settings).getAsJsonObject();
+
+        assertEquals(Set.of("launchHeight"), written.keySet());
+        assertEquals(settings, GsonHelper.GSON.fromJson(written, CreekSettings.class));
+    }
+
+    @Test
+    @DisplayName("The defaults are written as an empty block")
+    void defaultsWriteNothing() {
+        assertTrue(GsonHelper.GSON.toJsonTree(CreekSettings.DEFAULT).getAsJsonObject().isEmpty());
+    }
 }

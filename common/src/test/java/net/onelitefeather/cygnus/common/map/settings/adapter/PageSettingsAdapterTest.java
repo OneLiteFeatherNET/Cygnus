@@ -50,4 +50,21 @@ class PageSettingsAdapterTest {
         assertEquals(Set.of("proximityRange", "minActivePages", "ttlSeconds", "respawnDelaySeconds"), written.keySet());
         assertEquals(settings, GsonHelper.GSON.fromJson(written, PageSettings.class));
     }
+
+    @Test
+    @DisplayName("A value equal to its default is not written")
+    void defaultIsLeftOut() {
+        PageSettings settings = new PageSettings(30, 4, 60, 15);
+
+        JsonObject written = GsonHelper.GSON.toJsonTree(settings).getAsJsonObject();
+
+        assertEquals(Set.of("proximityRange"), written.keySet());
+        assertEquals(settings, GsonHelper.GSON.fromJson(written, PageSettings.class));
+    }
+
+    @Test
+    @DisplayName("The defaults are written as an empty block")
+    void defaultsWriteNothing() {
+        assertTrue(GsonHelper.GSON.toJsonTree(PageSettings.DEFAULT).getAsJsonObject().isEmpty());
+    }
 }

@@ -8,23 +8,23 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MapSideFileTest {
 
     @Test
-    @DisplayName("Missing keys are named in record order, keys that are there are not")
-    void missingKeysInRecordOrder() {
-        var block = JsonParser.parseString("{ \"sightRange\": 30, \"launchHeight\": 0 }").getAsJsonObject();
+    @DisplayName("Unknown keys are named in block order, known keys are not")
+    void unknownKeysInBlockOrder() {
+        var block = JsonParser.parseString("{ \"sightRang\": 30, \"launchHeight\": 0, \"speed\": 2 }").getAsJsonObject();
 
-        assertEquals(List.of("stalkMinDistance", "stalkMaxDistance", "respawnMinDistance", "routeLinkDistance",
-                "personalSpace"), MapSideFile.missingKeys(block, CreekSettings.class));
+        assertEquals(List.of("sightRang", "speed"), MapSideFile.unknownKeys(block, CreekSettings.class));
     }
 
     @Test
-    @DisplayName("A key set to null counts as missing")
-    void nullCountsAsMissing() {
-        var block = JsonParser.parseString("{ \"sightRange\": null }").getAsJsonObject();
+    @DisplayName("A block that leaves keys out has no unknown keys")
+    void leftOutKeysAreNotUnknown() {
+        var block = JsonParser.parseString("{ \"sightRange\": 30 }").getAsJsonObject();
 
-        assertEquals("sightRange", MapSideFile.missingKeys(block, CreekSettings.class).getFirst());
+        assertTrue(MapSideFile.unknownKeys(block, CreekSettings.class).isEmpty());
     }
 }
