@@ -97,7 +97,7 @@ public final class AtmosphereDialogs extends DialogBase {
                             option.option(new DialogInput.SingleOption.Option(
                                     preset.getKey(),
                                     Component.text(readable(preset.getKey())),
-                                    !hasValues && preset == StaticDimensionPreset.DENSE_FOG
+                                    !hasValues && preset == StaticDimensionPreset.GLOOM
                             ));
                         }
                     });

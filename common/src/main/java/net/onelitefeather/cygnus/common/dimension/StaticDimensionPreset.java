@@ -72,6 +72,20 @@ public enum StaticDimensionPreset implements DimensionPreset {
     ),
 
     /**
+     * A desaturated, grey-green murk — dark and close, the default for new maps.
+     */
+    GLOOM(
+            "gloom",
+            new Color(15, 21, 18),
+            new Color(26, 36, 32),
+            new Color(5, 7, 6),
+            0.004f,
+            0f,
+            34f,
+            26f
+    ),
+
+    /**
      * Open, airy, and well-lit — long sightlines, minimal fog.
      */
     BRIGHT(
