@@ -14,7 +14,7 @@ import net.minestom.server.event.trait.PlayerEvent;
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.7.0
  */
 @SuppressWarnings("java:S6206")
@@ -22,16 +22,29 @@ public final class PlayerDamagedEvent implements PlayerEvent {
 
     private final Player player;
     private final Point source;
+    private final double points;
+
+    /**
+     * Creates a new instance of the {@link PlayerDamagedEvent} for a hit whose size is not known.
+     *
+     * @param player the player who was hit
+     * @param source where the damage came from
+     */
+    public PlayerDamagedEvent(Player player, Point source) {
+        this(player, source, 0.0D);
+    }
 
     /**
      * Creates a new instance of the {@link PlayerDamagedEvent}.
      *
      * @param player the player who was hit
      * @param source where the damage came from
+     * @param points the vitality points the hit took
      */
-    public PlayerDamagedEvent(Player player, Point source) {
+    public PlayerDamagedEvent(Player player, Point source, double points) {
         this.player = player;
         this.source = source;
+        this.points = points;
     }
 
     /**
@@ -49,5 +62,14 @@ public final class PlayerDamagedEvent implements PlayerEvent {
      */
     public Point getSource() {
         return this.source;
+    }
+
+    /**
+     * Returns how much the hit took.
+     *
+     * @return the vitality points lost, {@code 0} when the sender does not know
+     */
+    public double getPoints() {
+        return this.points;
     }
 }

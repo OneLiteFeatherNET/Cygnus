@@ -1,0 +1,247 @@
+## Context
+
+The game is an asymmetric Slender round: one Slender, the rest Survivors who collect pages. A round runs
+`LobbyPhase -> WaitingPhase -> GamePhase -> RestartPhase` and ends with `GameFinishEvent` and one of the reasons
+`TIME_OVER`, `ALL_PAGES_FOUND`, `ALL_SURVIVOR_DEAD`, `SLENDER_LEFT`, `SURVIVOR_LEFT`. Survivors win on `TIME_OVER`,
+`ALL_PAGES_FOUND` and `SLENDER_LEFT`; the Slender wins on `ALL_SURVIVOR_DEAD` and `SURVIVOR_LEFT`.
+
+There is no persistence layer yet and no DI framework; `Cygnus` builds everything in its constructor.
+
+## Module layout
+
+The statistics live in their own Gradle module `stats`; the dependency direction is `game -> stats`. `common` and
+`setup` do not know about it, and `stats` depends on neither `game` nor `common` (and needs no Minestom).
+
+- `stats` owns everything that is not wiring to game events: the domain (`RoundStats`, `FinishedRound`,
+  `FinishReason`), the per-round bookkeeping in `RoundStatsTracker` (participants, counting, quits frozen as
+  `ABANDONED`, `WIN`/`LOSS` per finish reason, year from the injected `Clock` and zone), the persistence
+  (`StatsRepository`, `NoOpStatsRepository`, `HibernateStatsRepository`, the entities, `StatsRepositories`,
+  `StatsMetrics`), the Flyway migration under `db/migration`, and `StatsConfig`, which reads the `stats.*` keys
+  from the same `config.properties` itself.
+- `game` keeps a thin adapter, `RoundStatsCollector`: it registers on the Minestom event node, translates the game's
+  events and `GameFinishEvent.Reason` into tracker calls and hands the finished round to the repository. The hooks
+  in `PainkillerUsedEvent`, `PlayerDamagedEvent` and `RoundTracer.currentRoundId()` stay in `game`.
+- `FinishReason` mirrors the game's reasons by name, so the stored values are unchanged and the module does not
+  import the game's event class.
+- All database dependencies (Hibernate, HikariCP, Flyway with its PostgreSQL plugin, the PostgreSQL driver) belong to
+  `stats`; H2 is a test dependency there. `game` reaches them through `implementation(project(":stats"))`, so they
+  end up in the game shadow jar.
+
+## Statistics
+
+Counted per round, stored in `PlayerRoundStats`, summed (or maxed / minned) into `PlayerYearStats`.
+
+### General (every participant)
+
+| Statistic | Source | Year aggregate |
+|---|---|---|
+| Rounds played | participant at `GameStartEvent` | sum |
+| Rounds as Slender / as Survivor | team at `GameStartEvent` | sum per role |
+| Wins / losses | `GameFinishEvent` reason + role | sum per role |
+| Abandoned rounds | quit before `GameFinishEvent` | sum |
+| Play time | `GameStartEvent` until finish or quit | sum (seconds) |
+| Win by reason | reason of won rounds | sum per reason (`TIME_OVER`, `ALL_PAGES_FOUND`, ...) |
+| Lobby size (`participants`) | tracked participants at `GameStartEvent` | none, per-round value only |
+
+### Survivor
+
+| Statistic | Source | Year aggregate |
+|---|---|---|
+| Pages found | `PageFoundEvent` | sum, best round (max) |
+| Rounds survived (alive at the end) | not dead at `GameFinishEvent` | sum |
+| Deaths | `PlayerDeathListener` | sum |
+| Time survived | start until death or end | sum, longest |
+| Rounds won by finding all pages, with own pages > 0 | `ALL_PAGES_FOUND` | sum |
+| Last page found ("finisher") | `PageFoundEvent` with `foundCount == max` | sum |
+| Damage taken | `PlayerDamagedEvent` (points) | sum |
+| Painkillers used | `RegenerationService` heal item use | sum |
+| Creek hunts survived / caught | `CreekWitness` hunt end `TIMEOUT`/`GONE`/`SENT_AWAY` vs `CAUGHT` | sum each |
+| Jump scares received | `JumpScareManager` | sum |
+| Taken over as Slender | `SlenderReviveEvent` (chosen survivor), flag `taken_over` per round | sum (`takeovers`) |
+
+### Slender
+
+| Statistic | Source | Year aggregate |
+|---|---|---|
+| Kills | kill credit in `PlayerDeathListener` | sum, best round (max) |
+| Flawless wins (all survivors dead) | `ALL_SURVIVOR_DEAD` | sum |
+| Fastest win | round time at a Slender win | min (seconds) |
+| Damage dealt | `PlayerDamagedEvent` while Slender is the source | sum |
+| Pages the survivors found against them | sum of survivor pages in the round | sum |
+| Possessions | `PossessionFeature` | sum |
+
+### Derived, not stored
+
+Win rate per role, kills per Slender round, pages per Survivor round, K/D, average time survived. They are computed
+from the stored sums when read, so they never drift.
+
+### Deliberately left out
+
+Footprints, stamina state changes, sanity values and blackouts: high frequency, low meaning for a player, and
+already covered by OpenTelemetry for balancing. They can be added later as new columns plus a migration.
+
+## Data model
+
+```
+player_round_stats                      player_year_stats
+-------------------                     -----------------
+round_id        UUID   PK(1)            player_uuid  UUID  PK(1)
+player_uuid     UUID   PK(2)            year         INT   PK(2)
+year            INT    (indexed)        rounds_played, rounds_slender, rounds_survivor,
+finished_at     TIMESTAMP (UTC)         wins_slender, wins_survivor, losses_*, abandoned,
+role            SLENDER|SURVIVOR        play_time_seconds, pages_found, best_pages_round,
+outcome         WIN|LOSS|ABANDONED      deaths, kills, best_kills_round, fastest_win_seconds,
+finish_reason   enum                    ... one column per statistic above
+pages_found, kills, died, ...           version  BIGINT (optimistic lock)
+play_time_seconds, ...
+```
+
+- Two entities: `PlayerRoundStats` (composite id `round_id + player_uuid`) and `PlayerYearStats` (composite id
+  `player_uuid + year`, `@Version` for optimistic locking).
+- Wide tables with one column per statistic instead of a key/value table: type-safe, cheap to query for
+  leaderboards (`ORDER BY kills DESC WHERE year = ?`), and each new statistic is a conscious Flyway migration.
+- `player_round_stats` is the source of truth. If an aggregate is ever wrong, `player_year_stats` can be rebuilt
+  with one `INSERT ... SELECT ... GROUP BY player_uuid, year`.
+
+## Data for a later role balancing
+
+A later change will use the statistics to assign roles more fairly: players who were recently Slender are picked less
+often, players who were mostly Survivor recently are picked more often. That balancing is **not** part of this change;
+`TeamHelper.selectSlenderPlayer()` still picks at random. This change only collects what the later change needs, so it
+can ship without a schema rework and without a gap in the history:
+
+- **`participants`** (`player_round_stats`): the number of tracked participants (Slender and Survivors at the round
+  start), the same value on every row of the round. A player's fair share of Slender rounds is 1/n, so a weighted
+  lottery needs the lobby size of each past round. Players who quit later still count, the value is fixed at the start.
+- **`taken_over`** (`player_round_stats`) and **`takeovers`** (`player_year_stats`, summed): when the Slender leaves,
+  `SlenderTakeover` turns a survivor into the Slender and fires `SlenderReviveEvent` for exactly that player. `role`
+  keeps the start role, so the flag is the only trace that the survivor also played Slender in that round. The adapter
+  sets it on that event.
+- **Index `(player_uuid, finished_at)`** (`idx_player_round_stats_player_finished`): serves "the last N rounds of a
+  player ordered by `finished_at`" for all players of a lobby, across all servers sharing the database. The older index
+  `(player_uuid, stats_year)` stays: it serves the yearly reads and the rebuild of an aggregate, which filter by
+  `stats_year`, something the new index cannot do without scanning all rounds of the player.
+
+V1 is edited in place: it has not been applied to the production database. A development database that already ran
+the old V1 needs a `flyway clean` or a dropped schema.
+
+## Write path
+
+1. `RoundStatsCollector` keeps a `Map<UUID, RoundStats.Builder>` for the current round, created at `GameStartEvent`
+   for each team member. All event handlers only touch this map on the tick thread; no I/O.
+2. A quit before the finish freezes that player's builder with outcome `ABANDONED`.
+3. At `GameFinishEvent` the collector resolves win/loss from the reason and role, builds immutable `RoundStats`
+   records and clears the map.
+4. `StatsRepository.saveRound(FinishedRound)` runs on a dedicated single-thread executor
+   (virtual thread is fine). In one transaction it inserts the round rows, merges each year row
+   (load-or-create, add, keep max/min) and upserts the players' last known names. Several Cygnus servers write to the same database, so two rounds can touch
+   the same year row at once: an `OptimisticLockException` (another server updated the row) or a unique-key
+   violation (another server created the row first) rolls back and retries the whole transaction up to three times.
+   The round rows cannot collide because every round id is unique.
+5. After the commit the returned future completes with the merged year rows (`Map<UUID, YearStatsView>`), copied into
+   immutable views inside the transaction. A failure is logged with the round id, counted in an OpenTelemetry counter
+   `cygnus.stats.write.failures`, completes the future exceptionally, and does not affect the round end or the restart.
+6. On shutdown the executor is drained with a timeout before the `EntityManagerFactory` closes.
+
+Writing only at the round end keeps the database load at one transaction per round and means a crash mid-round
+loses that round's numbers, which is acceptable.
+
+## Player display
+
+Players see the statistics through a command, a menu and a lobby item; the round summary adds a line. The code lives
+in `net.onelitefeather.cygnus.stats.display` in `game`, `common` stays free of anything statistics. Everything a player
+can read is English.
+
+- **Command `/stats [player] [year]`** (`StatsCommand`, no permission): prints a compact overview in chat (header,
+  General, Survivor and Slender sections). Derived values (win rate, K/D, pages per round, average survival) come from
+  `YearStatsView`, which answers `0` instead of dividing by zero; K/D is the kill count when there is no death. The
+  year defaults to the current calendar year in `StatsConfig.timeZone()`, taken from the injected `Clock`; it is read as
+  text and must be a number between 2000 and 9999, otherwise the usage message is shown. The overview ends with a
+  clickable `[Open the menu]` that runs `/stats open-menu <player> <year>`. The literal contains a hyphen on purpose:
+  it cannot be a Minecraft name, so no player is shadowed by it. The console may look at a named player, but has no
+  statistics of its own.
+- **Menu** (`StatsMenu`): a chest inventory with the player's head and one item per area (general, survivor, Slender)
+  whose lore lists the same lines as the chat. It is its own `Inventory` subclass, so `StatsDisplayFeature` recognises
+  it and cancels every `InventoryPreClickEvent` in it (all click types, drags included) and in the player's own
+  inventory while it is open. The menu is built from an immutable view and never changes while open.
+- **Lobby item**: `StatsDisplayFeature` gives a book tagged `Items.STATS_ITEM` (`Tags.ITEM_TAG`, hotbar slot 4) on the
+  first spawn while the running phase is `LobbyPhase` or `WaitingPhase`. A right click (`PlayerUseItemEvent`) opens the
+  player's own current-year menu. The item is removed on `GameStartEvent` by its tag, so the survivors' painkillers
+  stay, and it cannot be dropped, swapped or moved. The feature is disabled while statistics are off, so no item is
+  given; the command stays registered to answer "Statistics are not available on this server."
+- **Round-end line**: `saveRound` completes with the committed year rows. `RoundStatsCollector` hands them to
+  `PlayerStatsService.roundSaved` once the write is committed, which hops to the server thread through the scheduler
+  and sends every online participant one line, `Your <year> totals: <rounds> rounds, <wins> wins, <pages> pages,
+  <kills> kills`. The line follows the existing round summary, which is sent immediately and so cannot wait for the
+  database. If the write fails or statistics are off nothing is shown, the existing failure log and metric stay.
+- **Name table**: `player_names (player_uuid PK, name, name_lower, updated_at)` with an index on `name_lower`, in V1
+  (edited in place). The tracker reads the names of the participants at the round start (a player who quits is gone
+  at the end) and `FinishedRound` carries them; the repository upserts them in the transaction of `saveRound`, with
+  the round's finish time as `updated_at`. The newest write wins on a rename, and a round that another server writes
+  late does not bring an old name back. A lookup lowercases the name and, when several players have carried it, takes
+  the most recently updated row. `deleteByPlayer` deletes the name row too.
+- **Read API**: `findYear(UUID, int)` returns `Optional<YearStatsView>`, `findPlayerByName(String)` returns
+  `Optional<KnownPlayer>` (UUID and last name) and `availableYears(UUID)` returns the years, newest first; it is only
+  used to tell a player which years exist when the asked year is empty. All return `CompletableFuture` and run on the
+  statistics executor, never on the tick thread; they return immutable records, never entities.
+  `NoOpStatsRepository` returns empty results and `enabled()` is `false`. Online players are resolved by name through
+  Minestom before the database is asked.
+- **Caching**: `PlayerStatsService` loads a player's current year asynchronously when they join and keeps it until they
+  leave. A round end drops the cache and discards loads that started before it; the committed totals of the round then
+  refill it. The cache only holds players who are online, and a load that completes after the player left is dropped.
+  A click without a cached view sends "Loading statistics…" and opens the menu when the view is there; a player without
+  a round in the year gets a menu of zeros. Answers are sent and menus opened on the server thread.
+- **Errors**: statistics off: "Statistics are not available on this server."; unknown player: "No statistics found for
+  <name>."; a known player without rows in the year: "<name> has no statistics for <year>." with the years that exist;
+  database error: "Could not load statistics, please try again later." and a log line with the cause; invalid year: the
+  usage message.
+
+## Configuration
+
+```
+stats.jdbc-url=            # empty = statistics off (NoOpStatsRepository)
+stats.username=
+stats.password=            # or env CYGNUS_STATS_PASSWORD
+stats.pool-size=4
+stats.time-zone=Europe/Berlin
+```
+
+## Testing
+
+- Unit (Fast, Independent): `RoundStatsTracker` as plain JUnit with a hand-driven `Clock` (in `stats`); the game-side
+  `RoundStatsCollector` against an in-memory `StatsRepository` fake (round id, hand-over, reason mapping) and through a
+  Minestom `Env` for the event adapter. Year resolution is tested at the turn of the year
+  (`2026-12-31T23:30Z` is already 2027 in `Europe/Berlin`).
+- Integration: `HibernateStatsRepository` against H2 in-memory in PostgreSQL compatibility mode
+  (`MODE=PostgreSQL`), a fresh database per test, Flyway migrations applied. The migrations use only SQL that both
+  PostgreSQL and the H2 mode accept (no PostgreSQL-only types; UUIDs as `UUID`). Covers insert, aggregate merge, max/min handling, the optimistic
+  retry and the deletion by UUID.
+- No sleeps: the repository executor is injected, tests pass a direct (same-thread) executor.
+- Display: the repository reads, the name upsert and lookup (rename, name reuse, late write, deletion) and the merged
+  views of `saveRound` run against H2 in `stats`; `YearStatsView` is tested for division by zero. In `game` a
+  `FakeStatsRepository` (completed futures, or reads the test completes itself) drives the command parsing, the cache,
+  the overview formatting, the menu, the lobby item and the round-end line through a Minestom `Env`; the server thread
+  is the injected scheduler and `env.tick()` runs it.
+
+## Decisions
+
+- **Hibernate with Flyway, no `hbm2ddl.auto=update`**: schema changes are reviewed SQL; Hibernate runs with
+  `hbm2ddl.auto=validate` so a missing migration fails at startup instead of at the first write.
+- **Year in a configured zone, not UTC**: the yearly recap follows the players' calendar; a round finished on New
+  Year's Eve at 00:30 local time counts for the new year.
+- **Both round rows and year aggregate** instead of only one: round rows alone make every profile read a
+  `GROUP BY`; aggregates alone make mistakes unrecoverable.
+- **Feature off without a JDBC URL**: local development and tests do not need a database.
+- **Last known name in the database instead of the Mojang API**: offline lookups need no external service and no
+  rate limit; the price is that a player who never finished a round has no name row.
+- **Chat overview plus menu plus lobby item**: the command is the fast, copyable view and works for anyone; the menu
+  and the item are for players who do not type commands.
+
+## Resolved questions
+
+- **Database**: PostgreSQL in production. Driver `org.postgresql:postgresql`, Hibernate's PostgreSQL dialect.
+- **Several servers**: yes, several Cygnus services share one database. Hence the optimistic lock on
+  `player_year_stats`, the retry on unique-key violations and the round id as part of the round row key.
+- **Retention**: rows are kept as long as they are needed; there is no automatic pruning of `player_round_stats`.
+  Removing data is a manual decision (or a deletion by UUID) and not part of this change.
+- **Spectators who joined mid-round**: no row, only players on a team at `GameStartEvent`.

@@ -5,6 +5,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
+import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
@@ -16,6 +17,7 @@ import net.onelitefeather.cygnus.common.config.RegenerationConfig;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.event.PainkillerUsedEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.team.TeamHelper;
@@ -135,6 +137,7 @@ public final class RegenerationService implements GameFeature {
         this.used.put(survivor, true);
         survivor.getInventory().setItemStack(Items.HEAL_SLOT, ItemStack.AIR);
         this.healing.put(survivor, Math.min(missing, this.share * vitality.max()));
+        EventDispatcher.call(new PainkillerUsedEvent(survivor));
         return true;
     }
 
