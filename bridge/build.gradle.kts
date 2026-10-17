@@ -23,6 +23,21 @@ dependencies {
     compileOnly(libs.cloudnet.driver.api)
     compileOnly(libs.cloudnet.bridge)
     compileOnly(libs.cloudnet.bridge.impl)
+    compileOnly(libs.cloudnet.jvm.wrapper)
+
+    // The round signal lives in :common. At runtime it is on the application classpath through the
+    // game jar, which is the parent of every extension classloader, so it is never bundled here.
+    compileOnly(project(":common"))
+    compileOnly(libs.slf4j.api)
+
+    testImplementation(platform(libs.aonyx.bom))
+    testImplementation(libs.minestom)
+    testImplementation(project(":common"))
+    testImplementation(libs.slf4j.api)
+    testImplementation(libs.junit.api)
+    testImplementation(libs.junit.params)
+    testImplementation(libs.junit.platform.launcher)
+    testRuntimeOnly(libs.junit.engine)
 }
 
 // The annotation processor generates extension.json but cannot know the project version. Subprojects
