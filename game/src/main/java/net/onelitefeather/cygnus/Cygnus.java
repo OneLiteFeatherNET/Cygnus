@@ -36,6 +36,7 @@ import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.entity.EntityType;
+import net.minestom.server.event.server.ServerListPingEvent;
 import net.minestom.server.listener.EntityActionListener;
 import net.minestom.server.listener.common.SettingsListener;
 import net.minestom.server.network.packet.client.common.ClientSettingsPacket;
@@ -71,6 +72,7 @@ import net.onelitefeather.cygnus.listener.PlayerDeathListener;
 import net.onelitefeather.cygnus.listener.PlayerLoginListener;
 import net.onelitefeather.cygnus.listener.PlayerQuitListener;
 import net.onelitefeather.cygnus.listener.PlayerSpawnListener;
+import net.onelitefeather.cygnus.listener.ServerListPingListener;
 import net.onelitefeather.cygnus.listener.stamina.StaminaStateChangeListener;
 import net.onelitefeather.cygnus.listener.game.GameFinishListener;
 import net.onelitefeather.cygnus.listener.page.GamePageListener;
@@ -351,6 +353,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         this.resourcePackService
                 )
         );
+        manager.addListener(ServerListPingEvent.class, new ServerListPingListener(this.gameConfig.round().maxPlayers()));
         manager.addListener(PlayerChatEvent.class, new PlayerChatListener(spectatorTeam));
         manager.addListener(GameMapLoadEvent.class, _ -> this.mapProvider.loadGameMap());
         manager.addListener(GamePrepareEvent.class, _ -> {
