@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.common.config;
 
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
+
 import static net.onelitefeather.cygnus.common.config.ConfigChecks.atLeast;
 import static net.onelitefeather.cygnus.common.config.ConfigChecks.below;
 import static net.onelitefeather.cygnus.common.config.ConfigChecks.between;

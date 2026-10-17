@@ -2,7 +2,7 @@ package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
-import net.onelitefeather.cygnus.common.config.CreekSettings;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;

@@ -1,9 +1,9 @@
 package net.onelitefeather.cygnus.common.map;
 
-import net.onelitefeather.cygnus.common.config.CreekSettings;
-import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.theevilreaper.aves.map.BaseMap;
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.page.PageResource;

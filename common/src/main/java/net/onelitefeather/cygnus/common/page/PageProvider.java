@@ -9,7 +9,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.config.GameConfig;
-import net.onelitefeather.cygnus.common.config.PageSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;

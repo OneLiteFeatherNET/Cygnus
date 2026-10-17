@@ -2,7 +2,7 @@ package net.onelitefeather.cygnus.common.page;
 
 import net.minestom.server.utils.Direction;
 import net.minestom.server.utils.validate.Check;
-import net.onelitefeather.cygnus.common.config.PageSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import org.jetbrains.annotations.Contract;
 
 /**

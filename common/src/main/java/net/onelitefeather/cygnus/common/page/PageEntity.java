@@ -12,7 +12,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import net.onelitefeather.cygnus.common.Tags;
-import net.onelitefeather.cygnus.common.config.PageSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;
 import net.onelitefeather.cygnus.common.util.Helper;

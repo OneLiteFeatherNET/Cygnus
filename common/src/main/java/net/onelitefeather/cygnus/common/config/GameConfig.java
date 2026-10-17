@@ -5,6 +5,7 @@ import static net.onelitefeather.cygnus.common.config.ConfigChecks.below;
 import static net.onelitefeather.cygnus.common.config.ConfigChecks.between;
 
 import net.kyori.adventure.key.Key;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,9 +1,9 @@
 package net.onelitefeather.cygnus.setup.dialog.settings;
 
 import net.kyori.adventure.key.Key;
-import net.onelitefeather.cygnus.common.config.CreekSettings;
-import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 
 import java.util.List;
 import java.util.Map;

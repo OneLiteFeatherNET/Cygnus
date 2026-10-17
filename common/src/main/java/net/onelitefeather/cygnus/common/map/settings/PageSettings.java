@@ -1,4 +1,6 @@
-package net.onelitefeather.cygnus.common.config;
+package net.onelitefeather.cygnus.common.map.settings;
+
+import net.onelitefeather.cygnus.common.config.GameConfig;
 
 import static net.onelitefeather.cygnus.common.config.ConfigChecks.between;
 
