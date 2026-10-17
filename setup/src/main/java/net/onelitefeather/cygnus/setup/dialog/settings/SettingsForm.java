@@ -83,6 +83,20 @@ public record SettingsForm<S>(
         return this.create.apply(values);
     }
 
+    /**
+     * Swaps the record keys in a reason for the slider labels, so it names what the player saw.
+     *
+     * @param reason why the values were rejected, naming record keys
+     * @return the reason naming slider labels
+     */
+    public String describe(String reason) {
+        String described = reason;
+        for (SettingsField<S> field : this.fields) {
+            described = described.replace(field.key(), "'" + field.label() + "'");
+        }
+        return described;
+    }
+
     private static @Nullable Double number(@Nullable BinaryTag tag) {
         return switch (tag) {
             case FloatBinaryTag value -> (double) value.value();

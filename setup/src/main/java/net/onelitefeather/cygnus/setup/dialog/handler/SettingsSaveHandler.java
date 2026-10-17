@@ -49,7 +49,7 @@ public final class SettingsSaveHandler<S> implements DialogHandler {
             try {
                 settings = this.form.apply(entered);
             } catch (IllegalArgumentException exception) {
-                player.sendMessage(SetupMessages.getInvalidSettings(exception.getMessage()));
+                player.sendMessage(SetupMessages.getInvalidSettings(this.form.describe(exception.getMessage())));
                 SettingsDialog.open(player, this.form, entered);
                 return;
             }
