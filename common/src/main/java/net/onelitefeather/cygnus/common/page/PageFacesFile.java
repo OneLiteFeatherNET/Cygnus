@@ -1,24 +1,14 @@
 package net.onelitefeather.cygnus.common.page;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.map.MapSideFile;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
-import net.onelitefeather.cygnus.common.util.JsonSettings;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,10 +23,9 @@ import java.util.Set;
  */
 public final class PageFacesFile {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PageFacesFile.class);
     private static final String FILE_NAME = "pages.json";
+    private static final String WHAT = "page faces";
     private static final String PAGES_KEY = "pages";
-    private static final String SETTINGS_KEY = "settings";
     private static final Type PAGE_FACES_TYPE = TypeToken.getParameterized(Set.class, PageResource.class).getType();
 
     private PageFacesFile() {
@@ -61,16 +50,13 @@ public final class PageFacesFile {
      */
     public static Set<PageResource> load(Path mapFile) {
         Path pagesFile = resolve(mapFile);
-        JsonElement root = parse(pagesFile);
-        if (root == null || root.isJsonNull()) return Set.of();
-        // The old layout is the bare list, the new one keeps it under "pages" next to the settings.
-        JsonElement pages = root.isJsonObject() ? root.getAsJsonObject().get(PAGES_KEY) : root;
-        if (pages == null || pages.isJsonNull()) return Set.of();
+        JsonElement pages = MapSideFile.data(MapSideFile.parse(WHAT, pagesFile), PAGES_KEY);
+        if (pages == null) return Set.of();
         try {
             Set<PageResource> pageFaces = GsonHelper.GSON.fromJson(pages, PAGE_FACES_TYPE);
             return pageFaces != null ? pageFaces : Set.of();
         } catch (JsonSyntaxException exception) {
-            throw new JsonSyntaxException("Failed to parse page faces from " + pagesFile + ": " + exception.getMessage(), exception);
+            throw new JsonSyntaxException("Failed to parse " + WHAT + " from " + pagesFile + ": " + exception.getMessage(), exception);
         }
     }
 
@@ -84,22 +70,7 @@ public final class PageFacesFile {
      */
     public static PageSettings loadSettings(Path mapFile) {
         Path pagesFile = resolve(mapFile);
-        JsonElement root = parse(pagesFile);
-        if (root == null || root.isJsonNull()) return PageSettings.DEFAULT;
-        JsonSettings json = root.isJsonObject() ? JsonSettings.of(root.getAsJsonObject(), pagesFile) : JsonSettings.none(pagesFile);
-        PageSettings defaults = PageSettings.DEFAULT;
-        PageSettings settings;
-        try {
-            settings = new PageSettings(
-                    json.getInt("proximityRange", defaults.proximityRange()),
-                    json.getInt("minActivePages", defaults.minActivePages()),
-                    json.getInt("ttlSeconds", defaults.ttlSeconds()),
-                    json.getInt("respawnDelaySeconds", defaults.respawnDelaySeconds()));
-        } catch (IllegalArgumentException exception) {
-            throw new IllegalArgumentException("Invalid settings in " + pagesFile + ": " + exception.getMessage(), exception);
-        }
-        json.logMissing(LOGGER);
-        return settings;
+        return MapSideFile.settings(MapSideFile.parse(WHAT, pagesFile), pagesFile, PageSettings.class, PageSettings.DEFAULT);
     }
 
     /**
@@ -121,20 +92,7 @@ public final class PageFacesFile {
      * @param settings  the page values the map sets for itself
      */
     public static void save(Path mapFile, Set<PageResource> pageFaces, PageSettings settings) {
-        Path pagesFile = resolve(mapFile);
-        JsonObject root = new JsonObject();
-        root.add(PAGES_KEY, GsonHelper.GSON.toJsonTree(pageFaces, PAGE_FACES_TYPE));
-        root.add(SETTINGS_KEY, GsonHelper.GSON.toJsonTree(settings));
-        try {
-            if (pagesFile.getParent() != null) {
-                Files.createDirectories(pagesFile.getParent());
-            }
-            try (var writer = Files.newBufferedWriter(pagesFile, StandardCharsets.UTF_8)) {
-                GsonHelper.GSON.toJson(root, writer);
-            }
-        } catch (IOException exception) {
-            throw new UncheckedIOException("Failed to save page faces to " + pagesFile, exception);
-        }
+        MapSideFile.write(WHAT, resolve(mapFile), PAGES_KEY, GsonHelper.GSON.toJsonTree(pageFaces, PAGE_FACES_TYPE), settings);
     }
 
     /**
@@ -151,16 +109,5 @@ public final class PageFacesFile {
         merged.addAll(load(mapFile));
 
         return map.withPageFaces(merged).withPageSettings(loadSettings(mapFile));
-    }
-
-    private static @Nullable JsonElement parse(Path pagesFile) {
-        if (!Files.exists(pagesFile)) return null;
-        try (var reader = Files.newBufferedReader(pagesFile, StandardCharsets.UTF_8)) {
-            return JsonParser.parseReader(reader);
-        } catch (JsonParseException exception) {
-            throw new JsonSyntaxException("Failed to parse page faces from " + pagesFile + ": " + exception.getMessage(), exception);
-        } catch (IOException exception) {
-            throw new UncheckedIOException("Failed to load page faces from " + pagesFile, exception);
-        }
     }
 }
