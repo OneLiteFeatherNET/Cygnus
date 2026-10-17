@@ -80,4 +80,17 @@ class SettingsFormTest {
         assertEquals(30.0D, entered.get("personalSpace"));
         assertTrue(exception.getMessage().contains("personalSpace"), exception.getMessage());
     }
+
+    @Test
+    @DisplayName("A rejected contradiction is told with the slider labels instead of the record keys")
+    void contradictionNamesTheSliderLabels() {
+        Map<String, Double> entered = SettingsForms.CREEK.values(CreekSettings.DEFAULT);
+        entered.put("personalSpace", 30.0D);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> SettingsForms.CREEK.apply(entered));
+
+        assertEquals("'Keeps away by' (30) must be below 'Stalks from at least' (20)",
+                SettingsForms.CREEK.describe(exception.getMessage()));
+    }
 }
