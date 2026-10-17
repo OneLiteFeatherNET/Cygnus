@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -228,6 +229,17 @@ class CreekRoutesFileTest {
                 () -> CreekRoutesFile.loadSettings(mapFile(root)));
         assertTrue(exception.getMessage().contains("creek.json"), exception.getMessage());
         assertTrue(exception.getMessage().contains("personalSpace"), exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("For the setup, broken settings fall back to the defaults and name the reason")
+    void brokenSettingsFallBackForTheSetup(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("creek.json"),
+                "{ \"routes\": [], \"settings\": { \"personalSpace\": 25 } }", StandardCharsets.UTF_8);
+        List<String> reasons = new ArrayList<>();
+
+        assertEquals(CreekSettings.DEFAULT, CreekRoutesFile.loadSettingsOrDefaults(mapFile(root), reasons::add));
+        assertTrue(reasons.getFirst().contains("personalSpace"), reasons.getFirst());
     }
 
     @Test

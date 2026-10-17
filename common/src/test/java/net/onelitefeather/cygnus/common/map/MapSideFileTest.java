@@ -5,6 +5,8 @@ import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,5 +28,45 @@ class MapSideFileTest {
         var block = JsonParser.parseString("{ \"sightRange\": 30 }").getAsJsonObject();
 
         assertTrue(MapSideFile.unknownKeys(block, CreekSettings.class).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Settings out of range fall back to the defaults and name the reason")
+    void outOfRangeFallsBackToTheDefaults() {
+        var root = JsonParser.parseString("{ \"routes\": [], \"settings\": { \"sightRange\": 200 } }");
+        List<String> reasons = new ArrayList<>();
+
+        CreekSettings settings = MapSideFile.settingsOrDefaults(root, Path.of("creek.json"), CreekSettings.class,
+                CreekSettings.DEFAULT, reasons::add);
+
+        assertEquals(CreekSettings.DEFAULT, settings);
+        assertEquals(1, reasons.size());
+        assertTrue(reasons.getFirst().contains("sightRange"), reasons.getFirst());
+    }
+
+    @Test
+    @DisplayName("A value that is no number falls back to the defaults and names the reason")
+    void unreadableValueFallsBackToTheDefaults() {
+        var root = JsonParser.parseString("{ \"routes\": [], \"settings\": { \"sightRange\": \"far\" } }");
+        List<String> reasons = new ArrayList<>();
+
+        CreekSettings settings = MapSideFile.settingsOrDefaults(root, Path.of("creek.json"), CreekSettings.class,
+                CreekSettings.DEFAULT, reasons::add);
+
+        assertEquals(CreekSettings.DEFAULT, settings);
+        assertTrue(reasons.getFirst().contains("sightRange"), reasons.getFirst());
+    }
+
+    @Test
+    @DisplayName("Valid settings are read as they are and report nothing")
+    void validSettingsReportNothing() {
+        var root = JsonParser.parseString("{ \"routes\": [], \"settings\": { \"sightRange\": 30 } }");
+        List<String> reasons = new ArrayList<>();
+
+        CreekSettings settings = MapSideFile.settingsOrDefaults(root, Path.of("creek.json"), CreekSettings.class,
+                CreekSettings.DEFAULT, reasons::add);
+
+        assertEquals(30, settings.sightRange());
+        assertTrue(reasons.isEmpty());
     }
 }

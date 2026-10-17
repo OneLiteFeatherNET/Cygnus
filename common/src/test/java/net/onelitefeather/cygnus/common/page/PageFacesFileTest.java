@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -139,6 +140,25 @@ class PageFacesFileTest {
                 () -> PageFacesFile.loadSettings(mapFile));
         assertTrue(exception.getMessage().contains("pages.json"), exception.getMessage());
         assertTrue(exception.getMessage().contains("ttlSeconds"), exception.getMessage());
+    }
+
+    @Test
+    void invalidSettingsFallBackToTheDefaultsForTheSetup(@TempDir Path root) throws IOException {
+        Path mapFile = root.resolve("map.json");
+        Set<PageResource> faces = Set.of(new PageResource(new Vec(1, 2, 3), Direction.NORTH));
+        String pages = GsonHelper.GSON.toJson(faces, TypeToken.getParameterized(Set.class, PageResource.class).getType());
+        Files.writeString(PageFacesFile.resolve(mapFile),
+                "{ \"pages\": " + pages + ", \"settings\": { \"ttlSeconds\": 5 } }", StandardCharsets.UTF_8);
+        GameMap map = new GameMap("Forest", Pos.ZERO, Pos.ZERO, Set.of(), Set.of(), List.of(), null);
+        List<String> reasons = new ArrayList<>();
+
+        GameMap loaded = PageFacesFile.loadInto(mapFile, map, reasons::add);
+
+        assertEquals(faces, loaded.getPageFaces());
+        assertEquals(PageSettings.DEFAULT, loaded.getPageSettings());
+        assertTrue(reasons.getFirst().contains("ttlSeconds"), reasons.getFirst());
+        assertThrows(IllegalArgumentException.class, () -> PageFacesFile.loadInto(mapFile, map),
+                "the game still refuses broken settings");
     }
 
     @Test

@@ -99,6 +99,20 @@ class GameDataTest {
     }
 
     @Test
+    void loadDataOpensAMapWithBrokenSettingsOnTheDefaults(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
+        Files.writeString(root.resolve("pages.json"),
+                "{ \"pages\": [], \"settings\": { \"ttlSeconds\": 5 } }", StandardCharsets.UTF_8);
+        Files.writeString(root.resolve("creek.json"),
+                "{ \"routes\": [], \"settings\": { \"sightRange\": 200 } }", StandardCharsets.UTF_8);
+
+        GameMapBuilder builder = (GameMapBuilder) new GameData(player, MapEntry.of(root)).getMapBuilder();
+
+        assertEquals(PageSettings.DEFAULT, builder.getPageSettings());
+        assertEquals(CreekSettings.DEFAULT, builder.getCreekSettings());
+    }
+
+    @Test
     void loadDataReadsPageFacesBackFromTheSiblingFile(@TempDir Path root) throws IOException {
         Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
         Files.writeString(
