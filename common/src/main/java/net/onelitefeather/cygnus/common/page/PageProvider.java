@@ -145,16 +145,25 @@ public final class PageProvider {
     /**
      * Picks the spots for the pages that are active when a round starts and creates the pages on them.
      * The pages only appear in the world once {@link #spawn(Instance)} is called.
+     * <p>
+     * A map with fewer spots than asked for puts a page on every spot it has instead, so a map
+     * setting that asks for too many pages at once never keeps a round from starting.
+     * </p>
      *
      * @param activePageCount how many pages to keep concurrently active, e.g. from {@link PageCalculation#calculateActivePageAmount(int)}
      */
     public void collectStartPages(int activePageCount) {
-        Check.argCondition(this.freeSpots.size() < activePageCount, "Not enough pages to start the game");
-        for (int i = 0; i < activePageCount; i++) {
+        Check.argCondition(this.freeSpots.isEmpty(), "Not enough pages to start the game");
+        int collected = Math.min(activePageCount, this.freeSpots.size());
+        if (collected < activePageCount) {
+            LOGGER.warn("The map has only {} page spots, so {} pages are active instead of {}",
+                    collected, collected, activePageCount);
+        }
+        for (int i = 0; i < collected; i++) {
             PageEntity page = PageFactory.createPage(this.freeSpots.poll(), this.pageNumber.getAndIncrement(), this.settings.ttlSeconds());
             this.activePages.put(page.getHitBoxUUID(), page);
         }
-        LOGGER.info("Collected {} start pages", activePageCount);
+        LOGGER.info("Collected {} start pages", collected);
     }
 
     /**
