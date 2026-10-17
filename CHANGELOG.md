@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.18.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.17.0...v2.18.0) (2026-10-17)
+
+
+### Features
+
+* **game:** report the configured max players in the server list ping ([#386](https://github.com/OneLiteFeatherNET/Cygnus/issues/386)) ([4605168](https://github.com/OneLiteFeatherNET/Cygnus/commit/460516841b3fdacc122f3fdbeae2894ff98486c5))
+
 ## [2.17.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.16.1...v2.17.0) (2026-10-16)
 
 
