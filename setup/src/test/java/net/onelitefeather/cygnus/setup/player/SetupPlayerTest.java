@@ -4,6 +4,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +18,12 @@ class SetupPlayerTest {
     @BeforeAll
     static void setUp(Env env) {
         env.process().connection().setPlayerProvider(new SetupPlayerProvider());
+    }
+
+    // MicrotusExtension never cleans up an Env resolved at class level, so stop its server process here
+    @AfterAll
+    static void stopProcess(Env env) {
+        env.process().stop();
     }
 
     @Test

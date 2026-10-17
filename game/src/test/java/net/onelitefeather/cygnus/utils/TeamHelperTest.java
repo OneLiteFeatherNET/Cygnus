@@ -59,6 +59,8 @@ class TeamHelperTest {
     @AfterAll
     static void cleanup(@NotNull Env env) {
         env.destroyInstance(instance, true);
+        // MicrotusExtension never cleans up an Env resolved at class level, so stop its server process here
+        env.process().stop();
     }
 
     @Test

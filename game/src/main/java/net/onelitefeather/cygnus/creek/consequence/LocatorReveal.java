@@ -9,36 +9,31 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.entity.Metadata;
 import net.minestom.server.entity.Player;
-import net.minestom.server.network.packet.server.play.EntityMetaDataPacket;
 import net.minestom.server.timer.Task;
 import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Lets a survivor glow for a few seconds, but only in the slender's eyes.
+ * Puts a survivor on the slender's locator bar for a few seconds.
  * <p>
- * Glowing is a metadata flag, and Minestom sends metadata to everyone who can see the player. So
- * the flag is never set on the survivor itself. Instead, only the slender gets a packet with it.
+ * The waypoint is sent to the slender only, see {@link SurvivorWaypoint}. It follows the survivor
+ * with an update every {@value #RESEND_TICKS} ticks. A survivor revealed again while he is still
+ * shown keeps his waypoint, and the time starts over.
  * </p>
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 2.0.0
  * @since 2.15.0
  */
-public final class GlowReveal implements SlenderReveal {
+public final class LocatorReveal implements SlenderReveal {
 
-    /** How often the glow packet goes out again, in ticks. */
+    /** How often the waypoint follows the survivor, in ticks. */
     static final int RESEND_TICKS = 5;
-
-    /** The glowing bit in the entity flags. */
-    static final byte GLOWING = 0x40;
 
     static final Key SLENDER_SOUND = Key.key("block.bell.use");
     static final Key SURVIVOR_SOUND = Key.key("entity.creaking.activate");
@@ -49,13 +44,13 @@ public final class GlowReveal implements SlenderReveal {
     private final TickSections sections;
 
     /**
-     * Sets up the reveal with its resends measured for the slow tick report.
+     * Sets up the reveal with its updates measured for the slow tick report.
      *
-     * @param seconds  how long the glow lasts
-     * @param sections measures how long the resends take
+     * @param seconds  how long the survivor stays on the locator bar
+     * @param sections measures how long the updates take
      * @since 2.15.0
      */
-    public GlowReveal(int seconds, TickSections sections) {
+    public LocatorReveal(int seconds, TickSections sections) {
         this.durationTicks = seconds * 20;
         this.sections = sections;
     }
@@ -68,14 +63,26 @@ public final class GlowReveal implements SlenderReveal {
         survivor.playSound(Sound.sound(SURVIVOR_SOUND, Sound.Source.HOSTILE, 1.0F, 0.8F));
         survivor.sendMessage(WARNING);
 
+        Reveal shown = this.find(survivor, slender);
+        if (shown != null) {
+            shown.ticksLeft = this.durationTicks;
+            return;
+        }
         Reveal reveal = new Reveal(survivor, slender, this.durationTicks);
         this.running.add(reveal);
-        slender.sendPacket(flagsPacket(survivor, true));
+        slender.sendPacket(SurvivorWaypoint.track(survivor));
         reveal.task = MinecraftServer.getSchedulerManager()
-                .buildTask(this.sections.wrap(TickSectionNames.GLOW_REVEAL, () -> this.step(reveal)))
+                .buildTask(this.sections.wrap(TickSectionNames.LOCATOR_REVEAL, () -> this.step(reveal)))
                 .delay(TaskSchedule.tick(RESEND_TICKS))
                 .repeat(TaskSchedule.tick(RESEND_TICKS))
                 .schedule();
+    }
+
+    private @Nullable Reveal find(Player survivor, Player slender) {
+        for (Reveal reveal : this.running) {
+            if (reveal.survivor == survivor && reveal.slender == slender) return reveal;
+        }
+        return null;
     }
 
     private void step(Reveal reveal) {
@@ -84,9 +91,7 @@ public final class GlowReveal implements SlenderReveal {
             this.end(reveal);
             return;
         }
-        // Whenever the survivor's metadata changes (sprinting, sneaking), the slender gets the real
-        // flags and the glow is gone. Sending it again keeps that gap short.
-        reveal.slender.sendPacket(flagsPacket(reveal.survivor, true));
+        reveal.slender.sendPacket(SurvivorWaypoint.update(reveal.survivor));
     }
 
     @Override
@@ -100,26 +105,8 @@ public final class GlowReveal implements SlenderReveal {
         if (!this.running.remove(reveal)) return;
         if (reveal.task != null) reveal.task.cancel();
         if (reveal.slender.isOnline()) {
-            reveal.slender.sendPacket(flagsPacket(reveal.survivor, false));
+            reveal.slender.sendPacket(SurvivorWaypoint.untrack(reveal.survivor));
         }
-    }
-
-    /**
-     * Builds a packet with the survivor's current entity flags, with the glow bit set or cleared.
-     * <p>
-     * The flags always go along. Otherwise the client would hold on to the last value it got, which
-     * after a reveal is the glow.
-     * </p>
-     *
-     * @param survivor the survivor whose flags are sent
-     * @param glowing  whether the glow bit is set
-     * @return the packet, meant for the slender only
-     */
-    public static EntityMetaDataPacket flagsPacket(Player survivor, boolean glowing) {
-        Metadata.Entry<?> entry = survivor.getMetadataPacket().entries().get(0);
-        byte flags = entry != null && entry.value() instanceof Byte value ? value : 0;
-        byte sent = glowing ? (byte) (flags | GLOWING) : (byte) (flags & ~GLOWING);
-        return new EntityMetaDataPacket(survivor.getEntityId(), Map.of(0, Metadata.Byte(sent)));
     }
 
     private static final class Reveal {

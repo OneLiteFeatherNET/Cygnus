@@ -42,7 +42,7 @@ import java.util.function.Supplier;
  * <p>
  * Meanwhile his body stands revealed and frozen. Only {@link Tags#HIDDEN} changes, the slender bar
  * keeps its state, so the body does no damage, but does not refill meanwhile. Survivors around
- * the creek glow for him, and the creek is noticed from farther away. Sneaking, the maximum time or the creek going away ends it,
+ * the creek show on his locator bar, and the creek is noticed from farther away. Sneaking, the maximum time or the creek going away ends it,
  * and then the full cooldown runs. A round starts with the item locked for a while. His other items
  * stay locked meanwhile and {@value #LOCK_OFFSET_TICKS} ticks longer, so a click meant for the
  * return does not fire them.
@@ -81,7 +81,7 @@ public final class PossessionFeature implements GameFeature {
     private final Supplier<@Nullable Player> slender;
     private final LongSupplier clock;
     private final PossessionCooldown cooldown;
-    private final PossessionGlow glow = new PossessionGlow();
+    private final PossessionLocator locator = new PossessionLocator();
     private final RepeatingTask task = new RepeatingTask(this::tick);
     private boolean running;
     private @Nullable Possession possession;
@@ -217,7 +217,7 @@ public final class PossessionFeature implements GameFeature {
 
     /**
      * Starts the possession of a creek the slender's client already knows: reveals the slender,
-     * locks his other items, moves his camera to the creek and lets the survivors around it glow.
+     * locks his other items, moves his camera to the creek and puts the survivors around it on his locator bar.
      *
      * @param player the slender
      * @param creek  the creek's entity
@@ -229,13 +229,13 @@ public final class PossessionFeature implements GameFeature {
         lockItems(player, this.config.maxSeconds() * TICKS_PER_SECOND + LOCK_OFFSET_TICKS);
         player.spectate(creek);
         this.possession = Possession.start(player, this.clock.getAsLong(), this.config.maxSeconds());
-        this.glow.update(player, Possession.inRange(creek, this.glowRange(), this.survivors.get()));
+        this.locator.update(player, Possession.inRange(creek, this.revealRange(), this.survivors.get()));
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }
 
     /**
      * Checks the running possession: ends it when the time is up or the creek is gone, and moves
-     * the glow along with the survivors otherwise.
+     * the waypoints along with the survivors otherwise.
      */
     synchronized void tick() {
         Possession current = this.possession;
@@ -245,15 +245,15 @@ public final class PossessionFeature implements GameFeature {
             this.end(current, true);
             return;
         }
-        this.glow.update(current.slender(), Possession.inRange(creek, this.glowRange(), this.survivors.get()));
+        this.locator.update(current.slender(), Possession.inRange(creek, this.revealRange(), this.survivors.get()));
     }
 
     /**
-     * Returns how far around the creek survivors glow, the creek's widened sight range.
+     * Returns how far around the creek survivors show on the locator bar, the creek's widened sight range.
      *
      * @return the range in blocks
      */
-    private double glowRange() {
+    private double revealRange() {
         return this.target.sightRange() * this.config.sightFactor();
     }
 
@@ -290,7 +290,7 @@ public final class PossessionFeature implements GameFeature {
         this.possession = null;
         this.task.stop();
         this.target.release();
-        this.glow.forget();
+        this.locator.forget();
         player.removeTag(Tags.POSSESSING);
     }
 
@@ -306,7 +306,7 @@ public final class PossessionFeature implements GameFeature {
     }
 
     /**
-     * Ends the possession for an online slender: camera back, glow off, creek released and the
+     * Ends the possession for an online slender: camera back, waypoints off, creek released and the
      * slender hidden again. His other items unlock {@value #LOCK_OFFSET_TICKS} ticks later, or show
      * their own cooldown again if it lasts longer. At the round's end they are left alone, the
      * items go anyway.
@@ -320,7 +320,7 @@ public final class PossessionFeature implements GameFeature {
         this.task.stop();
         this.target.release();
         player.stopSpectating();
-        this.glow.clear(player);
+        this.locator.clear(player);
         player.removeTag(Tags.POSSESSING);
         player.setTag(Tags.HIDDEN, SlenderBarHelper.HIDDEN);
         VisibilityRules.refresh(player);
@@ -353,11 +353,11 @@ public final class PossessionFeature implements GameFeature {
     }
 
     /**
-     * Returns the survivors who glow for the slender right now.
+     * Returns the survivors on the slender's locator bar right now.
      *
      * @return a copy of the set
      */
-    synchronized Set<Player> glowing() {
-        return this.glow.glowing();
+    synchronized Set<Player> tracked() {
+        return this.locator.tracked();
     }
 }
