@@ -9,7 +9,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
-import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;
@@ -36,11 +36,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_ACTIVE_PAGE_COUNT;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MicrotusExtension.class)
 class PageProviderTest {
+
+    private static final int MIN_ACTIVE_PAGE_COUNT = PageSettings.DEFAULT.minActivePages();
 
     @Test
     void testLoadingPagesTwiceIsRejected() {
@@ -330,7 +331,7 @@ class PageProviderTest {
         // Almost run out on its old spot
         Field tickTime = PageEntity.class.getDeclaredField("currentTickTime");
         tickTime.setAccessible(true);
-        tickTime.setInt(page, GameConfig.PAGE_TTL_TIME);
+        tickTime.setInt(page, PageSettings.DEFAULT.ttlSeconds());
 
         assertTrue(pageProvider.triggerPageFound(player, page.getHitBoxUUID()));
 
@@ -367,7 +368,7 @@ class PageProviderTest {
     }
 
     /**
-     * Creates a provider with {@value GameConfig#MIN_ACTIVE_PAGE_COUNT} pages placed into the instance.
+     * Creates a provider with the default minimum of active pages placed into the instance.
      * Every spot beyond that stays free in the pool.
      */
     private static PageProvider spawnedProvider(Instance instance, int spotCount) {
@@ -551,5 +552,13 @@ class PageProviderTest {
         assertEquals(2, pageProvider.foundPageCount(), "both finds must count for the test to mean anything");
         assertEquals(1.0D, pageProvider.foundShare());
         env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void settingsAreKeptForTheRound() {
+        PageSettings settings = new PageSettings(30, 6, 90, 20);
+
+        assertEquals(settings, new PageProvider(List::of, settings).settings());
+        assertEquals(PageSettings.DEFAULT, new PageProvider().settings());
     }
 }

@@ -84,14 +84,14 @@ class VanishStateTest {
     void stopsAtTheFirstHiddenPoint() {
         RecordingBody body = new RecordingBody(new Pos(50, 40, 50));
         AtomicInteger checked = new AtomicInteger();
-        SpotFinder counting = new SpotFinder(Contexts.CONFIG.sight().range(), candidate -> {
+        SpotFinder counting = new SpotFinder(Contexts.SETTINGS.sightRange(), candidate -> {
             checked.incrementAndGet();
             return Optional.of(candidate);
         });
         Pos[] behind = new Pos[20];
         for (int i = 0; i < behind.length; i++) behind[i] = new Pos(i, 40, -40 - i);
         CreekContext ctx = new CreekContext(1000L, List.of(WATCHER), body, Contexts.route(behind), counting,
-                Contexts.NO_ACTIONS, Contexts.CONFIG, new Random(7), HuntCooldowns.none(), Calm.NONE);
+                Contexts.NO_ACTIONS, Contexts.CONFIG, Contexts.SETTINGS, new Random(7), HuntCooldowns.none(), Calm.NONE);
 
         assertInstanceOf(PatrolState.class, new VanishState(1000L).tick(ctx));
         assertEquals(1, checked.get(), "every point behind the survivor is hidden, so the first one will do");

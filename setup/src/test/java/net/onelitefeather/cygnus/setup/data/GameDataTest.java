@@ -8,11 +8,14 @@ import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.cygnus.common.config.CreekSettings;
+import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.creek.CreekRoutesFile;
 import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
+import net.onelitefeather.cygnus.common.page.PageFacesFile;
 import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.theevilreaper.aves.map.MapEntry;
@@ -28,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -211,5 +215,39 @@ class GameDataTest {
         assertEquals(2, gameData.removeCreekPointAt(new Vec(5, 80, 1)));
         assertEquals(2, gameData.activeCreekPointCount());
         assertEquals(-1, gameData.removeCreekPointAt(new Vec(5, 80, 1)), "already gone");
+    }
+
+    @Test
+    void saveAndLoadKeepTheMapSettings(@TempDir Path root) {
+        MapEntry mapEntry = MapEntry.of(root);
+        GameData data = new GameData(player, mapEntry);
+        PageSettings pages = new PageSettings(30, 6, 90, 20);
+        CreekSettings creek = new CreekSettings(30, 18, 28, 20, 2.0D, 10, 0.0D);
+        GameMapBuilder builder = (GameMapBuilder) data.getMapBuilder();
+        builder.setPageSettings(pages);
+        builder.setCreekSettings(creek);
+        data.save();
+
+        GameMapBuilder reloaded = (GameMapBuilder) new GameData(player, mapEntry).getMapBuilder();
+        assertEquals(pages, reloaded.getPageSettings());
+        assertEquals(creek, reloaded.getCreekSettings());
+    }
+
+    @Test
+    void savingWithoutTouchingTheSettingsKeepsThem(@TempDir Path root) {
+        MapEntry mapEntry = MapEntry.of(root);
+        Path mapFile = root.resolve("map.json");
+        new GameData(player, mapEntry).save();
+        PageSettings pages = new PageSettings(30, 6, 90, 20);
+        CreekSettings creek = new CreekSettings(30, 18, 28, 20, 2.0D, 10, 0.0D);
+        PageFacesFile.save(mapFile, Set.of(), pages);
+        CreekRoutesFile.save(mapFile, List.of(), creek);
+
+        GameData second = new GameData(player, mapEntry);
+        second.addPage(Vec.ZERO, Direction.NORTH);
+        second.save();
+
+        assertEquals(pages, PageFacesFile.loadSettings(mapFile), "saving a page must not reset the map's page settings");
+        assertEquals(creek, CreekRoutesFile.loadSettings(mapFile));
     }
 }

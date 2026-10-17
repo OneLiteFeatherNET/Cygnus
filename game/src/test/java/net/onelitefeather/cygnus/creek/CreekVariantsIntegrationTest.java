@@ -8,6 +8,7 @@ import net.onelitefeather.cygnus.creek.state.Calm;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.common.config.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
@@ -35,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
 
     private static final CreekConfig CONFIG = CreekConfig.DEFAULT;
-    private static final CreekSight SIGHT = new CreekSight(CONFIG.sight().range(), CONFIG.sight().viewAngle());
+    private static final CreekSight SIGHT = new CreekSight(CreekSettings.DEFAULT.sightRange(), CONFIG.sight().viewAngle());
     private static final CatchConsequence NO_CATCH = new CatchConsequence() {
         @Override
         public void apply(Player survivor) {
@@ -49,13 +50,13 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
 
     private static BiFunction<Pos, CreekState, Creek> spawner(Instance instance, CreekConfig config, SpotFinder spots) {
         CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, CreekWitness.NONE, PATROL,
-                new StalkSounds(new Random(3)), config, new Random(3), HuntCooldowns.none(), () -> Calm.NONE);
+                new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3), HuntCooldowns.none(), () -> Calm.NONE);
         return (spot, initial) -> new Creek(CreakingBody.spawn(instance, spot), Contexts.route(), round, initial);
     }
 
     private static CreekVariants variants(Instance instance, CreekConfig config, Ground ground, long allowedAt) {
-        SpotFinder spots = new SpotFinder(CONFIG.sight().range(), ground);
-        return new CreekVariants(config, spots, new Random(5), allowedAt, spawner(instance, config, spots), () -> Calm.NONE);
+        SpotFinder spots = new SpotFinder(CreekSettings.DEFAULT.sightRange(), ground);
+        return new CreekVariants(config, CreekSettings.DEFAULT, spots, new Random(5), allowedAt, spawner(instance, config, spots), () -> Calm.NONE);
     }
 
     private static SurvivorView view(Player player, double dread) {

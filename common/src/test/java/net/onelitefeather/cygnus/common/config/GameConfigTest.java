@@ -105,7 +105,7 @@ class GameConfigTest {
     }
 
     private static GameConfig.PageProximity proximityWithFactor(float volumeFactor) {
-        return new GameConfig.PageProximity(true, 20, GameConfig.PageProximity.DEFAULT_SOUND, volumeFactor);
+        return new GameConfig.PageProximity(true, GameConfig.PageProximity.DEFAULT_SOUND, volumeFactor);
     }
 
     private static void assertRejected(String message, Executable creation) {
@@ -129,7 +129,7 @@ class GameConfigTest {
         properties.setProperty("survivorTeamSize", "10");
         properties.setProperty("sentryDsn", "https://key@sentry.example/1");
         properties.setProperty("resourcePackSha1", "0123456789abcdef0123456789abcdef01234567");
-        properties.setProperty("pageProximityRange", "30");
+        properties.setProperty("pageProximityVolumeFactor", "3");
         properties.setProperty("damageSoundCooldown", "40");
         properties.setProperty("glitchRange", "20");
         properties.setProperty("pageGlitchMaxLevel", "2");
@@ -143,7 +143,7 @@ class GameConfigTest {
         assertEquals(10, config.teams().survivorSize());
         assertEquals("https://key@sentry.example/1", config.sentryDsn());
         assertEquals("0123456789abcdef0123456789abcdef01234567", config.resourcePack().sha1());
-        assertEquals(30, config.pageProximity().range());
+        assertEquals(3.0F, config.pageProximity().volumeFactor());
         assertEquals(40, config.damageSound().cooldown());
         assertEquals(20, config.glitch().range());
         assertEquals(2, config.pageGlitch().maxLevel());

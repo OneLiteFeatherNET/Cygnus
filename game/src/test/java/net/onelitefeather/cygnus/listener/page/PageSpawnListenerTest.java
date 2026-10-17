@@ -5,6 +5,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
+import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
@@ -15,11 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static net.onelitefeather.cygnus.common.config.GameConfig.MIN_ACTIVE_PAGE_COUNT;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MicrotusExtension.class)
 class PageSpawnListenerTest {
+
+    private static final int MIN_ACTIVE_PAGE_COUNT = PageSettings.DEFAULT.minActivePages();
 
     @Test
     void acceptThrowsWhenActiveInstanceIsUnavailable() {

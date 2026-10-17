@@ -7,6 +7,7 @@ import net.minestom.server.potion.PotionEffect;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.common.config.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
@@ -54,11 +55,11 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     }
 
     private static Creek creek(CreekBody body, CreekConfig config, CreekState initial, CreekWitness witness) {
-        CreekSight sight = new CreekSight(config.sight().range(), config.sight().viewAngle());
+        CreekSight sight = new CreekSight(CreekSettings.DEFAULT.sightRange(), config.sight().viewAngle());
         // nextBoolean() is true for -1, so a selection always ends in the stun.
         PatrolHelper patrol = new PatrolHelper(() -> -1L);
-        CreekRound round = new CreekRound(sight, new SpotFinder(CreekConfig.DEFAULT.sight().range(), Optional::of), _ -> {}, witness, patrol,
-                new StalkSounds(new Random(3)), config, new Random(3), HuntCooldowns.none(), () -> Calm.NONE);
+        CreekRound round = new CreekRound(sight, new SpotFinder(CreekSettings.DEFAULT.sightRange(), Optional::of), _ -> {}, witness, patrol,
+                new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3), HuntCooldowns.none(), () -> Calm.NONE);
         return new Creek(body, Contexts.route(), round, initial);
     }
 

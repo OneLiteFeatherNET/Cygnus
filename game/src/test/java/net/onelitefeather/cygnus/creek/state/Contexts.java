@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.common.config.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.RouteProvider;
@@ -25,8 +26,10 @@ public final class Contexts {
 
     /** The defaults, without random stops, so wandering tests do not depend on chance. */
     static final CreekConfig CONFIG = randomStops(0.0D, 0, 0);
-    static final CreekSight SIGHT = new CreekSight(CONFIG.sight().range(), CONFIG.sight().viewAngle());
-    static final SpotFinder SPOTS = new SpotFinder(CONFIG.sight().range(), Optional::of);
+    /** The distances every map used before maps had settings of their own. */
+    static final CreekSettings SETTINGS = CreekSettings.DEFAULT;
+    static final CreekSight SIGHT = new CreekSight(SETTINGS.sightRange(), CONFIG.sight().viewAngle());
+    static final SpotFinder SPOTS = new SpotFinder(SETTINGS.sightRange(), Optional::of);
 
     /** Actions that do nothing. */
     public static final CreekActions NO_ACTIONS = actions(_ -> {}, _ -> {});
@@ -101,32 +104,32 @@ public final class Contexts {
 
     static CreekContext context(long now, CreekBody body, RouteProvider route, List<UUID> caught,
                                   SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions(caught::add, _ -> {}), CONFIG,
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions(caught::add, _ -> {}), CONFIG, SETTINGS,
                 new Random(7), HuntCooldowns.none(), Calm.NONE);
     }
 
     static CreekContext context(long now, CreekBody body, RouteProvider route, CreekConfig config,
                                 SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route, SPOTS, NO_ACTIONS, config, new Random(7), HuntCooldowns.none(), Calm.NONE);
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, NO_ACTIONS, config, SETTINGS, new Random(7), HuntCooldowns.none(), Calm.NONE);
     }
 
     /** A context with the given actions and random source. */
     static CreekContext context(long now, CreekBody body, RouteProvider route, CreekActions actions,
                                 RandomGenerator random, SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions, CONFIG, random, HuntCooldowns.none(), Calm.NONE);
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions, CONFIG, SETTINGS, random, HuntCooldowns.none(), Calm.NONE);
     }
 
     /** A context that keeps the hunt breathers in the given record and every catch in the list. */
     static CreekContext hunting(long now, CreekBody body, HuntCooldowns hunts, List<UUID> caught,
                                 SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route(), SPOTS, actions(caught::add, _ -> {}), CONFIG,
+        return new CreekContext(now, List.of(survivors), body, route(), SPOTS, actions(caught::add, _ -> {}), CONFIG, SETTINGS,
                 new Random(7), hunts, Calm.NONE);
     }
 
     /** A context that records every survivor the state selects. */
     static CreekContext selecting(long now, CreekBody body, RouteProvider route, List<UUID> selected,
                                   SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions(_ -> {}, selected::add), CONFIG,
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions(_ -> {}, selected::add), CONFIG, SETTINGS,
                 new Random(7), HuntCooldowns.none(), Calm.NONE);
     }
 
@@ -144,9 +147,8 @@ public final class Contexts {
 
     private static CreekConfig copy(boolean activeWithLastSurvivor, CreekConfig.Wander wander) {
         CreekConfig defaults = CreekConfig.DEFAULT;
-        return new CreekConfig(defaults.enabled(), activeWithLastSurvivor, defaults.routeLinkDistance(),
-                defaults.personalSpace(), defaults.stuckMillis(), defaults.sight(), wander, defaults.stalk(),
-                defaults.hunt(), defaults.vanish(), defaults.catching());
+        return new CreekConfig(defaults.enabled(), activeWithLastSurvivor, defaults.stuckMillis(), defaults.sight(),
+                wander, defaults.stalk(), defaults.hunt(), defaults.vanish(), defaults.catching());
     }
 
     /** A route that offers the first allowed point at least a block away. */
@@ -172,7 +174,7 @@ public final class Contexts {
     /** The same context, late in a round that has thinned out by the given calm. */
     static CreekContext calm(CreekContext ctx, Calm calm) {
         return new CreekContext(ctx.now(), ctx.survivors(), ctx.body(), ctx.route(), ctx.spots(), ctx.actions(),
-                ctx.config(), ctx.random(), ctx.hunts(), calm);
+                ctx.config(), ctx.settings(), ctx.random(), ctx.hunts(), calm);
     }
 
     private Contexts() {

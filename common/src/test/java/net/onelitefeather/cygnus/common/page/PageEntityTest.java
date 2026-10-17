@@ -143,4 +143,15 @@ class PageEntityTest {
         pageEntity.place(instance).join();
         return pageEntity;
     }
+
+    @Test
+    void ttlComesFromTheMapSettings() throws ReflectiveOperationException {
+        PageEntity pageEntity = new PageEntity(new PageResource(Pos.ZERO, Direction.NORTH), 1, 90);
+
+        Field ttl = PageEntity.class.getDeclaredField("ttlTime");
+        ttl.setAccessible(true);
+        // The offset only ever adds up to 30 %, so the default of 60 seconds can never reach 90.
+        int ttlTime = ttl.getInt(pageEntity);
+        assertTrue(ttlTime >= 90 && ttlTime <= 117, "was " + ttlTime);
+    }
 }

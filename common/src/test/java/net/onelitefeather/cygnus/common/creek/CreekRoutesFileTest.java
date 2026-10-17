@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.common.creek;
 import com.google.gson.JsonSyntaxException;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.onelitefeather.cygnus.common.config.CreekSettings;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -175,5 +176,70 @@ class CreekRoutesFileTest {
         assertEquals(new Vec(1.5, 80, -2.5), point.position());
         assertEquals(0, point.pauseMillis());
         assertEquals(3000, point.withPause(3000).pauseMillis());
+    }
+
+    @Test
+    @DisplayName("An old file is the bare list: its routes load, the settings are the defaults")
+    void oldArrayFileUsesTheDefaults(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("creek.json"), """
+                [ { "name": "A", "points": [ { "position": { "x": 0.5, "y": 80, "z": 0.5 } }, { "position": { "x": 0.5, "y": 80, "z": 9.5 } } ] } ]
+                """, StandardCharsets.UTF_8);
+
+        assertEquals(1, CreekRoutesFile.load(mapFile(root)).size());
+        assertEquals(CreekSettings.DEFAULT, CreekRoutesFile.loadSettings(mapFile(root)));
+    }
+
+    @Test
+    @DisplayName("Saved settings come back next to the routes")
+    void savedSettingsComeBack(@TempDir Path root) {
+        CreekSettings settings = new CreekSettings(30, 18, 28, 20, 2.0D, 10, 0.0D);
+
+        CreekRoutesFile.save(mapFile(root), List.of(NORTH, SOUTH), settings);
+
+        assertEquals(List.of(NORTH, SOUTH), CreekRoutesFile.load(mapFile(root)));
+        assertEquals(settings, CreekRoutesFile.loadSettings(mapFile(root)));
+    }
+
+    @Test
+    @DisplayName("A launch height of 0 stays 0 and does not fall back to 5")
+    void zeroLaunchHeightStays(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("creek.json"),
+                "{ \"routes\": [], \"settings\": { \"launchHeight\": 0 } }", StandardCharsets.UTF_8);
+
+        assertEquals(0.0D, CreekRoutesFile.loadSettings(mapFile(root)).launchHeight());
+    }
+
+    @Test
+    @DisplayName("Keys the file leaves out take their default")
+    void missingKeysTakeTheirDefault(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("creek.json"),
+                "{ \"routes\": [], \"settings\": { \"sightRange\": 30 } }", StandardCharsets.UTF_8);
+
+        assertEquals(new CreekSettings(30, 20, 35, 30, 3.0D, 15, 5.0D), CreekRoutesFile.loadSettings(mapFile(root)));
+    }
+
+    @Test
+    @DisplayName("Settings that contradict each other name the file and the field")
+    void contradictionNamesFileAndField(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("creek.json"),
+                "{ \"routes\": [], \"settings\": { \"personalSpace\": 25 } }", StandardCharsets.UTF_8);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> CreekRoutesFile.loadSettings(mapFile(root)));
+        assertTrue(exception.getMessage().contains("creek.json"), exception.getMessage());
+        assertTrue(exception.getMessage().contains("personalSpace"), exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("loadInto sets routes and settings")
+    void loadIntoSetsTheSettings(@TempDir Path root) {
+        CreekSettings settings = new CreekSettings(30, 18, 28, 20, 2.0D, 10, 0.0D);
+        CreekRoutesFile.save(mapFile(root), List.of(NORTH), settings);
+        GameMap map = new GameMap("Test", Pos.ZERO, Pos.ZERO, Set.of(), Set.of(), List.of(), null);
+
+        GameMap loaded = CreekRoutesFile.loadInto(mapFile(root), map);
+
+        assertEquals(List.of(NORTH), loaded.getCreekRoutes());
+        assertEquals(settings, loaded.getCreekSettings());
     }
 }

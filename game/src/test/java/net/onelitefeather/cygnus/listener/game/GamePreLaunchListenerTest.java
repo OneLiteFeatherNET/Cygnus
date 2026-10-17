@@ -16,6 +16,7 @@ import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.EightPagesConfig;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.PageResource;
@@ -51,7 +52,7 @@ class GamePreLaunchListenerTest {
 
         int pages = pageProvider.getMaxPageAmount();
         assertTrue(pages >= 8 && pages <= 10, "without players the round is an Eight Pages round, was " + pages);
-        assertEquals(GameConfig.MIN_ACTIVE_PAGE_COUNT, pageProvider.interactablePages().size(),
+        assertEquals(PageSettings.DEFAULT.minActivePages(), pageProvider.interactablePages().size(),
                 "without any players the round starts with the minimum of active pages");
         assertTrue(pageProvider.interactablePages().stream().allMatch(page -> page.getInstance() == null),
                 "the pages are only collected here, the round start places them");
@@ -179,7 +180,7 @@ class GamePreLaunchListenerTest {
     private static PageProvider loadedProvider() {
         PageProvider pageProvider = new PageProvider();
         pageProvider.loadPageData(
-                IntStream.range(0, GameConfig.MIN_ACTIVE_PAGE_COUNT * 2)
+                IntStream.range(0, PageSettings.DEFAULT.minActivePages() * 2)
                         .mapToObj(i -> new PageResource(new Pos(i, 40, 0), Direction.NORTH))
                         .collect(Collectors.toSet())
         );

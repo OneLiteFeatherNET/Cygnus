@@ -135,14 +135,12 @@ class GameConfigReaderTest {
     void testPageProximityValuesAreReadWhenTheyAreConfigured(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
-                pageProximityRange=32
                 pageProximitySound=block.note_block.chime
                 """);
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
         assertTrue(config.pageProximity().enabled());
-        assertEquals(32, config.pageProximity().range());
         assertEquals(Key.key("block.note_block.chime"), config.pageProximity().sound());
     }
 
@@ -333,15 +331,12 @@ class GameConfigReaderTest {
                 minPlayers=2
                 creek.enabled=false
                 creek.activeWithLastSurvivor=false
-                creek.sightRange=50
                 creek.sightViewAngle=30
                 creek.wanderPauseMillis=1600
                 creek.wanderSpeed=0.08
                 creek.huntSpeed=0.3
                 creek.stalkThreshold=0.2
                 creek.huntThreshold=0.7
-                creek.stalkMinDistance=22
-                creek.stalkMaxDistance=36
                 creek.stalkMinAngle=81
                 creek.stalkMaxAngle=131
                 creek.stalkRevealMillis=800
@@ -353,18 +348,14 @@ class GameConfigReaderTest {
                 creek.catchDistance=1.6
                 creek.vanishMinSeconds=21
                 creek.vanishMaxSeconds=41
-                creek.respawnMinDistance=31
-                creek.personalSpace=16
                 creek.stuckMillis=3100
                 creek.betrayalCatchCount=3
                 creek.betrayalChance=0.2
                 creek.betrayalGlowSeconds=7
                 creek.slownessSeconds=5
-                creek.routeLinkDistance=3.5
                 creek.randomStopChance=0.2
                 creek.randomStopMinMillis=1600
                 creek.randomStopMaxMillis=4100
-                creek.launchHeight=6.0
                 creek.swapChance=0.6
                 creek.launchDamage=5.0
                 """);
@@ -373,15 +364,12 @@ class GameConfigReaderTest {
 
         assertFalse(creek.enabled());
         assertFalse(creek.activeWithLastSurvivor());
-        assertEquals(50, creek.sight().range());
         assertEquals(30, creek.sight().viewAngle());
         assertEquals(1600, creek.wander().pauseMillis());
         assertEquals(0.08D, creek.wander().speed(), 1.0E-9);
         assertEquals(0.3D, creek.hunt().speed(), 1.0E-9);
         assertEquals(0.2D, creek.stalk().threshold(), 1.0E-9);
         assertEquals(0.7D, creek.hunt().threshold(), 1.0E-9);
-        assertEquals(22, creek.stalk().minDistance());
-        assertEquals(36, creek.stalk().maxDistance());
         assertEquals(81, creek.stalk().minAngle());
         assertEquals(131, creek.stalk().maxAngle());
         assertEquals(800, creek.stalk().revealMillis());
@@ -393,18 +381,14 @@ class GameConfigReaderTest {
         assertEquals(1.6D, creek.hunt().catchDistance(), 1.0E-9);
         assertEquals(21, creek.vanish().minSeconds());
         assertEquals(41, creek.vanish().maxSeconds());
-        assertEquals(31, creek.vanish().respawnMinDistance());
-        assertEquals(16, creek.personalSpace());
         assertEquals(3100, creek.stuckMillis());
         assertEquals(3, creek.catching().betrayalCatchCount());
         assertEquals(0.2D, creek.catching().betrayalChance(), 1.0E-9);
         assertEquals(7, creek.catching().betrayalGlowSeconds());
         assertEquals(5, creek.catching().slownessSeconds());
-        assertEquals(3.5D, creek.routeLinkDistance(), 1.0E-9);
         assertEquals(0.2D, creek.wander().stopChance(), 1.0E-9);
         assertEquals(1600, creek.wander().stopMinMillis());
         assertEquals(4100, creek.wander().stopMaxMillis());
-        assertEquals(6.0D, creek.catching().launchHeight(), 1.0E-9);
         assertEquals(0.6D, creek.catching().swapChance(), 1.0E-9);
         assertEquals(5.0D, creek.catching().launchDamage(), 1.0E-9);
     }
@@ -597,11 +581,11 @@ class GameConfigReaderTest {
     }
 
     @Test
-    void testARangeBeyondTheMaximumFallsBack(@TempDir Path tempDir) throws IOException {
+    void testAVolumeFactorBeyondTheMaximumFallsBack(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=4
-                pageProximityRange=%d
-                """.formatted(GameConfig.PageProximity.MAX_RANGE + 1));
+                pageProximityVolumeFactor=%s
+                """.formatted(GameConfig.PageProximity.MAX_VOLUME_FACTOR + 1));
 
         GameConfig config = new GameConfigReader(tempDir).getConfig();
 
@@ -677,32 +661,12 @@ class GameConfigReaderTest {
         assertEquals(CreekConfig.Hunt.DEFAULT, creek.hunt(), "the whole creek falls back, not one side of the contradiction");
     }
 
-    @Test
-    void testCreekGroupFallbackThatContradictsResetsTheCreek(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("config.properties"), """
-                minPlayers=2
-                creek.enabled=false
-                creek.personalSpace=25
-                creek.stalkMinDistance=30
-                creek.stalkMaxDistance=40
-                creek.stalkMaxAngle=200
-                creek.huntSpeed=0.3
-                """);
-
-        CreekConfig creek = new GameConfigReader(tempDir).getConfig().creek();
-
-        assertFalse(creek.enabled(), "a creek switched off stays off");
-        assertEquals(CreekConfig.Stalk.DEFAULT, creek.stalk(), "the broken stalk group falls back");
-        assertEquals(CreekConfig.DEFAULT.personalSpace(), creek.personalSpace(),
-                "its defaults contradict personalSpace, so the creek falls back as a whole");
-        assertEquals(CreekConfig.Hunt.DEFAULT, creek.hunt());
-    }
 
     @Test
     void testCreekGroupFallsBackAlone(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("config.properties"), """
                 minPlayers=2
-                creek.stalkMinDistance=50
+                creek.stalkMaxAngle=200
                 creek.huntSpeed=0.3
                 """);
 
