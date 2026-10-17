@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
 
 /**
  * Reads and writes the {@code settings} block of a map's {@code pages.json}. A key the block leaves
- * out takes its value from {@link PageSettings#DEFAULT}.
+ * out takes its value from {@link PageSettings#DEFAULT}, and a value equal to it is not written.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -26,12 +26,13 @@ public final class PageSettingsAdapter extends SettingsAdapter<PageSettings> {
 
     @Override
     public JsonElement serialize(PageSettings src, Type typeOfSrc, JsonSerializationContext context) {
-        JsonObject object = new JsonObject();
-        object.addProperty(PROXIMITY_RANGE_KEY, src.proximityRange());
-        object.addProperty(MIN_ACTIVE_PAGES_KEY, src.minActivePages());
-        object.addProperty(TTL_SECONDS_KEY, src.ttlSeconds());
-        object.addProperty(RESPAWN_DELAY_SECONDS_KEY, src.respawnDelaySeconds());
-        return object;
+        JsonObject block = new JsonObject();
+        PageSettings defaults = PageSettings.DEFAULT;
+        putInt(block, PROXIMITY_RANGE_KEY, src.proximityRange(), defaults.proximityRange());
+        putInt(block, MIN_ACTIVE_PAGES_KEY, src.minActivePages(), defaults.minActivePages());
+        putInt(block, TTL_SECONDS_KEY, src.ttlSeconds(), defaults.ttlSeconds());
+        putInt(block, RESPAWN_DELAY_SECONDS_KEY, src.respawnDelaySeconds(), defaults.respawnDelaySeconds());
+        return block;
     }
 
     @Override

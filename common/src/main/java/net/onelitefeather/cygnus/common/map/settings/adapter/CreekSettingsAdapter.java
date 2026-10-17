@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
 
 /**
  * Reads and writes the {@code settings} block of a map's {@code creek.json}. A key the block leaves
- * out takes its value from {@link CreekSettings#DEFAULT}.
+ * out takes its value from {@link CreekSettings#DEFAULT}, and a value equal to it is not written.
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -29,15 +29,16 @@ public final class CreekSettingsAdapter extends SettingsAdapter<CreekSettings> {
 
     @Override
     public JsonElement serialize(CreekSettings src, Type typeOfSrc, JsonSerializationContext context) {
-        JsonObject object = new JsonObject();
-        object.addProperty(SIGHT_RANGE_KEY, src.sightRange());
-        object.addProperty(STALK_MIN_DISTANCE_KEY, src.stalkMinDistance());
-        object.addProperty(STALK_MAX_DISTANCE_KEY, src.stalkMaxDistance());
-        object.addProperty(RESPAWN_MIN_DISTANCE_KEY, src.respawnMinDistance());
-        object.addProperty(ROUTE_LINK_DISTANCE_KEY, src.routeLinkDistance());
-        object.addProperty(PERSONAL_SPACE_KEY, src.personalSpace());
-        object.addProperty(LAUNCH_HEIGHT_KEY, src.launchHeight());
-        return object;
+        JsonObject block = new JsonObject();
+        CreekSettings defaults = CreekSettings.DEFAULT;
+        putInt(block, SIGHT_RANGE_KEY, src.sightRange(), defaults.sightRange());
+        putInt(block, STALK_MIN_DISTANCE_KEY, src.stalkMinDistance(), defaults.stalkMinDistance());
+        putInt(block, STALK_MAX_DISTANCE_KEY, src.stalkMaxDistance(), defaults.stalkMaxDistance());
+        putInt(block, RESPAWN_MIN_DISTANCE_KEY, src.respawnMinDistance(), defaults.respawnMinDistance());
+        putDouble(block, ROUTE_LINK_DISTANCE_KEY, src.routeLinkDistance(), defaults.routeLinkDistance());
+        putInt(block, PERSONAL_SPACE_KEY, src.personalSpace(), defaults.personalSpace());
+        putDouble(block, LAUNCH_HEIGHT_KEY, src.launchHeight(), defaults.launchHeight());
+        return block;
     }
 
     @Override

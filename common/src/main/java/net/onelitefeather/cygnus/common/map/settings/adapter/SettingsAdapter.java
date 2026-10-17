@@ -15,6 +15,10 @@ import java.math.BigDecimal;
  * that is there but cannot be read is never replaced by its default: it names the key instead,
  * because a silently ignored value hides a broken map.
  * </p>
+ * <p>
+ * Writing leaves out every value that equals its default. A map then only holds what it really
+ * changes, and a later change to a default reaches every map that never touched that value.
+ * </p>
  *
  * @param <S> the settings record
  * @author theEvilReaper
@@ -72,6 +76,34 @@ abstract class SettingsAdapter<S> implements JsonSerializer<S>, JsonDeserializer
             return number(element).doubleValue();
         } catch (NumberFormatException exception) {
             throw new JsonParseException("settings." + key + " has to be a number", exception);
+        }
+    }
+
+    /**
+     * Writes a whole number unless it equals its default.
+     *
+     * @param block    the settings block
+     * @param key      the key in the block
+     * @param value    the value to write
+     * @param fallback the default of the value
+     */
+    static void putInt(JsonObject block, String key, int value, int fallback) {
+        if (value != fallback) {
+            block.addProperty(key, value);
+        }
+    }
+
+    /**
+     * Writes a number unless it equals its default.
+     *
+     * @param block    the settings block
+     * @param key      the key in the block
+     * @param value    the value to write
+     * @param fallback the default of the value
+     */
+    static void putDouble(JsonObject block, String key, double value, double fallback) {
+        if (Double.compare(value, fallback) != 0) {
+            block.addProperty(key, value);
         }
     }
 

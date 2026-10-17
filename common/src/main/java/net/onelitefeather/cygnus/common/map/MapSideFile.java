@@ -18,6 +18,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Reads and writes the files that sit next to a map's {@code map.json} and hold its data together
@@ -76,8 +78,8 @@ public final class MapSideFile {
     /**
      * Reads the settings of a parsed side file. A key the file leaves out takes its default.
      * <p>
-     * Logs one line if the file has no settings at all, and one line naming the keys that were
-     * filled with defaults. A missing file logs nothing.
+     * Logs one line if the file has no settings at all, and warns about keys the settings do not
+     * know, since such a key is most likely a typo and its value is never used. A missing file logs nothing.
      * </p>
      *
      * @param root     the parsed file, {@code null} if it does not exist
@@ -107,9 +109,9 @@ public final class MapSideFile {
         } catch (IllegalArgumentException exception) {
             throw new IllegalArgumentException("Invalid settings in " + path + ": " + exception.getMessage(), exception);
         }
-        List<String> missing = missingKeys(block.getAsJsonObject(), type);
-        if (!missing.isEmpty()) {
-            LOGGER.info("{} leaves out {}, the map uses the defaults for them", path, String.join(", ", missing));
+        List<String> unknown = unknownKeys(block.getAsJsonObject(), type);
+        if (!unknown.isEmpty()) {
+            LOGGER.warn("{} has unknown settings {}, they are ignored", path, String.join(", ", unknown));
         }
         return settings;
     }
@@ -140,16 +142,18 @@ public final class MapSideFile {
     }
 
     /**
-     * Returns the values of a settings record that a settings block leaves out.
+     * Returns the keys of a settings block that the settings record has no value for.
      *
      * @param block the settings block
      * @param type  the settings record
-     * @return the names of the missing values, in record order
+     * @return the unknown keys, in block order
      */
-    public static List<String> missingKeys(JsonObject block, Class<? extends Record> type) {
-        return Arrays.stream(type.getRecordComponents())
+    public static List<String> unknownKeys(JsonObject block, Class<? extends Record> type) {
+        Set<String> known = Arrays.stream(type.getRecordComponents())
                 .map(RecordComponent::getName)
-                .filter(key -> !block.has(key) || block.get(key).isJsonNull())
+                .collect(Collectors.toSet());
+        return block.keySet().stream()
+                .filter(key -> !known.contains(key))
                 .toList();
     }
 }
