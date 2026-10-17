@@ -5,6 +5,25 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.17.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.16.1...v2.17.0) (2026-10-16)
+
+
+### Features
+
+* **anticheat:** detect cheat clients and disable unfair mods ([#338](https://github.com/OneLiteFeatherNET/Cygnus/issues/338)) ([a4620a4](https://github.com/OneLiteFeatherNET/Cygnus/commit/a4620a4b4e54c9d2815698825f6204d1381be4f2))
+* **ci:** add labeler workflow and configuration ([#382](https://github.com/OneLiteFeatherNET/Cygnus/issues/382)) ([32b1fc8](https://github.com/OneLiteFeatherNET/Cygnus/commit/32b1fc8a37632e27c0e9d0afe46297727f534e7f))
+* **game:** show revealed survivors on the slender's locator bar instead of glowing ([#384](https://github.com/OneLiteFeatherNET/Cygnus/issues/384)) ([547a438](https://github.com/OneLiteFeatherNET/Cygnus/commit/547a4383f1e599eb2c2b52b4d2a86629b2490b38))
+* **possession:** lock the slender's other items while he looks through the creek's eyes ([#374](https://github.com/OneLiteFeatherNET/Cygnus/issues/374)) ([59a4901](https://github.com/OneLiteFeatherNET/Cygnus/commit/59a4901e1ce03af90aa62c82fe3b0b9f10c77e23))
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.google.protobuf:protobuf-java to v3.25.6 ([#377](https://github.com/OneLiteFeatherNET/Cygnus/issues/377)) ([69ae18c](https://github.com/OneLiteFeatherNET/Cygnus/commit/69ae18c7a0221bad1f895d094110a30db3a69a84))
+* **deps:** update dependency com.google.protobuf:protobuf-java to v3.25.7 ([#378](https://github.com/OneLiteFeatherNET/Cygnus/issues/378)) ([8531161](https://github.com/OneLiteFeatherNET/Cygnus/commit/853116145385652754ff8f38402700cb7ac76528))
+* **deps:** update dependency com.google.protobuf:protobuf-java to v3.25.8 ([#379](https://github.com/OneLiteFeatherNET/Cygnus/issues/379)) ([de36b36](https://github.com/OneLiteFeatherNET/Cygnus/commit/de36b3626f6769935d377c1eac4d531706a4b5a1))
+* **deps:** update dependency com.google.protobuf:protobuf-java to v3.25.9 ([#380](https://github.com/OneLiteFeatherNET/Cygnus/issues/380)) ([bb0da37](https://github.com/OneLiteFeatherNET/Cygnus/commit/bb0da3711458e8266426f30cadbcf3517450f4a8))
+* **deps:** update dependency net.onelitefeather:pica to v0.1.5 ([#376](https://github.com/OneLiteFeatherNET/Cygnus/issues/376)) ([5866eb3](https://github.com/OneLiteFeatherNET/Cygnus/commit/5866eb35f20c4b2ddce5491d858cf61418ac16dc))
+
 ## [2.16.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.16.0...v2.16.1) (2026-10-14)
 
 
