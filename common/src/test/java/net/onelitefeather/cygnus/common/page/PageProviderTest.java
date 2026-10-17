@@ -80,15 +80,14 @@ class PageProviderTest {
     }
 
     @Test
-    void testCollectStartPagesRejectsAnActivePageCountAboveTheAvailableData() {
+    void testCollectStartPagesCapsTheActivePageCountAtTheAvailableSpots(@NotNull Env env) {
         PageProvider pageProvider = new PageProvider();
         pageProvider.loadPageData(spots(8));
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> pageProvider.collectStartPages(12)
-        );
-        assertEquals("Not enough pages to start the game", exception.getMessage());
+        // A map may ask for more pages at once than it has spots; the round still starts, with every spot in use.
+        pageProvider.collectStartPages(12);
+
+        assertEquals(8, pageProvider.interactablePages().size());
     }
 
     @Test
