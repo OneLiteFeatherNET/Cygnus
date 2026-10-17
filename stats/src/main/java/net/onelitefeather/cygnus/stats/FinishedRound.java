@@ -16,7 +16,7 @@ import java.util.UUID;
  *                   a participant without an entry gets no name row
  * @author TheMeinerLP
  * @version 1.0.0
- * @since 2.16.0
+ * @since 2.18.0
  */
 public record FinishedRound(UUID roundId, Instant finishedAt, int year, List<RoundStats> players,
                             Map<UUID, String> names) {

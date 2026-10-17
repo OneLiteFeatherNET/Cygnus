@@ -37,7 +37,7 @@ import java.util.UUID;
  * @param takeovers              times the player took over the Slender role
  * @author TheMeinerLP
  * @version 1.0.0
- * @since 2.16.0
+ * @since 2.18.0
  */
 public record YearStatsView(
         UUID playerUuid,

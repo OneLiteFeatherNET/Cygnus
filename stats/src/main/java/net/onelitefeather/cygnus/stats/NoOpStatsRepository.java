@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author TheMeinerLP
  * @version 1.0.0
- * @since 2.16.0
+ * @since 2.18.0
  */
 public final class NoOpStatsRepository implements StatsRepository {
 

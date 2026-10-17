@@ -28,7 +28,7 @@ import java.util.UUID;
  * @param takenOver          whether this survivor became the Slender after the original one left; {@code role} stays the start role
  * @author TheMeinerLP
  * @version 1.0.0
- * @since 2.16.0
+ * @since 2.18.0
  */
 public record RoundStats(
         UUID playerUuid,

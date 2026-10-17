@@ -9,7 +9,7 @@ import java.util.UUID;
  * @param name the last known name, spelled as the player wrote it
  * @author TheMeinerLP
  * @version 1.0.0
- * @since 2.16.0
+ * @since 2.18.0
  */
 public record KnownPlayer(UUID uuid, String name) {
 }

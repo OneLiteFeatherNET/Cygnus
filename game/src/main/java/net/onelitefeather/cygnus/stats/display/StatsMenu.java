@@ -25,7 +25,7 @@ import java.util.List;
  *
  * @author TheMeinerLP
  * @version 1.0.0
- * @since 2.16.0
+ * @since 2.18.0
  */
 public final class StatsMenu extends Inventory {
 

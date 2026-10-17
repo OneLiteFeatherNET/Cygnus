@@ -11,7 +11,7 @@ import net.minestom.server.event.trait.PlayerEvent;
  *
  * @author TheMeinerLP
  * @version 1.0.0
- * @since 2.16.0
+ * @since 2.18.0
  */
 @SuppressWarnings("java:S6206")
 public final class PainkillerUsedEvent implements PlayerEvent {

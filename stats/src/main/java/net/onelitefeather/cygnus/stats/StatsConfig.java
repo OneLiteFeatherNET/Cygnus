@@ -30,7 +30,7 @@ import java.util.function.Function;
  * @param timeZone the zone whose calendar decides which year a finished round counts for
  * @author TheMeinerLP
  * @version 1.0.0
- * @since 2.16.0
+ * @since 2.18.0
  */
 public record StatsConfig(@Nullable String jdbcUrl, String username, String password, int poolSize, ZoneId timeZone) {
 
