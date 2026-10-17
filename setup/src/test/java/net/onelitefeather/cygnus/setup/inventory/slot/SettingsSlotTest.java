@@ -10,7 +10,7 @@ import net.minestom.server.inventory.click.Click;
 import net.minestom.server.item.ItemStack;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
-import net.onelitefeather.cygnus.common.config.CreekSettings;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.setup.dialog.settings.SettingsForms;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;

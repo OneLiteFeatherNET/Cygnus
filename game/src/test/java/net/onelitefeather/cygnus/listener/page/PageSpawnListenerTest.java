@@ -5,7 +5,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
-import net.onelitefeather.cygnus.common.config.PageSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.PageProvider;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;

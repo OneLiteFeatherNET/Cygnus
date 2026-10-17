@@ -9,7 +9,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.utils.Direction;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
-import net.onelitefeather.cygnus.common.config.PageSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;

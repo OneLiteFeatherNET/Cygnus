@@ -4,7 +4,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.config.GameConfig;
-import net.onelitefeather.cygnus.common.config.PageSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

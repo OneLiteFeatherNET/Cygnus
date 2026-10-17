@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.common.config;
+package net.onelitefeather.cygnus.common.map.settings;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

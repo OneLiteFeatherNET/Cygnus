@@ -2,8 +2,8 @@ package net.onelitefeather.cygnus.setup.dialog.settings;
 
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.FloatBinaryTag;
-import net.onelitefeather.cygnus.common.config.CreekSettings;
-import net.onelitefeather.cygnus.common.config.PageSettings;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

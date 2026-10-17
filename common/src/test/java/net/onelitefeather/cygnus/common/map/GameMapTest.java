@@ -3,8 +3,8 @@ package net.onelitefeather.cygnus.common.map;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
-import net.onelitefeather.cygnus.common.config.CreekSettings;
-import net.onelitefeather.cygnus.common.config.PageSettings;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import org.junit.jupiter.api.Test;
 
