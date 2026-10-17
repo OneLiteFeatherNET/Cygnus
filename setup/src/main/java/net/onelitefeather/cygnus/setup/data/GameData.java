@@ -46,6 +46,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class GameData extends InstanceSetupData {
 
@@ -666,12 +667,14 @@ public class GameData extends InstanceSetupData {
      */
     @Override
     public void loadData() {
+        // Broken settings fall back to the defaults, so the map still opens and can be fixed here.
+        Consumer<String> onInvalidSettings = reason -> this.player.sendMessage(SetupMessages.getSettingsFallback(reason));
         Optional<GameMap> mapData =
                 this.mapEntry.hasMapFile()
                         ? GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), GameMap.class)
-                                .map(map -> PageFacesFile.loadInto(mapEntry.getMapFile(), map))
+                                .map(map -> PageFacesFile.loadInto(mapEntry.getMapFile(), map, onInvalidSettings))
                                 .map(map -> map.withCreekRoutes(CreekRoutesFile.loadUnchecked(mapEntry.getMapFile()))
-                                        .withCreekSettings(CreekRoutesFile.loadSettings(mapEntry.getMapFile())))
+                                        .withCreekSettings(CreekRoutesFile.loadSettingsOrDefaults(mapEntry.getMapFile(), onInvalidSettings)))
                         : Optional.empty();
 
         this.gameMapBuilder = mapData

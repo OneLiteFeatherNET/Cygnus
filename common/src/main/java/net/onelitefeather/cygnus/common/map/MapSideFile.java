@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -114,6 +115,30 @@ public final class MapSideFile {
             LOGGER.warn("{} has unknown settings {}, they are ignored", path, String.join(", ", unknown));
         }
         return settings;
+    }
+
+    /**
+     * Reads the settings of a parsed side file like {@link #settings}, but falls back to the
+     * defaults if they cannot be used. Meant for the setup, which has to open a broken map so it
+     * can be fixed.
+     *
+     * @param root      the parsed file, {@code null} if it does not exist
+     * @param path      the file, named in messages
+     * @param type      the settings record
+     * @param defaults  the settings without a file, without a settings block or with broken settings
+     * @param onInvalid receives the reason if the settings were broken and the defaults are used
+     * @param <S>       the settings record
+     * @return the settings, or the defaults if they are broken
+     */
+    public static <S extends Record> S settingsOrDefaults(@Nullable JsonElement root, Path path, Class<S> type, S defaults,
+                                                          Consumer<String> onInvalid) {
+        try {
+            return settings(root, path, type, defaults);
+        } catch (IllegalArgumentException | JsonSyntaxException exception) {
+            LOGGER.warn("{}, the map uses the defaults", exception.getMessage());
+            onInvalid.accept(exception.getMessage());
+            return defaults;
+        }
     }
 
     /**

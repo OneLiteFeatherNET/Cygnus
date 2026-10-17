@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Reads and writes the {@code creek.json} next to a map's {@code map.json}.
@@ -85,6 +86,21 @@ public final class CreekRoutesFile {
     public static CreekSettings loadSettings(Path mapFile) {
         Path file = resolve(mapFile);
         return MapSideFile.settings(MapSideFile.parse(ROUTE_KEY, file), file, CreekSettings.class, CreekSettings.DEFAULT);
+    }
+
+    /**
+     * Loads the creek values like {@link #loadSettings(Path)}, but falls back to
+     * {@link CreekSettings#DEFAULT} if they are broken. Meant for the setup, which has to open a
+     * broken map so it can be fixed.
+     *
+     * @param mapFile   the map file the settings belong to
+     * @param onInvalid receives the reason if the settings were broken and the defaults are used
+     * @return the settings, or the defaults if they are broken
+     */
+    public static CreekSettings loadSettingsOrDefaults(Path mapFile, Consumer<String> onInvalid) {
+        Path file = resolve(mapFile);
+        return MapSideFile.settingsOrDefaults(MapSideFile.parse(ROUTE_KEY, file), file, CreekSettings.class,
+                CreekSettings.DEFAULT, onInvalid);
     }
 
     /**

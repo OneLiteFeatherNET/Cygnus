@@ -12,6 +12,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Reads and writes the {@code pages.json} file that sits next to a map's {@code map.json} and
@@ -74,6 +75,21 @@ public final class PageFacesFile {
     }
 
     /**
+     * Loads the page values like {@link #loadSettings(Path)}, but falls back to
+     * {@link PageSettings#DEFAULT} if they are broken. Meant for the setup, which has to open a
+     * broken map so it can be fixed.
+     *
+     * @param mapFile   the map file the settings belong to
+     * @param onInvalid receives the reason if the settings were broken and the defaults are used
+     * @return the settings, or the defaults if they are broken
+     */
+    public static PageSettings loadSettingsOrDefaults(Path mapFile, Consumer<String> onInvalid) {
+        Path pagesFile = resolve(mapFile);
+        return MapSideFile.settingsOrDefaults(MapSideFile.parse(WHAT, pagesFile), pagesFile, PageSettings.class,
+                PageSettings.DEFAULT, onInvalid);
+    }
+
+    /**
      * Writes the given page faces to the sibling {@code pages.json} with the default page settings.
      *
      * @param mapFile   the map file the page faces belong to
@@ -105,9 +121,26 @@ public final class PageFacesFile {
      * @return a new {@link GameMap} carrying the merged page faces and the page settings
      */
     public static GameMap loadInto(Path mapFile, GameMap map) {
+        return withMergedFaces(mapFile, map).withPageSettings(loadSettings(mapFile));
+    }
+
+    /**
+     * Works like {@link #loadInto(Path, GameMap)}, but falls back to {@link PageSettings#DEFAULT}
+     * if the page settings are broken. Meant for the setup, which has to open a broken map so it
+     * can be fixed.
+     *
+     * @param mapFile   the map file {@code map} was loaded from
+     * @param map       the map to merge page faces into
+     * @param onInvalid receives the reason if the settings were broken and the defaults are used
+     * @return a new {@link GameMap} carrying the merged page faces and the page settings
+     */
+    public static GameMap loadInto(Path mapFile, GameMap map, Consumer<String> onInvalid) {
+        return withMergedFaces(mapFile, map).withPageSettings(loadSettingsOrDefaults(mapFile, onInvalid));
+    }
+
+    private static GameMap withMergedFaces(Path mapFile, GameMap map) {
         Set<PageResource> merged = new HashSet<>(map.getPageFaces());
         merged.addAll(load(mapFile));
-
-        return map.withPageFaces(merged).withPageSettings(loadSettings(mapFile));
+        return map.withPageFaces(merged);
     }
 }

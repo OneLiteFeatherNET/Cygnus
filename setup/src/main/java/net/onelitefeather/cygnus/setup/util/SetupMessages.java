@@ -329,6 +329,19 @@ public final class SetupMessages {
     }
 
     /**
+     * Creates a new {@link Component} instance which explains that broken settings of the map were
+     * replaced by the defaults, and that saving the map writes the defaults over them.
+     *
+     * @param reason why the settings could not be used
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getSettingsFallback(@NotNull String reason) {
+        return Messages.withMiniPrefix("<red>Loaded the defaults, saving overwrites the broken values: <gold><reason>",
+                textTag("reason", reason));
+    }
+
+    /**
      * Inserts a value as plain text, so nothing in it is parsed as a tag.
      */
     private static TagResolver textTag(String key, String value) {
