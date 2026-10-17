@@ -7,7 +7,9 @@ import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.world.DimensionType;
+import net.onelitefeather.cygnus.common.config.CreekSettings;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.creek.CreekRoutesFile;
 import net.onelitefeather.cygnus.common.dimension.BlendedAtmosphere;
 import net.onelitefeather.cygnus.common.dimension.DimensionAtmosphere;
@@ -45,6 +47,8 @@ public final class GameMapProvider extends AbstractMapProvider {
     private final MapEntry gameEntry;
     private final RegistryKey<DimensionType> gameDimension;
     private final RegistryKey<DimensionType> lobbyDimension;
+    private final PageSettings pageSettings;
+    private final CreekSettings creekSettings;
     private @Nullable InstanceContainer gameInstance;
     private @Nullable GameMap gameMap;
     private @Nullable InstanceContainer previousInstance;
@@ -81,6 +85,9 @@ public final class GameMapProvider extends AbstractMapProvider {
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("No game map found"));
         GameMap map = readGameMap();
+        // Read with the map before any service is built, so every one of them gets the map's own values.
+        this.pageSettings = map.getPageSettings();
+        this.creekSettings = map.getCreekSettings();
         this.gameDimension = registerDimension(map);
         this.lobbyDimension = registerLobbyDimension(map, lobbyAtmosphereShare);
         this.loadLobbyMap(lobbyEntry);
@@ -163,7 +170,8 @@ public final class GameMapProvider extends AbstractMapProvider {
      *
      * <p>This also merges in the page faces from the sibling {@code pages.json}, if one exists, via
      * {@link PageFacesFile#loadInto(Path, GameMap)}. The creek routes come from the sibling
-     * {@code creek.json} via {@link CreekRoutesFile#loadInto(Path, GameMap)}.</p>
+     * {@code creek.json} via {@link CreekRoutesFile#loadInto(Path, GameMap)}. Both files also carry
+     * the values the map sets for its pages and its creek.</p>
      *
      * @return the loaded game map
      * @throws IllegalStateException if the file cannot be read
@@ -173,6 +181,26 @@ public final class GameMapProvider extends AbstractMapProvider {
                 .orElseThrow(() -> new IllegalStateException("Failed to load GameMap from file: " + this.gameEntry.getMapFile()));
         Path mapFile = this.gameEntry.getMapFile();
         return CreekRoutesFile.loadInto(mapFile, PageFacesFile.loadInto(mapFile, map));
+    }
+
+    /**
+     * Returns the page values of the game map. Known as soon as the provider exists, long before
+     * the map is loaded into an instance.
+     *
+     * @return the page settings of the game map
+     */
+    public PageSettings pageSettings() {
+        return this.pageSettings;
+    }
+
+    /**
+     * Returns the creek values of the game map. Known as soon as the provider exists, long before
+     * the map is loaded into an instance.
+     *
+     * @return the creek settings of the game map
+     */
+    public CreekSettings creekSettings() {
+        return this.creekSettings;
     }
 
     public void loadGameMap() {

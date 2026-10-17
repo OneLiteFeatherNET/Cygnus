@@ -41,7 +41,7 @@ public final class PageCalculation {
 
     /**
      * How many extra survivors above {@value #PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING} it takes for
-     * {@link #calculateActivePageAmount()} to add one more page.
+     * {@link #calculateActivePageAmount(int)} to add one more page.
      * <p>
      * Playtesting a steeper step (one active page per extra survivor) reached 16 concurrently
      * active pages, which felt like clutter; this keeps the top of the range below 10.
@@ -86,20 +86,21 @@ public final class PageCalculation {
      * This stays below {@link #calculatePageAmount(int)} on purpose: it governs how many pages exist
      * in the world at the same time, not the total pool a round draws from. If the number of online
      * players (excluding one) is less than {@value #PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING},
-     * {@link GameConfig#MIN_ACTIVE_PAGE_COUNT} is returned. Otherwise, one page is added for every
+     * {@code minActivePages} is returned. Otherwise, one page is added for every
      * {@value #ACTIVE_PAGE_COUNT_STEP_SIZE} survivors past that threshold, so the count stays flat
      * for most of the range and only rises near the top of a full lobby.
      *
-     * @return the number of pages to keep active at once, at least {@link GameConfig#MIN_ACTIVE_PAGE_COUNT}
+     * @param minActivePages how many pages a small round keeps active, from the map's page settings
+     * @return the number of pages to keep active at once, at least {@code minActivePages}
      */
-    public static int calculateActivePageAmount() {
+    public static int calculateActivePageAmount(int minActivePages) {
         int currentPlayers = MinecraftServer.getConnectionManager().getOnlinePlayers().size();
         int survivors = currentPlayers - 1;
 
         if (survivors < PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING) {
-            return GameConfig.MIN_ACTIVE_PAGE_COUNT;
+            return minActivePages;
         }
-        return GameConfig.MIN_ACTIVE_PAGE_COUNT + (survivors - PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING) / ACTIVE_PAGE_COUNT_STEP_SIZE;
+        return minActivePages + (survivors - PLAYER_SIZE_FOR_ACTIVE_PAGE_SCALING) / ACTIVE_PAGE_COUNT_STEP_SIZE;
     }
 
     private PageCalculation() {

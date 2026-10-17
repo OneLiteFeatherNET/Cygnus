@@ -10,7 +10,6 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.utils.Direction;
-import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.creek.CreekRoutesFile;
 import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
@@ -78,7 +77,7 @@ public class GameData extends InstanceSetupData {
         this.pageInventory = createPageInventory(player);
         this.creekRouteInventory = createCreekRouteInventory(player);
         this.creekRoutePreview = new CreekRoutePreview(player, () -> this.gameMapBuilder.getCreekRoutes(),
-                () -> this.activeCreekRoute, CreekConfig.DEFAULT.routeLinkDistance());
+                () -> this.activeCreekRoute, () -> this.gameMapBuilder.getCreekSettings().routeLinkDistance());
         this.pagePreview = new PagePreview(player, () -> this.gameMapBuilder.getPageFaces());
         this.refreshCreekRoutes();
     }
@@ -633,8 +632,8 @@ public class GameData extends InstanceSetupData {
             this.mapEntry.createFile();
         }
         GameMap map = this.gameMapBuilder.build();
-        PageFacesFile.save(mapEntry.getMapFile(), map.getPageFaces());
-        CreekRoutesFile.save(mapEntry.getMapFile(), map.getCreekRoutes());
+        PageFacesFile.save(mapEntry.getMapFile(), map.getPageFaces(), map.getPageSettings());
+        CreekRoutesFile.save(mapEntry.getMapFile(), map.getCreekRoutes(), map.getCreekSettings());
         GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), map);
     }
 
@@ -671,7 +670,8 @@ public class GameData extends InstanceSetupData {
                 this.mapEntry.hasMapFile()
                         ? GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), GameMap.class)
                                 .map(map -> PageFacesFile.loadInto(mapEntry.getMapFile(), map))
-                                .map(map -> map.withCreekRoutes(CreekRoutesFile.loadUnchecked(mapEntry.getMapFile())))
+                                .map(map -> map.withCreekRoutes(CreekRoutesFile.loadUnchecked(mapEntry.getMapFile()))
+                                        .withCreekSettings(CreekRoutesFile.loadSettings(mapEntry.getMapFile())))
                         : Optional.empty();
 
         this.gameMapBuilder = mapData

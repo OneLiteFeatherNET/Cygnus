@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.common.map;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.utils.Direction;
+import net.onelitefeather.cygnus.common.config.CreekSettings;
+import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
@@ -27,6 +29,8 @@ public final class GameMapBuilder extends BaseMapBuilder {
     private final Set<PageResource> pageFaces;
     private final Set<Pos> survivorSpawns;
     private final Map<String, List<CreekWaypoint>> creekRoutes;
+    private PageSettings pageSettings = PageSettings.DEFAULT;
+    private CreekSettings creekSettings = CreekSettings.DEFAULT;
 
     /**
      * Creates a new instance of the builder class
@@ -58,6 +62,8 @@ public final class GameMapBuilder extends BaseMapBuilder {
         this.survivorSpawns.addAll(gameMap.getSurvivorSpawns());
         this.pageFaces = new HashSet<>(gameMap.getPageFaces());
         this.atmosphere = gameMap.getAtmosphere();
+        this.pageSettings = gameMap.getPageSettings();
+        this.creekSettings = gameMap.getCreekSettings();
         // Mutable on purpose: the setup adds, edits and removes routes. A name seen twice keeps the last route.
         this.creekRoutes = gameMap.getCreekRoutes().stream().collect(Collectors.toMap(
                 CreekRoute::name, route -> new ArrayList<>(route.points()), (first, last) -> last, LinkedHashMap::new));
@@ -103,7 +109,8 @@ public final class GameMapBuilder extends BaseMapBuilder {
      */
     @Override
     public GameMap build() {
-        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders, atmosphere, getCreekRoutes());
+        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders, atmosphere, getCreekRoutes(),
+                pageSettings, creekSettings);
     }
 
     /**
@@ -318,5 +325,41 @@ public final class GameMapBuilder extends BaseMapBuilder {
         return this.creekRoutes.entrySet().stream()
                 .map(entry -> new CreekRoute(entry.getKey(), entry.getValue()))
                 .toList();
+    }
+
+    /**
+     * Returns the page values the map sets for itself.
+     *
+     * @return the page settings
+     */
+    public PageSettings getPageSettings() {
+        return pageSettings;
+    }
+
+    /**
+     * Sets the page values the map sets for itself.
+     *
+     * @param pageSettings the new page settings
+     */
+    public void setPageSettings(PageSettings pageSettings) {
+        this.pageSettings = pageSettings;
+    }
+
+    /**
+     * Returns the creek values the map sets for itself.
+     *
+     * @return the creek settings
+     */
+    public CreekSettings getCreekSettings() {
+        return creekSettings;
+    }
+
+    /**
+     * Sets the creek values the map sets for itself.
+     *
+     * @param creekSettings the new creek settings
+     */
+    public void setCreekSettings(CreekSettings creekSettings) {
+        this.creekSettings = creekSettings;
     }
 }

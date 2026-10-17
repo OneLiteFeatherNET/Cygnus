@@ -296,6 +296,46 @@ public final class SetupMessages {
     }
 
     /**
+     * Creates a new {@link Component} instance which confirms that settings were stored on the map.
+     *
+     * @param title the name of the settings
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getSettingsSaved(@NotNull String title) {
+        return Messages.withMiniPrefix("<gray>Saved the <gold><title>", textTag("title", title));
+    }
+
+    /**
+     * Creates a new {@link Component} instance which confirms that settings went back to their defaults.
+     *
+     * @param title the name of the settings
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getSettingsReset(@NotNull String title) {
+        return Messages.withMiniPrefix("<gray>Reset the <gold><title> <gray>to the defaults", textTag("title", title));
+    }
+
+    /**
+     * Creates a new {@link Component} instance which explains why entered settings were not stored.
+     *
+     * @param reason what does not fit
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getInvalidSettings(@NotNull String reason) {
+        return Messages.withMiniPrefix("<red>These values do not fit together: <gold><reason>", textTag("reason", reason));
+    }
+
+    /**
+     * Inserts a value as plain text, so nothing in it is parsed as a tag.
+     */
+    private static TagResolver textTag(String key, String value) {
+        return TagResolver.builder().tag(key, Tag.inserting(Component.text(value))).build();
+    }
+
+    /**
      * Route names come from player input, so they are inserted as plain text instead of being parsed.
      */
     private static TagResolver nameTag(String name) {

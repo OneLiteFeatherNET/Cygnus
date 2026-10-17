@@ -9,6 +9,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;
@@ -62,12 +63,13 @@ public final class PageProvider {
     private final AtomicInteger foundPages = new AtomicInteger();
     private int maxPageAmount;
     private final Supplier<? extends Collection<? extends Point>> survivors;
+    private final PageSettings settings;
 
     /**
      * Creates a provider that does not know where the survivors are, so pages move on to any spot.
      */
     public PageProvider() {
-        this(List::of);
+        this(List::of, PageSettings.DEFAULT);
     }
 
     /**
@@ -76,7 +78,28 @@ public final class PageProvider {
      * @param survivors supplies where the living survivors stand right now
      */
     public PageProvider(Supplier<? extends Collection<? extends Point>> survivors) {
+        this(survivors, PageSettings.DEFAULT);
+    }
+
+    /**
+     * Creates a provider that keeps a moving page away from the survivors and uses the page values
+     * the map sets for itself.
+     *
+     * @param survivors supplies where the living survivors stand right now
+     * @param settings  the page values of the map
+     */
+    public PageProvider(Supplier<? extends Collection<? extends Point>> survivors, PageSettings settings) {
         this.survivors = survivors;
+        this.settings = settings;
+    }
+
+    /**
+     * Returns the page values of the map this provider places pages on.
+     *
+     * @return the page settings
+     */
+    public PageSettings settings() {
+        return this.settings;
     }
 
     /**
@@ -123,12 +146,12 @@ public final class PageProvider {
      * Picks the spots for the pages that are active when a round starts and creates the pages on them.
      * The pages only appear in the world once {@link #spawn(Instance)} is called.
      *
-     * @param activePageCount how many pages to keep concurrently active, e.g. from {@link PageCalculation#calculateActivePageAmount()}
+     * @param activePageCount how many pages to keep concurrently active, e.g. from {@link PageCalculation#calculateActivePageAmount(int)}
      */
     public void collectStartPages(int activePageCount) {
         Check.argCondition(this.freeSpots.size() < activePageCount, "Not enough pages to start the game");
         for (int i = 0; i < activePageCount; i++) {
-            PageEntity page = PageFactory.createPage(this.freeSpots.poll(), this.pageNumber.getAndIncrement());
+            PageEntity page = PageFactory.createPage(this.freeSpots.poll(), this.pageNumber.getAndIncrement(), this.settings.ttlSeconds());
             this.activePages.put(page.getHitBoxUUID(), page);
         }
         LOGGER.info("Collected {} start pages", activePageCount);
@@ -276,9 +299,9 @@ public final class PageProvider {
         return false;
     }
 
-    private static int respawnDelay() {
+    private int respawnDelay() {
         int jitter = GameConfig.PAGE_RESPAWN_DELAY_JITTER;
-        return GameConfig.PAGE_RESPAWN_DELAY + ThreadLocalRandom.current().nextInt(-jitter, jitter + 1);
+        return this.settings.respawnDelaySeconds() + ThreadLocalRandom.current().nextInt(-jitter, jitter + 1);
     }
 
     /**

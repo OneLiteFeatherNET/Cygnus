@@ -12,7 +12,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import net.onelitefeather.cygnus.common.Tags;
-import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.page.event.PageExpiredEvent;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnedEvent;
 import net.onelitefeather.cygnus.common.util.Helper;
@@ -42,6 +42,7 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
     private static final long ADDITION_TIME = 1000L;
     private final Entity hitBox;
     private ItemStack pageItem;
+    private final int ttlSeconds;
     private int ttlTime;
     private int currentTickTime;
     private long nextTick;
@@ -57,11 +58,24 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
      * @param pageCount the current page count
      */
     PageEntity(PageResource resource, int pageCount) {
+        this(resource, pageCount, PageSettings.DEFAULT.ttlSeconds());
+    }
+
+    /**
+     * Constructs a new {@link PageEntity} that moves on after the given time. The page is not part
+     * of any instance until {@link #place(Instance)} is called.
+     *
+     * @param resource   the spot the page stands on
+     * @param pageCount  the current page count
+     * @param ttlSeconds how long the page stays in one spot, in seconds, from the map's settings
+     */
+    PageEntity(PageResource resource, int pageCount, int ttlSeconds) {
         super(EntityType.ITEM_DISPLAY);
+        this.ttlSeconds = ttlSeconds;
         this.resource = resource;
         this.hitBox = new Entity(EntityType.INTERACTION);
         this.pageItem = createPageItem(pageCount);
-        this.ttlTime = Helper.calculateOffsetTime(GameConfig.PAGE_TTL_TIME);
+        this.ttlTime = Helper.calculateOffsetTime(this.ttlSeconds);
         this.initialBlockLight = PageLightUtil.randomInitialBlockLight();
 
         ItemDisplayMeta itemDisplayMeta = (ItemDisplayMeta) this.getEntityMeta();
@@ -140,7 +154,7 @@ public final class PageEntity extends Entity implements PageCreator, PageProximi
         InteractionMeta interactionMeta = (InteractionMeta) this.hitBox.getEntityMeta();
         interactionMeta.setResponse(true);
         interactionMeta.setInvisible(false);
-        this.ttlTime = Helper.calculateOffsetTime(GameConfig.PAGE_TTL_TIME);
+        this.ttlTime = Helper.calculateOffsetTime(this.ttlSeconds);
         this.currentTickTime = 0;
         this.calculateNextTick();
         this.send = false;

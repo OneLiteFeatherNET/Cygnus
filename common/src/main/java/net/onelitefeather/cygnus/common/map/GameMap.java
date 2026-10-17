@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.common.map;
 
+import net.onelitefeather.cygnus.common.config.CreekSettings;
+import net.onelitefeather.cygnus.common.config.PageSettings;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.theevilreaper.aves.map.BaseMap;
@@ -29,6 +31,9 @@ public final class GameMap extends BaseMap {
     private final @Nullable MapAtmosphere atmosphere;
     // transient like pageFaces: the routes live in a sibling creek.json (see CreekRoutesFile)
     private final transient List<CreekRoute> creekRoutes;
+    // transient like pageFaces: the page settings live in pages.json, the creek settings in creek.json
+    private final transient PageSettings pageSettings;
+    private final transient CreekSettings creekSettings;
 
     /**
      * Creates a new instance from the {@link GameMap} with the given values.
@@ -75,12 +80,44 @@ public final class GameMap extends BaseMap {
             @Nullable MapAtmosphere atmosphere,
             List<CreekRoute> creekRoutes
     ) {
+        this(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders, atmosphere, creekRoutes,
+                PageSettings.DEFAULT, CreekSettings.DEFAULT);
+    }
+
+    /**
+     * Creates a map that also carries the values it sets for its pages and its creek.
+     *
+     * @param name           the name of the map
+     * @param spawn          the spawn position for the players
+     * @param slenderSpawn   the spawn position for the slender
+     * @param pageFaces      the faces for the pages
+     * @param survivorSpawns the spawn positions for the survivors
+     * @param builders       the builders for the map
+     * @param atmosphere     the fog and sky look of the map, or {@code null} for the overworld default
+     * @param creekRoutes    the routes the creek walks along
+     * @param pageSettings   the page values the map sets for itself
+     * @param creekSettings  the creek values the map sets for itself
+     */
+    public GameMap(
+            String name,
+            Pos spawn,
+            Pos slenderSpawn,
+            Set<PageResource> pageFaces,
+            Set<Pos> survivorSpawns,
+            List<String> builders,
+            @Nullable MapAtmosphere atmosphere,
+            List<CreekRoute> creekRoutes,
+            PageSettings pageSettings,
+            CreekSettings creekSettings
+    ) {
         super(name, spawn, builders);
         this.slenderSpawn = slenderSpawn;
         this.pageFaces = Set.copyOf(pageFaces);
         this.survivorSpawns = Set.copyOf(survivorSpawns);
         this.atmosphere = atmosphere;
         this.creekRoutes = List.copyOf(creekRoutes);
+        this.pageSettings = pageSettings;
+        this.creekSettings = creekSettings;
     }
 
     /**
@@ -138,7 +175,8 @@ public final class GameMap extends BaseMap {
      * @return the copy
      */
     public GameMap withPageFaces(Set<PageResource> pageFaces) {
-        return new GameMap(name(), spawn(), slenderSpawn, pageFaces, survivorSpawns, builders(), atmosphere, creekRoutes);
+        return new GameMap(name(), spawn(), slenderSpawn, pageFaces, survivorSpawns, builders(), atmosphere, creekRoutes,
+                pageSettings, creekSettings);
     }
 
     /**
@@ -148,6 +186,47 @@ public final class GameMap extends BaseMap {
      * @return the copy
      */
     public GameMap withCreekRoutes(List<CreekRoute> creekRoutes) {
-        return new GameMap(name(), spawn(), slenderSpawn, pageFaces, survivorSpawns, builders(), atmosphere, creekRoutes);
+        return new GameMap(name(), spawn(), slenderSpawn, pageFaces, survivorSpawns, builders(), atmosphere, creekRoutes,
+                pageSettings, creekSettings);
+    }
+
+    /**
+     * Returns the page values this map sets for itself.
+     *
+     * @return the settings, {@link PageSettings#DEFAULT} if the map sets none
+     */
+    public PageSettings getPageSettings() {
+        return pageSettings;
+    }
+
+    /**
+     * Returns the creek values this map sets for itself.
+     *
+     * @return the settings, {@link CreekSettings#DEFAULT} if the map sets none
+     */
+    public CreekSettings getCreekSettings() {
+        return creekSettings;
+    }
+
+    /**
+     * Returns a copy of this map with other page settings.
+     *
+     * @param pageSettings the new settings
+     * @return the copy
+     */
+    public GameMap withPageSettings(PageSettings pageSettings) {
+        return new GameMap(name(), spawn(), slenderSpawn, pageFaces, survivorSpawns, builders(), atmosphere,
+                creekRoutes, pageSettings, creekSettings);
+    }
+
+    /**
+     * Returns a copy of this map with other creek settings.
+     *
+     * @param creekSettings the new settings
+     * @return the copy
+     */
+    public GameMap withCreekSettings(CreekSettings creekSettings) {
+        return new GameMap(name(), spawn(), slenderSpawn, pageFaces, survivorSpawns, builders(), atmosphere,
+                creekRoutes, pageSettings, creekSettings);
     }
 }

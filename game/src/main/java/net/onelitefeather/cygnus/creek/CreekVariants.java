@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.creek;
 
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.common.config.CreekSettings;
 import net.onelitefeather.cygnus.creek.state.Calm;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.DoneState;
@@ -46,6 +47,7 @@ final class CreekVariants {
     static final int MAX_VARIANTS = 3;
 
     private final CreekConfig config;
+    private final CreekSettings settings;
     private final SpotFinder spots;
     private final RandomGenerator random;
     private final long allowedAt;
@@ -58,15 +60,17 @@ final class CreekVariants {
      * Sets up the variants for a round.
      *
      * @param config    the settings
+     * @param settings  the distances the map sets for the creek
      * @param spots     finds a spot next to a survivor, out of their view
      * @param random    the random source
      * @param allowedAt the earliest time a variant may show up, in milliseconds
      * @param spawner   creates a variant's creek at a spot, starting in the given state
      * @param calm      how far the round has thinned out right now
      */
-    CreekVariants(CreekConfig config, SpotFinder spots, RandomGenerator random, long allowedAt,
+    CreekVariants(CreekConfig config, CreekSettings settings, SpotFinder spots, RandomGenerator random, long allowedAt,
                   BiFunction<Pos, CreekState, Creek> spawner, Supplier<Calm> calm) {
         this.config = config;
+        this.settings = settings;
         this.spots = spots;
         this.random = random;
         this.allowedAt = allowedAt;
@@ -189,8 +193,8 @@ final class CreekVariants {
      * @return {@code false} if there was no free spot next to them in this step
      */
     private boolean start(SurvivorView view, long now) {
-        Optional<Pos> spot = this.spots.beside(view.position(), config.stalk().minDistance(), config.stalk().maxDistance(),
-                config.stalk().minAngle(), config.stalk().maxAngle(), List.of(view.eyes()), config.personalSpace(),
+        Optional<Pos> spot = this.spots.beside(view.position(), this.settings.stalkMinDistance(), this.settings.stalkMaxDistance(),
+                config.stalk().minAngle(), config.stalk().maxAngle(), List.of(view.eyes()), this.settings.personalSpace(),
                 this.random);
         if (spot.isEmpty()) return false;
 

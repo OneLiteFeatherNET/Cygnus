@@ -15,11 +15,13 @@ import static net.onelitefeather.cygnus.common.config.ConfigChecks.positive;
  * and this record rejects the combinations that span groups, for example a hiding spot inside the
  * view cone.
  * </p>
+ * <p>
+ * The distances that depend on the map — sight range, stalk band, respawn distance, route link
+ * distance, personal space and launch height — live in {@link CreekSettings}.
+ * </p>
  *
  * @param enabled                whether the creek takes part in a round
  * @param activeWithLastSurvivor whether the creek keeps going when only one survivor is left
- * @param routeLinkDistance      how close two route ends have to be to count as linked, in blocks
- * @param personalSpace          how close a survivor may come outside a hunt, in blocks
  * @param stuckMillis            how long the creek may make no progress before taking a shortcut
  * @param sight                  when a survivor notices the creek
  * @param wander                 how the creek moves while patrolling
@@ -34,8 +36,6 @@ import static net.onelitefeather.cygnus.common.config.ConfigChecks.positive;
 public record CreekConfig(
         boolean enabled,
         boolean activeWithLastSurvivor,
-        double routeLinkDistance,
-        int personalSpace,
         int stuckMillis,
         Sight sight,
         Wander wander,
@@ -57,7 +57,7 @@ public record CreekConfig(
      * The default settings: enabled, and tuned for a round of about fifteen minutes.
      */
     public static final CreekConfig DEFAULT = new CreekConfig(
-            true, true, 3.0D, 15, 3000,
+            true, true, 3000,
             Sight.DEFAULT, Wander.DEFAULT, Stalk.DEFAULT, Hunt.DEFAULT, Vanish.DEFAULT, Catch.DEFAULT
     );
 
@@ -67,11 +67,8 @@ public record CreekConfig(
      * @throws IllegalArgumentException if a value is out of range or two values contradict each other
      */
     public CreekConfig {
-        positive("routeLinkDistance", routeLinkDistance);
-        atLeast("personalSpace", personalSpace, 1);
         atLeast("stuckMillis", stuckMillis, 1);
         below("stalkThreshold", stalk.threshold(), "huntThreshold", hunt.threshold());
-        below("personalSpace", personalSpace, "stalkMinDistance", stalk.minDistance());
         // A hiding spot inside the view cone would count as seen right away.
         below("sightViewAngle", sight.viewAngle(), "stalkMinAngle", stalk.minAngle());
     }
@@ -97,14 +94,11 @@ public record CreekConfig(
         Catch catching = Catch.read(section);
         // A contradiction between groups does not tell which side is wrong, so everything but the
         // two switches falls back. A creek the operator switched off has to stay off.
-        CreekConfig fallback = new CreekConfig(enabled, activeWithLastSurvivor, DEFAULT.routeLinkDistance(),
-                DEFAULT.personalSpace(), DEFAULT.stuckMillis(), Sight.DEFAULT, Wander.DEFAULT, Stalk.DEFAULT,
-                Hunt.DEFAULT, Vanish.DEFAULT, Catch.DEFAULT);
+        CreekConfig fallback = new CreekConfig(enabled, activeWithLastSurvivor, DEFAULT.stuckMillis(),
+                Sight.DEFAULT, Wander.DEFAULT, Stalk.DEFAULT, Hunt.DEFAULT, Vanish.DEFAULT, Catch.DEFAULT);
         return section.orDefault("creek", () -> new CreekConfig(
                 enabled,
                 activeWithLastSurvivor,
-                section.getDouble("routeLinkDistance", DEFAULT.routeLinkDistance()),
-                section.getInt("personalSpace", DEFAULT.personalSpace()),
                 section.getInt("stuckMillis", DEFAULT.stuckMillis()),
                 sight, wander, stalk, hunt, vanish, catching), fallback);
     }
@@ -112,14 +106,13 @@ public record CreekConfig(
     /**
      * When a survivor notices the creek.
      *
-     * @param range     how far away a survivor can notice the creek, in blocks (key {@code sightRange})
      * @param viewAngle the maximum angle from a survivor's view center at which the creek counts as
      *                  seen, in degrees (key {@code sightViewAngle})
      */
-    public record Sight(int range, int viewAngle) {
+    public record Sight(int viewAngle) {
 
         /** The default sight. */
-        public static final Sight DEFAULT = new Sight(48, 35);
+        public static final Sight DEFAULT = new Sight(35);
 
         /**
          * Checks the values.
@@ -127,7 +120,6 @@ public record CreekConfig(
          * @throws IllegalArgumentException if a value is out of range
          */
         public Sight {
-            atLeast("sightRange", range, 1);
             between("sightViewAngle", viewAngle, 1, GameConfig.Glitch.MAX_VIEW_ANGLE);
         }
 
@@ -139,7 +131,6 @@ public record CreekConfig(
          */
         public static Sight read(ConfigSection section) {
             return section.orDefault("creek sight", () -> new Sight(
-                    section.getInt("sightRange", DEFAULT.range()),
                     section.getInt("sightViewAngle", DEFAULT.viewAngle())), DEFAULT);
         }
     }
@@ -191,19 +182,17 @@ public record CreekConfig(
      * How the creek follows a scared survivor.
      *
      * @param threshold    the dread at which the creek starts stalking a survivor (key {@code stalkThreshold})
-     * @param minDistance  minimum distance to the stalked survivor, in blocks (key {@code stalkMinDistance})
-     * @param maxDistance  maximum distance to the stalked survivor, in blocks (key {@code stalkMaxDistance})
      * @param minAngle     minimum angle from the stalked survivor's view direction, in degrees (key {@code stalkMinAngle})
      * @param maxAngle     maximum angle from the stalked survivor's view direction, in degrees (key {@code stalkMaxAngle})
      * @param revealMillis how long the creek stays visible before it teleports away (key {@code stalkRevealMillis})
      * @param minSeconds   minimum length of a stalk (key {@code stalkMinSeconds})
      * @param maxSeconds   maximum length of a stalk (key {@code stalkMaxSeconds})
      */
-    public record Stalk(double threshold, int minDistance, int maxDistance, int minAngle, int maxAngle,
-                        int revealMillis, int minSeconds, int maxSeconds) {
+    public record Stalk(double threshold, int minAngle, int maxAngle, int revealMillis, int minSeconds,
+                        int maxSeconds) {
 
         /** The default stalk. It appears beside and behind the survivor's shoulder, off their screen. */
-        public static final Stalk DEFAULT = new Stalk(0.25D, 20, 35, 80, 130, 700, 45, 90);
+        public static final Stalk DEFAULT = new Stalk(0.25D, 80, 130, 700, 45, 90);
 
         /**
          * Checks the values.
@@ -212,7 +201,6 @@ public record CreekConfig(
          */
         public Stalk {
             positive("stalkThreshold", threshold);
-            below("stalkMinDistance", minDistance, "stalkMaxDistance", maxDistance);
             below("stalkMinAngle", minAngle, "stalkMaxAngle", maxAngle);
             between("stalkMaxAngle", maxAngle, 1, 180);
             // Spots inside the hide angle are never used, so the band has to reach past it.
@@ -231,8 +219,6 @@ public record CreekConfig(
         public static Stalk read(ConfigSection section) {
             return section.orDefault("creek stalk", () -> new Stalk(
                     section.getDouble("stalkThreshold", DEFAULT.threshold()),
-                    section.getInt("stalkMinDistance", DEFAULT.minDistance()),
-                    section.getInt("stalkMaxDistance", DEFAULT.maxDistance()),
                     section.getInt("stalkMinAngle", DEFAULT.minAngle()),
                     section.getInt("stalkMaxAngle", DEFAULT.maxAngle()),
                     section.getInt("stalkRevealMillis", DEFAULT.revealMillis()),
@@ -294,12 +280,11 @@ public record CreekConfig(
      *
      * @param minSeconds         shortest vanish time, used at full dread (key {@code vanishMinSeconds})
      * @param maxSeconds         longest vanish time, used at no dread (key {@code vanishMaxSeconds})
-     * @param respawnMinDistance minimum distance to every survivor when reappearing, in blocks (key {@code respawnMinDistance})
      */
-    public record Vanish(int minSeconds, int maxSeconds, int respawnMinDistance) {
+    public record Vanish(int minSeconds, int maxSeconds) {
 
         /** The default vanish. */
-        public static final Vanish DEFAULT = new Vanish(20, 40, 30);
+        public static final Vanish DEFAULT = new Vanish(20, 40);
 
         /**
          * Checks the values.
@@ -309,7 +294,6 @@ public record CreekConfig(
         public Vanish {
             atLeast("vanishMinSeconds", minSeconds, 0);
             notAbove("vanishMinSeconds", minSeconds, "vanishMaxSeconds", maxSeconds);
-            atLeast("respawnMinDistance", respawnMinDistance, 1);
         }
 
         /**
@@ -321,8 +305,7 @@ public record CreekConfig(
         public static Vanish read(ConfigSection section) {
             return section.orDefault("creek vanish", () -> new Vanish(
                     section.getInt("vanishMinSeconds", DEFAULT.minSeconds()),
-                    section.getInt("vanishMaxSeconds", DEFAULT.maxSeconds()),
-                    section.getInt("respawnMinDistance", DEFAULT.respawnMinDistance())), DEFAULT);
+                    section.getInt("vanishMaxSeconds", DEFAULT.maxSeconds())), DEFAULT);
         }
     }
 
@@ -333,23 +316,20 @@ public record CreekConfig(
      * @param betrayalChance      chance of a reveal on earlier catches
      * @param betrayalGlowSeconds how long a revealed survivor shows on the slender's locator bar
      * @param slownessSeconds     how long a caught survivor is slowed
-     * @param launchHeight        how high a caught survivor is thrown into the air, in blocks. 0 turns the launch off
-     * @param swapChance          chance that a catch swaps two survivors instead of throwing the caught one.
+     * @param swapChance          chance that a catch swaps two survivors instead of throwing the caught one
+     *                            {@link CreekSettings#launchHeight()} blocks into the air.
      *                            0 always throws, 1 always swaps
      * @param launchDamage        health points a thrown survivor loses on landing, never taking them below 1.
      *                            0 turns it off
      */
     public record Catch(int betrayalCatchCount, double betrayalChance, int betrayalGlowSeconds, int slownessSeconds,
-                        double launchHeight, double swapChance, double launchDamage) {
-
-        /** The highest launch a catch may be set to, in blocks. */
-        public static final double MAX_LAUNCH_HEIGHT = 20.0D;
+                        double swapChance, double launchDamage) {
 
         /** The most health a landing may cost, in health points. */
         public static final double MAX_LAUNCH_DAMAGE = 20.0D;
 
         /** The default catch. */
-        public static final Catch DEFAULT = new Catch(2, 0.15D, 6, 4, 5.0D, 0.5D, 4.0D);
+        public static final Catch DEFAULT = new Catch(2, 0.15D, 6, 4, 0.5D, 4.0D);
 
         /**
          * Checks the values.
@@ -361,7 +341,6 @@ public record CreekConfig(
             between("betrayalChance", betrayalChance, 0.0D, 1.0D);
             atLeast("betrayalGlowSeconds", betrayalGlowSeconds, 1);
             atLeast("slownessSeconds", slownessSeconds, 0);
-            between("launchHeight", launchHeight, 0.0D, MAX_LAUNCH_HEIGHT);
             between("swapChance", swapChance, 0.0D, 1.0D);
             between("launchDamage", launchDamage, 0.0D, MAX_LAUNCH_DAMAGE);
         }
@@ -378,7 +357,6 @@ public record CreekConfig(
                     section.getDouble("betrayalChance", DEFAULT.betrayalChance()),
                     section.getInt("betrayalGlowSeconds", DEFAULT.betrayalGlowSeconds()),
                     section.getInt("slownessSeconds", DEFAULT.slownessSeconds()),
-                    section.getDouble("launchHeight", DEFAULT.launchHeight()),
                     section.getDouble("swapChance", DEFAULT.swapChance()),
                     section.getDouble("launchDamage", DEFAULT.launchDamage())), DEFAULT);
         }

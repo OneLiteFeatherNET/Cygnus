@@ -26,8 +26,9 @@ import java.util.Set;
  */
 public enum InventoryMode {
     LOBBY(new int[]{11, 13, 15}, MapDataCategory.NAME, MapDataCategory.AUTHOR, MapDataCategory.SPAWN),
-    GAME(new int[]{10, 11, 13, 15, 16}, MapDataCategory.NAME, MapDataCategory.AUTHOR, MapDataCategory.SPAWN,
-            MapDataCategory.SLENDER, MapDataCategory.ATMOSPHERE);
+    GAME(new int[]{10, 11, 12, 13, 14, 15, 16}, MapDataCategory.NAME, MapDataCategory.AUTHOR, MapDataCategory.SPAWN,
+            MapDataCategory.SLENDER, MapDataCategory.ATMOSPHERE, MapDataCategory.PAGE_SETTINGS,
+            MapDataCategory.CREEK_SETTINGS);
 
     private final EnumSet<MapDataCategory> categories;
     private final int[] slots;

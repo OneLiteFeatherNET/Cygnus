@@ -10,6 +10,9 @@ import net.onelitefeather.cygnus.setup.inventory.slot.PositionSlot;
 import net.onelitefeather.cygnus.setup.inventory.slot.StringSlot;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
+import net.onelitefeather.cygnus.setup.inventory.slot.SettingsSlot;
+import net.onelitefeather.cygnus.setup.dialog.settings.SettingsForms;
+import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
 import net.theevilreaper.aves.inventory.PersonalInventoryBuilder;
 import net.theevilreaper.aves.inventory.layout.InventoryLayout;
 import net.theevilreaper.aves.inventory.slot.ISlot;
@@ -62,6 +65,10 @@ public class MapDataOverviewInventory extends PersonalInventoryBuilder {
             case SPAWN -> new PositionSlot(MapDataCategory.SPAWN, mapBuilder.getSpawn());
             case SLENDER -> new PositionSlot(MapDataCategory.SLENDER, ((GameMapBuilder) mapBuilder).getSlenderSpawn());
             case ATMOSPHERE -> new AtmosphereSlot(((GameMapBuilder) mapBuilder).getAtmosphere());
+            case PAGE_SETTINGS -> new SettingsSlot<>(MapDataCategory.PAGE_SETTINGS, DialogTarget.PAGE_SETTINGS,
+                    SettingsForms.PAGES, ((GameMapBuilder) mapBuilder).getPageSettings());
+            case CREEK_SETTINGS -> new SettingsSlot<>(MapDataCategory.CREEK_SETTINGS, DialogTarget.CREEK_SETTINGS,
+                    SettingsForms.CREEK, ((GameMapBuilder) mapBuilder).getCreekSettings());
             default -> throw new IllegalStateException("Unknown category: " + category);
         };
     }

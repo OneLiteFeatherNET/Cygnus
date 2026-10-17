@@ -20,6 +20,9 @@ import net.onelitefeather.cygnus.setup.dialog.handler.DialogHandler;
 import net.onelitefeather.cygnus.setup.dialog.handler.DynamicDataHandler;
 import net.onelitefeather.cygnus.setup.dialog.handler.MapNameHandler;
 import net.onelitefeather.cygnus.setup.dialog.handler.NonDynamicDataHandler;
+import net.onelitefeather.cygnus.setup.dialog.handler.SettingsResetHandler;
+import net.onelitefeather.cygnus.setup.dialog.handler.SettingsSaveHandler;
+import net.onelitefeather.cygnus.setup.dialog.settings.SettingsForms;
 import net.onelitefeather.guira.SetupDataService;
 
 import java.util.Map;
@@ -41,7 +44,11 @@ public class DialogPayloadListener implements Consumer<PlayerCustomClickEvent> {
                 Map.entry(AtmosphereDialogs.PRESET_KEY, new AtmospherePresetHandler(dataService)),
                 Map.entry(AtmosphereDialogs.VALUES_KEY, new AtmosphereValuesHandler(dataService, previewService)),
                 Map.entry(AtmosphereDialogs.CONFIRM_KEY, new AtmosphereConfirmHandler(dataService, previewService)),
-                Map.entry(AtmosphereDialogs.ADJUST_KEY, new AtmosphereAdjustHandler(dataService))
+                Map.entry(AtmosphereDialogs.ADJUST_KEY, new AtmosphereAdjustHandler(dataService)),
+                Map.entry(SettingsForms.PAGES.saveKey(), new SettingsSaveHandler<>(dataService, SettingsForms.PAGES)),
+                Map.entry(SettingsForms.PAGES.resetKey(), new SettingsResetHandler<>(dataService, SettingsForms.PAGES)),
+                Map.entry(SettingsForms.CREEK.saveKey(), new SettingsSaveHandler<>(dataService, SettingsForms.CREEK)),
+                Map.entry(SettingsForms.CREEK.resetKey(), new SettingsResetHandler<>(dataService, SettingsForms.CREEK))
         );
     }
 

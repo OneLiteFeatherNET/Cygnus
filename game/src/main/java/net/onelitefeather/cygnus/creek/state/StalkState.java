@@ -15,7 +15,7 @@ import java.util.random.RandomGenerator;
  * <p>
  * Look at it and it holds your gaze for a moment, then it is gone and turns up somewhere else,
  * just out of view. The longer the stalk lasts, the closer it creeps: it starts at
- * {@code stalkMinDistance} to {@code stalkMaxDistance} away and ends at {@link #END_MIN_DISTANCE}
+ * {@code stalkMinDistance} to {@code stalkMaxDistance} away, as the map sets them, and ends at {@link #END_MIN_DISTANCE}
  * to {@link #END_MAX_DISTANCE}. The stalk is over when time runs out or the survivor is gone.
  * </p>
  * <p>
@@ -205,12 +205,12 @@ public final class StalkState implements CreekState {
     }
 
     private double minDistance(CreekContext ctx) {
-        double start = ctx.config().stalk().minDistance();
+        double start = ctx.settings().stalkMinDistance();
         return start + (END_MIN_DISTANCE - start) * this.progress(ctx.now());
     }
 
     private double maxDistance(CreekContext ctx) {
-        double start = ctx.config().stalk().maxDistance();
+        double start = ctx.settings().stalkMaxDistance();
         return start + (END_MAX_DISTANCE - start) * this.progress(ctx.now());
     }
 }
