@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.18.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.18.0...v2.18.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **build:** merge service files of all dependencies into the shadow jar ([#393](https://github.com/OneLiteFeatherNET/Cygnus/issues/393)) ([48af00a](https://github.com/OneLiteFeatherNET/Cygnus/commit/48af00a1251930be90b43c0a7cae3ea792beaa13))
+
 ## [2.18.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.17.0...v2.18.0) (2026-10-18)
 
 
