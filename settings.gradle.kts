@@ -89,7 +89,7 @@ dependencyResolutionManagement {
             library("flyway.postgresql", "org.flywaydb", "flyway-database-postgresql").versionRef("flyway")
             library("postgresql", "org.postgresql", "postgresql").versionRef("postgresql")
             library("h2", "com.h2database", "h2").versionRef("h2")
-            library("jetbrains.annotations", "org.jetbrains", "annotations").version("26.0.2")
+            library("jetbrains.annotations", "org.jetbrains", "annotations").version("26.0.2-1")
             library("luckperms.api", "net.luckperms", "api").versionRef("luckperms")
             library("luckperms.minestom.loader", "net.luckperms", "minestom-loader").versionRef("luckperms-minestom-loader")
             library("apollo.protos", "com.lunarclient", "apollo-protos").versionRef("apollo-protos")
