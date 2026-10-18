@@ -106,7 +106,7 @@ public final class Vitality {
         if (health(after) >= shownBefore) return lost;
         // Setting health never raises Minestom's own damage event, so anything reacting to a hit
         // would otherwise never hear about it.
-        EventDispatcher.call(new PlayerDamagedEvent(this.player, source));
+        EventDispatcher.call(new PlayerDamagedEvent(this.player, source, lost));
         return lost;
     }
 

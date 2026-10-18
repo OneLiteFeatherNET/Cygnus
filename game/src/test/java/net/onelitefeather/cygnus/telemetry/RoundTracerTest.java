@@ -62,6 +62,16 @@ class RoundTracerTest {
     }
 
     @Test
+    @DisplayName("The id of the round is readable for records outside the trace")
+    void roundIdIsExposed() {
+        assertNull(this.rounds.currentRoundId(), "no round has started yet");
+
+        this.series.start();
+
+        assertEquals("round-1", this.rounds.currentRoundId());
+    }
+
+    @Test
     @DisplayName("Every phase is a child of the round span, named after the phase")
     void phasesAreChildrenOfTheRound() {
         this.series.start();

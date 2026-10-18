@@ -66,6 +66,13 @@ dependencyResolutionManagement {
             // above that ceiling. Raise it together with the agent, never ahead of it. Without the
             // agent every call lands on the no-op implementation.
             version("opentelemetry", "1.67.0")
+            // Yearly player statistics (the :stats module). Hibernate runs on a Hikari pool, Flyway owns
+            // the schema, PostgreSQL is the production database and H2 (PostgreSQL mode) backs the tests.
+            version("hibernate", "7.4.13.Final")
+            version("hikari", "7.1.0")
+            version("flyway", "13.10.0")
+            version("postgresql", "42.7.14")
+            version("h2", "2.5.252")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
             library("slf4j.api", "org.slf4j", "slf4j-api").versionRef("slf4j")
@@ -76,6 +83,13 @@ dependencyResolutionManagement {
             // Test only: an in-process SDK with an in-memory exporter, so tests assert on real spans.
             library("opentelemetry.sdk", "io.opentelemetry", "opentelemetry-sdk").versionRef("opentelemetry")
             library("opentelemetry.sdk.testing", "io.opentelemetry", "opentelemetry-sdk-testing").versionRef("opentelemetry")
+            library("hibernate.core", "org.hibernate.orm", "hibernate-core").versionRef("hibernate")
+            library("hikari", "com.zaxxer", "HikariCP").versionRef("hikari")
+            library("flyway.core", "org.flywaydb", "flyway-core").versionRef("flyway")
+            library("flyway.postgresql", "org.flywaydb", "flyway-database-postgresql").versionRef("flyway")
+            library("postgresql", "org.postgresql", "postgresql").versionRef("postgresql")
+            library("h2", "com.h2database", "h2").versionRef("h2")
+            library("jetbrains.annotations", "org.jetbrains", "annotations").version("26.0.2")
             library("luckperms.api", "net.luckperms", "api").versionRef("luckperms")
             library("luckperms.minestom.loader", "net.luckperms", "minestom-loader").versionRef("luckperms-minestom-loader")
             library("apollo.protos", "com.lunarclient", "apollo-protos").versionRef("apollo-protos")
@@ -124,5 +138,6 @@ dependencyResolutionManagement {
 
 include("common")
 include("setup")
+include("stats")
 include("game")
 include("bridge")

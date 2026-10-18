@@ -104,6 +104,7 @@ class VitalityTest extends CygnusPlayerTestBase {
         assertEquals(16.0F, player.getHealth());
         collector.assertSingle(event -> {
             assertEquals(source, event.getSource());
+            assertEquals(22.5D, event.getPoints(), EPSILON, "the event carries the points the hit took");
         });
     }
 

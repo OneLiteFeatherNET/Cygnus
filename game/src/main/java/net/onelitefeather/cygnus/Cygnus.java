@@ -97,6 +97,15 @@ import net.onelitefeather.cygnus.resourcepack.ResourcePackService;
 import net.onelitefeather.cygnus.sanity.SanityService;
 import net.onelitefeather.cygnus.stamina.SlenderBarTrigger;
 import net.onelitefeather.cygnus.stamina.StaminaService;
+import net.onelitefeather.cygnus.stats.NoOpStatsRepository;
+import net.onelitefeather.cygnus.stats.display.PlayerStatsService;
+import net.onelitefeather.cygnus.stats.display.StatsDisplayFeature;
+import net.onelitefeather.cygnus.stats.RoundStats;
+import net.onelitefeather.cygnus.stats.RoundStatsCollector;
+import net.onelitefeather.cygnus.stats.StatsConfig;
+import net.onelitefeather.cygnus.stats.StatsMetrics;
+import net.onelitefeather.cygnus.stats.StatsRepositories;
+import net.onelitefeather.cygnus.stats.StatsRepository;
 import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
@@ -110,6 +119,8 @@ import net.onelitefeather.cygnus.creek.tab.HuntedTabWitness;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.onelitefeather.cygnus.telemetry.CygnusTracing;
 import net.onelitefeather.cygnus.telemetry.JoinTracer;
 import net.onelitefeather.cygnus.telemetry.KickTracer;
@@ -127,7 +138,9 @@ import net.onelitefeather.cygnus.vitality.RegenerationService;
 
 import java.nio.file.Path;
 import java.time.Clock;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -140,6 +153,8 @@ import java.util.stream.Stream;
  **/
 @SuppressWarnings("java:S3252")
 public final class Cygnus implements TeamCreator, ListenerHandling {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Cygnus.class);
 
     private final TeamService teamService;
     private final LinearPhaseSeries<TimedPhase> linearPhaseSeries;
@@ -164,6 +179,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final SlowTickTracer slowTickTracer;
     private final ActionTracer actionTracer;
     private final TraceCookie traceCookie;
+    private final RoundStatsCollector roundStatsCollector;
 
     /**
      * Wires the game together.
@@ -195,6 +211,17 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             try (TraceStep ignored = startup.child("cygnus.startup.config")) {
                 this.gameConfig = new GameConfigReader(path).getConfig();
             }
+            // Opened as early as possible, the schema check fails fast; a database that is down only
+            // costs the statistics, never the start. Drained on shutdown so a queued round is written.
+            StatsConfig statsConfig = StatsConfig.load(path, System::getenv);
+            StatsRepository statsRepository = openStatistics(statsConfig,
+                    StatsMetrics.fromGlobal(CygnusAttributes.INSTRUMENTATION_NAME, serviceVersion()));
+            MinecraftServer.getSchedulerManager().buildShutdownTask(statsRepository::close);
+            PlayerStatsService playerStats = new PlayerStatsService(statsRepository, Clock.systemUTC(),
+                    statsConfig.timeZone(), MinecraftServer.getConnectionManager(),
+                    task -> MinecraftServer.getSchedulerManager().scheduleNextTick(task));
+            this.roundStatsCollector = new RoundStatsCollector(statsRepository, Clock.systemUTC(),
+                    statsConfig.timeZone(), this.roundTracer::currentRoundId, Cygnus::onlineName, playerStats::roundSaved);
             this.slowTickTracer = new SlowTickTracer(this.tracing, this.roundTracer, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections,
                     TickMetrics.fromGlobal(serviceVersion(), this.roundTracer::phaseLabel));
             this.staminaService = new StaminaService(this.gameConfig.stamina(), tickSections);
@@ -253,6 +280,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         new EpilepsyDisclaimer(),
                         this.slenderTakeover,
                         this.spectatorService,
+                        new StatsDisplayFeature(playerStats, this.linearPhaseSeries::getCurrentPhase,
+                                MinecraftServer.getConnectionManager()),
                         // Not part of the OverlayModule: the sound is the feedback a hit owes the player
                         // either way, and it needs neither the resource pack nor the overlay gate to be heard.
                         new MinimapPolicy(this.gameConfig.minimap()),
@@ -305,9 +334,31 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         }
     }
 
+    /**
+     * Opens the statistics repository. The game runs without statistics when the database cannot be
+     * reached or its schema does not validate: the failure is logged and counted, not rethrown.
+     *
+     * @param config  the statistics settings
+     * @param metrics counts failures
+     * @return the repository, a no-op one when statistics are off or could not be opened
+     */
+    private static StatsRepository openStatistics(StatsConfig config, StatsMetrics metrics) {
+        try {
+            return StatsRepositories.create(config, metrics);
+        } catch (RuntimeException exception) {
+            LOGGER.error("Opening the statistics database failed, the game runs without statistics", exception);
+            return new NoOpStatsRepository();
+        }
+    }
+
     private @Nullable String activeMapName() {
         GameMap activeMap = this.mapProvider.getGameMap();
         return activeMap == null ? null : activeMap.name();
+    }
+
+    private static @Nullable String onlineName(UUID uuid) {
+        Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid);
+        return player == null ? null : player.getUsername();
     }
 
     private static ActionTracer.@Nullable Actor survivorActor(UUID uuid) {
@@ -332,11 +383,32 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     }
 
 
+    /**
+     * Reads everyone on the Slender or Survivor team with the role they play, for the statistics.
+     */
+    private Map<UUID, RoundStats.Role> statsParticipants() {
+        Map<UUID, RoundStats.Role> participants = new HashMap<>();
+        TeamHelper.survivorsOf(this.teamService)
+                .forEach(player -> participants.put(player.getUuid(), RoundStats.Role.SURVIVOR));
+        Player slender = TeamHelper.slenderOf(this.teamService);
+        if (slender != null) {
+            participants.put(slender.getUuid(), RoundStats.Role.SLENDER);
+        }
+        return participants;
+    }
+
     private void initListener(Team spectatorTeam) {
         Supplier<Phase> phaseSupplier = this.linearPhaseSeries::getCurrentPhase;
         var manager = MinecraftServer.getGlobalEventHandler();
         // First, so the join span exists before any listener below can turn the player away.
         this.joinTracer.register(manager);
+        // Before the quit and death listeners below: either can end the round from inside its handler,
+        // and the collector must have counted the quit or the death by then.
+        this.roundStatsCollector.register(manager, this::statsParticipants,
+                () -> {
+                    Player slender = TeamHelper.slenderOf(this.teamService);
+                    return slender == null ? null : slender.getUuid();
+                });
         this.traceCookie.register(manager, TraceCookie.DEFAULT_TIMEOUT);
         manager.addListener(GameMapLoadedEvent.class, event ->
                 this.pageProvider.loadPageData(event.gameMap().getPageFaces())
