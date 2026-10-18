@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
@@ -95,7 +96,7 @@ class StatsConfigTest {
     @DisplayName("A pool size below 1 is rejected and names the field")
     void poolSizeBelowOneIsRejected() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> new StatsConfig("jdbc:h2:mem:x", "", "", 0, ZoneId.of("UTC")));
+                () -> new StatsConfig("jdbc:h2:mem:x", "", "", 0, "cygnus_stats", ZoneId.of("UTC")));
 
         assertTrue(exception.getMessage().contains("poolSize"), exception.getMessage());
     }
@@ -111,7 +112,7 @@ class StatsConfigTest {
     @Test
     @DisplayName("The password never shows up in toString")
     void toStringHidesPassword() {
-        StatsConfig config = new StatsConfig("jdbc:h2:mem:x", "cygnus", "secret", 4, ZoneId.of("UTC"));
+        StatsConfig config = new StatsConfig("jdbc:h2:mem:x", "cygnus", "secret", 4, "cygnus_stats", ZoneId.of("UTC"));
 
         assertFalse(config.toString().contains("secret"), config.toString());
     }
@@ -138,5 +139,47 @@ class StatsConfigTest {
         StatsConfig config = read(Map.of("stats.jdbc-url", "jdbc:postgresql://db/cygnus", "stats.pool-size", "many"), NO_ENV);
 
         assertEquals(StatsConfig.DEFAULT_POOL_SIZE, config.poolSize());
+    }
+
+    @Test
+    @DisplayName("Without a schema the statistics use cygnus_stats, never public")
+    void schemaDefaultsToCygnusStats() {
+        StatsConfig config = read(Map.of("stats.jdbc-url", "jdbc:postgresql://db/cygnus"), NO_ENV);
+
+        assertEquals("cygnus_stats", config.schema());
+    }
+
+    @Test
+    @DisplayName("A custom schema is read")
+    void customSchemaIsRead() {
+        StatsConfig config = read(Map.of("stats.jdbc-url", "jdbc:postgresql://db/cygnus", "stats.schema", "slender_2"), NO_ENV);
+
+        assertEquals("slender_2", config.schema());
+    }
+
+    @Test
+    @DisplayName("An invalid schema falls back to the default and keeps the other values")
+    void invalidSchemaFallsBackToDefault() {
+        for (String invalid : List.of("Public", "1stats", "stats-db", "stats; drop table x", "a".repeat(64))) {
+            StatsConfig config = read(Map.of("stats.jdbc-url", "jdbc:postgresql://db/cygnus", "stats.pool-size", "7",
+                    "stats.schema", invalid), NO_ENV);
+
+            assertEquals("cygnus_stats", config.schema(), "schema '" + invalid + "' must fall back");
+            assertEquals(7, config.poolSize(), "the other values stay");
+        }
+    }
+
+    @Test
+    @DisplayName("A schema of 63 characters is accepted")
+    void longestSchemaIsAccepted() {
+        String longest = "a".repeat(63);
+
+        assertEquals(longest, read(Map.of("stats.jdbc-url", "jdbc:postgresql://db/cygnus", "stats.schema", longest), NO_ENV).schema());
+    }
+
+    @Test
+    @DisplayName("The constructor rejects an invalid schema")
+    void constructorRejectsInvalidSchema() {
+        assertThrows(IllegalArgumentException.class, () -> new StatsConfig("jdbc:h2:mem:x", "", "", 1, "public; x", ZoneId.of("UTC")));
     }
 }
