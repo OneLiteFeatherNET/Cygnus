@@ -1,3 +1,5 @@
+import java.util.zip.ZipFile
+
 plugins {
     id("cygnus.java-conventions")
     `maven-publish`
@@ -88,12 +90,53 @@ tasks {
         archiveFileName.set("cygnus.jar")
         // Read back by Cygnus as the version of the OpenTelemetry instrumentation scope.
         manifest.attributes("Implementation-Version" to rootProject.version)
+        // Shadow 9 drops duplicate paths (DuplicatesStrategy.EXCLUDE) before the transformers see
+        // them, so only the first META-INF/services file survived and e.g. Flyway lost almost all
+        // of its plugins. Let the service files through so mergeServiceFiles() can merge them.
+        filesMatching("META-INF/services/**") { duplicatesStrategy = DuplicatesStrategy.INCLUDE }
         mergeServiceFiles()
         // Shaded deps ship signed and multi-release jars that break a relocation-free
         // application fat jar; drop signatures and module-info.
         exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
         exclude("module-info.class", "META-INF/versions/**/module-info.class")
     }
+}
+
+// Guards against a regression of the shadow service file merge: fails when a META-INF/services
+// file in the shadow jar lacks an entry that one of the runtime dependencies declares.
+val verifyShadowServiceFiles by tasks.registering {
+    val shadowJarFile = tasks.shadowJar.flatMap { it.archiveFile }
+    val runtimeJars = configurations.runtimeClasspath
+    inputs.file(shadowJarFile)
+    inputs.files(runtimeJars)
+    doLast {
+        fun services(file: File): Map<String, Set<String>> = ZipFile(file).use { zip ->
+            zip.entries().asSequence()
+                .filter { !it.isDirectory && it.name.startsWith("META-INF/services/") }
+                .associate { entry ->
+                    entry.name to zip.getInputStream(entry).bufferedReader().readLines()
+                        .map { it.substringBefore('#').trim() }
+                        .filter { it.isNotEmpty() }
+                        .toSet()
+                }
+        }
+        val expected = mutableMapOf<String, MutableSet<String>>()
+        runtimeJars.get().files.filter { it.isFile && it.extension == "jar" }.forEach { jar ->
+            services(jar).forEach { (name, entries) -> expected.getOrPut(name) { mutableSetOf() }.addAll(entries) }
+        }
+        val actual = services(shadowJarFile.get().asFile)
+        val problems = expected.mapNotNull { (name, entries) ->
+            val missing = entries - (actual[name] ?: emptySet())
+            if (missing.isEmpty()) null else "${name.removePrefix("META-INF/services/")} lacks $missing"
+        }
+        check(problems.isEmpty()) {
+            "The shadow jar dropped service file entries:\n" + problems.joinToString("\n")
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(verifyShadowServiceFiles)
 }
 
 publishing {

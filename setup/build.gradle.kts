@@ -65,6 +65,10 @@ tasks {
     shadowJar {
         archiveClassifier.set("")
         archiveFileName.set("setup.jar")
+        // Shadow 9 drops duplicate paths (DuplicatesStrategy.EXCLUDE) before the transformers see
+        // them, so only the first META-INF/services file survived and e.g. Flyway lost almost all
+        // of its plugins. Let the service files through so mergeServiceFiles() can merge them.
+        filesMatching("META-INF/services/**") { duplicatesStrategy = DuplicatesStrategy.INCLUDE }
         mergeServiceFiles()
         // Shaded deps ship signed and multi-release jars that break a relocation-free
         // application fat jar; drop signatures and module-info.
