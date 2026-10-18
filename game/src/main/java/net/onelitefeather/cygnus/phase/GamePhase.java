@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.phase;
 
 import net.minestom.server.event.EventDispatcher;
+import net.onelitefeather.cygnus.common.event.RoundInGameEvent;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
@@ -67,6 +68,7 @@ public final class GamePhase extends TimedPhase {
         super.onStart();
         addListener(PlayerTickEvent.class, new CygnusPlayerTickListener(this.jumpscareManager, this.dreadSource));
         EventDispatcher.call(new GameStartEvent());
+        EventDispatcher.call(new RoundInGameEvent());
     }
 
     @Override

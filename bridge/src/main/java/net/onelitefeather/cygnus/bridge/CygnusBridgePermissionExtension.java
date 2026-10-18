@@ -4,7 +4,11 @@ import eu.cloudnetservice.driver.registry.ServiceRegistry;
 import eu.cloudnetservice.modules.bridge.impl.platform.minestom.MinestomPermissionChecker;
 import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.util.TriState;
+import net.minestom.server.MinecraftServer;
+import net.minestom.server.event.Event;
+import net.minestom.server.event.EventNode;
 import net.minestom.server.extensions.Extension;
+import net.onelitefeather.cygnus.common.event.RoundInGameEvent;
 import net.onelitefeather.minestom.extensions.processor.ExtensionInfo;
 
 /**
@@ -22,6 +26,10 @@ import net.onelitefeather.minestom.extensions.processor.ExtensionInfo;
  * Adventure come from the application classloader above, so the pointer read here is the very one
  * the player carries.
  * <p>
+ * The same extension also reports the round as in game: on {@link RoundInGameEvent} it switches the
+ * service to {@code INGAME} so CloudNet starts a fresh service of the task. A jar carries only one
+ * extension entry point, so this lives here and shares the {@code CloudNet_Bridge} dependency.
+ * <p>
  * {@link ExtensionInfo} generates {@code extension.json} at compile time; the version is supplied by
  * the build through {@code -Aminestom.extension.version}.
  *
@@ -36,6 +44,8 @@ import net.onelitefeather.minestom.extensions.processor.ExtensionInfo;
 )
 public final class CygnusBridgePermissionExtension extends Extension {
 
+    private final EventNode<Event> inGameNode = EventNode.all("cygnus-bridge-ingame");
+
     @Override
     public void initialize() {
         MinestomPermissionChecker checker = (player, permission) ->
@@ -44,9 +54,13 @@ public final class CygnusBridgePermissionExtension extends Extension {
         ServiceRegistry.registry()
                 .registerProvider(MinestomPermissionChecker.class, "cygnus-luckperms", checker)
                 .markAsDefaultService();
+
+        inGameNode.addListener(RoundInGameEvent.class, new InGameListener(new CloudNetServiceStateSwitch()));
+        MinecraftServer.getGlobalEventHandler().addChild(inGameNode);
     }
 
     @Override
     public void terminate() {
+        MinecraftServer.getGlobalEventHandler().removeChild(inGameNode);
     }
 }
