@@ -5,6 +5,22 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.18.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.17.0...v2.18.0) (2026-10-18)
+
+
+### Features
+
+* **bridge:** start a new service when the round goes in game ([#387](https://github.com/OneLiteFeatherNET/Cygnus/issues/387)) ([01bbae0](https://github.com/OneLiteFeatherNET/Cygnus/commit/01bbae0f3cbdaf875e05438dd01aae29c592c347))
+* **game:** report the configured max players in the server list ping ([#386](https://github.com/OneLiteFeatherNET/Cygnus/issues/386)) ([4605168](https://github.com/OneLiteFeatherNET/Cygnus/commit/460516841b3fdacc122f3fdbeae2894ff98486c5))
+* **stats:** persist yearly player statistics with hibernate ([#355](https://github.com/OneLiteFeatherNET/Cygnus/issues/355)) ([679bf0a](https://github.com/OneLiteFeatherNET/Cygnus/commit/679bf0a69dc4a38decd959b67b5ec533eeccbd5c))
+
+
+### Bug Fixes
+
+* **deps:** update dependency org.jetbrains:annotations to v26.0.2-1 ([#389](https://github.com/OneLiteFeatherNET/Cygnus/issues/389)) ([3c3eb5f](https://github.com/OneLiteFeatherNET/Cygnus/commit/3c3eb5f73a6863c5c405ebc02132a2e8b7f22610))
+* **deps:** update dependency org.jetbrains:annotations to v26.1.0 ([#391](https://github.com/OneLiteFeatherNET/Cygnus/issues/391)) ([050c8d1](https://github.com/OneLiteFeatherNET/Cygnus/commit/050c8d17957f0970b9b12abfca35424381e415fe))
+* **deps:** update flyway to v13.10.2 ([#390](https://github.com/OneLiteFeatherNET/Cygnus/issues/390)) ([e9c24fe](https://github.com/OneLiteFeatherNET/Cygnus/commit/e9c24fe7e85f8a20e95a7efe141a270c0df938e9))
+
 ## [2.17.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.16.1...v2.17.0) (2026-10-16)
 
 
