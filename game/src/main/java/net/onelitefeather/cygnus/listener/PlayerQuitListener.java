@@ -14,6 +14,7 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.listener.game.SlenderTakeover;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 
 import java.util.Optional;
@@ -69,6 +70,10 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
     public void accept(PlayerDisconnectEvent event) {
         Player player = event.getPlayer();
         this.staminaService.removePlayer(player);
+        // Turned away before the spawn: never announced as joined, never counted as a participant.
+        if (player instanceof CygnusPlayer cygnusPlayer && cygnusPlayer.isRejectedBeforeJoin()) {
+            return;
+        }
         switch (phaseSupplier.get()) {
             case LobbyPhase lobbyPhase -> handleLobbyQuit(player, lobbyPhase);
             case GamePhase gamePhase -> handleInGameQuit(player, gamePhase);

@@ -55,6 +55,10 @@ public final class ResourcePackService implements GameFeature {
     private static final Component KICK_MESSAGE =
             Component.text("You must accept the ResourcePack to play on this server!", NamedTextColor.RED);
 
+    private static final Component LOAD_FAILED_MESSAGE = Component.text(
+            "The Cygnus ResourcePack could not be loaded. Your Minecraft version may not be supported yet.",
+            NamedTextColor.RED);
+
     // Downloading the pack to hash it happens on the configuration thread of the joining player,
     // so it must not be able to hang that join forever.
     private static final long HASH_TIMEOUT_SECONDS = 30;
@@ -150,7 +154,14 @@ public final class ResourcePackService implements GameFeature {
             return;
         }
         if (KICK_STATUSES.contains(event.getStatus())) {
-            event.getPlayer().kick(KICK_MESSAGE);
+            Component message = event.getStatus() == ResourcePackStatus.DECLINED ? KICK_MESSAGE : LOAD_FAILED_MESSAGE;
+            // A kick during configuration makes a proxy move the player to the fallback server inside the
+            // same configuration phase, which breaks the client. Wait for the play state instead.
+            if (event.getPlayer() instanceof CygnusPlayer cygnusPlayer) {
+                cygnusPlayer.kickInPlay(message);
+            } else {
+                event.getPlayer().kick(message);
+            }
         }
     }
 
