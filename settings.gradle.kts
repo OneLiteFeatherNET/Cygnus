@@ -70,7 +70,7 @@ dependencyResolutionManagement {
             // the schema, PostgreSQL is the production database and H2 (PostgreSQL mode) backs the tests.
             version("hibernate", "7.4.13.Final")
             version("hikari", "7.1.0")
-            version("flyway", "13.11.0")
+            version("flyway", "13.11.1")
             version("postgresql", "42.7.14")
             version("h2", "2.5.252")
 
