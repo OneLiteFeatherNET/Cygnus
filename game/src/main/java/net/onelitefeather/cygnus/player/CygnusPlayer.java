@@ -4,9 +4,11 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.resource.ResourcePackStatus;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
+import net.minestom.server.instance.Instance;
 import net.minestom.server.network.ConnectionState;
 import net.minestom.server.network.packet.server.play.EntityAttributesPacket;
 import net.minestom.server.network.player.GameProfile;
@@ -21,6 +23,7 @@ import net.onelitefeather.cygnus.vitality.Vitality;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -55,6 +58,9 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
     private final KickTracer kickTracer;
 
     private boolean leaving;
+    // A kick that was asked for during the configuration phase and waits for the play state.
+    private final AtomicReference<@Nullable Component> deferredKick = new AtomicReference<>();
+    private volatile boolean rejectedBeforeJoin;
     // Atomic: the ack arrives on the network thread, the timeout on the tick thread, and the
     // disconnect on whichever closed the connection. Exactly one of them may take the kick.
     private final AtomicReference<@Nullable Component> pendingKick = new AtomicReference<>();
@@ -142,6 +148,11 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
         if (this.leaving) {
             return;
         }
+        if (this.deferredKick.get() != null && getPlayerConnection().getServerState() != ConnectionState.PLAY) {
+            // Minestom kicks a failed required pack on its own right after the status event; that
+            // second kick must not end the configuration the deferred one is waiting to leave.
+            return;
+        }
         if (this.resourcePackId == null || !isOnline()
                 || getPlayerConnection().getServerState() != ConnectionState.PLAY) {
             // Nothing to wait for, so the span only records that the kick happened and why.
@@ -158,6 +169,70 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
         this.pendingKick.set(component);
         removeResourcePacks(this.resourcePackId);
         scheduler().buildTask(() -> completeKick(CygnusAttributes.KICK_BY_TIMEOUT)).delay(TaskSchedule.tick(POP_TIMEOUT_TICKS)).schedule();
+    }
+
+    /**
+     * Kicks the player once the play state is reached, instead of disconnecting during configuration.
+     *
+     * <p>Behind a proxy a player kicked while still configuring is moved to the fallback server inside
+     * the very same configuration phase, so the registries of both servers pile up on the client and it
+     * crashes with a duplicate registry key. In the play state the proxy switches the client over cleanly.
+     * Until then the player is only marked: the configuration finishes, the join packets are sent, and
+     * the kick is delivered in place of the spawn (see {@link #setInstance(Instance, Pos)}), so no
+     * spawn listener ever sees the player.</p>
+     *
+     * <p>Already in the play state this is a plain {@link #kick(Component)}. The first deferred message
+     * wins.</p>
+     *
+     * @param component the kick message
+     * @since 2.18.2
+     */
+    public void kickInPlay(Component component) {
+        if (getPlayerConnection().getServerState() == ConnectionState.PLAY) {
+            kick(component);
+            return;
+        }
+        this.deferredKick.compareAndSet(null, component);
+    }
+
+    /**
+     * Returns whether this player was kicked by {@link #kickInPlay(Component)} before it spawned, and
+     * therefore never took part in the game.
+     *
+     * @return {@code true} if the player never joined, otherwise {@code false}
+     * @since 2.18.2
+     */
+    public boolean isRejectedBeforeJoin() {
+        return rejectedBeforeJoin;
+    }
+
+    /**
+     * Delivers a kick deferred by {@link #kickInPlay(Component)} instead of the first spawn.
+     *
+     * <p>The join packets are already out when Minestom gets here, which is what makes the proxy treat
+     * the kick as one from a joined player. The player never enters the instance, so no
+     * {@code PlayerSpawnEvent} fires; and since nothing ticks a player outside an instance, the removal
+     * the disconnect schedules for the next tick is done right away.</p>
+     *
+     * @param instance      the instance the player would spawn in
+     * @param spawnPosition the position the player would spawn at
+     * @return the future of the instance switch
+     */
+    @Override
+    public CompletableFuture<Void> setInstance(Instance instance, Pos spawnPosition) {
+        Component deferred = getInstance() == null ? this.deferredKick.getAndSet(null) : null;
+        if (deferred == null) {
+            return super.setInstance(instance, spawnPosition);
+        }
+        this.rejectedBeforeJoin = true;
+        TraceStep step = this.kickTracer.begin(getUuid(), deferred);
+        try {
+            super.kick(deferred);
+            remove();
+        } finally {
+            this.kickTracer.complete(step, CygnusAttributes.KICK_BY_IMMEDIATE);
+        }
+        return CompletableFuture.completedFuture(null);
     }
 
     /**
