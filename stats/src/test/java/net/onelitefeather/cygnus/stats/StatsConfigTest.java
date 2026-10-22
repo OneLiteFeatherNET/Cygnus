@@ -11,7 +11,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,9 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class StatsConfigTest {
 
-    private static final Function<String, String> NO_ENV = _ -> null;
+    private static final UnaryOperator<String> NO_ENV = _ -> null;
 
-    private static StatsConfig read(Map<String, String> entries, Function<String, String> env) {
+    private static StatsConfig read(Map<String, String> entries, UnaryOperator<String> env) {
         Properties properties = new Properties();
         entries.forEach(properties::setProperty);
         return StatsConfig.read(properties, env);

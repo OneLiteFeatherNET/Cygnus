@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -51,7 +52,7 @@ class ScoreboardDisplayTest {
         team.add(ColorComponent.class, new ColorComponent(ColorData.AQUA));
         team.add(TeamNameComponent.class, new TeamNameComponent("Test"));
         teamService.add(team);
-        ScoreboardDisplay scoreboardDisplay = new ScoreboardDisplay(teamService.getTeams());
+        new ScoreboardDisplay(teamService.getTeams());
         TeamManager teamManager = env.process().team();
         assertEquals(1, teamManager.getTeams().size());
         net.minestom.server.scoreboard.Team testTeam = teamManager.getTeam("Test");
@@ -126,10 +127,10 @@ class ScoreboardDisplayTest {
         teamOf.put(promoted.getUsername(), GameConfig.SURVIVOR_TEAM_NAME);
         teamOf.put(other.getUsername(), GameConfig.SURVIVOR_TEAM_NAME);
         for (TeamsPacket packet : packets.collect()) {
-            if (packet.action() instanceof TeamsPacket.AddEntitiesToTeamAction add) {
-                add.entities().forEach(name -> teamOf.put(name, packet.teamName()));
-            } else if (packet.action() instanceof TeamsPacket.RemoveEntitiesToTeamAction remove) {
-                for (String name : remove.entities()) {
+            if (packet.action() instanceof TeamsPacket.AddEntitiesToTeamAction(List<String> entities)) {
+                entities.forEach(name -> teamOf.put(name, packet.teamName()));
+            } else if (packet.action() instanceof TeamsPacket.RemoveEntitiesToTeamAction(List<String> entities)) {
+                for (String name : entities) {
                     assertEquals(packet.teamName(), teamOf.get(name),
                             "the client would disconnect: " + name + " is not on " + packet.teamName());
                     teamOf.remove(name);
