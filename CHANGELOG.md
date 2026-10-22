@@ -5,6 +5,18 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.18.2](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.18.1...v2.18.2) (2026-10-22)
+
+
+### Bug Fixes
+
+* **deps:** update dependency io.sentry:sentry to v8.61.1 ([#399](https://github.com/OneLiteFeatherNET/Cygnus/issues/399)) ([bb18a69](https://github.com/OneLiteFeatherNET/Cygnus/commit/bb18a6907fcbd3929754c6bcab93b61f705c5dd2))
+* **deps:** update flyway to v13.10.3 ([#392](https://github.com/OneLiteFeatherNET/Cygnus/issues/392)) ([91d1478](https://github.com/OneLiteFeatherNET/Cygnus/commit/91d14789d17f26075b3eedabe62a78fb41326134))
+* **deps:** update flyway to v13.11.0 ([#401](https://github.com/OneLiteFeatherNET/Cygnus/issues/401)) ([92e870a](https://github.com/OneLiteFeatherNET/Cygnus/commit/92e870a31bb56355926ab1a5a4d8869ca2f875ff))
+* **deps:** update flyway to v13.11.1 ([#402](https://github.com/OneLiteFeatherNET/Cygnus/issues/402)) ([69ff7e6](https://github.com/OneLiteFeatherNET/Cygnus/commit/69ff7e6de50df74f91d94f3239302c4dd7bf26e8))
+* **resourcepack:** kick a player whose pack fails only once they reached play ([#397](https://github.com/OneLiteFeatherNET/Cygnus/issues/397)) ([32153a5](https://github.com/OneLiteFeatherNET/Cygnus/commit/32153a5a42b435e3affed84464994d48d65387e7))
+* **stats:** keep the statistics in their own database schema ([#395](https://github.com/OneLiteFeatherNET/Cygnus/issues/395)) ([3e235b5](https://github.com/OneLiteFeatherNET/Cygnus/commit/3e235b575bb9aedf5c158429e432c79ee1c54088))
+
 ## [2.18.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.18.0...v2.18.1) (2026-10-18)
 
 
