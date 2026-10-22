@@ -306,12 +306,12 @@ public final class PlayerStatsService {
 
     private void answer(CommandSender sender, Outcome outcome, int year, BiConsumer<KnownPlayer, YearStatsView> found) {
         Component message = switch (outcome) {
-            case Outcome.Unknown unknown -> StatsMessages.unknownPlayer(unknown.name());
-            case Outcome.NoRounds none -> none.self()
-                    ? StatsMessages.selfWithoutRounds(year, none.years())
-                    : StatsMessages.noStatisticsInYear(none.player().name(), year, none.years());
-            case Outcome.Found result -> {
-                found.accept(result.player(), result.view());
+            case Outcome.Unknown(String name) -> StatsMessages.unknownPlayer(name);
+            case Outcome.NoRounds(KnownPlayer player, boolean self, List<Integer> years) -> self
+                    ? StatsMessages.selfWithoutRounds(year, years)
+                    : StatsMessages.noStatisticsInYear(player.name(), year, years);
+            case Outcome.Found(KnownPlayer player, YearStatsView view) -> {
+                found.accept(player, view);
                 yield null;
             }
         };
