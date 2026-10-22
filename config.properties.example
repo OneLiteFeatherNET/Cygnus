@@ -453,7 +453,8 @@ survivorTeamSize=12
 # OFF unless a JDBC URL is set: nothing connects anywhere and the game runs as without it.
 # The write happens after the round ended, off the tick thread; a failed write is logged and
 # counted in the metric cygnus.stats.write.failures and never affects the round or the restart.
-# Stored are the Minecraft UUID and game counters, no names and no IPs.
+# Stored are the Minecraft UUID, game counters and the last known player name (so /stats can
+# find offline players by name); the name is deleted together with the stats by UUID. No IPs.
 
 # JDBC URL of the database.
 #stats.jdbc-url=jdbc:postgresql://localhost:5432/cygnus
@@ -462,6 +463,13 @@ survivorTeamSize=12
 
 # Leave it out to read the password from the environment variable CYGNUS_STATS_PASSWORD.
 #stats.password=
+
+# The database schema that holds the tables and Flyway's history. It is created on start and
+# must not be 'public': that one belongs to the database's operator and Flyway refuses a
+# non-empty schema without history. A lower-case SQL identifier ([a-z_][a-z0-9_]*, at most 63
+# characters); an invalid value falls back to the default. The database user needs CREATE on
+# the database (be its owner), or the schema must already exist and be owned by it.
+#stats.schema=cygnus_stats
 
 # Connections the pool may hold. At least 1.
 #stats.pool-size=4

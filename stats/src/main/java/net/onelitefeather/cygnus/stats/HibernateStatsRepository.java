@@ -13,6 +13,8 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.jetbrains.annotations.Nullable;
+
 import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,7 +102,22 @@ public final class HibernateStatsRepository implements StatsRepository {
      * @return the session factory
      */
     public static SessionFactory buildSessionFactory(DataSource dataSource) {
-        StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+        return buildSessionFactory(dataSource, null);
+    }
+
+    /**
+     * Builds the session factory on a data source, validating the tables in the given schema.
+     *
+     * @param dataSource the pool, already migrated by Flyway
+     * @param schema     the schema that holds the tables, {@code null} for the connection's default
+     * @return the session factory
+     */
+    public static SessionFactory buildSessionFactory(DataSource dataSource, @Nullable String schema) {
+        StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
+        if (schema != null) {
+            builder.applySetting(AvailableSettings.DEFAULT_SCHEMA, schema);
+        }
+        StandardServiceRegistry registry = builder
                 .applySetting(AvailableSettings.JAKARTA_NON_JTA_DATASOURCE, dataSource)
                 .applySetting(AvailableSettings.HBM2DDL_AUTO, "validate")
                 .build();

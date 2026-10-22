@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
 import org.hibernate.SessionFactory;
 
+import javax.sql.DataSource;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -42,6 +43,8 @@ public final class StatsRepositories {
         pool.setJdbcUrl(config.jdbcUrl());
         pool.setMaximumPoolSize(config.poolSize());
         pool.setConnectionTimeout(CONNECTION_TIMEOUT_MILLIS);
+        // PostgreSQL's driver maps this to search_path, so unqualified (native) SQL stays in the schema.
+        pool.setSchema(config.schema());
         if (!config.username().isEmpty()) {
             pool.setUsername(config.username());
         }
@@ -50,17 +53,31 @@ public final class StatsRepositories {
         }
         HikariDataSource dataSource = new HikariDataSource(pool);
         try {
-            Flyway.configure()
-                    .dataSource(dataSource)
-                    .locations("classpath:db/migration")
-                    .load()
-                    .migrate();
-            SessionFactory sessionFactory = HibernateStatsRepository.buildSessionFactory(dataSource);
+            migrate(dataSource, config.schema());
+            SessionFactory sessionFactory = HibernateStatsRepository.buildSessionFactory(dataSource, config.schema());
             ExecutorService executor = Executors.newSingleThreadExecutor(Thread.ofPlatform().name("cygnus-stats").factory());
             return new HibernateStatsRepository(sessionFactory, executor, metrics, dataSource::close);
         } catch (RuntimeException exception) {
             dataSource.close();
             throw exception;
         }
+    }
+
+    /**
+     * Brings the given schema up to date. Flyway creates the schema if needed and keeps its history table
+     * in it, so the database's other schemas (such as {@code public}) are never read or touched.
+     *
+     * @param dataSource the database
+     * @param schema     the schema that holds the statistics
+     */
+    static void migrate(DataSource dataSource, String schema) {
+        Flyway.configure()
+                .dataSource(dataSource)
+                .schemas(schema)
+                .defaultSchema(schema)
+                .createSchemas(true)
+                .locations("classpath:db/migration")
+                .load()
+                .migrate();
     }
 }
