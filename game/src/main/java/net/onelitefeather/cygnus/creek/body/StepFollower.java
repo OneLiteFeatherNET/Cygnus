@@ -81,7 +81,7 @@ final class StepFollower extends GroundNodeFollower {
         Pos position = this.entity.getPosition();
         Vec ahead = horizontal(point.x() - position.x(), point.z() - position.z(), LOOK_AHEAD);
         // Still room to walk, or a step it can walk up: no need to jump.
-        if (!this.blocked(instance, position.add(0, Vec.EPSILON, 0), ahead)) return;
+        if (!this.blocked(instance, position.add(0, Point.EPSILON, 0), ahead)) return;
         if (!this.blocked(instance, this.lifted(instance, position), ahead)) return;
         super.jump(point, target);
     }
@@ -97,7 +97,7 @@ final class StepFollower extends GroundNodeFollower {
      * Moves by {@code step}, walking up a low block if the flat move runs into it.
      */
     private Pos walk(Instance instance, Pos from, Vec step) {
-        PhysicsResult flat = this.sweep(instance, from.add(0, Vec.EPSILON, 0), step);
+        PhysicsResult flat = this.sweep(instance, from.add(0, Point.EPSILON, 0), step);
         Pos flatEnd = flat.newPosition().withY(from.y());
         if ((!flat.collisionX() && !flat.collisionZ()) || !this.entity.isOnGround()) return flatEnd;
 
@@ -110,7 +110,7 @@ final class StepFollower extends GroundNodeFollower {
      * Returns the position {@link #stepHeight()} higher, or lower if a ceiling is in the way.
      */
     private Pos lifted(Instance instance, Pos from) {
-        return this.sweep(instance, from.add(0, Vec.EPSILON, 0), new Vec(0, this.stepHeight(), 0)).newPosition();
+        return this.sweep(instance, from.add(0, Point.EPSILON, 0), new Vec(0, this.stepHeight(), 0)).newPosition();
     }
 
     private boolean blocked(Instance instance, Pos from, Vec step) {

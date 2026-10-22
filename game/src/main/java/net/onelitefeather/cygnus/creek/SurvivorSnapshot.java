@@ -23,10 +23,7 @@ import java.util.UUID;
  * @version 1.0.0
  * @since 2.15.0
  */
-final class SurvivorSnapshot {
-
-    private final List<Player> players;
-    private final List<SurvivorView> views;
+record SurvivorSnapshot(List<Player> players, List<SurvivorView> views) {
 
     /**
      * Pairs up the players with their views.
@@ -34,12 +31,12 @@ final class SurvivorSnapshot {
      * @param players the survivors
      * @param views   one view per survivor, in the same order
      */
-    SurvivorSnapshot(List<Player> players, List<SurvivorView> views) {
+    SurvivorSnapshot {
         if (players.size() != views.size()) {
             throw new IllegalArgumentException("Every survivor needs exactly one view");
         }
-        this.players = List.copyOf(players);
-        this.views = List.copyOf(views);
+        players = List.copyOf(players);
+        views = List.copyOf(views);
     }
 
     /**
@@ -57,24 +54,6 @@ final class SurvivorSnapshot {
                     dread.dreadOf(survivor.getUuid()), false, false));
         }
         return new SurvivorSnapshot(survivors, views);
-    }
-
-    /**
-     * The survivors.
-     *
-     * @return the players, in the same order as {@link #views()}
-     */
-    List<Player> players() {
-        return this.players;
-    }
-
-    /**
-     * One view per survivor, none of them seeing a creek or having it in sight.
-     *
-     * @return the views, in the same order as {@link #players()}
-     */
-    List<SurvivorView> views() {
-        return this.views;
     }
 
     /**

@@ -125,13 +125,13 @@ public final class ClientGuard implements GameFeature {
     }
 
     private void evaluate(Player player, ClientProfile profile) {
-        if (!(ClientInspector.inspect(profile, this.config) instanceof Verdict.Blocked blocked)) {
+        if (!(ClientInspector.inspect(profile, this.config) instanceof Verdict.Blocked(String reason))) {
             return;
         }
         if (!this.flagged.add(player.getUuid())) {
             return;
         }
-        LOGGER.warn("Blocked client of {} ({}): {}", player.getUsername(), player.getUuid(), blocked.reason());
+        LOGGER.warn("Blocked client of {} ({}): {}", player.getUsername(), player.getUuid(), reason);
         if (this.config.mode() == ClientGuardConfig.Mode.KICK) {
             player.kick(Messages.CLIENT_BLOCKED);
         }

@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.util.Properties;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 /**
@@ -95,7 +95,7 @@ public record StatsConfig(@Nullable String jdbcUrl, String username, String pass
      * @param env       looks up an environment variable, {@code null} for an unset one
      * @return the statistics settings
      */
-    public static StatsConfig load(Path directory, Function<String, @Nullable String> env) {
+    public static StatsConfig load(Path directory, UnaryOperator<String> env) {
         Path file = directory.resolve("config.properties");
         if (!Files.exists(file)) {
             return DISABLED;
@@ -117,7 +117,7 @@ public record StatsConfig(@Nullable String jdbcUrl, String username, String pass
      * @param env        looks up an environment variable, {@code null} for an unset one
      * @return the statistics settings
      */
-    public static StatsConfig read(Properties properties, Function<String, @Nullable String> env) {
+    public static StatsConfig read(Properties properties, UnaryOperator<String> env) {
         String url = string(properties, "jdbc-url");
         if (url == null) {
             return DISABLED;
