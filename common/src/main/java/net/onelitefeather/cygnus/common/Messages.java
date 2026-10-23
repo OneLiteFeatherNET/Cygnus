@@ -101,6 +101,38 @@ public final class Messages {
     private Messages() {
     }
 
+    /**
+     * Builds the hint that tells a joining player to turn the game audio on.
+     *
+     * @return the prefixed hint
+     * @since 2.19.0
+     */
+    @Contract(value = " -> new", pure = true)
+    public static Component audioHint() {
+        return withMiniPrefix("<yellow>Turn your <red>game audio on<yellow> - sounds matter in Slender!");
+    }
+
+    /**
+     * Builds the line that tells a player which server they are playing on.
+     *
+     * @param serverName the name of the server, for example {@code Slender-2}
+     * @return the prefixed line
+     * @since 2.19.0
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static Component serverInfo(String serverName) {
+        return withMiniPrefix("<gray>You are playing on <color:" + SECONDARY_COLOR + "><server></color>",
+                TagResolver.builder().tag("server", Tag.inserting(Component.text(serverName))).build());
+    }
+
+    /**
+     * The reason shown when the player is sent away from the server and nothing else could take them
+     * back to the lobby.
+     *
+     * @since 2.19.0
+     */
+    public static final Component LOBBY_RETURN_KICK = Component.text("Returning to the lobby", NamedTextColor.GRAY);
+
     @Contract(value = "_ -> new", pure = true)
     public static Component withPrefix(String component) {
         return PREFIX.append(MINI_MESSAGE.deserialize(component));

@@ -83,6 +83,8 @@ import net.onelitefeather.cygnus.listener.game.PlayerStartSprintingListener;
 import net.onelitefeather.cygnus.listener.game.PlayerStopSprintingListener;
 import net.onelitefeather.cygnus.listener.game.SlenderItemListener;
 import net.onelitefeather.cygnus.listener.game.SlenderTakeover;
+import net.onelitefeather.cygnus.lobby.LobbyHintsFeature;
+import net.onelitefeather.cygnus.common.bootstrap.ServiceName;
 import net.onelitefeather.cygnus.monitoring.SentrySupport;
 import net.onelitefeather.cygnus.movement.CygnusEntityActionListener;
 import net.onelitefeather.cygnus.movement.PlayerStartSprintingEvent;
@@ -282,6 +284,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         this.slenderTakeover,
                         this.spectatorService,
                         new StatsDisplayFeature(playerStats, this.linearPhaseSeries::getCurrentPhase,
+                                MinecraftServer.getConnectionManager()),
+                        new LobbyHintsFeature(ServiceName.of(path), this.linearPhaseSeries::getCurrentPhase,
                                 MinecraftServer.getConnectionManager()),
                         // Not part of the OverlayModule: the sound is the feedback a hit owes the player
                         // either way, and it needs neither the resource pack nor the overlay gate to be heard.

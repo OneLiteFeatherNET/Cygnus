@@ -4,14 +4,13 @@ import io.sentry.Sentry;
 import io.sentry.SentryOptions;
 import net.minestom.server.exception.ExceptionHandler;
 import net.minestom.server.exception.ExceptionManager;
+import net.onelitefeather.cygnus.common.bootstrap.ServiceName;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Sets up Sentry error reporting, but only when a DSN says where to report to.
@@ -41,9 +40,6 @@ public final class SentrySupport {
     private static final Logger LOGGER = LoggerFactory.getLogger(SentrySupport.class);
     private static final String RELEASE_PREFIX = "cygnus-game@";
     private static final String UNKNOWN_VERSION = "unknown";
-    // CloudNet names the directory of a temporary service <name>_<unique id>.
-    private static final Pattern SERVICE_DIRECTORY =
-            Pattern.compile("(.+)_[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}");
 
     private SentrySupport() {
     }
@@ -131,11 +127,6 @@ public final class SentrySupport {
      * @since 2.18.3
      */
     public static @Nullable String serviceName(Path workingDirectory) {
-        Path fileName = workingDirectory.toAbsolutePath().normalize().getFileName();
-        if (fileName == null) {
-            return null;
-        }
-        Matcher matcher = SERVICE_DIRECTORY.matcher(fileName.toString());
-        return matcher.matches() ? matcher.group(1) : null;
+        return ServiceName.of(workingDirectory);
     }
 }
