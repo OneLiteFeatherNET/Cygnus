@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.18.3](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.18.2...v2.18.3) (2026-10-23)
+
+
+### Bug Fixes
+
+* **monitoring:** forward minestom errors to sentry and tag release and server ([#403](https://github.com/OneLiteFeatherNET/Cygnus/issues/403)) ([deeab02](https://github.com/OneLiteFeatherNET/Cygnus/commit/deeab021d6ef9b23013bc3ebc7ee4eba8797b2b6))
+
 ## [2.18.2](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.18.1...v2.18.2) (2026-10-22)
 
 
