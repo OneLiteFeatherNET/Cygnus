@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.19.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.18.4...v2.19.0) (2026-10-23)
+
+
+### Features
+
+* **lobby:** hint at game audio, show the server and add a back-to-lobby item ([#407](https://github.com/OneLiteFeatherNET/Cygnus/issues/407)) ([676f3b0](https://github.com/OneLiteFeatherNET/Cygnus/commit/676f3b02c60765be97a194b88cd97d3f13f5c47d))
+
 ## [2.18.4](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.18.3...v2.18.4) (2026-10-23)
 
 
