@@ -8,6 +8,7 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.extensions.Extension;
+import net.onelitefeather.cygnus.common.event.LobbyReturnRequestEvent;
 import net.onelitefeather.cygnus.common.event.RoundInGameEvent;
 import net.onelitefeather.minestom.extensions.processor.ExtensionInfo;
 
@@ -29,6 +30,7 @@ import net.onelitefeather.minestom.extensions.processor.ExtensionInfo;
  * The same extension also reports the round as in game: on {@link RoundInGameEvent} it switches the
  * service to {@code INGAME} so CloudNet starts a fresh service of the task. A jar carries only one
  * extension entry point, so this lives here and shares the {@code CloudNet_Bridge} dependency.
+ * Likewise, on {@link LobbyReturnRequestEvent} it sends the player to the network lobby.
  * <p>
  * {@link ExtensionInfo} generates {@code extension.json} at compile time; the version is supplied by
  * the build through {@code -Aminestom.extension.version}.
@@ -56,6 +58,7 @@ public final class CygnusBridgePermissionExtension extends Extension {
                 .markAsDefaultService();
 
         inGameNode.addListener(RoundInGameEvent.class, new InGameListener(new CloudNetServiceStateSwitch()));
+        inGameNode.addListener(LobbyReturnRequestEvent.class, new LobbyReturnListener(new CloudNetLobbyConnector()));
         MinecraftServer.getGlobalEventHandler().addChild(inGameNode);
     }
 

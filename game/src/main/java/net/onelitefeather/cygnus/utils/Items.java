@@ -31,6 +31,8 @@ public final class Items {
     public static final byte POSSESSION_ITEM = (byte) 0x04;
     public static final byte HEAL_ITEM = (byte) 0x05;
     public static final byte STATS_ITEM = (byte) 0x06;
+    public static final byte SERVER_ITEM = (byte) 0x07;
+    public static final byte LOBBY_ITEM = (byte) 0x08;
 
     /** The tracker's material, which is also the client's cooldown group for it. */
     public static final Material TRACKING_MATERIAL = Material.RABBIT_FOOT;
@@ -53,7 +55,19 @@ public final class Items {
     /** The hotbar slot of the lobby's statistics item, the middle one. */
     public static final int STATS_SLOT = 4;
 
-    private static final ItemStack slenderEye = ItemStack.builder(Material.ENDER_EYE)
+    /** The hotbar slot of the lobby's server item, the first one. */
+    public static final int SERVER_SLOT = 0;
+
+    /** The hotbar slot of the lobby's item that leads back to the network lobby, the last one. */
+    public static final int LOBBY_SLOT = 8;
+
+    private static final ItemStack lobbyReturn = ItemStack.builder(Material.MAGMA_CREAM)
+            .customName(Component.text("Back to Lobby", NamedTextColor.RED).decoration(TextDecoration.ITALIC, false))
+            .lore(lore("Right click to leave this", "round and return to the lobby"))
+            .set(Tags.ITEM_TAG, LOBBY_ITEM)
+            .build();
+
+    private static final ItemStack slenderEye =ItemStack.builder(Material.ENDER_EYE)
             .customName(Component.text("SlenderEye").color(TextColor.fromHexString("#ff00d4")))
             .lore(lore("Right click to hide yourself", "or to show yourself again"))
             .set(Tags.ITEM_TAG, SLENDER_ITEM)
@@ -183,6 +197,73 @@ public final class Items {
             }
         }
         return false;
+    }
+
+    /**
+     * Gives the player the lobby's item that shows the server they are on.
+     *
+     * @param player     who should receive the item
+     * @param serverName the name of the server, shown on the item
+     * @since 2.19.0
+     */
+    public static void setServerItem(Player player, String serverName) {
+        player.getInventory().setItemStack(SERVER_SLOT, ItemStack.builder(Material.COMPASS)
+                .customName(Component.text("Server: ", NamedTextColor.GOLD)
+                        .append(Component.text(serverName, NamedTextColor.WHITE))
+                        .decoration(TextDecoration.ITALIC, false))
+                .lore(lore("Right click to see which", "server you are playing on"))
+                .set(Tags.ITEM_TAG, SERVER_ITEM)
+                .build());
+    }
+
+    /**
+     * Gives the player the lobby's item that leads back to the network lobby.
+     *
+     * @param player who should receive the item
+     * @since 2.19.0
+     */
+    public static void setLobbyItem(Player player) {
+        player.getInventory().setItemStack(LOBBY_SLOT, lobbyReturn);
+    }
+
+    /**
+     * Takes the server item and the lobby item out of the player's inventory, wherever they ended up.
+     *
+     * @param player who should lose the items
+     * @since 2.19.0
+     */
+    public static void removeLobbyItems(Player player) {
+        var inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            ItemStack stack = inventory.getItemStack(slot);
+            if (isServerItem(stack) || isLobbyItem(stack)) {
+                inventory.setItemStack(slot, ItemStack.AIR);
+            }
+        }
+    }
+
+    /**
+     * Tells whether the stack is the server item.
+     *
+     * @param stack the stack to look at
+     * @return {@code true} if the stack carries the server tag
+     * @since 2.19.0
+     */
+    public static boolean isServerItem(ItemStack stack) {
+        Byte tag = stack.getTag(Tags.ITEM_TAG);
+        return tag != null && tag == SERVER_ITEM;
+    }
+
+    /**
+     * Tells whether the stack is the item that leads back to the lobby.
+     *
+     * @param stack the stack to look at
+     * @return {@code true} if the stack carries the lobby tag
+     * @since 2.19.0
+     */
+    public static boolean isLobbyItem(ItemStack stack) {
+        Byte tag = stack.getTag(Tags.ITEM_TAG);
+        return tag != null && tag == LOBBY_ITEM;
     }
 
     /**
