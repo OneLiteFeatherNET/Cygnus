@@ -116,7 +116,7 @@ class LobbyHintsFeatureTest {
         assertTrue(Items.isServerItem(serverItem()), "the server item belongs in the first slot");
         assertEquals(Material.COMPASS, serverItem().material());
         assertTrue(Items.isLobbyItem(lobbyItem()), "the lobby item belongs in the last slot");
-        assertEquals(Material.MAGMA_CREAM, lobbyItem().material());
+        assertEquals(Material.DARK_OAK_DOOR, lobbyItem().material());
     }
 
     @Test
