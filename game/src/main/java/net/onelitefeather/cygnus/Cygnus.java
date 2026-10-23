@@ -227,7 +227,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             this.staminaService = new StaminaService(this.gameConfig.stamina(), tickSections);
             // Set up as early as possible so anything that goes wrong while the rest of the game is
             // being wired up is already covered. Stays off entirely when no DSN is configured.
-            SentrySupport.init(this.gameConfig.sentryDsn());
+            SentrySupport.init(this.gameConfig.sentryDsn(), serviceVersion(),
+                    SentrySupport.serviceName(path), MinecraftServer.getExceptionManager());
             try (TraceStep ignored = startup.child("cygnus.startup.resourcepack")) {
                 this.resourcePackService = ResourcePackService.create(this.gameConfig.resourcePack());
             }
