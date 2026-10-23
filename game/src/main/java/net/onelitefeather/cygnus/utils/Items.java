@@ -61,7 +61,7 @@ public final class Items {
     /** The hotbar slot of the lobby's item that leads back to the network lobby, the last one. */
     public static final int LOBBY_SLOT = 8;
 
-    private static final ItemStack lobbyReturn = ItemStack.builder(Material.MAGMA_CREAM)
+    private static final ItemStack lobbyReturn = ItemStack.builder(Material.DARK_OAK_DOOR)
             .customName(Component.text("Back to Lobby", NamedTextColor.RED).decoration(TextDecoration.ITALIC, false))
             .lore(lore("Right click to leave this", "round and return to the lobby"))
             .set(Tags.ITEM_TAG, LOBBY_ITEM)
