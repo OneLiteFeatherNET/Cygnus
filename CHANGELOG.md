@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.18.4](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.18.3...v2.18.4) (2026-10-23)
+
+
+### Bug Fixes
+
+* **command:** require a permission for the start command ([#405](https://github.com/OneLiteFeatherNET/Cygnus/issues/405)) ([e32b2c7](https://github.com/OneLiteFeatherNET/Cygnus/commit/e32b2c7dd6f18c9de7c072ffdb890599faa7fd54))
+
 ## [2.18.3](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.18.2...v2.18.3) (2026-10-23)
 
 
