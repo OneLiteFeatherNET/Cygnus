@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.21.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.20.0...v2.21.0) (2026-10-24)
+
+
+### Features
+
+* **map:** per-map page and creek settings ([#385](https://github.com/OneLiteFeatherNET/Cygnus/issues/385)) ([55573f8](https://github.com/OneLiteFeatherNET/Cygnus/commit/55573f8a1de38c91076ed1f5ea9c67e54425d514))
+
 ## [2.20.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.19.0...v2.20.0) (2026-10-23)
 
 
