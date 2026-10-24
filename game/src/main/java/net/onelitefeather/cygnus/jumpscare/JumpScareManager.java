@@ -282,6 +282,17 @@ public final class JumpScareManager {
     }
 
     /**
+     * Tells whether the turnaround scare is held back for a survivor.
+     *
+     * @param survivor the survivor to check
+     * @return {@code true} while it is paused
+     * @since 2.21.0
+     */
+    public boolean isTurnaroundPaused(UUID survivor) {
+        return this.pausedTurnarounds.contains(survivor);
+    }
+
+    /**
      * Picks a random corpse that is still in the world.
      *
      * @param random the random source

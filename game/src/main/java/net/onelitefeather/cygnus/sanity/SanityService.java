@@ -219,6 +219,17 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     }
 
     /**
+     * Scares a survivor whom a dead teammate's figure has just struck.
+     *
+     * @param survivor the survivor who was lured
+     * @param gain     how much the fear jumps, between 0 and 1
+     * @since 2.21.0
+     */
+    public void lured(UUID survivor, double gain) {
+        this.scare(survivor, this.survivors.get(survivor), gain, SanityObserver.SOURCE_LURE);
+    }
+
+    /**
      * Scares every other survivor when one of them dies, then stops tracking the dead one. Nobody
      * has to be close: on a big map a radius would leave most deaths unnoticed.
      */

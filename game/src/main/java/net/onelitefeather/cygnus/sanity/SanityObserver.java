@@ -29,6 +29,8 @@ public interface SanityObserver {
     String SOURCE_DEATH = "death";
     /** The source of the steady rise while a creek stalks the survivor. */
     String SOURCE_STALK = "stalk";
+    /** The source of a jump caused by a dead teammate's figure striking. */
+    String SOURCE_LURE = "lure";
 
     /**
      * Hears nothing.

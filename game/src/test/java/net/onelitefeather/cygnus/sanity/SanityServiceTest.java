@@ -452,4 +452,20 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         assertEquals(0, survivor.getLevel());
         env.process().eventHandler().removeChild(service.node());
     }
+
+    @Test
+    @DisplayName("A lure raises the fear by its gain and reports it as a lure")
+    void lureRaisesTheFear(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        java.util.List<String> heard = new java.util.ArrayList<>();
+        SanityService service = new SanityService(NO_DECAY, () -> this.pageProgress, ROUND_MILLIS, this.clock::get,
+                () -> this.survivors, (id, source, before, after) -> heard.add(source + ":" + before + ">" + after));
+        service.track(survivor);
+
+        service.lured(survivor.getUuid(), 0.3D);
+
+        assertEquals(0.3D, dread(service, survivor), EPSILON);
+        assertEquals(java.util.List.of(SanityObserver.SOURCE_LURE + ":0.0>0.3"), heard);
+    }
 }

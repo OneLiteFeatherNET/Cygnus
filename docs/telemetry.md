@@ -119,6 +119,7 @@ The measured services, with the name each reports as `cygnus.tick.section.name` 
 | `stamina` | The survivors' stamina bars, added up |
 | `slender-bar` | The slender's stamina bar |
 | `jump-scare` | The despawn of a jump scare |
+| `lure` | The lure's step |
 
 Only what is scheduled through the Minestom scheduler can be measured. Time the server spends outside of
 it (entity and chunk ticking, packet handling) is not a section, so a slow tick can still have a gap between the
@@ -234,7 +235,7 @@ player at that moment as `cygnus.position.x/y/z` (rounded to 0.1), plus `cygnus.
 | `cygnus.action.disclaimer.acknowledge`, `cygnus.action.disclaimer.decline` | |
 | `cygnus.action.blackout` | `cygnus.blackout.team`, `cygnus.blackout.players`, `cygnus.blackout.duration_ticks`, `cygnus.blackout.next_in_s` (the interval just rolled) |
 | `cygnus.action.blackout.player` | child of a blackout, one per player hit; the player attributes only |
-| `cygnus.action.sanity.threshold` | `cygnus.sanity.band.from`, `cygnus.sanity.band`, `cygnus.sanity.fear` (0 calm, 1 maximum), `cygnus.sanity.value` (1 - fear, as `/creek` shows it), `cygnus.sanity.source` (`page`, `sighting`, `caught`, `selected`, `death`, `stalk`) |
+| `cygnus.action.sanity.threshold` | `cygnus.sanity.band.from`, `cygnus.sanity.band`, `cygnus.sanity.fear` (0 calm, 1 maximum), `cygnus.sanity.value` (1 - fear, as `/creek` shows it), `cygnus.sanity.source` (`page`, `sighting`, `caught`, `selected`, `death`, `stalk`, `lure`) |
 | `cygnus.action.creek.sighted`, `.selected`, `.stalk` (first step of a stalk only), `.caught` | the survivor's attributes only |
 | `cygnus.action.creek.hunt` | A hunt, from the creek taking the survivor as its target until it stops. Child of the phase it started in. The survivor's attributes at the start, `cygnus.map`, `cygnus.creek.hunt.outcome` (`caught`, `timeout`, `gone`, `escaped`, `round_end`) and `cygnus.creek.hunt.duration_ms`. |
 
