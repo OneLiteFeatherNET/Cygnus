@@ -18,6 +18,7 @@ import net.onelitefeather.cygnus.overlay.OverlayModule;
 import net.onelitefeather.cygnus.spectator.SpectatorService;
 import net.onelitefeather.cygnus.creek.CreekModule;
 import net.onelitefeather.cygnus.creek.CreekRespite;
+import net.onelitefeather.cygnus.lure.LureModule;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.team.TeamCreator;
 import net.onelitefeather.cygnus.team.TeamHelper;
@@ -302,6 +303,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         new ClientGuard(this.gameConfig.clientGuard()),
                         new DamageSoundService(this.gameConfig.damageSound(), System::currentTimeMillis),
                         creekModule,
+                        new LureModule(this.gameConfig.lure(), this.teamService, this.mapProvider, this.jumpscareManager,
+                                creekRespite, sanityService, tickSections),
                         new PossessionFeature(this.gameConfig.possession(), this.gameConfig.creek().enabled(),
                                 creekModule.possessionTarget(),
                                 () -> TeamHelper.survivorsOf(this.teamService),
