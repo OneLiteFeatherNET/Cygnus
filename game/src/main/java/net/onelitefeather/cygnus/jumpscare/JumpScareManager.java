@@ -7,6 +7,7 @@ import net.kyori.adventure.sound.Sound;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.PlayerSkin;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
@@ -25,11 +26,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.random.RandomGenerator;
 
 /**
  * Manages dead player mannequins and turnaround scare for surviving players.
@@ -51,6 +54,7 @@ public final class JumpScareManager {
     private final Map<UUID, Long> jumpScareCooldowns;
     private final Map<UUID, Float> playerLastYaws;
     private final Map<DeadPlayerMannequin, Set<UUID>> corpseHiddenFromViewers;
+    private final Set<UUID> pausedTurnarounds;
     private final Random random;
     private final TickSections sections;
 
@@ -61,12 +65,25 @@ public final class JumpScareManager {
      * @since 2.15.0
      */
     public JumpScareManager(TickSections sections) {
+        this(sections, new Random());
+    }
+
+    /**
+     * Creates a new instance of the service with the given random source, which decides whether a
+     * turnaround scares.
+     *
+     * @param sections measures how long the despawn of a jump scare takes
+     * @param random   the random source
+     * @since 2.21.0
+     */
+    JumpScareManager(TickSections sections, Random random) {
         this.sections = sections;
         this.activeMannequins = new CopyOnWriteArrayList<>();
         this.jumpScareCooldowns = new ConcurrentHashMap<>();
         this.playerLastYaws = new ConcurrentHashMap<>();
         this.corpseHiddenFromViewers = new ConcurrentHashMap<>();
-        this.random = new Random();
+        this.pausedTurnarounds = ConcurrentHashMap.newKeySet();
+        this.random = random;
     }
 
     /**
@@ -104,7 +121,7 @@ public final class JumpScareManager {
             yawDelta = 360.0f - yawDelta;
         }
 
-        if (yawDelta >= TURNAROUND_THRESHOLD_DEGREES) {
+        if (yawDelta >= TURNAROUND_THRESHOLD_DEGREES && !this.pausedTurnarounds.contains(player.getUuid())) {
             triggerIfEligible(player);
         }
     }
@@ -157,16 +174,45 @@ public final class JumpScareManager {
 
         DeadPlayerMannequin sampleCorpse = activeMannequins.get(random.nextInt(activeMannequins.size()));
 
+        hideCorpseFromViewer(sampleCorpse, player);
+        playPhantom(player, sampleCorpse.getOriginalPlayerUuid(), sampleCorpse.getSkin(), jumpscarePos,
+                () -> restoreCorpseVisibility(sampleCorpse, player));
+        return true;
+    }
+
+    /**
+     * Scares a {@link Player} with a phantom of the given identity, right in front of their face.
+     * No corpse has to be registered for it and none is hidden. It starts the turnaround cooldown,
+     * so the two scares never hit right after each other.
+     *
+     * @param victim   who retrieves it
+     * @param identity the UUID of the player the phantom impersonates
+     * @param skin     the skin to render the phantom with, or null for the default skin
+     * @return true when the execution was successfully, false if there is no free spot in front of the victim
+     * @since 2.21.0
+     */
+    public boolean scare(Player victim, UUID identity, @Nullable PlayerSkin skin) {
+        Pos jumpscarePos = getJumpscarePos(victim);
+        if (jumpscarePos == null) return false;
+        playPhantom(victim, identity, skin, jumpscarePos, () -> {});
+        return true;
+    }
+
+    /**
+     * Sends the phantom, its sound, darkness and smoke to the victim and dissolves it after 2.5 seconds.
+     *
+     * @param player       who retrieves it
+     * @param identity     the UUID of the player the phantom impersonates
+     * @param skin         the skin to render the phantom with, or null for the default skin
+     * @param jumpscarePos where the phantom stands
+     * @param afterDespawn what to do once the phantom is gone
+     */
+    private void playPhantom(Player player, UUID identity, @Nullable PlayerSkin skin, Pos jumpscarePos,
+                             Runnable afterDespawn) {
         jumpScareCooldowns.put(player.getUuid(), System.currentTimeMillis());
 
-        DeadPlayerMannequin phantom = DeadPlayerMannequin.standing(
-                sampleCorpse.getOriginalPlayerUuid(),
-                sampleCorpse.getSkin(),
-                jumpscarePos
-        );
+        DeadPlayerMannequin phantom = DeadPlayerMannequin.standing(identity, skin, jumpscarePos);
         int phantomEntityId = phantom.getEntityId();
-
-        hideCorpseFromViewer(sampleCorpse, player);
 
         player.sendPacket(phantom.toSpawnPacket());
         player.sendPacket(phantom.getMetadataPacket());
@@ -211,10 +257,42 @@ public final class JumpScareManager {
                 ));
                 player.sendPacket(new DestroyEntitiesPacket(phantomEntityId));
             }
-            restoreCorpseVisibility(sampleCorpse, player);
+            afterDespawn.run();
         })).delay(TaskSchedule.tick(50)).schedule();
+    }
 
-        return true;
+    /**
+     * Holds back the turnaround scare for a survivor, for example while a lure waits for them.
+     *
+     * @param survivor the survivor to spare from the turnaround scare
+     * @since 2.21.0
+     */
+    public void pauseTurnaround(UUID survivor) {
+        this.pausedTurnarounds.add(survivor);
+    }
+
+    /**
+     * Lets the turnaround scare reach a survivor again.
+     *
+     * @param survivor the survivor to resume
+     * @since 2.21.0
+     */
+    public void resumeTurnaround(UUID survivor) {
+        this.pausedTurnarounds.remove(survivor);
+    }
+
+    /**
+     * Picks a random corpse that is still in the world.
+     *
+     * @param random the random source
+     * @return the corpse, or empty if nobody has died or every corpse is gone
+     * @since 2.21.0
+     */
+    public Optional<DeadPlayerMannequin> randomCorpse(RandomGenerator random) {
+        activeMannequins.removeIf(corpse -> corpse.getInstance() == null || corpse.isRemoved());
+        List<DeadPlayerMannequin> corpses = List.copyOf(activeMannequins);
+        if (corpses.isEmpty()) return Optional.empty();
+        return Optional.of(corpses.get(random.nextInt(corpses.size())));
     }
 
     /**
@@ -326,6 +404,7 @@ public final class JumpScareManager {
         jumpScareCooldowns.clear();
         playerLastYaws.clear();
         corpseHiddenFromViewers.clear();
+        pausedTurnarounds.clear();
     }
 
     /**

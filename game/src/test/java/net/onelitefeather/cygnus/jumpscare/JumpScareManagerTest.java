@@ -19,6 +19,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -281,5 +284,99 @@ class JumpScareManagerTest extends CygnusPlayerTestBase {
         assertFalse(manager.force(victim), "the scare must not fire when there is no free spot for the phantom");
         assertTrue(victimSpawns.collect().isEmpty(), "no phantom spawn packet should be sent when the scare is skipped");
         assertTrue(corpse.isViewer(victim), "the real corpse must stay visible since no scare actually started");
+    }
+
+    @Test
+    void scareWorksWithoutRegisteredCorpse(@NotNull Env env) {
+        TestConnection victimConn = env.createConnection();
+        Player victim = victimConn.connect(instance, new Pos(0.5, 40, 0.5));
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
+        Collector<SpawnEntityPacket> victimSpawns = victimConn.trackIncoming(SpawnEntityPacket.class);
+
+        assertTrue(manager.scare(victim, UUID.randomUUID(), null));
+
+        List<SpawnEntityPacket> packets = victimSpawns.collect();
+        assertEquals(1, packets.size(), "the victim must receive exactly the phantom's spawn packet");
+        assertEquals(EntityType.MANNEQUIN, packets.getFirst().type());
+    }
+
+    @Test
+    void scareStartsTheTurnaroundCooldown(@NotNull Env env) {
+        TestConnection victimConn = env.createConnection();
+        Player victim = victimConn.connect(instance, new Pos(0.5, 40, 0.5, 0, 0));
+        Player corpseOwner = env.createConnection().connect(instance, new Pos(10, 40, 10));
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE, alwaysTriggering());
+        DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
+        corpse.setInstance(instance, new Pos(10, 40, 10));
+        manager.register(corpse);
+        assertTrue(manager.scare(victim, UUID.randomUUID(), null));
+        Collector<SpawnEntityPacket> victimSpawns = victimConn.trackIncoming(SpawnEntityPacket.class);
+
+        turnAround(manager, victim);
+
+        assertTrue(victimSpawns.collect().stream().noneMatch(packet -> packet.type() == EntityType.MANNEQUIN),
+                "a turnaround right after the scare must not scare again");
+    }
+
+    @Test
+    void pausedTurnaroundNeverTriggers(@NotNull Env env) {
+        TestConnection victimConn = env.createConnection();
+        Player victim = victimConn.connect(instance, new Pos(0.5, 40, 0.5, 0, 0));
+        Player corpseOwner = env.createConnection().connect(instance, new Pos(10, 40, 10));
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE, alwaysTriggering());
+        DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(corpseOwner);
+        corpse.setInstance(instance, new Pos(10, 40, 10));
+        manager.register(corpse);
+        Collector<SpawnEntityPacket> paused = victimConn.trackIncoming(SpawnEntityPacket.class);
+
+        manager.pauseTurnaround(victim.getUuid());
+        for (int i = 0; i < 50; i++) turnAround(manager, victim);
+
+        assertTrue(paused.collect().stream().noneMatch(packet -> packet.type() == EntityType.MANNEQUIN),
+                "a paused turnaround must never scare");
+
+        Collector<SpawnEntityPacket> resumed = victimConn.trackIncoming(SpawnEntityPacket.class);
+        manager.resumeTurnaround(victim.getUuid());
+        turnAround(manager, victim);
+
+        assertTrue(resumed.collect().stream().anyMatch(packet -> packet.type() == EntityType.MANNEQUIN),
+                "a resumed turnaround scares again");
+    }
+
+    @Test
+    void randomCorpseSkipsRemovedOnes(@NotNull Env env) {
+        Player owner = env.createConnection().connect(instance, new Pos(10, 40, 10));
+        JumpScareManager manager = new JumpScareManager(TickSections.NONE);
+        assertTrue(manager.randomCorpse(new Random(1)).isEmpty());
+
+        DeadPlayerMannequin corpse = DeadPlayerMannequin.sleeping(owner);
+        corpse.setInstance(instance, new Pos(10, 40, 10));
+        manager.register(corpse);
+        assertEquals(Optional.of(corpse), manager.randomCorpse(new Random(1)));
+
+        corpse.remove();
+        assertTrue(manager.randomCorpse(new Random(1)).isEmpty());
+    }
+
+    /**
+     * Turns the victim by 180 degrees, which is far past the turnaround threshold.
+     */
+    private static void turnAround(JumpScareManager manager, Player victim) {
+        manager.checkTurnAround(victim);
+        Pos turned = victim.getPosition().withYaw(victim.getPosition().yaw() + 180.0F);
+        victim.teleport(turned).join();
+        manager.checkTurnAround(victim);
+    }
+
+    /**
+     * A random source whose chance roll always passes.
+     */
+    private static Random alwaysTriggering() {
+        return new Random() {
+            @Override
+            public float nextFloat() {
+                return 0.0F;
+            }
+        };
     }
 }
