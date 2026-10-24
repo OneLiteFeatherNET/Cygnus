@@ -98,8 +98,20 @@ public final class LureSpotFinder {
     private boolean fits(Instance world, Pos survivorFeet, Pos eyes, Pos spot) {
         if (Math.abs(spot.y() - survivorFeet.y()) > this.config.maxHeightOffset()) return false;
         // The ground search only wants a solid floor and room above it. Water and lava pass that.
-        if (world.getBlock(spot).liquid() || world.getBlock(spot.sub(0, 1, 0)).liquid()) return false;
+        Block floor = world.getBlock(spot.sub(0, 1, 0));
+        if (world.getBlock(spot).liquid() || floor.liquid()) return false;
+        if (!walkable(floor)) return false;
         return clearLine(world, eyes, spot.add(0, SurvivorView.EYE_HEIGHT, 0));
+    }
+
+    /**
+     * Tells whether a living player would stand on a block. Nobody stands on top of a bush, a fence
+     * or a wall, even though they are solid.
+     */
+    static boolean walkable(Block floor) {
+        String name = floor.key().value();
+        return !name.endsWith("_leaves") && !name.endsWith("_fence") && !name.endsWith("_fence_gate")
+                && !name.endsWith("_wall");
     }
 
     private static Pos step(Pos from, double yaw, double distance) {
