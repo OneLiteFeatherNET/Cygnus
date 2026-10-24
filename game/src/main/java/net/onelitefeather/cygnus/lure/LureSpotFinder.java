@@ -5,7 +5,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
-import net.onelitefeather.cygnus.common.config.LureConfig;
+import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.world.Ground;
 import org.jetbrains.annotations.Nullable;
@@ -34,19 +34,34 @@ public final class LureSpotFinder {
     /** How far apart the samples along a line of sight are, in blocks. */
     static final double LINE_STEP = 0.2D;
 
-    private final LureConfig config;
+    /** How close the figure stands at the least, in blocks. */
+    static final double MIN_DISTANCE = 15.0D;
+
+    /** How far away the figure stands at the most, in blocks. */
+    static final double MAX_DISTANCE = 25.0D;
+
+    /**
+     * How far off the view the figure stands at the least, in degrees. Above
+     * {@link CreekConfig#HIDE_ANGLE} the survivor never sees it pop in.
+     */
+    static final double MIN_ANGLE = 80.0D;
+
+    /** How far off the view the figure stands at the most, in degrees. */
+    static final double MAX_ANGLE = 130.0D;
+
+    /** How much higher or lower than the survivor the figure may stand, in blocks. */
+    static final double MAX_HEIGHT_OFFSET = 3.0D;
+
     private final Ground ground;
     private final Supplier<? extends @Nullable Instance> instance;
 
     /**
      * Sets up the search.
      *
-     * @param config   the settings
      * @param ground   puts candidates onto a floor
      * @param instance supplies the round's instance, or {@code null} while there is none
      */
-    public LureSpotFinder(LureConfig config, Ground ground, Supplier<? extends @Nullable Instance> instance) {
-        this.config = config;
+    public LureSpotFinder(Ground ground, Supplier<? extends @Nullable Instance> instance) {
         this.ground = ground;
         this.instance = instance;
     }
@@ -63,8 +78,8 @@ public final class LureSpotFinder {
         if (world == null) return Optional.empty();
         Pos eyes = survivorFeet.add(0, SurvivorView.EYE_HEIGHT, 0);
         for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
-            double offset = random.nextDouble(this.config.minAngle(), this.config.maxAngle()) * (random.nextBoolean() ? 1.0D : -1.0D);
-            double distance = random.nextDouble(this.config.minDistance(), this.config.maxDistance());
+            double offset = random.nextDouble(MIN_ANGLE, MAX_ANGLE) * (random.nextBoolean() ? 1.0D : -1.0D);
+            double distance = random.nextDouble(MIN_DISTANCE, MAX_DISTANCE);
             Optional<Pos> spot = this.ground.settle(step(survivorFeet, survivorFeet.yaw() + offset, distance))
                     .filter(candidate -> this.fits(world, survivorFeet, eyes, candidate));
             if (spot.isPresent()) {
@@ -96,7 +111,7 @@ public final class LureSpotFinder {
     }
 
     private boolean fits(Instance world, Pos survivorFeet, Pos eyes, Pos spot) {
-        if (Math.abs(spot.y() - survivorFeet.y()) > this.config.maxHeightOffset()) return false;
+        if (Math.abs(spot.y() - survivorFeet.y()) > MAX_HEIGHT_OFFSET) return false;
         // The ground search only wants a solid floor and room above it. Water and lava pass that.
         Block floor = world.getBlock(spot.sub(0, 1, 0));
         if (world.getBlock(spot).liquid() || floor.liquid()) return false;

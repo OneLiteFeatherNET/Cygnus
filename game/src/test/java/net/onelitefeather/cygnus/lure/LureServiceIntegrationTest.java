@@ -35,9 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LureServiceIntegrationTest extends CygnusPlayerTestBase {
 
-    /** Rolls a lure on every step and always follows up with a betrayal. */
-    private static final LureConfig ALWAYS = new LureConfig(true, 30, 1, 1.0D, 15, 25, 80, 130, 3, 20, 700, 35,
-            0.30D, 0.0D, 1.0D, 0.0D, 4, 60);
+    /** Lures on every roll. */
+    private static final LureConfig ALWAYS = new LureConfig(true, 30, 1.0D, 0.30D, 4, 60);
 
     private static final Pos ALONE = new Pos(0.5, 40, 0.5, 0, 0);
 
@@ -48,6 +47,7 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
     private final CreekRespite respite = new CreekRespite();
     private JumpScareManager jumpScares;
     private @Nullable Player slender;
+    private LureOutcome outcome = LureOutcome.BETRAYAL;
 
     @Test
     @DisplayName("Without a dead survivor nobody is lured")
@@ -119,7 +119,7 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
         Collector<SpawnEntityPacket> spawns = connection.trackIncoming(SpawnEntityPacket.class);
 
         service.tick();
-        this.clock.addAndGet(700L);
+        this.clock.addAndGet(LureService.GAZE_MILLIS);
         service.tick();
 
         assertTrue(service.figureOf(survivor.getUuid()).isEmpty());
@@ -141,9 +141,8 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = flat(env);
         Player slowed = join(env, instance, ALONE);
         corpse(env, instance);
-        LureConfig slow = new LureConfig(true, 30, 1, 1.0D, 15, 25, 80, 130, 3, 20, 700, 35,
-                0.30D, 1.0D, 0.0D, 0.0D, 4, 60);
-        LureService service = service(slow, instance);
+        this.outcome = LureOutcome.SLOWNESS;
+        LureService service = service(ALWAYS, instance);
 
         fire(service, slowed);
 
@@ -156,9 +155,8 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = flat(env);
         Player blinded = join(env, instance, ALONE);
         corpse(env, instance);
-        LureConfig blind = new LureConfig(true, 30, 1, 1.0D, 15, 25, 80, 130, 3, 20, 700, 35,
-                0.30D, 0.0D, 0.0D, 1.0D, 4, 60);
-        LureService service = service(blind, instance);
+        this.outcome = LureOutcome.BLINDNESS;
+        LureService service = service(ALWAYS, instance);
 
         fire(service, blinded);
 
@@ -192,7 +190,7 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
         LureFigure first = service.figureOf(survivor.getUuid()).orElseThrow();
         lookAway(survivor, first);
 
-        this.clock.addAndGet(20_000L);
+        this.clock.addAndGet(LureService.WAIT_MILLIS);
         service.tick();
 
         assertTrue(service.figureOf(survivor.getUuid()).isEmpty());
@@ -287,10 +285,10 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
         for (DeadPlayerMannequin corpse : this.pendingCorpses) {
             this.jumpScares.register(corpse);
         }
-        LureSpotFinder spots = new LureSpotFinder(config, new InstanceGround(() -> instance), () -> instance);
+        LureSpotFinder spots = new LureSpotFinder(new InstanceGround(() -> instance), () -> instance);
         return new LureService(config, () -> List.copyOf(this.survivors), () -> this.slender, this.jumpScares, spots, this.respite,
                 (id, gain) -> this.fear.add(id + ":" + gain), (survivor, _) -> this.revealed.add(survivor.getUuid()),
-                this.clock::get, new Random(5), TickSections.NONE);
+                () -> this.outcome, this.clock::get, new Random(5), TickSections.NONE);
     }
 
     private final List<DeadPlayerMannequin> pendingCorpses = new ArrayList<>();
@@ -319,7 +317,7 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
         service.tick();
         lookAt(survivor, service.figureOf(survivor.getUuid()).orElseThrow());
         service.tick();
-        this.clock.addAndGet(700L);
+        this.clock.addAndGet(LureService.GAZE_MILLIS);
         service.tick();
         this.clock.addAndGet(LureService.FOLLOW_UP_MILLIS);
         service.tick();

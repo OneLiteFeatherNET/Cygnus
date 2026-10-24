@@ -5,7 +5,6 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
-import net.onelitefeather.cygnus.common.config.LureConfig;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.world.InstanceGround;
 import org.junit.jupiter.api.DisplayName;
@@ -113,7 +112,7 @@ class LureSpotFinderIntegrationTest {
     }
 
     private static LureSpotFinder finder(Instance instance) {
-        return new LureSpotFinder(LureConfig.DEFAULT, new InstanceGround(() -> instance), () -> instance);
+        return new LureSpotFinder(new InstanceGround(() -> instance), () -> instance);
     }
 
     private static Instance flat(Env env) {
