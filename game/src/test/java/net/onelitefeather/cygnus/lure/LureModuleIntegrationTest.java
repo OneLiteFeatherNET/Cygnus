@@ -39,8 +39,7 @@ class LureModuleIntegrationTest extends CygnusPlayerTestBase {
     @DisplayName("The lure's own switch decides whether it takes part")
     void disabledModuleIsOff(Env env) {
         Instance instance = env.createFlatInstance();
-        LureConfig off = new LureConfig(false, 30, 5, 0.08D, 15, 25, 80, 130, 3, 20, 700, 35,
-                0.30D, 0.20D, 0.15D, 0.15D, 4, 60);
+        LureConfig off = new LureConfig(false, 30, 0.08D, 0.30D, 4, 60);
 
         assertFalse(new LureModule(off, service(instance)).enabled());
         assertTrue(new LureModule(LureConfig.DEFAULT, service(instance)).enabled());
@@ -48,7 +47,7 @@ class LureModuleIntegrationTest extends CygnusPlayerTestBase {
 
     private static LureService service(Instance instance) {
         return new LureService(LureConfig.DEFAULT, List::of, () -> null, new JumpScareManager(TickSections.NONE),
-                new LureSpotFinder(LureConfig.DEFAULT, new InstanceGround(() -> instance), () -> instance),
-                new CreekRespite(), (_, _) -> {}, (_, _) -> {}, () -> 0L, new Random(1), TickSections.NONE);
+                new LureSpotFinder(new InstanceGround(() -> instance), () -> instance),
+                new CreekRespite(), (_, _) -> {}, (_, _) -> {}, () -> LureOutcome.NOTHING, () -> 0L, new Random(1), TickSections.NONE);
     }
 }

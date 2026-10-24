@@ -58,6 +58,18 @@ public final class LureService {
     /** How long the follow-up waits for the phantom to dissolve: the jump scare's 50 ticks. */
     static final long FOLLOW_UP_MILLIS = 2500L;
 
+    /** How often a lone survivor is rolled for, in milliseconds. */
+    static final long ROLL_MILLIS = 5000L;
+
+    /** How long the figure waits to be noticed before it is gone, in milliseconds. */
+    static final long WAIT_MILLIS = 20_000L;
+
+    /** How long the survivor has to look at the figure before it strikes, in milliseconds. */
+    static final long GAZE_MILLIS = 700L;
+
+    /** How far off the view centre the figure still counts as looked at, in degrees. */
+    private static final int GAZE_ANGLE = 35;
+
     /** How much farther than the figure can stand the gaze still reaches, in blocks. */
     private static final int GAZE_SLACK = 8;
 
@@ -69,6 +81,7 @@ public final class LureService {
     private final CreekRespite respite;
     private final BiConsumer<UUID, Double> fear;
     private final SlenderReveal reveal;
+    private final Supplier<LureOutcome> outcomes;
     private final LongSupplier clock;
     private final RandomGenerator random;
     private final CreekSight gaze;
@@ -87,13 +100,15 @@ public final class LureService {
      * @param respite    the breather from the creek, shared with it
      * @param fear       raises a survivor's fear by the given gain
      * @param reveal     shows a survivor to the slender for a betrayal
+     * @param outcomes   picks the follow-up of a scare
      * @param clock      supplies the current time in milliseconds
      * @param random     the random source
      * @param sections   measures how long each step takes
      */
     public LureService(LureConfig config, Supplier<? extends Collection<Player>> survivors,
                        Supplier<@Nullable Player> slender, JumpScareManager jumpScares, LureSpotFinder spots,
-                       CreekRespite respite, BiConsumer<UUID, Double> fear, SlenderReveal reveal, LongSupplier clock,
+                       CreekRespite respite, BiConsumer<UUID, Double> fear, SlenderReveal reveal,
+                       Supplier<LureOutcome> outcomes, LongSupplier clock,
                        RandomGenerator random, TickSections sections) {
         this.config = config;
         this.survivors = survivors;
@@ -103,9 +118,10 @@ public final class LureService {
         this.respite = respite;
         this.fear = fear;
         this.reveal = reveal;
+        this.outcomes = outcomes;
         this.clock = clock;
         this.random = random;
-        this.gaze = new CreekSight(config.maxDistance() + GAZE_SLACK, config.gazeAngle());
+        this.gaze = new CreekSight((int) LureSpotFinder.MAX_DISTANCE + GAZE_SLACK, GAZE_ANGLE);
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.LURE, this::tick));
     }
 
@@ -184,13 +200,13 @@ public final class LureService {
         if (!this.alone(survivor, living)) return;
         // Never right after the turnaround scare, the two should not hit back to back.
         if (this.jumpScares.isCoolingDown(survivor.getUuid())) return;
-        if (!state.rollDue(now, this.config.rollSeconds() * 1000L)) return;
+        if (!state.rollDue(now, ROLL_MILLIS)) return;
         if (this.random.nextDouble() >= this.config.rollChance()) return;
         Optional<DeadPlayerMannequin> corpse = this.jumpScares.randomCorpse(this.random);
         if (corpse.isEmpty()) return;
         Optional<Pos> spot = this.spots.find(survivor.getPosition(), this.random);
         if (spot.isEmpty()) return;
-        state.waiting(LureFigure.show(survivor, corpse.get(), spot.get()), now + this.config.waitSeconds() * 1000L);
+        state.waiting(LureFigure.show(survivor, corpse.get(), spot.get()), now + WAIT_MILLIS);
         this.jumpScares.pauseTurnaround(survivor.getUuid());
     }
 
@@ -202,7 +218,7 @@ public final class LureService {
             return;
         }
         long looked = state.gaze(this.looksAt(survivor, figure), now);
-        if (looked < this.config.gazeMillis()) return;
+        if (looked < GAZE_MILLIS) return;
         // Pressed against a wall there is no room in front of the face. The figure keeps waiting.
         if (!this.jumpScares.scare(survivor, figure.identity(), figure.skin())) return;
         figure.remove();
@@ -214,7 +230,7 @@ public final class LureService {
 
     private void followUp(Player survivor) {
         int ticks = this.config.effectSeconds() * 20;
-        switch (LureOutcome.roll(this.config, this.random.nextDouble())) {
+        switch (this.outcomes.get()) {
             case SLOWNESS -> survivor.addEffect(new Potion(PotionEffect.SLOWNESS, (byte) 1, ticks));
             case BLINDNESS -> survivor.addEffect(new Potion(PotionEffect.BLINDNESS, (byte) 0, ticks));
             case BETRAYAL -> {

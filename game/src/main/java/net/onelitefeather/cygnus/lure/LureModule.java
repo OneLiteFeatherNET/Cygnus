@@ -44,17 +44,26 @@ public final class LureModule implements GameFeature {
      */
     public LureModule(LureConfig config, TeamService teamService, GameMapProvider mapProvider,
                       JumpScareManager jumpScares, CreekRespite respite, SanityService sanity, TickSections sections) {
+        this(config, new Random(), teamService, mapProvider, jumpScares, respite, sanity, sections);
+    }
+
+    /**
+     * Shares one random source between the rolls, the spots and the follow-ups.
+     */
+    private LureModule(LureConfig config, Random random, TeamService teamService, GameMapProvider mapProvider,
+                       JumpScareManager jumpScares, CreekRespite respite, SanityService sanity, TickSections sections) {
         this(config, new LureService(
                 config,
                 () -> TeamHelper.survivorsOf(teamService).stream().filter(survivor -> !survivor.isDead()).toList(),
                 () -> TeamHelper.slenderOf(teamService),
                 jumpScares,
-                new LureSpotFinder(config, new InstanceGround(mapProvider.getActiveInstance()), mapProvider.getActiveInstance()),
+                new LureSpotFinder(new InstanceGround(mapProvider.getActiveInstance()), mapProvider.getActiveInstance()),
                 respite,
                 sanity::lured,
                 new LocatorReveal(config.effectSeconds(), sections),
+                () -> LureOutcome.roll(random.nextDouble()),
                 System::currentTimeMillis,
-                new Random(),
+                random,
                 sections));
     }
 
