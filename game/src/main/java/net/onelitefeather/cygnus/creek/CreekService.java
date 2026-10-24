@@ -71,6 +71,7 @@ public final class CreekService implements PossessionTarget {
     private final BiFunction<Instance, Pos, CreekBody> bodies;
     private final DreadSource dread;
     private final CreekWitness witness;
+    private final CreekRespite respite;
     private final CatchConsequence consequence;
     private final LongSupplier clock;
     private final RandomGenerator random;
@@ -97,6 +98,7 @@ public final class CreekService implements PossessionTarget {
      * @param bodies      puts a creek body into the world
      * @param dread       rates how scared each survivor is
      * @param witness     hears about catches and sightings
+     * @param respite     tells who the creek leaves alone for now
      * @param consequence what happens on a catch
      * @param clock       supplies the current time in milliseconds
      * @param random      the random source
@@ -106,7 +108,7 @@ public final class CreekService implements PossessionTarget {
     public CreekService(CreekConfig config, CreekSettings settings, Supplier<Set<Player>> survivors,
                           Supplier<? extends @Nullable Instance> instance, Supplier<List<CreekRoute>> routes,
                           BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread, CreekWitness witness,
-                          CatchConsequence consequence, LongSupplier clock, RandomGenerator random,
+                          CreekRespite respite, CatchConsequence consequence, LongSupplier clock, RandomGenerator random,
                           TickSections sections) {
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.CREEK, this::tick));
         this.config = config;
@@ -116,6 +118,7 @@ public final class CreekService implements PossessionTarget {
         this.bodies = bodies;
         this.dread = dread;
         this.witness = witness;
+        this.respite = respite;
         this.consequence = consequence;
         this.clock = clock;
         this.random = random;
@@ -179,8 +182,8 @@ public final class CreekService implements PossessionTarget {
         Creek current = this.creek;
         if (current == null) return;
         // One snapshot for every creek: where the survivors are and how scared they are is the same for all.
-        SurvivorSnapshot survivors = SurvivorSnapshot.take(this.survivors.get(), this.dread);
         long now = this.clock.getAsLong();
+        SurvivorSnapshot survivors = SurvivorSnapshot.take(this.survivors.get(), this.dread, this.respite, now);
         // Measured against the fullest the round has been: survivors may still be joining in its first steps.
         this.started = Math.max(this.started, survivors.size());
         this.calm = Calm.of(this.started, survivors.size());

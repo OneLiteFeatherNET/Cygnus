@@ -109,7 +109,7 @@ final class CreekVariants {
 
     /**
      * Picks who to haunt next: the survivor with the highest dread, as long as it reaches the
-     * threshold. If two are equally scared, the one who strayed farthest from the others.
+     * threshold and the survivor is not spared. If two are equally scared, the one who strayed farthest from the others.
      *
      * @param views     every survivor
      * @param threshold the lowest dread that counts
@@ -118,7 +118,7 @@ final class CreekVariants {
      */
     static Optional<SurvivorView> pick(List<SurvivorView> views, double threshold, Predicate<UUID> eligible) {
         return views.stream()
-                .filter(view -> view.dread() >= threshold && eligible.test(view.id()))
+                .filter(view -> !view.spared() && view.dread() >= threshold && eligible.test(view.id()))
                 .max(Comparator.comparingDouble(SurvivorView::dread)
                         .thenComparingDouble(view -> nearestOther(views, view)));
     }

@@ -86,4 +86,12 @@ class CreekVariantsTest {
 
         assertEquals(THIRD, CreekVariants.pick(views, 0.25D, _ -> true).orElseThrow().id());
     }
+
+    @Test
+    @DisplayName("A spared survivor gets no variant, however scared")
+    void sparedSurvivorGetsNoVariant() {
+        List<SurvivorView> views = List.of(new SurvivorView(FIRST, new Pos(0, 40, 0), 1.0D, false, true, true));
+
+        assertEquals(Optional.empty(), CreekVariants.pick(views, 0.25D, _ -> true));
+    }
 }

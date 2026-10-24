@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SurvivorSnapshotIntegrationTest extends CygnusPlayerTestBase {
 
@@ -28,7 +29,7 @@ class SurvivorSnapshotIntegrationTest extends CygnusPlayerTestBase {
         Player second = env.createConnection().connect(instance, new Pos(10, 40, 0));
 
         SurvivorSnapshot survivors = SurvivorSnapshot.take(List.of(first, second),
-                id -> id.equals(first.getUuid()) ? 0.7D : 0.2D);
+                id -> id.equals(first.getUuid()) ? 0.7D : 0.2D, new CreekRespite(), 0L);
 
         assertEquals(List.of(first, second), survivors.players());
         SurvivorView view = survivors.views().getFirst();
@@ -44,7 +45,7 @@ class SurvivorSnapshotIntegrationTest extends CygnusPlayerTestBase {
     void findsPlayers(Env env) {
         Instance instance = env.createFlatInstance();
         Player first = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        SurvivorSnapshot survivors = SurvivorSnapshot.take(List.of(first), _ -> 0.0D);
+        SurvivorSnapshot survivors = SurvivorSnapshot.take(List.of(first), _ -> 0.0D, new CreekRespite(), 0L);
 
         assertSame(first, survivors.player(first.getUuid()));
         assertNull(survivors.player(UUID.randomUUID()));
@@ -57,5 +58,22 @@ class SurvivorSnapshotIntegrationTest extends CygnusPlayerTestBase {
         Player first = env.createConnection().connect(instance, new Pos(0, 40, 0));
 
         assertThrows(IllegalArgumentException.class, () -> new SurvivorSnapshot(List.of(first), List.of()));
+    }
+
+    @Test
+    @DisplayName("A survivor the respite spares is marked as spared until it runs out")
+    void marksSparedSurvivors(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player first = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        Player second = env.createConnection().connect(instance, new Pos(10, 40, 0));
+        CreekRespite respite = new CreekRespite();
+        respite.spare(first.getUuid(), 1000L);
+
+        SurvivorSnapshot during = SurvivorSnapshot.take(List.of(first, second), _ -> 0.0D, respite, 999L);
+        SurvivorSnapshot after = SurvivorSnapshot.take(List.of(first, second), _ -> 0.0D, respite, 1000L);
+
+        assertTrue(during.views().getFirst().spared());
+        assertFalse(during.views().get(1).spared());
+        assertFalse(after.views().getFirst().spared());
     }
 }
