@@ -52,14 +52,15 @@ public record CreekContext(
 ) {
 
     /**
-     * Looks up a survivor by id.
+     * Looks up a survivor by id. A spared survivor counts as gone, so whatever the creek is doing
+     * to them ends.
      *
      * @param id the id to look for
-     * @return the survivor, or empty if they are no longer in the round
+     * @return the survivor, or empty if they are no longer in the round or spared for now
      */
     public Optional<SurvivorView> survivor(UUID id) {
         for (SurvivorView view : this.survivors) {
-            if (view.id().equals(id)) return Optional.of(view);
+            if (view.id().equals(id)) return view.spared() ? Optional.empty() : Optional.of(view);
         }
         return Optional.empty();
     }

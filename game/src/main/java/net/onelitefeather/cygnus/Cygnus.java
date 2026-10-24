@@ -17,6 +17,7 @@ import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
 import net.onelitefeather.cygnus.overlay.OverlayModule;
 import net.onelitefeather.cygnus.spectator.SpectatorService;
 import net.onelitefeather.cygnus.creek.CreekModule;
+import net.onelitefeather.cygnus.creek.CreekRespite;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.team.TeamCreator;
 import net.onelitefeather.cygnus.team.TeamHelper;
@@ -274,13 +275,15 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                     System::currentTimeMillis,
                     () -> TeamHelper.survivorsOf(this.teamService),
                     this.actionTracer.sanityObserver(Cygnus::survivorActor));
+            // Shared by the creek and the lure: whom the lure scared, the creek leaves alone for a while.
+            CreekRespite creekRespite = new CreekRespite();
             this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase, tickSections);
             try (TraceStep ignored = startup.child("cygnus.startup.features")) {
                 CreekModule creekModule = new CreekModule(this.gameConfig.creek(), this.mapProvider.creekSettings(), this.teamService, this.mapProvider,
                         sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor,
                                 new HuntTracer(this.roundTracer, Clock.systemUTC(), this::activeMapName,
                                         Cygnus::survivorActor, HuntMetrics.fromGlobal(serviceVersion()))),
-                                MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), this.jumpscareManager, this.staminaService, tickSections);
+                                MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), creekRespite, this.jumpscareManager, this.staminaService, tickSections);
                 this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
                         new EpilepsyDisclaimer(),
                         this.slenderTakeover,

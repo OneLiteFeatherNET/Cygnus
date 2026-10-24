@@ -192,7 +192,7 @@ public final class PatrolState implements CreekState {
         SurvivorView nearest = null;
         double best = SELECT_RADIUS;
         for (SurvivorView view : ctx.survivors()) {
-            if (!view.inSight()) continue;
+            if (!view.inSight() || view.spared()) continue;
             double distance = view.position().distance(here);
             if (distance <= best) {
                 best = distance;

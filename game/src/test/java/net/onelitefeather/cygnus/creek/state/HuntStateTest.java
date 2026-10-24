@@ -222,4 +222,15 @@ class HuntStateTest {
 
         assertEquals(HuntEnd.GONE, hunt.end());
     }
+
+    @Test
+    @DisplayName("A spared target ends the hunt as gone")
+    void sparedTargetEndsTheHunt() {
+        HuntState hunt = new HuntState(TARGET, 30_000L);
+        SurvivorView spared = new SurvivorView(TARGET, TARGET_POS, 0.7D, false, true, true);
+
+        hunt.tick(Contexts.context(0L, new RecordingBody(new Pos(0, 40, 10)), Contexts.route(), new ArrayList<>(), spared));
+
+        assertEquals(HuntEnd.GONE, hunt.end());
+    }
 }

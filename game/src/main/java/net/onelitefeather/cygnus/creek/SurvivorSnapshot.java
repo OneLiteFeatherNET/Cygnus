@@ -44,14 +44,16 @@ record SurvivorSnapshot(List<Player> players, List<SurvivorView> views) {
      *
      * @param players the survivors of the round
      * @param dread   rates how scared each survivor is
+     * @param respite tells who the creek leaves alone for now
+     * @param now     the current time in milliseconds
      * @return the snapshot
      */
-    static SurvivorSnapshot take(Collection<Player> players, DreadSource dread) {
+    static SurvivorSnapshot take(Collection<Player> players, DreadSource dread, CreekRespite respite, long now) {
         List<Player> survivors = List.copyOf(players);
         List<SurvivorView> views = new ArrayList<>(survivors.size());
         for (Player survivor : survivors) {
             views.add(new SurvivorView(survivor.getUuid(), survivor.getPosition(),
-                    dread.dreadOf(survivor.getUuid()), false, false));
+                    dread.dreadOf(survivor.getUuid()), false, false, respite.spares(survivor.getUuid(), now)));
         }
         return new SurvivorSnapshot(survivors, views);
     }
