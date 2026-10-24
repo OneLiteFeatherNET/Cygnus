@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 public final class AtmospherePresetHandler implements DialogHandler {
 
     /** Preset a map falls back to when it has no values yet and the builder keeps the default. */
-    private static final StaticDimensionPreset FALLBACK = StaticDimensionPreset.DENSE_FOG;
+    private static final StaticDimensionPreset FALLBACK = StaticDimensionPreset.GLOOM;
 
     private final SetupDataService dataService;
 

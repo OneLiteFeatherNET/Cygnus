@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek;
 
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
@@ -23,6 +24,7 @@ import java.util.random.RandomGenerator;
  * @param patrol      what the patrolling creek does to the survivors around it
  * @param stalk       lets a stalked survivor hear the creek
  * @param config      the settings
+ * @param settings    the distances the map sets for the creek
  * @param random      the random source
  * @param hunts       when each survivor's last hunt ended
  * @param calm        how far the round has thinned out right now
@@ -39,6 +41,7 @@ record CreekRound(
         PatrolHelper patrol,
         StalkSounds stalk,
         CreekConfig config,
+        CreekSettings settings,
         RandomGenerator random,
         HuntCooldowns hunts,
         Supplier<Calm> calm

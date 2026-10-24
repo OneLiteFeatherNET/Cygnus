@@ -25,7 +25,6 @@ import java.util.Properties;
  *     <li>resourcePackUrl</li>
  *     <li>resourcePackSha1</li>
  *     <li>pageProximityEnabled</li>
- *     <li>pageProximityRange</li>
  *     <li>pageProximitySound</li>
  *     <li>pageProximityVolumeFactor</li>
  *     <li>damageSoundEnabled</li>

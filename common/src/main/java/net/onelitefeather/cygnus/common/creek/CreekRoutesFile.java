@@ -1,26 +1,31 @@
 package net.onelitefeather.cygnus.common.creek;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.map.MapSideFile;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Reads and writes the {@code creek.json} next to a map's {@code map.json}.
+ * <p>
+ * The file holds the routes under {@code routes} and the creek values the map sets for itself under
+ * {@code settings}. A file in the old layout is the bare list and leaves every setting at its default.
+ * </p>
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -30,6 +35,8 @@ public final class CreekRoutesFile {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CreekRoutesFile.class);
     private static final String FILE_NAME = "creek.json";
+    private static final String ROUTE_KEY = "creek routes";
+    private static final String ROUTES_KEY = "routes";
     private static final Type ROUTES_TYPE = TypeToken.getParameterized(List.class, CreekRoute.class).getType();
 
     private CreekRoutesFile() {
@@ -69,52 +76,76 @@ public final class CreekRoutesFile {
     }
 
     /**
-     * Writes the routes to the sibling {@code creek.json}.
+     * Loads the creek values the map sets for itself from the sibling {@code creek.json}.
      *
-     * @param mapFile the map file the routes belong to
-     * @param routes  the routes to write
+     * @param mapFile the map file the settings belong to
+     * @return the settings, {@link CreekSettings#DEFAULT} for a missing file and filled up with
+     * defaults for every key the file leaves out
+     * @throws IllegalArgumentException if a value is out of range or two values contradict each other, naming the file
      */
-    public static void save(Path mapFile, List<CreekRoute> routes) {
+    public static CreekSettings loadSettings(Path mapFile) {
         Path file = resolve(mapFile);
-        try {
-            if (file.getParent() != null) {
-                Files.createDirectories(file.getParent());
-            }
-            try (var writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
-                GsonHelper.GSON.toJson(routes, ROUTES_TYPE, writer);
-            }
-        } catch (IOException exception) {
-            throw new UncheckedIOException("Failed to save creek routes to " + file, exception);
-        }
+        return MapSideFile.settings(MapSideFile.parse(ROUTE_KEY, file), file, CreekSettings.class, CreekSettings.DEFAULT);
     }
 
     /**
-     * Returns a copy of the map carrying the valid routes from the sibling {@code creek.json}.
+     * Loads the creek values like {@link #loadSettings(Path)}, but falls back to
+     * {@link CreekSettings#DEFAULT} if they are broken. Meant for the setup, which has to open a
+     * broken map so it can be fixed.
+     *
+     * @param mapFile   the map file the settings belong to
+     * @param onInvalid receives the reason if the settings were broken and the defaults are used
+     * @return the settings, or the defaults if they are broken
+     */
+    public static CreekSettings loadSettingsOrDefaults(Path mapFile, Consumer<String> onInvalid) {
+        Path file = resolve(mapFile);
+        return MapSideFile.settingsOrDefaults(MapSideFile.parse(ROUTE_KEY, file), file, CreekSettings.class,
+                CreekSettings.DEFAULT, onInvalid);
+    }
+
+    /**
+     * Writes the routes to the sibling {@code creek.json} with the default creek settings.
+     *
+     * @param mapFile where the routes belong to
+     * @param routes  the routes to write
+     */
+    public static void save(Path mapFile, List<CreekRoute> routes) {
+        save(mapFile, routes, CreekSettings.DEFAULT);
+    }
+
+    /**
+     * Writes the routes and the creek settings to the sibling {@code creek.json}.
+     *
+     * @param mapFile  where the routes belong to
+     * @param routes   the routes to write
+     * @param settings the creek values the map sets for itself
+     */
+    public static void save(Path mapFile, List<CreekRoute> routes, CreekSettings settings) {
+        MapSideFile.write(ROUTE_KEY, resolve(mapFile), ROUTES_KEY, GsonHelper.GSON.toJsonTree(routes, ROUTES_TYPE), settings);
+    }
+
+    /**
+     * Returns a copy of the map carrying the valid routes and the creek settings from the sibling {@code creek.json}.
      *
      * @param mapFile the map file {@code map} was loaded from
      * @param map     the map
-     * @return the map with its routes
+     * @return the map with its routes and settings
      */
     public static GameMap loadInto(Path mapFile, GameMap map) {
-        return map.withCreekRoutes(load(mapFile));
+        return map.withCreekRoutes(load(mapFile)).withCreekSettings(loadSettings(mapFile));
     }
 
     private static List<CreekRoute> read(Path file) {
-        if (!Files.exists(file)) {
-            return List.of();
+        JsonElement element = MapSideFile.data(MapSideFile.parse(ROUTE_KEY, file), ROUTES_KEY);
+        if (element == null) return List.of();
+        List<CreekRoute> routes;
+        try {
+            routes = GsonHelper.GSON.fromJson(element, ROUTES_TYPE);
+        } catch (JsonSyntaxException exception) {
+            throw new JsonSyntaxException("Failed to parse " + ROUTE_KEY + " from " + file + ": " + exception.getMessage(), exception);
         }
-        try (var reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-            List<CreekRoute> routes;
-            try {
-                routes = GsonHelper.GSON.fromJson(reader, ROUTES_TYPE);
-            } catch (JsonSyntaxException exception) {
-                throw new JsonSyntaxException("Failed to parse creek routes from " + file + ": " + exception.getMessage(), exception);
-            }
-            if (routes == null) return List.of();
-            return routes.stream().filter(route -> route != null).toList();
-        } catch (IOException exception) {
-            throw new UncheckedIOException("Failed to load creek routes from " + file, exception);
-        }
+        if (routes == null) return List.of();
+        return routes.stream().filter(Objects::nonNull).toList();
     }
 
     private static List<CreekRoute> valid(List<CreekRoute> routes, Path file) {

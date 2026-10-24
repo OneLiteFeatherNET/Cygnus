@@ -33,7 +33,7 @@ public class GamePreLaunchListener implements Consumer<GamePreLaunchEvent> {
         int pageCount = PageCalculation.calculatePageAmount(survivors);
         this.pageProvider.setMaxPageAmount(pageCount);
         // Only picked here, placed into the world once the round starts
-        this.pageProvider.collectStartPages(PageCalculation.calculateActivePageAmount());
+        this.pageProvider.collectStartPages(PageCalculation.calculateActivePageAmount(this.pageProvider.settings().minActivePages()));
 
         // Based on the players, not on the page count: the page count carries a random jitter.
         // Drawn once, so all survivors of the round get the same whole hearts

@@ -6,6 +6,10 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.adapter.GameMapAdapter;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
+import net.onelitefeather.cygnus.common.map.settings.adapter.CreekSettingsAdapter;
+import net.onelitefeather.cygnus.common.map.settings.adapter.PageSettingsAdapter;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.page.adapter.PageResourceAdapter;
 import net.theevilreaper.aves.file.GsonFileHandler;
@@ -32,6 +36,8 @@ public final class GsonHelper {
                 .registerTypeAdapter(Color.class, new ColorGsonAdapter())
                 .registerTypeAdapter(PageResource.class, new PageResourceAdapter())
                 .registerTypeAdapter(GameMap.class, new GameMapAdapter())
+                .registerTypeAdapter(PageSettings.class, new PageSettingsAdapter())
+                .registerTypeAdapter(CreekSettings.class, new CreekSettingsAdapter())
                 .create();
         FILE_HANDLER = new GsonFileHandler(GSON);
     }

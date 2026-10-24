@@ -4,6 +4,8 @@ import net.minestom.server.coordinate.Point;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.page.PageResource;
 
+import java.util.Map;
+
 /**
  * Represents the context for a dialog event which contains all necessary data
  * to open the correct dialog for a specific {@link DialogTarget}.
@@ -19,7 +21,8 @@ public sealed interface DialogContext permits
         DialogContext.AuthorAmount,
         DialogContext.PageContent,
         DialogContext.AtmosphereContext,
-        DialogContext.CreekPauseContext {
+        DialogContext.CreekPauseContext,
+        DialogContext.SettingsValues {
 
     /**
      * Specific context for the update or deletion of a name.
@@ -78,6 +81,15 @@ public sealed interface DialogContext permits
      * @param endMillis   the current pause at the end, in milliseconds
      */
     record CreekPauseContext(String route, int startMillis, int endMillis) implements DialogContext {
+
+    }
+
+    /**
+     * The values a settings dialog opens with, keyed by field key.
+     *
+     * @param values the slider values
+     */
+    record SettingsValues(Map<String, Double> values) implements DialogContext {
 
     }
 }

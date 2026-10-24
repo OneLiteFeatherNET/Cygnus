@@ -163,7 +163,7 @@ final class Creek {
                 : views.stream().filter(view -> !ignored.contains(view.id())).toList();
         return new CreekContext(now, noticed, this.body, this.route, this.round.spots(),
                 new Actions(this.round, survivors, ignored, this.body),
-                this.round.config(), this.round.random(), this.round.hunts(), this.round.calm().get());
+                this.round.config(), this.round.settings(), this.round.random(), this.round.hunts(), this.round.calm().get());
     }
 
     /**

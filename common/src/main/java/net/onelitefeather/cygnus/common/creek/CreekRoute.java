@@ -19,7 +19,7 @@ public record CreekRoute(String name, List<CreekWaypoint> points) {
     public static final int MIN_POINTS = 2;
 
     /**
-     * Fills in what a hand-written file may leave out, so a broken route can be reported by name
+     * Fills in what a handwritten file may leave out, so a broken route can be reported by name
      * instead of breaking the whole file.
      */
     @SuppressWarnings("ConstantValue")

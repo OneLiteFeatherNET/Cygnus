@@ -11,6 +11,7 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
+import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
@@ -56,7 +57,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
     private static final CreekRoute ROUTE = CreekRoute.ofPositions("Test", List.of(new Vec(10, 40, 10), new Vec(20, 40, 10)));
 
     private CreekService service(Instance instance, Set<Player> survivors, List<CreekRoute> routes, AtomicLong clock) {
-        return new CreekService(CreekConfig.DEFAULT, () -> survivors, () -> instance, () -> routes,
+        return new CreekService(CreekConfig.DEFAULT, CreekSettings.DEFAULT, () -> survivors, () -> instance, () -> routes,
                 CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, consequence, clock::get, new Random(3), TickSections.NONE);
     }
 
@@ -297,7 +298,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         AtomicReference<Set<Player>> survivors = new AtomicReference<>(Set.of(scared, other));
         AtomicInteger dreadCalls = new AtomicInteger();
         AtomicLong clock = new AtomicLong();
-        CreekService service = new CreekService(config, survivors::get, () -> instance, () -> List.of(ROUTE),
+        CreekService service = new CreekService(config, CreekSettings.DEFAULT, survivors::get, () -> instance, () -> List.of(ROUTE),
                 CreakingBody::spawn, id -> {
                     dreadCalls.incrementAndGet();
                     return id.equals(scared.getUuid()) ? 0.5D : 0.0D;
@@ -313,4 +314,14 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
                          AtomicInteger dreadCalls) {
     }
 
+    @Test
+    @DisplayName("The sight range comes from the map settings")
+    void sightRangeComesFromTheMapSettings(Env env) {
+        Instance instance = env.createFlatInstance();
+        CreekSettings settings = new CreekSettings(30, 20, 25, 30, 3.0D, 15, 5.0D);
+        CreekService service = new CreekService(CreekConfig.DEFAULT, settings, Set::of, () -> instance, List::of,
+                CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, consequence, () -> 0L, new Random(3), TickSections.NONE);
+
+        assertEquals(30, service.sightRange());
+    }
 }

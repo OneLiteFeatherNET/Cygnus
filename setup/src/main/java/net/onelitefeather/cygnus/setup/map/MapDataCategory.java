@@ -25,7 +25,9 @@ public enum MapDataCategory {
     SLENDER("Slender", Material.ENDER_EYE, NamedTextColor.DARK_PURPLE),
     SURVIVOR("Survivor", Material.CLOCK, NamedTextColor.GREEN),
     PAGE("Page", Material.PAPER, NamedTextColor.WHITE),
-    ATMOSPHERE("Fog", Material.CAMPFIRE, NamedTextColor.GRAY);
+    ATMOSPHERE("Fog", Material.CAMPFIRE, NamedTextColor.GRAY),
+    PAGE_SETTINGS("Page settings", Material.BOOK, NamedTextColor.WHITE),
+    CREEK_SETTINGS("Creek settings", Material.CREAKING_HEART, NamedTextColor.GOLD);
 
     private static final MapDataCategory[] VALUES = values();
     private static final Map<MapDataCategory, ItemStack> DEFAULT_CACHE = new EnumMap<>(MapDataCategory.class);

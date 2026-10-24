@@ -63,20 +63,13 @@ survivorTeamSize=12
 # played at the page's own position, so the client places it in 3D: a player hears
 # which direction a page is in without ever being told where it is. The slender
 # never hears it.
+# How far a page can be heard is set per map, as proximityRange in its pages.json.
 #pageProximityEnabled=true
-
-# How far away a page may be and still be heard, in blocks. Between 1 and 64; a
-# value outside that range is rejected and the service refuses to start.
-#
-# The value doubles as the volume: a client carries a sound 16 * volume blocks, so
-# a range beyond 16 needs a louder sound to reach that far. The server clips on the
-# range itself either way.
-#pageProximityRange=20
 
 # The sound played. A key that names no sound the server knows falls back to the
 # default, so the hint never goes silent because of a typo.
 #pageProximitySound=block.amethyst_block.chime
-# How far past pageProximityRange the chime's falloff is stretched. Between 1 and
+# How far past the map's proximityRange the chime's falloff is stretched. Between 1 and
 # 8.
 #
 # Minecraft fades a sound to nothing at 16 * volume blocks, so a volume derived to
@@ -195,12 +188,12 @@ survivorTeamSize=12
 # route; everywhere else it stays away, even with creek.enabled=true.
 # Every key below maps to a field of CreekConfig. An unreadable value falls back
 # to its default; values that contradict each other are rejected.
+# Distances that depend on the map (sight range, stalk distances, respawn distance,
+# route link distance, personal space, launch height) are set per map in its creek.json.
 #creek.enabled=true
 #creek.activeWithLastSurvivor=true
 #creek.stalkThreshold=0.25
 #creek.huntThreshold=0.6
-#creek.stalkMinDistance=20
-#creek.stalkMaxDistance=35
 #creek.catchDistance=1.5
 # A stalk only turns into a hunt once it has run for huntMinStalkSeconds, and
 # never sooner than huntCooldownSeconds after the survivor's last hunt ended -
@@ -213,9 +206,6 @@ survivorTeamSize=12
 #creek.huntSpeed=0.25
 #creek.betrayalCatchCount=2
 #creek.betrayalChance=0.15
-# How close the ends of two routes in creek.json have to be (in blocks) for the
-# creek to switch from one route to the other.
-#creek.routeLinkDistance=3.0
 # After reaching a waypoint the creek sometimes stops for a moment. The chance is
 # between 0 and 1 (0 turns it off); the stop lasts between min and max milliseconds.
 # A pause set on the route end in creek.json and a random stop do not add up: the
@@ -223,12 +213,8 @@ survivorTeamSize=12
 #creek.randomStopChance=0.15
 #creek.randomStopMinMillis=1500
 #creek.randomStopMaxMillis=4000
-# When the creek ("Manfred") catches a survivor, they are thrown this many blocks
-# into the air, without fall damage. Between 0 and 20; 0 turns the launch off.
-# Playtest: tune this if the throw feels too weak or too violent.
-#creek.launchHeight=5.0
 # On a catch the creek chooses one punishment on top of the usual ones: throw the
-# caught survivor into the air (launchHeight above), or swap places with another
+# caught survivor into the air (launchHeight in the map's creek.json), or swap places with another
 # living survivor. This is the chance for the swap, between 0 and 1: 0 always
 # throws, 1 always swaps. Without another survivor the creek throws instead.
 # Playtest: tune this if the swaps happen too often or too rarely.

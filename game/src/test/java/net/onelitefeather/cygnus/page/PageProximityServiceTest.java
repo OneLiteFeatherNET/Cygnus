@@ -132,7 +132,7 @@ class PageProximityServiceTest {
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
-        GameConfig.PageProximity config = new GameConfig.PageProximity(false, 20, GameConfig.PageProximity.DEFAULT_SOUND, GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
+        Setup config = new Setup(new GameConfig.PageProximity(false, GameConfig.PageProximity.DEFAULT_SOUND, GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR), 20);
         PageProximityService service = service(config, player, new Pos(0, 64, 1));
 
         service.startTask();
@@ -150,7 +150,7 @@ class PageProximityServiceTest {
         Player player = connection.connect(instance, PLAYER_POS);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
-        GameConfig.PageProximity config = new GameConfig.PageProximity(true, 20, Key.key("cygnus", "no_such_sound"), GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
+        Setup config = new Setup(new GameConfig.PageProximity(true, Key.key("cygnus", "no_such_sound"), GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR), 20);
 
         service(config, player, new Pos(0, 64, 1)).tick();
 
@@ -172,12 +172,16 @@ class PageProximityServiceTest {
     }
 
     /** A configuration on the shipped volume factor. */
-    private static GameConfig.PageProximity config(int range) {
-        return new GameConfig.PageProximity(true, range, GameConfig.PageProximity.DEFAULT_SOUND, GameConfig.PageProximity.DEFAULT_VOLUME_FACTOR);
+    private static Setup config(int range) {
+        return new Setup(GameConfig.PageProximity.DEFAULT, range);
     }
 
-    private static GameConfig.PageProximity config(int range, float volumeFactor) {
-        return new GameConfig.PageProximity(true, range, GameConfig.PageProximity.DEFAULT_SOUND, volumeFactor);
+    private static Setup config(int range, float volumeFactor) {
+        return new Setup(new GameConfig.PageProximity(true, GameConfig.PageProximity.DEFAULT_SOUND, volumeFactor), range);
+    }
+
+    /** What the service is built from: the config and the range the map sets. */
+    private record Setup(GameConfig.PageProximity config, int range) {
     }
 
     @Test
@@ -187,7 +191,7 @@ class PageProximityServiceTest {
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.75);
-        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target), TickSections.NONE);
+        PageProximityService service = new PageProximityService(GameConfig.PageProximity.DEFAULT, 20, () -> List.of(player), () -> List.of(target), TickSections.NONE);
         service.tick();
 
         sounds.assertEmpty();
@@ -200,7 +204,7 @@ class PageProximityServiceTest {
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.35);
-        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target), TickSections.NONE);
+        PageProximityService service = new PageProximityService(GameConfig.PageProximity.DEFAULT, 20, () -> List.of(player), () -> List.of(target), TickSections.NONE);
         service.tick();
 
         sounds.assertSingle(packet -> {
@@ -216,7 +220,7 @@ class PageProximityServiceTest {
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.15);
-        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target), TickSections.NONE);
+        PageProximityService service = new PageProximityService(GameConfig.PageProximity.DEFAULT, 20, () -> List.of(player), () -> List.of(target), TickSections.NONE);
         service.tick();
 
         sounds.assertSingle(packet -> {
@@ -233,7 +237,7 @@ class PageProximityServiceTest {
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         PageProximityTarget target = PageProximityTarget.of(UUID.randomUUID(), new Pos(0, 64, 5), 0.35);
-        PageProximityService service = new PageProximityService(config(20), () -> List.of(player), () -> List.of(target), TickSections.NONE);
+        PageProximityService service = new PageProximityService(GameConfig.PageProximity.DEFAULT, 20, () -> List.of(player), () -> List.of(target), TickSections.NONE);
 
         service.tick(); // First tick: triggers chime
         service.tick(); // Immediate next tick (5 ticks later): throttled by 60-tick warning interval!
@@ -241,11 +245,11 @@ class PageProximityServiceTest {
         assertEquals(1, sounds.collect().size(), "second tick within interval must be throttled");
     }
 
-    private static PageProximityService service(GameConfig.PageProximity config, Player player, Pos... pages) {
+    private static PageProximityService service(Setup setup, Player player, Pos... pages) {
         Collection<Player> listeners = List.of(player);
         List<PageProximityTarget> targets = Arrays.stream(pages)
                 .map(pos -> PageProximityTarget.of(UUID.nameUUIDFromBytes(pos.toString().getBytes()), pos, 0.35))
                 .toList();
-        return new PageProximityService(config, () -> listeners, () -> targets, TickSections.NONE);
+        return new PageProximityService(setup.config(), setup.range(), () -> listeners, () -> targets, TickSections.NONE);
     }
 }

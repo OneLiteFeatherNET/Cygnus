@@ -239,12 +239,13 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             UUID resourcePackId = this.resourcePackService.map(ResourcePackService::packId).orElse(null);
             MinecraftServer.getConnectionManager().setPlayerProvider(
                     (connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, resourcePackId, kickTracer));
-            // A moving page keeps away from the survivors, so it is not handed to one for free.
-            this.pageProvider = new PageProvider(
-                    () -> TeamHelper.survivorsOf(this.teamService).stream().map(Player::getPosition).toList());
             try (TraceStep ignored = startup.child("cygnus.startup.maps")) {
                 this.mapProvider = new GameMapProvider(path, this.gameConfig.lobbyAtmosphereShare());
             }
+            // A moving page keeps away from the survivors, so it is not handed to one for free.
+            this.pageProvider = new PageProvider(
+                    () -> TeamHelper.survivorsOf(this.teamService).stream().map(Player::getPosition).toList(),
+                    this.mapProvider.pageSettings());
             // Falco keeps its region files open, so the loaders have to be released on shutdown
             MinecraftServer.getSchedulerManager().buildShutdownTask(this.mapProvider::close);
             this.view = new GameViewImpl();
@@ -257,6 +258,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             // camp at, which is the opposite of what the hint is for.
             this.pageProximityService = new PageProximityService(
                     this.gameConfig.pageProximity(),
+                    this.mapProvider.pageSettings().proximityRange(),
                     survivorTeam::getPlayers,
                     this.pageProvider::interactablePages,
                     tickSections
@@ -274,7 +276,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                     this.actionTracer.sanityObserver(Cygnus::survivorActor));
             this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase, tickSections);
             try (TraceStep ignored = startup.child("cygnus.startup.features")) {
-                CreekModule creekModule = new CreekModule(this.gameConfig.creek(), this.teamService, this.mapProvider,
+                CreekModule creekModule = new CreekModule(this.gameConfig.creek(), this.mapProvider.creekSettings(), this.teamService, this.mapProvider,
                         sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor,
                                 new HuntTracer(this.roundTracer, Clock.systemUTC(), this::activeMapName,
                                         Cygnus::survivorActor, HuntMetrics.fromGlobal(serviceVersion()))),

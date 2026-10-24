@@ -5,6 +5,7 @@ import static net.onelitefeather.cygnus.common.config.ConfigChecks.below;
 import static net.onelitefeather.cygnus.common.config.ConfigChecks.between;
 
 import net.kyori.adventure.key.Key;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,12 +80,6 @@ public record GameConfig(
     public static final Key SPECTATOR_KEY = Key.key("cygnus", "spectator");
 
     /**
-     * How many pages are in the world at once, at least. Playtest tuning: at most four pages are out at the
-     * same time; the total number to find was doubled separately.
-     */
-    public static final int MIN_ACTIVE_PAGE_COUNT = 4;
-
-    /**
      * The most survivors a small round has. Such a round needs only eight pages, and its survivors
      * get extra hearts and a little extra speed. The healing steps by the same size.
      * <p>
@@ -110,21 +105,12 @@ public record GameConfig(
     public static final int PAGE_SPAWN_DELAY_JITTER = 2;
 
     /**
-     * How many seconds a found page stays hidden when there is no free spot left to move it to.
-     * <p>
-     * The page then has to come back on the spot it was found on. Without the delay it would be
-     * collectible again right away, letting a survivor pick up page after page on the same spot.
-     * </p>
-     */
-    public static final int PAGE_RESPAWN_DELAY = 15;
-
-    /**
-     * How many seconds {@link #PAGE_RESPAWN_DELAY} may randomly shift up or down, re-rolled for every
-     * hidden page, so waiting next to the spot does not pay off.
+     * How many seconds the respawn delay of a found page ({@link PageSettings#respawnDelaySeconds()})
+     * may randomly shift up or down, re-rolled for every hidden page, so waiting next to the spot does
+     * not pay off.
      */
     public static final int PAGE_RESPAWN_DELAY_JITTER = 5;
 
-    public static final int PAGE_TTL_TIME = 60;
     public static final int FORCE_START_TIME = 11;
 
     /**
@@ -348,21 +334,18 @@ public record GameConfig(
     /**
      * The sound survivors hear while a page is nearby.
      *
-     * @param enabled      whether the hint is played at all
-     * @param range        how far away a page may be and still be heard, in blocks
+     * @param enabled      whether the hint is played at all. How far a page can be heard is set per
+     *                     map, see {@link PageSettings#proximityRange()}
      * @param sound        the sound; a key naming no known sound falls back to {@link #DEFAULT_SOUND}
      *                     when it is first played
      * @param volumeFactor how far past the range the falloff is stretched. Minecraft fades a sound to
      *                     nothing at {@code 16 * volume} blocks, so a volume that reaches exactly the
      *                     range would be silent at its edge.
      */
-    public record PageProximity(boolean enabled, int range, Key sound, float volumeFactor) {
+    public record PageProximity(boolean enabled, Key sound, float volumeFactor) {
 
         /** A soft, bell-less shimmer that reads as "something is here" without sounding like an alarm. */
         public static final Key DEFAULT_SOUND = Key.key("block.amethyst_block.chime");
-
-        /** Beyond this a single page would be audible across a good part of the map. */
-        public static final int MAX_RANGE = 64;
 
         /** Leaves roughly half the volume at the edge of the range. */
         public static final float DEFAULT_VOLUME_FACTOR = 2.0F;
@@ -373,10 +356,9 @@ public record GameConfig(
          */
         public static final float MAX_VOLUME_FACTOR = 8.0F;
 
-        public static final PageProximity DEFAULT = new PageProximity(true, 20, DEFAULT_SOUND, DEFAULT_VOLUME_FACTOR);
+        public static final PageProximity DEFAULT = new PageProximity(true, DEFAULT_SOUND, DEFAULT_VOLUME_FACTOR);
 
         public PageProximity {
-            between("pageProximityRange", range, 1, MAX_RANGE);
             between("pageProximityVolumeFactor", volumeFactor, 1.0D, MAX_VOLUME_FACTOR);
         }
 
@@ -389,7 +371,6 @@ public record GameConfig(
         public static PageProximity read(ConfigSection root) {
             return root.orDefault("page proximity", () -> new PageProximity(
                     root.getBoolean("pageProximityEnabled", DEFAULT.enabled()),
-                    root.getInt("pageProximityRange", DEFAULT.range()),
                     root.getSound("pageProximitySound", DEFAULT.sound()),
                     root.getFloat("pageProximityVolumeFactor", DEFAULT.volumeFactor())), DEFAULT);
         }
