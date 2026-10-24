@@ -44,6 +44,8 @@ public final class TickSectionNames {
     public static final String SLENDER_BAR = "slender-bar";
     /** The jump scare's despawn. */
     public static final String JUMP_SCARE = "jump-scare";
+    /** The lure's step. */
+    public static final String LURE = "lure";
     /** The lobby's waiting action bar. */
     public static final String LOBBY_WAITING = "lobby-waiting";
     /** The lobby's slide of the world time. */
@@ -52,7 +54,7 @@ public final class TickSectionNames {
     /** Every name, for tests and documentation to check against. */
     public static final List<String> ALL = List.of(CREEK, LOCATOR_REVEAL, SLENDER_GAZE, TUNNEL_VISION, PAGE_GLITCH,
             BLOOD_SPLATTER, PAGE_PROXIMITY, AMBIENT, ADRENALINE, REGENERATION, SLENDER_TAKEOVER, STAMINA, SLENDER_BAR,
-            JUMP_SCARE, LOBBY_WAITING, LOBBY_TIME);
+            JUMP_SCARE, LURE, LOBBY_WAITING, LOBBY_TIME);
 
     private TickSectionNames() {
     }
