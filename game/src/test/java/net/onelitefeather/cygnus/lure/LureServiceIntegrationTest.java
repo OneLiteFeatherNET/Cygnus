@@ -62,6 +62,20 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("Right after a turnaround scare nobody is lured")
+    void noLureRightAfterATurnaroundScare(Env env) {
+        Instance instance = flat(env);
+        Player survivor = join(env, instance, ALONE);
+        corpse(env, instance);
+        LureService service = service(ALWAYS, instance);
+        assertTrue(this.jumpScares.force(survivor));
+
+        steps(service, 20);
+
+        assertTrue(service.figureOf(survivor.getUuid()).isEmpty());
+    }
+
+    @Test
     @DisplayName("A survivor with company is not lured")
     void notAloneNoLure(Env env) {
         Instance instance = flat(env);
@@ -251,11 +265,21 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
         assertFalse(this.jumpScares.isTurnaroundPaused(waiting.getUuid()));
         assertFalse(service.isRunning());
 
+        service.tick();
+        assertTrue(service.figureOf(waiting.getUuid()).isEmpty(), "a step that comes after the stop does nothing");
+
+        service.start();
         fire(service, waiting);
         service.stop();
+        // Like the end of a round: the corpses and the scare cooldowns go, a new death brings a new corpse.
+        this.jumpScares.cleanUp();
+        corpse(env, instance);
+        this.jumpScares.register(this.pendingCorpses.getLast());
+        service.start();
         service.tick();
 
         assertTrue(service.figureOf(waiting.getUuid()).isPresent(), "a new round starts with every lure open");
+        service.stop();
     }
 
     private LureService service(LureConfig config, Instance instance) {

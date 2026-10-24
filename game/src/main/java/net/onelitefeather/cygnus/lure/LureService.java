@@ -74,6 +74,7 @@ public final class LureService {
     private final CreekSight gaze;
     private final RepeatingTask task;
     private final Map<UUID, LureState> states = new HashMap<>();
+    private boolean stopped;
 
     /**
      * Sets up the service, with its step measured for the slow tick report.
@@ -111,7 +112,8 @@ public final class LureService {
     /**
      * Starts stepping the lures.
      */
-    public void start() {
+    public synchronized void start() {
+        this.stopped = false;
         this.task.start(STEP_MILLIS, ChronoUnit.MILLIS);
     }
 
@@ -120,6 +122,8 @@ public final class LureService {
      * starts clean.
      */
     public synchronized void stop() {
+        // A step already waiting for the lock would otherwise run after the stop and lure again.
+        this.stopped = true;
         this.task.stop();
         this.states.forEach((id, state) -> this.endWait(id, state));
         this.states.clear();
@@ -150,6 +154,7 @@ public final class LureService {
      * Runs one step for every living survivor.
      */
     synchronized void tick() {
+        if (this.stopped) return;
         long now = this.clock.getAsLong();
         List<Player> living = List.copyOf(this.survivors.get());
         Set<UUID> present = new HashSet<>();
@@ -177,6 +182,8 @@ public final class LureService {
 
     private void roll(Player survivor, LureState state, List<Player> living, long now) {
         if (!this.alone(survivor, living)) return;
+        // Never right after the turnaround scare, the two should not hit back to back.
+        if (this.jumpScares.isCoolingDown(survivor.getUuid())) return;
         if (!state.rollDue(now, this.config.rollSeconds() * 1000L)) return;
         if (this.random.nextDouble() >= this.config.rollChance()) return;
         Optional<DeadPlayerMannequin> corpse = this.jumpScares.randomCorpse(this.random);

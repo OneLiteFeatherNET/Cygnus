@@ -282,6 +282,17 @@ public final class JumpScareManager {
     }
 
     /**
+     * Tells whether a survivor was scared less than a minute ago, by either scare.
+     *
+     * @param survivor the survivor to check
+     * @return {@code true} while the cooldown runs
+     * @since 2.21.0
+     */
+    public boolean isCoolingDown(UUID survivor) {
+        return System.currentTimeMillis() - jumpScareCooldowns.getOrDefault(survivor, 0L) < COOLDOWN_MS;
+    }
+
+    /**
      * Tells whether the turnaround scare is held back for a survivor.
      *
      * @param survivor the survivor to check

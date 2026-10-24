@@ -65,6 +65,24 @@ class LureSpotFinderIntegrationTest {
     }
 
     @Test
+    @DisplayName("Nobody stands on a bush")
+    void skipsLeaves(Env env) {
+        Instance instance = flat(env);
+        ring(instance, 13, 27, 40, 40, Block.OAK_LEAVES);
+
+        assertEquals(Optional.empty(), finder(instance).find(SURVIVOR, new Random(3)));
+    }
+
+    @Test
+    @DisplayName("Nobody stands on a fence")
+    void skipsFences(Env env) {
+        Instance instance = flat(env);
+        ring(instance, 13, 27, 40, 40, Block.OAK_FENCE);
+
+        assertEquals(Optional.empty(), finder(instance).find(SURVIVOR, new Random(3)));
+    }
+
+    @Test
     @DisplayName("Nobody stands behind a wall")
     void skipsSpotsBehindAWall(Env env) {
         Instance instance = flat(env);
