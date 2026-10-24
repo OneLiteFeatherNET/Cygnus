@@ -252,6 +252,40 @@ survivorTeamSize=12
 #sanity.timeFloorWeight=0.15
 #sanity.floorCap=0.55
 
+# --- Lure -------------------------------------------------------------------
+# Once a survivor has died, a survivor who is on their own may see them standing
+# in the distance, just outside their view, looking like a living player. Look at
+# the figure for gazeMillis and it is right in front of their face. After the
+# scare a follow-up is rolled (slowness, a reveal on the slender's locator bar,
+# blindness, or nothing for whatever the weights leave), and the creek leaves the
+# survivor alone for respiteSeconds. One lure per survivor and round at most; a
+# figure nobody noticed does not count.
+# Every key below maps to a field of LureConfig. An unreadable value falls back
+# to its default; values that contradict each other are rejected.
+#lure.enabled=true
+# No other living survivor may be within this many blocks.
+#lure.aloneRadius=30
+# A lone survivor is rolled for every rollSeconds with rollChance (0 to 1).
+# Playtest: tune these if the lure comes too soon or too late.
+#lure.rollSeconds=5
+#lure.rollChance=0.08
+# Where the figure stands: distance in blocks, angle off the view in degrees
+# (keep minAngle above 75, or the survivor sees it pop in) and height difference.
+#lure.minDistance=15
+#lure.maxDistance=25
+#lure.minAngle=80
+#lure.maxAngle=130
+#lure.maxHeightOffset=3
+#lure.waitSeconds=20
+#lure.gazeMillis=700
+#lure.gazeAngle=35
+#lure.fearGain=0.30
+#lure.slownessWeight=0.20
+#lure.betrayalWeight=0.15
+#lure.blindnessWeight=0.15
+#lure.effectSeconds=4
+#lure.respiteSeconds=60
+
 # --- Stamina ----------------------------------------------------------------
 # A survivor's sprint bar holds 20 points and drains 2 per second while they
 # sprint. Once it ran dry, or once they stopped early, they may sprint again as

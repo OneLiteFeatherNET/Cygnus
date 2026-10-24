@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
  * @param minimap              the request to client minimap mods to switch themselves off
  * @param eightPages           the settings for rounds with only a few survivors
  * @param regeneration         how survivors win back health after an encounter
+ * @param lure                 the dead teammate who lures a lone survivor
  * @param clientGuard          the check on the client's brand and mod channels, which kicks known cheat clients
  * @param clientApi            the requests to client mods through their own server APIs (WorldDownloader, LabyMod)
  * @param lunar                the request to Lunar Client to switch off mods that give a survivor an edge
@@ -67,6 +68,7 @@ public record GameConfig(
         MinimapConfig minimap,
         EightPagesConfig eightPages,
         RegenerationConfig regeneration,
+        LureConfig lure,
         ClientGuardConfig clientGuard,
         ClientApiConfig clientApi,
         LunarConfig lunar,
@@ -146,6 +148,7 @@ public record GameConfig(
             MinimapConfig.DEFAULT,
             EightPagesConfig.DEFAULT,
             RegenerationConfig.DEFAULT,
+            LureConfig.DEFAULT,
             ClientGuardConfig.DEFAULT,
             ClientApiConfig.DEFAULT,
             LunarConfig.DEFAULT,
@@ -183,6 +186,7 @@ public record GameConfig(
                 MinimapConfig.read(root.section("minimap.")),
                 EightPagesConfig.read(root.section("eightPages.")),
                 RegenerationConfig.read(root.section("regeneration.")),
+                LureConfig.read(root.section("lure.")),
                 ClientGuardConfig.read(root.section("client-guard.")),
                 ClientApiConfig.read(root.section("client-api.")),
                 LunarConfig.read(root.section("lunar.")),
