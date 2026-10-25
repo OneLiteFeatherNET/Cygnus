@@ -8,6 +8,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.network.packet.server.ServerPacket;
 import net.minestom.server.network.packet.server.play.ActionBarPacket;
+import net.minestom.server.network.packet.server.play.EntitySoundEffectPacket;
 import net.minestom.server.network.packet.server.play.SetCooldownPacket;
 import net.minestom.server.network.packet.server.play.SoundEffectPacket;
 import net.minestom.testing.Collector;
@@ -511,6 +512,49 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         Player survivor = drainOnce(env, instance, narrow, 3.0D);
 
         assertEquals(20.0F, survivor.getHealth(), 0.001F);
+    }
+
+    @Test
+    @DisplayName("Only the slender hears the hit sound, once per tick however many survivors he hurts")
+    void hitSoundPlaysOnceToTheSlender(@NotNull Env env) {
+        TestConnection slenderConnection = env.createConnection();
+        CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        TestConnection survivorConnection = env.createConnection();
+        Player first = survivorConnection.connect(instance, new Pos(1, 40, 0));
+        first.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        Player second = env.createConnection().connect(instance, new Pos(-1, 40, 0));
+        second.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender);
+        slenderBar.start();
+        slenderBar.changeStatus();
+        Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
+        Collector<EntitySoundEffectPacket> survivorSounds = survivorConnection.trackIncoming(EntitySoundEffectPacket.class);
+
+        slenderBar.consume();
+
+        slenderSounds.assertSingle(packet -> assertEquals(SlenderBar.HIT.name(), packet.soundEvent().key()));
+        survivorSounds.assertEmpty();
+        slenderBar.stop();
+    }
+
+    @Test
+    @DisplayName("Without a survivor in range the slender hears no hit sound")
+    void noHitSoundWithoutASurvivorInRange(@NotNull Env env) {
+        TestConnection slenderConnection = env.createConnection();
+        CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        Player survivor = env.createConnection().connect(instance, new Pos(10, 40, 0));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender);
+        slenderBar.start();
+        slenderBar.changeStatus();
+        Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
+
+        slenderBar.consume();
+
+        slenderSounds.assertEmpty();
+        slenderBar.stop();
     }
 
     private Player drainOnce(Env env, Instance instance, StaminaConfig config, double distance) {
