@@ -11,10 +11,10 @@ import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.LureConfig;
-import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.telemetry.TickSections;
+import net.onelitefeather.cygnus.utils.Eyes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -303,14 +303,14 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     private static void lookAt(Player survivor, LureFigure figure) {
-        Pos eyes = survivor.getPosition().add(0, SurvivorView.EYE_HEIGHT, 0);
-        Pos look = eyes.withLookAt(figure.position().add(0, SurvivorView.EYE_HEIGHT, 0));
+        Pos eyes = Eyes.of(survivor.getPosition());
+        Pos look = eyes.withLookAt(Eyes.of(figure.position()));
         survivor.teleport(survivor.getPosition().withView(look.yaw(), look.pitch())).join();
     }
 
     private static void lookAway(Player survivor, LureFigure figure) {
-        Pos eyes = survivor.getPosition().add(0, SurvivorView.EYE_HEIGHT, 0);
-        Pos look = eyes.withLookAt(figure.position().add(0, SurvivorView.EYE_HEIGHT, 0));
+        Pos eyes = Eyes.of(survivor.getPosition());
+        Pos look = eyes.withLookAt(Eyes.of(figure.position()));
         survivor.teleport(survivor.getPosition().withView(look.yaw() + 180.0F, 0.0F)).join();
     }
 

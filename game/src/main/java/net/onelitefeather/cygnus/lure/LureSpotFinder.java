@@ -6,10 +6,10 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
-import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.world.BesideSearch;
 import net.onelitefeather.cygnus.creek.world.Ground;
 import net.onelitefeather.cygnus.creek.world.InstanceGround;
+import net.onelitefeather.cygnus.utils.Eyes;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -74,11 +74,11 @@ public final class LureSpotFinder {
     public Optional<Pos> find(Pos survivorFeet, RandomGenerator random) {
         Instance world = this.instance.get();
         if (world == null) return Optional.empty();
-        Pos eyes = survivorFeet.add(0, SurvivorView.EYE_HEIGHT, 0);
+        Pos eyes = Eyes.of(survivorFeet);
         return BesideSearch.find(survivorFeet, MIN_DISTANCE, MAX_DISTANCE, MIN_ANGLE, MAX_ANGLE,
                 candidate -> this.ground.settle(candidate).filter(spot -> this.fits(world, survivorFeet, eyes, spot)),
                 random).map(at -> {
-                    Pos look = at.add(0, SurvivorView.EYE_HEIGHT, 0).withLookAt(eyes);
+                    Pos look = Eyes.of(at).withLookAt(eyes);
                     return at.withView(look.yaw(), look.pitch());
                 });
     }
@@ -108,7 +108,7 @@ public final class LureSpotFinder {
         Block floor = world.getBlock(spot.sub(0, 1, 0));
         if (world.getBlock(spot).liquid() || floor.liquid()) return false;
         if (!walkable(floor)) return false;
-        return clearLine(world, eyes, spot.add(0, SurvivorView.EYE_HEIGHT, 0));
+        return clearLine(world, eyes, Eyes.of(spot));
     }
 
     /**

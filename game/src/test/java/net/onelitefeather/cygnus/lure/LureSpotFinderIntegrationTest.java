@@ -5,7 +5,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.testing.Env;
 import net.minestom.testing.extension.MicrotusExtension;
-import net.onelitefeather.cygnus.creek.state.SurvivorView;
+import net.onelitefeather.cygnus.utils.Eyes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -96,7 +96,7 @@ class LureSpotFinderIntegrationTest {
 
         Pos spot = finder(instance).find(SURVIVOR, new Random(3)).orElseThrow();
 
-        Pos expected = spot.add(0, SurvivorView.EYE_HEIGHT, 0).withLookAt(SURVIVOR.add(0, SurvivorView.EYE_HEIGHT, 0));
+        Pos expected = Eyes.of(spot).withLookAt(Eyes.of(SURVIVOR));
         assertEquals(expected.yaw(), spot.yaw(), 1.0F);
     }
 

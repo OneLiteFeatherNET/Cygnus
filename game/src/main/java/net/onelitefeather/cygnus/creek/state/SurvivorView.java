@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.utils.Eyes;
 
 import java.util.UUID;
 
@@ -22,9 +23,6 @@ import java.util.UUID;
  * @since 2.15.0
  */
 public record SurvivorView(UUID id, Pos position, double dread, boolean seesCreek, boolean inSight, boolean spared) {
-
-    /** How high a standing player's eyes are, in blocks. */
-    public static final double EYE_HEIGHT = 1.62D;
 
     /**
      * A snapshot of a survivor with nothing between them and the creek.
@@ -57,7 +55,7 @@ public record SurvivorView(UUID id, Pos position, double dread, boolean seesCree
      * @return the eye position, looking where the survivor looks
      */
     public Pos eyes() {
-        return this.position.add(0, EYE_HEIGHT, 0);
+        return Eyes.of(this.position);
     }
 
     /**

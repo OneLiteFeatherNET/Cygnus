@@ -4,12 +4,12 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.common.config.LureConfig;
-import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.telemetry.TickSectionNames;
 import net.onelitefeather.cygnus.telemetry.TickSections;
+import net.onelitefeather.cygnus.utils.Eyes;
 import net.onelitefeather.cygnus.utils.RepeatingTask;
 
 import java.time.temporal.ChronoUnit;
@@ -227,8 +227,8 @@ public final class LureService {
     private boolean looksAt(Player survivor, LureFigure figure) {
         Instance world = survivor.getInstance();
         if (world == null) return false;
-        Pos eyes = survivor.getPosition().add(0, SurvivorView.EYE_HEIGHT, 0);
-        Pos head = figure.position().add(0, SurvivorView.EYE_HEIGHT, 0);
+        Pos eyes = Eyes.of(survivor.getPosition());
+        Pos head = Eyes.of(figure.position());
         return this.gaze.inView(eyes, head) && LureSpotFinder.clearLine(world, eyes, head);
     }
 }
