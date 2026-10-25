@@ -46,8 +46,10 @@ class LureModuleIntegrationTest extends CygnusPlayerTestBase {
     }
 
     private static LureService service(Instance instance) {
-        return new LureService(LureConfig.DEFAULT, List::of, () -> null, new JumpScareManager(TickSections.NONE),
+        return new LureService(LureConfig.DEFAULT, List::of, new JumpScareManager(TickSections.NONE),
                 new LureSpotFinder(new InstanceGround(() -> instance), () -> instance),
-                new CreekRespite(), (_, _) -> {}, (_, _) -> {}, () -> LureOutcome.NOTHING, () -> 0L, new Random(1), TickSections.NONE);
+                new LureAftermath(LureConfig.DEFAULT, (_, _) -> {}, new CreekRespite(), () -> null, (_, _) -> {},
+                        () -> LureOutcome.NOTHING),
+                () -> 0L, new Random(1), TickSections.NONE);
     }
 }

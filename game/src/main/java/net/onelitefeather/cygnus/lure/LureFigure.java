@@ -26,16 +26,12 @@ public final class LureFigure {
 
     private final Player survivor;
     private final DeadPlayerMannequin body;
-    private final UUID identity;
-    private final @Nullable PlayerSkin skin;
     private final Pos position;
     private boolean removed;
 
-    private LureFigure(Player survivor, DeadPlayerMannequin body, UUID identity, @Nullable PlayerSkin skin, Pos position) {
+    private LureFigure(Player survivor, DeadPlayerMannequin body, Pos position) {
         this.survivor = survivor;
         this.body = body;
-        this.identity = identity;
-        this.skin = skin;
         this.position = position;
     }
 
@@ -52,7 +48,7 @@ public final class LureFigure {
         survivor.sendPacket(body.toSpawnPacket());
         survivor.sendPacket(body.getMetadataPacket());
         survivor.sendPacket(new EntityHeadLookPacket(body.getEntityId(), at.yaw()));
-        return new LureFigure(survivor, body, corpse.getOriginalPlayerUuid(), corpse.getSkin(), at);
+        return new LureFigure(survivor, body, at);
     }
 
     /**
@@ -61,7 +57,7 @@ public final class LureFigure {
      * @return the dead survivor's id
      */
     public UUID identity() {
-        return this.identity;
+        return this.body.getOriginalPlayerUuid();
     }
 
     /**
@@ -70,7 +66,7 @@ public final class LureFigure {
      * @return the skin, or {@code null} for the default skin
      */
     public @Nullable PlayerSkin skin() {
-        return this.skin;
+        return this.body.getSkin();
     }
 
     /**

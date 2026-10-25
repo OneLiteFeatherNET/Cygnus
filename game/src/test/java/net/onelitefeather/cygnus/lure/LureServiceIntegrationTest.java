@@ -6,26 +6,22 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
 import net.minestom.server.network.packet.server.play.SpawnEntityPacket;
-import net.minestom.server.potion.PotionEffect;
 import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.LureConfig;
-import net.onelitefeather.cygnus.creek.CreekRespite;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.world.InstanceGround;
 import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.telemetry.TickSections;
-import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -42,12 +38,8 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
 
     private final AtomicLong clock = new AtomicLong();
     private final List<Player> survivors = new ArrayList<>();
-    private final List<String> fear = new ArrayList<>();
-    private final List<UUID> revealed = new ArrayList<>();
-    private final CreekRespite respite = new CreekRespite();
+    private final List<String> consequences = new ArrayList<>();
     private JumpScareManager jumpScares;
-    private @Nullable Player slender;
-    private LureOutcome outcome = LureOutcome.BETRAYAL;
 
     @Test
     @DisplayName("Without a dead survivor nobody is lured")
@@ -105,14 +97,13 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("Looking at the figure fires the scare, scares, spares and follows up after the dissolve")
+    @DisplayName("Looking at the figure fires the scare, strikes at once and follows up after the dissolve")
     void gazeFiresTheScare(Env env) {
         Instance instance = flat(env);
         TestConnection connection = env.createConnection();
         Player survivor = connection.connect(instance, ALONE);
         this.survivors.add(survivor);
         corpse(env, instance);
-        this.slender = env.createConnection().connect(instance, new Pos(-300.5, 40, 0.5));
         LureService service = service(ALWAYS, instance);
         service.tick();
         lookAt(survivor, service.figureOf(survivor.getUuid()).orElseThrow());
@@ -124,43 +115,14 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
 
         assertTrue(service.figureOf(survivor.getUuid()).isEmpty());
         assertTrue(spawns.collect().stream().anyMatch(packet -> packet.type() == EntityType.MANNEQUIN));
-        assertEquals(List.of(survivor.getUuid() + ":0.3"), this.fear);
-        assertTrue(this.respite.spares(survivor.getUuid(), this.clock.get()));
+        assertEquals(List.of("struck:" + survivor.getUuid() + "@" + this.clock.get()), this.consequences,
+                "the follow-up waits for the dissolve");
         assertFalse(this.jumpScares.isTurnaroundPaused(survivor.getUuid()));
-        assertTrue(this.revealed.isEmpty(), "the follow-up waits for the dissolve");
 
         this.clock.addAndGet(LureService.FOLLOW_UP_MILLIS);
         service.tick();
 
-        assertEquals(List.of(survivor.getUuid()), this.revealed);
-    }
-
-    @Test
-    @DisplayName("Slowness follows up as a potion effect")
-    void slownessFollowsUp(Env env) {
-        Instance instance = flat(env);
-        Player slowed = join(env, instance, ALONE);
-        corpse(env, instance);
-        this.outcome = LureOutcome.SLOWNESS;
-        LureService service = service(ALWAYS, instance);
-
-        fire(service, slowed);
-
-        assertTrue(slowed.hasEffect(PotionEffect.SLOWNESS));
-    }
-
-    @Test
-    @DisplayName("Blindness follows up as a potion effect")
-    void blindnessFollowsUp(Env env) {
-        Instance instance = flat(env);
-        Player blinded = join(env, instance, ALONE);
-        corpse(env, instance);
-        this.outcome = LureOutcome.BLINDNESS;
-        LureService service = service(ALWAYS, instance);
-
-        fire(service, blinded);
-
-        assertTrue(blinded.hasEffect(PotionEffect.BLINDNESS));
+        assertEquals("followUp:" + survivor.getUuid(), this.consequences.getLast());
     }
 
     @Test
@@ -245,19 +207,17 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("Stopping removes every figure, forgets every lure and clears the respite")
+    @DisplayName("Stopping removes every figure, forgets every lure and cleans up the consequence")
     void stopClearsEverything(Env env) {
         Instance instance = flat(env);
         Player waiting = join(env, instance, ALONE);
         corpse(env, instance);
         LureService service = service(ALWAYS, instance);
         service.tick();
-        UUID spared = UUID.randomUUID();
-        this.respite.spare(spared, Long.MAX_VALUE);
 
         service.stop();
 
-        assertFalse(this.respite.spares(spared, this.clock.get()));
+        assertEquals(List.of("cleanUp"), this.consequences);
 
         assertTrue(service.figureOf(waiting.getUuid()).isEmpty());
         assertFalse(this.jumpScares.isTurnaroundPaused(waiting.getUuid()));
@@ -286,9 +246,22 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
             this.jumpScares.register(corpse);
         }
         LureSpotFinder spots = new LureSpotFinder(new InstanceGround(() -> instance), () -> instance);
-        return new LureService(config, () -> List.copyOf(this.survivors), () -> this.slender, this.jumpScares, spots, this.respite,
-                (id, gain) -> this.fear.add(id + ":" + gain), (survivor, _) -> this.revealed.add(survivor.getUuid()),
-                () -> this.outcome, this.clock::get, new Random(5), TickSections.NONE);
+        return new LureService(config, () -> List.copyOf(this.survivors), this.jumpScares, spots, new LureConsequence() {
+            @Override
+            public void struck(Player survivor, long now) {
+                consequences.add("struck:" + survivor.getUuid() + "@" + now);
+            }
+
+            @Override
+            public void followUp(Player survivor) {
+                consequences.add("followUp:" + survivor.getUuid());
+            }
+
+            @Override
+            public void cleanUp() {
+                consequences.add("cleanUp");
+            }
+        }, this.clock::get, new Random(5), TickSections.NONE);
     }
 
     private final List<DeadPlayerMannequin> pendingCorpses = new ArrayList<>();
