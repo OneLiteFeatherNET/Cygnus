@@ -3,6 +3,8 @@ package net.onelitefeather.cygnus.spectator;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.Event;
+import net.minestom.server.event.EventNode;
 import net.minestom.server.inventory.click.Click;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.item.ItemStack;
@@ -30,14 +32,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SpectatorInventoryTest extends CygnusPlayerTestBase {
 
     private Instance instance;
+    private EventNode<Event> statsNode;
+    private List<SpectatorStatsRequestEvent> statsRequests;
 
     @BeforeEach
     void setUp(Env env) {
         this.instance = env.createFlatInstance();
+        // The Env lives for the whole class, so a listener from env.listen would leak into later tests
+        this.statsRequests = new ArrayList<>();
+        this.statsNode = EventNode.all("stats-requests");
+        this.statsNode.addListener(SpectatorStatsRequestEvent.class, statsRequests::add);
+        env.process().eventHandler().addChild(this.statsNode);
     }
 
     @AfterEach
     void tearDown(Env env) {
+        env.process().eventHandler().removeChild(this.statsNode);
         env.destroyInstance(this.instance, true);
     }
 
@@ -173,14 +183,11 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         List<Player> teleportedTo = new ArrayList<>();
         SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(),
                 (_, t) -> teleportedTo.add(t));
-        env.listen(SpectatorStatsRequestEvent.class).followup(event -> {
-            assertEquals(spectator, event.getPlayer());
-            assertEquals(target, event.getTarget());
-        });
 
         inventory.handleClick(spectator, 9, new Click.Right(9), headOf(target), _ -> {});
 
         assertTrue(teleportedTo.isEmpty());
+        assertStatsRequested(spectator, target);
     }
 
     @Test
@@ -197,6 +204,22 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         inventory.handleClick(viewer, 36, new Click.Left(36), headOf(other), _ -> {});
 
         assertTrue(teleportedTo.isEmpty());
+    }
+
+    @Test
+    void testRightClickOnSpectatorOpensStats(@NotNull Env env) {
+        Player viewer = env.createPlayer(instance);
+        Player other = env.createPlayer(instance);
+        Team spectatorTeam = spectatorTeam();
+        spectatorTeam.addPlayer(other);
+        List<Player> teleportedTo = new ArrayList<>();
+        SpectatorInventory inventory = new SpectatorInventory(Team.of(GameConfig.SURVIVOR_KEY, 5), spectatorTeam,
+                (_, t) -> teleportedTo.add(t));
+
+        inventory.handleClick(viewer, 36, new Click.Right(36), headOf(other), _ -> {});
+
+        assertTrue(teleportedTo.isEmpty());
+        assertStatsRequested(viewer, other);
     }
 
     @Test
@@ -264,6 +287,12 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
                 (_, _) -> {});
 
         assertFalse(inventory.refreshHealth());
+    }
+
+    private void assertStatsRequested(Player viewer, Player target) {
+        assertEquals(1, statsRequests.size());
+        assertEquals(viewer, statsRequests.getFirst().getPlayer());
+        assertEquals(target, statsRequests.getFirst().getTarget());
     }
 
     private static Team spectatorTeam() {
