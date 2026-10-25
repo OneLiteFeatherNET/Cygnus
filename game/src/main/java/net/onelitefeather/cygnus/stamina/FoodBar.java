@@ -173,18 +173,20 @@ public non-sealed class FoodBar extends StaminaBar {
     }
 
     /**
-     * Lifts the bar to the {@linkplain StaminaConfig#sprintResumeShare() resume share} and allows
-     * sprinting again.
+     * Lifts the bar to the given share and allows sprinting again.
      * <p>
      * Used when an adrenaline rush kicks in, so a survivor caught with an empty bar can still
-     * sprint away. A bar that is already fuller stays as it is. The state stays too: a running
-     * sprint goes on, an empty bar keeps regenerating from the share on.
+     * sprint away. The bar never ends up below the {@linkplain StaminaConfig#sprintResumeShare() resume share},
+     * so the refill always allows a sprint. A bar that is already fuller stays as it is. The state
+     * stays too: a running sprint goes on, an empty bar keeps regenerating from the share on.
      * </p>
+     *
+     * @param share how full the bar gets, between 0 and 1
      */
-    public void refillToResume() {
-        float resume = (float) (this.config.sprintResumeShare() * MAX_FOOD);
-        if (this.currentSpeedCount >= resume) return;
-        this.currentSpeedCount = resume;
+    public void refillTo(double share) {
+        float target = (float) (Math.max(share, this.config.sprintResumeShare()) * MAX_FOOD);
+        if (this.currentSpeedCount >= target) return;
+        this.currentSpeedCount = target;
         player.setExp(normalize(this.currentSpeedCount));
         player.setBlockedSprinting(false);
     }
