@@ -34,13 +34,23 @@ import java.util.function.LongSupplier;
  * appearance onto the next. While he looks through the creek's eyes, regeneration stands still.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
 public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
 
     private static final Sound LEVEL = Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F);
+
+    /** What only the slender hears when his drain hurts a survivor, the sound of a regular attack. */
+    static final Sound HIT = Sound.sound(SoundEvent.ENTITY_PLAYER_ATTACK_STRONG, Sound.Source.PLAYER, 0.6F, 1F);
+
+    /**
+     * How long the slender waits before he hears {@link #HIT} again, in milliseconds. The drain hurts
+     * twice a second, so without it he would hear the sound at that rate; one second matches the
+     * survivor's own hurt sound.
+     */
+    static final long HIT_COOLDOWN_MILLIS = 1000L;
 
     /**
      * Upper bound of {@link #currentTime}, in stamina units and also the number of segments rendered in the
@@ -88,6 +98,8 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private StaminaColors colorState;
     /** The earliest moment the slender may appear again, in milliseconds. */
     private long reappearAt;
+    /** The earliest moment the slender may hear {@link #HIT} again, in milliseconds. */
+    private long hitSoundAt = Long.MIN_VALUE;
     /** Whether regeneration was held back on the last tick because he looked through the creek. */
     private boolean paused;
 
@@ -140,7 +152,9 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private void handleDraining() {
         currentTime -= TIME_STEP;
         Instance instance = player.getInstance();
-        applyDamage(instance, player.getUuid(), player.getPosition(), damageRange, DAMAGE_PER_TICK);
+        if (applyDamage(instance, player.getUuid(), player.getPosition(), damageRange, DAMAGE_PER_TICK)) {
+            this.playHitSound();
+        }
         // Hides in the same tick the bar runs dry: one tick later he would stay visible and hit
         // once more with a bar that already shows empty.
         if (currentTime <= 0) {
@@ -149,6 +163,16 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
             return;
         }
         this.colorState.sendProgressBar(player, tileChar, currentTime, time);
+    }
+
+    /**
+     * Lets the slender hear that he hurt someone, at most once per {@value #HIT_COOLDOWN_MILLIS} ms.
+     */
+    private void playHitSound() {
+        long now = this.clock.getAsLong();
+        if (now < this.hitSoundAt) return;
+        this.hitSoundAt = now + HIT_COOLDOWN_MILLIS;
+        player.playSound(HIT, Sound.Emitter.self());
     }
 
     /**

@@ -22,7 +22,7 @@ import java.util.function.BiPredicate;
  * The method will iterate over all entities in the given range and apply the damage to the entity if it is a player.
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @SuppressWarnings({"java:S3252"})
@@ -74,16 +74,19 @@ public interface SlenderBarHelper {
      * @param center   the center position where the damage should be applied
      * @param range    the range where the damage should be applied
      * @param damage   the damage in health points, taken as points through {@link Vitality}
+     * @return {@code true} if at least one survivor was hit
      */
-    default void applyDamage(Instance instance, UUID uuid, Pos center, int range, float damage) {
+    default boolean applyDamage(Instance instance, UUID uuid, Pos center, int range, float damage) {
         Collection<Entity> nearbyEntities = instance.getNearbyEntities(center, range);
-        if (nearbyEntities.isEmpty()) return;
+        boolean hit = false;
         for (Entity nearbyEntity : nearbyEntities) {
             if (!(nearbyEntity instanceof CygnusPlayer target)) continue;
             if (UUID_COMPARATOR.test(uuid, target.getUuid())) continue;
             if (!isDamageableSurvivor(target)) continue;
             target.vitality().damage(damage * Vitality.POINTS_PER_HEALTH, center);
+            hit = true;
         }
+        return hit;
     }
 
     /**
