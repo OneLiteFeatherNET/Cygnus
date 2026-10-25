@@ -30,9 +30,9 @@ import java.util.function.LongSupplier;
  * {@code SlenderBarHelper#swing}, so no event ever names him as the victim - a sound on his
  * side would only be a second way to locate the survivor he is already standing next to.</p>
  *
- * <p>The cooldown is what keeps the feedback readable. A draining slender damages everyone around
- * him twice a second, so without it a survivor next to him would hear the sound at that rate until
- * one of them died.</p>
+ * <p>The cooldown keeps the feedback readable when hits pile up. A visible slender swings once a
+ * second, which the default cooldown lets through, while two hits from different sources in the same
+ * moment, a swing and the landing after the creek, still play one sound.</p>
  *
  * <p>Usage:</p>
  * <pre>{@code

@@ -384,8 +384,8 @@ public record GameConfig(
      * The sound a player hears when hit.
      *
      * @param enabled  whether the sound is played at all
-     * @param cooldown the ticks before a player hears it again, at least 1. The slender damages
-     *                 everyone around him twice a second while he drains.
+     * @param cooldown the ticks before a player hears it again, at least 1. The slender swings at
+     *                 everyone around him once a second while he is visible.
      * @param sound    the sound; a key naming no known sound falls back to {@link #DEFAULT_SOUND}
      *                 when it is first played
      */
@@ -397,8 +397,11 @@ public record GameConfig(
          */
         public static final Key DEFAULT_SOUND = Key.key("entity.player.hurt");
 
-        /** Lets through every second damage tick of a draining slender: enough to notice, not enough to grate. */
-        public static final DamageSound DEFAULT = new DamageSound(true, 20, DEFAULT_SOUND);
+        /**
+         * Stays below the one second between two swings of the slender, so a swing the scheduler runs a
+         * little early is still heard. Two hits from different sources in the same moment still play one sound.
+         */
+        public static final DamageSound DEFAULT = new DamageSound(true, 15, DEFAULT_SOUND);
 
         public DamageSound {
             atLeast("damageSoundCooldown", cooldown, 1);
