@@ -112,6 +112,7 @@ The measured services, with the name each reports as `cygnus.tick.section.name` 
 | `page-glitch` | The page glitch overlay |
 | `blood-splatter` | The fade of blood splatters |
 | `page-proximity` | The page proximity hint |
+| `page-reveal` | The nearby pages on a survivor's locator bar |
 | `ambient` | Ambient sounds and blackouts |
 | `adrenaline` | The adrenaline rush |
 | `slender-takeover` | The takeover countdown after the slender left |

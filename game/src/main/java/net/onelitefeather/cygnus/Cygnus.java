@@ -51,6 +51,7 @@ import net.onelitefeather.cygnus.minimap.MinimapPolicy;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
 import net.onelitefeather.cygnus.clientguard.ClientGuard;
 import net.onelitefeather.cygnus.page.PageProximityService;
+import net.onelitefeather.cygnus.page.PageRevealFeature;
 import net.onelitefeather.cygnus.damage.DamageSoundService;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
@@ -317,6 +318,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         new FootprintFeature(this.gameConfig.footprint(),
                                 () -> TeamHelper.slenderOf(this.teamService),
                                 System::currentTimeMillis),
+                        new PageRevealFeature(this.pageProvider::interactablePages,
+                                () -> TeamHelper.survivorsOf(this.teamService),
+                                System::currentTimeMillis,
+                                tickSections),
                         new OverlayModule(this.gameConfig.glitch(), this.gameConfig.pageGlitch(), this.teamService,
                                 this.staminaService, tickSections)
                 )).toList();
