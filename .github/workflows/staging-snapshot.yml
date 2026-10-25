@@ -1,0 +1,95 @@
+name: Staging Snapshot
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "Pull request number to build for staging"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-snapshot-${{ inputs.pr || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      ONELITEFEATHER_MAVEN_USERNAME: ${{ secrets.ONELITEFEATHER_MAVEN_USERNAME }}
+      ONELITEFEATHER_MAVEN_PASSWORD: ${{ secrets.ONELITEFEATHER_MAVEN_PASSWORD }}
+      GRADLE_OPTS: "-Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.welcome=never"
+    steps:
+      # Build the PR head commit when a PR number is given, otherwise the dispatched or pushed ref.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.pr && format('refs/pull/{0}/head', inputs.pr) || github.ref }}
+
+      # Fork PRs must not get publish credentials, so they are refused before any build runs.
+      - name: Validate PR input
+        env:
+          INPUT_PR: ${{ inputs.pr }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$INPUT_PR" ]; then
+            echo "No PR number given, building the dispatched ref."
+            exit 0
+          fi
+          if ! [[ "$INPUT_PR" =~ ^[0-9]+$ ]]; then
+            echo "::error::pr input must be a pull request number, got '$INPUT_PR'"
+            exit 1
+          fi
+          cross=$(gh pr view "$INPUT_PR" --json isCrossRepository --jq .isCrossRepository)
+          if [ "$cross" = "true" ]; then
+            echo "::error::PR #$INPUT_PR is from a fork; fork PRs cannot be published as staging snapshots"
+            exit 1
+          fi
+
+      # The version in build.gradle.kts belongs to release-please, so it is rewritten only in this checkout.
+      - name: Compute snapshot version
+        id: version
+        env:
+          INPUT_PR: ${{ inputs.pr }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          base=$(sed -n 's/^version = "\([0-9]*\.[0-9]*\.[0-9]*\)".*x-release-please-version.*/\1/p' build.gradle.kts)
+          if [ -z "$base" ]; then
+            echo "::error::could not read base version from build.gradle.kts"
+            exit 1
+          fi
+          if [ -n "$INPUT_PR" ]; then
+            channel="pr-$INPUT_PR"
+          else
+            channel=$(echo "$REF_NAME" | tr -c 'A-Za-z0-9.\n' '-')
+          fi
+          version="${base}-${channel}-SNAPSHOT"
+          sed -i "s/^version = \"[^\"]*\" \/\/ x-release-please-version/version = \"${version}\" \/\/ x-release-please-version/" build.gradle.kts
+          echo "Snapshot version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Staging snapshot"
+            echo "- Version: \`$version\`"
+            echo "- Commit: \`$(git rev-parse HEAD)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build and publish
+        run: ./gradlew build publish
