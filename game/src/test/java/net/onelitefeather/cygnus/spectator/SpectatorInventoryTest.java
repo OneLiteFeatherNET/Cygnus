@@ -13,6 +13,7 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.event.SpectatorStatsRequestEvent;
+import net.onelitefeather.cygnus.player.event.SpectatorTeleportRequestEvent;
 import net.onelitefeather.cygnus.utils.HealthDisplay;
 import net.theevilreaper.xerus.api.team.Team;
 import org.jetbrains.annotations.NotNull;
@@ -32,22 +33,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SpectatorInventoryTest extends CygnusPlayerTestBase {
 
     private Instance instance;
-    private EventNode<Event> statsNode;
+    private EventNode<Event> requestNode;
     private List<SpectatorStatsRequestEvent> statsRequests;
+    private List<Player> teleportedTo;
 
     @BeforeEach
     void setUp(Env env) {
         this.instance = env.createFlatInstance();
         // The Env lives for the whole class, so a listener from env.listen would leak into later tests
         this.statsRequests = new ArrayList<>();
-        this.statsNode = EventNode.all("stats-requests");
-        this.statsNode.addListener(SpectatorStatsRequestEvent.class, statsRequests::add);
-        env.process().eventHandler().addChild(this.statsNode);
+        this.teleportedTo = new ArrayList<>();
+        this.requestNode = EventNode.all("spectator-requests");
+        this.requestNode.addListener(SpectatorStatsRequestEvent.class, statsRequests::add);
+        this.requestNode.addListener(SpectatorTeleportRequestEvent.class, event -> teleportedTo.add(event.getTarget()));
+        env.process().eventHandler().addChild(this.requestNode);
     }
 
     @AfterEach
     void tearDown(Env env) {
-        env.process().eventHandler().removeChild(this.statsNode);
+        env.process().eventHandler().removeChild(this.requestNode);
         env.destroyInstance(this.instance, true);
     }
 
@@ -56,7 +60,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         Player player = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
 
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(), (spectator, target) -> {});
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam());
         inventory.open(player);
 
         assertEquals(inventory.getInventory(), player.getOpenInventory());
@@ -69,8 +73,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
         survivorTeam.addPlayer(target);
 
-        List<Player> teleportedTo = new ArrayList<>();
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(), (s, t) -> teleportedTo.add(t));
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam());
 
         ItemStack headStack = ItemStack.builder(Material.PLAYER_HEAD)
                 .set(SpectatorInventory.TARGET_TAG, target.getUuid())
@@ -87,8 +90,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         Player spectator = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
 
-        List<Player> teleportedTo = new ArrayList<>();
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(), (s, t) -> teleportedTo.add(t));
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam());
 
         ItemStack headStack = ItemStack.builder(Material.PLAYER_HEAD)
                 .set(SpectatorInventory.TARGET_TAG, UUID.randomUUID())
@@ -106,7 +108,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
         survivorTeam.addPlayer(survivor);
 
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(), (_, _) -> {});
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam());
         inventory.open(spectator);
         env.tick();
 
@@ -127,7 +129,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(second);
         survivorTeam.addPlayer(third);
 
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(), (_, _) -> {});
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam());
         inventory.open(spectator);
         env.tick();
         assertEquals(3, countHeads(inventory), "all survivors should be listed initially");
@@ -150,7 +152,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
         survivorTeam.addPlayer(first);
 
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(), (_, _) -> {});
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam());
         inventory.open(spectator);
         env.tick();
         assertEquals(1, countHeads(inventory));
@@ -166,8 +168,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
     void testHandleClickWithoutTargetIsNoOp(@NotNull Env env) {
         Player spectator = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
-        List<Player> teleportedTo = new ArrayList<>();
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(), (_, t) -> teleportedTo.add(t));
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam());
 
         inventory.handleClick(spectator, 11, null, ItemStack.AIR, _ -> {});
 
@@ -180,9 +181,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         Player target = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
         survivorTeam.addPlayer(target);
-        List<Player> teleportedTo = new ArrayList<>();
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(),
-                (_, t) -> teleportedTo.add(t));
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam());
 
         inventory.handleClick(spectator, 9, new Click.Right(9), headOf(target), _ -> {});
 
@@ -191,17 +190,40 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    void testLeftClickOnSpectatorDoesNotTeleport(@NotNull Env env) {
+    void testLeftClickOnSpectatorTeleports(@NotNull Env env) {
         Player viewer = env.createPlayer(instance);
         Player other = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
         Team spectatorTeam = spectatorTeam();
+        spectatorTeam.addPlayer(viewer);
         spectatorTeam.addPlayer(other);
-        List<Player> teleportedTo = new ArrayList<>();
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam,
-                (_, t) -> teleportedTo.add(t));
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam);
 
         inventory.handleClick(viewer, 36, new Click.Left(36), headOf(other), _ -> {});
+
+        assertEquals(List.of(other), teleportedTo);
+    }
+
+    @Test
+    void testLeftClickOnOwnHeadDoesNotTeleport(@NotNull Env env) {
+        Player viewer = env.createPlayer(instance);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        Team spectatorTeam = spectatorTeam();
+        spectatorTeam.addPlayer(viewer);
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam);
+
+        inventory.handleClick(viewer, 36, new Click.Left(36), headOf(viewer), _ -> {});
+
+        assertTrue(teleportedTo.isEmpty());
+    }
+
+    @Test
+    void testLeftClickOnPlayerOutsideBothTeamsDoesNotTeleport(@NotNull Env env) {
+        Player viewer = env.createPlayer(instance);
+        Player stranger = env.createPlayer(instance);
+        SpectatorInventory inventory = new SpectatorInventory(Team.of(GameConfig.SURVIVOR_KEY, 5), spectatorTeam());
+
+        inventory.handleClick(viewer, 36, new Click.Left(36), headOf(stranger), _ -> {});
 
         assertTrue(teleportedTo.isEmpty());
     }
@@ -212,14 +234,28 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         Player other = env.createPlayer(instance);
         Team spectatorTeam = spectatorTeam();
         spectatorTeam.addPlayer(other);
-        List<Player> teleportedTo = new ArrayList<>();
-        SpectatorInventory inventory = new SpectatorInventory(Team.of(GameConfig.SURVIVOR_KEY, 5), spectatorTeam,
-                (_, t) -> teleportedTo.add(t));
+        SpectatorInventory inventory = new SpectatorInventory(Team.of(GameConfig.SURVIVOR_KEY, 5), spectatorTeam);
 
         inventory.handleClick(viewer, 36, new Click.Right(36), headOf(other), _ -> {});
 
         assertTrue(teleportedTo.isEmpty());
         assertStatsRequested(viewer, other);
+    }
+
+    @Test
+    void testSpectatorHeadShowsTeleportHint(@NotNull Env env) {
+        Player viewer = env.createPlayer(instance);
+        Player dead = env.createPlayer(instance);
+        Team spectatorTeam = spectatorTeam();
+        spectatorTeam.addPlayer(dead);
+
+        SpectatorInventory inventory = new SpectatorInventory(Team.of(GameConfig.SURVIVOR_KEY, 5), spectatorTeam);
+        inventory.open(viewer);
+        env.tick();
+
+        List<Component> lore = inventory.getInventory().getItemStack(SpectatorInventory.SPECTATOR_SLOTS[0])
+                .get(DataComponents.LORE);
+        assertTrue(lore.contains(SpectatorInventory.TELEPORT_HINT));
     }
 
     @Test
@@ -232,7 +268,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         Team spectatorTeam = spectatorTeam();
         spectatorTeam.addPlayer(dead);
 
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam, (_, _) -> {});
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam);
         inventory.open(viewer);
         env.tick();
 
@@ -250,7 +286,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
         survivorTeam.addPlayer(survivor);
 
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(), (_, _) -> {});
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam());
         inventory.open(viewer);
         env.tick();
 
@@ -265,7 +301,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
         Player survivor = env.createPlayer(instance);
         Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
         survivorTeam.addPlayer(survivor);
-        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam(), (_, _) -> {});
+        SpectatorInventory inventory = new SpectatorInventory(survivorTeam, spectatorTeam());
         inventory.open(viewer);
         env.tick();
         ItemStack before = inventory.getInventory().getItemStack(SpectatorInventory.SURVIVOR_SLOTS[0]);
@@ -283,8 +319,7 @@ class SpectatorInventoryTest extends CygnusPlayerTestBase {
 
     @Test
     void testRefreshHealthReportsClosedInventory() {
-        SpectatorInventory inventory = new SpectatorInventory(Team.of(GameConfig.SURVIVOR_KEY, 5), spectatorTeam(),
-                (_, _) -> {});
+        SpectatorInventory inventory = new SpectatorInventory(Team.of(GameConfig.SURVIVOR_KEY, 5), spectatorTeam());
 
         assertFalse(inventory.refreshHealth());
     }

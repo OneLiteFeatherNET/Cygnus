@@ -13,6 +13,7 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.player.event.SpectatorTeleportRequestEvent;
 import net.onelitefeather.cygnus.team.RoleIcon;
 import net.theevilreaper.xerus.api.team.Team;
 import org.jetbrains.annotations.NotNull;
@@ -105,6 +106,20 @@ class SpectatorServiceTest extends CygnusPlayerTestBase {
         SpectatorService service = new SpectatorService(spectatorTeam, survivorTeam);
 
         service.teleportTo(spectator, target).get();
+
+        assertEquals(target.getPosition(), spectator.getPosition());
+    }
+
+    @Test
+    void testTeleportRequestMovesSpectatorToTarget(@NotNull Env env) throws Exception {
+        Player spectator = env.createPlayer(instance);
+        Player target = env.createPlayer(instance);
+        target.teleport(new Pos(15, 41, 15)).get();
+        SpectatorService service = new SpectatorService(Team.of(GameConfig.SPECTATOR_KEY, 5),
+                Team.of(GameConfig.SURVIVOR_KEY, 5));
+
+        service.node().call(new SpectatorTeleportRequestEvent(spectator, target));
+        env.tick();
 
         assertEquals(target.getPosition(), spectator.getPosition());
     }
