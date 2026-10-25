@@ -3,6 +3,8 @@ name: Staging Snapshot
 on:
   push:
     branches: [main]
+  pull_request:
+    types: [labeled, synchronize, reopened]
   workflow_dispatch:
     inputs:
       pr:
@@ -12,29 +14,41 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 concurrency:
-  group: staging-snapshot-${{ inputs.pr || github.ref }}
+  group: staging-snapshot-${{ inputs.pr || github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   publish:
+    # Pull requests only build while they carry the staging label, and never from forks.
+    # A labeled event only counts when the label that was just added is staging.
+    if: >-
+      github.event_name != 'pull_request' || (
+        contains(github.event.pull_request.labels.*.name, 'staging') &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        (github.event.action != 'labeled' || github.event.label.name == 'staging')
+      )
     runs-on: ubuntu-latest
     env:
       ONELITEFEATHER_MAVEN_USERNAME: ${{ secrets.ONELITEFEATHER_MAVEN_USERNAME }}
       ONELITEFEATHER_MAVEN_PASSWORD: ${{ secrets.ONELITEFEATHER_MAVEN_PASSWORD }}
       GRADLE_OPTS: "-Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.welcome=never"
+      PR_NUMBER: ${{ inputs.pr || github.event.pull_request.number }}
     steps:
-      # Build the PR head commit when a PR number is given, otherwise the dispatched or pushed ref.
+      # Pull requests are checked out as GitHub merges them into main, so staging tests them together
+      # with main's latest changes. If that merge ref does not exist (merge conflict), this step fails.
+      # Dispatched PRs use the head commit, and pushes use the pushed ref.
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.pr && format('refs/pull/{0}/head', inputs.pr) || github.ref }}
+          ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || inputs.pr && format('refs/pull/{0}/head', inputs.pr) || github.ref }}
 
       # Fork PRs must not get publish credentials, so they are refused before any build runs.
       - name: Validate PR input
         env:
-          INPUT_PR: ${{ inputs.pr }}
+          INPUT_PR: ${{ env.PR_NUMBER }}
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
@@ -52,11 +66,25 @@ jobs:
             exit 1
           fi
 
+      # Only one PR may carry the staging label, because the staging server follows that label.
+      - name: Remove staging label from other pull requests
+        if: env.PR_NUMBER != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh pr list --label staging --state open --json number --jq '.[].number' |
+            while read -r other; do
+              if [ "$other" != "$PR_NUMBER" ]; then
+                echo "Removing staging label from #$other"
+                gh pr edit "$other" --remove-label staging
+              fi
+            done
+
       # The version in build.gradle.kts belongs to release-please, so it is rewritten only in this checkout.
       - name: Compute snapshot version
         id: version
         env:
-          INPUT_PR: ${{ inputs.pr }}
           REF_NAME: ${{ github.ref_name }}
         run: |
           base=$(sed -n 's/^version = "\([0-9]*\.[0-9]*\.[0-9]*\)".*x-release-please-version.*/\1/p' build.gradle.kts)
@@ -64,8 +92,8 @@ jobs:
             echo "::error::could not read base version from build.gradle.kts"
             exit 1
           fi
-          if [ -n "$INPUT_PR" ]; then
-            channel="pr-$INPUT_PR"
+          if [ -n "$PR_NUMBER" ]; then
+            channel="pr-$PR_NUMBER"
           else
             channel=$(echo "$REF_NAME" | tr -c 'A-Za-z0-9.\n' '-')
           fi
