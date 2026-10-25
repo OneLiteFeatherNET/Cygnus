@@ -6,6 +6,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.potion.PotionEffect;
+import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.network.packet.server.ServerPacket;
 import net.minestom.server.network.packet.server.play.ActionBarPacket;
 import net.minestom.server.network.packet.server.play.EntitySoundEffectPacket;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.LongSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -436,20 +438,137 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    void testDrainTickTakesDoubleTheBarStepFromASurvivorInRange(@NotNull Env env) {
-        CygnusPlayer slender = (CygnusPlayer) env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(0, 40, 0));
+    @DisplayName("The first tick of an appearance does not swing yet")
+    void firstTickOfAnAppearanceDoesNotSwing(@NotNull Env env) {
+        CygnusPlayer slender = slender(env, new Pos(0, 40, 0));
+        CygnusPlayer survivor = survivor(env, new Pos(1, 40, 0));
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, () -> 0L, HIT);
+        bar.start();
+        bar.changeStatus();
+
+        bar.consume();
+
+        assertEquals(100.0D, survivor.vitality().points(), DELTA, "a survivor next to him gets a moment to react");
+        bar.stop();
+    }
+
+    @Test
+    @DisplayName("Every second tick swings, one second apart")
+    void swingsOnEverySecondTick(@NotNull Env env) {
+        CygnusPlayer slender = slender(env, new Pos(0, 40, 0));
+        CygnusPlayer survivor = survivor(env, new Pos(1, 40, 0));
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, () -> 0L, HIT);
+        bar.start();
+        bar.changeStatus();
+
+        for (int i = 0; i < 4; i++) {
+            bar.consume();
+        }
+
+        assertEquals(100.0D - 2 * HIT_POINTS, survivor.vitality().points(), DELTA, "four ticks are two swings");
+        bar.stop();
+    }
+
+    @Test
+    @DisplayName("A new appearance waits one second again before the first swing")
+    void reappearingWaitsOneSecondAgain(@NotNull Env env) {
+        CygnusPlayer slender = slender(env, new Pos(0, 40, 0));
+        CygnusPlayer survivor = survivor(env, new Pos(1, 40, 0));
+        AtomicLong clock = new AtomicLong();
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, clock::get, HIT);
+        bar.start();
+        bar.changeStatus();
+        bar.consume();
+        bar.changeStatus();
+        clock.addAndGet(StaminaConfig.DEFAULT.slenderReappearCooldownSeconds() * 1000L);
+        assertTrue(bar.changeStatus(), "he may appear again once the cooldown is over");
+
+        bar.consume();
+
+        assertEquals(100.0D, survivor.vitality().points(), DELTA, "the tick before hiding must not count towards the new appearance");
+        bar.stop();
+    }
+
+    @Test
+    @DisplayName("The swing on the tick the bar runs dry still lands")
+    void swingLandsOnTheTickTheBarRunsDry(@NotNull Env env) {
+        CygnusPlayer slender = slender(env, new Pos(0, 40, 0));
+        CygnusPlayer survivor = survivor(env, new Pos(1, 40, 0));
+        survivor.vitality().setUp(1000);
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, () -> 0L, HIT);
+        bar.start();
+        bar.changeStatus();
+        int ticks = (int) (SlenderBar.MAX_TIME / SlenderBar.TIME_STEP);
+
+        for (int i = 0; i < ticks; i++) {
+            bar.consume();
+        }
+
+        assertEquals(StaminaBar.State.REGENERATING, bar.state, "the bar ran dry");
+        assertEquals(1100.0D - (ticks / SlenderBar.TICKS_PER_SWING) * HIT_POINTS, survivor.vitality().points(), DELTA,
+                "the last tick is a swing tick and its swing lands before he hides");
+    }
+
+    @Test
+    @DisplayName("A miss plays the swoosh to the slender and to nobody else")
+    void missPlaysTheSwooshToTheSlenderOnly(@NotNull Env env) {
+        TestConnection slenderConnection = env.createConnection();
+        CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
-        Player survivor = env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(1, 40, 0));
+        TestConnection survivorConnection = env.createConnection();
+        Player survivor = survivorConnection.connect(instance, new Pos(1, 40, 0));
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
-        survivor.setHealth(20F);
-        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender);
-        slenderBar.start();
-        slenderBar.changeStatus();
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, () -> 0L, MISS);
+        bar.start();
+        bar.changeStatus();
+        bar.consume();
+        Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
+        Collector<EntitySoundEffectPacket> survivorSounds = survivorConnection.trackIncoming(EntitySoundEffectPacket.class);
 
-        slenderBar.consume();
+        bar.consume();
 
-        assertEquals(19F, survivor.getHealth(), 0.001F, "one 500 ms tick must take 1.0 health, twice the 0.5 bar step");
-        slenderBar.stop();
+        slenderSounds.assertSingle(packet -> assertEquals(SoundEvent.ENTITY_PLAYER_ATTACK_NODAMAGE, packet.soundEvent()));
+        survivorSounds.assertEmpty();
+        bar.stop();
+    }
+
+    @Test
+    @DisplayName("A hit plays the hit sound instead of the swoosh")
+    void hitPlaysNoSwoosh(@NotNull Env env) {
+        TestConnection slenderConnection = env.createConnection();
+        CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        survivor(env, new Pos(1, 40, 0));
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, () -> 0L, HIT);
+        bar.start();
+        bar.changeStatus();
+        bar.consume();
+        Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
+
+        bar.consume();
+
+        slenderSounds.assertSingle(packet -> assertEquals(SlenderBar.HIT.name(), packet.soundEvent().key()));
+        bar.stop();
+    }
+
+    @Test
+    @DisplayName("Missing two survivors with one swing plays one swoosh")
+    void twoMissesPlayOneSwoosh(@NotNull Env env) {
+        TestConnection slenderConnection = env.createConnection();
+        CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        survivor(env, new Pos(1, 40, 0));
+        survivor(env, new Pos(-1, 40, 0));
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, () -> 0L, MISS);
+        bar.start();
+        bar.changeStatus();
+        bar.consume();
+        Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
+
+        bar.consume();
+
+        slenderSounds.assertSingle(packet -> assertEquals(SoundEvent.ENTITY_PLAYER_ATTACK_NODAMAGE, packet.soundEvent()));
+        bar.stop();
     }
 
     @Test
@@ -474,14 +593,14 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
 
     @Test
     void testDrainDoesNotHurtTheSlenderOrANonSurvivor(@NotNull Env env) {
-        CygnusPlayer slender = (CygnusPlayer) env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(0, 40, 0));
-        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
-        Player spectator = env.createConnection().connect(instance, new net.minestom.server.coordinate.Pos(1, 40, 0));
+        CygnusPlayer slender = slender(env, new Pos(0, 40, 0));
+        Player spectator = env.createConnection().connect(instance, new Pos(1, 40, 0));
         spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
-        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender);
+        SlenderBar slenderBar = bar(slender, StaminaConfig.DEFAULT, () -> 0L, HIT);
         slenderBar.start();
         slenderBar.changeStatus();
 
+        slenderBar.consume();
         slenderBar.consume();
 
         assertEquals(20F, slender.getHealth(), 0.001F, "the slender must not hurt himself");
@@ -490,32 +609,32 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("A survivor 3.5 blocks away is hurt with the default range")
+    @DisplayName("A survivor 3.5 blocks away is hit with the default range")
     void survivorInsideTheDefaultRangeIsHurt(@NotNull Env env) {
-        Player survivor = drainOnce(env, instance, StaminaConfig.DEFAULT, 3.5D);
+        CygnusPlayer survivor = drainSwing(env, instance, StaminaConfig.DEFAULT, 3.5D);
 
-        assertEquals(19.0F, survivor.getHealth(), 0.001F, "one tick takes the damage of one bar step");
+        assertEquals(100.0D - HIT_POINTS, survivor.vitality().points(), DELTA, "one swing lands");
     }
 
     @Test
     @DisplayName("A survivor 4.5 blocks away is left alone with the default range")
     void survivorOutsideTheDefaultRangeIsUntouched(@NotNull Env env) {
-        Player survivor = drainOnce(env, instance, StaminaConfig.DEFAULT, 4.5D);
+        CygnusPlayer survivor = drainSwing(env, instance, StaminaConfig.DEFAULT, 4.5D);
 
-        assertEquals(20.0F, survivor.getHealth(), 0.001F);
+        assertEquals(100.0D, survivor.vitality().points(), DELTA);
     }
 
     @Test
     @DisplayName("A configured range of 2 leaves a survivor 3 blocks away untouched")
     void configuredRangeIsHonoured(@NotNull Env env) {
         StaminaConfig narrow = new StaminaConfig(0.3D, 1.25D, 5, 2);
-        Player survivor = drainOnce(env, instance, narrow, 3.0D);
+        CygnusPlayer survivor = drainSwing(env, instance, narrow, 3.0D);
 
-        assertEquals(20.0F, survivor.getHealth(), 0.001F);
+        assertEquals(100.0D, survivor.vitality().points(), DELTA);
     }
 
     @Test
-    @DisplayName("Only the slender hears the hit sound, once per tick however many survivors he hurts")
+    @DisplayName("Only the slender hears the hit sound, once per swing however many survivors he hurts")
     void hitSoundPlaysOnceToTheSlender(@NotNull Env env) {
         TestConnection slenderConnection = env.createConnection();
         CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
@@ -523,19 +642,19 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         TestConnection survivorConnection = env.createConnection();
         Player first = survivorConnection.connect(instance, new Pos(1, 40, 0));
         first.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
-        Player second = env.createConnection().connect(instance, new Pos(-1, 40, 0));
-        second.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
-        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender);
-        slenderBar.start();
-        slenderBar.changeStatus();
+        survivor(env, new Pos(-1, 40, 0));
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, () -> 0L, HIT);
+        bar.start();
+        bar.changeStatus();
+        bar.consume();
         Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
         Collector<EntitySoundEffectPacket> survivorSounds = survivorConnection.trackIncoming(EntitySoundEffectPacket.class);
 
-        slenderBar.consume();
+        bar.consume();
 
         slenderSounds.assertSingle(packet -> assertEquals(SlenderBar.HIT.name(), packet.soundEvent().key()));
         survivorSounds.assertEmpty();
-        slenderBar.stop();
+        bar.stop();
     }
 
     @Test
@@ -544,24 +663,26 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         TestConnection slenderConnection = env.createConnection();
         CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
-        Player survivor = env.createConnection().connect(instance, new Pos(1, 40, 0));
-        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        survivor(env, new Pos(1, 40, 0));
         AtomicLong clock = new AtomicLong();
-        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender, StaminaConfig.DEFAULT, clock::get);
-        slenderBar.start();
-        slenderBar.changeStatus();
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, clock::get, HIT);
+        bar.start();
+        bar.changeStatus();
         Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
 
-        slenderBar.consume();
+        bar.consume();
+        bar.consume();
         clock.set(SlenderBar.HIT_COOLDOWN_MILLIS / 2);
-        slenderBar.consume();
+        bar.consume();
+        bar.consume();
         assertEquals(1, slenderSounds.collect().size(), "the second hit lands inside the cooldown");
 
         Collector<EntitySoundEffectPacket> laterSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
         clock.set(SlenderBar.HIT_COOLDOWN_MILLIS);
-        slenderBar.consume();
+        bar.consume();
+        bar.consume();
         laterSounds.assertSingle(packet -> assertEquals(SlenderBar.HIT.name(), packet.soundEvent().key()));
-        slenderBar.stop();
+        bar.stop();
     }
 
     @Test
@@ -570,28 +691,49 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         TestConnection slenderConnection = env.createConnection();
         CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
-        Player survivor = env.createConnection().connect(instance, new Pos(10, 40, 0));
-        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
-        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender);
-        slenderBar.start();
-        slenderBar.changeStatus();
-        Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
-
-        slenderBar.consume();
-
-        slenderSounds.assertEmpty();
-        slenderBar.stop();
-    }
-
-    private Player drainOnce(Env env, Instance instance, StaminaConfig config, double distance) {
-        CygnusPlayer slender = (CygnusPlayer) env.createConnection().connect(instance, new Pos(0, 40, 0));
-        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
-        Player survivor = env.createConnection().connect(instance, new Pos(distance, 40, 0));
-        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
-        survivor.setHealth(20F);
-        SlenderBar bar = (SlenderBar) StaminaFactory.createSlenderStamina(slender, config, () -> 0L);
+        survivor(env, new Pos(10, 40, 0));
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, () -> 0L, HIT);
         bar.start();
         bar.changeStatus();
+        Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
+
+        bar.consume();
+        bar.consume();
+
+        slenderSounds.assertEmpty();
+        bar.stop();
+    }
+
+    /** Draws a hit of the lowest damage against a calm survivor: 0.6 hearts, 6 points. */
+    private static final double[] HIT = {0.99D, 0.0D};
+    private static final double[] MISS = {0.0D};
+    private static final double HIT_POINTS = 0.6D * SlenderSwing.POINTS_PER_HEART;
+    private static final double DELTA = 1.0E-9D;
+
+    private static SlenderBar bar(CygnusPlayer slender, StaminaConfig config, LongSupplier clock, double[] rolls) {
+        return (SlenderBar) StaminaFactory.createSlenderStamina(slender, config, clock, _ -> 0.0D,
+                new SlenderSwing(() -> new FixedRandom(rolls)));
+    }
+
+    private CygnusPlayer slender(Env env, Pos where) {
+        CygnusPlayer slender = (CygnusPlayer) env.createConnection().connect(instance, where);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        return slender;
+    }
+
+    private CygnusPlayer survivor(Env env, Pos where) {
+        CygnusPlayer survivor = (CygnusPlayer) env.createConnection().connect(instance, where);
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        return survivor;
+    }
+
+    private CygnusPlayer drainSwing(Env env, Instance instance, StaminaConfig config, double distance) {
+        CygnusPlayer slender = slender(env, new Pos(0, 40, 0));
+        CygnusPlayer survivor = survivor(env, new Pos(distance, 40, 0));
+        SlenderBar bar = bar(slender, config, () -> 0L, HIT);
+        bar.start();
+        bar.changeStatus();
+        bar.consume();
         bar.consume();
         bar.stop();
         return survivor;

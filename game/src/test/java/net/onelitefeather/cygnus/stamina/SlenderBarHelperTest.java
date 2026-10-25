@@ -12,9 +12,9 @@ import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.event.PlayerDamagedEvent;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
-import net.onelitefeather.cygnus.vitality.Vitality;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -36,10 +37,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SlenderBarHelperTest extends CygnusPlayerTestBase {
 
     private static final Pos CENTER = new Pos(10, 41, 10);
-    private static final float DAMAGE = 0.5F;
-    /** One health point, what the slender's drain takes per tick, enough to drop the shown health. */
-    private static final float SHOWN_DAMAGE = 1.0F;
     private static final int RANGE = 3;
+    /** Hits a calm survivor with the lowest damage, 0.6 hearts, enough to drop the shown health. */
+    private static final SlenderSwing HIT = new SlenderSwing(() -> new FixedRandom(0.99D, 0.0D));
+    private static final SlenderSwing MISS = new SlenderSwing(() -> new FixedRandom(0.0D));
+    private static final DreadSource CALM = _ -> 0.0D;
 
     private final SlenderBarHelper helper = new SlenderBarHelper() {
     };
@@ -66,7 +68,7 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         spectator.setGameMode(GameMode.SPECTATOR);
 
         float healthBefore = spectator.getHealth();
-        helper.applyDamage(instance, slender.getUuid(), CENTER, 3, DAMAGE);
+        helper.swing(instance, slender.getUuid(), CENTER, RANGE, HIT, CALM);
 
         assertEquals(healthBefore, spectator.getHealth(), "a spectator must never take slender damage");
     }
@@ -80,9 +82,9 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         double pointsBefore = survivor.vitality().points();
-        helper.applyDamage(instance, slender.getUuid(), CENTER, 3, DAMAGE);
+        helper.swing(instance, slender.getUuid(), CENTER, RANGE, HIT, CALM);
 
-        assertEquals(pointsBefore - DAMAGE * Vitality.POINTS_PER_HEALTH, survivor.vitality().points(), 1.0E-9,
+        assertEquals(pointsBefore - 0.6D * SlenderSwing.POINTS_PER_HEART, survivor.vitality().points(), 1.0E-9,
                 "a survivor must still take slender damage");
     }
 
@@ -96,7 +98,7 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
 
         float slenderHealth = slender.getHealth();
         float otherHealth = otherSlender.getHealth();
-        helper.applyDamage(instance, slender.getUuid(), CENTER, 3, DAMAGE);
+        helper.swing(instance, slender.getUuid(), CENTER, RANGE, HIT, CALM);
 
         assertEquals(slenderHealth, slender.getHealth(), "the slender must not damage itself");
         assertEquals(otherHealth, otherSlender.getHealth(), "a slender must never take slender damage");
@@ -110,7 +112,7 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         Player untagged = env.createPlayer(instance, CENTER.add(1, 0, 0));
 
         float healthBefore = untagged.getHealth();
-        helper.applyDamage(instance, slender.getUuid(), CENTER, 3, DAMAGE);
+        helper.swing(instance, slender.getUuid(), CENTER, RANGE, HIT, CALM);
 
         assertEquals(healthBefore, untagged.getHealth(), "the damage filter must be fail closed for untagged players");
     }
@@ -218,7 +220,7 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         Collector<PlayerDamagedEvent> collector =
                 env.trackEvent(PlayerDamagedEvent.class, EventFilter.PLAYER, victim);
 
-        this.helper.applyDamage(instance, attacker.getUuid(), center, RANGE, SHOWN_DAMAGE);
+        this.helper.swing(instance, attacker.getUuid(), center, RANGE, HIT, CALM);
 
         collector.assertSingle(event -> {
             assertEquals(victim, event.getPlayer(), "the victim has to be the one that was hit");
@@ -234,7 +236,7 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         Collector<PlayerDamagedEvent> collector =
                 env.trackEvent(PlayerDamagedEvent.class, EventFilter.PLAYER, attacker);
 
-        this.helper.applyDamage(instance, attacker.getUuid(), new Pos(0, 40, 0), RANGE, SHOWN_DAMAGE);
+        this.helper.swing(instance, attacker.getUuid(), new Pos(0, 40, 0), RANGE, HIT, CALM);
 
         collector.assertEmpty();
     }
@@ -248,9 +250,71 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         victim.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
         victim.vitality().setUp(50);
 
-        this.helper.applyDamage(instance, attacker.getUuid(), new Pos(0, 40, 0), RANGE, 1.0F);
+        this.helper.swing(instance, attacker.getUuid(), new Pos(0, 40, 0), RANGE, HIT, CALM);
 
-        assertEquals(145.0D, victim.vitality().points(), 1.0E-9);
+        assertEquals(144.0D, victim.vitality().points(), 1.0E-9);
         assertEquals(29.0F, victim.getHealth());
+    }
+
+    @Test
+    @DisplayName("A miss leaves the survivor untouched, announces nothing and is reported")
+    void missLeavesTheSurvivorAndAnnouncesNothing(Env env) {
+        Player slender = env.createPlayer(instance, CENTER);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        CygnusPlayer survivor = (CygnusPlayer) env.createPlayer(instance, CENTER.add(1, 0, 0));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        Collector<PlayerDamagedEvent> collector = env.trackEvent(PlayerDamagedEvent.class, EventFilter.PLAYER, survivor);
+
+        SlenderBarHelper.SwingOutcome outcome = this.helper.swing(instance, slender.getUuid(), CENTER, RANGE, MISS, CALM);
+
+        assertTrue(outcome.missed());
+        assertFalse(outcome.hit());
+        assertEquals(100.0D, survivor.vitality().points(), 1.0E-9);
+        collector.assertEmpty();
+    }
+
+    @Test
+    @DisplayName("A hit is reported as a hit, not as a miss")
+    void hitIsReportedAsHit(Env env) {
+        Player slender = env.createPlayer(instance, CENTER);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        Player survivor = env.createPlayer(instance, CENTER.add(1, 0, 0));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        SlenderBarHelper.SwingOutcome outcome = this.helper.swing(instance, slender.getUuid(), CENTER, RANGE, HIT, CALM);
+
+        assertTrue(outcome.hit());
+        assertFalse(outcome.missed());
+    }
+
+    @Test
+    @DisplayName("Every survivor in range rolls with their own fear")
+    void eachSurvivorRollsWithItsOwnFear(Env env) {
+        Player slender = env.createPlayer(instance, CENTER);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        CygnusPlayer calm = (CygnusPlayer) env.createPlayer(instance, CENTER.add(1, 0, 0));
+        calm.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        CygnusPlayer terrified = (CygnusPlayer) env.createPlayer(instance, CENTER.add(-1, 0, 0));
+        terrified.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        DreadSource dread = uuid -> uuid.equals(terrified.getUuid()) ? 1.0D : 0.0D;
+        // Every draw is 0.2: a hit for the calm one (0.2 >= 0.1), a miss for the terrified one (0.2 < 0.3).
+        SlenderSwing swing = new SlenderSwing(() -> new FixedRandom(0.2D));
+
+        SlenderBarHelper.SwingOutcome outcome = this.helper.swing(instance, slender.getUuid(), CENTER, RANGE, swing, dread);
+
+        assertTrue(outcome.hit());
+        assertTrue(outcome.missed());
+        assertEquals(100.0D - (0.6D + 0.2D * 0.65D) * SlenderSwing.POINTS_PER_HEART, calm.vitality().points(), 1.0E-9);
+        assertEquals(100.0D, terrified.vitality().points(), 1.0E-9);
+    }
+
+    @Test
+    @DisplayName("Nobody in range means nothing was hit or missed")
+    void nobodyInRangeIsNoMiss(Env env) {
+        Player slender = env.createPlayer(instance, CENTER);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+
+        assertEquals(new SlenderBarHelper.SwingOutcome(false, false),
+                this.helper.swing(instance, slender.getUuid(), CENTER, RANGE, MISS, CALM));
     }
 }
