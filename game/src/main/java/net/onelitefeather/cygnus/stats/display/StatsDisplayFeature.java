@@ -17,6 +17,7 @@ import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.phase.WaitingPhase;
+import net.onelitefeather.cygnus.player.event.SpectatorStatsRequestEvent;
 import net.onelitefeather.cygnus.utils.Items;
 import net.theevilreaper.xerus.api.phase.Phase;
 
@@ -93,6 +94,8 @@ public final class StatsDisplayFeature implements GameFeature {
             }
         });
         this.node.addListener(InventoryPreClickEvent.class, this::onClick);
+        this.node.addListener(SpectatorStatsRequestEvent.class, event -> this.service.openMenu(event.getPlayer(),
+                event.getTarget().getUsername(), this.service.currentYear()));
     }
 
     private void onSpawn(PlayerSpawnEvent event) {
