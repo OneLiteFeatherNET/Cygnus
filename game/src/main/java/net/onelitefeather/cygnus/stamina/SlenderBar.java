@@ -69,8 +69,9 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private static final int MIN_TIME_TO_REACTIVATE = 10;
 
     /**
-     * Bar ticks per swing. The slender swings once a second, every second tick of an appearance, so
-     * the first swing falls one second after he appears and a survivor next to him has a moment to react.
+     * Bar ticks per swing. The slender swings once a second, on every second tick of an appearance. The
+     * bar keeps its 500 ms rhythm when he appears, so the first swing falls half a second to a second
+     * later, and a survivor next to him always gets a moment to react.
      */
     static final int TICKS_PER_SWING = 2;
 

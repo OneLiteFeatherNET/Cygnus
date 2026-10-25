@@ -13,7 +13,7 @@ import java.util.random.RandomGenerator;
  * {@code f}, clamped to {@code 0} to {@code 1}: the miss chance is {@code 0.10 + 0.20 f}, a hit deals
  * between {@code 0.6 - 0.1 f} and {@code 1.25 - 0.25 f} hearts, evenly spread. A survivor who is
  * already terrified stands badly anyway, so the swing gives them a little more air, while a calm
- * survivor still dies within one appearance.
+ * survivor without a health bonus still dies within one appearance.
  * </p>
  *
  * @author theEvilReaper

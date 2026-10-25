@@ -19,8 +19,8 @@ import java.util.UUID;
 import java.util.function.BiPredicate;
 
 /**
- * The StaminaDamage interface is designed to provide a method to apply damage to entities in a given range.
- * The method will iterate over all entities in the given range and apply the damage to the entity if it is a player.
+ * Shared behaviour of the slender's bar: his swing at the survivors in range, his blindness and the
+ * sounds survivors hear when he appears or vanishes.
  *
  * @author theEvilReaper
  * @version 1.3.0
