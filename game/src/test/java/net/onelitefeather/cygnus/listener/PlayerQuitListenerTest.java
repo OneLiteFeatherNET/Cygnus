@@ -6,9 +6,13 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.network.packet.server.play.SystemChatPacket;
 import net.minestom.server.potion.PotionEffect;
+import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
+import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
+import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
@@ -182,6 +186,73 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         assertNotNull(finishEvent.get(), "GameFinishEvent must be dispatched");
         assertEquals(GameFinishEvent.Reason.SLENDER_LEFT, finishEvent.get().reason());
+    }
+
+    @Test
+    void testSurvivorDisconnectIsAnnounced(@NotNull Env env) {
+        Player survivor = env.createPlayer(instance);
+        Player otherSurvivor = env.createPlayer(instance);
+        TestConnection slenderConnection = env.createConnection();
+        Player slender = slenderConnection.connect(instance);
+
+        TeamService teamService = TeamService.of();
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        teamService.add(slenderTeam);
+        teamService.add(survivorTeam);
+
+        slenderTeam.addPlayer(slender);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        survivorTeam.addPlayer(survivor);
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        survivorTeam.addPlayer(otherSurvivor);
+        otherSurvivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
+        testNode.addListener(PlayerDisconnectEvent.class, listener);
+
+        Collector<SystemChatPacket> slenderMessages = slenderConnection.trackIncoming(SystemChatPacket.class);
+
+        playerQuit(survivor, env);
+
+        assertTrue(slenderMessages.collect().stream()
+                        .anyMatch(packet -> Messages.getLeaveMessage(survivor).equals(packet.message())),
+                "The other players must be told that the survivor left the round.");
+    }
+
+    @Test
+    void testSlenderDisconnectIsAnnouncedWithItsOwnMessage(@NotNull Env env) {
+        TestConnection survivorConnection = env.createConnection();
+        Player survivor = survivorConnection.connect(instance);
+        Player slender = env.createPlayer(instance);
+
+        TeamService teamService = TeamService.of();
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        teamService.add(slenderTeam);
+        teamService.add(survivorTeam);
+
+        slenderTeam.addPlayer(slender);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        survivorTeam.addPlayer(survivor);
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
+        testNode.addListener(PlayerDisconnectEvent.class, listener);
+
+        Collector<SystemChatPacket> survivorMessages = survivorConnection.trackIncoming(SystemChatPacket.class);
+
+        playerQuit(slender, env);
+
+        var messages = survivorMessages.collect();
+        assertTrue(messages.stream().anyMatch(packet -> Messages.getSlenderLeaveMessage(slender).equals(packet.message())),
+                "The survivors must be told that the slender left the round.");
+        assertTrue(messages.stream().noneMatch(packet -> Messages.getLeaveMessage(slender).equals(packet.message())),
+                "The slender must not get the plain leave message.");
     }
 
     private static void playerQuit(Player player, Env env) {
