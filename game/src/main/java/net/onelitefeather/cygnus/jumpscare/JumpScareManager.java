@@ -6,6 +6,7 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.PlayerSkin;
 import net.minestom.server.instance.Instance;
@@ -19,6 +20,7 @@ import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.timer.TaskSchedule;
 import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
+import net.onelitefeather.cygnus.utils.Heading;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -327,9 +329,9 @@ public final class JumpScareManager {
     private static @Nullable Pos getJumpscarePos(Player player) {
         Pos playerPos = player.getPosition();
         // Calculate strictly 2D horizontal forward vector on XZ plane at exact foot Y level
-        float yawRad = (float) Math.toRadians(playerPos.yaw());
-        double dirX = -Math.sin(yawRad);
-        double dirZ = Math.cos(yawRad);
+        Vec forward = Heading.forward(playerPos.yaw());
+        double dirX = forward.x();
+        double dirZ = forward.z();
         double distance = clampToFreeDistance(player.getInstance(), playerPos, dirX, dirZ);
         if (distance < MIN_PHANTOM_SPAWN_DISTANCE) return null;
 
