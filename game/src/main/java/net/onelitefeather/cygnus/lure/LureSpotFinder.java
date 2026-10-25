@@ -8,6 +8,7 @@ import net.minestom.server.instance.block.Block;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.world.Ground;
+import net.onelitefeather.cygnus.creek.world.InstanceGround;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -56,13 +57,12 @@ public final class LureSpotFinder {
     private final Supplier<? extends @Nullable Instance> instance;
 
     /**
-     * Sets up the search.
+     * Sets up the search on the floor of the round's instance.
      *
-     * @param ground   puts candidates onto a floor
      * @param instance supplies the round's instance, or {@code null} while there is none
      */
-    public LureSpotFinder(Ground ground, Supplier<? extends @Nullable Instance> instance) {
-        this.ground = ground;
+    public LureSpotFinder(Supplier<? extends @Nullable Instance> instance) {
+        this.ground = new InstanceGround(instance);
         this.instance = instance;
     }
 

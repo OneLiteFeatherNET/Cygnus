@@ -6,7 +6,6 @@ import net.onelitefeather.cygnus.GameFeature;
 import net.onelitefeather.cygnus.common.config.LureConfig;
 import net.onelitefeather.cygnus.creek.CreekRespite;
 import net.onelitefeather.cygnus.creek.consequence.LocatorReveal;
-import net.onelitefeather.cygnus.creek.world.InstanceGround;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
@@ -50,7 +49,7 @@ public final class LureModule implements GameFeature {
                 config,
                 () -> TeamHelper.survivorsOf(teamService).stream().filter(survivor -> !survivor.isDead()).toList(),
                 jumpScares,
-                new LureSpotFinder(new InstanceGround(mapProvider.getActiveInstance()), mapProvider.getActiveInstance()),
+                new LureSpotFinder(mapProvider.getActiveInstance()),
                 new LureAftermath(
                         config,
                         sanity::lured,

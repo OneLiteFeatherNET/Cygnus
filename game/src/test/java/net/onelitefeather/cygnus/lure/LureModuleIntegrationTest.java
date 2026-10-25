@@ -5,7 +5,6 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.LureConfig;
 import net.onelitefeather.cygnus.creek.CreekRespite;
-import net.onelitefeather.cygnus.creek.world.InstanceGround;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
@@ -47,7 +46,7 @@ class LureModuleIntegrationTest extends CygnusPlayerTestBase {
 
     private static LureService service(Instance instance) {
         return new LureService(LureConfig.DEFAULT, List::of, new JumpScareManager(TickSections.NONE),
-                new LureSpotFinder(new InstanceGround(() -> instance), () -> instance),
+                new LureSpotFinder(() -> instance),
                 new LureAftermath(LureConfig.DEFAULT, (_, _) -> {}, new CreekRespite(), () -> null, (_, _) -> {},
                         () -> LureOutcome.NOTHING),
                 () -> 0L, new Random(1), TickSections.NONE);

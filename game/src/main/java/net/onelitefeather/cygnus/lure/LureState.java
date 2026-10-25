@@ -29,6 +29,9 @@ final class LureState {
         USED
     }
 
+    /** How often a lone survivor is rolled for, in milliseconds. */
+    static final long ROLL_MILLIS = 5000L;
+
     private Phase phase = Phase.IDLE;
     private long nextRollAt;
     private @Nullable LureFigure figure;
@@ -43,13 +46,12 @@ final class LureState {
     /**
      * Tells whether the survivor is due for a roll, and if so, sets the next one.
      *
-     * @param now   the current time in milliseconds
-     * @param every how long until the next roll, in milliseconds
+     * @param now the current time in milliseconds
      * @return {@code true} if a roll is due now
      */
-    boolean rollDue(long now, long every) {
+    boolean rollDue(long now) {
         if (now < this.nextRollAt) return false;
-        this.nextRollAt = now + every;
+        this.nextRollAt = now + ROLL_MILLIS;
         return true;
     }
 

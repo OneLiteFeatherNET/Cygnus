@@ -12,7 +12,6 @@ import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.LureConfig;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
-import net.onelitefeather.cygnus.creek.world.InstanceGround;
 import net.onelitefeather.cygnus.entity.DeadPlayerMannequin;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.telemetry.TickSections;
@@ -245,7 +244,7 @@ class LureServiceIntegrationTest extends CygnusPlayerTestBase {
         for (DeadPlayerMannequin corpse : this.pendingCorpses) {
             this.jumpScares.register(corpse);
         }
-        LureSpotFinder spots = new LureSpotFinder(new InstanceGround(() -> instance), () -> instance);
+        LureSpotFinder spots = new LureSpotFinder(() -> instance);
         return new LureService(config, () -> List.copyOf(this.survivors), this.jumpScares, spots, new LureConsequence() {
             @Override
             public void struck(Player survivor, long now) {

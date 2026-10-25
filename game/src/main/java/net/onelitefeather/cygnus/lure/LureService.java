@@ -31,8 +31,9 @@ import java.util.random.RandomGenerator;
  * Every step it looks at each living survivor. One who is alone, in a round where somebody has
  * died, is rolled for now and then. On a hit a dead survivor's figure appears just outside their
  * view, looking like a living player. If they look at it long enough, it is right in front of
- * their face: the jump scare of {@link JumpScareManager}, followed by the {@link LureConsequence}. While a figure waits, the turnaround
- * scare is held back for that survivor, so turning towards the figure does not set it off first.
+ * their face: the jump scare of {@link JumpScareManager}, followed by the {@link LureConsequence}.
+ * While a figure waits, the turnaround scare is held back for that survivor, so turning towards the
+ * figure does not set it off first.
  * </p>
  * <p>
  * The steps run on the scheduler thread, the end of a round may come from elsewhere, so the two
@@ -50,9 +51,6 @@ public final class LureService {
 
     /** How long the follow-up waits for the phantom to dissolve: the jump scare's 50 ticks. */
     static final long FOLLOW_UP_MILLIS = 2500L;
-
-    /** How often a lone survivor is rolled for, in milliseconds. */
-    static final long ROLL_MILLIS = 5000L;
 
     /** How long the figure waits to be noticed before it is gone, in milliseconds. */
     static final long WAIT_MILLIS = 20_000L;
@@ -120,7 +118,7 @@ public final class LureService {
         // A step already waiting for the lock would otherwise run after the stop and lure again.
         this.stopped = true;
         this.task.stop();
-        this.states.forEach((id, state) -> this.endWait(id, state));
+        this.states.forEach(this::endWait);
         this.states.clear();
         this.consequence.cleanUp();
     }
@@ -179,7 +177,7 @@ public final class LureService {
         if (!this.alone(survivor, living)) return;
         // Never right after the turnaround scare, the two should not hit back to back.
         if (this.jumpScares.isCoolingDown(survivor.getUuid())) return;
-        if (!state.rollDue(now, ROLL_MILLIS)) return;
+        if (!state.rollDue(now)) return;
         if (this.random.nextDouble() >= this.config.rollChance()) return;
         Optional<DeadPlayerMannequin> corpse = this.jumpScares.randomCorpse(this.random);
         if (corpse.isEmpty()) return;
