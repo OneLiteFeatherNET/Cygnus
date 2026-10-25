@@ -190,7 +190,7 @@ class AdrenalineServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("The rush lifts an empty sprint bar to the resume share")
+    @DisplayName("The rush lifts an empty sprint bar to the refill share")
     void rushRefillsAnEmptyBar(Env env) {
         Instance instance = env.createFlatInstance();
         Player slender = connect(env, instance, new Pos(0, 40, 0));
@@ -202,7 +202,7 @@ class AdrenalineServiceTest extends CygnusPlayerTestBase {
         slenderBecomes(slender, StaminaBar.State.DRAINING);
         service.tick();
 
-        assertEquals(0.3f, bar.remainingShare(), 1.0E-6f);
+        assertEquals((float) AdrenalineService.REFILL_SHARE, bar.remainingShare(), 1.0E-6f);
         assertTrue(bar.canConsume());
     }
 
