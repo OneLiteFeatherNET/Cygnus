@@ -25,14 +25,15 @@ import java.util.function.Consumer;
  * {@link ExceptionManager}, so they never reach Sentry on their own. With a DSN the manager's handler
  * is wrapped to forward every throwable first and then still pass it on to the handler that was there
  * before, so nothing disappears from the logs. Every event carries the release and the CloudNet
- * service it came from.
+ * service it came from. The environment, such as staging, comes from Sentry's own SENTRY_ENVIRONMENT
+ * variable.
  * </p>
  * <p>
  * Sentry installs its own shutdown hook to flush pending events, so nothing has to be closed here.
  * </p>
  *
  * @author TheMeinerLP
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.11.0
  */
 public final class SentrySupport {
@@ -85,6 +86,8 @@ public final class SentrySupport {
      * @since 2.18.3
      */
     static void configure(SentryOptions options, String dsn, String version, @Nullable String serviceName) {
+        // Lets Sentry read SENTRY_* env vars; a set SENTRY_DSN/RELEASE/SERVER_NAME overrides values here.
+        options.setEnableExternalConfiguration(true);
         options.setDsn(dsn);
         if (!UNKNOWN_VERSION.equals(version)) {
             options.setRelease(RELEASE_PREFIX + version);

@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SentrySupportTest {
 
@@ -88,6 +89,15 @@ class SentrySupportTest {
 
         assertEquals("cygnus-game@2.18.3", options.getRelease());
         assertEquals("Slender-2", options.getServerName());
+    }
+
+    @Test
+    void testOptionsEnableExternalConfigurationSoSentryReadsItsEnvironmentVariables() {
+        SentryOptions options = new SentryOptions();
+
+        SentrySupport.configure(options, "https://key@example.invalid/1", "2.18.3", "Slender-2");
+
+        assertTrue(options.isEnableExternalConfiguration(), "Sentry must read SENTRY_ENVIRONMENT from the environment");
     }
 
     @Test
