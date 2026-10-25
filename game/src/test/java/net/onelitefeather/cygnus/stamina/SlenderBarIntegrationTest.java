@@ -539,6 +539,32 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("The slender hears the hit sound at most once a second")
+    void hitSoundWaitsForTheCooldown(@NotNull Env env) {
+        TestConnection slenderConnection = env.createConnection();
+        CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        Player survivor = env.createConnection().connect(instance, new Pos(1, 40, 0));
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        AtomicLong clock = new AtomicLong();
+        SlenderBar slenderBar = (SlenderBar) StaminaFactory.createSlenderStamina(slender, StaminaConfig.DEFAULT, clock::get);
+        slenderBar.start();
+        slenderBar.changeStatus();
+        Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
+
+        slenderBar.consume();
+        clock.set(SlenderBar.HIT_COOLDOWN_MILLIS / 2);
+        slenderBar.consume();
+        assertEquals(1, slenderSounds.collect().size(), "the second hit lands inside the cooldown");
+
+        Collector<EntitySoundEffectPacket> laterSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
+        clock.set(SlenderBar.HIT_COOLDOWN_MILLIS);
+        slenderBar.consume();
+        laterSounds.assertSingle(packet -> assertEquals(SlenderBar.HIT.name(), packet.soundEvent().key()));
+        slenderBar.stop();
+    }
+
+    @Test
     @DisplayName("Without a survivor in range the slender hears no hit sound")
     void noHitSoundWithoutASurvivorInRange(@NotNull Env env) {
         TestConnection slenderConnection = env.createConnection();
