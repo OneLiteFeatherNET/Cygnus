@@ -111,32 +111,38 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
         team.removePlayer(player);
 
         if (SLENDER_KEY.equals(team.key())) {
-            handleSlenderQuit(gamePhase);
+            handleSlenderQuit(player, gamePhase);
             return;
         }
 
         if (SURVIVOR_KEY.equals(team.key())) {
-            handleSurvivorQuit(team, gamePhase);
+            handleSurvivorQuit(player, team, gamePhase);
         }
     }
 
     /**
-     * Handles the Slender player disconnecting: a survivor takes over after a countdown, otherwise
-     * the match ends.
+     * Handles the Slender player disconnecting: announces the leave, then a survivor takes over after
+     * a countdown, otherwise the match ends.
      *
+     * @param player    the slender who disconnected
      * @param gamePhase the active game phase
      */
-    private void handleSlenderQuit(GamePhase gamePhase) {
+    private void handleSlenderQuit(Player player, GamePhase gamePhase) {
+        // Before the takeover, which may end the round right away.
+        Broadcaster.broadcast(Messages.getSlenderLeaveMessage(player));
         this.takeover.begin(gamePhase);
     }
 
     /**
-     * Handles a survivor disconnecting: ends the match if no survivors remain.
+     * Handles a survivor disconnecting: announces the leave and ends the match if no survivors remain.
      *
+     * @param player       the survivor who disconnected
      * @param survivorTeam the survivor team, after the disconnecting player was already removed
      * @param gamePhase    the active game phase
      */
-    private void handleSurvivorQuit(Team survivorTeam, GamePhase gamePhase) {
+    private void handleSurvivorQuit(Player player, Team survivorTeam, GamePhase gamePhase) {
+        // Before the finish below, so the leave reads ahead of the win message it causes.
+        Broadcaster.broadcast(Messages.getLeaveMessage(player));
         this.inventoryUpdater.apply();
         if (!survivorTeam.getPlayers().isEmpty()) return;
         Team slenderTeam = teamService.getTeam(SLENDER_KEY)

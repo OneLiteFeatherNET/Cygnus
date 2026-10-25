@@ -284,6 +284,20 @@ public final class Messages {
     }
 
     /**
+     * Returns the message announcing that the slender left the running round.
+     *
+     * @param player the slender who left
+     * @return the created {@link Component} reference
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static Component getSlenderLeaveMessage(Player player) {
+        var playerName = Tag.preProcessParsed(player.getUsername());
+        var playerTag = TagResolver.builder().tag("player", (_, _) -> playerName).build();
+        return PREFIX.append(Component.space())
+                .append(withMini("<gray>The slender <red><player></red> has left the forest!", playerTag));
+    }
+
+    /**
      * Returns the usage line of the glitch preview command.
      *
      * @param levels how many degrees of tearing there are to pick from
