@@ -34,13 +34,16 @@ import java.util.function.LongSupplier;
  * appearance onto the next. While he looks through the creek's eyes, regeneration stands still.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  **/
 @SuppressWarnings("java:S3252")
 public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
 
     private static final Sound LEVEL = Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F);
+
+    /** What only the slender hears when his drain hurts a survivor, the sound of a regular attack. */
+    static final Sound HIT = Sound.sound(SoundEvent.ENTITY_PLAYER_ATTACK_STRONG, Sound.Source.PLAYER, 0.6F, 1F);
 
     /**
      * Upper bound of {@link #currentTime}, in stamina units and also the number of segments rendered in the
@@ -140,7 +143,9 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private void handleDraining() {
         currentTime -= TIME_STEP;
         Instance instance = player.getInstance();
-        applyDamage(instance, player.getUuid(), player.getPosition(), damageRange, DAMAGE_PER_TICK);
+        if (applyDamage(instance, player.getUuid(), player.getPosition(), damageRange, DAMAGE_PER_TICK)) {
+            player.playSound(HIT, Sound.Emitter.self());
+        }
         // Hides in the same tick the bar runs dry: one tick later he would stay visible and hit
         // once more with a bar that already shows empty.
         if (currentTime <= 0) {
