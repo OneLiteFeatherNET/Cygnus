@@ -16,9 +16,6 @@ import java.util.random.RandomGenerator;
  */
 public final class SpotFinder {
 
-    /** How many candidate spots are tried per step. */
-    static final int ATTEMPTS = 16;
-
     /** How high the middle of the creek's body is. That is the part a survivor would notice. */
     public static final double BODY_CENTRE = 1.4D;
 
@@ -82,18 +79,7 @@ public final class SpotFinder {
     public Optional<Pos> beside(Pos target, double minDistance, double maxDistance, double minAngle,
                                 double maxAngle, List<Pos> observerEyes, double personalSpace,
                                 RandomGenerator random) {
-        for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
-            double offset = random.nextDouble(minAngle, maxAngle) * (random.nextBoolean() ? 1.0D : -1.0D);
-            double distance = random.nextDouble(minDistance, maxDistance);
-            Optional<Pos> spot = this.hiddenSpotAt(step(target, target.yaw() + offset, distance), observerEyes, personalSpace);
-            if (spot.isPresent()) return spot;
-        }
-        return Optional.empty();
-    }
-
-    private static Pos step(Pos from, double yaw, double distance) {
-        double radians = Math.toRadians(yaw);
-        // Minecraft's yaw goes clockwise from south (+Z), so the direction is (-sin, cos).
-        return new Pos(from.x() - Math.sin(radians) * distance, from.y(), from.z() + Math.cos(radians) * distance);
+        return BesideSearch.find(target, minDistance, maxDistance, minAngle, maxAngle,
+                candidate -> this.hiddenSpotAt(candidate, observerEyes, personalSpace), random);
     }
 }

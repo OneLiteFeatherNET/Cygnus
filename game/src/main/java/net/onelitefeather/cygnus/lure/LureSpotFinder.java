@@ -7,6 +7,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
+import net.onelitefeather.cygnus.creek.world.BesideSearch;
 import net.onelitefeather.cygnus.creek.world.Ground;
 import net.onelitefeather.cygnus.creek.world.InstanceGround;
 import org.jetbrains.annotations.Nullable;
@@ -19,8 +20,8 @@ import java.util.random.RandomGenerator;
  * Finds a spot where a living player could plausibly stand: on the ground, about as high as the
  * survivor, with nothing between them, just outside the survivor's view.
  * <p>
- * The creek's {@code SpotFinder} looks for the opposite, a spot nobody sees, so only the ground
- * search is shared with it.
+ * The creek's {@code SpotFinder} looks for the opposite, a spot nobody sees, so only the search
+ * beside the view and the ground are shared with it.
  * </p>
  *
  * @author theEvilReaper
@@ -28,9 +29,6 @@ import java.util.random.RandomGenerator;
  * @since 2.21.0
  */
 public final class LureSpotFinder {
-
-    /** How many candidate spots are tried per search. */
-    static final int ATTEMPTS = 16;
 
     /** How far apart the samples along a line of sight are, in blocks. */
     static final double LINE_STEP = 0.2D;
@@ -77,18 +75,12 @@ public final class LureSpotFinder {
         Instance world = this.instance.get();
         if (world == null) return Optional.empty();
         Pos eyes = survivorFeet.add(0, SurvivorView.EYE_HEIGHT, 0);
-        for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
-            double offset = random.nextDouble(MIN_ANGLE, MAX_ANGLE) * (random.nextBoolean() ? 1.0D : -1.0D);
-            double distance = random.nextDouble(MIN_DISTANCE, MAX_DISTANCE);
-            Optional<Pos> spot = this.ground.settle(step(survivorFeet, survivorFeet.yaw() + offset, distance))
-                    .filter(candidate -> this.fits(world, survivorFeet, eyes, candidate));
-            if (spot.isPresent()) {
-                Pos at = spot.get();
-                Pos look = at.add(0, SurvivorView.EYE_HEIGHT, 0).withLookAt(eyes);
-                return Optional.of(at.withView(look.yaw(), look.pitch()));
-            }
-        }
-        return Optional.empty();
+        return BesideSearch.find(survivorFeet, MIN_DISTANCE, MAX_DISTANCE, MIN_ANGLE, MAX_ANGLE,
+                candidate -> this.ground.settle(candidate).filter(spot -> this.fits(world, survivorFeet, eyes, spot)),
+                random).map(at -> {
+                    Pos look = at.add(0, SurvivorView.EYE_HEIGHT, 0).withLookAt(eyes);
+                    return at.withView(look.yaw(), look.pitch());
+                });
     }
 
     /**
@@ -127,11 +119,5 @@ public final class LureSpotFinder {
         String name = floor.key().value();
         return !name.endsWith("_leaves") && !name.endsWith("_fence") && !name.endsWith("_fence_gate")
                 && !name.endsWith("_wall");
-    }
-
-    private static Pos step(Pos from, double yaw, double distance) {
-        double radians = Math.toRadians(yaw);
-        // Minecraft's yaw goes clockwise from south (+Z), so the direction is (-sin, cos).
-        return new Pos(from.x() - Math.sin(radians) * distance, from.y(), from.z() + Math.cos(radians) * distance);
     }
 }
