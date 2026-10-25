@@ -14,6 +14,7 @@ import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.player.event.SpectatorAddEvent;
+import net.onelitefeather.cygnus.player.event.SpectatorTeleportRequestEvent;
 import net.onelitefeather.cygnus.player.listener.SpectatorAddListener;
 import net.onelitefeather.cygnus.player.listener.SpectatorItemListener;
 import net.onelitefeather.cygnus.team.RoleIcon;
@@ -37,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.4.0
+ * @version 1.5.0
  * @since 2.7.0
  */
 public final class SpectatorService implements GameFeature {
@@ -52,7 +53,7 @@ public final class SpectatorService implements GameFeature {
 
     public SpectatorService(Team spectatorTeam, Team survivorTeam) {
         this.spectatorTeam = spectatorTeam;
-        this.spectatorInventory = new SpectatorInventory(survivorTeam, spectatorTeam, this::teleportTo);
+        this.spectatorInventory = new SpectatorInventory(survivorTeam, spectatorTeam);
         this.registerListeners();
         this.healthRefresh = new RepeatingTask(this::refreshHealth);
     }
@@ -68,6 +69,7 @@ public final class SpectatorService implements GameFeature {
     private void registerListeners() {
         this.node.addListener(SpectatorAddEvent.class, new SpectatorAddListener(this));
         this.node.addListener(PlayerUseItemEvent.class, new SpectatorItemListener(this));
+        this.node.addListener(SpectatorTeleportRequestEvent.class, event -> teleportTo(event.getPlayer(), event.getTarget()));
     }
 
     /**
