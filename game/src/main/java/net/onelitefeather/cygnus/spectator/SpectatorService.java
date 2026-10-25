@@ -20,17 +20,24 @@ import net.onelitefeather.cygnus.team.RoleIcon;
 import net.onelitefeather.cygnus.team.TabOrder;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.utils.Items;
+import net.onelitefeather.cygnus.utils.RepeatingTask;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
 import net.theevilreaper.xerus.api.team.Team;
 
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * Encapsulates all spectator-related behavior: gamemode/team/visibility changes on death,
  * the spectate-overview GUI, and leaving spectator mode.
+ * <p>
+ * While somebody has the overview open, it checks once a second whether the hearts of a survivor
+ * changed and rebuilds the heads only then. A survivor loses and wins back health all the time, so
+ * hooking every change would rebuild the heads far more often than anybody can read them.
+ * </p>
  *
  * @author theEvilReaper
- * @version 1.3.0
+ * @version 1.4.0
  * @since 2.7.0
  */
 public final class SpectatorService implements GameFeature {
@@ -41,11 +48,13 @@ public final class SpectatorService implements GameFeature {
 
     private final Team spectatorTeam;
     private final SpectatorInventory spectatorInventory;
+    private final RepeatingTask healthRefresh;
 
     public SpectatorService(Team spectatorTeam, Team survivorTeam) {
         this.spectatorTeam = spectatorTeam;
-        this.spectatorInventory = new SpectatorInventory(survivorTeam, this::teleportTo);
+        this.spectatorInventory = new SpectatorInventory(survivorTeam, spectatorTeam, this::teleportTo);
         this.registerListeners();
+        this.healthRefresh = new RepeatingTask(this::refreshHealth);
     }
 
     @Override
@@ -71,7 +80,7 @@ public final class SpectatorService implements GameFeature {
      * <p>
      * {@link Player#setAllowFlying(boolean)} has to be set next to {@link Player#setFlying(boolean)}:
      * {@link Player#setGameMode(GameMode)} resets the flight permission to the one of the mode, and
-     * {@code SURVIVAL} does not allow flying. The abilities packet then only carries the flying flag, so the
+     * {@code SURVIVAL} does not allow flying. The ability packet then only carries the flying flag, so the
      * client drops flight the moment the spectator touches the ground and refuses to take off again.
      *
      * @param player the player to convert
@@ -96,7 +105,7 @@ public final class SpectatorService implements GameFeature {
      * A spectator keeps the display name they carried into the round, so the tab list still shows them in
      * the green of a living survivor. The strike through plus the gray of the spectator team marks them as
      * out of the round at a glance, which is the only signal the tab list can give: a spectator is invisible
-     * for everybody still playing, so their entry is the only place they show up at all.
+     * for everybody still playing, so their entry is the only place they show up completely.
      *
      * @param player the player who just became a spectator
      */
@@ -140,6 +149,16 @@ public final class SpectatorService implements GameFeature {
      */
     public void openOverview(Player player) {
         spectatorInventory.open(player);
+        healthRefresh.start(1, ChronoUnit.SECONDS);
+    }
+
+    /**
+     * Rebuilds the heads when a survivor's hearts changed and stops checking once nobody looks.
+     */
+    private void refreshHealth() {
+        if (!spectatorInventory.refreshHealth()) {
+            healthRefresh.stop();
+        }
     }
 
     /**
