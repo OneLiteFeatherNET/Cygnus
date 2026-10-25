@@ -33,6 +33,7 @@ public final class Items {
     public static final byte STATS_ITEM = (byte) 0x06;
     public static final byte SERVER_ITEM = (byte) 0x07;
     public static final byte LOBBY_ITEM = (byte) 0x08;
+    public static final byte PAGE_REVEAL_ITEM = (byte) 0x09;
 
     /** The tracker's material, which is also the client's cooldown group for it. */
     public static final Material TRACKING_MATERIAL = Material.RABBIT_FOOT;
@@ -51,6 +52,15 @@ public final class Items {
 
     /** The hotbar slot of the survivors' painkillers, the last one, away from the pages. */
     public static final int HEAL_SLOT = 8;
+
+    /**
+     * The page reveal's material, which is also the client's cooldown group for it. A right click
+     * does nothing of its own with it.
+     */
+    public static final Material PAGE_REVEAL_MATERIAL = Material.AMETHYST_SHARD;
+
+    /** The hotbar slot of the survivors' page reveal, the second to last one, next to the painkillers. */
+    public static final int PAGE_REVEAL_SLOT = 7;
 
     /** The hotbar slot of the lobby's statistics item, the middle one. */
     public static final int STATS_SLOT = 4;
@@ -92,6 +102,13 @@ public final class Items {
             .lore(lore("Right click to win back some health", "Only once per round",
                     "A hit takes from what they give back"))
             .set(Tags.ITEM_TAG, HEAL_ITEM)
+            .build();
+
+    private static final ItemStack pageReveal = ItemStack.builder(PAGE_REVEAL_MATERIAL)
+            .customName(Component.text("Page Sense", NamedTextColor.LIGHT_PURPLE))
+            .lore(lore("Right click to show the pages", "around you on your locator bar",
+                    "They show only roughly where they are"))
+            .set(Tags.ITEM_TAG, PAGE_REVEAL_ITEM)
             .build();
 
     private static final ItemStack statistics = ItemStack.builder(Material.BOOK)
@@ -146,6 +163,15 @@ public final class Items {
      */
     public static void setHealItem(Player player) {
         player.getInventory().setItemStack(HEAL_SLOT, painkillers);
+    }
+
+    /**
+     * Gives a survivor the item that shows nearby pages on the locator bar.
+     *
+     * @param player the survivor
+     */
+    public static void setPageRevealItem(Player player) {
+        player.getInventory().setItemStack(PAGE_REVEAL_SLOT, pageReveal);
     }
 
     /**
