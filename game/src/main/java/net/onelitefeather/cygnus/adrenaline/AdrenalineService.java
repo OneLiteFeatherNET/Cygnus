@@ -34,8 +34,8 @@ import java.util.function.Supplier;
 /**
  * Gives a survivor an adrenaline rush when the visible slender comes close.
  * <p>
- * For a few seconds the survivor moves faster. A sprint bar below the resume share is lifted to it,
- * so a survivor caught with an empty bar can still sprint away. Once a rush is over, the same survivor has to wait out a cooldown before the next
+ * For a few seconds the survivor moves faster. A sprint bar below {@link #REFILL_SHARE} is lifted to it,
+ * so a survivor caught with an almost empty bar has the breath to actually sprint away. Once a rush is over, the same survivor has to wait out a cooldown before the next
  * one. When a rush ends and when the next one may start is kept on the player as transient tags.
  * </p>
  * <p>
@@ -44,7 +44,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.16.0
  */
 public final class AdrenalineService implements GameFeature {
@@ -57,6 +57,12 @@ public final class AdrenalineService implements GameFeature {
 
     /** When a survivor may get the next rush, in milliseconds. */
     static final Tag<Long> COOLDOWN_UNTIL = Tag.Transient("adrenalineCooldownUntil");
+
+    /**
+     * How full the rush fills the sprint bar. Lifting it only to the resume share left a survivor
+     * out of breath again after a second or two, so the rush gave speed but no way to use it.
+     */
+    static final double REFILL_SHARE = 0.75D;
 
     /** What the survivor hears when the rush kicks in, so they know why they are faster. */
     private static final Sound HEARTBEAT = Sound.sound(SoundEvent.ENTITY_WARDEN_HEARTBEAT, Sound.Source.MASTER, 1F, 1F);
@@ -161,7 +167,7 @@ public final class AdrenalineService implements GameFeature {
         survivor.setTag(COOLDOWN_UNTIL, ends + this.config.cooldownSeconds() * 1000L);
         AttributeHelper.applyAdrenaline(survivor, this.config.speedBonus());
         FoodBar bar = this.staminaBars.apply(survivor);
-        if (bar != null) bar.refillToResume();
+        if (bar != null) bar.refillTo(REFILL_SHARE);
         survivor.playSound(HEARTBEAT, Sound.Emitter.self());
         this.rushing.add(survivor);
     }
