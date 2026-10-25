@@ -306,4 +306,13 @@ class StalkStateTest {
         assertEquals(1, body.teleports.size());
         assertEquals(List.of(100L), log.times);
     }
+
+    @Test
+    @DisplayName("A spared target ends the stalk")
+    void sparedTargetEndsTheStalk() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        SurvivorView spared = new SurvivorView(TARGET, new Pos(0, 40, 0, 0, 0), 0.3D, false, true, true);
+
+        assertSame(DoneState.INSTANCE, new StalkState(TARGET, 60_000L).tick(at(0L, body, spared)));
+    }
 }

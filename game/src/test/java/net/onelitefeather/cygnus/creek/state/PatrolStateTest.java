@@ -527,4 +527,21 @@ class PatrolStateTest {
         assertSame(state, state.tick(deadEndContext(100L, body, route, vanished, 0.0D)));
         assertTrue(vanished.isEmpty());
     }
+
+    @Test
+    @DisplayName("A spared survivor is not picked out, but still sees him")
+    void sparedSurvivorIsNotPickedOut() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        List<UUID> selected = new ArrayList<>();
+        SurvivorView spared = new SurvivorView(FIRST, new Pos(0, 40, 2), 0.0D, false, true, true);
+        CreekContext ctx = Contexts.selecting(0L, body, Contexts.route(A), selected, spared);
+        state.enter(ctx);
+
+        state.tick(ctx);
+
+        assertEquals(Optional.empty(), state.staring());
+        assertEquals(Set.of(FIRST), ctx.survivorIds());
+        assertEquals(Set.of(FIRST), body.viewers);
+    }
 }

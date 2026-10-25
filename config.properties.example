@@ -252,6 +252,27 @@ survivorTeamSize=12
 #sanity.timeFloorWeight=0.15
 #sanity.floorCap=0.55
 
+# --- Lure -------------------------------------------------------------------
+# Once a survivor has died, a survivor who is on their own may see them standing
+# in the distance, just outside their view, looking like a living player. Look at
+# the figure for a moment and it is right in front of their face. After the scare
+# a follow-up is rolled (slowness, a reveal on the slender's locator bar,
+# blindness, or nothing), and the creek leaves the survivor alone for a while.
+# One lure per survivor and round at most; a figure nobody noticed does not count.
+# Every key below maps to a field of LureConfig. An unreadable value falls back
+# to its default; values out of range are rejected.
+#lure.enabled=true
+# No other living survivor may be within this many blocks.
+#lure.aloneRadius=30
+# A lone survivor is rolled for every 5 seconds with this chance (0 to 1).
+# Playtest: tune this if the lure comes too soon or too late.
+#lure.rollChance=0.08
+#lure.fearGain=0.30
+# How long slowness, blindness or the reveal last, in seconds.
+#lure.effectSeconds=4
+# How long the creek leaves the survivor alone after the scare, in seconds.
+#lure.respiteSeconds=60
+
 # --- Stamina ----------------------------------------------------------------
 # A survivor's sprint bar holds 20 points and drains 2 per second while they
 # sprint. Once it ran dry, or once they stopped early, they may sprint again as

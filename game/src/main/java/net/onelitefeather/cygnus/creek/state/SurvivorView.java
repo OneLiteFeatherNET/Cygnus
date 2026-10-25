@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.utils.Eyes;
 
 import java.util.UUID;
 
@@ -14,15 +15,14 @@ import java.util.UUID;
  * @param inSight   whether no block stands between the survivor and the creek, wherever the
  *                  survivor is looking. It is only worked out up close. Farther away it is
  *                  {@code false} unless the survivor sees the creek.
+ * @param spared    whether the creek leaves the survivor alone for now: it neither picks them out,
+ *                  nor stalks, nor hunts them
  *
  * @author theEvilReaper
  * @version 1.0.0
  * @since 2.15.0
  */
-public record SurvivorView(UUID id, Pos position, double dread, boolean seesCreek, boolean inSight) {
-
-    /** How high a standing player's eyes are, in blocks. */
-    public static final double EYE_HEIGHT = 1.62D;
+public record SurvivorView(UUID id, Pos position, double dread, boolean seesCreek, boolean inSight, boolean spared) {
 
     /**
      * A snapshot of a survivor with nothing between them and the creek.
@@ -37,12 +37,25 @@ public record SurvivorView(UUID id, Pos position, double dread, boolean seesCree
     }
 
     /**
+     * A snapshot of a survivor the creek does not spare.
+     *
+     * @param id        the survivor's id
+     * @param position  where the survivor's feet are, including where they are looking
+     * @param dread     how likely the survivor is to be haunted, from 0 to 1
+     * @param seesCreek whether the survivor can see the creek right now
+     * @param inSight   whether no block stands between the survivor and the creek
+     */
+    public SurvivorView(UUID id, Pos position, double dread, boolean seesCreek, boolean inSight) {
+        this(id, position, dread, seesCreek, inSight, false);
+    }
+
+    /**
      * Where the survivor's eyes are.
      *
      * @return the eye position, looking where the survivor looks
      */
     public Pos eyes() {
-        return this.position.add(0, EYE_HEIGHT, 0);
+        return Eyes.of(this.position);
     }
 
     /**
@@ -55,6 +68,6 @@ public record SurvivorView(UUID id, Pos position, double dread, boolean seesCree
      */
     public SurvivorView withSight(boolean sees, boolean inSight) {
         if (sees == this.seesCreek && inSight == this.inSight) return this;
-        return new SurvivorView(this.id, this.position, this.dread, sees, inSight);
+        return new SurvivorView(this.id, this.position, this.dread, sees, inSight, this.spared);
     }
 }

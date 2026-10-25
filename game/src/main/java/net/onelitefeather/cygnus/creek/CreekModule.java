@@ -48,13 +48,14 @@ public final class CreekModule implements GameFeature {
      * @param mapProvider      the maps and the active instance
      * @param dread            rates how scared each survivor is
      * @param witness          hears about catches and sightings
+     * @param respite          tells who the creek leaves alone for now
      * @param jumpScareManager plays the jump scare of a catch
      * @param staminaService   the stamina bars a catch drains
      * @param sections         measures how long each step takes
      * @since 2.15.0
      */
     public CreekModule(CreekConfig config, CreekSettings settings, TeamService teamService,
-                       GameMapProvider mapProvider, DreadSource dread, CreekWitness witness,
+                       GameMapProvider mapProvider, DreadSource dread, CreekWitness witness, CreekRespite respite,
                        JumpScareManager jumpScareManager, StaminaService staminaService, TickSections sections) {
         this.config = config;
         this.mapProvider = mapProvider;
@@ -70,6 +71,7 @@ public final class CreekModule implements GameFeature {
                 CreakingBody::spawn,
                 dread,
                 witness,
+                respite,
                 new StagedCatchConsequence(
                         new CatchTricks(
                                 new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.catching().slownessSeconds()),
