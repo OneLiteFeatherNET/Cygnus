@@ -16,6 +16,7 @@ import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.ResolvableProfile;
 import net.minestom.server.tag.Tag;
 import net.onelitefeather.cygnus.player.event.SpectatorStatsRequestEvent;
+import net.onelitefeather.cygnus.player.event.SpectatorTeleportRequestEvent;
 import net.onelitefeather.cygnus.utils.HealthDisplay;
 import net.theevilreaper.aves.inventory.GlobalInventoryBuilder;
 import net.theevilreaper.aves.inventory.click.ClickHolder;
@@ -28,20 +29,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
  * Global "Spectate" inventory which lists every survivor and every spectator as a player head.
  * <p>
- * The survivors fill the upper part and show the hearts they have left. A left click on one of them
- * teleports the viewer to that survivor, a right click on any head asks for the statistics of that player
- * through a {@link SpectatorStatsRequestEvent}.
- * The spectators fill the lower part: they are out of the round, so there is nothing to teleport to.
+ * The survivors fill the upper part and show the hearts they have left, the spectators fill the lower part.
+ * A left click on any head asks to teleport the viewer to that player through a
+ * {@link SpectatorTeleportRequestEvent}, a right click asks for the statistics of that player through a
+ * {@link SpectatorStatsRequestEvent}.
  * </p>
  *
  * @author OneLiteFeather
- * @version 1.1.0
+ * @version 1.3.0
  * @since 1.0.0
  */
 public class SpectatorInventory extends GlobalInventoryBuilder {
@@ -51,7 +51,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
             .build();
     static final Tag<UUID> TARGET_TAG = Tag.UUID("target");
 
-    private static final Component TELEPORT_HINT = hint("Left click to teleport");
+    static final Component TELEPORT_HINT = hint("Left click to teleport");
     private static final Component STATS_HINT = hint("Right click for statistics");
     private static final Component OUT_OF_ROUND = hint("Out of the round");
 
@@ -68,7 +68,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
             .quad(InventoryType.CHEST_4_ROW.getSize(), InventoryType.CHEST_5_ROW.getSize() - 1);
 
     private final Team survivorTeam;
-    private final BiConsumer<Player, Player> teleportCallback;
+    private final Team spectatorTeam;
     private volatile int populatedSurvivorSlots;
     private volatile int populatedSpectatorSlots;
     private Map<UUID, Float> shownHealth = Map.of();
@@ -76,14 +76,13 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
     /**
      * Creates the inventory for the given teams.
      *
-     * @param survivorTeam     the team whose players can be teleported to
-     * @param spectatorTeam    the team whose players are listed as out of the round
-     * @param teleportCallback called with the viewer and the survivor they want to teleport to
+     * @param survivorTeam  the team whose players are listed with their hearts
+     * @param spectatorTeam the team whose players are listed as out of the round
      */
-    public SpectatorInventory(Team survivorTeam, Team spectatorTeam, BiConsumer<Player, Player> teleportCallback) {
+    public SpectatorInventory(Team survivorTeam, Team spectatorTeam) {
         super(Component.text("Spectate"), InventoryType.CHEST_6_ROW);
         this.survivorTeam = survivorTeam;
-        this.teleportCallback = teleportCallback;
+        this.spectatorTeam = spectatorTeam;
 
         InventoryLayout layout = InventoryLayout.fromType(getType());
         layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), DECORATION_PANE);
@@ -114,7 +113,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
      * @param layout  the layout to fill
      * @param slots   the slots to fill in order
      * @param players the players to show
-     * @param alive   whether the players are survivors, who show their hearts and can be teleported to
+     * @param alive   whether the players are survivors, who show their hearts
      * @return how many slots got a head
      */
     private int fill(InventoryLayout layout, int[] slots, Collection<Player> players, boolean alive) {
@@ -140,7 +139,7 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
                 : new ResolvableProfile(new GameProfile(player.getUuid(), player.getUsername()));
         List<Component> lore = alive
                 ? List.of(Component.empty(), HealthDisplay.hearts(player), Component.empty(), TELEPORT_HINT, STATS_HINT, Component.empty())
-                : List.of(Component.empty(), OUT_OF_ROUND, Component.empty(), STATS_HINT, Component.empty());
+                : List.of(Component.empty(), OUT_OF_ROUND, Component.empty(), TELEPORT_HINT, STATS_HINT, Component.empty());
         return ItemStack.builder(Material.PLAYER_HEAD)
                 .customName(Component.text(player.getUsername()))
                 .set(DataComponents.PROFILE, profile)
@@ -187,8 +186,9 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
     /**
      * Contains the logic what should happen when a player clicks on a player.
      * <p>
-     * A right click asks for the statistics of the clicked player. Any other click teleports the viewer,
-     * but only to a survivor: a spectator is out of the round and flies wherever they like.
+     * A right click asks for the statistics of the clicked player. Any other click asks to teleport the viewer
+     * to the clicked survivor or spectator. A click on the own head does nothing, and neither does one on a
+     * player who left both teams since the heads were built.
      * </p>
      *
      * @param player who is involved in the click
@@ -218,12 +218,16 @@ public class SpectatorInventory extends GlobalInventoryBuilder {
             return;
         }
 
-        if (!survivorTeam.getPlayers().contains(targetPlayer)) {
+        if (targetPlayer.equals(player) || !isListed(targetPlayer)) {
             return;
         }
 
         player.closeInventory();
-        teleportCallback.accept(player, targetPlayer);
+        EventDispatcher.call(new SpectatorTeleportRequestEvent(player, targetPlayer));
+    }
+
+    private boolean isListed(Player target) {
+        return survivorTeam.getPlayers().contains(target) || spectatorTeam.getPlayers().contains(target);
     }
 
     /**
