@@ -27,7 +27,7 @@ import java.util.function.LongSupplier;
  * has to tell them that it happened.</p>
  *
  * <p>The slender never hears it. He is the only source of damage in the game and is skipped by
- * {@code SlenderBarHelper#applyDamage}, so no event ever names him as the victim - a sound on his
+ * {@code SlenderBarHelper#swing}, so no event ever names him as the victim - a sound on his
  * side would only be a second way to locate the survivor he is already standing next to.</p>
  *
  * <p>The cooldown is what keeps the feedback readable. A draining slender damages everyone around

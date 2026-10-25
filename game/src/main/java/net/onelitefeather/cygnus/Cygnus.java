@@ -277,6 +277,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                     System::currentTimeMillis,
                     () -> TeamHelper.survivorsOf(this.teamService),
                     this.actionTracer.sanityObserver(Cygnus::survivorActor));
+            this.staminaService.useDread(sanityService);
             // Shared by the creek and the lure: whom the lure scared, the creek leaves alone for a while.
             CreekRespite creekRespite = new CreekRespite();
             this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase, tickSections);

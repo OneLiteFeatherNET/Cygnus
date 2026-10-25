@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.stamina;
 
 import net.onelitefeather.cygnus.common.config.StaminaConfig;
+import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 
 import java.util.function.LongSupplier;
@@ -15,6 +16,9 @@ import java.util.function.LongSupplier;
  * @since 1.0.0
  **/
 public final class StaminaFactory {
+
+    /** Fear that is never there, for a bar built without anyone tracking the survivors' fear. */
+    static final DreadSource CALM = _ -> 0.0D;
 
     private StaminaFactory() {
     }
@@ -59,6 +63,21 @@ public final class StaminaFactory {
      * @return the created instance from a {@link SlenderBar}
      */
     public static StaminaBar createSlenderStamina(CygnusPlayer player, StaminaConfig config, LongSupplier clock) {
-        return new SlenderBar(player, config, clock);
+        return createSlenderStamina(player, config, clock, CALM, SlenderSwing.random());
+    }
+
+    /**
+     * Creates a new instance of an {@link SlenderBar} whose swings lean on the survivors' fear.
+     *
+     * @param player the player who owns the created object
+     * @param config the settings, of which the bar reads the reappear cooldown and the damage range
+     * @param clock  supplies the current time in milliseconds
+     * @param dread  supplies the fear of each survivor
+     * @param swing  rolls what a swing does to a survivor
+     * @return the created instance from a {@link SlenderBar}
+     */
+    public static StaminaBar createSlenderStamina(CygnusPlayer player, StaminaConfig config, LongSupplier clock,
+                                                  DreadSource dread, SlenderSwing swing) {
+        return new SlenderBar(player, config, clock, dread, swing);
     }
 }

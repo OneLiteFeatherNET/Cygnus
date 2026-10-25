@@ -5,6 +5,7 @@ import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.entity.Player;
 import net.minestom.server.utils.validate.Check;
 import net.onelitefeather.cygnus.common.config.StaminaConfig;
+import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,7 +18,7 @@ import java.util.UUID;
  * The class has some abilities to manage all {@link StaminaBar} references which are required in the game.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  */
 public final class StaminaService {
@@ -25,6 +26,8 @@ public final class StaminaService {
     private final StaminaConfig config;
     private final TickSections sections;
     private final Map<UUID, StaminaBar> staminaBars;
+    private final SlenderSwing swing = SlenderSwing.random();
+    private DreadSource dread = StaminaFactory.CALM;
     private @Nullable StaminaBar slenderBar;
 
     /**
@@ -57,6 +60,16 @@ public final class StaminaService {
     }
 
     /**
+     * Sets where the slender's swings read the survivors' fear from. The fear is tracked by a service
+     * built after this one, so it is handed in afterwards; until then every survivor counts as calm.
+     *
+     * @param dread supplies the fear of each survivor
+     */
+    public void useDread(DreadSource dread) {
+        this.dread = dread;
+    }
+
+    /**
      * Creates a new instance of an {@link SlenderBar} for a given {@link Player}.
      *
      * @param player     the player that owns the {@link StaminaBar}
@@ -67,7 +80,8 @@ public final class StaminaService {
             this.slenderBar.stop();
         }
 
-        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player, this.config, System::currentTimeMillis)
+        this.slenderBar = StaminaFactory.createSlenderStamina((CygnusPlayer) player, this.config, System::currentTimeMillis,
+                        this.dread, this.swing)
                 .measuredBy(this.sections, TickSectionNames.SLENDER_BAR);
         if (!forceStart) return;
         this.slenderBar.start();
