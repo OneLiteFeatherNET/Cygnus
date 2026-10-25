@@ -68,7 +68,7 @@ dependencyResolutionManagement {
             version("opentelemetry", "1.67.0")
             // Yearly player statistics (the :stats module). Hibernate runs on a Hikari pool, Flyway owns
             // the schema, PostgreSQL is the production database and H2 (PostgreSQL mode) backs the tests.
-            version("hibernate", "7.4.13.Final")
+            version("hibernate", "7.4.14.Final")
             version("hikari", "7.1.0")
             version("flyway", "13.11.1")
             version("postgresql", "42.7.14")
