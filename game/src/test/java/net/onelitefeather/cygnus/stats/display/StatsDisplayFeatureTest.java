@@ -9,6 +9,7 @@ import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerSwapItemEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
+import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.inventory.click.Click;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.item.ItemStack;
@@ -23,6 +24,7 @@ import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.phase.WaitingPhase;
+import net.onelitefeather.cygnus.player.event.SpectatorStatsRequestEvent;
 import net.onelitefeather.cygnus.stats.FakeStatsRepository;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.onelitefeather.cygnus.utils.Items;
@@ -36,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.UUID;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -176,6 +179,19 @@ class StatsDisplayFeatureTest {
 
         StatsMenu menu = assertInstanceOf(StatsMenu.class, this.player.getOpenInventory(), "the menu must open");
         assertTrue(StatsDisplayTestSupport.plain(menu.getTitle()).contains(this.player.getUsername()));
+    }
+
+    @Test
+    @DisplayName("A spectator's request opens the menu of the clicked player")
+    void spectatorRequestOpensTheTargetsMenu() {
+        Player target = this.env.createConnection(new GameProfile(UUID.randomUUID(), "Target"))
+                .connect(this.instance, new Pos(0, 40, 0));
+        this.repository.store(year(target.getUuid(), 2026, 4, 2, 0, 0));
+
+        this.feature.node().call(new SpectatorStatsRequestEvent(this.player, target));
+
+        StatsMenu menu = assertInstanceOf(StatsMenu.class, this.player.getOpenInventory(), "the menu must open");
+        assertTrue(StatsDisplayTestSupport.plain(menu.getTitle()).contains(target.getUsername()));
     }
 
     @Test
