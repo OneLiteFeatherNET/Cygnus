@@ -500,4 +500,27 @@ class GameDataTest {
                 .anyMatch(line -> line.contains("Now editing page pool default")));
         data.reset();
     }
+
+    @Test
+    void savingRepairsBrokenPageSettings(@TempDir Path root) throws IOException {
+        Path mapFile = root.resolve("map.json");
+        Files.writeString(mapFile, "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
+        Files.writeString(root.resolve("pages.json"),
+                "{ \"pages\": [ " + PAGE_JSON + " ], \"settings\": { \"ttlSeconds\": 5 } }", StandardCharsets.UTF_8);
+
+        new GameData(player, MapEntry.of(root)).save();
+
+        assertEquals(PageSettings.DEFAULT, PageFacesFile.loadSettings(mapFile));
+        assertEquals(Set.of(FILE_PAGE), PageFacesFile.load(mapFile));
+    }
+
+    @Test
+    void poolNameOfAnInvalidCaseVariantFileIsReserved(@TempDir Path root) throws IOException {
+        Path variant = root.resolve("pages").resolve("Nord.json");
+        Files.createDirectories(variant.getParent());
+        Files.writeString(variant, "{ \"pages\": [] }", StandardCharsets.UTF_8);
+        GameData data = new GameData(player, MapEntry.of(root));
+
+        assertEquals(GameData.CreateResult.DUPLICATE, data.createPagePool("nord"));
+    }
 }
