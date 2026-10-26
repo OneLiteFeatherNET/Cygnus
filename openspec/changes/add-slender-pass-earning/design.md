@@ -63,7 +63,7 @@ last_quota_month      VARCHAR(7) NULL                -- 'YYYY-MM', UTC
 ## Pity counter
 
 The counter is updated from the `FinishedRound` that `RoundStatsCollector.gameFinished` hands out, before the
-statistics are written. The classification uses the same fields as the statistics:
+statistics are written. The classification uses the same fields as the statistics. It lives in `PityCounter.roundFinished`:
 
 | Participant in `FinishedRound`                              | Effect on `rounds_since_slender`                       |
 |-------------------------------------------------------------|--------------------------------------------------------|
@@ -72,8 +72,7 @@ statistics are written. The classification uses the same fields as the statistic
 | role `SURVIVOR`, outcome `ABANDONED` (quit before the end)  | unchanged                                              |
 | role `SURVIVOR`, not taken over, not abandoned              | +1; at `pass.pity-rounds` the counter goes to 0 and a pass is credited |
 
-- The classification is one pure function over `FinishedRound.players()`. It does not look at the team tags or the
-  events again.
+- The classification reads `FinishedRound.players()` only. It does not look at the team tags or the events again.
 - The reset for the Slender is applied with the round snapshot, not at the moment of selection. A Slender who quits
   early is still in the snapshot with outcome `ABANDONED`, so the reset still happens. The only difference to a
   reset at selection: a server that stops in the middle of a round keeps the old counter for that round. The round
@@ -86,13 +85,13 @@ statistics are written. The classification uses the same fields as the statistic
 
 ## Monthly quota
 
-- The meta `cygnus.slender-pass.monthly-quota` is read through a small interface, `MonthlyQuotaSource`, with one
-  method `int monthlyQuota(UUID player)`. The LuckPerms implementation sits in `common` next to `LuckPermsSupport`:
-  it reads the cached user data (no I/O), returns 0 without LuckPerms, without user data, without the meta, or for a
-  value that is not an integer, and logs the last case once. Tests give a fake.
-- The hook runs in the lobby spawn (`PlayerSpawnEvent`, next to `SlenderPassService.onLobbyJoin`) on the tick thread.
-  The spawn event also fires on instance changes; the grant is idempotent, so a second call in the same month
-  credits nothing and costs one conditional statement.
+- The meta `cygnus.slender-pass.monthly-quota` is read through a small interface, `MonthlyQuota.MonthlyQuotaSource`,
+  with one method `int monthlyQuota(UUID player)`. Its LuckPerms implementation is `LuckPermsSupport.monthlyQuota` in
+  `common`: it reads the cached user data (no I/O), returns 0 without LuckPerms, without user data, without the meta,
+  or for a value that is not an integer, and logs the last case. Tests give a fake.
+- The hook is the lobby join of `PlayerSpawnListener` (the first spawn in the lobby), next to
+  `SlenderPassService.onLobbyJoin`, on the tick thread. The grant is idempotent per month, so a repeated lobby join in
+  the same month credits nothing and costs one conditional statement.
 - The grant is one repository call. Inside one transaction it creates the balance row if needed, runs
   `UPDATE player_slender_pass SET last_quota_month = :month, version = version + 1 WHERE player_uuid = :uuid AND (last_quota_month IS NULL OR last_quota_month < :month)`,
   and credits the quota only when the update matched. The `version` bump is explicit because a bulk update does not
@@ -130,7 +129,7 @@ Invalid values stop the server at start with a clear message, the same way other
 
 ## Testing
 
-- Unit (Fast, Independent) in `:game`: the pity classification and the quota logic against
+- Unit (Fast, Independent) in `:game`: `PityCounterTest` and `MonthlyQuotaTest` run the real `RoundStatsTracker` and
   `InMemorySlenderPassRepository` (new methods, same rules as the database) and a fixed `Clock`. The month change is
   tested at the turn of the month in UTC (`2026-10-31T23:30Z` is October, and `2026-11-01T00:30Z` is November). The
   meta is a fake `MonthlyQuotaSource`.
