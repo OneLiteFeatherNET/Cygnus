@@ -186,30 +186,39 @@ class HibernateSlenderPassEarningIntegrationTest {
     }
 
     @Test
-    void theV3MigrationKeepsTheLedgerRowsOfV2InOrder() throws SQLException {
+    void theV3MigrationKeepsTheLedgerRowsAndTheirIds() throws SQLException {
         DataSource fresh = freshDatabase();
         Flyway.configure().dataSource(fresh).locations("classpath:db/migration").target("2").load().migrate();
+        long givenId;
+        long redeemId;
         try (Connection connection = fresh.getConnection(); Statement statement = connection.createStatement()) {
             statement.execute("INSERT INTO player_slender_pass (player_uuid, balance, version) VALUES ('" + ALICE + "', 1, 0)");
             statement.execute("INSERT INTO slender_pass_transaction (player_uuid, delta, reason, created_at) "
                     + "VALUES ('" + ALICE + "', 2, 'ADMIN_GIVE', '2026-10-01 10:00:00+00')");
             statement.execute("INSERT INTO slender_pass_transaction (player_uuid, delta, reason, round_id, created_at) "
                     + "VALUES ('" + ALICE + "', -1, 'REDEEM', '00000000-0000-0000-0000-00000000f001', '2026-10-02 10:00:00+00')");
+            givenId = ledgerId(statement, "ADMIN_GIVE");
+            redeemId = ledgerId(statement, "REDEEM");
         }
 
         Flyway.configure().dataSource(fresh).locations("classpath:db/migration").load().migrate();
 
         try (Connection connection = fresh.getConnection(); Statement statement = connection.createStatement()) {
-            try (ResultSet rows = statement.executeQuery("SELECT reason, delta, round_id FROM slender_pass_transaction ORDER BY id")) {
+            try (ResultSet rows = statement.executeQuery("SELECT id, reason, delta, round_id FROM slender_pass_transaction ORDER BY id")) {
                 assertTrue(rows.next());
+                assertEquals(givenId, rows.getLong("id"), "the migration keeps the id of the first ledger row");
                 assertEquals("ADMIN_GIVE", rows.getString("reason"));
                 assertEquals(2, rows.getInt("delta"));
                 assertTrue(rows.next());
+                assertEquals(redeemId, rows.getLong("id"), "the migration keeps the id of the second ledger row");
                 assertEquals("REDEEM", rows.getString("reason"));
                 assertEquals(-1, rows.getInt("delta"));
                 assertEquals("00000000-0000-0000-0000-00000000f001", rows.getString("round_id"));
                 assertFalse(rows.next());
             }
+            statement.execute("INSERT INTO slender_pass_transaction (player_uuid, delta, reason, created_at) "
+                    + "VALUES ('" + ALICE + "', 1, 'EARNED_PITY', '2026-10-03 10:00:00+00')");
+            assertTrue(ledgerId(statement, "EARNED_PITY") > redeemId, "new rows get ids after the migrated ones");
             try (ResultSet balance = statement.executeQuery("SELECT balance, rounds_since_slender FROM player_slender_pass")) {
                 assertTrue(balance.next());
                 assertEquals(1, balance.getInt("balance"));
@@ -219,6 +228,13 @@ class HibernateSlenderPassEarningIntegrationTest {
             try (Connection connection = fresh.getConnection(); Statement statement = connection.createStatement()) {
                 statement.execute("SHUTDOWN");
             }
+        }
+    }
+
+    private static long ledgerId(Statement statement, String reason) throws SQLException {
+        try (ResultSet row = statement.executeQuery("SELECT id FROM slender_pass_transaction WHERE reason = '" + reason + "'")) {
+            assertTrue(row.next(), "a ledger row with reason " + reason);
+            return row.getLong("id");
         }
     }
 
