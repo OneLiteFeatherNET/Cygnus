@@ -219,6 +219,25 @@ class StalkStateTest {
     }
 
     @Test
+    @DisplayName("After coming back closer, the shadow stays there unheard instead of jumping back into the band")
+    void shadowStaysCloserAfterLook() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        RandomGenerator random = firstRoll(0.99D);
+        List<Double> sounds = new ArrayList<>();
+        CreekActions actions = Contexts.actions(_ -> {}, _ -> {}, _ -> {}, (_, _) -> {}, _ -> {},
+                (_, progress) -> sounds.add(progress));
+        state.tick(Contexts.mood(Contexts.context(0L, body, Contexts.route(), actions, random, target(0.3D, true)), CreekMood.SHADOW));
+        state.tick(Contexts.mood(Contexts.context(700L, body, Contexts.route(), actions, random, target(0.3D, true)), CreekMood.SHADOW));
+        Pos closer = body.position;
+
+        state.tick(Contexts.mood(Contexts.context(800L, body, Contexts.route(), actions, random, target(0.3D, false)), CreekMood.SHADOW));
+
+        assertEquals(closer, body.position, "he stays where he came back to");
+        assertTrue(sounds.isEmpty(), "and makes no sound");
+    }
+
+    @Test
     @DisplayName("The normal creek ignores teammates and keeps its distance after a look")
     void normalUnchanged() {
         RecordingBody body = new RecordingBody(IN_THE_BAND);
