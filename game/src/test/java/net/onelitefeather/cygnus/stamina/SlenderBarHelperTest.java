@@ -297,14 +297,14 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         CygnusPlayer terrified = (CygnusPlayer) env.createPlayer(instance, CENTER.add(-1, 0, 0));
         terrified.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
         DreadSource dread = uuid -> uuid.equals(terrified.getUuid()) ? 1.0D : 0.0D;
-        // Every draw is 0.2: a hit for the calm one (0.2 >= 0.1), a miss for the terrified one (0.2 < 0.3).
-        SlenderSwing swing = new SlenderSwing(() -> new FixedRandom(0.2D));
+        // Every draw is 0.1: a hit for the calm one (0.1 >= 0.05), a miss for the terrified one (0.1 < 0.15).
+        SlenderSwing swing = new SlenderSwing(() -> new FixedRandom(0.1D));
 
         SlenderBarHelper.SwingOutcome outcome = this.helper.swing(instance, slender.getUuid(), CENTER, RANGE, swing, dread);
 
         assertTrue(outcome.hit());
         assertTrue(outcome.missed());
-        assertEquals(100.0D - (0.6D + 0.2D * 0.65D) * SlenderSwing.POINTS_PER_HEART, calm.vitality().points(), 1.0E-9);
+        assertEquals(100.0D - (0.6D + 0.1D * 0.65D) * SlenderSwing.POINTS_PER_HEART, calm.vitality().points(), 1.0E-9);
         assertEquals(100.0D, terrified.vitality().points(), 1.0E-9);
     }
 
