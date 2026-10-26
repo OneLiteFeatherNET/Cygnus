@@ -8,17 +8,20 @@ import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
+import net.onelitefeather.cygnus.common.page.PagePoolFiles;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -27,6 +30,8 @@ public final class GameMapBuilder extends BaseMapBuilder {
     private @Nullable Pos slenderSpawn;
     private @Nullable MapAtmosphere atmosphere;
     private final Set<PageResource> pageFaces;
+    // The pools besides the default one, which is pageFaces. Sorted so the setup lists them by name.
+    private final Map<String, Set<PageResource>> extraPagePools = new TreeMap<>();
     private final Set<Pos> survivorSpawns;
     private final Map<String, List<CreekWaypoint>> creekRoutes;
     private PageSettings pageSettings = PageSettings.DEFAULT;
@@ -141,6 +146,110 @@ public final class GameMapBuilder extends BaseMapBuilder {
      */
     public Set<PageResource> getPageFaces() {
         return pageFaces;
+    }
+
+    /**
+     * Adds an empty page pool.
+     *
+     * @param name the pool's name, already normalized with {@link PagePoolFiles#normalizeName(String)}
+     * @return {@code false} if the name is the default pool or already taken
+     */
+    public boolean addPagePool(String name) {
+        if (PagePoolFiles.DEFAULT_POOL.equals(name) || this.extraPagePools.containsKey(name)) return false;
+        this.extraPagePools.put(name, new HashSet<>());
+        return true;
+    }
+
+    /**
+     * Puts a loaded page pool into the builder, replacing a pool with the same name.
+     *
+     * @param name  the pool's name
+     * @param pages the pages of the pool
+     * @throws IllegalArgumentException for the default pool, which is loaded with the map
+     */
+    public void putPagePool(String name, Set<PageResource> pages) {
+        if (PagePoolFiles.DEFAULT_POOL.equals(name)) {
+            throw new IllegalArgumentException("The default pool is loaded with the map");
+        }
+        this.extraPagePools.put(name, new HashSet<>(pages));
+    }
+
+    /**
+     * Removes a page pool.
+     *
+     * @param name the pool's name
+     * @return {@code false} for the default pool or if there was no such pool
+     */
+    public boolean removePagePool(String name) {
+        return this.extraPagePools.remove(name) != null;
+    }
+
+    /**
+     * Returns whether a page pool with this name exists.
+     *
+     * @param name the pool's name
+     * @return {@code true} if it exists, always for the default pool
+     */
+    public boolean hasPagePool(String name) {
+        return PagePoolFiles.DEFAULT_POOL.equals(name) || this.extraPagePools.containsKey(name);
+    }
+
+    /**
+     * Returns the pages of a pool.
+     *
+     * @param name the pool's name
+     * @return the underlying set, the {@link #getPageFaces() page faces} for the default pool
+     * @throws IllegalArgumentException if there is no such pool
+     */
+    public Set<PageResource> getPagePool(String name) {
+        if (PagePoolFiles.DEFAULT_POOL.equals(name)) return this.pageFaces;
+        Set<PageResource> pool = this.extraPagePools.get(name);
+        if (pool == null) throw new IllegalArgumentException("Unknown page pool: " + name);
+        return pool;
+    }
+
+    /**
+     * Returns the names of all page pools.
+     *
+     * @return the default pool first, then the others by name
+     */
+    public List<String> getPagePoolNames() {
+        List<String> names = new ArrayList<>(this.extraPagePools.size() + 1);
+        names.add(PagePoolFiles.DEFAULT_POOL);
+        names.addAll(this.extraPagePools.keySet());
+        return names;
+    }
+
+    /**
+     * Returns the page pools besides the default one, which each have their own file.
+     *
+     * @return an unmodifiable view, sorted by name
+     */
+    public Map<String, Set<PageResource>> getExtraPagePools() {
+        return Collections.unmodifiableMap(this.extraPagePools);
+    }
+
+    /**
+     * Adds a page to a pool.
+     *
+     * @param pool the pool's name
+     * @param pos  the position of the page
+     * @param face the face of the page
+     * @return {@code false} if there is no such pool or the pool already has this page
+     */
+    public boolean addPage(String pool, Vec pos, Direction face) {
+        return hasPagePool(pool) && getPagePool(pool).add(new PageResource(pos, face));
+    }
+
+    /**
+     * Removes a page from a pool.
+     *
+     * @param pool         the pool's name
+     * @param pageResource the page to remove
+     * @return {@code false} if there is no such pool or the pool does not have this page
+     */
+    public boolean removePage(String pool, PageResource pageResource) {
+        return hasPagePool(pool) && getPagePool(pool).remove(pageResource);
     }
 
     /**
