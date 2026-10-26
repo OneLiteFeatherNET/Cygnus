@@ -1,5 +1,15 @@
 package net.onelitefeather.cygnus.setup.data;
 
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.minestom.server.event.Event;
+import net.minestom.server.event.EventNode;
+import net.minestom.server.network.packet.server.play.SystemChatPacket;
+import net.minestom.testing.Collector;
+import net.minestom.testing.TestConnection;
+import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
+import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
+import java.util.concurrent.atomic.AtomicReference;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
@@ -16,6 +26,8 @@ import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.PageFacesFile;
+import net.onelitefeather.cygnus.common.page.PagePoolFiles;
+import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.theevilreaper.aves.map.MapEntry;
@@ -31,6 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -59,6 +72,7 @@ class GameDataTest {
 
     @Test
     void testAddAndRemovePage() {
+        gameData.selectPagePool("default");
         assertTrue(gameData.addPage(Vec.ZERO, Direction.NORTH));
         assertFalse(gameData.addPage(Vec.ZERO, Direction.NORTH));
         assertTrue(gameData.addPage(Vec.ZERO, Direction.SOUTH));
@@ -90,6 +104,7 @@ class GameDataTest {
     @Test
     void saveWritesPageFacesToTheSiblingFileAndLeavesThemOutOfMapJson(@TempDir Path root) throws IOException {
         GameData data = new GameData(player, MapEntry.of(root));
+        data.selectPagePool("default");
         data.addPage(Vec.ZERO, Direction.NORTH);
         data.save();
 
@@ -258,10 +273,297 @@ class GameDataTest {
         CreekRoutesFile.save(mapFile, List.of(), creek);
 
         GameData second = new GameData(player, mapEntry);
+        second.selectPagePool("default");
         second.addPage(Vec.ZERO, Direction.NORTH);
         second.save();
 
         assertEquals(pages, PageFacesFile.loadSettings(mapFile), "saving a page must not reset the map's page settings");
         assertEquals(creek, CreekRoutesFile.loadSettings(mapFile));
+    }
+
+    private static final String PAGE_JSON = "{ \"face\": \"NORTH\", \"position\": { \"x\": 1.0, \"y\": 2.0, \"z\": 3.0 } }";
+    private static final PageResource FILE_PAGE = new PageResource(new Vec(1, 2, 3), Direction.NORTH);
+
+    private static GameMapBuilder builderOf(GameData data) {
+        return (GameMapBuilder) data.getMapBuilder();
+    }
+
+    @Test
+    void activePoolStartsEmpty() {
+        assertNull(gameData.activePagePool());
+        assertEquals(List.of("default"), gameData.pagePoolNames());
+    }
+
+    @Test
+    void createPagePoolNormalizesAndActivates() {
+        assertEquals(GameData.CreateResult.CREATED, gameData.createPagePool(" Nord "));
+
+        assertEquals("nord", gameData.activePagePool());
+        assertEquals(List.of("default", "nord"), gameData.pagePoolNames());
+    }
+
+    @Test
+    void createPagePoolRejectsInvalidAndDuplicateNames() {
+        assertEquals(GameData.CreateResult.INVALID_NAME, gameData.createPagePool(""));
+        assertEquals(GameData.CreateResult.INVALID_NAME, gameData.createPagePool("a b"));
+        assertEquals(GameData.CreateResult.INVALID_NAME, gameData.createPagePool("default"));
+        assertEquals(GameData.CreateResult.CREATED, gameData.createPagePool("nord"));
+        assertEquals(GameData.CreateResult.DUPLICATE, gameData.createPagePool("NORD"));
+    }
+
+    @Test
+    void pagesGoIntoTheActivePool() {
+        gameData.createPagePool("nord");
+
+        assertTrue(gameData.addPage(Vec.ZERO, Direction.NORTH));
+
+        assertEquals(1, gameData.pagePoolSize("nord"));
+        assertTrue(builderOf(gameData).getPageFaces().isEmpty());
+    }
+
+    @Test
+    void selectPagePoolSwitchesTheActivePool() {
+        gameData.createPagePool("nord");
+
+        assertTrue(gameData.selectPagePool("default"));
+        assertFalse(gameData.selectPagePool("keller"));
+
+        assertEquals("default", gameData.activePagePool());
+    }
+
+    @Test
+    void deletingTheActivePoolLeavesNoActivePool() {
+        gameData.createPagePool("nord");
+
+        assertTrue(gameData.deletePagePool("nord"));
+
+        assertNull(gameData.activePagePool());
+        assertEquals(List.of("default"), gameData.pagePoolNames());
+    }
+
+    @Test
+    void defaultPoolCannotBeDeleted() {
+        assertFalse(gameData.deletePagePool("default"));
+        assertFalse(gameData.deletePagePool("keller"));
+    }
+
+    @Test
+    void savedPoolsComeBackAfterReopening(@TempDir Path root) {
+        GameData data = new GameData(player, MapEntry.of(root));
+        data.createPagePool("nord");
+        data.addPage(Vec.ZERO, Direction.NORTH);
+        data.save();
+
+        GameData reopened = new GameData(player, MapEntry.of(root));
+
+        assertEquals(List.of("default", "nord"), reopened.pagePoolNames());
+        assertEquals(1, reopened.pagePoolSize("nord"));
+        assertNull(reopened.activePagePool());
+    }
+
+    @Test
+    void changingOnlyAnotherPoolLeavesPagesJsonUntouched(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
+        String pagesJson = "[ " + PAGE_JSON + " ]";
+        Files.writeString(root.resolve("pages.json"), pagesJson, StandardCharsets.UTF_8);
+        GameData data = new GameData(player, MapEntry.of(root));
+        data.createPagePool("nord");
+        data.addPage(Vec.ZERO, Direction.NORTH);
+
+        data.save();
+
+        assertEquals(pagesJson, Files.readString(root.resolve("pages.json"), StandardCharsets.UTF_8));
+        assertTrue(Files.exists(root.resolve("pages").resolve("nord.json")));
+    }
+
+    @Test
+    void changingTheDefaultPoolRewritesPagesJson(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
+        Files.writeString(root.resolve("pages.json"), "[ " + PAGE_JSON + " ]", StandardCharsets.UTF_8);
+        GameData data = new GameData(player, MapEntry.of(root));
+        data.selectPagePool("default");
+        data.addPage(Vec.ZERO, Direction.NORTH);
+
+        data.save();
+
+        Path mapFile = root.resolve("map.json");
+        assertEquals(Set.of(FILE_PAGE, new PageResource(Vec.ZERO, Direction.NORTH)), PageFacesFile.load(mapFile));
+    }
+
+    @Test
+    void changingOnlyThePageSettingsRewritesPagesJson(@TempDir Path root) throws IOException {
+        Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
+        Files.writeString(root.resolve("pages.json"), "[ " + PAGE_JSON + " ]", StandardCharsets.UTF_8);
+        GameData data = new GameData(player, MapEntry.of(root));
+        PageSettings settings = new PageSettings(30, 6, 90, 20);
+        builderOf(data).setPageSettings(settings);
+
+        data.save();
+
+        Path mapFile = root.resolve("map.json");
+        assertEquals(settings, PageFacesFile.loadSettings(mapFile));
+        assertEquals(Set.of(FILE_PAGE), PageFacesFile.load(mapFile));
+    }
+
+    @Test
+    void newMapWithoutDefaultPagesWritesNoPagesJson(@TempDir Path root) {
+        GameData data = new GameData(player, MapEntry.of(root));
+        data.createPagePool("nord");
+        data.addPage(Vec.ZERO, Direction.NORTH);
+
+        data.save();
+
+        assertFalse(Files.exists(root.resolve("pages.json")));
+        assertTrue(Files.exists(root.resolve("pages").resolve("nord.json")));
+    }
+
+    @Test
+    void inlinePagesFromAnOldMapJsonMoveIntoPagesJson(@TempDir Path root) throws IOException {
+        String inlinePage = "{ \"face\": \"SOUTH\", \"position\": { \"x\": 4.0, \"y\": 5.0, \"z\": 6.0 } }";
+        Files.writeString(root.resolve("map.json"),
+                "{ \"name\": \"Test\", \"pageFaces\": [ " + inlinePage + " ] }", StandardCharsets.UTF_8);
+        Files.writeString(root.resolve("pages.json"), "[ " + PAGE_JSON + " ]", StandardCharsets.UTF_8);
+
+        new GameData(player, MapEntry.of(root)).save();
+
+        assertEquals(Set.of(FILE_PAGE, new PageResource(new Vec(4, 5, 6), Direction.SOUTH)),
+                PageFacesFile.load(root.resolve("map.json")));
+    }
+
+    @Test
+    void deletedPoolFileIsRemovedOnSave(@TempDir Path root) {
+        GameData data = new GameData(player, MapEntry.of(root));
+        data.createPagePool("nord");
+        data.save();
+        GameData reopened = new GameData(player, MapEntry.of(root));
+
+        reopened.deletePagePool("nord");
+        reopened.save();
+
+        assertFalse(Files.exists(root.resolve("pages").resolve("nord.json")));
+    }
+
+    @Test
+    void poolDeletedAndRecreatedSurvivesSave(@TempDir Path root) {
+        GameData data = new GameData(player, MapEntry.of(root));
+        data.createPagePool("nord");
+        data.save();
+        GameData reopened = new GameData(player, MapEntry.of(root));
+
+        reopened.deletePagePool("nord");
+        reopened.createPagePool("nord");
+        reopened.addPage(Vec.ZERO, Direction.NORTH);
+        reopened.save();
+
+        Map<String, Set<PageResource>> pools = PagePoolFiles.load(root.resolve("map.json"), (_, _) -> {});
+        assertEquals(Set.of(new PageResource(Vec.ZERO, Direction.NORTH)), pools.get("nord"));
+    }
+
+    @Test
+    void brokenPoolFileIsSkippedKeptAndReserved(@TempDir Path root) throws IOException {
+        Path broken = root.resolve("pages").resolve("kaputt.json");
+        Files.createDirectories(broken.getParent());
+        Files.writeString(broken, "{ not valid json ]", StandardCharsets.UTF_8);
+        GameData data = new GameData(player, MapEntry.of(root));
+
+        assertEquals(List.of("default"), data.pagePoolNames());
+        assertEquals(GameData.CreateResult.DUPLICATE, data.createPagePool("kaputt"));
+
+        data.save();
+
+        assertEquals("{ not valid json ]", Files.readString(broken, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void newPoolItemRequestsTheNameDialog(Env env) {
+        AtomicReference<DialogRequestEvent> request = new AtomicReference<>();
+        EventNode<Event> node = EventNode.all("page-pool-dialog-test");
+        node.addListener(DialogRequestEvent.class, request::set);
+        env.process().eventHandler().addChild(node);
+        try {
+            gameData.handleItemInteraction(player, SetupItemId.PAGE_POOL_NEW);
+        } finally {
+            env.process().eventHandler().removeChild(node);
+        }
+
+        assertNotNull(request.get());
+        assertEquals(DialogTarget.PAGE_POOL_NAME, request.get().getTarget());
+    }
+
+    @Test
+    void enteringPageModeAsksForAPool(Env env) {
+        TestConnection connection = env.createConnection();
+        Player builder = connection.connect(this.instance, new Pos(0, 40, 0));
+        GameData data = new GameData(builder, MapEntry.of(Paths.get("")));
+        Collector<SystemChatPacket> chat = connection.trackIncoming(SystemChatPacket.class);
+
+        data.handleItemInteraction(builder, SetupItemId.PAGE);
+
+        assertTrue(chat.collect().stream()
+                .map(packet -> PlainTextComponentSerializer.plainText().serialize(packet.message()))
+                .anyMatch(line -> line.contains("Create or select a page pool first")));
+        assertEquals(SetupItemId.PAGE_POOL_NEW, builder.getInventory().getItemStack(0).getTag(Tags.ITEM_TAG).byteValue());
+        data.reset();
+    }
+
+    @Test
+    void savingRepairsBrokenPageSettings(@TempDir Path root) throws IOException {
+        Path mapFile = root.resolve("map.json");
+        Files.writeString(mapFile, "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
+        Files.writeString(root.resolve("pages.json"),
+                "{ \"pages\": [ " + PAGE_JSON + " ], \"settings\": { \"ttlSeconds\": 5 } }", StandardCharsets.UTF_8);
+
+        new GameData(player, MapEntry.of(root)).save();
+
+        assertEquals(PageSettings.DEFAULT, PageFacesFile.loadSettings(mapFile));
+        assertEquals(Set.of(FILE_PAGE), PageFacesFile.load(mapFile));
+    }
+
+    @Test
+    void poolNameOfAnInvalidCaseVariantFileIsReserved(@TempDir Path root) throws IOException {
+        Path variant = root.resolve("pages").resolve("Nord.json");
+        Files.createDirectories(variant.getParent());
+        Files.writeString(variant, "{ \"pages\": [] }", StandardCharsets.UTF_8);
+        GameData data = new GameData(player, MapEntry.of(root));
+
+        assertEquals(GameData.CreateResult.DUPLICATE, data.createPagePool("nord"));
+    }
+
+    @Test
+    void addPageWithoutActivePoolFails() {
+        assertFalse(gameData.addPage(Vec.ZERO, Direction.NORTH));
+        assertTrue(builderOf(gameData).getPageFaces().isEmpty());
+    }
+
+    @Test
+    void finishItemClearsTheActivePoolAndShowsThePoolItems() {
+        gameData.handleItemInteraction(player, SetupItemId.PAGE);
+        gameData.createPagePool("nord");
+
+        gameData.handleItemInteraction(player, SetupItemId.PAGE_POOL_FINISH);
+
+        assertNull(gameData.activePagePool());
+        assertTrue(gameData.hasPageMode());
+        assertEquals(SetupItemId.PAGE_POOL_NEW, player.getInventory().getItemStack(0).getTag(Tags.ITEM_TAG).byteValue());
+    }
+
+    @Test
+    void leavingPageModeClearsTheActivePool() {
+        gameData.handleItemInteraction(player, SetupItemId.PAGE);
+        gameData.selectPagePool("default");
+
+        gameData.handleItemInteraction(player, SetupItemId.LEAVE_PAGE);
+
+        assertNull(gameData.activePagePool());
+    }
+
+    @Test
+    void togglingPageModeOffClearsTheActivePool() {
+        gameData.handleItemInteraction(player, SetupItemId.PAGE);
+        gameData.selectPagePool("default");
+
+        gameData.handleItemInteraction(player, SetupItemId.PAGE);
+
+        assertNull(gameData.activePagePool());
     }
 }

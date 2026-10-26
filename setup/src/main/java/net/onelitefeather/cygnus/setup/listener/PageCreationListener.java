@@ -38,6 +38,12 @@ public final class PageCreationListener implements Consumer<PlayerBlockBreakEven
 
         if (!(setupData instanceof GameData gameData) || !gameData.hasPageMode()) return;
 
+        String pool = gameData.activePagePool();
+        if (pool == null) {
+            player.sendMessage(SetupMessages.NO_ACTIVE_PAGE_POOL);
+            return;
+        }
+
         Direction direction = MathUtils.getHorizontalDirection(player.getPosition().yaw());
 
         Vec dir = player.getPosition().direction();
@@ -59,7 +65,9 @@ public final class PageCreationListener implements Consumer<PlayerBlockBreakEven
         Component component = Component.text("Created page at: ", NamedTextColor.GRAY)
                 .append(Components.convertPoint(position).style(Style.style(NamedTextColor.GOLD)))
                 .append(Component.text(" with direction: ", NamedTextColor.GRAY))
-                .append(Component.text(direction.name(), NamedTextColor.GREEN));
+                .append(Component.text(direction.name(), NamedTextColor.GREEN))
+                .append(Component.text(" in pool: ", NamedTextColor.GRAY))
+                .append(Component.text(pool, NamedTextColor.GOLD));
         player.sendMessage(Messages.withPrefix(component));
     }
 }

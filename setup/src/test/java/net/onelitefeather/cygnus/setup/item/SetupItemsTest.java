@@ -48,8 +48,17 @@ class SetupItemsTest {
     @Test
     void testPageItemSet() {
         SetupItems.setPageItems(player);
-        assertItem(2, SetupItemId.PAGES);
-        assertItem(6, SetupItemId.LEAVE_PAGE);
+        assertItem(0, SetupItemId.PAGE_POOL_NEW);
+        assertItem(4, SetupItemId.PAGE_POOLS);
+        assertItem(8, SetupItemId.LEAVE_PAGE);
+    }
+
+    @Test
+    void testPagePoolEditItemSet() {
+        SetupItems.setPagePoolEditItems(player);
+        assertItem(0, SetupItemId.PAGES);
+        assertItem(6, SetupItemId.PAGE_POOL_FINISH);
+        assertItem(8, SetupItemId.LEAVE_PAGE);
     }
 
     @Test

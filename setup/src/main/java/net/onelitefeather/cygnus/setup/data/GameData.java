@@ -22,6 +22,7 @@ import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
 import net.onelitefeather.cygnus.setup.inventory.page.PageHeaderFormatter;
 import net.onelitefeather.cygnus.setup.inventory.slot.CreekRouteSlot;
+import net.onelitefeather.cygnus.setup.inventory.slot.PagePoolSlot;
 import net.onelitefeather.cygnus.setup.inventory.slot.PageSlot;
 import net.onelitefeather.cygnus.setup.inventory.view.InventoryMode;
 import net.onelitefeather.cygnus.setup.inventory.view.MapDataOverviewInventory;
@@ -29,7 +30,9 @@ import net.onelitefeather.cygnus.setup.inventory.view.SurvivorViewInventory;
 import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.PageFacesFile;
+import net.onelitefeather.cygnus.common.page.PagePoolFiles;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.setup.page.PagePreview;
 import net.onelitefeather.cygnus.setup.player.SetupPlayer;
@@ -37,23 +40,38 @@ import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.theevilreaper.aves.inventory.layout.InventoryLayout;
 import net.theevilreaper.aves.inventory.pageable.PageableInventory;
 import net.theevilreaper.aves.inventory.pageable.TitleData;
-import net.theevilreaper.aves.inventory.slot.ISlot;
 import net.theevilreaper.aves.inventory.util.LayoutCalculator;
 import net.theevilreaper.aves.map.BaseMapBuilder;
 import net.theevilreaper.aves.map.MapEntry;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class GameData extends InstanceSetupData {
+
+    /**
+     * What came of creating a page pool.
+     */
+    public enum CreateResult {
+        CREATED,
+        INVALID_NAME,
+        DUPLICATE
+    }
 
     private final MapDataOverviewInventory inventory;
     private final SurvivorViewInventory survivorInventory;
     private final PageableInventory pageInventory;
     private final PageableInventory creekRouteInventory;
+    private final PageableInventory pagePoolInventory;
+    private final List<PagePoolSlot> pagePoolSlots;
     private final List<CreekRouteSlot> creekRouteSlots;
     private final CreekRoutePreview creekRoutePreview;
     private final PagePreview pagePreview;
@@ -62,6 +80,14 @@ public class GameData extends InstanceSetupData {
     private boolean survivorMode;
     private boolean creekRouteMode;
     private @Nullable String activeCreekRoute;
+    private final List<PageSlot> pageSlots;
+    private final Set<String> deletedPagePools;
+    // Pools whose file could not be read. Their names stay taken so a new pool never overwrites the file.
+    private final Set<String> brokenPagePools;
+    private @Nullable String activePagePool;
+    // What pages.json holds on disk. It is only written again once the default pool or the settings differ.
+    private Set<PageResource> savedDefaultPool;
+    private @Nullable PageSettings savedPageSettings;
 
     /**
      * Constructs a new GameData instance.
@@ -71,16 +97,23 @@ public class GameData extends InstanceSetupData {
      */
     public GameData(Player player, MapEntry mapEntry) {
         super(player, mapEntry, BossBar.Color.RED);
+        // Created before loadData(), which already fills them while it reads the page pools
+        this.pageSlots = new ArrayList<>();
+        this.deletedPagePools = new HashSet<>();
+        this.brokenPagePools = new HashSet<>();
         this.loadData();
         this.creekRouteSlots = new ArrayList<>();
         this.inventory = new MapDataOverviewInventory(player, this.gameMapBuilder, InventoryMode.GAME);
         this.survivorInventory = new SurvivorViewInventory(player, this.gameMapBuilder);
         this.pageInventory = createPageInventory(player);
         this.creekRouteInventory = createCreekRouteInventory(player);
+        this.pagePoolSlots = new ArrayList<>();
+        this.pagePoolInventory = createPagePoolInventory(player);
         this.creekRoutePreview = new CreekRoutePreview(player, () -> this.gameMapBuilder.getCreekRoutes(),
                 () -> this.activeCreekRoute, () -> this.gameMapBuilder.getCreekSettings().routeLinkDistance());
-        this.pagePreview = new PagePreview(player, () -> this.gameMapBuilder.getPageFaces());
+        this.pagePreview = new PagePreview(player, this::activePagePoolPages);
         this.refreshCreekRoutes();
+        this.refreshPageSlots();
     }
 
     /**
@@ -104,6 +137,65 @@ public class GameData extends InstanceSetupData {
                 .layout(layout)
                 .values(new ArrayList<>())
                 .build();
+    }
+
+    /**
+     * Creates the {@link PageableInventory} to display the page pools of the map.
+     *
+     * @param player who owns the inventory
+     * @return the created inventory
+     */
+    private PageableInventory createPagePoolInventory(Player player) {
+        InventoryLayout layout = InventoryLayout.fromType(InventoryType.CHEST_6_ROW);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), SetupItems.DECORATION_PANE);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_6_ROW), SetupItems.DECORATION_PANE);
+        return PageableInventory.builder()
+                .titleData(TitleData.builder()
+                        .title(Component.text("Page pools - "))
+                        .pageMapper(PageHeaderFormatter::format)
+                        .showPageNumbers(true)
+                        .build())
+                .player(player)
+                .slotRange(LayoutCalculator.quad(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_5_ROW.getSize() - 1))
+                .layout(layout)
+                .values(new ArrayList<>())
+                .build();
+    }
+
+    /**
+     * Rebuilds the pool overview, so it shows the current pools, their page counts and the active one.
+     */
+    private void refreshPagePools() {
+        this.pagePoolSlots.forEach(this.pagePoolInventory::remove);
+        this.pagePoolSlots.clear();
+        for (String name : this.pagePoolNames()) {
+            PagePoolSlot slot = new PagePoolSlot(name, this.pagePoolSize(name), name.equals(this.activePagePool),
+                    this::selectPoolFromOverview, this::deletePoolFromOverview);
+            this.pagePoolSlots.add(slot);
+            this.pagePoolInventory.add(slot);
+        }
+    }
+
+    private void selectPoolFromOverview(Player player, String name) {
+        if (this.selectPagePool(name)) {
+            player.sendMessage(SetupMessages.getPagePoolSelected(name));
+            SetupItems.setPagePoolEditItems(player);
+        }
+    }
+
+    private void deletePoolFromOverview(Player player, String name) {
+        if (PagePoolFiles.DEFAULT_POOL.equals(name)) {
+            player.sendMessage(SetupMessages.DEFAULT_PAGE_POOL_NOT_DELETABLE);
+            return;
+        }
+        boolean wasActive = name.equals(this.activePagePool);
+        if (this.deletePagePool(name)) {
+            player.sendMessage(SetupMessages.getPagePoolDeleted(name));
+            this.refreshPagePools();
+            if (wasActive) {
+                SetupItems.setPageItems(player);
+            }
+        }
     }
 
     /**
@@ -161,7 +253,7 @@ public class GameData extends InstanceSetupData {
                 .player(player)
                 .slotRange(LayoutCalculator.quad(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_5_ROW.getSize() - 1))
                 .layout(layout)
-                .values(getPageSlots())
+                .values(new ArrayList<>())
                 .build();
     }
 
@@ -170,28 +262,136 @@ public class GameData extends InstanceSetupData {
      *
      * @param pos  of the resource
      * @param face of the resource
-     * @return true if the page was added, false if a page at the position and face already exists
+     * @return true if the page was added, false without an active pool or if a page at the position
+     * and face already exists
      */
     public boolean addPage(Vec pos, Direction face) {
+        String pool = this.activePagePool;
+        if (pool == null) return false;
         PageResource pageResource = new PageResource(pos, face);
-        boolean added = this.gameMapBuilder.addPage(pos, face);
+        boolean added = this.gameMapBuilder.addPage(pool, pos, face);
         if (added) {
-            this.pageInventory.add(new PageSlot(pageResource));
+            PageSlot slot = new PageSlot(pageResource);
+            this.pageSlots.add(slot);
+            this.pageInventory.add(slot);
             this.pagePreview.refresh();
         }
         return added;
     }
 
     /**
-     * Returns the list of slots for the given {@link PageResource}s
-     *
-     * @return the created list
+     * Fills the page list with the pages of the active pool.
      */
-    private List<ISlot> getPageSlots() {
-        if (this.gameMapBuilder.getPageFaces().isEmpty()) return new ArrayList<>();
-        List<ISlot> pageSlots = new ArrayList<>(this.gameMapBuilder.getPageFaces().size());
-        this.gameMapBuilder.getPageFaces().forEach(pageFace -> pageSlots.add(new PageSlot(pageFace)));
-        return pageSlots;
+    private void refreshPageSlots() {
+        this.pageSlots.forEach(this.pageInventory::remove);
+        this.pageSlots.clear();
+        for (PageResource page : this.activePagePoolPages()) {
+            PageSlot slot = new PageSlot(page);
+            this.pageSlots.add(slot);
+            this.pageInventory.add(slot);
+        }
+    }
+
+    /**
+     * Returns the pages of the active pool.
+     *
+     * @return the pages, empty while no pool is active
+     */
+    private Set<PageResource> activePagePoolPages() {
+        String pool = this.activePagePool;
+        return pool == null ? Set.of() : this.gameMapBuilder.getPagePool(pool);
+    }
+
+    /**
+     * Shows the pages of the active pool after it changed.
+     */
+    private void onActivePagePoolChanged() {
+        this.refreshPageSlots();
+        this.pagePreview.refresh();
+    }
+
+    /**
+     * Creates a page pool and makes it the active one.
+     *
+     * @param rawName the name as the builder typed it
+     * @return what came of it
+     */
+    public CreateResult createPagePool(String rawName) {
+        String name = PagePoolFiles.normalizeName(rawName);
+        if (name == null) return CreateResult.INVALID_NAME;
+        if (this.brokenPagePools.contains(name) || !this.gameMapBuilder.addPagePool(name)) return CreateResult.DUPLICATE;
+        this.deletedPagePools.remove(name);
+        this.activePagePool = name;
+        this.onActivePagePoolChanged();
+        return CreateResult.CREATED;
+    }
+
+    /**
+     * Makes a page pool the active one. New pages go into it and the preview shows it.
+     *
+     * @param name the pool's name
+     * @return {@code false} if there is no such pool
+     */
+    public boolean selectPagePool(String name) {
+        if (!this.gameMapBuilder.hasPagePool(name)) return false;
+        this.activePagePool = name;
+        this.onActivePagePoolChanged();
+        return true;
+    }
+
+    /**
+     * Stops editing the active page pool. The pool itself stays.
+     *
+     * @return {@code false} if no pool was being edited
+     */
+    public boolean finishPagePool() {
+        if (this.activePagePool == null) return false;
+        this.activePagePool = null;
+        this.onActivePagePoolChanged();
+        return true;
+    }
+
+    /**
+     * Deletes a page pool. Its file goes on the next save. If it was active, no pool is active afterwards.
+     *
+     * @param name the pool's name
+     * @return {@code false} for the default pool or if there was no such pool
+     */
+    public boolean deletePagePool(String name) {
+        if (!this.gameMapBuilder.removePagePool(name)) return false;
+        this.deletedPagePools.add(name);
+        if (name.equals(this.activePagePool)) {
+            this.finishPagePool();
+        }
+        return true;
+    }
+
+    /**
+     * Returns the name of the pool new pages go into.
+     *
+     * @return the active pool, or {@code null} while the builder has not created or selected one
+     */
+    public @Nullable String activePagePool() {
+        return this.activePagePool;
+    }
+
+    /**
+     * Returns the names of all page pools.
+     *
+     * @return the default pool first, then the others by name
+     */
+    public List<String> pagePoolNames() {
+        return this.gameMapBuilder.getPagePoolNames();
+    }
+
+    /**
+     * Returns how many pages a pool has.
+     *
+     * @param name the pool's name
+     * @return the number of pages
+     */
+    public int pagePoolSize(String name) {
+        return this.gameMapBuilder.getPagePool(name).size();
     }
 
     /**
@@ -203,6 +403,8 @@ public class GameData extends InstanceSetupData {
         if (this.pageMode) {
             this.pagePreview.show();
         } else {
+            // Every visit to the page mode starts with picking a pool
+            this.finishPagePool();
             this.pagePreview.hide();
         }
     }
@@ -458,6 +660,7 @@ public class GameData extends InstanceSetupData {
             if (hasPageMode()) {
                 player.sendMessage(SetupMessages.PAGE_MODE_ENABLED);
                 player.sendMessage(SetupMessages.getModeInform("page"));
+                player.sendMessage(SetupMessages.NO_ACTIVE_PAGE_POOL);
                 SetupItems.setPageItems(player);
             } else {
                 player.sendMessage(SetupMessages.PAGE_MODE_DISABLED);
@@ -503,6 +706,27 @@ public class GameData extends InstanceSetupData {
 
         if (SetupItemId.PAGES == tagValue) {
             this.openInventory(InventoryTarget.PAGE);
+            return;
+        }
+
+        if (SetupItemId.PAGE_POOL_NEW == tagValue) {
+            EventDispatcher.call(new DialogRequestEvent(player, DialogTarget.PAGE_POOL_NAME));
+            return;
+        }
+
+        if (SetupItemId.PAGE_POOL_FINISH == tagValue) {
+            String pool = this.activePagePool;
+            if (pool != null && this.finishPagePool()) {
+                player.sendMessage(SetupMessages.getPagePoolFinished(pool));
+            }
+            SetupItems.setPageItems(player);
+            return;
+        }
+
+        if (SetupItemId.PAGE_POOLS == tagValue) {
+            // Built when opened, so the page counts are current
+            this.refreshPagePools();
+            this.pagePoolInventory.open();
             return;
         }
 
@@ -616,9 +840,12 @@ public class GameData extends InstanceSetupData {
             if (player instanceof SetupPlayer setupPlayer) {
                 pageResource = setupPlayer.getPageResource();
             }
-            if (pageResource != null) {
-                this.gameMapBuilder.removePage(pageResource);
-                this.pageInventory.remove(new PageSlot(pageResource));
+            String pool = this.activePagePool;
+            if (pageResource != null && pool != null) {
+                this.gameMapBuilder.removePage(pool, pageResource);
+                PageSlot slot = new PageSlot(pageResource);
+                this.pageSlots.remove(slot);
+                this.pageInventory.remove(slot);
                 this.pagePreview.refresh();
             }
         }
@@ -633,7 +860,16 @@ public class GameData extends InstanceSetupData {
             this.mapEntry.createFile();
         }
         GameMap map = this.gameMapBuilder.build();
-        PageFacesFile.save(mapEntry.getMapFile(), map.getPageFaces(), map.getPageSettings());
+        Path mapFile = mapEntry.getMapFile();
+        // pages.json is what the game still loads, so it only changes with the default pool or the settings
+        if (!map.getPageFaces().equals(this.savedDefaultPool) || !map.getPageSettings().equals(this.savedPageSettings)) {
+            PageFacesFile.save(mapFile, map.getPageFaces(), map.getPageSettings());
+            this.savedDefaultPool = Set.copyOf(map.getPageFaces());
+            this.savedPageSettings = map.getPageSettings();
+        }
+        this.gameMapBuilder.getExtraPagePools().forEach((name, pages) -> PagePoolFiles.save(mapFile, name, pages));
+        this.deletedPagePools.forEach(name -> PagePoolFiles.delete(mapFile, name));
+        this.deletedPagePools.clear();
         CreekRoutesFile.save(mapEntry.getMapFile(), map.getCreekRoutes(), map.getCreekSettings());
         GsonHelper.FILE_HANDLER.save(mapEntry.getMapFile(), map);
     }
@@ -658,6 +894,7 @@ public class GameData extends InstanceSetupData {
         this.inventory.unregister();
         this.pageInventory.unregister();
         this.creekRouteInventory.unregister();
+        this.pagePoolInventory.unregister();
         this.creekRoutePreview.hide();
         this.pagePreview.hide();
     }
@@ -669,10 +906,15 @@ public class GameData extends InstanceSetupData {
     public void loadData() {
         // Broken settings fall back to the defaults, so the map still opens and can be fixed here.
         Consumer<String> onInvalidSettings = reason -> this.player.sendMessage(SetupMessages.getSettingsFallback(reason));
+        AtomicBoolean pageSettingsBroken = new AtomicBoolean();
+        Consumer<String> onInvalidPageSettings = reason -> {
+            pageSettingsBroken.set(true);
+            onInvalidSettings.accept(reason);
+        };
         Optional<GameMap> mapData =
                 this.mapEntry.hasMapFile()
                         ? GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), GameMap.class)
-                                .map(map -> PageFacesFile.loadInto(mapEntry.getMapFile(), map, onInvalidSettings))
+                                .map(map -> PageFacesFile.loadInto(mapEntry.getMapFile(), map, onInvalidPageSettings))
                                 .map(map -> map.withCreekRoutes(CreekRoutesFile.loadUnchecked(mapEntry.getMapFile()))
                                         .withCreekSettings(CreekRoutesFile.loadSettingsOrDefaults(mapEntry.getMapFile(), onInvalidSettings)))
                         : Optional.empty();
@@ -680,11 +922,33 @@ public class GameData extends InstanceSetupData {
         this.gameMapBuilder = mapData
                 .map(GameMapBuilder::new)
                 .orElseGet(GameMapBuilder::new);
+        this.loadPagePools(pageSettingsBroken.get());
 
         this.createInstance();
 
         this.updateTitle();
         MinecraftServer.getInstanceManager().registerInstance(this.instance);
+    }
+
+    /**
+     * Loads the page pools from the {@code pages} folder and remembers what {@code pages.json} holds.
+     * A pool whose file cannot be read is reported and left out, so the map still opens.
+     *
+     * @param pageSettingsBroken whether the settings in {@code pages.json} were broken and replaced by the defaults
+     */
+    private void loadPagePools(boolean pageSettingsBroken) {
+        // The pools sit next to the map file, which may not exist yet for a new map
+        Path mapFile = this.mapEntry.getDirectoryRoot().resolve(MapEntry.MAP_FILE);
+        PagePoolFiles.load(mapFile, (name, reason) -> {
+            this.brokenPagePools.add(name);
+            // A case-insensitive file system would resolve the lower-case name to this very file
+            this.brokenPagePools.add(name.toLowerCase(Locale.ROOT));
+            this.player.sendMessage(SetupMessages.getBrokenPagePool(name, reason));
+        }).forEach(this.gameMapBuilder::putPagePool);
+        // Compared against the file, not the merged pages, so pages inlined in an old map.json move over on save
+        this.savedDefaultPool = this.mapEntry.hasMapFile() ? Set.copyOf(PageFacesFile.load(mapFile)) : Set.of();
+        // null for broken settings, so the next save writes the defaults over them
+        this.savedPageSettings = pageSettingsBroken ? null : this.gameMapBuilder.getPageSettings();
     }
 
     /**
