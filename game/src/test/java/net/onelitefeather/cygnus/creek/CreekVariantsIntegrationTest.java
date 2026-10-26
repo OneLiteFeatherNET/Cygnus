@@ -51,7 +51,7 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
     private static final PatrolHelper PATROL = new PatrolHelper(new Random(1));
 
     private static BiFunction<Pos, CreekState, Creek> spawner(Instance instance, CreekConfig config, SpotFinder spots) {
-        CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, CreekMarks.NONE, CreekWitness.NONE, PATROL,
+        CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, CreekMarks.NONE, _ -> false, CreekWitness.NONE, PATROL,
                 new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3), HuntCooldowns.none(), () -> new CreekTuning(config, Calm.NONE));
         return (spot, initial) -> new Creek(CreakingBody.spawn(instance, spot), Contexts.route(), round, initial);
     }

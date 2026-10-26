@@ -34,6 +34,8 @@ import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import net.onelitefeather.cygnus.creek.state.CreekMood;
+import net.onelitefeather.cygnus.creek.consequence.catching.CatchTrick;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -62,11 +64,17 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
     private static Creek creek(CreekBody body, CreekConfig config, CreekState initial, CreekWitness witness,
                                CreekMarks marks) {
+        return creek(body, config, initial, witness, marks, _ -> false, CreekMood.NORMAL);
+    }
+
+    private static Creek creek(CreekBody body, CreekConfig config, CreekState initial, CreekWitness witness,
+                               CreekMarks marks, CatchTrick stareTrick, CreekMood mood) {
         CreekSight sight = new CreekSight(CreekSettings.DEFAULT.sightRange(), config.sight().viewAngle());
         // nextBoolean() is true for -1, so a selection always ends in the stun.
         PatrolHelper patrol = new PatrolHelper(() -> -1L);
-        CreekRound round = new CreekRound(sight, new SpotFinder(CreekSettings.DEFAULT.sightRange(), Optional::of), _ -> {}, marks, witness, patrol,
-                new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3), HuntCooldowns.none(), () -> new CreekTuning(config, Calm.NONE));
+        CreekRound round = new CreekRound(sight, new SpotFinder(CreekSettings.DEFAULT.sightRange(), Optional::of), _ -> {}, marks,
+                stareTrick, witness, patrol, new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3),
+                HuntCooldowns.none(), () -> new CreekTuning(config, Calm.NONE, mood));
         return new Creek(body, Contexts.route(), round, initial);
     }
 
@@ -252,6 +260,35 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
         assertTrue(survivor.hasEffect(PotionEffect.SLOWNESS));
         assertEquals(List.of(survivor.getUuid()), witness.selections);
+    }
+
+    @Test
+    @DisplayName("The trickster teleports whoever it stared at instead of stunning them, the normal creek stuns")
+    void tricksterStareTeleports(Env env) {
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        CreekState selecting = new CreekState() {
+            @Override
+            public void enter(CreekContext ctx) {
+            }
+
+            @Override
+            public CreekState tick(CreekContext ctx) {
+                ctx.actions().selected(survivor.getUuid());
+                return this;
+            }
+        };
+        List<Player> teleported = new ArrayList<>();
+        CatchTrick stareTrick = player -> teleported.add(player);
+
+        creek(CreakingBody.spawn(instance, new Pos(0, 40, 20)), CreekConfig.DEFAULT, selecting, CreekWitness.NONE,
+                CreekMarks.NONE, stareTrick, CreekMood.TRICKSTER).tick(survivors(survivor), 0L);
+        assertEquals(List.of(survivor), teleported);
+        assertFalse(survivor.hasEffect(PotionEffect.SLOWNESS), "no stun on top of the teleport");
+
+        creek(CreakingBody.spawn(instance, new Pos(0, 40, 20)), CreekConfig.DEFAULT, selecting, CreekWitness.NONE,
+                CreekMarks.NONE, stareTrick, CreekMood.NORMAL).tick(survivors(survivor), 0L);
+        assertEquals(List.of(survivor), teleported, "the normal creek does not teleport");
+        assertTrue(survivor.hasEffect(PotionEffect.SLOWNESS));
     }
 
     @Test

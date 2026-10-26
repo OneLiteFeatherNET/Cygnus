@@ -514,6 +514,28 @@ class PatrolStateTest {
     }
 
     @Test
+    @DisplayName("The trickster vanishes at a dead end on a roll the normal creek rests on")
+    void tricksterVanishesMoreAtDeadEnds() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = towardsA(3000, true);
+        List<Pos> vanished = new ArrayList<>();
+        PatrolState trickster = new PatrolState();
+        trickster.enter(Contexts.mood(deadEndContext(0L, body, route, vanished, 0.7D), CreekMood.TRICKSTER));
+        trickster.tick(Contexts.mood(deadEndContext(0L, body, route, vanished, 0.7D), CreekMood.TRICKSTER));
+        body.position = A;
+
+        assertInstanceOf(VanishState.class,
+                trickster.tick(Contexts.mood(deadEndContext(100L, body, route, vanished, 0.7D), CreekMood.TRICKSTER)));
+
+        body.position = new Pos(0, 40, 0);
+        PatrolState normal = new PatrolState();
+        normal.enter(deadEndContext(0L, body, route, vanished, 0.7D));
+        normal.tick(deadEndContext(0L, body, route, vanished, 0.7D));
+        body.position = A;
+        assertSame(normal, normal.tick(deadEndContext(100L, body, route, vanished, 0.7D)));
+    }
+
+    @Test
     @DisplayName("A point that is no dead end never makes him vanish")
     void noVanishWithoutADeadEnd() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 0));

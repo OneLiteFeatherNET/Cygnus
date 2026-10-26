@@ -189,6 +189,13 @@ public final class Contexts {
                 ctx.config(), ctx.settings(), ctx.random(), ctx.hunts(), new CreekTuning(ctx.config(), calm));
     }
 
+    /** The same context, with the creek in the given mood. */
+    public static CreekContext mood(CreekContext ctx, CreekMood mood) {
+        return new CreekContext(ctx.now(), ctx.survivors(), ctx.body(), ctx.route(), ctx.spots(), ctx.actions(),
+                ctx.config(), ctx.settings(), ctx.random(), ctx.hunts(),
+                new CreekTuning(ctx.config(), ctx.tuning().calm(), mood));
+    }
+
     private Contexts() {
     }
 }

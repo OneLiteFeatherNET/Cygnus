@@ -7,6 +7,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import org.jetbrains.annotations.Nullable;
+import net.onelitefeather.cygnus.creek.state.CreekMood;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +18,7 @@ import java.util.Set;
 import java.util.random.RandomGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CatchTricksIntegrationTest extends CygnusPlayerTestBase {
@@ -31,9 +33,29 @@ class CatchTricksIntegrationTest extends CygnusPlayerTestBase {
 
     private static CatchTricks tricks(CatchConsequence base, double swapChance, Set<Player> survivors,
                                       @Nullable Pos spawn) {
+        return tricks(base, swapChance, survivors, spawn, CreekMood.NORMAL);
+    }
+
+    private static CatchTricks tricks(CatchConsequence base, double swapChance, Set<Player> survivors,
+                                      @Nullable Pos spawn, CreekMood mood) {
         RandomGenerator random = new java.util.Random(7L);
         return new CatchTricks(base, new CatchSwap(() -> survivors, random), new CatchSpawnTeleport(() -> spawn),
-                new CatchLaunch(HEIGHT), swapChance, random);
+                new CatchLaunch(HEIGHT), swapChance, random, () -> mood);
+    }
+
+    @Test
+    @DisplayName("The trickster teleports on a swap chance of 0 instead of throwing")
+    void tricksterAlwaysTeleports(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player caught = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        Player other = env.createConnection().connect(instance, new Pos(10, 40, 0));
+
+        tricks(_ -> {
+        }, 0.0D, Set.of(caught, other), SPAWN, CreekMood.TRICKSTER).apply(caught);
+        assertEquals(0.0D, caught.getVelocity().y(), "the survivor was not thrown");
+        env.tick();
+
+        assertNotEquals(new Vec(0, 40, 0), caught.getPosition().asVec());
     }
 
     @Test

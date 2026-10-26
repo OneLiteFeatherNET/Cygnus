@@ -7,6 +7,7 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import org.jetbrains.annotations.Nullable;
+import net.onelitefeather.cygnus.creek.state.CreekMood;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -23,8 +24,26 @@ class RevealMarksIntegrationTest extends CygnusPlayerTestBase {
     private final AtomicLong clock = new AtomicLong();
 
     private RevealMarks marks(@Nullable Player slender, double roll) {
+        return this.marks(slender, roll, CreekMood.NORMAL);
+    }
+
+    private RevealMarks marks(@Nullable Player slender, double roll, CreekMood mood) {
         return new RevealMarks((survivor, _) -> this.revealed.add(survivor), () -> slender, this.clock::get,
-                Contexts.rolling(roll));
+                Contexts.rolling(roll), () -> mood);
+    }
+
+    @Test
+    @DisplayName("The shadow marks a look at it with a chance of one half")
+    void shadowMarksLooksAtHalf(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        Player slender = env.createConnection().connect(instance, new Pos(5, 40, 0));
+
+        this.marks(slender, 0.49D, CreekMood.NORMAL).spotted(survivor);
+        assertTrue(this.revealed.isEmpty(), "the normal creek misses at 0.49");
+
+        this.marks(slender, 0.49D, CreekMood.SHADOW).spotted(survivor);
+        assertEquals(List.of(survivor), this.revealed);
     }
 
     @Test
