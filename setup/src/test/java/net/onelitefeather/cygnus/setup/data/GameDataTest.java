@@ -72,6 +72,7 @@ class GameDataTest {
 
     @Test
     void testAddAndRemovePage() {
+        gameData.selectPagePool("default");
         assertTrue(gameData.addPage(Vec.ZERO, Direction.NORTH));
         assertFalse(gameData.addPage(Vec.ZERO, Direction.NORTH));
         assertTrue(gameData.addPage(Vec.ZERO, Direction.SOUTH));
@@ -103,6 +104,7 @@ class GameDataTest {
     @Test
     void saveWritesPageFacesToTheSiblingFileAndLeavesThemOutOfMapJson(@TempDir Path root) throws IOException {
         GameData data = new GameData(player, MapEntry.of(root));
+        data.selectPagePool("default");
         data.addPage(Vec.ZERO, Direction.NORTH);
         data.save();
 
@@ -271,6 +273,7 @@ class GameDataTest {
         CreekRoutesFile.save(mapFile, List.of(), creek);
 
         GameData second = new GameData(player, mapEntry);
+        second.selectPagePool("default");
         second.addPage(Vec.ZERO, Direction.NORTH);
         second.save();
 
@@ -286,8 +289,8 @@ class GameDataTest {
     }
 
     @Test
-    void activePoolStartsAsDefault() {
-        assertEquals(PagePoolFiles.DEFAULT_POOL, gameData.activePagePool());
+    void activePoolStartsEmpty() {
+        assertNull(gameData.activePagePool());
         assertEquals(List.of("default"), gameData.pagePoolNames());
     }
 
@@ -329,12 +332,12 @@ class GameDataTest {
     }
 
     @Test
-    void deletingTheActivePoolFallsBackToDefault() {
+    void deletingTheActivePoolLeavesNoActivePool() {
         gameData.createPagePool("nord");
 
         assertTrue(gameData.deletePagePool("nord"));
 
-        assertEquals("default", gameData.activePagePool());
+        assertNull(gameData.activePagePool());
         assertEquals(List.of("default"), gameData.pagePoolNames());
     }
 
@@ -355,7 +358,7 @@ class GameDataTest {
 
         assertEquals(List.of("default", "nord"), reopened.pagePoolNames());
         assertEquals(1, reopened.pagePoolSize("nord"));
-        assertEquals("default", reopened.activePagePool());
+        assertNull(reopened.activePagePool());
     }
 
     @Test
@@ -378,6 +381,7 @@ class GameDataTest {
         Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
         Files.writeString(root.resolve("pages.json"), "[ " + PAGE_JSON + " ]", StandardCharsets.UTF_8);
         GameData data = new GameData(player, MapEntry.of(root));
+        data.selectPagePool("default");
         data.addPage(Vec.ZERO, Direction.NORTH);
 
         data.save();
@@ -487,7 +491,7 @@ class GameDataTest {
     }
 
     @Test
-    void enteringPageModeNamesTheActivePool(Env env) {
+    void enteringPageModeAsksForAPool(Env env) {
         TestConnection connection = env.createConnection();
         Player builder = connection.connect(this.instance, new Pos(0, 40, 0));
         GameData data = new GameData(builder, MapEntry.of(Paths.get("")));
@@ -497,7 +501,8 @@ class GameDataTest {
 
         assertTrue(chat.collect().stream()
                 .map(packet -> PlainTextComponentSerializer.plainText().serialize(packet.message()))
-                .anyMatch(line -> line.contains("Now editing page pool default")));
+                .anyMatch(line -> line.contains("Create or select a page pool first")));
+        assertEquals(SetupItemId.PAGE_POOL_NEW, builder.getInventory().getItemStack(0).getTag(Tags.ITEM_TAG).byteValue());
         data.reset();
     }
 
@@ -522,5 +527,43 @@ class GameDataTest {
         GameData data = new GameData(player, MapEntry.of(root));
 
         assertEquals(GameData.CreateResult.DUPLICATE, data.createPagePool("nord"));
+    }
+
+    @Test
+    void addPageWithoutActivePoolFails() {
+        assertFalse(gameData.addPage(Vec.ZERO, Direction.NORTH));
+        assertTrue(builderOf(gameData).getPageFaces().isEmpty());
+    }
+
+    @Test
+    void finishItemClearsTheActivePoolAndShowsThePoolItems() {
+        gameData.handleItemInteraction(player, SetupItemId.PAGE);
+        gameData.createPagePool("nord");
+
+        gameData.handleItemInteraction(player, SetupItemId.PAGE_POOL_FINISH);
+
+        assertNull(gameData.activePagePool());
+        assertTrue(gameData.hasPageMode());
+        assertEquals(SetupItemId.PAGE_POOL_NEW, player.getInventory().getItemStack(0).getTag(Tags.ITEM_TAG).byteValue());
+    }
+
+    @Test
+    void leavingPageModeClearsTheActivePool() {
+        gameData.handleItemInteraction(player, SetupItemId.PAGE);
+        gameData.selectPagePool("default");
+
+        gameData.handleItemInteraction(player, SetupItemId.LEAVE_PAGE);
+
+        assertNull(gameData.activePagePool());
+    }
+
+    @Test
+    void togglingPageModeOffClearsTheActivePool() {
+        gameData.handleItemInteraction(player, SetupItemId.PAGE);
+        gameData.selectPagePool("default");
+
+        gameData.handleItemInteraction(player, SetupItemId.PAGE);
+
+        assertNull(gameData.activePagePool());
     }
 }

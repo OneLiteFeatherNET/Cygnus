@@ -69,6 +69,7 @@ class PageHitListenerTest {
     void hittingAPageAsksToDeleteIt() {
         Collector<SpawnEntityPacket> spawns = this.connection.trackIncoming(SpawnEntityPacket.class);
         this.data.swapPageMode();
+        this.data.selectPagePool("default");
         this.data.addPage(new Vec(10, 40, 0), Direction.NORTH);
         int box = spawns.collect().stream().filter(packet -> packet.type() == EntityType.INTERACTION)
                 .findFirst().orElseThrow().entityId();
