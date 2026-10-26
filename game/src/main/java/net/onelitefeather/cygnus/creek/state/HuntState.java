@@ -11,7 +11,8 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * The creek chases one survivor, but only moves while they are not looking at it.
+ * The creek chases one survivor, but only moves while they are not looking at it. In the hunter
+ * mood it keeps creeping on slowly while watched.
  * <p>
  * Look at it and it freezes. Let it get close enough, with nothing in between, and you are caught. The hunt is over after a
  * catch, when time runs out or when the survivor is gone. However it ends, the survivor's breather
@@ -109,6 +110,15 @@ public final class HuntState implements CreekState {
         CreekBody body = ctx.body();
 
         if (view.seesCreek()) {
+            double creep = ctx.tuning().watchedHuntSpeed();
+            if (creep > 0.0D) {
+                // The hunter keeps creeping on. It still only catches once the survivor looks away.
+                body.setFrozen(false);
+                body.lookAt(view.eyes());
+                body.moveTo(view.position(), creep);
+                this.progressSince = ctx.now();
+                return this;
+            }
             body.setFrozen(true);
             body.stop();
             this.progressSince = ctx.now();
