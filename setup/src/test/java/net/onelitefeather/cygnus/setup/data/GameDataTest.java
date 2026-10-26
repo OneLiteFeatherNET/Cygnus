@@ -25,6 +25,7 @@ import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
+import net.onelitefeather.cygnus.common.page.PagePool;
 import net.onelitefeather.cygnus.common.page.PagePoolFiles;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.page.PageSettingsFile;
@@ -43,7 +44,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -110,8 +110,8 @@ class GameDataTest {
 
         String mapJson = Files.readString(root.resolve("map.json"), StandardCharsets.UTF_8);
         assertFalse(mapJson.contains("pageFaces"));
-        assertEquals(Set.of(new PageResource(Vec.ZERO, Direction.NORTH)),
-                PagePoolFiles.load(root.resolve("map.json"), (_, _) -> {}).get("default"));
+        assertEquals(List.of(new PagePool("default", Set.of(new PageResource(Vec.ZERO, Direction.NORTH)))),
+                PagePoolFiles.load(root.resolve("map.json"), (_, _) -> {}));
     }
 
     @Test
@@ -400,7 +400,7 @@ class GameDataTest {
         new GameData(player, MapEntry.of(root)).save();
 
         assertFalse(Files.exists(root.resolve("pages.json")));
-        assertEquals(Set.of(), PagePoolFiles.load(root.resolve("map.json"), (_, _) -> {}).get("default"));
+        assertEquals(List.of(new PagePool("default", Set.of())), PagePoolFiles.load(root.resolve("map.json"), (_, _) -> {}));
     }
 
     @Test
@@ -442,8 +442,8 @@ class GameDataTest {
         reopened.addPage(Vec.ZERO, Direction.NORTH);
         reopened.save();
 
-        Map<String, Set<PageResource>> pools = PagePoolFiles.load(root.resolve("map.json"), (_, _) -> {});
-        assertEquals(Set.of(new PageResource(Vec.ZERO, Direction.NORTH)), pools.get("nord"));
+        assertTrue(PagePoolFiles.load(root.resolve("map.json"), (_, _) -> {})
+                .contains(new PagePool("nord", Set.of(new PageResource(Vec.ZERO, Direction.NORTH)))));
     }
 
     @Test

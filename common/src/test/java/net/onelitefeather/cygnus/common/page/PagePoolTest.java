@@ -10,59 +10,59 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-class PagePoolDrawTest {
+class PagePoolTest {
 
     @Test
-    void drawsOnlyFromPoolsWithEnoughSpots() {
-        Map<String, Set<PageResource>> pools = Map.of("default", spots(4), "nord", spots(4), "keller", spots(2));
-        Set<String> drawn = new HashSet<>();
+    void picksOnlyPoolsWithEnoughSpots() {
+        List<PagePool> pools = List.of(new PagePool("default", spots(4)), new PagePool("nord", spots(4)),
+                new PagePool("keller", spots(2)));
+        Set<String> picked = new HashSet<>();
         for (int i = 0; i < 200; i++) {
-            drawn.add(PagePoolDraw.draw("map.json", pools, 4).name());
+            picked.add(PagePool.pick(pools, 4).name());
         }
-        assertEquals(Set.of("default", "nord"), drawn);
+        assertEquals(Set.of("default", "nord"), picked);
     }
 
     @Test
     void emptyDefaultIsSkippedWhenAnotherPoolFits() {
         Set<PageResource> nord = spots(4);
-        PagePool drawn = PagePoolDraw.draw("map.json", Map.of("default", Set.of(), "nord", nord), 4);
-        assertEquals(new PagePool("nord", nord), drawn);
+        PagePool nordPool = new PagePool("nord", nord);
+        assertEquals(nordPool, PagePool.pick(List.of(new PagePool("default", Set.of()), nordPool), 4));
     }
 
     @Test
     void fallsBackToDefaultWhenNoPoolIsBigEnough() {
-        Set<PageResource> defaults = spots(1);
-        PagePool drawn = PagePoolDraw.draw("map.json", Map.of("default", defaults, "nord", spots(2)), 4);
-        assertEquals(new PagePool("default", defaults), drawn);
+        PagePool defaultPool = new PagePool("default", spots(1));
+        assertEquals(defaultPool, PagePool.pick(List.of(defaultPool, new PagePool("nord", spots(2))), 4));
     }
 
     @Test
     void fallsBackToAnEmptyDefaultWhenItIsMissing() {
-        assertEquals(new PagePool("default", Set.of()), PagePoolDraw.draw("map.json", Map.of("nord", spots(2)), 4));
+        assertEquals(new PagePool("default", Set.of()), PagePool.pick(List.of(new PagePool("nord", spots(2))), 4));
     }
 
     @Test
-    void drawFromReadsTheDefaultPoolFromThePagesDirectory(@TempDir Path root) {
+    void forRoundReadsTheDefaultPoolFromThePagesDirectory(@TempDir Path root) {
         Path mapFile = root.resolve("map.json");
         Set<PageResource> defaults = spots(4);
         PagePoolFiles.save(mapFile, "default", defaults);
-        assertEquals(new PagePool("default", defaults), PagePoolDraw.drawFrom(mapFile, 4));
+        assertEquals(new PagePool("default", defaults), PagePool.forRound(mapFile, 4));
     }
 
     @Test
-    void drawFromWithoutPagesDirectoryFallsBackToAnEmptyDefault(@TempDir Path root) {
-        assertEquals(new PagePool("default", Set.of()), PagePoolDraw.drawFrom(root.resolve("map.json"), 4));
+    void forRoundWithoutPagesDirectoryFallsBackToAnEmptyDefault(@TempDir Path root) {
+        assertEquals(new PagePool("default", Set.of()), PagePool.forRound(root.resolve("map.json"), 4));
     }
 
     @Test
-    void drawFromSurvivesUnreadablePagesDirectory(@TempDir Path root) throws IOException {
+    void forRoundSurvivesUnreadablePagesDirectory(@TempDir Path root) throws IOException {
         Path mapFile = root.resolve("map.json");
         PagePoolFiles.save(mapFile, "nord", spots(4));
         Path directory = root.resolve("pages");
@@ -70,7 +70,7 @@ class PagePoolDrawTest {
         Files.setPosixFilePermissions(directory, Set.of());
         try {
             assumeFalse(Files.isReadable(directory), "running as a user that ignores permissions");
-            assertEquals(new PagePool("default", Set.of()), PagePoolDraw.drawFrom(mapFile, 4));
+            assertEquals(new PagePool("default", Set.of()), PagePool.forRound(mapFile, 4));
         } finally {
             Files.setPosixFilePermissions(directory, PosixFilePermissions.fromString("rwx------"));
         }

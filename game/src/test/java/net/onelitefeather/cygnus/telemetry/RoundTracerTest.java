@@ -312,7 +312,7 @@ class RoundTracerTest {
     }
 
     @Test
-    @DisplayName("The drawn page pool is kept on the round span")
+    @DisplayName("The picked page pool is kept on the round span")
     void pagePoolIsOnTheRound() {
         this.series.start();
         this.rounds.pagePoolDrawn("nord");
@@ -324,7 +324,7 @@ class RoundTracerTest {
     }
 
     @Test
-    @DisplayName("A page pool drawn while no round runs is ignored")
+    @DisplayName("A page pool picked while no round runs is ignored")
     void pagePoolWithoutRoundIsIgnored() {
         assertDoesNotThrow(() -> this.rounds.pagePoolDrawn("nord"));
     }

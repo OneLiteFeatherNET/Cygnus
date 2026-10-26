@@ -15,6 +15,7 @@ import net.onelitefeather.cygnus.common.dimension.StaticDimensionPreset;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
+import net.onelitefeather.cygnus.common.page.PagePool;
 import net.onelitefeather.cygnus.common.page.PagePoolFiles;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.common.page.PageSettingsFile;
@@ -210,7 +211,7 @@ class GameMapProviderIntegrationTest {
         for (int i = 0; i < PageSettings.DEFAULT.minActivePages(); i++) {
             pages.add(new PageResource(new Vec(i, 2, 3), Direction.NORTH));
         }
-        PagePoolFiles.save(mapFile, PagePoolFiles.DEFAULT_POOL, pages);
+        PagePoolFiles.save(mapFile, PagePool.DEFAULT_NAME, pages);
 
         provider.loadGameMap();
 
