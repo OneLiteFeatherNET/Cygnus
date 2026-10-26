@@ -30,15 +30,10 @@ class PagePoolDrawTest {
     }
 
     @Test
-    void drawnPoolCarriesItsPages() {
-        Set<PageResource> nord = spots(5);
+    void emptyDefaultIsSkippedWhenAnotherPoolFits() {
+        Set<PageResource> nord = spots(4);
         PagePoolDraw.Drawn drawn = PagePoolDraw.draw("map.json", Set.of(), Map.of("nord", nord), 4);
         assertEquals(new PagePoolDraw.Drawn("nord", nord), drawn);
-    }
-
-    @Test
-    void emptyDefaultIsSkippedWhenAnotherPoolFits() {
-        assertEquals("nord", PagePoolDraw.draw("map.json", Set.of(), Map.of("nord", spots(4)), 4).name());
     }
 
     @Test
@@ -58,25 +53,6 @@ class PagePoolDrawTest {
         Set<PageResource> defaults = spots(4);
         assertEquals(new PagePoolDraw.Drawn("default", defaults),
                 PagePoolDraw.drawFrom(root.resolve("map.json"), defaults, 4));
-    }
-
-    @Test
-    void drawFromSkipsBrokenPoolFile(@TempDir Path root) throws IOException {
-        Path mapFile = root.resolve("map.json");
-        PagePoolFiles.save(mapFile, "nord", spots(4));
-        Files.writeString(root.resolve("pages").resolve("kaputt.json"), "{ not json");
-        assertEquals("nord", PagePoolDraw.drawFrom(mapFile, Set.of(), 4).name());
-    }
-
-    @Test
-    void drawFromSkipsPoolFileWithBrokenValues(@TempDir Path root) throws IOException {
-        Path mapFile = root.resolve("map.json");
-        PagePoolFiles.save(mapFile, "nord", spots(4));
-        Files.writeString(root.resolve("pages").resolve("ohne_seite.json"),
-                "{\"pages\": [{\"position\": {\"x\": 1, \"y\": 2, \"z\": 3}, \"face\": null}]}");
-        Files.writeString(root.resolve("pages").resolve("text_statt_zahl.json"),
-                "{\"pages\": [{\"position\": {\"x\": \"abc\", \"y\": 2, \"z\": 3}, \"face\": \"north\"}]}");
-        assertEquals("nord", PagePoolDraw.drawFrom(mapFile, Set.of(), 4).name());
     }
 
     @Test

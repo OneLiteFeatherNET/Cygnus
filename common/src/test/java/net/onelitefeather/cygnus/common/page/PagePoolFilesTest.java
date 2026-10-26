@@ -89,6 +89,23 @@ class PagePoolFilesTest {
     }
 
     @Test
+    void poolWithBrokenValuesIsSkippedAndReported(@TempDir Path root) throws IOException {
+        Path mapFile = root.resolve("map.json");
+        PagePoolFiles.save(mapFile, "nord", Set.of(NORTH_PAGE));
+        Path directory = root.resolve("pages");
+        Files.writeString(directory.resolve("ohne_seite.json"),
+                "{\"pages\": [{\"position\": {\"x\": 1, \"y\": 2, \"z\": 3}, \"face\": null}]}");
+        Files.writeString(directory.resolve("text_statt_zahl.json"),
+                "{\"pages\": [{\"position\": {\"x\": \"abc\", \"y\": 2, \"z\": 3}, \"face\": \"north\"}]}");
+        List<String> reported = new ArrayList<>();
+
+        Map<String, Set<PageResource>> pools = PagePoolFiles.load(mapFile, (name, _) -> reported.add(name));
+
+        assertEquals(Set.of("nord"), pools.keySet());
+        assertEquals(List.of("ohne_seite", "text_statt_zahl"), reported);
+    }
+
+    @Test
     void fileWithInvalidNameIsSkippedAndReported(@TempDir Path root) throws IOException {
         Path mapFile = root.resolve("map.json");
         Path directory = root.resolve("pages");
