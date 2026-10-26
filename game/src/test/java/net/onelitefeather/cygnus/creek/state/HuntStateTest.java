@@ -154,8 +154,8 @@ class HuntStateTest {
 
         new HuntState(TARGET, 30_000L).tick(Contexts.hunting(5_000L, body, hunts, new ArrayList<>(), target(false)));
 
-        assertFalse(hunts.ready(TARGET, 49_999L, Calm.NONE));
-        assertTrue(hunts.ready(TARGET, 50_000L, Calm.NONE));
+        assertFalse(hunts.ready(TARGET, 49_999L, new CreekTuning(Contexts.CONFIG, Calm.NONE)));
+        assertTrue(hunts.ready(TARGET, 50_000L, new CreekTuning(Contexts.CONFIG, Calm.NONE)));
     }
 
     @Test
@@ -168,7 +168,7 @@ class HuntStateTest {
                 .tick(Contexts.hunting(30_000L, body, hunts, new ArrayList<>(), target(false)));
 
         assertSame(DoneState.INSTANCE, next);
-        assertFalse(hunts.ready(TARGET, 74_999L, Calm.NONE));
+        assertFalse(hunts.ready(TARGET, 74_999L, new CreekTuning(Contexts.CONFIG, Calm.NONE)));
     }
 
     @Test
@@ -179,7 +179,7 @@ class HuntStateTest {
 
         new HuntState(TARGET, 30_000L).tick(Contexts.hunting(0L, body, hunts, new ArrayList<>(), target(false)));
 
-        assertTrue(hunts.ready(TARGET, 0L, Calm.NONE));
+        assertTrue(hunts.ready(TARGET, 0L, new CreekTuning(Contexts.CONFIG, Calm.NONE)));
     }
 
     @Test

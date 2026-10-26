@@ -117,32 +117,32 @@ public final class Contexts {
     static CreekContext context(long now, CreekBody body, RouteProvider route, List<UUID> caught,
                                   SurvivorView... survivors) {
         return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions(caught::add, _ -> {}), CONFIG, SETTINGS,
-                new Random(7), HuntCooldowns.none(), Calm.NONE);
+                new Random(7), HuntCooldowns.none(), new CreekTuning(CONFIG, Calm.NONE));
     }
 
     static CreekContext context(long now, CreekBody body, RouteProvider route, CreekConfig config,
                                 SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route, SPOTS, NO_ACTIONS, config, SETTINGS, new Random(7), HuntCooldowns.none(), Calm.NONE);
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, NO_ACTIONS, config, SETTINGS, new Random(7), HuntCooldowns.none(), new CreekTuning(config, Calm.NONE));
     }
 
     /** A context with the given actions and random source. */
     static CreekContext context(long now, CreekBody body, RouteProvider route, CreekActions actions,
                                 RandomGenerator random, SurvivorView... survivors) {
-        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions, CONFIG, SETTINGS, random, HuntCooldowns.none(), Calm.NONE);
+        return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions, CONFIG, SETTINGS, random, HuntCooldowns.none(), new CreekTuning(CONFIG, Calm.NONE));
     }
 
     /** A context that keeps the hunt breathers in the given record and every catch in the list. */
     static CreekContext hunting(long now, CreekBody body, HuntCooldowns hunts, List<UUID> caught,
                                 SurvivorView... survivors) {
         return new CreekContext(now, List.of(survivors), body, route(), SPOTS, actions(caught::add, _ -> {}), CONFIG, SETTINGS,
-                new Random(7), hunts, Calm.NONE);
+                new Random(7), hunts, new CreekTuning(CONFIG, Calm.NONE));
     }
 
     /** A context that records every survivor the state selects. */
     static CreekContext selecting(long now, CreekBody body, RouteProvider route, List<UUID> selected,
                                   SurvivorView... survivors) {
         return new CreekContext(now, List.of(survivors), body, route, SPOTS, actions(_ -> {}, selected::add), CONFIG, SETTINGS,
-                new Random(7), HuntCooldowns.none(), Calm.NONE);
+                new Random(7), HuntCooldowns.none(), new CreekTuning(CONFIG, Calm.NONE));
     }
 
     /** The defaults with other random stops. */
@@ -186,7 +186,7 @@ public final class Contexts {
     /** The same context, late in a round that has thinned out by the given calm. */
     static CreekContext calm(CreekContext ctx, Calm calm) {
         return new CreekContext(ctx.now(), ctx.survivors(), ctx.body(), ctx.route(), ctx.spots(), ctx.actions(),
-                ctx.config(), ctx.settings(), ctx.random(), ctx.hunts(), calm);
+                ctx.config(), ctx.settings(), ctx.random(), ctx.hunts(), new CreekTuning(ctx.config(), calm));
     }
 
     private Contexts() {
