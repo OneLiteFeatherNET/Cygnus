@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus.listener.player;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerTickEvent;
+import net.onelitefeather.cygnus.ambient.SoundPresetSource;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
@@ -21,16 +22,30 @@ public final class CygnusPlayerTickListener implements Consumer<PlayerTickEvent>
 
     private final JumpScareManager jumpscareManager;
     private final DreadSource dreadSource;
+    private final SoundPresetSource presets;
 
     /**
-     * Creates a new instance of this listener implementation
+     * Creates a new instance of this listener implementation, with the ambient sounds left to the fear alone.
      *
      * @param jumpscareManager the jump scare manager instance
      * @param dreadSource      rates how scared a survivor is, to pace their ambient sounds
      */
     public CygnusPlayerTickListener(JumpScareManager jumpscareManager, DreadSource dreadSource) {
+        this(jumpscareManager, dreadSource, SoundPresetSource.NONE);
+    }
+
+    /**
+     * Creates a new instance of this listener implementation.
+     *
+     * @param jumpscareManager the jump scare manager instance
+     * @param dreadSource      rates how scared a survivor is, to pace their ambient sounds
+     * @param presets          tells what the ambient sounds of a survivor have to make room for
+     * @since 2.21.0
+     */
+    public CygnusPlayerTickListener(JumpScareManager jumpscareManager, DreadSource dreadSource, SoundPresetSource presets) {
         this.jumpscareManager = jumpscareManager;
         this.dreadSource = dreadSource;
+        this.presets = presets;
     }
 
     @Override
@@ -52,7 +67,9 @@ public final class CygnusPlayerTickListener implements Consumer<PlayerTickEvent>
         cygnusPlayer.tickHeartbeat();
 
         if (livingSurvivor) {
-            cygnusPlayer.tickAmbient(this.dreadSource.dreadOf(player.getUuid(), System.currentTimeMillis()));
+            long now = System.currentTimeMillis();
+            cygnusPlayer.tickAmbient(this.dreadSource.dreadOf(player.getUuid(), now),
+                    this.presets.presetOf(player.getUuid(), now));
         }
     }
 

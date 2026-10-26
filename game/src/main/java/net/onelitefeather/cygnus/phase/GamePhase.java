@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.phase;
 
 import net.minestom.server.event.EventDispatcher;
+import net.onelitefeather.cygnus.ambient.SoundPresetSource;
 import net.onelitefeather.cygnus.common.event.RoundInGameEvent;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.event.GameStartEvent;
@@ -28,6 +29,7 @@ public final class GamePhase extends TimedPhase {
     private final GameView gameView;
     private final JumpScareManager jumpscareManager;
     private final DreadSource dreadSource;
+    private final SoundPresetSource presets;
     private @Nullable GameFinishEvent finishEvent;
 
     /**
@@ -44,6 +46,26 @@ public final class GamePhase extends TimedPhase {
             JumpScareManager jumpscareManager,
             DreadSource dreadSource
     ) {
+        this(gameView, gameTime, jumpscareManager, dreadSource, SoundPresetSource.NONE);
+    }
+
+    /**
+     * Creates a new instance from the {@link GamePhase}.
+     *
+     * @param gameView         the view to update
+     * @param gameTime         the game time
+     * @param jumpscareManager the jumpscare manager instance
+     * @param dreadSource      rates how scared a survivor is, to pace their ambient sounds
+     * @param presets          tells what the ambient sounds of a survivor have to make room for
+     * @since 2.21.0
+     */
+    public GamePhase(
+            GameView gameView,
+            int gameTime,
+            JumpScareManager jumpscareManager,
+            DreadSource dreadSource,
+            SoundPresetSource presets
+    ) {
         super("GamePhase", ChronoUnit.SECONDS, 1);
         this.setCurrentTicks(gameTime);
         this.setTickDirection(TickDirection.DOWN);
@@ -51,6 +73,7 @@ public final class GamePhase extends TimedPhase {
         this.gameView = gameView;
         this.jumpscareManager = jumpscareManager;
         this.dreadSource = dreadSource;
+        this.presets = presets;
     }
 
     /**
@@ -66,7 +89,7 @@ public final class GamePhase extends TimedPhase {
     @Override
     public void onStart() {
         super.onStart();
-        addListener(PlayerTickEvent.class, new CygnusPlayerTickListener(this.jumpscareManager, this.dreadSource));
+        addListener(PlayerTickEvent.class, new CygnusPlayerTickListener(this.jumpscareManager, this.dreadSource, this.presets));
         EventDispatcher.call(new GameStartEvent());
         EventDispatcher.call(new RoundInGameEvent());
     }
