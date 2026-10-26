@@ -60,7 +60,7 @@ Player identity is always the UUID in `cygnus.player.uuid`. No address of a play
 | --- | --- | --- |
 | `cygnus.startup` | Wiring the game in `Cygnus`. Ends before the port is bound. | |
 | `cygnus.startup.config`, `.resourcepack`, `.maps`, `.features`, `.phases`, `.listeners` | Children of the startup, one per major step. | |
-| `cygnus.round` | One round, from the lobby opening to the restart ending. Root of its own trace; the first round links to `cygnus.startup`. | `cygnus.round.id`, `cygnus.game.end_reason` |
+| `cygnus.round` | One round, from the lobby opening to the restart ending. Root of its own trace; the first round links to `cygnus.startup`. | `cygnus.round.id`, `cygnus.game.end_reason`, `cygnus.page.pool` (the page pool picked for the round, `default` for the fallback pool) |
 | `cygnus.phase.<name>` | One phase of the round (`lobby`, `waiting`, `gamephase`, `restart`). Child of the round. | `cygnus.phase.name` |
 | `cygnus.player.join` | A player from the login until the first spawn. Child of the phase running at the login; a root when no round runs. | `cygnus.player.uuid`, `cygnus.join.outcome` (`spawned`, `abandoned`) |
 | `cygnus.player.kick` | A kick, including the wait for the client to drop the ResourcePack. Child of the phase running at the kick; a root when no round runs. | `cygnus.player.uuid`, `cygnus.kick.reason`, `cygnus.kick.completed_by` (`ack`, `timeout`, `immediate`) |

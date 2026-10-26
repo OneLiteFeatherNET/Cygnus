@@ -154,6 +154,23 @@ public final class MapSideFile {
         JsonObject root = new JsonObject();
         root.add(dataKey, data);
         root.add(SETTINGS_KEY, GsonHelper.GSON.toJsonTree(settings));
+        writeRoot(file, path, root);
+    }
+
+    /**
+     * Writes a side file that holds nothing but the settings, such as {@code pages.json}.
+     *
+     * @param file     what the file holds, for error messages, e.g. {@code "page settings"}
+     * @param path     the file
+     * @param settings the settings the map sets for itself
+     */
+    public static void writeSettings(String file, Path path, Record settings) {
+        JsonObject root = new JsonObject();
+        root.add(SETTINGS_KEY, GsonHelper.GSON.toJsonTree(settings));
+        writeRoot(file, path, root);
+    }
+
+    private static void writeRoot(String file, Path path, JsonObject root) {
         try {
             if (path.getParent() != null) {
                 Files.createDirectories(path.getParent());

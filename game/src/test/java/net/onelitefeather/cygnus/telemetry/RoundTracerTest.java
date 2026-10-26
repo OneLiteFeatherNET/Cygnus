@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -308,5 +309,23 @@ class RoundTracerTest {
         this.rounds.abort("test");
 
         assertNull(this.telemetry.span(CygnusAttributes.SPAN_ROUND).getAttributes().get(CygnusAttributes.LINKS_DROPPED));
+    }
+
+    @Test
+    @DisplayName("The picked page pool is kept on the round span")
+    void pagePoolIsOnTheRound() {
+        this.series.start();
+        this.rounds.pagePoolDrawn("nord");
+        this.lobby.finish();
+        this.game.finish();
+
+        SpanData round = this.telemetry.span(CygnusAttributes.SPAN_ROUND);
+        assertEquals("nord", round.getAttributes().get(CygnusAttributes.PAGE_POOL));
+    }
+
+    @Test
+    @DisplayName("A page pool picked while no round runs is ignored")
+    void pagePoolWithoutRoundIsIgnored() {
+        assertDoesNotThrow(() -> this.rounds.pagePoolDrawn("nord"));
     }
 }

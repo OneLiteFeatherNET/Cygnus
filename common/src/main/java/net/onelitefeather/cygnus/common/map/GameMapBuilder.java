@@ -8,6 +8,7 @@ import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
+import net.onelitefeather.cygnus.common.page.PagePool;
 import net.onelitefeather.cygnus.common.page.PagePoolFiles;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.theevilreaper.aves.map.BaseMapBuilder;
@@ -157,21 +158,23 @@ public final class GameMapBuilder extends BaseMapBuilder {
      * @return {@code false} if the name is the default pool or already taken
      */
     public boolean addPagePool(String name) {
-        if (PagePoolFiles.DEFAULT_POOL.equals(name) || this.extraPagePools.containsKey(name)) return false;
+        if (PagePool.DEFAULT_NAME.equals(name) || this.extraPagePools.containsKey(name)) return false;
         this.extraPagePools.put(name, new HashSet<>());
         return true;
     }
 
     /**
      * Puts a loaded page pool into the builder, replacing a pool with the same name.
+     * For the default pool this replaces the {@link #getPageFaces() page faces}.
      *
      * @param name  the pool's name
      * @param pages the pages of the pool
-     * @throws IllegalArgumentException for the default pool, which is loaded with the map
      */
     public void putPagePool(String name, Set<PageResource> pages) {
-        if (PagePoolFiles.DEFAULT_POOL.equals(name)) {
-            throw new IllegalArgumentException("The default pool is loaded with the map");
+        if (PagePool.DEFAULT_NAME.equals(name)) {
+            this.pageFaces.clear();
+            this.pageFaces.addAll(pages);
+            return;
         }
         this.extraPagePools.put(name, new HashSet<>(pages));
     }
@@ -193,7 +196,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
      * @return {@code true} if it exists, always for the default pool
      */
     public boolean hasPagePool(String name) {
-        return PagePoolFiles.DEFAULT_POOL.equals(name) || this.extraPagePools.containsKey(name);
+        return PagePool.DEFAULT_NAME.equals(name) || this.extraPagePools.containsKey(name);
     }
 
     /**
@@ -204,7 +207,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
      * @throws IllegalArgumentException if there is no such pool
      */
     public Set<PageResource> getPagePool(String name) {
-        if (PagePoolFiles.DEFAULT_POOL.equals(name)) return this.pageFaces;
+        if (PagePool.DEFAULT_NAME.equals(name)) return this.pageFaces;
         Set<PageResource> pool = this.extraPagePools.get(name);
         if (pool == null) throw new IllegalArgumentException("Unknown page pool: " + name);
         return pool;
@@ -217,7 +220,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
      */
     public List<String> getPagePoolNames() {
         List<String> names = new ArrayList<>(this.extraPagePools.size() + 1);
-        names.add(PagePoolFiles.DEFAULT_POOL);
+        names.add(PagePool.DEFAULT_NAME);
         names.addAll(this.extraPagePools.keySet());
         return names;
     }

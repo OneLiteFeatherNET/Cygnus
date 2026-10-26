@@ -23,15 +23,14 @@ import java.util.Set;
 public final class GameMap extends BaseMap {
 
     private final Pos slenderSpawn;
-    // transient: pageFaces now lives in a sibling pages.json (see PageFacesFile), not inline in
-    // map.json. GameMapAdapter still reads it from here if an old file inlines it, since that
-    // deserializer reads fields manually rather than through Gson's reflective path.
+    // transient: the pages live in the pools of the sibling pages folder (see PagePoolFiles), the game
+    // puts the pool picked for the round in here. GameMapAdapter ignores pages an old map.json still inlines.
     private final transient Set<PageResource> pageFaces;
     private final Set<Pos> survivorSpawns;
     private final @Nullable MapAtmosphere atmosphere;
     // transient like pageFaces: the routes live in a sibling creek.json (see CreekRoutesFile)
     private final transient List<CreekRoute> creekRoutes;
-    // transient like pageFaces: the page settings live in pages.json, the creek settings in creek.json
+    // transient like pageFaces: the page settings live in pages.json (see PageSettingsFile), the creek settings in creek.json
     private final transient PageSettings pageSettings;
     private final transient CreekSettings creekSettings;
 

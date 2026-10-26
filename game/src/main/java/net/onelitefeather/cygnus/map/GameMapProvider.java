@@ -18,7 +18,8 @@ import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.filter.MapFilters;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
-import net.onelitefeather.cygnus.common.page.PageFacesFile;
+import net.onelitefeather.cygnus.common.page.PagePool;
+import net.onelitefeather.cygnus.common.page.PageSettingsFile;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
@@ -168,10 +169,10 @@ public final class GameMapProvider extends AbstractMapProvider {
     /**
      * Reads the game map from its map file.
      *
-     * <p>This also merges in the page faces from the sibling {@code pages.json}, if one exists, via
-     * {@link PageFacesFile#loadInto(Path, GameMap)}. The creek routes come from the sibling
-     * {@code creek.json} via {@link CreekRoutesFile#loadInto(Path, GameMap)}. Both files also carry
-     * the values the map sets for its pages and its creek.</p>
+     * <p>The page settings come from the sibling {@code pages.json} via
+     * {@link PageSettingsFile#loadInto(Path, GameMap)}, the creek routes and settings from the sibling
+     * {@code creek.json} via {@link CreekRoutesFile#loadInto(Path, GameMap)}. The pages themselves are
+     * only put in by {@link #loadGameMap()}, from the pool picked for the round.</p>
      *
      * @return the loaded game map
      * @throws IllegalStateException if the file cannot be read
@@ -180,7 +181,7 @@ public final class GameMapProvider extends AbstractMapProvider {
         GameMap map = this.fileHandler.load(this.gameEntry.getMapFile(), GameMap.class)
                 .orElseThrow(() -> new IllegalStateException("Failed to load GameMap from file: " + this.gameEntry.getMapFile()));
         Path mapFile = this.gameEntry.getMapFile();
-        return CreekRoutesFile.loadInto(mapFile, PageFacesFile.loadInto(mapFile, map));
+        return CreekRoutesFile.loadInto(mapFile, PageSettingsFile.loadInto(mapFile, map));
     }
 
     /**
@@ -203,14 +204,20 @@ public final class GameMapProvider extends AbstractMapProvider {
         return this.creekSettings;
     }
 
+    /**
+     * Loads the game map into a fresh instance. The page pool of the round is picked here, once, so
+     * the map carries only the spots of that pool (see {@link PagePool#forRound(Path, int)}).
+     */
     public void loadGameMap() {
         if (this.gameMap != null) return; // idempotent
 
-        this.gameMap = readGameMap();
+        GameMap map = readGameMap();
+        PagePool pool = PagePool.forRound(this.gameEntry.getMapFile(), map.getPageSettings().minActivePages());
+        this.gameMap = map.withPageFaces(pool.pages());
         this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer(this.gameDimension);
         this.gameInstance.setTime(Helper.NEW_MOON_TIME);
         this.registerFalcoInstance(this.gameInstance, this.gameEntry);
-        EventDispatcher.call(new GameMapLoadedEvent(this.gameMap, this.gameInstance));
+        EventDispatcher.call(new GameMapLoadedEvent(this.gameMap, this.gameInstance, pool));
     }
 
     /**

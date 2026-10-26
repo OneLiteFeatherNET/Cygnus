@@ -2,11 +2,10 @@ package net.onelitefeather.cygnus.common.map;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
-import net.minestom.server.utils.Direction;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.creek.CreekWaypoint;
-import net.onelitefeather.cygnus.common.page.PageFacesFile;
-import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.common.map.settings.PageSettings;
+import net.onelitefeather.cygnus.common.page.PageSettingsFile;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -72,12 +71,12 @@ class GameMapCreekRoutesTest {
     }
 
     @Test
-    @DisplayName("Merging page faces keeps the routes")
-    void pageMergeKeepsRoutes(@TempDir Path root) {
+    @DisplayName("Loading the page settings keeps the routes")
+    void pageSettingsKeepRoutes(@TempDir Path root) {
         GameMap map = map().withCreekRoutes(List.of(ROUTE));
-        PageFacesFile.save(root.resolve("map.json"), Set.of(new PageResource(Vec.ZERO, Direction.NORTH)));
+        PageSettingsFile.save(root.resolve("map.json"), PageSettings.DEFAULT);
 
-        GameMap merged = PageFacesFile.loadInto(root.resolve("map.json"), map);
+        GameMap merged = PageSettingsFile.loadInto(root.resolve("map.json"), map);
 
         assertEquals(List.of(ROUTE), merged.getCreekRoutes());
     }

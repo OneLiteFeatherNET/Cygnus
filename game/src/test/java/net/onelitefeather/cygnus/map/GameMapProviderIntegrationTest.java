@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.map;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.utils.Direction;
 import net.minestom.server.world.DimensionType;
 import net.minestom.server.world.attribute.EnvironmentAttribute;
 import net.minestom.testing.Env;
@@ -14,7 +15,10 @@ import net.onelitefeather.cygnus.common.dimension.StaticDimensionPreset;
 import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
-import net.onelitefeather.cygnus.common.page.PageFacesFile;
+import net.onelitefeather.cygnus.common.page.PagePool;
+import net.onelitefeather.cygnus.common.page.PagePoolFiles;
+import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.common.page.PageSettingsFile;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.falco.anvil.FalcoAnvilLoader;
 import net.theevilreaper.aves.map.BaseMap;
@@ -26,6 +30,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -199,18 +204,18 @@ class GameMapProviderIntegrationTest {
     }
 
     @Test
-    void loadsPageFacesFromTheSiblingPagesJson(Env env, @TempDir Path root) throws IOException {
+    void loadsThePagesOfTheDrawnPool(Env env, @TempDir Path root) throws IOException {
         GameMapProvider provider = createProvider(root);
-        Path pagesFile = root.resolve("game").resolve("maps").resolve(ARENA_NAME).resolve("pages.json");
-        Files.writeString(
-                pagesFile,
-                "[ { \"face\": \"NORTH\", \"position\": { \"x\": 1.0, \"y\": 2.0, \"z\": 3.0 } } ]",
-                StandardCharsets.UTF_8
-        );
+        Path mapFile = root.resolve("game").resolve("maps").resolve(ARENA_NAME).resolve("map.json");
+        Set<PageResource> pages = new HashSet<>();
+        for (int i = 0; i < PageSettings.DEFAULT.minActivePages(); i++) {
+            pages.add(new PageResource(new Vec(i, 2, 3), Direction.NORTH));
+        }
+        PagePoolFiles.save(mapFile, PagePool.DEFAULT_NAME, pages);
 
         provider.loadGameMap();
 
-        assertEquals(1, provider.getGameMap().getPageFaces().size());
+        assertEquals(pages, provider.getGameMap().getPageFaces());
 
         InstanceContainer gameInstance = (InstanceContainer) provider.getActiveInstance().get();
         provider.close();
@@ -239,7 +244,7 @@ class GameMapProviderIntegrationTest {
         CreekSettings creek = new CreekSettings(30, 18, 28, 20, 2.0D, 10, 0.0D);
         // The side files have to be there before the provider reads the map in its constructor.
         writeLayout(root, null);
-        PageFacesFile.save(mapFile, Set.of(), pages);
+        PageSettingsFile.save(mapFile, pages);
         CreekRoutesFile.save(mapFile, List.of(), creek);
 
         GameMapProvider provider = new GameMapProvider(root);

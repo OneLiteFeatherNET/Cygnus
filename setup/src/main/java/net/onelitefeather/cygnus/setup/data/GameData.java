@@ -31,8 +31,9 @@ import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
-import net.onelitefeather.cygnus.common.page.PageFacesFile;
+import net.onelitefeather.cygnus.common.page.PagePool;
 import net.onelitefeather.cygnus.common.page.PagePoolFiles;
+import net.onelitefeather.cygnus.common.page.PageSettingsFile;
 import net.onelitefeather.cygnus.common.page.PageResource;
 import net.onelitefeather.cygnus.setup.page.PagePreview;
 import net.onelitefeather.cygnus.setup.player.SetupPlayer;
@@ -85,8 +86,7 @@ public class GameData extends InstanceSetupData {
     // Pools whose file could not be read. Their names stay taken so a new pool never overwrites the file.
     private final Set<String> brokenPagePools;
     private @Nullable String activePagePool;
-    // What pages.json holds on disk. It is only written again once the default pool or the settings differ.
-    private Set<PageResource> savedDefaultPool;
+    // What pages.json holds on disk. It is only written again once the settings differ.
     private @Nullable PageSettings savedPageSettings;
 
     /**
@@ -184,7 +184,7 @@ public class GameData extends InstanceSetupData {
     }
 
     private void deletePoolFromOverview(Player player, String name) {
-        if (PagePoolFiles.DEFAULT_POOL.equals(name)) {
+        if (PagePool.DEFAULT_NAME.equals(name)) {
             player.sendMessage(SetupMessages.DEFAULT_PAGE_POOL_NOT_DELETABLE);
             return;
         }
@@ -861,11 +861,14 @@ public class GameData extends InstanceSetupData {
         }
         GameMap map = this.gameMapBuilder.build();
         Path mapFile = mapEntry.getMapFile();
-        // pages.json is what the game still loads, so it only changes with the default pool or the settings
-        if (!map.getPageFaces().equals(this.savedDefaultPool) || !map.getPageSettings().equals(this.savedPageSettings)) {
-            PageFacesFile.save(mapFile, map.getPageFaces(), map.getPageSettings());
-            this.savedDefaultPool = Set.copyOf(map.getPageFaces());
+        // pages.json only holds the settings, so it only changes with them
+        if (!map.getPageSettings().equals(this.savedPageSettings)) {
+            PageSettingsFile.save(mapFile, map.getPageSettings());
             this.savedPageSettings = map.getPageSettings();
+        }
+        // A broken default.json stays untouched, like every other broken pool file
+        if (!this.brokenPagePools.contains(PagePool.DEFAULT_NAME)) {
+            PagePoolFiles.save(mapFile, PagePool.DEFAULT_NAME, map.getPageFaces());
         }
         this.gameMapBuilder.getExtraPagePools().forEach((name, pages) -> PagePoolFiles.save(mapFile, name, pages));
         this.deletedPagePools.forEach(name -> PagePoolFiles.delete(mapFile, name));
@@ -914,7 +917,7 @@ public class GameData extends InstanceSetupData {
         Optional<GameMap> mapData =
                 this.mapEntry.hasMapFile()
                         ? GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), GameMap.class)
-                                .map(map -> PageFacesFile.loadInto(mapEntry.getMapFile(), map, onInvalidPageSettings))
+                                .map(map -> PageSettingsFile.loadInto(mapEntry.getMapFile(), map, onInvalidPageSettings))
                                 .map(map -> map.withCreekRoutes(CreekRoutesFile.loadUnchecked(mapEntry.getMapFile()))
                                         .withCreekSettings(CreekRoutesFile.loadSettingsOrDefaults(mapEntry.getMapFile(), onInvalidSettings)))
                         : Optional.empty();
@@ -931,7 +934,8 @@ public class GameData extends InstanceSetupData {
     }
 
     /**
-     * Loads the page pools from the {@code pages} folder and remembers what {@code pages.json} holds.
+     * Loads the page pools from the {@code pages} folder, the default pool included, and remembers the
+     * settings {@code pages.json} holds.
      * A pool whose file cannot be read is reported and left out, so the map still opens.
      *
      * @param pageSettingsBroken whether the settings in {@code pages.json} were broken and replaced by the defaults
@@ -944,9 +948,7 @@ public class GameData extends InstanceSetupData {
             // A case-insensitive file system would resolve the lower-case name to this very file
             this.brokenPagePools.add(name.toLowerCase(Locale.ROOT));
             this.player.sendMessage(SetupMessages.getBrokenPagePool(name, reason));
-        }).forEach(this.gameMapBuilder::putPagePool);
-        // Compared against the file, not the merged pages, so pages inlined in an old map.json move over on save
-        this.savedDefaultPool = this.mapEntry.hasMapFile() ? Set.copyOf(PageFacesFile.load(mapFile)) : Set.of();
+        }).forEach(pool -> this.gameMapBuilder.putPagePool(pool.name(), pool.pages()));
         // null for broken settings, so the next save writes the defaults over them
         this.savedPageSettings = pageSettingsBroken ? null : this.gameMapBuilder.getPageSettings();
     }

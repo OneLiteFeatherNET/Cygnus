@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,10 +51,9 @@ class PagePoolFilesTest {
         PagePoolFiles.save(mapFile, "nord", Set.of(NORTH_PAGE));
         PagePoolFiles.save(mapFile, "keller", Set.of(SOUTH_PAGE));
 
-        Map<String, Set<PageResource>> pools = PagePoolFiles.load(mapFile, (_, _) -> {});
+        List<PagePool> pools = PagePoolFiles.load(mapFile, (_, _) -> {});
 
-        assertEquals(Map.of("keller", Set.of(SOUTH_PAGE), "nord", Set.of(NORTH_PAGE)), pools);
-        assertEquals(List.of("keller", "nord"), new ArrayList<>(pools.keySet()));
+        assertEquals(List.of(new PagePool("keller", Set.of(SOUTH_PAGE)), new PagePool("nord", Set.of(NORTH_PAGE))), pools);
     }
 
     @Test
@@ -78,14 +76,39 @@ class PagePoolFilesTest {
         List<String> reported = new ArrayList<>();
         List<String> reasons = new ArrayList<>();
 
-        Map<String, Set<PageResource>> pools = PagePoolFiles.load(mapFile, (name, reason) -> {
+        List<PagePool> pools = PagePoolFiles.load(mapFile, (name, reason) -> {
             reported.add(name);
             reasons.add(reason);
         });
 
-        assertEquals(Set.of("nord"), pools.keySet());
+        assertEquals(List.of("nord"), pools.stream().map(PagePool::name).toList());
         assertEquals(List.of("kaputt"), reported);
         assertTrue(reasons.getFirst().contains(broken.toString()));
+    }
+
+    @Test
+    void poolWithBrokenValuesIsSkippedAndReported(@TempDir Path root) throws IOException {
+        Path mapFile = root.resolve("map.json");
+        PagePoolFiles.save(mapFile, "nord", Set.of(NORTH_PAGE));
+        Path directory = root.resolve("pages");
+        Files.writeString(directory.resolve("ohne_seite.json"),
+                "{\"pages\": [{\"position\": {\"x\": 1, \"y\": 2, \"z\": 3}, \"face\": null}]}");
+        Files.writeString(directory.resolve("text_statt_zahl.json"),
+                "{\"pages\": [{\"position\": {\"x\": \"abc\", \"y\": 2, \"z\": 3}, \"face\": \"north\"}]}");
+        List<String> reported = new ArrayList<>();
+
+        List<PagePool> pools = PagePoolFiles.load(mapFile, (name, _) -> reported.add(name));
+
+        assertEquals(List.of("nord"), pools.stream().map(PagePool::name).toList());
+        assertEquals(List.of("ohne_seite", "text_statt_zahl"), reported);
+    }
+
+    @Test
+    void defaultPoolFileIsLoaded(@TempDir Path root) {
+        Path mapFile = root.resolve("map.json");
+        PagePoolFiles.save(mapFile, PagePool.DEFAULT_NAME, Set.of(NORTH_PAGE));
+
+        assertEquals(List.of(new PagePool("default", Set.of(NORTH_PAGE))), PagePoolFiles.load(mapFile, (_, _) -> {}));
     }
 
     @Test
@@ -97,7 +120,7 @@ class PagePoolFilesTest {
         Files.writeString(directory.resolve("a b.json"), "{ \"pages\": [] }");
         List<String> reported = new ArrayList<>();
 
-        Map<String, Set<PageResource>> pools = PagePoolFiles.load(mapFile, (name, _) -> reported.add(name));
+        List<PagePool> pools = PagePoolFiles.load(mapFile, (name, _) -> reported.add(name));
 
         assertTrue(pools.isEmpty());
         assertEquals(Set.of("Default", "a b"), Set.copyOf(reported));
