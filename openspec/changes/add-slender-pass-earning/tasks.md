@@ -18,7 +18,7 @@
 - [x] 1.4 Add message tests: one message per credit with delta above 0, none for a credit of 0
 - [x] 1.5 Add `HibernateSlenderPassEarningIntegrationTest` in `stats/src/test/.../stats/` against H2 in PostgreSQL mode
   with `V1` to `V3` and `hbm2ddl=validate`: the threshold credit in one transaction; two conditional quota calls credit
-  once; the new reasons pass the check constraint; the rebuild in `V3` keeps the existing ledger rows and their order
+  once; the new reasons pass the check constraint; the constraint swap in `V3` keeps the existing ledger rows and their ids
 - [x] 1.6 Add config tests in `common/src/test/.../config/`: `pass.pity-rounds` and `pass.max-balance` default to 10 and
   5; `pass.pity-rounds` 0 and `pass.max-balance` -1 are refused with a message that names the key
 - [ ] 1.7 Run `./gradlew :stats:test :game:test :common:test` and confirm the new tests fail for the missing production
@@ -26,8 +26,8 @@
 
 ## 2. Persistence (module `stats`)
 
-- [x] 2.1 Add Flyway migration `V3__slender_pass_earning.sql`: the two columns, and the ledger rebuild with the replaced
-  reason check (named constraint, rows copied in order, index recreated)
+- [x] 2.1 Add Flyway migration `V3__slender_pass_earning.sql`: the two columns, and the replaced reason check (drop and
+  re-add the named constraint `ck_slender_pass_transaction_reason`)
 - [x] 2.2 Map `last_quota_month` to `YearMonth` with an `AttributeConverter` and add `rounds_since_slender` to
   `SlenderPassBalance`; add `EARNED_PITY` and `RANK_QUOTA` to `LedgerReason`
 - [x] 2.3 Add the repository methods to `SlenderPassRepository` and implement them in `HibernateSlenderPassRepository`

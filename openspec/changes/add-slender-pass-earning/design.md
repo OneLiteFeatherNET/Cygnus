@@ -48,15 +48,10 @@ last_quota_month      VARCHAR(7) NULL                -- 'YYYY-MM', UTC
 - `last_quota_month` is text, not a date type: `YYYY-MM` sorts correctly as a string, the comparison is one SQL
   predicate, and it stays portable to H2 in PostgreSQL mode. The Java side maps it to `YearMonth` with an
   `AttributeConverter`.
-- New ledger reasons: `EARNED_PITY` and `RANK_QUOTA`. The `reason` check of `slender_pass_transaction` has to be
-  replaced. The inline check of `V2` has no name, and PostgreSQL and H2 name such a constraint differently, so
-  `DROP CONSTRAINT` cannot address it on both. `V3` therefore rebuilds the ledger table: it creates
-  `slender_pass_transaction_v3` with a named check on the six reasons, copies the rows in their order, drops the
-  old table and renames the new one, then recreates the index `idx_slender_pass_transaction_player`.
-  - The copy does not carry the old `id` values. The identity column of PostgreSQL does not move past explicitly
-    written ids, so the next insert would collide. The ids are renumbered in the same order. Nothing refers to a
-    ledger id, so no reference breaks.
-  - The migration rewrites the ledger rows once, but changes no content.
+- New ledger reasons: `EARNED_PITY` and `RANK_QUOTA`. The `reason` check of `slender_pass_transaction` is replaced.
+  `V2` gives that check the name `ck_slender_pass_transaction_reason`, so `V3` drops it by that name and adds a
+  check with the six reasons under the same name. The table, its rows and their ids stay as they are, and the
+  index from `V2` is not touched.
 - `V3` adds the two columns with `ALTER TABLE ... ADD COLUMN`, which both databases accept on a populated table.
 - `V1` and `V2` are not changed.
 
@@ -135,8 +130,8 @@ Invalid values stop the server at start with a clear message, the same way other
   meta is a fake `MonthlyQuotaSource`.
 - Integration in `:stats`: `HibernateSlenderPassRepositoryEarningIntegrationTest` against H2 in PostgreSQL mode with
   the real migrations `V1` to `V3` and `hbm2ddl=validate`: the threshold in one transaction, the conditional quota
-  grant by two calls (only one credit), the cap, the new reasons under the check constraint, and the ledger rebuild
-  of `V3` keeping the existing rows.
+  grant by two calls (only one credit), the cap, the new reasons under the check constraint, and the constraint swap
+  of `V3` keeping the existing rows and their ids.
 - No sleeps; the Minestom `Env` drives joins and round ends with `env.tick()`.
 
 ## Decisions
@@ -150,7 +145,8 @@ Invalid values stop the server at start with a clear message, the same way other
   pass, it does not reopen the counter.
 - **Conditional quota update instead of a read-then-write**: the database decides which server pays.
 - **`YYYY-MM` as text**: sortable, portable to H2, one predicate.
-- **Ledger rebuild in `V3`**: the only portable way to replace an unnamed check constraint. Ids are renumbered.
+- **Named check in `V2`, replaced in `V3`**: `ALTER TABLE ... DROP CONSTRAINT` and `ADD CONSTRAINT` work on both
+  databases, and the ledger keeps its ids.
 - **Quota read from the cached LuckPerms data on the tick thread**: the lookup is in memory; only the database write
   is off the tick thread.
 

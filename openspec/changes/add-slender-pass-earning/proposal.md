@@ -26,7 +26,8 @@ after `V2__slender_pass.sql`. The new Java classes carry `@since 2.21.0`.
   - two new columns on `player_slender_pass`: `rounds_since_slender` (integer, default 0, `CHECK (>= 0)`) and
     `last_quota_month` (text `YYYY-MM`, nullable);
   - the `reason` check of `slender_pass_transaction` is replaced by one that also allows `EARNED_PITY` and
-    `RANK_QUOTA`. The inline check of `V2` is unnamed, so the migration rebuilds the ledger table; the rows are kept.
+    `RANK_QUOTA`. `V2` names that check, so `V3` drops it by name and adds the new one; the ledger rows and their ids
+    are kept.
   - `V1` and `V2` are not changed.
 - Pity counter: the rounds are counted from the round snapshot that the statistics build when a round ends
   (`RoundStatsCollector.gameFinished`, `FinishedRound`). A Survivor who plays to the end, dead or alive, increases the
