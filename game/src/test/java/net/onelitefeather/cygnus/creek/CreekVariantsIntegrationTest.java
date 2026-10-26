@@ -4,6 +4,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
+import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.creek.state.Calm;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
@@ -49,7 +50,7 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
     private static final PatrolHelper PATROL = new PatrolHelper(new Random(1));
 
     private static BiFunction<Pos, CreekState, Creek> spawner(Instance instance, CreekConfig config, SpotFinder spots) {
-        CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, CreekWitness.NONE, PATROL,
+        CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, CreekMarks.NONE, CreekWitness.NONE, PATROL,
                 new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3), HuntCooldowns.none(), () -> Calm.NONE);
         return (spot, initial) -> new Creek(CreakingBody.spawn(instance, spot), Contexts.route(), round, initial);
     }
