@@ -103,7 +103,7 @@ public final class CreekService {
      * @param consequence what happens on a catch
      * @param marks       sometimes gives a survivor away to the slender outside of a catch
      * @param mood        decides when the creek's mood switches and to which
-     * @param stareTrick  teleports a survivor at the end of a stare, for a mood that does so
+     * @param stareTrick  teleports a survivor at the end of a stare, for the trickster
      * @param clock       supplies the current time in milliseconds
      * @param random      the random source
      * @param sections    measures how long each step takes

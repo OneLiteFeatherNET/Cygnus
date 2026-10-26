@@ -45,7 +45,7 @@ public final class CatchTricks implements CatchConsequence {
      * @param launch        throws the caught survivor
      * @param swapChance    chance for a teleport, from 0 (always launch) to 1 (always teleport)
      * @param random        the random source
-     * @param mood          the creek's mood right now, which may make every catch teleport
+     * @param mood          the creek's mood right now. The trickster makes every catch teleport
      */
     public CatchTricks(
             CatchConsequence base,
@@ -89,11 +89,11 @@ public final class CatchTricks implements CatchConsequence {
     }
 
     /**
-     * The chance for a teleport instead of a throw: {@code swapChance}, or always for a mood that
-     * always teleports.
+     * The chance for a teleport instead of a throw: {@code swapChance}, or always for the
+     * trickster.
      */
     private double teleportChance() {
-        return this.mood.get().alwaysTeleport() ? 1.0D : this.swapChance;
+        return this.mood.get() == CreekMood.TRICKSTER ? 1.0D : this.swapChance;
     }
 
     @Override

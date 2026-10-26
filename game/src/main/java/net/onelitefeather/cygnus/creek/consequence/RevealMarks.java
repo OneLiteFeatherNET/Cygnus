@@ -13,7 +13,7 @@ import java.util.random.RandomGenerator;
 /**
  * Gives a survivor away to the slender now and then: with a chance of {@link #STARE_CHANCE} at the
  * end of a patrol stare, and when a stalked survivor looked at the creek with the chance the
- * creek's mood sets, see {@link CreekMood#spotMarkChance()}.
+ * creek's mood sets, see {@link CreekMood.Traits#spotMarkChance()}.
  * <p>
  * After a mark the survivor is safe from these two for {@link #COOLDOWN_MILLIS}. A catch ignores
  * this breather and does not start it either. The reveal is shared with the catch, which also ends
@@ -61,7 +61,7 @@ public final class RevealMarks implements CreekMarks {
 
     @Override
     public void spotted(Player survivor, long now) {
-        this.mark(survivor, this.mood.get().spotMarkChance(), now);
+        this.mark(survivor, this.mood.get().traits().spotMarkChance(), now);
     }
 
     private void mark(Player survivor, double chance, long now) {

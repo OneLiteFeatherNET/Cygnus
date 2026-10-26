@@ -38,7 +38,7 @@ public record CreekTuning(CreekConfig config, Calm calm, CreekMood mood) {
      * @return the speed
      */
     public double huntSpeed() {
-        return this.calm.speed(this.config.hunt().speed() * this.mood.huntSpeed());
+        return this.calm.speed(this.config.hunt().speed() * this.mood.traits().huntSpeed());
     }
 
     /**
@@ -47,7 +47,7 @@ public record CreekTuning(CreekConfig config, Calm calm, CreekMood mood) {
      * @return the speed, 0 when it freezes
      */
     public double watchedHuntSpeed() {
-        return this.huntSpeed() * this.mood.watchedHuntSpeed();
+        return this.huntSpeed() * this.mood.traits().watchedHuntSpeed();
     }
 
     /**
@@ -56,7 +56,7 @@ public record CreekTuning(CreekConfig config, Calm calm, CreekMood mood) {
      * @return the dread, from 0 to 1
      */
     public double huntThreshold() {
-        return this.config.hunt().threshold() * this.mood.huntThreshold();
+        return this.config.hunt().threshold() * this.mood.traits().huntThreshold();
     }
 
     /**
@@ -65,7 +65,7 @@ public record CreekTuning(CreekConfig config, Calm calm, CreekMood mood) {
      * @return the time in milliseconds
      */
     public long huntMinStalkMillis() {
-        return Math.round(this.config.hunt().minStalkSeconds() * 1000L * this.mood.minStalk());
+        return Math.round(this.config.hunt().minStalkSeconds() * 1000L * this.mood.traits().minStalk());
     }
 
     /**
@@ -75,7 +75,7 @@ public record CreekTuning(CreekConfig config, Calm calm, CreekMood mood) {
      * @return the breather in this round
      */
     public long huntCooldown(long millis) {
-        return this.calm.stretch(Math.round(millis * this.mood.huntCooldown()));
+        return this.calm.stretch(Math.round(millis * this.mood.traits().huntCooldown()));
     }
 
     /**
@@ -114,7 +114,7 @@ public record CreekTuning(CreekConfig config, Calm calm, CreekMood mood) {
      */
     public long stalkMillis(RandomGenerator random) {
         long seconds = random.nextLong(this.config.stalk().minSeconds(), this.config.stalk().maxSeconds() + 1L);
-        return Math.round(seconds * 1000L * this.mood.stalkDuration());
+        return Math.round(seconds * 1000L * this.mood.traits().stalkDuration());
     }
 
     /**
@@ -129,7 +129,7 @@ public record CreekTuning(CreekConfig config, Calm calm, CreekMood mood) {
         CreekConfig.Vanish vanish = this.config.vanish();
         double span = vanish.maxSeconds() - vanish.minSeconds();
         double seconds = vanish.maxSeconds() - span * Math.clamp(dread, 0.0D, 1.0D);
-        return this.calm.stretch(Math.round(seconds * 1000.0D * this.mood.variantBreather()));
+        return this.calm.stretch(Math.round(seconds * 1000.0D * this.mood.traits().variantBreather()));
     }
 
     /**
@@ -138,6 +138,6 @@ public record CreekTuning(CreekConfig config, Calm calm, CreekMood mood) {
      * @return the chance
      */
     public double deadEndVanishChance() {
-        return this.mood.deadEndVanishChance();
+        return this.mood.traits().deadEndVanishChance();
     }
 }

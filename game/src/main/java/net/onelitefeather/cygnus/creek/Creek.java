@@ -7,6 +7,7 @@ import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.dread.HuntEnd;
 import net.onelitefeather.cygnus.creek.state.CreekActions;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
+import net.onelitefeather.cygnus.creek.state.CreekMood;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.HuntState;
 import net.onelitefeather.cygnus.creek.state.StalkState;
@@ -272,7 +273,7 @@ final class Creek {
         @Override
         public void selected(UUID survivor) {
             this.with(survivor, player -> {
-                boolean teleported = this.round.tuning().get().mood().stareTeleports()
+                boolean teleported = this.round.tuning().get().mood() == CreekMood.TRICKSTER
                         && this.round.stareTrick().perform(player);
                 if (!teleported) this.round.patrol().selected(player, this::eyes, this.survivors.players());
                 this.round.marks().stared(player, this.now);
