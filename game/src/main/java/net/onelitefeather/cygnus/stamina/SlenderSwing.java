@@ -10,14 +10,14 @@ import java.util.random.RandomGenerator;
  * Rolls what one swing of the slender does to one survivor.
  * <p>
  * A swing first decides whether it misses, then how hard it hits. Both lean on the survivor's fear
- * {@code f}, clamped to {@code 0} to {@code 1}: the miss chance is {@code 0.10 + 0.20 f}, a hit deals
+ * {@code f}, clamped to {@code 0} to {@code 1}: the miss chance is {@code 0.05 + 0.10 f}, a hit deals
  * between {@code 0.6 - 0.1 f} and {@code 1.25 - 0.25 f} hearts, evenly spread. A survivor who is
  * already terrified stands badly anyway, so the swing gives them a little more air, while a calm
  * survivor without a health bonus still dies within one appearance.
  * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.21.0
  */
 public final class SlenderSwing {
@@ -25,8 +25,8 @@ public final class SlenderSwing {
     /** Points of {@link Vitality} per heart: two health points make a heart. */
     public static final double POINTS_PER_HEART = 2 * Vitality.POINTS_PER_HEALTH;
 
-    private static final double MISS_CALM = 0.10D;
-    private static final double MISS_FEAR = 0.20D;
+    private static final double MISS_CALM = 0.05D;
+    private static final double MISS_FEAR = 0.10D;
     private static final double MIN_CALM = 0.6D;
     private static final double MIN_FEAR = 0.1D;
     private static final double MAX_CALM = 1.25D;
