@@ -220,7 +220,7 @@ public final class StalkState implements CreekState {
         double distance = ctx.random().nextDouble(DECOY_MIN_DISTANCE, DECOY_MAX_DISTANCE);
         Pos candidate = target.add(ahead.normalize().mul(distance));
         ctx.spots().grounded(candidate)
-                .filter(spot -> !ctx.spots().isHidden(spot, List.of(view.eyes()), 0.0D))
+                .filter(spot -> ctx.spots().visibleFrom(view.eyes(), spot))
                 .ifPresent(spot -> {
                     this.leftDecoy = true;
                     ctx.actions().decoy(this.target, spot);
@@ -260,7 +260,7 @@ public final class StalkState implements CreekState {
         Vec away = new Vec(mate.x() - target.x(), 0.0D, mate.z() - target.z());
         if (away.isZero()) return false;
         Optional<Pos> spot = ctx.spots().grounded(mate.add(away.normalize().mul(BEHIND_DISTANCE)))
-                .filter(candidate -> !ctx.spots().isHidden(candidate, List.of(view.eyes()), 0.0D));
+                .filter(candidate -> ctx.spots().visibleFrom(view.eyes(), candidate));
         spot.ifPresent(ctx.body()::teleport);
         return spot.isPresent();
     }

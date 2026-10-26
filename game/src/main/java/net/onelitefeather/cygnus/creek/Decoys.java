@@ -8,10 +8,8 @@ import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CreekScare;
-import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,9 +22,9 @@ import java.util.function.LongSupplier;
 /**
  * The trickster's doppelgangers: creek bodies that never act, each seen by one survivor only.
  * <p>
- * Once its survivor has looked at a doppelganger for {@code revealMillis} in a row, it crumbles to
- * leaves with the creek's scare sound. It is also gone once its survivor is or after
- * {@link #LIFETIME_MILLIS}. Everything here runs in the creek's step.
+ * Once its survivor has seen a doppelganger for {@code revealMillis} in a row, with nothing in the
+ * way, it crumbles to leaves with the creek's scare sound. It is also gone once its survivor is
+ * gone, or after {@link #LIFETIME_MILLIS}. Everything here runs in the creek's step.
  * </p>
  *
  * @author theEvilReaper
@@ -89,20 +87,19 @@ final class Decoys {
         Iterator<Decoy> iterator = this.running.iterator();
         while (iterator.hasNext()) {
             Decoy decoy = iterator.next();
-            SurvivorView view = viewOf(survivors, decoy.viewer);
-            if (view == null || now - decoy.bornAt >= LIFETIME_MILLIS) {
+            Player viewer = survivors.player(decoy.viewer);
+            if (viewer == null || now - decoy.bornAt >= LIFETIME_MILLIS) {
                 decoy.body.remove();
                 iterator.remove();
                 continue;
             }
-            if (!this.sight.inView(view.eyes(), decoy.body.position().add(0, SpotFinder.BODY_CENTRE, 0))) {
+            if (!this.sight.sees(viewer, decoy.body.entity())) {
                 decoy.seenSince = -1L;
                 continue;
             }
             if (decoy.seenSince < 0) decoy.seenSince = now;
             if (now - decoy.seenSince < this.revealMillis) continue;
-            Player viewer = survivors.player(decoy.viewer);
-            if (viewer != null) crumble(viewer, decoy.body.position());
+            crumble(viewer, decoy.body.position());
             decoy.body.remove();
             iterator.remove();
         }
@@ -116,13 +113,6 @@ final class Decoys {
             decoy.body.remove();
         }
         this.running.clear();
-    }
-
-    private static @Nullable SurvivorView viewOf(SurvivorSnapshot survivors, UUID id) {
-        for (SurvivorView view : survivors.views()) {
-            if (view.id().equals(id)) return view;
-        }
-        return null;
     }
 
     private static void crumble(Player viewer, Pos where) {
