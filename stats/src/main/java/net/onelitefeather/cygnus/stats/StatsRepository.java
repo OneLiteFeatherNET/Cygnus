@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.stats;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,6 +74,18 @@ public interface StatsRepository extends AutoCloseable {
      * @return how many rows were removed in total
      */
     int deleteByPlayer(UUID playerUuid);
+
+    /**
+     * Returns the repository for the slender passes. It shares the connections and the executor of this one, so
+     * a deletion by player covers the passes too. A repository without storage answers with the no-op one.
+     *
+     * @param clock the time of every ledger row
+     * @return the pass repository
+     * @since 2.21.0
+     */
+    default SlenderPassRepository slenderPasses(Clock clock) {
+        return new NoOpSlenderPassRepository();
+    }
 
     /**
      * Writes what is still queued and releases the connections.

@@ -422,7 +422,7 @@ class HibernateStatsRepositoryIntegrationTest {
         List<String> tables = new ArrayList<>();
         try (Connection connection = this.dataSource.getConnection();
              ResultSet result = connection.createStatement().executeQuery(
-                     "select table_name from information_schema.tables where table_name like 'PLAYER_%'")) {
+                     "select table_name from information_schema.tables where table_name like 'PLAYER_%' or table_name like 'SLENDER_PASS_%'")) {
             while (result.next()) {
                 tables.add(result.getString(1));
             }
@@ -430,7 +430,7 @@ class HibernateStatsRepositoryIntegrationTest {
             throw new AssertionError(exception);
         }
 
-        assertEquals(List.of("PLAYER_NAMES", "PLAYER_ROUND_STATS", "PLAYER_YEAR_STATS"), tables.stream().sorted().toList());
+        assertEquals(List.of("PLAYER_NAMES", "PLAYER_ROUND_STATS", "PLAYER_SLENDER_PASS", "PLAYER_YEAR_STATS", "SLENDER_PASS_TRANSACTION"), tables.stream().sorted().toList());
     }
 
     @Test
