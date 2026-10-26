@@ -658,30 +658,25 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("The slender hears the hit sound at most once a second")
-    void hitSoundWaitsForTheCooldown(@NotNull Env env) {
+    @DisplayName("Every swing that hits plays the hit sound, however close the swings fall")
+    void everyHittingSwingPlaysTheHitSound(@NotNull Env env) {
         TestConnection slenderConnection = env.createConnection();
         CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
         survivor(env, new Pos(1, 40, 0));
-        AtomicLong clock = new AtomicLong();
-        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, clock::get, HIT);
+        // The clock stands still, as if the scheduler ran the second swing early.
+        SlenderBar bar = bar(slender, StaminaConfig.DEFAULT, () -> 0L, HIT);
         bar.start();
         bar.changeStatus();
         Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
 
-        bar.consume();
-        bar.consume();
-        clock.set(SlenderBar.HIT_COOLDOWN_MILLIS / 2);
-        bar.consume();
-        bar.consume();
-        assertEquals(1, slenderSounds.collect().size(), "the second hit lands inside the cooldown");
+        for (int i = 0; i < 2 * SlenderBar.TICKS_PER_SWING; i++) {
+            bar.consume();
+        }
 
-        Collector<EntitySoundEffectPacket> laterSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
-        clock.set(SlenderBar.HIT_COOLDOWN_MILLIS);
-        bar.consume();
-        bar.consume();
-        laterSounds.assertSingle(packet -> assertEquals(SlenderBar.HIT.name(), packet.soundEvent().key()));
+        List<EntitySoundEffectPacket> sounds = slenderSounds.collect();
+        assertEquals(2, sounds.size(), "two swings are two hit sounds");
+        sounds.forEach(packet -> assertEquals(SlenderBar.HIT.name(), packet.soundEvent().key()));
         bar.stop();
     }
 
