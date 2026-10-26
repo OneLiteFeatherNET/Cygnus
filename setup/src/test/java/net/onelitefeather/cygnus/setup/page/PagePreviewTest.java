@@ -28,6 +28,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MicrotusExtension.class)
@@ -36,6 +37,7 @@ class PagePreviewTest {
     private static final Pos BUILDER = new Pos(0, 40, 0);
     private static final PageResource NEAR = new PageResource(new Pos(10, 40, 0), Direction.NORTH);
     private static final PageResource FAR = new PageResource(new Pos(100, 40, 0), Direction.NORTH);
+    private static final PageResource PAIRED = new PageResource(new Pos(12, 40, 0), Direction.SOUTH);
 
     private Instance instance;
     private TestConnection connection;
@@ -114,13 +116,13 @@ class PagePreviewTest {
     @Test
     @DisplayName("Hiding the preview takes every display away in one go")
     void hideRemovesEverything() {
-        this.spots.addAll(List.of(NEAR, new PageResource(new Pos(12, 40, 0), Direction.SOUTH)));
+        this.spots.addAll(List.of(NEAR, PAIRED));
         this.preview.show();
         Collector<DestroyEntitiesPacket> destroys = this.connection.trackIncoming(DestroyEntitiesPacket.class);
 
         this.preview.hide();
 
-        destroys.assertSingle(packet -> assertEquals(4, packet.entityIds().size()));
+        destroys.assertSingle(packet -> assertEquals(5, packet.entityIds().size(), "two pages, two boxes and the label"));
     }
 
     @Test
@@ -185,9 +187,48 @@ class PagePreviewTest {
     }
 
     @Test
-    @DisplayName("A crowded spot glows red, any other green")
-    void colourFollowsTheCrowd() {
-        assertEquals(PagePreview.CROWDED_COLOUR, PagePreview.colourOf(0.5D));
-        assertEquals(PagePreview.CALM_COLOUR, PagePreview.colourOf(1.0D));
+    @DisplayName("A crowded group glows red, a lone spot grey, any other group in its own colour")
+    void colourFollowsTheGroup() {
+        PageGroups.Group crowded = new PageGroups.Group(List.of(NEAR, PAIRED), 0.5D);
+        PageGroups.Group calm = new PageGroups.Group(List.of(NEAR, PAIRED), 0.1D);
+        PageGroups.Group lone = new PageGroups.Group(List.of(FAR), 0.05D);
+
+        assertEquals(PagePreview.CROWDED_COLOUR, PagePreview.colourOf(crowded, 0));
+        assertEquals(PagePreview.LONE_COLOUR, PagePreview.colourOf(lone, 1));
+        assertEquals(PagePreview.GROUP_COLOURS[0], PagePreview.colourOf(calm, 0));
+        assertNotEquals(PagePreview.colourOf(calm, 0), PagePreview.colourOf(calm, 1),
+                "groups next in line must not look alike");
+    }
+
+    @Test
+    @DisplayName("The label of a group tells its size and share")
+    void labelTellsSizeAndShare() {
+        assertEquals("2 pages · 38%", PagePreview.labelText(new PageGroups.Group(List.of(NEAR, PAIRED), 0.375D)));
+    }
+
+    @Test
+    @DisplayName("A group of spots gets a label above it, a lone spot none")
+    void groupGetsALabel() {
+        this.spots.addAll(List.of(NEAR, PAIRED));
+        Collector<SpawnEntityPacket> spawns = this.connection.trackIncoming(SpawnEntityPacket.class);
+
+        this.preview.show();
+
+        List<EntityType> types = types(spawns);
+        assertEquals(1, types.stream().filter(type -> type == EntityType.TEXT_DISPLAY).count());
+        assertEquals(5, types.size(), "two pages, two boxes and one label");
+    }
+
+    @Test
+    @DisplayName("Walking away from a group takes its label away too")
+    void labelFollowsTheBuilder() {
+        this.spots.addAll(List.of(NEAR, PAIRED));
+        this.preview.show();
+        Collector<DestroyEntitiesPacket> destroys = this.connection.trackIncoming(DestroyEntitiesPacket.class);
+
+        this.builder.teleport(new Pos(-100, 40, 0)).join();
+        this.preview.update();
+
+        assertEquals(5, destroys.collect().stream().mapToInt(packet -> packet.entityIds().size()).sum());
     }
 }
