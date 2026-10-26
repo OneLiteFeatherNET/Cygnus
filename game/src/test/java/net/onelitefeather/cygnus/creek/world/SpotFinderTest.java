@@ -22,6 +22,26 @@ class SpotFinderTest {
     private static final Pos TARGET_EYES = TARGET.add(0, 1.62, 0);
 
     @Test
+    @DisplayName("A spot is visible when it is in the view cone and nothing is in the way")
+    void visibleFrom() {
+        Ground walled = new Ground() {
+            @Override
+            public Optional<Pos> settle(Pos candidate) {
+                return Optional.of(candidate);
+            }
+
+            @Override
+            public boolean open(Pos from, Pos to) {
+                return false;
+            }
+        };
+
+        assertTrue(SPOTS.visibleFrom(TARGET_EYES, new Pos(0, 40, 10)));
+        assertFalse(SPOTS.visibleFrom(TARGET_EYES, new Pos(0, 40, -10)), "behind the survivor");
+        assertFalse(new SpotFinder(48, walled).visibleFrom(TARGET_EYES, new Pos(0, 40, 10)), "behind a wall");
+    }
+
+    @Test
     @DisplayName("A spot beside the view stays in the band and off the screen")
     void besideStaysOffTheScreen() {
         RandomGenerator random = new Random(1);

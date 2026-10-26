@@ -202,6 +202,12 @@ public final class Contexts {
                 ctx.config(), ctx.settings(), ctx.random(), ctx.hunts(), new CreekTuning(ctx.config(), calm));
     }
 
+    /** The same context, with spots found by the given finder. */
+    public static CreekContext spots(CreekContext ctx, SpotFinder spots) {
+        return new CreekContext(ctx.now(), ctx.survivors(), ctx.body(), ctx.route(), spots, ctx.actions(),
+                ctx.config(), ctx.settings(), ctx.random(), ctx.hunts(), ctx.tuning());
+    }
+
     /** The same context, with the creek in the given mood. */
     public static CreekContext mood(CreekContext ctx, CreekMood mood) {
         return new CreekContext(ctx.now(), ctx.survivors(), ctx.body(), ctx.route(), ctx.spots(), ctx.actions(),

@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.creek;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.network.packet.server.play.SoundEffectPacket;
 import net.minestom.server.sound.SoundEvent;
@@ -42,8 +43,10 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         }, sight, REVEAL_MILLIS, () -> 0L);
     }
 
+    /** Turns the viewer towards the doppelganger or away from it, and takes the snapshot. */
     private static SurvivorSnapshot looking(Player viewer, boolean atTheDecoy) {
         Pos position = atTheDecoy ? VIEWER_POS : VIEWER_POS.withYaw(180.0F);
+        viewer.teleport(position).join();
         return new SurvivorSnapshot(List.of(viewer), List.of(new SurvivorView(viewer.getUuid(), position, 0.0D, false)));
     }
 
@@ -84,6 +87,25 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         assertTrue(this.removed());
         assertFalse(particles.collect().isEmpty());
         assertTrue(sounds.collect().stream().anyMatch(packet -> packet.soundEvent() == SoundEvent.ENTITY_CREAKING_ACTIVATE));
+    }
+
+    @Test
+    @DisplayName("Behind a wall the doppelganger is not seen, so it does not crumble")
+    void wallHidesTheDecoy(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player viewer = env.createConnection().connect(instance, VIEWER_POS);
+        for (int y = 40; y < 44; y++) {
+            for (int x = -3; x <= 3; x++) {
+                instance.setBlock(x, y, 5, Block.STONE);
+            }
+        }
+        Decoys decoys = this.decoys();
+        decoys.spawn(viewer, DECOY_SPOT);
+
+        decoys.tick(looking(viewer, true), 0L);
+        decoys.tick(looking(viewer, true), REVEAL_MILLIS);
+
+        assertFalse(this.removed());
     }
 
     @Test

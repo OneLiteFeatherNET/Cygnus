@@ -1,12 +1,14 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.creek.world.Ground;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -280,6 +282,28 @@ class StalkStateTest {
         body.position = new Pos(0, 40, -10);
         state.tick(decoying(100L, body, decoys, CreekMood.TRICKSTER));
         assertEquals(1, decoys.size(), "only one per stalk");
+    }
+
+    @Test
+    @DisplayName("The trickster leaves no doppelganger where a wall hides it from the target")
+    void noDecoyBehindAWall() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -10));
+        List<Pos> decoys = new ArrayList<>();
+        SpotFinder walled = new SpotFinder(Contexts.SETTINGS.sightRange(), new Ground() {
+            @Override
+            public Optional<Pos> settle(Pos candidate) {
+                return Optional.of(candidate);
+            }
+
+            @Override
+            public boolean open(Pos from, Pos to) {
+                return false;
+            }
+        });
+
+        new StalkState(TARGET, 60_000L).tick(Contexts.spots(decoying(0L, body, decoys, CreekMood.TRICKSTER), walled));
+
+        assertTrue(decoys.isEmpty());
     }
 
     @Test
