@@ -71,6 +71,17 @@ class PagePoolDrawTest {
     }
 
     @Test
+    void drawFromSkipsPoolFileWithBrokenValues(@TempDir Path root) throws IOException {
+        Path mapFile = root.resolve("map.json");
+        PagePoolFiles.save(mapFile, "nord", spots(4));
+        Files.writeString(root.resolve("pages").resolve("ohne_seite.json"),
+                "{\"pages\": [{\"position\": {\"x\": 1, \"y\": 2, \"z\": 3}, \"face\": null}]}");
+        Files.writeString(root.resolve("pages").resolve("text_statt_zahl.json"),
+                "{\"pages\": [{\"position\": {\"x\": \"abc\", \"y\": 2, \"z\": 3}, \"face\": \"north\"}]}");
+        assertEquals("nord", PagePoolDraw.drawFrom(mapFile, Set.of(), 4, new Random(1)).name());
+    }
+
+    @Test
     void drawFromSurvivesUnreadablePagesDirectory(@TempDir Path root) throws IOException {
         Path mapFile = root.resolve("map.json");
         PagePoolFiles.save(mapFile, "nord", spots(4));
