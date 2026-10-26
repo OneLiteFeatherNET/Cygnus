@@ -42,7 +42,6 @@ final class Decoys {
     private final BiFunction<Instance, Pos, CreekBody> bodies;
     private final CreekSight sight;
     private final LongSupplier revealMillis;
-    private final LongSupplier clock;
     private final List<Decoy> running = new ArrayList<>();
 
     /**
@@ -52,13 +51,11 @@ final class Decoys {
      * @param sight        decides whether a survivor sees a doppelganger
      * @param revealMillis how long a survivor has to look at one before it crumbles, the same as
      *                     for the real creek right now
-     * @param clock        supplies the current time in milliseconds
      */
-    Decoys(BiFunction<Instance, Pos, CreekBody> bodies, CreekSight sight, LongSupplier revealMillis, LongSupplier clock) {
+    Decoys(BiFunction<Instance, Pos, CreekBody> bodies, CreekSight sight, LongSupplier revealMillis) {
         this.bodies = bodies;
         this.sight = sight;
         this.revealMillis = revealMillis;
-        this.clock = clock;
     }
 
     /**
@@ -66,15 +63,16 @@ final class Decoys {
      *
      * @param viewer the survivor who sees it
      * @param where  where it stands
+     * @param now    the current time in milliseconds
      */
-    void spawn(Player viewer, Pos where) {
+    void spawn(Player viewer, Pos where, long now) {
         Instance instance = viewer.getInstance();
         if (instance == null) return;
         CreekBody body = this.bodies.apply(instance, where);
         body.showTo(Set.of(viewer.getUuid()));
         body.setFrozen(true);
         body.lookAt(viewer.getPosition().add(0, viewer.getEyeHeight(), 0));
-        this.running.add(new Decoy(viewer.getUuid(), body, this.clock.getAsLong()));
+        this.running.add(new Decoy(viewer.getUuid(), body, now));
     }
 
     /**

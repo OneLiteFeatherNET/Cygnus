@@ -96,7 +96,7 @@ public final class CreekModule implements GameFeature {
                         () -> TeamHelper.slenderOf(teamService),
                         this.config,
                         random),
-                new RevealMarks(reveal, () -> TeamHelper.slenderOf(teamService), System::currentTimeMillis, random, mood),
+                new RevealMarks(reveal, () -> TeamHelper.slenderOf(teamService), random, mood),
                 mood,
                 tricks::teleport,
                 System::currentTimeMillis,

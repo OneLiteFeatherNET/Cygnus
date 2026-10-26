@@ -7,7 +7,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
@@ -35,7 +34,6 @@ public final class RevealMarks implements CreekMarks {
 
     private final SlenderReveal reveal;
     private final Supplier<@Nullable Player> slender;
-    private final LongSupplier clock;
     private final RandomGenerator random;
     private final Supplier<CreekMood> mood;
     private final Map<UUID, Long> safeUntil = new ConcurrentHashMap<>();
@@ -45,31 +43,28 @@ public final class RevealMarks implements CreekMarks {
      *
      * @param reveal  gives a survivor away to the slender
      * @param slender supplies the slender, or {@code null} while there is none
-     * @param clock   supplies the current time in milliseconds
      * @param random  the random source
      * @param mood    the creek's mood right now
      */
-    public RevealMarks(SlenderReveal reveal, Supplier<@Nullable Player> slender, LongSupplier clock,
+    public RevealMarks(SlenderReveal reveal, Supplier<@Nullable Player> slender,
                        RandomGenerator random, Supplier<CreekMood> mood) {
         this.reveal = reveal;
         this.slender = slender;
-        this.clock = clock;
         this.random = random;
         this.mood = mood;
     }
 
     @Override
-    public void stared(Player survivor) {
-        this.mark(survivor, STARE_CHANCE);
+    public void stared(Player survivor, long now) {
+        this.mark(survivor, STARE_CHANCE, now);
     }
 
     @Override
-    public void spotted(Player survivor) {
-        this.mark(survivor, this.mood.get().spotMarkChance());
+    public void spotted(Player survivor, long now) {
+        this.mark(survivor, this.mood.get().spotMarkChance(), now);
     }
 
-    private void mark(Player survivor, double chance) {
-        long now = this.clock.getAsLong();
+    private void mark(Player survivor, double chance, long now) {
         Long safe = this.safeUntil.get(survivor.getUuid());
         if (safe != null && now < safe) return;
         if (this.random.nextDouble() >= chance) return;

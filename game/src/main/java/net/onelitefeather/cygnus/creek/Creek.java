@@ -164,7 +164,7 @@ final class Creek {
         List<SurvivorView> noticed = ignored.isEmpty() ? views
                 : views.stream().filter(view -> !ignored.contains(view.id())).toList();
         return new CreekContext(now, noticed, this.body, this.route, this.round.spots(),
-                new Actions(this.round, survivors, ignored, this.body),
+                new Actions(this.round, survivors, ignored, this.body, now),
                 this.round.config(), this.round.settings(), this.round.random(), this.round.hunts(), this.round.tuning().get());
     }
 
@@ -256,8 +256,9 @@ final class Creek {
      * @param survivors the survivors of the step
      * @param ignored   the survivors the creek leaves alone in the step
      * @param body      the creek's body
+     * @param now       the time of the step in milliseconds
      */
-    private record Actions(CreekRound round, SurvivorSnapshot survivors, Set<UUID> ignored, CreekBody body)
+    private record Actions(CreekRound round, SurvivorSnapshot survivors, Set<UUID> ignored, CreekBody body, long now)
             implements CreekActions {
 
         @Override
@@ -274,19 +275,19 @@ final class Creek {
                 boolean teleported = this.round.tuning().get().mood().stareTeleports()
                         && this.round.stareTrick().perform(player);
                 if (!teleported) this.round.patrol().selected(player, this::eyes, this.survivors.players());
-                this.round.marks().stared(player);
+                this.round.marks().stared(player, this.now);
                 this.round.witness().selected(survivor);
             });
         }
 
         @Override
         public void spotted(UUID survivor) {
-            this.with(survivor, this.round.marks()::spotted);
+            this.with(survivor, player -> this.round.marks().spotted(player, this.now));
         }
 
         @Override
         public void decoy(UUID survivor, Pos where) {
-            this.with(survivor, player -> this.round.decoys().spawn(player, where));
+            this.with(survivor, player -> this.round.decoys().spawn(player, where, this.now));
         }
 
         @Override

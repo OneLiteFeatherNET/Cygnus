@@ -160,7 +160,7 @@ public final class CreekService {
         }
         // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
-        Decoys decoys = new Decoys(this.bodies, this.sight, () -> this.tuning().revealMillis(), this.clock);
+        Decoys decoys = new Decoys(this.bodies, this.sight, () -> this.tuning().revealMillis());
         CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.marks, this.stareTrick, decoys, this.witness,
                 new PatrolHelper(this.random), new StalkSounds(this.random), this.config, this.settings, this.random,
                 new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L), this::tuning);
@@ -171,12 +171,13 @@ public final class CreekService {
         CreekBody body = this.bodies.apply(world, this.ground.settle(point).orElse(point));
         // Start hidden. The creek and its variants only show up once the survivors have had time to
         // spread out, the creek somewhere far away from all of them.
-        long showsUp = this.clock.getAsLong() + this.config.vanish().minSeconds() * 1000L;
+        long now = this.clock.getAsLong();
+        long showsUp = now + this.config.vanish().minSeconds() * 1000L;
         this.creek = new Creek(body, pathRoute, round, new VanishState(showsUp));
         this.variants = new CreekVariants(this.config, this.settings, this.spots, this.random, showsUp,
                 (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state),
                 this::tuning);
-        this.pressure.start(this.clock.getAsLong());
+        this.pressure.start(now);
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }
 
@@ -206,7 +207,7 @@ public final class CreekService {
             current.tick(survivors, haunted, now);
             if (currentVariants != null) currentVariants.tick(survivors, now);
         }
-        // Doppelgangers crumble or run out of time even once the creek is gone for good.
+        // Doppelgängers crumble or run out of time even once the creek is gone for good.
         CreekRound currentRound = this.round;
         if (currentRound != null) currentRound.decoys().tick(survivors, now);
     }
