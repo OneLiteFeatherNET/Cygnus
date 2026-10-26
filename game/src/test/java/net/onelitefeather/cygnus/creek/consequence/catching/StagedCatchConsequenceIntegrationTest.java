@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.creek.consequence;
+package net.onelitefeather.cygnus.creek.consequence.catching;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
@@ -6,6 +6,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.creek.consequence.SlenderReveal;
 import org.jetbrains.annotations.Nullable;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import org.junit.jupiter.api.DisplayName;

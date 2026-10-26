@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.creek.consequence;
+package net.onelitefeather.cygnus.creek.consequence.catching;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

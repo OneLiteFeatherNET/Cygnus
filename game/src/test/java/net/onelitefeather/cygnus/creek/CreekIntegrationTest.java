@@ -5,6 +5,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.testing.Env;
+import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
@@ -55,10 +56,15 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
     }
 
     private static Creek creek(CreekBody body, CreekConfig config, CreekState initial, CreekWitness witness) {
+        return creek(body, config, initial, witness, CreekMarks.NONE);
+    }
+
+    private static Creek creek(CreekBody body, CreekConfig config, CreekState initial, CreekWitness witness,
+                               CreekMarks marks) {
         CreekSight sight = new CreekSight(CreekSettings.DEFAULT.sightRange(), config.sight().viewAngle());
         // nextBoolean() is true for -1, so a selection always ends in the stun.
         PatrolHelper patrol = new PatrolHelper(() -> -1L);
-        CreekRound round = new CreekRound(sight, new SpotFinder(CreekSettings.DEFAULT.sightRange(), Optional::of), _ -> {}, witness, patrol,
+        CreekRound round = new CreekRound(sight, new SpotFinder(CreekSettings.DEFAULT.sightRange(), Optional::of), _ -> {}, marks, witness, patrol,
                 new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3), HuntCooldowns.none(), () -> Calm.NONE);
         return new Creek(body, Contexts.route(), round, initial);
     }
@@ -245,6 +251,41 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
         assertTrue(survivor.hasEffect(PotionEffect.SLOWNESS));
         assertEquals(List.of(survivor.getUuid()), witness.selections);
+    }
+
+    @Test
+    @DisplayName("The end of a stare and a stalked survivor's look reach the marks")
+    void staresAndLooksReachTheMarks(Env env) {
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        CreakingBody body = CreakingBody.spawn(instance, new Pos(0, 40, 20));
+        CreekState acting = new CreekState() {
+            @Override
+            public void enter(CreekContext ctx) {
+            }
+
+            @Override
+            public CreekState tick(CreekContext ctx) {
+                ctx.actions().selected(survivor.getUuid());
+                ctx.actions().spotted(survivor.getUuid());
+                return this;
+            }
+        };
+        List<String> marked = new ArrayList<>();
+        CreekMarks marks = new CreekMarks() {
+            @Override
+            public void stared(Player player) {
+                marked.add("stared " + player.getUsername());
+            }
+
+            @Override
+            public void spotted(Player player) {
+                marked.add("spotted " + player.getUsername());
+            }
+        };
+
+        creek(body, CreekConfig.DEFAULT, acting, CreekWitness.NONE, marks).tick(survivors(survivor), 0L);
+
+        assertEquals(List.of("stared " + survivor.getUsername(), "spotted " + survivor.getUsername()), marked);
     }
 
     @Test

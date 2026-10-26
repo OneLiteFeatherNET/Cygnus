@@ -12,7 +12,8 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
-import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
+import net.onelitefeather.cygnus.creek.consequence.catching.CatchConsequence;
+import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
 import net.onelitefeather.cygnus.creek.state.Calm;
@@ -73,6 +74,7 @@ public final class CreekService implements PossessionTarget {
     private final CreekWitness witness;
     private final CreekRespite respite;
     private final CatchConsequence consequence;
+    private final CreekMarks marks;
     private final LongSupplier clock;
     private final RandomGenerator random;
     private final CreekSight sight;
@@ -100,6 +102,7 @@ public final class CreekService implements PossessionTarget {
      * @param witness     hears about catches and sightings
      * @param respite     tells who the creek leaves alone for now
      * @param consequence what happens on a catch
+     * @param marks       sometimes gives a survivor away to the slender outside of a catch
      * @param clock       supplies the current time in milliseconds
      * @param random      the random source
      * @param sections    measures how long each step takes
@@ -108,7 +111,7 @@ public final class CreekService implements PossessionTarget {
     public CreekService(CreekConfig config, CreekSettings settings, Supplier<Set<Player>> survivors,
                           Supplier<? extends @Nullable Instance> instance, Supplier<List<CreekRoute>> routes,
                           BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread, CreekWitness witness,
-                          CreekRespite respite, CatchConsequence consequence, LongSupplier clock, RandomGenerator random,
+                          CreekRespite respite, CatchConsequence consequence, CreekMarks marks, LongSupplier clock, RandomGenerator random,
                           TickSections sections) {
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.CREEK, this::tick));
         this.config = config;
@@ -120,6 +123,7 @@ public final class CreekService implements PossessionTarget {
         this.witness = witness;
         this.respite = respite;
         this.consequence = consequence;
+        this.marks = marks;
         this.clock = clock;
         this.random = random;
         this.sight = new CreekSight(settings.sightRange(), config.sight().viewAngle());
@@ -152,7 +156,7 @@ public final class CreekService implements PossessionTarget {
         }
         // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
-        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.witness,
+        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.marks, this.witness,
                 new PatrolHelper(this.random), new StalkSounds(this.random), this.config, this.settings, this.random,
                 new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L), () -> this.calm);
         this.round = round;
@@ -212,6 +216,7 @@ public final class CreekService implements PossessionTarget {
         this.creek = null;
         if (current != null) current.remove();
         this.consequence.cleanUp();
+        this.marks.cleanUp();
         CreekRound currentRound = this.round;
         this.round = null;
         if (currentRound != null) currentRound.patrol().cleanUp();

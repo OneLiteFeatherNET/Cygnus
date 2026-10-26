@@ -1,8 +1,9 @@
-package net.onelitefeather.cygnus.creek.consequence;
+package net.onelitefeather.cygnus.creek.consequence.catching;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.tag.Tag;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
+import net.onelitefeather.cygnus.creek.consequence.SlenderReveal;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -23,7 +24,7 @@ import java.util.random.RandomGenerator;
 public final class StagedCatchConsequence implements CatchConsequence {
 
     /** How often a survivor has been caught since they were last given away. */
-    static final Tag<Integer> CATCHES = Tag.Transient("creekCatches");
+    public static final Tag<Integer> CATCHES = Tag.Transient("creekCatches");
 
     private final CatchConsequence effects;
     private final SlenderReveal reveal;

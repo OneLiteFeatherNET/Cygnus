@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.creek.consequence;
+package net.onelitefeather.cygnus.creek.consequence.catching;
 
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;

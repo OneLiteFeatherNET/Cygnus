@@ -318,9 +318,10 @@ public record CreekConfig(
      * @param betrayalChance      chance of a reveal on earlier catches
      * @param betrayalGlowSeconds how long a revealed survivor shows on the slender's locator bar
      * @param slownessSeconds     how long a caught survivor is slowed
-     * @param swapChance          chance that a catch swaps two survivors instead of throwing the caught one
+     * @param swapChance          chance that a catch teleports the caught survivor, by swapping with another
+     *                            survivor or to the slender spawn, instead of throwing them
      *                            {@link CreekSettings#launchHeight()} blocks into the air.
-     *                            0 always throws, 1 always swaps
+     *                            0 always throws, 1 always teleports
      * @param launchDamage        health points a thrown survivor loses on landing, never taking them below 1.
      *                            0 turns it off
      */
