@@ -2,7 +2,6 @@ package net.onelitefeather.cygnus.common.page;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import net.onelitefeather.cygnus.common.map.MapSideFile;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
@@ -97,7 +96,9 @@ public final class PagePoolFiles {
                 JsonElement pages = MapSideFile.data(MapSideFile.parse(WHAT, file), PAGES_KEY);
                 Set<PageResource> loaded = pages == null ? null : GsonHelper.GSON.fromJson(pages, PAGES_TYPE);
                 pools.put(name, loaded != null ? loaded : Set.of());
-            } catch (JsonParseException | UncheckedIOException exception) {
+            } catch (RuntimeException exception) {
+                // Not only JsonParseException: Gson lets a null face or a text coordinate through as
+                // UnsupportedOperationException or NumberFormatException, and one bad file must not stop the map
                 onBroken.accept(name, "Failed to load " + WHAT + " from " + file + ": " + exception.getMessage());
             }
         }
