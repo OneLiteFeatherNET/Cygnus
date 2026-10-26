@@ -9,7 +9,6 @@ import com.google.gson.reflect.TypeToken;
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.dimension.MapAtmosphere;
 import net.onelitefeather.cygnus.common.map.GameMap;
-import net.onelitefeather.cygnus.common.page.PageResource;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
@@ -28,12 +27,10 @@ public final class GameMapAdapter implements JsonDeserializer<GameMap> {
     private static final String NAME_KEY = "name";
     private static final String SPAWN_KEY = "spawn";
     private static final String SLENDER_SPAWN_KEY = "slenderSpawn";
-    private static final String PAGE_FACES_KEY = "pageFaces";
     private static final String SURVIVOR_SPAWNS_KEY = "survivorSpawns";
     private static final String BUILDERS_KEY = "builders";
     private static final String ATMOSPHERE_KEY = "atmosphere";
 
-    private static final Type PAGE_FACES_TYPE = TypeToken.getParameterized(Set.class, PageResource.class).getType();
     private static final Type SURVIVOR_SPAWNS_TYPE = TypeToken.getParameterized(Set.class, Pos.class).getType();
     private static final Type BUILDERS_TYPE = TypeToken.getParameterized(List.class, String.class).getType();
 
@@ -55,12 +52,12 @@ public final class GameMapAdapter implements JsonDeserializer<GameMap> {
         String name = deserializeOrDefault(object, NAME_KEY, String.class, context, "");
         Pos spawn = deserializeOrDefault(object, SPAWN_KEY, Pos.class, context, null);
         Pos slenderSpawn = deserializeOrDefault(object, SLENDER_SPAWN_KEY, Pos.class, context, null);
-        Set<PageResource> pageFaces = deserializeOrDefault(object, PAGE_FACES_KEY, PAGE_FACES_TYPE, context, Set.of());
         Set<Pos> survivorSpawns = deserializeOrDefault(object, SURVIVOR_SPAWNS_KEY, SURVIVOR_SPAWNS_TYPE, context, Set.of());
         List<String> builders = deserializeOrDefault(object, BUILDERS_KEY, BUILDERS_TYPE, context, List.of());
         MapAtmosphere atmosphere = deserializeOrDefault(object, ATMOSPHERE_KEY, MapAtmosphere.class, context, null);
 
-        return new GameMap(name, spawn, slenderSpawn, pageFaces, survivorSpawns, builders, atmosphere);
+        // The pages live in the pools of the pages folder, pages an old map.json still inlines are ignored
+        return new GameMap(name, spawn, slenderSpawn, Set.of(), survivorSpawns, builders, atmosphere);
     }
 
     /**

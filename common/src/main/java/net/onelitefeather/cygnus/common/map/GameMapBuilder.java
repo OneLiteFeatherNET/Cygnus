@@ -164,14 +164,16 @@ public final class GameMapBuilder extends BaseMapBuilder {
 
     /**
      * Puts a loaded page pool into the builder, replacing a pool with the same name.
+     * For the default pool this replaces the {@link #getPageFaces() page faces}.
      *
      * @param name  the pool's name
      * @param pages the pages of the pool
-     * @throws IllegalArgumentException for the default pool, which is loaded with the map
      */
     public void putPagePool(String name, Set<PageResource> pages) {
         if (PagePoolFiles.DEFAULT_POOL.equals(name)) {
-            throw new IllegalArgumentException("The default pool is loaded with the map");
+            this.pageFaces.clear();
+            this.pageFaces.addAll(pages);
+            return;
         }
         this.extraPagePools.put(name, new HashSet<>(pages));
     }

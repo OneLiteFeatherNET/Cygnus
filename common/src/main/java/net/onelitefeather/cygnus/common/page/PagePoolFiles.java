@@ -26,8 +26,9 @@ import java.util.stream.Stream;
  * Reads and writes the page pools in the {@code pages} folder next to a map's {@code map.json}.
  * Each {@code pages/<name>.json} holds one pool, a set of {@link PageResource}s under {@code pages}.
  *
- * <p>The default pool has no file in that folder. It still lives in the old {@code pages.json}
- * (see {@link PageFacesFile}), which the game keeps reading until it picks pools itself.</p>
+ * <p>The {@link #DEFAULT_POOL} is a file like any other, {@code pages/default.json}. It is the pool
+ * the game falls back to, so a builder cannot create another pool under its name. The page settings
+ * for all pools stay in {@code pages.json} (see {@link PageSettingsFile}).</p>
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -35,7 +36,7 @@ import java.util.stream.Stream;
  */
 public final class PagePoolFiles {
 
-    /** The name of the pool that lives in {@code pages.json}. */
+    /** The name of the pool the game falls back to if no pool has enough spots. */
     public static final String DEFAULT_POOL = "default";
 
     private static final String DIRECTORY_NAME = "pages";
@@ -74,8 +75,8 @@ public final class PagePoolFiles {
     }
 
     /**
-     * Loads every pool from the {@code pages} folder. A file that cannot be read or whose name is
-     * no valid pool name is skipped, so the rest of the map still opens.
+     * Loads every pool from the {@code pages} folder, the {@link #DEFAULT_POOL} included. A file that
+     * cannot be read or whose name is no valid pool name is skipped, so the rest of the map still opens.
      *
      * @param mapFile  the map file the pools belong to
      * @param onBroken receives the file name without {@code .json} and the reason for every skipped file
@@ -88,7 +89,7 @@ public final class PagePoolFiles {
         for (Path file : listPoolFiles(directory)) {
             String fileName = file.getFileName().toString();
             String name = fileName.substring(0, fileName.length() - EXTENSION.length());
-            if (!name.equals(normalizeName(name))) {
+            if (!DEFAULT_POOL.equals(name) && !name.equals(normalizeName(name))) {
                 onBroken.accept(name, "Invalid pool name in " + file);
                 continue;
             }
