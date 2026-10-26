@@ -60,6 +60,11 @@ class TracingCreekWitnessTest {
             public void selected(UUID survivor) {
                 heard.add("selected");
             }
+
+            @Override
+            public void crumbled(UUID survivor) {
+                heard.add("crumbled");
+            }
         };
         this.witness = new TracingCreekWitness(recorder, actions,
                 id -> id.equals(SURVIVOR) ? new Actor(SURVIVOR, "survivor", 1, 64, 2) : null);
@@ -81,8 +86,9 @@ class TracingCreekWitnessTest {
         this.witness.selected(SURVIVOR);
         this.witness.stalked(SURVIVOR);
         this.witness.caught(SURVIVOR);
+        this.witness.crumbled(SURVIVOR);
 
-        assertEquals(List.of("sighted", "selected", "stalked", "caught"), this.heard);
+        assertEquals(List.of("sighted", "selected", "stalked", "caught", "crumbled"), this.heard);
     }
 
     @Test

@@ -234,6 +234,11 @@ class HuntedTabWitnessTest extends CygnusPlayerTestBase {
             public void huntEnded(UUID survivor) {
                 log.append("ended;");
             }
+
+            @Override
+            public void crumbled(UUID survivor) {
+                log.append("crumbled;");
+            }
         };
         HuntedTabWitness witness = new HuntedTabWitness(recording, _ -> null);
 
@@ -243,8 +248,9 @@ class HuntedTabWitnessTest extends CygnusPlayerTestBase {
         witness.selected(id);
         witness.hunted(id);
         witness.huntEnded(id);
+        witness.crumbled(id);
 
-        assertEquals("sighted;caught;stalked;selected;hunted;ended;", log.toString());
+        assertEquals("sighted;caught;stalked;selected;hunted;ended;crumbled;", log.toString());
     }
 
     private static boolean contains(Component root, Component wanted) {
