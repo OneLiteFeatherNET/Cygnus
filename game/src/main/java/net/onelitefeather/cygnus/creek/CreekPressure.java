@@ -4,6 +4,8 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.state.Calm;
 import net.onelitefeather.cygnus.creek.state.CreekMood;
 import net.onelitefeather.cygnus.creek.state.CreekTuning;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * How hard the creek presses right now: the round's calm and the creek's mood, turned into the
@@ -12,6 +14,10 @@ import net.onelitefeather.cygnus.creek.state.CreekTuning;
  * The values only change when a survivor dies or the mood switches, a few times a round. Every
  * other step gets the very same {@link CreekTuning}.
  * </p>
+ * <p>
+ * The switch is logged with the mood, since the survivors only hear that something changed.
+ * Without it, feedback from a round cannot be put down to a mood.
+ * </p>
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -19,12 +25,17 @@ import net.onelitefeather.cygnus.creek.state.CreekTuning;
  */
 final class CreekPressure {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreekPressure.class);
+
     private final CreekConfig config;
     private final MoodClock mood;
     /** The most survivors the round has had so far, which is what its calm is measured against. */
     private int started;
     private int alive;
     private volatile CreekTuning tuning;
+    private volatile long startedAt;
+    /** The pages found this round, only for the log at the switch. Only the page event counts them up. */
+    private volatile int pages;
 
     /**
      * Sets up the pressure.
@@ -46,6 +57,7 @@ final class CreekPressure {
     void start(long now) {
         this.mood.start(now);
         this.forget();
+        this.startedAt = now;
     }
 
     /**
@@ -58,6 +70,10 @@ final class CreekPressure {
      */
     boolean step(int alive, long now) {
         boolean switched = this.mood.tick(now);
+        if (switched) {
+            LOGGER.info("The creek switched to {} after {} s, with {} pages found",
+                    this.mood.get(), (now - this.startedAt) / 1000L, this.pages);
+        }
         // Measured against the fullest the round has been: survivors may still be joining in its first steps.
         int started = Math.max(this.started, alive);
         if (switched || started != this.started || alive != this.alive) {
@@ -74,6 +90,7 @@ final class CreekPressure {
      * @param now the current time in milliseconds
      */
     void pageFound(long now) {
+        this.pages++;
         this.mood.pageFound(now);
     }
 
@@ -97,6 +114,7 @@ final class CreekPressure {
     private void forget() {
         this.started = 0;
         this.alive = 0;
+        this.pages = 0;
         this.tuning = new CreekTuning(this.config, Calm.NONE, CreekMood.NORMAL);
     }
 }
