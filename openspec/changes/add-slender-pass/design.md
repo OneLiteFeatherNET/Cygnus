@@ -120,18 +120,22 @@ report the result on the tick thread.
 
 ## Feature switch
 
-When `stats.jdbc-url` is empty, `Cygnus` builds `NoOpSlenderPassRepository`. The lobby item is not given, the
+The selection is `StatsRepository.slenderPasses(clock)`: the statistics repository returns the Hibernate pass repository
+on its own pool and executor when `stats.jdbc-url` is set, and the no-op one otherwise. It is the same condition as for
+the statistics, so both features stand or fall together. When it is no-op, the lobby item is not given, the
 reservation path is not registered, and `/pass` (all subcommands, admin included) answers "feature unavailable".
 Round start skips the pass lookup entirely, so the round behaves as before.
 
-Until the JPA implementation exists, `Cygnus` always builds `NoOpSlenderPassRepository`. The selection happens in one
-place in the constructor, so the later change swaps only that line.
-
 ## GDPR deletion
 
-The deletion by UUID from the statistics change runs `SlenderPassRepository#deleteByPlayer(uuid)` inside the same
-transaction as its own delete, so either all rows of that UUID are gone or none is. Both pass tables are emptied for
-that UUID; the ledger rows go too.
+`HibernateStatsRepository.deleteByPlayer(uuid)` deletes the rows of both pass tables in the same transaction as the
+statistics rows, so either all rows of that UUID are gone or none is. The ledger rows go too.
+
+## Module placement
+
+The repository interface, its implementations, the entities and the migration live in the Gradle module `:stats`, next
+to the statistics, because they share its pool, executor and transactions. The lobby service, the feedback, the
+command and the item live in `:game`, which depends on `:stats`.
 
 ## Decisions
 
