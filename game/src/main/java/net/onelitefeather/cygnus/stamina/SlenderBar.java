@@ -42,14 +42,11 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
 
     private static final Sound LEVEL = Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F);
 
-    /** What only the slender hears when his swing hurts a survivor, the sound of a regular attack. */
-    static final Sound HIT = Sound.sound(SoundEvent.ENTITY_PLAYER_ATTACK_STRONG, Sound.Source.PLAYER, 0.6F, 1F);
-
     /**
-     * How long the slender waits before he hears {@link #HIT} again, in milliseconds. He swings only
-     * once a second anyway, so the cooldown just keeps the sound from ever stacking up.
+     * What only the slender hears when his swing hurts a survivor, the sound of a regular attack. It
+     * needs no cooldown of its own: he swings only once a second, and one swing plays it at most once.
      */
-    static final long HIT_COOLDOWN_MILLIS = 1000L;
+    static final Sound HIT = Sound.sound(SoundEvent.ENTITY_PLAYER_ATTACK_STRONG, Sound.Source.PLAYER, 0.6F, 1F);
 
     /**
      * Upper bound of {@link #currentTime}, in stamina units and also the number of segments rendered in the
@@ -102,8 +99,6 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
     private StaminaColors colorState;
     /** The earliest moment the slender may appear again, in milliseconds. */
     private long reappearAt;
-    /** The earliest moment the slender may hear {@link #HIT} again, in milliseconds. */
-    private long hitSoundAt = Long.MIN_VALUE;
     /** Whether regeneration was held back on the last tick because he looked through the creek. */
     private boolean paused;
     /** The bar ticks of the running appearance, counted to swing on every {@value #TICKS_PER_SWING}th. */
@@ -164,7 +159,7 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         if (++drainTicks % TICKS_PER_SWING == 0) {
             SwingOutcome outcome = swing(player.getInstance(), player.getUuid(), player.getPosition(), damageRange, swing, dread);
             if (outcome.hit()) {
-                this.playHitSound();
+                player.playSound(HIT, Sound.Emitter.self());
             }
             if (outcome.missed()) {
                 player.playSound(MISS, Sound.Emitter.self());
@@ -178,16 +173,6 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
             return;
         }
         this.colorState.sendProgressBar(player, tileChar, currentTime, time);
-    }
-
-    /**
-     * Lets the slender hear that he hurt someone, at most once per {@value #HIT_COOLDOWN_MILLIS} ms.
-     */
-    private void playHitSound() {
-        long now = this.clock.getAsLong();
-        if (now < this.hitSoundAt) return;
-        this.hitSoundAt = now + HIT_COOLDOWN_MILLIS;
-        player.playSound(HIT, Sound.Emitter.self());
     }
 
     /**
