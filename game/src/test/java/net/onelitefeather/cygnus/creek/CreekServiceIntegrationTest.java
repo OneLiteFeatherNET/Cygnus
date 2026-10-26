@@ -59,7 +59,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
 
     private CreekService service(Instance instance, Set<Player> survivors, List<CreekRoute> routes, AtomicLong clock) {
         return new CreekService(CreekConfig.DEFAULT, CreekSettings.DEFAULT, () -> survivors, () -> instance, () -> routes,
-                CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE, clock::get, new Random(3), TickSections.NONE);
+                CreakingBody::spawn, (_, _) -> 0.0D, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE, clock::get, new Random(3), TickSections.NONE);
     }
 
     @Test
@@ -300,7 +300,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         AtomicInteger dreadCalls = new AtomicInteger();
         AtomicLong clock = new AtomicLong();
         CreekService service = new CreekService(config, CreekSettings.DEFAULT, survivors::get, () -> instance, () -> List.of(ROUTE),
-                CreakingBody::spawn, id -> {
+                CreakingBody::spawn, (id, _) -> {
                     dreadCalls.incrementAndGet();
                     return id.equals(scared.getUuid()) ? 0.5D : 0.0D;
                 }, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE,
@@ -321,7 +321,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         CreekSettings settings = new CreekSettings(30, 20, 25, 30, 3.0D, 15, 5.0D);
         CreekService service = new CreekService(CreekConfig.DEFAULT, settings, Set::of, () -> instance, List::of,
-                CreakingBody::spawn, _ -> 0.0D, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE, () -> 0L, new Random(3), TickSections.NONE);
+                CreakingBody::spawn, (_, _) -> 0.0D, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE, () -> 0L, new Random(3), TickSections.NONE);
 
         assertEquals(30, service.sightRange());
     }

@@ -45,7 +45,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.17.0
  */
 public final class RegenerationService implements GameFeature {
@@ -145,6 +145,8 @@ public final class RegenerationService implements GameFeature {
      * Moves every running healing on by one step.
      */
     void tick() {
+        // One time for the whole tick, so every healing survivor is rated at the same moment.
+        long now = System.currentTimeMillis();
         for (Map.Entry<CygnusPlayer, Double> entry : Map.copyOf(this.healing).entrySet()) {
             CygnusPlayer survivor = entry.getKey();
             if (!affected(survivor)) {
@@ -153,7 +155,7 @@ public final class RegenerationService implements GameFeature {
             }
             Vitality vitality = survivor.vitality();
             double rest = entry.getValue();
-            double speed = this.config.speedFor(this.dread.dreadOf(survivor.getUuid()));
+            double speed = this.config.speedFor(this.dread.dreadOf(survivor.getUuid(), now));
             double step = Math.min(rest, speed * TICK_MILLIS / 1000.0D);
             rest -= vitality.heal(step);
             // Done, or full already with nothing more to give

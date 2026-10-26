@@ -50,7 +50,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.16.0
  */
 public final class SanityService implements GameFeature, DreadSource, CreekWitness {
@@ -166,11 +166,11 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      * {@inheritDoc}
      */
     @Override
-    public double dreadOf(UUID survivor) {
-        double floor = this.floor();
+    public double dreadOf(UUID survivor, long now) {
+        double floor = this.floor(now);
         Fear fear = this.survivors.get(survivor);
         if (fear == null) return Math.min(this.config.floorCap(), floor);
-        return fear.read(this.clock.getAsLong(), floor);
+        return fear.read(now, floor);
     }
 
     /**
@@ -210,7 +210,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
         Fear fear = this.survivors.get(survivor);
         if (fear == null) return;
         long now = this.clock.getAsLong();
-        double floor = this.floor();
+        double floor = this.floor(now);
         double before = this.observed ? fear.read(now, floor) : 0.0D;
         fear.stalked(this.config.stalkGainPerSecond(), now, floor);
         if (this.observed) {
@@ -241,7 +241,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     private void scare(UUID id, @Nullable Fear fear, double gain, String source) {
         if (fear == null) return;
         long now = this.clock.getAsLong();
-        double floor = this.floor();
+        double floor = this.floor(now);
         // Read around the jump only when somebody listens: the add settles the value first anyway, so
         // the extra read changes nothing about the fear itself.
         double before = this.observed ? fear.read(now, floor) : 0.0D;
@@ -256,9 +256,10 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      * the client is not told the same number four times a second.
      */
     void showSanity() {
+        long now = this.clock.getAsLong();
         for (Player survivor : this.roundSurvivors.get()) {
             if (this.survivors.get(survivor) == null) continue;
-            int level = sanityLevel(this.dreadOf(survivor.getUuid()));
+            int level = sanityLevel(this.dreadOf(survivor.getUuid(), now));
             if (survivor.getLevel() != level) {
                 survivor.setLevel(level);
             }
@@ -290,17 +291,17 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     /**
      * The floor everyone shares, before the cap: it grows with the pages found and the time played.
      */
-    private double floor() {
+    private double floor(long now) {
         return this.config.pageFloorWeight() * this.pageProgress.getAsDouble()
-                + this.config.timeFloorWeight() * this.roundProgress();
+                + this.config.timeFloorWeight() * this.roundProgress(now);
     }
 
     /**
      * How much of the round's time is up: {@code 0} before the round starts, {@code 1} at its end.
      */
-    private double roundProgress() {
+    private double roundProgress(long now) {
         long started = this.startedAt;
         if (started == NOT_STARTED || this.roundMillis <= 0) return 0.0D;
-        return Math.clamp((double) (this.clock.getAsLong() - started) / this.roundMillis, 0.0D, 1.0D);
+        return Math.clamp((double) (now - started) / this.roundMillis, 0.0D, 1.0D);
     }
 }

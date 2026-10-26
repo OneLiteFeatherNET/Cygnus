@@ -11,7 +11,7 @@ import java.util.UUID;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.15.0
  */
 @FunctionalInterface
@@ -21,7 +21,8 @@ public interface DreadSource {
      * Rates one survivor.
      *
      * @param survivor the survivor to rate
+     * @param now      the current time in milliseconds, so a caller's step rates everyone at the same moment
      * @return the dread, between {@code 0} and {@code 1}
      */
-    double dreadOf(UUID survivor);
+    double dreadOf(UUID survivor, long now);
 }

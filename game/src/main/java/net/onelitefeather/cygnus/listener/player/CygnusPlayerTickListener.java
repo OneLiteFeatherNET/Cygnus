@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  * the heartbeat and the ambient sounds, which get more frequent the more scared a survivor is.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  */
 public final class CygnusPlayerTickListener implements Consumer<PlayerTickEvent> {
@@ -52,7 +52,7 @@ public final class CygnusPlayerTickListener implements Consumer<PlayerTickEvent>
         cygnusPlayer.tickHeartbeat();
 
         if (livingSurvivor) {
-            cygnusPlayer.tickAmbient(this.dreadSource.dreadOf(player.getUuid()));
+            cygnusPlayer.tickAmbient(this.dreadSource.dreadOf(player.getUuid(), System.currentTimeMillis()));
         }
     }
 

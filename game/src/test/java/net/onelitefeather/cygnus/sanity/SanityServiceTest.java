@@ -41,8 +41,8 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         return new SanityService(config, () -> this.pageProgress, ROUND_MILLIS, this.clock::get, () -> this.survivors);
     }
 
-    private static double dread(SanityService service, Player player) {
-        return service.dreadOf(player.getUuid());
+    private double dread(SanityService service, Player player) {
+        return service.dreadOf(player.getUuid(), this.clock.get());
     }
 
     private static Player connect(Env env, Instance instance, Pos position) {
@@ -55,7 +55,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         SanityService service = service(NO_DECAY);
         this.pageProgress = 0.5D;
 
-        assertEquals(0.25D, service.dreadOf(UUID.randomUUID()), EPSILON);
+        assertEquals(0.25D, service.dreadOf(UUID.randomUUID(), this.clock.get()), EPSILON);
     }
 
     @Test
@@ -63,7 +63,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
     void noFoundPagesNoFloor() {
         SanityService service = service(NO_DECAY);
 
-        assertEquals(0.0D, service.dreadOf(UUID.randomUUID()), EPSILON);
+        assertEquals(0.0D, service.dreadOf(UUID.randomUUID(), this.clock.get()), EPSILON);
     }
 
     @Test
@@ -169,12 +169,12 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         SanityService service = service(SanityConfig.DEFAULT);
         env.process().eventHandler().addChild(service.node());
         this.clock.set(ROUND_MILLIS);
-        assertEquals(0.0D, service.dreadOf(UUID.randomUUID()), EPSILON, "no time floor before the start");
+        assertEquals(0.0D, service.dreadOf(UUID.randomUUID(), this.clock.get()), EPSILON, "no time floor before the start");
 
         EventDispatcher.call(new GameStartEvent());
         this.clock.addAndGet(ROUND_MILLIS / 2);
 
-        assertEquals(0.075D, service.dreadOf(UUID.randomUUID()), EPSILON);
+        assertEquals(0.075D, service.dreadOf(UUID.randomUUID(), this.clock.get()), EPSILON);
     }
 
     @Test
@@ -186,7 +186,7 @@ class SanityServiceTest extends CygnusPlayerTestBase {
         this.pageProgress = 1.0D;
         this.clock.addAndGet(ROUND_MILLIS);
 
-        assertEquals(0.55D, service.dreadOf(UUID.randomUUID()), EPSILON);
+        assertEquals(0.55D, service.dreadOf(UUID.randomUUID(), this.clock.get()), EPSILON);
     }
 
     @Test

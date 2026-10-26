@@ -123,7 +123,7 @@ class StatsDisplayFeatureTest {
     @Test
     @DisplayName("During the round nobody gets the item")
     void gamePhaseGivesNoItem() {
-        this.phase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        this.phase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
 
         spawn();
 

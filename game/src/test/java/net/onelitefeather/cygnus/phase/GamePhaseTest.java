@@ -25,7 +25,7 @@ class GamePhaseTest extends CygnusPlayerTestBase {
     @DisplayName("The clean up callback runs and the series still advances")
     void runsCleanUp(@NotNull Env env) {
         AtomicBoolean cleanedUp = new AtomicBoolean();
-        GamePhase phase = new GamePhase(new GameViewImpl(), 10, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        GamePhase phase = new GamePhase(new GameViewImpl(), 10, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         phase.addFinishedCallback(() -> cleanedUp.set(true));
         Phase nextPhase = new Phase("NextPhase") {
             @Override
@@ -49,7 +49,7 @@ class GamePhaseTest extends CygnusPlayerTestBase {
     void signalsRoundInGameOnce(@NotNull Env env) {
         AtomicInteger signals = new AtomicInteger();
         env.process().eventHandler().addListener(RoundInGameEvent.class, _ -> signals.incrementAndGet());
-        GamePhase phase = new GamePhase(new GameViewImpl(), 10, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        GamePhase phase = new GamePhase(new GameViewImpl(), 10, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         LinearPhaseSeries<Phase> series = new LinearPhaseSeries<>("TestSeries");
         series.add(phase);
 

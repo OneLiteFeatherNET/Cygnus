@@ -53,7 +53,7 @@ record SurvivorSnapshot(List<Player> players, List<SurvivorView> views) {
         List<SurvivorView> views = new ArrayList<>(survivors.size());
         for (Player survivor : survivors) {
             views.add(new SurvivorView(survivor.getUuid(), survivor.getPosition(),
-                    dread.dreadOf(survivor.getUuid()), false, false, respite.spares(survivor.getUuid(), now)));
+                    dread.dreadOf(survivor.getUuid(), now), false, false, respite.spares(survivor.getUuid(), now)));
         }
         return new SurvivorSnapshot(survivors, views);
     }
