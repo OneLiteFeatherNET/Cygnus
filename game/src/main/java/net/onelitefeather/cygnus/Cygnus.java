@@ -432,10 +432,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(GameMapLoadedEvent.class, event ->
                 this.pageProvider.loadPageData(event.gameMap().getPageFaces())
         );
-        manager.addListener(GameMapLoadedEvent.class, _ -> {
-            String pool = this.mapProvider.pagePool();
-            if (pool != null) this.roundTracer.pagePoolDrawn(pool);
-        });
+        manager.addListener(GameMapLoadedEvent.class, event -> this.roundTracer.pagePoolDrawn(event.pagePool().name()));
         manager.addListener(GameMapLoadedEvent.class, new GameMapLoadedListener());
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier));
         PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.spectatorService::updateInventory, this.slenderTakeover);

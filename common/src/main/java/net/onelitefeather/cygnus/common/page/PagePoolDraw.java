@@ -32,15 +32,6 @@ public final class PagePoolDraw {
     }
 
     /**
-     * A drawn pool.
-     *
-     * @param name  the name of the pool, {@link PagePoolFiles#DEFAULT_POOL} for the one in {@code pages.json}
-     * @param pages the spots of the pool
-     */
-    public record Drawn(String name, Set<PageResource> pages) {
-    }
-
-    /**
      * Loads the pools of a map and draws one of them. A broken pool file or an unreadable
      * {@code pages} folder is logged and left out, so the round still starts.
      *
@@ -49,7 +40,7 @@ public final class PagePoolDraw {
      * @param minActivePages how many pages a round starts with; a pool with fewer spots is skipped
      * @return the drawn pool, or the default pool if no pool has enough spots
      */
-    public static Drawn drawFrom(Path mapFile, Set<PageResource> defaultPages, int minActivePages) {
+    public static PagePool drawFrom(Path mapFile, Set<PageResource> defaultPages, int minActivePages) {
         Map<String, Set<PageResource>> pools;
         try {
             pools = PagePoolFiles.load(mapFile, (name, reason) ->
@@ -71,24 +62,24 @@ public final class PagePoolDraw {
      * @param minActivePages how many pages a round starts with; a pool with fewer spots is skipped
      * @return the drawn pool, or the default pool if no pool has enough spots
      */
-    static Drawn draw(String map, Set<PageResource> defaultPages, Map<String, Set<PageResource>> pools,
-                      int minActivePages) {
-        List<Drawn> candidates = new ArrayList<>();
-        addIfBigEnough(candidates, map, new Drawn(PagePoolFiles.DEFAULT_POOL, defaultPages), minActivePages);
+    static PagePool draw(String map, Set<PageResource> defaultPages, Map<String, Set<PageResource>> pools,
+                         int minActivePages) {
+        List<PagePool> candidates = new ArrayList<>();
+        addIfBigEnough(candidates, map, new PagePool(PagePoolFiles.DEFAULT_POOL, defaultPages), minActivePages);
         for (Map.Entry<String, Set<PageResource>> pool : pools.entrySet()) {
-            addIfBigEnough(candidates, map, new Drawn(pool.getKey(), pool.getValue()), minActivePages);
+            addIfBigEnough(candidates, map, new PagePool(pool.getKey(), pool.getValue()), minActivePages);
         }
         if (candidates.isEmpty()) {
             LOGGER.warn("No page pool of {} has enough spots, the default pool is used", map);
-            return new Drawn(PagePoolFiles.DEFAULT_POOL, defaultPages);
+            return new PagePool(PagePoolFiles.DEFAULT_POOL, defaultPages);
         }
-        Drawn drawn = candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
+        PagePool drawn = candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
         LOGGER.info("Drew page pool {} of {} with {} spots out of {} pools", drawn.name(), map,
                 drawn.pages().size(), candidates.size());
         return drawn;
     }
 
-    private static void addIfBigEnough(List<Drawn> candidates, String map, Drawn pool, int minActivePages) {
+    private static void addIfBigEnough(List<PagePool> candidates, String map, PagePool pool, int minActivePages) {
         if (pool.pages().size() < minActivePages) {
             LOGGER.warn("Skipped page pool {} of {}: {} spots, but a round starts with {} pages",
                     pool.name(), map, pool.pages().size(), minActivePages);

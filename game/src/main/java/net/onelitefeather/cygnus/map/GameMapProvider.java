@@ -19,6 +19,7 @@ import net.onelitefeather.cygnus.common.map.filter.MapFilters;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.PageFacesFile;
+import net.onelitefeather.cygnus.common.page.PagePool;
 import net.onelitefeather.cygnus.common.page.PagePoolDraw;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.cygnus.common.util.Helper;
@@ -52,7 +53,6 @@ public final class GameMapProvider extends AbstractMapProvider {
     private final CreekSettings creekSettings;
     private @Nullable InstanceContainer gameInstance;
     private @Nullable GameMap gameMap;
-    private @Nullable String pagePool;
     private @Nullable InstanceContainer previousInstance;
     private boolean releasePending;
 
@@ -206,15 +206,6 @@ public final class GameMapProvider extends AbstractMapProvider {
     }
 
     /**
-     * Returns the name of the page pool the round is played with.
-     *
-     * @return the drawn pool, or {@code null} until {@link #loadGameMap()} ran
-     */
-    public @Nullable String pagePool() {
-        return this.pagePool;
-    }
-
-    /**
      * Loads the game map into a fresh instance. The page pool of the round is drawn here, once, so
      * the map carries only the spots of that pool (see {@link PagePoolDraw}).
      */
@@ -222,14 +213,13 @@ public final class GameMapProvider extends AbstractMapProvider {
         if (this.gameMap != null) return; // idempotent
 
         GameMap map = readGameMap();
-        PagePoolDraw.Drawn pool = PagePoolDraw.drawFrom(this.gameEntry.getMapFile(), map.getPageFaces(),
+        PagePool pool = PagePoolDraw.drawFrom(this.gameEntry.getMapFile(), map.getPageFaces(),
                 map.getPageSettings().minActivePages());
-        this.pagePool = pool.name();
         this.gameMap = map.withPageFaces(pool.pages());
         this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer(this.gameDimension);
         this.gameInstance.setTime(Helper.NEW_MOON_TIME);
         this.registerFalcoInstance(this.gameInstance, this.gameEntry);
-        EventDispatcher.call(new GameMapLoadedEvent(this.gameMap, this.gameInstance));
+        EventDispatcher.call(new GameMapLoadedEvent(this.gameMap, this.gameInstance, pool));
     }
 
     /**
