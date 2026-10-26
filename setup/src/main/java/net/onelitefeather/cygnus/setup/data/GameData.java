@@ -49,8 +49,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class GameData extends InstanceSetupData {
@@ -85,7 +87,7 @@ public class GameData extends InstanceSetupData {
     private String activePagePool;
     // What pages.json holds on disk. It is only written again once the default pool or the settings differ.
     private Set<PageResource> savedDefaultPool;
-    private PageSettings savedPageSettings;
+    private @Nullable PageSettings savedPageSettings;
 
     /**
      * Constructs a new GameData instance.
@@ -864,10 +866,15 @@ public class GameData extends InstanceSetupData {
     public void loadData() {
         // Broken settings fall back to the defaults, so the map still opens and can be fixed here.
         Consumer<String> onInvalidSettings = reason -> this.player.sendMessage(SetupMessages.getSettingsFallback(reason));
+        AtomicBoolean pageSettingsBroken = new AtomicBoolean();
+        Consumer<String> onInvalidPageSettings = reason -> {
+            pageSettingsBroken.set(true);
+            onInvalidSettings.accept(reason);
+        };
         Optional<GameMap> mapData =
                 this.mapEntry.hasMapFile()
                         ? GsonHelper.FILE_HANDLER.load(mapEntry.getMapFile(), GameMap.class)
-                                .map(map -> PageFacesFile.loadInto(mapEntry.getMapFile(), map, onInvalidSettings))
+                                .map(map -> PageFacesFile.loadInto(mapEntry.getMapFile(), map, onInvalidPageSettings))
                                 .map(map -> map.withCreekRoutes(CreekRoutesFile.loadUnchecked(mapEntry.getMapFile()))
                                         .withCreekSettings(CreekRoutesFile.loadSettingsOrDefaults(mapEntry.getMapFile(), onInvalidSettings)))
                         : Optional.empty();
@@ -875,7 +882,7 @@ public class GameData extends InstanceSetupData {
         this.gameMapBuilder = mapData
                 .map(GameMapBuilder::new)
                 .orElseGet(GameMapBuilder::new);
-        this.loadPagePools();
+        this.loadPagePools(pageSettingsBroken.get());
 
         this.createInstance();
 
@@ -886,17 +893,22 @@ public class GameData extends InstanceSetupData {
     /**
      * Loads the page pools from the {@code pages} folder and remembers what {@code pages.json} holds.
      * A pool whose file cannot be read is reported and left out, so the map still opens.
+     *
+     * @param pageSettingsBroken whether the settings in {@code pages.json} were broken and replaced by the defaults
      */
-    private void loadPagePools() {
+    private void loadPagePools(boolean pageSettingsBroken) {
         // The pools sit next to the map file, which may not exist yet for a new map
         Path mapFile = this.mapEntry.getDirectoryRoot().resolve(MapEntry.MAP_FILE);
         PagePoolFiles.load(mapFile, (name, reason) -> {
             this.brokenPagePools.add(name);
+            // A case-insensitive file system would resolve the lower-case name to this very file
+            this.brokenPagePools.add(name.toLowerCase(Locale.ROOT));
             this.player.sendMessage(SetupMessages.getBrokenPagePool(name, reason));
         }).forEach(this.gameMapBuilder::putPagePool);
         // Compared against the file, not the merged pages, so pages inlined in an old map.json move over on save
         this.savedDefaultPool = this.mapEntry.hasMapFile() ? Set.copyOf(PageFacesFile.load(mapFile)) : Set.of();
-        this.savedPageSettings = this.gameMapBuilder.getPageSettings();
+        // null for broken settings, so the next save writes the defaults over them
+        this.savedPageSettings = pageSettingsBroken ? null : this.gameMapBuilder.getPageSettings();
     }
 
     /**
