@@ -17,6 +17,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
 import net.minestom.server.network.packet.server.play.EntityMetaDataPacket;
+import net.minestom.server.network.packet.server.play.EntityTeleportPacket;
 import net.minestom.server.network.packet.server.play.SpawnEntityPacket;
 import net.minestom.server.timer.Task;
 import net.minestom.server.timer.TaskSchedule;
@@ -142,7 +143,8 @@ public final class PagePreview {
     /**
      * Brings the displays up to date after a spot was added or removed. A change can turn the
      * neighbours of a spot into another group too, so the groups are found anew, but only the
-     * displays that changed are sent. Does nothing while hidden.
+     * displays that changed are sent, and a label whose group grew or shrank is moved, not spawned
+     * again. Does nothing while hidden.
      */
     public void refresh() {
         if (this.task == null) return;
@@ -186,7 +188,12 @@ public final class PagePreview {
                 gone.add(entry.getValue().id());
                 shownLabels.remove();
             } else if (current != entry.getValue()) {
-                this.player.sendPacket(current.look());
+                Label shownLabel = entry.getValue();
+                if (!current.centre().samePoint(shownLabel.centre())) {
+                    this.player.sendPacket(new EntityTeleportPacket(current.id(), labelPosition(current.centre()),
+                            Vec.ZERO, 0, false));
+                }
+                if (current.look() != shownLabel.look()) this.player.sendPacket(current.look());
                 entry.setValue(current);
             }
         }
@@ -303,8 +310,8 @@ public final class PagePreview {
 
     /**
      * Finds the groups and builds what the builder should see. A spot that was there before keeps its
-     * marker and only gets a new look if its glow changed; a label keeps its id while its group's
-     * middle stays where it is.
+     * marker and only gets a new look if its glow changed; a label keeps its id as long as its group
+     * keeps its anchor.
      */
     private void build() {
         List<PageGroups.Group> groups = PageGroups.find(List.copyOf(this.spots.get()));
@@ -357,20 +364,32 @@ public final class PagePreview {
 
     /**
      * Builds the label floating above a group, red if the group holds too many spots. The old label of
-     * the group is kept as it is if nothing about it changed, and keeps its id if only its text did.
+     * the group keeps its id, so the builder's client only has to move it or change its text; it is
+     * kept as it is if nothing about it changed.
      */
     private static Label label(PageGroups.Group group, @Nullable Label old) {
         Pos centre = group.centre().asPos();
         String text = labelText(group);
         boolean crowded = group.crowded();
-        if (old != null && old.centre().samePoint(centre)) {
-            if (old.text().equals(text) && old.crowded() == crowded) return old;
-            return new Label(centre, old.id(), old.spawn(), text, crowded, labelLook(old.id(), text, crowded));
+        if (old != null) {
+            boolean samePlace = old.centre().samePoint(centre);
+            boolean sameLook = old.text().equals(text) && old.crowded() == crowded;
+            if (samePlace && sameLook) return old;
+            SpawnEntityPacket spawn = samePlace ? old.spawn() : labelSpawn(old.id(), centre);
+            EntityMetaDataPacket look = sameLook ? old.look() : labelLook(old.id(), text, crowded);
+            return new Label(centre, old.id(), spawn, text, crowded, look);
         }
         int id = Entity.generateId();
-        SpawnEntityPacket spawn = new SpawnEntityPacket(id, UUID.randomUUID(), EntityType.TEXT_DISPLAY,
-                centre.add(0, LABEL_HEIGHT, 0), 0F, 0, Vec.ZERO);
-        return new Label(centre, id, spawn, text, crowded, labelLook(id, text, crowded));
+        return new Label(centre, id, labelSpawn(id, centre), text, crowded, labelLook(id, text, crowded));
+    }
+
+    private static SpawnEntityPacket labelSpawn(int id, Pos centre) {
+        return new SpawnEntityPacket(id, UUID.randomUUID(), EntityType.TEXT_DISPLAY,
+                labelPosition(centre), 0F, 0, Vec.ZERO);
+    }
+
+    private static Pos labelPosition(Pos centre) {
+        return centre.add(0, LABEL_HEIGHT, 0);
     }
 
     private static EntityMetaDataPacket labelLook(int id, String text, boolean crowded) {
