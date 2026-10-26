@@ -142,6 +142,96 @@ class StalkStateTest {
         assertEquals(List.of(TARGET), spotted);
     }
 
+    /** Answers the first roll with the given value and every later one from a seeded source. */
+    private static RandomGenerator firstRoll(double first) {
+        Random rest = new Random(7);
+        return new RandomGenerator() {
+            private boolean rolled;
+
+            @Override
+            public long nextLong() {
+                return rest.nextLong();
+            }
+
+            @Override
+            public double nextDouble() {
+                if (this.rolled) return rest.nextDouble();
+                this.rolled = true;
+                return first;
+            }
+        };
+    }
+
+    private static CreekContext looked(long now, RecordingBody body, RandomGenerator random, CreekMood mood,
+                                       SurvivorView... survivors) {
+        return Contexts.mood(Contexts.context(now, body, Contexts.route(), Contexts.NO_ACTIONS, random, survivors), mood);
+    }
+
+    /** Another survivor ten blocks in front of the target. */
+    private static final SurvivorView TEAMMATE = new SurvivorView(OTHER, new Pos(0, 40, 10), 0.0D, false);
+
+    @Test
+    @DisplayName("The shadow, looked at long enough, turns up right behind a teammate in the target's view")
+    void shadowStandsBehindATeammate() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        RandomGenerator random = firstRoll(0.0D);
+
+        state.tick(looked(0L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+        state.tick(looked(700L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+
+        assertEquals(new Pos(0, 40, 12).asVec(), body.position.asVec());
+        assertTrue(Contexts.SIGHT.inView(target(0.3D, true).eyes(), body.position.add(0, SpotFinder.BODY_CENTRE, 0)));
+    }
+
+    @Test
+    @DisplayName("The shadow stands behind a teammate only once per stalk")
+    void onlyOncePerStalk() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        RandomGenerator random = firstRoll(0.0D);
+        state.tick(looked(0L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+        state.tick(looked(700L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+
+        state.tick(looked(800L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+        state.tick(looked(1500L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+
+        assertEquals(2, body.teleports.size());
+        assertFalse(Contexts.SIGHT.inView(target(0.3D, true).eyes(), body.position.add(0, SpotFinder.BODY_CENTRE, 0)),
+                "the second time he moves out of sight as usual");
+    }
+
+    @Test
+    @DisplayName("Without a teammate nearby the shadow moves out of sight as usual, but comes back closer")
+    void noTeammateRelocatesAsUsual() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        RandomGenerator random = firstRoll(0.0D);
+
+        state.tick(looked(0L, body, random, CreekMood.SHADOW, target(0.3D, true)));
+        state.tick(looked(700L, body, random, CreekMood.SHADOW, target(0.3D, true)));
+
+        assertEquals(1, body.teleports.size());
+        double distance = body.position.distance(target(0.3D, true).position());
+        assertTrue(distance >= StalkState.END_MIN_DISTANCE - 1.0E-6 && distance <= StalkState.END_MAX_DISTANCE + 1.0E-6,
+                "distance was " + distance);
+        assertFalse(Contexts.SIGHT.inView(target(0.3D, true).eyes(), body.position.add(0, SpotFinder.BODY_CENTRE, 0)));
+    }
+
+    @Test
+    @DisplayName("The normal creek ignores teammates and keeps its distance after a look")
+    void normalUnchanged() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        RandomGenerator random = firstRoll(0.0D);
+
+        state.tick(looked(0L, body, random, CreekMood.NORMAL, target(0.3D, true), TEAMMATE));
+        state.tick(looked(700L, body, random, CreekMood.NORMAL, target(0.3D, true), TEAMMATE));
+
+        double distance = body.position.distance(target(0.3D, true).position());
+        assertTrue(distance >= 20 - 1.0E-6 && distance <= 35 + 1.0E-6, "distance was " + distance);
+    }
+
     @Test
     @DisplayName("Late in a thinned out round he stays visible longer before moving out of sight")
     void lingersLongerLate() {
