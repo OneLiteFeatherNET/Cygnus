@@ -73,15 +73,6 @@ public final class PageProvider {
     }
 
     /**
-     * Creates a provider that keeps a moving page away from the survivors.
-     *
-     * @param survivors supplies where the living survivors stand right now
-     */
-    public PageProvider(Supplier<? extends Collection<? extends Point>> survivors) {
-        this(survivors, PageSettings.DEFAULT);
-    }
-
-    /**
      * Creates a provider that keeps a moving page away from the survivors and uses the page values
      * the map sets for itself.
      *
@@ -138,7 +129,7 @@ public final class PageProvider {
             keys.put(spot, Math.pow(random.nextDouble(), 1.0D / weights.get(spot)));
         }
         List<PageResource> order = new ArrayList<>(spots);
-        order.sort(Comparator.comparingDouble((PageResource spot) -> keys.get(spot)).reversed());
+        order.sort(Comparator.comparingDouble(keys::get).reversed());
         return order;
     }
 
