@@ -9,6 +9,10 @@ import net.onelitefeather.cygnus.setup.player.SetupPlayerProvider;
 public class SetupLoader {
 
     static void main() {
+        // The atmosphere preview registers dimension types while the server runs, which Minestom
+        // refuses once its registries are frozen. ServerFlag reads this once when it loads, so it
+        // has to be set before anything touches Minestom. The game server keeps the safe default.
+        System.setProperty("minestom.registry.unsafe-ops", "true");
         // minestom-extensions loads platform extensions - the CloudNet bridge and our
         // :bridge permission extension among them - from the extensions/ folder. Running
         // standalone simply loads none. This also performs MinecraftServer.init(Auth), which is the

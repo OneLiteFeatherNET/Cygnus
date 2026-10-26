@@ -36,10 +36,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * among it - that a failed swap would corrupt, and a builder judging fog does not need their
  * markers to be present while they do it.</p>
  *
- * <p>Each preview costs one registry entry that cannot be taken back: removing from a
- * {@code DynamicRegistry} is gated behind {@code -Dminestom.registry.unsafe-ops}, which is not worth
- * enabling server-wide to tidy up after a dialog. The entries are a few hundred bytes each, so this
- * only warns once a session has produced an unreasonable number of them.</p>
+ * <p>Minestom freezes its dynamic registries once the server has started, so this only works because
+ * {@code SetupLoader} turns on {@code minestom.registry.unsafe-ops} for the setup server. Each
+ * builder owns a single registry slot that every preview of theirs overwrites. Entries are never
+ * removed: a removal shifts the ids of every later entry, and a builder still standing in their own
+ * preview would then be sent the wrong dimension on their next respawn.</p>
  *
  * @author TheMeinerLP
  * @version 1.0.0
@@ -48,9 +49,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class AtmospherePreviewService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AtmospherePreviewService.class);
-
-    /** Number of previews after which a session is considered to be churning the registry. */
-    private static final int PREVIEW_WARNING_THRESHOLD = 50;
 
     private final Map<UUID, Session> sessions = new ConcurrentHashMap<>();
 
@@ -69,7 +67,6 @@ public final class AtmospherePreviewService {
         Session previous = this.sessions.get(player.getUuid());
         Instance origin = previous != null ? previous.origin() : player.getInstance();
         Pos originPosition = previous != null ? previous.originPosition() : player.getPosition();
-        int counter = previous != null ? previous.counter() + 1 : 1;
         if (previous != null && previous.returning()) {
             // A preview that is already on its way out has released its instance; start fresh.
             previous = null;
@@ -80,16 +77,9 @@ public final class AtmospherePreviewService {
             return;
         }
 
-        if (counter == PREVIEW_WARNING_THRESHOLD) {
-            LOGGER.warn(
-                    "{} has rendered {} atmosphere previews; each one holds a dimension registry entry "
-                            + "for the lifetime of this server",
-                    player.getUsername(), counter
-            );
-        }
-
+        // Overwriting keeps the slot's id, so other builders' registry data stays valid.
         RegistryKey<DimensionType> dimension = DimensionFactory.create(
-                Key.key("cygnus", "preview/%s/%d".formatted(player.getUuid().toString().replace("-", ""), counter)),
+                Key.key("cygnus", "preview/%s".formatted(player.getUuid().toString().replace("-", ""))),
                 atmosphere
         );
 
@@ -99,7 +89,7 @@ public final class AtmospherePreviewService {
         instance.enableAutoChunkLoad(true);
         MinecraftServer.getInstanceManager().registerInstance(instance);
 
-        Session session = new Session(instance, loader, origin, originPosition, counter, false);
+        Session session = new Session(instance, loader, origin, originPosition, false);
         this.sessions.put(player.getUuid(), session);
 
         // The builder stays where they are standing rather than being sent back to where the first
@@ -224,8 +214,6 @@ public final class AtmospherePreviewService {
      * @param loader         the chunk loader of that instance, which holds its region files open
      * @param origin         the instance the builder came from
      * @param originPosition where in that instance they stood
-     * @param counter        how many previews this builder has rendered, used to keep registry keys
-     *                       unique
      * @param returning      whether the builder is on their way back out of the preview
      */
     private record Session(
@@ -233,7 +221,6 @@ public final class AtmospherePreviewService {
             FalcoAnvilLoader loader,
             Instance origin,
             Pos originPosition,
-            int counter,
             boolean returning
     ) {
 
@@ -244,7 +231,7 @@ public final class AtmospherePreviewService {
          * @return the adjusted session
          */
         private Session returning(boolean value) {
-            return new Session(instance, loader, origin, originPosition, counter, value);
+            return new Session(instance, loader, origin, originPosition, value);
         }
     }
 }
