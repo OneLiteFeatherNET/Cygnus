@@ -283,6 +283,9 @@ public final class SlenderPassService {
             this.feedback.tell(uuid, Messages.PASS_NO_BALANCE);
             return;
         }
+        if (this.online.apply(uuid) == null) {
+            return;
+        }
         this.holder = uuid;
         this.feedback.tell(uuid, Messages.PASS_RESERVED);
         this.feedback.tellLobby(Messages.PASS_REDEEMED, uuid);

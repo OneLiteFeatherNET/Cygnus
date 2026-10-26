@@ -215,6 +215,28 @@ class SlenderPassServiceTest {
     }
 
     @Test
+    void reservationOfPlayerWhoLeftWhileTheBalanceWasReadIsDropped(@NotNull Env env) {
+        tick = tickQueue::add;
+        Instance instance = instance(env);
+        Player alice = join(env, instance);
+        Player bob = join(env, instance);
+        repository.give(alice.getUuid(), 1).join();
+        repository.give(bob.getUuid(), 1).join();
+        SlenderPassService service = service(repository);
+        service.reserve(alice);
+        online.remove(alice.getUuid());
+        service.release(alice.getUuid());
+
+        drainTickQueue();
+
+        assertEquals(Optional.empty(), service.reservedBy(), "an offline player must not hold the slot");
+        service.reserve(bob);
+        drainTickQueue();
+        assertEquals(Optional.of(bob.getUuid()), service.reservedBy(),
+                "the slot must be free for the next player after the offline reservation was dropped");
+    }
+
+    @Test
     void roundStartSelectsTheHolderAndSpendsOneTimeWithTheRound(@NotNull Env env) {
         Player alice = join(env, instance(env));
         repository.give(alice.getUuid(), 2).join();
