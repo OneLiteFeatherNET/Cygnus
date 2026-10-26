@@ -33,7 +33,7 @@ public final class MoodClock implements Supplier<CreekMood> {
     static final double PAGE_KEEPS = 0.9D;
 
     /** What everyone hears at the switch. It does not tell the mood. */
-    static final Sound SWITCH_SOUND = Sound.sound(Key.key("block.creaking_heart.spawn"), Sound.Source.AMBIENT, 1.0F, 0.5F);
+    static final Sound SWITCH_SOUND = Sound.sound(Key.key("block.creaking_heart.spawn"), Sound.Source.HOSTILE, 1.0F, 0.5F);
 
     private static final List<CreekMood> MOODS = List.of(CreekMood.HUNTER, CreekMood.SHADOW, CreekMood.TRICKSTER);
 
