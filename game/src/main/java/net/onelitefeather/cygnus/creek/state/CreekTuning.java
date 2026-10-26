@@ -5,7 +5,8 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import java.util.random.RandomGenerator;
 
 /**
- * The values the creek acts on right now: the settings, as the round's calm changes them.
+ * The values the creek acts on right now: the settings, as the creek's mood and the round's calm
+ * change them. The mood's factors apply first, the calm on top.
  * <p>
  * The states ask here instead of reading the settings themselves, so whatever changes the creek
  * during a round changes it in one place.
@@ -13,12 +14,23 @@ import java.util.random.RandomGenerator;
  *
  * @param config the settings
  * @param calm   how far the round has thinned out
+ * @param mood   how the creek behaves since its mood switched
  *
  * @author theEvilReaper
  * @version 1.0.0
  * @since 2.21.0
  */
-public record CreekTuning(CreekConfig config, Calm calm) {
+public record CreekTuning(CreekConfig config, Calm calm, CreekMood mood) {
+
+    /**
+     * The values of the creek in its normal mood.
+     *
+     * @param config the settings
+     * @param calm   how far the round has thinned out
+     */
+    public CreekTuning(CreekConfig config, Calm calm) {
+        this(config, calm, CreekMood.NORMAL);
+    }
 
     /**
      * How fast the creek hunts.
@@ -26,7 +38,16 @@ public record CreekTuning(CreekConfig config, Calm calm) {
      * @return the speed
      */
     public double huntSpeed() {
-        return this.calm.speed(this.config.hunt().speed());
+        return this.calm.speed(this.config.hunt().speed() * this.mood.huntSpeed());
+    }
+
+    /**
+     * How fast the creek hunts while the hunted survivor looks at it.
+     *
+     * @return the speed, 0 when it freezes
+     */
+    public double watchedHuntSpeed() {
+        return this.huntSpeed() * this.mood.watchedHuntSpeed();
     }
 
     /**
@@ -35,7 +56,7 @@ public record CreekTuning(CreekConfig config, Calm calm) {
      * @return the dread, from 0 to 1
      */
     public double huntThreshold() {
-        return this.config.hunt().threshold();
+        return this.config.hunt().threshold() * this.mood.huntThreshold();
     }
 
     /**
@@ -44,7 +65,7 @@ public record CreekTuning(CreekConfig config, Calm calm) {
      * @return the time in milliseconds
      */
     public long huntMinStalkMillis() {
-        return this.config.hunt().minStalkSeconds() * 1000L;
+        return Math.round(this.config.hunt().minStalkSeconds() * 1000L * this.mood.minStalk());
     }
 
     /**
@@ -54,7 +75,7 @@ public record CreekTuning(CreekConfig config, Calm calm) {
      * @return the breather in this round
      */
     public long huntCooldown(long millis) {
-        return this.calm.stretch(millis);
+        return this.calm.stretch(Math.round(millis * this.mood.huntCooldown()));
     }
 
     /**
@@ -92,7 +113,8 @@ public record CreekTuning(CreekConfig config, Calm calm) {
      * @return the length in milliseconds
      */
     public long stalkMillis(RandomGenerator random) {
-        return random.nextLong(this.config.stalk().minSeconds(), this.config.stalk().maxSeconds() + 1L) * 1000L;
+        long seconds = random.nextLong(this.config.stalk().minSeconds(), this.config.stalk().maxSeconds() + 1L);
+        return Math.round(seconds * 1000L * this.mood.stalkDuration());
     }
 
     /**
@@ -107,6 +129,15 @@ public record CreekTuning(CreekConfig config, Calm calm) {
         CreekConfig.Vanish vanish = this.config.vanish();
         double span = vanish.maxSeconds() - vanish.minSeconds();
         double seconds = vanish.maxSeconds() - span * Math.clamp(dread, 0.0D, 1.0D);
-        return this.calm.stretch(Math.round(seconds * 1000.0D));
+        return this.calm.stretch(Math.round(seconds * 1000.0D * this.mood.variantBreather()));
+    }
+
+    /**
+     * The chance that the creek vanishes at a dead end instead of resting there.
+     *
+     * @return the chance
+     */
+    public double deadEndVanishChance() {
+        return this.mood.deadEndVanishChance();
     }
 }

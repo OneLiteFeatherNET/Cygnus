@@ -269,7 +269,9 @@ final class Creek {
         @Override
         public void selected(UUID survivor) {
             this.with(survivor, player -> {
-                this.round.patrol().selected(player, this::eyes, this.survivors.players());
+                boolean teleported = this.round.tuning().get().mood().stareTeleports()
+                        && this.round.stareTrick().perform(player);
+                if (!teleported) this.round.patrol().selected(player, this::eyes, this.survivors.players());
                 this.round.marks().stared(player);
                 this.round.witness().selected(survivor);
             });

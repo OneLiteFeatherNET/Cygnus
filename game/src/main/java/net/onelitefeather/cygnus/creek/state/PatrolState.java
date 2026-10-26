@@ -45,9 +45,6 @@ public final class PatrolState implements CreekState {
     /** How long it leaves everyone alone after picking someone out, in milliseconds. */
     static final long SELECT_COOLDOWN_MILLIS = 10_000L;
 
-    /** How likely it vanishes on reaching a dead end instead of resting there. */
-    static final double DEAD_END_VANISH_CHANCE = 0.5D;
-
     /** How close counts as having reached a waypoint, in blocks. */
     static final double ARRIVED = 2.0D;
 
@@ -117,7 +114,7 @@ public final class PatrolState implements CreekState {
         RouteStep reached = this.goal;
         if (reached != null && here.distance(reached.target()) < ARRIVED) {
             this.goal = null;
-            if (reached.deadEnd() && ctx.random().nextDouble() < DEAD_END_VANISH_CHANCE) {
+            if (reached.deadEnd() && ctx.random().nextDouble() < ctx.tuning().deadEndVanishChance()) {
                 ctx.actions().vanished(here);
                 // Gone for as long as it would have rested here, then back somewhere else.
                 return new VanishState(ctx.now() + reached.pauseMillis());

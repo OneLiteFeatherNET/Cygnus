@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.creek;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.consequence.catching.CatchConsequence;
+import net.onelitefeather.cygnus.creek.consequence.catching.CatchTrick;
 import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
@@ -22,6 +23,7 @@ import java.util.random.RandomGenerator;
  * @param spots       finds places where nobody can see a creek
  * @param consequence what happens on a catch
  * @param marks       sometimes gives a survivor away to the slender outside of a catch
+ * @param stareTrick  teleports a survivor at the end of a stare, for a mood that does so
  * @param witness     hears about catches and sightings
  * @param patrol      what the patrolling creek does to the survivors around it
  * @param stalk       lets a stalked survivor hear the creek
@@ -40,6 +42,7 @@ record CreekRound(
         SpotFinder spots,
         CatchConsequence consequence,
         CreekMarks marks,
+        CatchTrick stareTrick,
         CreekWitness witness,
         PatrolHelper patrol,
         StalkSounds stalk,

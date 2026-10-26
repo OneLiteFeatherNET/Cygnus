@@ -1,7 +1,9 @@
 package net.onelitefeather.cygnus.creek.consequence.catching;
 
 import net.minestom.server.entity.Player;
+import net.onelitefeather.cygnus.creek.state.CreekMood;
 
+import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
 /**
@@ -32,6 +34,7 @@ public final class CatchTricks implements CatchConsequence {
     private final CatchTrick launch;
     private final double swapChance;
     private final RandomGenerator random;
+    private final Supplier<CreekMood> mood;
 
     /**
      * Sets up the choice.
@@ -42,6 +45,7 @@ public final class CatchTricks implements CatchConsequence {
      * @param launch        throws the caught survivor
      * @param swapChance    chance for a teleport, from 0 (always launch) to 1 (always teleport)
      * @param random        the random source
+     * @param mood          the creek's mood right now, which may make every catch teleport
      */
     public CatchTricks(
             CatchConsequence base,
@@ -49,7 +53,8 @@ public final class CatchTricks implements CatchConsequence {
             CatchTrick spawnTeleport,
             CatchTrick launch,
             double swapChance,
-            RandomGenerator random
+            RandomGenerator random,
+            Supplier<CreekMood> mood
     ) {
         this.base = base;
         this.swap = swap;
@@ -57,28 +62,38 @@ public final class CatchTricks implements CatchConsequence {
         this.launch = launch;
         this.swapChance = swapChance;
         this.random = random;
+        this.mood = mood;
     }
 
     @Override
     public void apply(Player survivor) {
         this.base.apply(survivor);
-        if (this.random.nextDouble() < this.swapChance && this.teleport(survivor)) {
+        if (this.random.nextDouble() < this.teleportChance() && this.teleport(survivor)) {
             return;
         }
         this.launch.perform(survivor);
     }
 
     /**
-     * Plays one of the two teleports, falling back to the other one.
+     * Plays one of the two teleports, falling back to the other one. The trickster also uses this
+     * at the end of a patrol stare.
      *
      * @param survivor the survivor who was caught
      * @return {@code true} if one of the teleports worked
      */
-    private boolean teleport(Player survivor) {
+    public boolean teleport(Player survivor) {
         boolean toSpawn = this.random.nextDouble() < SPAWN_SHARE;
         CatchTrick first = toSpawn ? this.spawnTeleport : this.swap;
         CatchTrick second = toSpawn ? this.swap : this.spawnTeleport;
         return first.perform(survivor) || second.perform(survivor);
+    }
+
+    /**
+     * The chance for a teleport instead of a throw: {@code swapChance}, or always for a mood that
+     * always teleports.
+     */
+    private double teleportChance() {
+        return this.mood.get().alwaysTeleport() ? 1.0D : this.swapChance;
     }
 
     @Override

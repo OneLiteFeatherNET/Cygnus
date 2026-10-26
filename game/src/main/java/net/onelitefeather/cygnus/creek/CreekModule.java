@@ -70,6 +70,15 @@ public final class CreekModule implements GameFeature {
         Random random = new Random();
         // One reveal for the catches and the marks, so the slender only ever sees the newest one.
         LocatorReveal reveal = new LocatorReveal(this.config.catching().betrayalGlowSeconds(), sections);
+        MoodClock mood = new MoodClock(gameTimeSeconds * 1000L, random);
+        CatchTricks tricks = new CatchTricks(
+                new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.catching().slownessSeconds()),
+                new CatchSwap(() -> TeamHelper.survivorsOf(teamService), random),
+                new CatchSpawnTeleport(this::slenderSpawn),
+                new CatchLaunch(settings.launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
+                this.config.catching().swapChance(),
+                random,
+                mood);
         this.service = new CreekService(
                 this.config,
                 settings,
@@ -81,19 +90,14 @@ public final class CreekModule implements GameFeature {
                 witness,
                 respite,
                 new StagedCatchConsequence(
-                        new CatchTricks(
-                                new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.catching().slownessSeconds()),
-                                new CatchSwap(() -> TeamHelper.survivorsOf(teamService), random),
-                                new CatchSpawnTeleport(this::slenderSpawn),
-                                new CatchLaunch(settings.launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
-                                this.config.catching().swapChance(),
-                                random),
+                        tricks,
                         reveal,
                         () -> TeamHelper.slenderOf(teamService),
                         this.config,
                         random),
-                new RevealMarks(reveal, () -> TeamHelper.slenderOf(teamService), System::currentTimeMillis, random),
-                new MoodClock(gameTimeSeconds * 1000L, random),
+                new RevealMarks(reveal, () -> TeamHelper.slenderOf(teamService), System::currentTimeMillis, random, mood),
+                mood,
+                tricks::teleport,
                 System::currentTimeMillis,
                 random,
                 sections);
