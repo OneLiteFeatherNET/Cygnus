@@ -45,6 +45,7 @@ public final class SetupMessages {
     public static final Component CREEK_END_PAUSE_NEEDS_TWO_POINTS;
     public static final Component CREEK_ROUTE_NOT_USABLE;
     public static final Component CREEK_POINT_HINT;
+    public static final Component DEFAULT_PAGE_POOL_NOT_DELETABLE;
 
     static {
         SPACE_SEPARATOR = Component.text("» ", NamedTextColor.GRAY);
@@ -118,6 +119,9 @@ public final class SetupMessages {
                 Component.text("The creek route mode has been", NamedTextColor.GRAY)
                         .append(Component.space())
                         .append(Component.text("disabled", NamedTextColor.RED))
+        );
+        DEFAULT_PAGE_POOL_NOT_DELETABLE = Messages.withPrefix(
+                Component.text("The default page pool is what the game loads and cannot be deleted", NamedTextColor.RED)
         );
         NO_ACTIVE_CREEK_ROUTE = Messages.withPrefix(
                 Component.text("Create or select a creek route first", NamedTextColor.RED)
@@ -344,6 +348,76 @@ public final class SetupMessages {
     /**
      * Inserts a value as plain text, so nothing in it is parsed as a tag.
      */
+    /**
+     * Creates a new {@link Component} instance which confirms that a page pool was created.
+     *
+     * @param name of the created pool
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getPagePoolCreated(@NotNull String name) {
+        return Messages.withMiniPrefix("<gray>Created page pool <gold><name>", nameTag(name));
+    }
+
+    /**
+     * Creates a new {@link Component} instance which tells the player which page pool new pages go into.
+     *
+     * @param name of the active pool
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getPagePoolSelected(@NotNull String name) {
+        return Messages.withMiniPrefix("<gray>Now editing page pool <gold><name>", nameTag(name));
+    }
+
+    /**
+     * Creates a new {@link Component} instance which confirms that a page pool was deleted.
+     *
+     * @param name of the deleted pool
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getPagePoolDeleted(@NotNull String name) {
+        return Messages.withMiniPrefix("<gray>Deleted page pool <gold><name>", nameTag(name));
+    }
+
+    /**
+     * Creates a new {@link Component} instance which informs the player that a pool name is not allowed.
+     *
+     * @param name which was entered
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getInvalidPagePoolName(@NotNull String name) {
+        return Messages.withMiniPrefix(
+                "<red>The pool name <gold><name> <red>is not allowed. Use a-z, 0-9, _ and - only, and not default",
+                nameTag(name));
+    }
+
+    /**
+     * Creates a new {@link Component} instance which informs the player that the pool name is taken.
+     *
+     * @param name which is already taken
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getDuplicatePagePool(@NotNull String name) {
+        return Messages.withMiniPrefix("<red>A page pool with the name <gold><name> <red>already exists", nameTag(name));
+    }
+
+    /**
+     * Creates a new {@link Component} instance which informs the player that a page pool could not be loaded.
+     *
+     * @param name   of the pool
+     * @param reason why it could not be loaded
+     * @return the created component
+     */
+    @Contract(value = "_, _ -> new", pure = true)
+    public static @NotNull Component getBrokenPagePool(@NotNull String name, @NotNull String reason) {
+        return Messages.withMiniPrefix("<red>Skipped page pool <gold><name><red>: <reason>",
+                nameTag(name), textTag("reason", reason));
+    }
+
     private static TagResolver textTag(String key, String value) {
         return TagResolver.builder().tag(key, Tag.inserting(Component.text(value))).build();
     }
