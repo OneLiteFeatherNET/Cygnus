@@ -23,6 +23,9 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.page.PageProximityTarget;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.stamina.FoodBar;
+import net.onelitefeather.cygnus.stamina.StaminaFactory;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.onelitefeather.cygnus.utils.Items;
 import org.jetbrains.annotations.Nullable;
@@ -31,8 +34,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SplittableRandom;
 import java.util.UUID;
@@ -59,6 +64,7 @@ class PageRevealFeatureTest extends CygnusPlayerTestBase {
     private final AtomicLong clock = new AtomicLong();
     private final List<PageProximityTarget> pages = new ArrayList<>();
     private final Set<Player> survivors = new HashSet<>();
+    private final Map<Player, FoodBar> staminaBars = new HashMap<>();
     private @Nullable PageRevealFeature feature;
 
     private PageRevealFeature feature(Env env) {
@@ -67,7 +73,7 @@ class PageRevealFeatureTest extends CygnusPlayerTestBase {
 
     private PageRevealFeature feature(Env env, RandomGenerator random) {
         PageRevealFeature feature = new PageRevealFeature(() -> this.pages, () -> this.survivors,
-                this.clock::get, TickSections.NONE, random);
+                this.staminaBars::get, this.clock::get, TickSections.NONE, random);
         env.process().eventHandler().addChild(feature.node());
         this.feature = feature;
         return feature;
@@ -76,6 +82,8 @@ class PageRevealFeatureTest extends CygnusPlayerTestBase {
     // The server process is shared by the whole class, so a feature left behind would answer the next test's events
     @AfterEach
     void detach(Env env) {
+        this.staminaBars.values().forEach(FoodBar::stop);
+        this.staminaBars.clear();
         if (this.feature == null) return;
         EventDispatcher.call(new GameFinishEvent(GameFinishEvent.Reason.TIME_OVER));
         env.process().eventHandler().removeChild(this.feature.node());
@@ -240,6 +248,80 @@ class PageRevealFeatureTest extends CygnusPlayerTestBase {
         Collector<TrackedWaypointPacket> packets = connection.trackIncoming(TrackedWaypointPacket.class);
         use(user);
         assertEquals(List.of(Operation.TRACK), operations(packets));
+    }
+
+    @Test
+    @DisplayName("A use while sprinting only tells the survivor to stop, no cooldown starts")
+    void sprintingUseCostsNothing(Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player user = survivor(env, connection, instance);
+        page(new Pos(10, 40, 0));
+        feature(env);
+        EventDispatcher.call(new GameStartEvent());
+        user.setSprinting(true);
+        Collector<ActionBarPacket> messages = connection.trackIncoming(ActionBarPacket.class);
+        Collector<SetCooldownPacket> cooldowns = connection.trackIncoming(SetCooldownPacket.class);
+        Collector<TrackedWaypointPacket> packets = connection.trackIncoming(TrackedWaypointPacket.class);
+
+        use(user);
+
+        assertEquals(List.of(new ActionBarPacket(PageRevealFeature.SPRINTING)), messages.collect());
+        assertTrue(cooldowns.collect().isEmpty());
+        assertTrue(packets.collect().isEmpty());
+
+        user.setSprinting(false);
+        Collector<TrackedWaypointPacket> standing = connection.trackIncoming(TrackedWaypointPacket.class);
+        use(user);
+        assertEquals(List.of(Operation.TRACK), operations(standing));
+    }
+
+    @Test
+    @DisplayName("A sprint takes the pages off the locator bar for good")
+    void sprintUntracks(Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        Player user = survivor(env, connection, instance);
+        page(new Pos(10, 40, 0));
+        page(new Pos(-10, 40, 0));
+        feature(env);
+        EventDispatcher.call(new GameStartEvent());
+        use(user);
+        Collector<TrackedWaypointPacket> packets = connection.trackIncoming(TrackedWaypointPacket.class);
+
+        user.setSprinting(true);
+        tick(env, PageRevealFeature.RESEND_TICKS);
+
+        assertEquals(List.of(Operation.UNTRACK, Operation.UNTRACK), operations(packets));
+
+        user.setSprinting(false);
+        Collector<TrackedWaypointPacket> later = connection.trackIncoming(TrackedWaypointPacket.class);
+        tick(env, SHOWN_TICKS);
+        assertTrue(later.collect().isEmpty(), "stopping again does not bring the pages back");
+    }
+
+    @Test
+    @DisplayName("The stamina stays off the experience bar while the pages are shown")
+    void staminaDisplayIsHeld(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player user = survivor(env, env.createConnection(), instance);
+        FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina((CygnusPlayer) user);
+        bar.start();
+        this.staminaBars.put(user, bar);
+        page(new Pos(10, 40, 0));
+        feature(env);
+        EventDispatcher.call(new GameStartEvent());
+
+        use(user);
+        bar.startConsume();
+        bar.consume();
+
+        assertEquals(1.0f, user.getExp(), 1.0E-6f, "a change of the stamina must not push the locator bar away");
+
+        user.setSprinting(true);
+        tick(env, PageRevealFeature.RESEND_TICKS);
+
+        assertEquals(bar.remainingShare(), user.getExp(), 1.0E-6f);
     }
 
     @Test
