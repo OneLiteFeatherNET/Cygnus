@@ -29,10 +29,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -45,8 +49,9 @@ import java.util.function.Supplier;
  * as the page list.
  * <p>
  * The displays exist for the builder alone and only as packets: nothing is put into the world, so
- * they cost the server no ticking and no chunk loading. Every spot gets its packets built once, and
- * only spots that come into or go out of reach are sent.
+ * they cost the server no ticking and no chunk loading. Every spot keeps its entity ids for as long as
+ * it exists, and only what changed is sent: spots and labels that come into or go out of reach, that
+ * were added or deleted, and a new look for those whose glow or text changed.
  * </p>
  *
  * @author theEvilReaper
@@ -78,14 +83,21 @@ public final class PagePreview {
 
     private static final ItemStack PAGE = ItemStack.of(Material.PAPER);
 
+    private static final Comparator<PageResource> ANCHOR_ORDER = Comparator
+            .comparingDouble((PageResource spot) -> spot.position().x())
+            .thenComparingDouble(spot -> spot.position().y())
+            .thenComparingDouble(spot -> spot.position().z())
+            .thenComparing(PageResource::face);
+
     private final Player player;
     private final Supplier<? extends Collection<PageResource>> spots;
     private final Map<Integer, EntityMetaDataPacket> looks;
     private final EntityMetaDataPacket boxLook = boxLook();
     private Map<PageResource, Marker> markers = Map.of();
     private final Map<PageResource, Marker> shown = new HashMap<>();
-    private List<Label> labels = List.of();
-    private final Map<Integer, Label> shownLabels;
+    /** The label of every group, by the group's anchor, see {@link #anchorOf(PageGroups.Group)}. */
+    private Map<PageResource, Label> labels = Map.of();
+    private final Map<PageResource, Label> shownLabels;
     /** The spots behind the boxes the builder can hit right now. Read from the network thread. */
     private final Map<Integer, PageResource> boxes = new ConcurrentHashMap<>();
     private @Nullable Task task;
@@ -128,18 +140,20 @@ public final class PagePreview {
     }
 
     /**
-     * Rebuilds the displays after a spot was added or removed. A change can turn the neighbours of a
-     * spot crowded or calm too, so every display is built anew. Does nothing while hidden.
+     * Brings the displays up to date after a spot was added or removed. A change can turn the
+     * neighbours of a spot into another group too, so the groups are found anew, but only the
+     * displays that changed are sent. Does nothing while hidden.
      */
     public void refresh() {
         if (this.task == null) return;
-        this.removeShown();
         this.build();
         this.update();
     }
 
     /**
-     * Sends the spots that came into reach and takes away the ones that went out of it.
+     * Sends the builder what differs from what they see: displays that came into reach or were added,
+     * the removal of those that went out of reach or were deleted, and the new look of those whose
+     * glow or text changed.
      */
     void update() {
         if (!this.player.isOnline()) {
@@ -149,20 +163,33 @@ public final class PagePreview {
         Pos here = this.player.getPosition();
         double reach = REACH * REACH;
         List<Integer> gone = new ArrayList<>();
-        this.shown.entrySet().removeIf(entry -> {
-            boolean away = entry.getKey().position().distanceSquared(here) > reach;
-            if (away) {
+        Iterator<Map.Entry<PageResource, Marker>> shownMarkers = this.shown.entrySet().iterator();
+        while (shownMarkers.hasNext()) {
+            Map.Entry<PageResource, Marker> entry = shownMarkers.next();
+            Marker current = this.markers.get(entry.getKey());
+            if (current == null || entry.getKey().position().distanceSquared(here) > reach) {
                 gone.add(entry.getValue().id());
                 gone.add(entry.getValue().boxId());
                 this.boxes.remove(entry.getValue().boxId());
+                shownMarkers.remove();
+            } else if (current.colour() != entry.getValue().colour()) {
+                this.player.sendPacket(current.look());
+                entry.setValue(current);
             }
-            return away;
-        });
-        this.shownLabels.values().removeIf(label -> {
-            boolean away = label.centre().distanceSquared(here) > reach;
-            if (away) gone.add(label.id());
-            return away;
-        });
+        }
+        Iterator<Map.Entry<PageResource, Label>> shownLabels = this.shownLabels.entrySet().iterator();
+        while (shownLabels.hasNext()) {
+            Map.Entry<PageResource, Label> entry = shownLabels.next();
+            Label current = this.labels.get(entry.getKey());
+            if (current == null || current.id() != entry.getValue().id()
+                    || current.centre().distanceSquared(here) > reach) {
+                gone.add(entry.getValue().id());
+                shownLabels.remove();
+            } else if (current != entry.getValue()) {
+                this.player.sendPacket(current.look());
+                entry.setValue(current);
+            }
+        }
         if (!gone.isEmpty()) this.player.sendPacket(new DestroyEntitiesPacket(gone));
         for (Map.Entry<PageResource, Marker> entry : this.markers.entrySet()) {
             if (this.shown.containsKey(entry.getKey())) continue;
@@ -175,12 +202,13 @@ public final class PagePreview {
             this.shown.put(entry.getKey(), marker);
             this.boxes.put(marker.boxId(), entry.getKey());
         }
-        for (Label label : this.labels) {
-            if (this.shownLabels.containsKey(label.id())) continue;
+        for (Map.Entry<PageResource, Label> entry : this.labels.entrySet()) {
+            if (this.shownLabels.containsKey(entry.getKey())) continue;
+            Label label = entry.getValue();
             if (label.centre().distanceSquared(here) > reach) continue;
             this.player.sendPacket(label.spawn());
             this.player.sendPacket(label.look());
-            this.shownLabels.put(label.id(), label);
+            this.shownLabels.put(entry.getKey(), label);
         }
     }
 
@@ -199,16 +227,68 @@ public final class PagePreview {
     }
 
     /**
-     * Picks the glow of a group.
+     * Picks the glow of every group. A crowded group glows red and a lone spot grey. Any other group
+     * keeps the colour most of its spots had before, so adding or deleting a spot leaves the colours of
+     * the other groups alone. A colour goes to one group only, the larger one first; groups without a
+     * colour to keep take one no other group has, as long as there is one left.
      *
-     * @param group the group
-     * @param index the place of the group among all groups, largest first
-     * @return the colour as RGB
+     * @param groups   the groups, largest first, see {@link PageGroups#find(Collection)}
+     * @param previous the colour every spot glowed in before
+     * @return the colour of each group as RGB, in the order of the groups
      */
-    static int colourOf(PageGroups.Group group, int index) {
-        if (group.crowded()) return CROWDED_COLOUR;
-        if (group.spots().size() == 1) return LONE_COLOUR;
-        return GROUP_COLOURS[index % GROUP_COLOURS.length];
+    static int[] colours(List<PageGroups.Group> groups, Map<PageResource, Integer> previous) {
+        int[] colours = new int[groups.size()];
+        Set<Integer> taken = new HashSet<>();
+        List<Integer> waiting = new ArrayList<>();
+        for (int index = 0; index < groups.size(); index++) {
+            PageGroups.Group group = groups.get(index);
+            if (group.crowded()) {
+                colours[index] = CROWDED_COLOUR;
+            } else if (group.spots().size() == 1) {
+                colours[index] = LONE_COLOUR;
+            } else {
+                Integer kept = keptColour(group, previous, taken);
+                if (kept == null) {
+                    waiting.add(index);
+                } else {
+                    colours[index] = kept;
+                    taken.add(kept);
+                }
+            }
+        }
+        for (int index : waiting) {
+            int colour = GROUP_COLOURS[index % GROUP_COLOURS.length];
+            for (int free : GROUP_COLOURS) {
+                if (!taken.contains(free)) {
+                    colour = free;
+                    break;
+                }
+            }
+            colours[index] = colour;
+            taken.add(colour);
+        }
+        return colours;
+    }
+
+    /**
+     * Finds the group colour most of the group's spots glowed in before and no other group took yet.
+     */
+    private static @Nullable Integer keptColour(PageGroups.Group group, Map<PageResource, Integer> previous,
+                                                Set<Integer> taken) {
+        Integer kept = null;
+        int most = 0;
+        for (int colour : GROUP_COLOURS) {
+            if (taken.contains(colour)) continue;
+            int count = 0;
+            for (PageResource spot : group.spots()) {
+                if (Integer.valueOf(colour).equals(previous.get(spot))) count++;
+            }
+            if (count > most) {
+                most = count;
+                kept = colour;
+            }
+        }
+        return kept;
     }
 
     /**
@@ -221,23 +301,48 @@ public final class PagePreview {
         return String.format(Locale.ROOT, "%d pages · %d%%", group.spots().size(), Math.round(group.share() * 100.0D));
     }
 
+    /**
+     * Finds the groups and builds what the builder should see. A spot that was there before keeps its
+     * marker and only gets a new look if its glow changed; a label keeps its id while its group's
+     * middle stays where it is.
+     */
     private void build() {
         List<PageGroups.Group> groups = PageGroups.find(List.copyOf(this.spots.get()));
-        Map<PageResource, Marker> built = new HashMap<>();
-        List<Label> builtLabels = new ArrayList<>();
+        Map<PageResource, Integer> previous = new HashMap<>(this.markers.size());
+        this.markers.forEach((spot, marker) -> previous.put(spot, marker.colour()));
+        int[] colours = colours(groups, previous);
+        Map<PageResource, Marker> built = new HashMap<>(previous.size() + 1);
+        Map<PageResource, Label> builtLabels = new HashMap<>();
         for (int index = 0; index < groups.size(); index++) {
             PageGroups.Group group = groups.get(index);
-            EntityMetaDataPacket template = this.looks.computeIfAbsent(colourOf(group, index), PagePreview::look);
+            int colour = colours[index];
+            EntityMetaDataPacket template = this.looks.computeIfAbsent(colour, PagePreview::look);
             for (PageResource spot : group.spots()) {
-                built.put(spot, this.marker(spot, template));
+                Marker old = this.markers.get(spot);
+                if (old == null) {
+                    built.put(spot, this.marker(spot, colour, template));
+                } else {
+                    built.put(spot, old.colour() == colour ? old : old.withColour(colour, template));
+                }
             }
-            if (group.spots().size() > 1) builtLabels.add(label(group));
+            if (group.spots().size() > 1) {
+                PageResource anchor = anchorOf(group);
+                builtLabels.put(anchor, label(group, this.labels.get(anchor)));
+            }
         }
         this.markers = built;
         this.labels = builtLabels;
     }
 
-    private Marker marker(PageResource spot, EntityMetaDataPacket template) {
+    /**
+     * Picks the spot a group's label is filed under: the one with the smallest position, so the label
+     * stays the same while the group gains or loses other spots.
+     */
+    private static PageResource anchorOf(PageGroups.Group group) {
+        return group.spots().stream().min(ANCHOR_ORDER).orElseThrow();
+    }
+
+    private Marker marker(PageResource spot, int colour, EntityMetaDataPacket template) {
         int id = Entity.generateId();
         Pos where = Helper.updatePosition(spot.position().asPos(), spot.face());
         SpawnEntityPacket spawn = new SpawnEntityPacket(id, UUID.randomUUID(), EntityType.ITEM_DISPLAY,
@@ -246,24 +351,35 @@ public final class PagePreview {
         // An interaction box stands on its position, so it is lowered to sit around the page.
         SpawnEntityPacket boxSpawn = new SpawnEntityPacket(boxId, UUID.randomUUID(), EntityType.INTERACTION,
                 where.sub(0, BOX_SIZE / 2.0D, 0), 0F, 0, Vec.ZERO);
-        return new Marker(id, spawn, new EntityMetaDataPacket(id, template.entries()),
+        return new Marker(id, spawn, colour, new EntityMetaDataPacket(id, template.entries()),
                 boxId, boxSpawn, new EntityMetaDataPacket(boxId, this.boxLook.entries()));
     }
 
     /**
-     * Builds the label floating above a group, red if the group holds too many spots.
+     * Builds the label floating above a group, red if the group holds too many spots. The old label of
+     * the group is kept as it is if nothing about it changed, and keeps its id if only its text did.
      */
-    private static Label label(PageGroups.Group group) {
-        Entity template = new Entity(EntityType.TEXT_DISPLAY);
-        TextDisplayMeta meta = (TextDisplayMeta) template.getEntityMeta();
-        meta.setText(Component.text(labelText(group), group.crowded() ? NamedTextColor.RED : NamedTextColor.WHITE));
-        meta.setBillboardRenderConstraints(AbstractDisplayMeta.BillboardConstraints.CENTER);
-        meta.setSeeThrough(true);
-        int id = Entity.generateId();
+    private static Label label(PageGroups.Group group, @Nullable Label old) {
         Pos centre = group.centre().asPos();
+        String text = labelText(group);
+        boolean crowded = group.crowded();
+        if (old != null && old.centre().samePoint(centre)) {
+            if (old.text().equals(text) && old.crowded() == crowded) return old;
+            return new Label(centre, old.id(), old.spawn(), text, crowded, labelLook(old.id(), text, crowded));
+        }
+        int id = Entity.generateId();
         SpawnEntityPacket spawn = new SpawnEntityPacket(id, UUID.randomUUID(), EntityType.TEXT_DISPLAY,
                 centre.add(0, LABEL_HEIGHT, 0), 0F, 0, Vec.ZERO);
-        return new Label(centre, id, spawn, new EntityMetaDataPacket(id, template.getMetadataPacket().entries()));
+        return new Label(centre, id, spawn, text, crowded, labelLook(id, text, crowded));
+    }
+
+    private static EntityMetaDataPacket labelLook(int id, String text, boolean crowded) {
+        Entity template = new Entity(EntityType.TEXT_DISPLAY);
+        TextDisplayMeta meta = (TextDisplayMeta) template.getEntityMeta();
+        meta.setText(Component.text(text, crowded ? NamedTextColor.RED : NamedTextColor.WHITE));
+        meta.setBillboardRenderConstraints(AbstractDisplayMeta.BillboardConstraints.CENTER);
+        meta.setSeeThrough(true);
+        return new EntityMetaDataPacket(id, template.getMetadataPacket().entries());
     }
 
     private void removeShown() {
@@ -273,7 +389,9 @@ public final class PagePreview {
             ids.add(marker.id());
             ids.add(marker.boxId());
         }
-        ids.addAll(this.shownLabels.keySet());
+        for (Label label : this.shownLabels.values()) {
+            ids.add(label.id());
+        }
         this.shown.clear();
         this.boxes.clear();
         this.shownLabels.clear();
@@ -311,23 +429,35 @@ public final class PagePreview {
      *
      * @param id       the display's entity id
      * @param spawn    puts the display at the spot
-     * @param look     makes it a glowing page
+     * @param colour   the glow of the page as RGB
+     * @param look     makes it a page glowing in that colour
      * @param boxId    the id of the box that takes the builder's hit
      * @param boxSpawn puts the box in front of the page
      * @param boxLook  gives the box its size
      */
-    private record Marker(int id, SpawnEntityPacket spawn, EntityMetaDataPacket look,
+    private record Marker(int id, SpawnEntityPacket spawn, int colour, EntityMetaDataPacket look,
                           int boxId, SpawnEntityPacket boxSpawn, EntityMetaDataPacket boxLook) {
+
+        /**
+         * Returns the same marker glowing in another colour.
+         */
+        Marker withColour(int colour, EntityMetaDataPacket template) {
+            return new Marker(this.id, this.spawn, colour, new EntityMetaDataPacket(this.id, template.entries()),
+                    this.boxId, this.boxSpawn, this.boxLook);
+        }
     }
 
     /**
      * The packets of one group's label, built once.
      *
-     * @param centre the middle of the group, which decides whether the label is in reach
-     * @param id     the label's entity id
-     * @param spawn  puts the label above the group
-     * @param look   gives it its text
+     * @param centre  the middle of the group, which decides whether the label is in reach
+     * @param id      the label's entity id
+     * @param spawn   puts the label above the group
+     * @param text    the text it shows
+     * @param crowded whether the text is red
+     * @param look    gives it its text
      */
-    private record Label(Pos centre, int id, SpawnEntityPacket spawn, EntityMetaDataPacket look) {
+    private record Label(Pos centre, int id, SpawnEntityPacket spawn, String text, boolean crowded,
+                         EntityMetaDataPacket look) {
     }
 }
