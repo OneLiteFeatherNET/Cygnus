@@ -31,6 +31,7 @@ import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
+import net.onelitefeather.cygnus.common.page.PagePool;
 import net.onelitefeather.cygnus.common.page.PagePoolFiles;
 import net.onelitefeather.cygnus.common.page.PageSettingsFile;
 import net.onelitefeather.cygnus.common.page.PageResource;
@@ -183,7 +184,7 @@ public class GameData extends InstanceSetupData {
     }
 
     private void deletePoolFromOverview(Player player, String name) {
-        if (PagePoolFiles.DEFAULT_POOL.equals(name)) {
+        if (PagePool.DEFAULT_NAME.equals(name)) {
             player.sendMessage(SetupMessages.DEFAULT_PAGE_POOL_NOT_DELETABLE);
             return;
         }
@@ -866,8 +867,8 @@ public class GameData extends InstanceSetupData {
             this.savedPageSettings = map.getPageSettings();
         }
         // A broken default.json stays untouched, like every other broken pool file
-        if (!this.brokenPagePools.contains(PagePoolFiles.DEFAULT_POOL)) {
-            PagePoolFiles.save(mapFile, PagePoolFiles.DEFAULT_POOL, map.getPageFaces());
+        if (!this.brokenPagePools.contains(PagePool.DEFAULT_NAME)) {
+            PagePoolFiles.save(mapFile, PagePool.DEFAULT_NAME, map.getPageFaces());
         }
         this.gameMapBuilder.getExtraPagePools().forEach((name, pages) -> PagePoolFiles.save(mapFile, name, pages));
         this.deletedPagePools.forEach(name -> PagePoolFiles.delete(mapFile, name));
@@ -947,7 +948,7 @@ public class GameData extends InstanceSetupData {
             // A case-insensitive file system would resolve the lower-case name to this very file
             this.brokenPagePools.add(name.toLowerCase(Locale.ROOT));
             this.player.sendMessage(SetupMessages.getBrokenPagePool(name, reason));
-        }).forEach(this.gameMapBuilder::putPagePool);
+        }).forEach(pool -> this.gameMapBuilder.putPagePool(pool.name(), pool.pages()));
         // null for broken settings, so the next save writes the defaults over them
         this.savedPageSettings = pageSettingsBroken ? null : this.gameMapBuilder.getPageSettings();
     }

@@ -13,31 +13,27 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
  * Reads and writes the page pools in the {@code pages} folder next to a map's {@code map.json}.
- * Each {@code pages/<name>.json} holds one pool, a set of {@link PageResource}s under {@code pages}.
+ * Each {@code pages/<name>.json} holds one {@link PagePool}, its spots under {@code pages}.
  *
- * <p>The {@link #DEFAULT_POOL} is a file like any other, {@code pages/default.json}. It is the pool
- * the game falls back to, so a builder cannot create another pool under its name. The page settings
- * for all pools stay in {@code pages.json} (see {@link PageSettingsFile}).</p>
+ * <p>The {@link PagePool#DEFAULT_NAME default pool} is a file like any other, {@code pages/default.json}.
+ * It is the pool the game falls back to, so a builder cannot create another pool under its name. The
+ * page settings for all pools stay in {@code pages.json} (see {@link PageSettingsFile}).</p>
  *
  * @author theEvilReaper
  * @version 1.0.0
  * @since 2.21.0
  */
 public final class PagePoolFiles {
-
-    /** The name of the pool the game falls back to if no pool has enough spots. */
-    public static final String DEFAULT_POOL = "default";
 
     private static final String DIRECTORY_NAME = "pages";
     private static final String EXTENSION = ".json";
@@ -66,37 +62,37 @@ public final class PagePoolFiles {
      *
      * @param raw the typed name
      * @return the trimmed name in lower case, or {@code null} if it is empty, holds other characters
-     *         than {@code a-z}, {@code 0-9}, {@code _} and {@code -}, or is the {@link #DEFAULT_POOL}
+     *         than {@code a-z}, {@code 0-9}, {@code _} and {@code -}, or is the {@link PagePool#DEFAULT_NAME}
      */
     public static @Nullable String normalizeName(String raw) {
         String name = raw.trim().toLowerCase(Locale.ROOT);
-        if (!NAME_PATTERN.matcher(name).matches() || DEFAULT_POOL.equals(name)) return null;
+        if (!NAME_PATTERN.matcher(name).matches() || PagePool.DEFAULT_NAME.equals(name)) return null;
         return name;
     }
 
     /**
-     * Loads every pool from the {@code pages} folder, the {@link #DEFAULT_POOL} included. A file that
+     * Loads every pool from the {@code pages} folder, the default pool included. A file that
      * cannot be read or whose name is no valid pool name is skipped, so the rest of the map still opens.
      *
      * @param mapFile  the map file the pools belong to
      * @param onBroken receives the file name without {@code .json} and the reason for every skipped file
      * @return the pools sorted by name, empty if the folder does not exist
      */
-    public static Map<String, Set<PageResource>> load(Path mapFile, BiConsumer<String, String> onBroken) {
-        Map<String, Set<PageResource>> pools = new TreeMap<>();
+    public static List<PagePool> load(Path mapFile, BiConsumer<String, String> onBroken) {
+        List<PagePool> pools = new ArrayList<>();
         Path directory = resolveDirectory(mapFile);
         if (!Files.isDirectory(directory)) return pools;
         for (Path file : listPoolFiles(directory)) {
             String fileName = file.getFileName().toString();
             String name = fileName.substring(0, fileName.length() - EXTENSION.length());
-            if (!DEFAULT_POOL.equals(name) && !name.equals(normalizeName(name))) {
+            if (!PagePool.DEFAULT_NAME.equals(name) && !name.equals(normalizeName(name))) {
                 onBroken.accept(name, "Invalid pool name in " + file);
                 continue;
             }
             try {
                 JsonElement pages = MapSideFile.data(MapSideFile.parse(WHAT, file), PAGES_KEY);
                 Set<PageResource> loaded = pages == null ? null : GsonHelper.GSON.fromJson(pages, PAGES_TYPE);
-                pools.put(name, loaded != null ? loaded : Set.of());
+                pools.add(new PagePool(name, loaded != null ? loaded : Set.of()));
             } catch (RuntimeException exception) {
                 // Not only JsonParseException: Gson lets a null face or a text coordinate through as
                 // UnsupportedOperationException or NumberFormatException, and one bad file must not stop the map

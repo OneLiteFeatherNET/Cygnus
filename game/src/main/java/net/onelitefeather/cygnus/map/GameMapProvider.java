@@ -19,7 +19,6 @@ import net.onelitefeather.cygnus.common.map.filter.MapFilters;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.PagePool;
-import net.onelitefeather.cygnus.common.page.PagePoolDraw;
 import net.onelitefeather.cygnus.common.page.PageSettingsFile;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.cygnus.common.util.Helper;
@@ -173,7 +172,7 @@ public final class GameMapProvider extends AbstractMapProvider {
      * <p>The page settings come from the sibling {@code pages.json} via
      * {@link PageSettingsFile#loadInto(Path, GameMap)}, the creek routes and settings from the sibling
      * {@code creek.json} via {@link CreekRoutesFile#loadInto(Path, GameMap)}. The pages themselves are
-     * only put in by {@link #loadGameMap()}, from the drawn pool.</p>
+     * only put in by {@link #loadGameMap()}, from the pool picked for the round.</p>
      *
      * @return the loaded game map
      * @throws IllegalStateException if the file cannot be read
@@ -206,14 +205,14 @@ public final class GameMapProvider extends AbstractMapProvider {
     }
 
     /**
-     * Loads the game map into a fresh instance. The page pool of the round is drawn here, once, so
-     * the map carries only the spots of that pool (see {@link PagePoolDraw}).
+     * Loads the game map into a fresh instance. The page pool of the round is picked here, once, so
+     * the map carries only the spots of that pool (see {@link PagePool#forRound(Path, int)}).
      */
     public void loadGameMap() {
         if (this.gameMap != null) return; // idempotent
 
         GameMap map = readGameMap();
-        PagePool pool = PagePoolDraw.drawFrom(this.gameEntry.getMapFile(), map.getPageSettings().minActivePages());
+        PagePool pool = PagePool.forRound(this.gameEntry.getMapFile(), map.getPageSettings().minActivePages());
         this.gameMap = map.withPageFaces(pool.pages());
         this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer(this.gameDimension);
         this.gameInstance.setTime(Helper.NEW_MOON_TIME);

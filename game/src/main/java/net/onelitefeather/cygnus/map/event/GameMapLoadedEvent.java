@@ -10,7 +10,7 @@ import net.onelitefeather.cygnus.common.page.PagePool;
  *
  * @param gameMap           which was loaded
  * @param instanceContainer the instance container of the map
- * @param pagePool          the page pool drawn for the round, whose spots the map carries
+ * @param pagePool          the page pool picked for the round, whose spots the map carries
  */
 public record GameMapLoadedEvent(GameMap gameMap, InstanceContainer instanceContainer, PagePool pagePool) implements Event {
 }

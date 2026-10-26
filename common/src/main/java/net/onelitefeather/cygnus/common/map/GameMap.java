@@ -24,7 +24,7 @@ public final class GameMap extends BaseMap {
 
     private final Pos slenderSpawn;
     // transient: the pages live in the pools of the sibling pages folder (see PagePoolFiles), the game
-    // puts the drawn pool in here. GameMapAdapter ignores pages an old map.json still inlines.
+    // puts the pool picked for the round in here. GameMapAdapter ignores pages an old map.json still inlines.
     private final transient Set<PageResource> pageFaces;
     private final Set<Pos> survivorSpawns;
     private final @Nullable MapAtmosphere atmosphere;

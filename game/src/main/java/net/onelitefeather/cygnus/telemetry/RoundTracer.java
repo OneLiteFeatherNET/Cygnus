@@ -316,7 +316,7 @@ public final class RoundTracer {
      * Keeps the page pool the round is played with on the round span, so rounds can be filtered by
      * pool when a pool turns out to be too hard or too easy.
      *
-     * @param pool the name of the drawn pool
+     * @param pool the name of the pool picked for the round
      */
     public synchronized void pagePoolDrawn(String pool) {
         TraceStep current = this.round;
