@@ -75,14 +75,14 @@ public class GameData extends InstanceSetupData {
     private boolean survivorMode;
     private boolean creekRouteMode;
     private @Nullable String activeCreekRoute;
-    private final List<PageSlot> pageSlots = new ArrayList<>();
-    private final Set<String> deletedPagePools = new HashSet<>();
+    private final List<PageSlot> pageSlots;
+    private final Set<String> deletedPagePools;
     // Pools whose file could not be read. Their names stay taken so a new pool never overwrites the file.
-    private final Set<String> brokenPagePools = new HashSet<>();
-    private String activePagePool = PagePoolFiles.DEFAULT_POOL;
+    private final Set<String> brokenPagePools;
+    private String activePagePool;
     // What pages.json holds on disk. It is only written again once the default pool or the settings differ.
-    private Set<PageResource> savedDefaultPool = Set.of();
-    private PageSettings savedPageSettings = PageSettings.DEFAULT;
+    private Set<PageResource> savedDefaultPool;
+    private PageSettings savedPageSettings;
 
     /**
      * Constructs a new GameData instance.
@@ -92,6 +92,11 @@ public class GameData extends InstanceSetupData {
      */
     public GameData(Player player, MapEntry mapEntry) {
         super(player, mapEntry, BossBar.Color.RED);
+        // Created before loadData(), which already fills them while it reads the page pools
+        this.pageSlots = new ArrayList<>();
+        this.deletedPagePools = new HashSet<>();
+        this.brokenPagePools = new HashSet<>();
+        this.activePagePool = PagePoolFiles.DEFAULT_POOL;
         this.loadData();
         this.creekRouteSlots = new ArrayList<>();
         this.inventory = new MapDataOverviewInventory(player, this.gameMapBuilder, InventoryMode.GAME);

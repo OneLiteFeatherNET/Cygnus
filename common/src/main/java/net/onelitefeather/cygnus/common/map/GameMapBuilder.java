@@ -31,7 +31,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
     private @Nullable MapAtmosphere atmosphere;
     private final Set<PageResource> pageFaces;
     // The pools besides the default one, which is pageFaces. Sorted so the setup lists them by name.
-    private final Map<String, Set<PageResource>> extraPagePools = new TreeMap<>();
+    private final Map<String, Set<PageResource>> extraPagePools;
     private final Set<Pos> survivorSpawns;
     private final Map<String, List<CreekWaypoint>> creekRoutes;
     private PageSettings pageSettings = PageSettings.DEFAULT;
@@ -43,6 +43,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
     public GameMapBuilder() {
         super();
         this.pageFaces = new HashSet<>();
+        this.extraPagePools = new TreeMap<>();
         this.survivorSpawns = new TreeSet<>(
                 Comparator.comparingInt(Pos::blockX)
                         .thenComparingInt(Pos::blockY)
@@ -66,6 +67,7 @@ public final class GameMapBuilder extends BaseMapBuilder {
         );
         this.survivorSpawns.addAll(gameMap.getSurvivorSpawns());
         this.pageFaces = new HashSet<>(gameMap.getPageFaces());
+        this.extraPagePools = new TreeMap<>();
         this.atmosphere = gameMap.getAtmosphere();
         this.pageSettings = gameMap.getPageSettings();
         this.creekSettings = gameMap.getCreekSettings();
