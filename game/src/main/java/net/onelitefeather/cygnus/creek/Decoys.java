@@ -41,7 +41,7 @@ final class Decoys {
 
     private final BiFunction<Instance, Pos, CreekBody> bodies;
     private final CreekSight sight;
-    private final long revealMillis;
+    private final LongSupplier revealMillis;
     private final LongSupplier clock;
     private final List<Decoy> running = new ArrayList<>();
 
@@ -50,10 +50,11 @@ final class Decoys {
      *
      * @param bodies       puts a creek body into the world
      * @param sight        decides whether a survivor sees a doppelganger
-     * @param revealMillis how long a survivor has to look at one before it crumbles
+     * @param revealMillis how long a survivor has to look at one before it crumbles, the same as
+     *                     for the real creek right now
      * @param clock        supplies the current time in milliseconds
      */
-    Decoys(BiFunction<Instance, Pos, CreekBody> bodies, CreekSight sight, long revealMillis, LongSupplier clock) {
+    Decoys(BiFunction<Instance, Pos, CreekBody> bodies, CreekSight sight, LongSupplier revealMillis, LongSupplier clock) {
         this.bodies = bodies;
         this.sight = sight;
         this.revealMillis = revealMillis;
@@ -98,7 +99,7 @@ final class Decoys {
                 continue;
             }
             if (decoy.seenSince < 0) decoy.seenSince = now;
-            if (now - decoy.seenSince < this.revealMillis) continue;
+            if (now - decoy.seenSince < this.revealMillis.getAsLong()) continue;
             crumble(viewer, decoy.body.position());
             decoy.body.remove();
             iterator.remove();

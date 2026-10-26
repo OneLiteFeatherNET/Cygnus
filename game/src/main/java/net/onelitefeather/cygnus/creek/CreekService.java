@@ -166,7 +166,7 @@ public final class CreekService implements PossessionTarget {
         }
         // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
-        Decoys decoys = new Decoys(this.bodies, this.sight, this.config.stalk().revealMillis(), this.clock);
+        Decoys decoys = new Decoys(this.bodies, this.sight, () -> this.tuning().revealMillis(), this.clock);
         CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.marks, this.stareTrick, decoys, this.witness,
                 new PatrolHelper(this.random), new StalkSounds(this.random), this.config, this.settings, this.random,
                 new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L), this::tuning);
