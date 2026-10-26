@@ -4,6 +4,7 @@ import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.setup.dialog.AtmosphereDialogs;
 import net.onelitefeather.cygnus.setup.dialog.AuthorDialogs;
 import net.onelitefeather.cygnus.setup.dialog.CreekRouteDialogs;
+import net.onelitefeather.cygnus.setup.dialog.PagePoolDialogs;
 import net.onelitefeather.cygnus.setup.dialog.MapDialogs;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogContext;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
@@ -24,6 +25,7 @@ public class DialogRequestListener implements Consumer<DialogRequestEvent> {
         switch (target) {
             case CREATE_NAME -> MapDialogs.openNameCreateDialog(player);
             case CREEK_ROUTE_NAME -> CreekRouteDialogs.openNameDialog(player);
+            case PAGE_POOL_NAME -> PagePoolDialogs.openNameDialog(player);
             case CREEK_ROUTE_PAUSE -> {
                 if (context instanceof DialogContext.CreekPauseContext pauseContext) {
                     CreekRouteDialogs.openPauseDialog(player, pauseContext);

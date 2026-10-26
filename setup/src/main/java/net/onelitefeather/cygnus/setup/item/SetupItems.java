@@ -151,6 +151,18 @@ public final class SetupItems {
         creekRouteEditLayout.set(8, leaveCreekMode);
 
         pageLayout = new HotBarLayout();
+        pageLayout.set(0, ItemStack.builder(Material.NAME_TAG)
+                .customName(Component.text("New pool", NamedTextColor.GREEN))
+                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Create a page pool and name it", NamedTextColor.WHITE))))
+                .set(Tags.ITEM_TAG, SetupItemId.PAGE_POOL_NEW)
+                .build()
+        );
+        pageLayout.set(4, ItemStack.builder(Material.BOOKSHELF)
+                .customName(Component.text("Pools", NamedTextColor.AQUA))
+                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Pick or delete a page pool", NamedTextColor.WHITE))))
+                .set(Tags.ITEM_TAG, SetupItemId.PAGE_POOLS)
+                .build()
+        );
         pageLayout.set(2, ItemStack.builder(Material.COMPASS)
                 .customName(Component.text("Pages", NamedTextColor.YELLOW))
                 .lore(

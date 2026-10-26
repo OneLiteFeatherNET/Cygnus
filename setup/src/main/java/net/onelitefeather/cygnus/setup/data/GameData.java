@@ -22,6 +22,7 @@ import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
 import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
 import net.onelitefeather.cygnus.setup.inventory.page.PageHeaderFormatter;
 import net.onelitefeather.cygnus.setup.inventory.slot.CreekRouteSlot;
+import net.onelitefeather.cygnus.setup.inventory.slot.PagePoolSlot;
 import net.onelitefeather.cygnus.setup.inventory.slot.PageSlot;
 import net.onelitefeather.cygnus.setup.inventory.view.InventoryMode;
 import net.onelitefeather.cygnus.setup.inventory.view.MapDataOverviewInventory;
@@ -67,6 +68,8 @@ public class GameData extends InstanceSetupData {
     private final SurvivorViewInventory survivorInventory;
     private final PageableInventory pageInventory;
     private final PageableInventory creekRouteInventory;
+    private final PageableInventory pagePoolInventory;
+    private final List<PagePoolSlot> pagePoolSlots;
     private final List<CreekRouteSlot> creekRouteSlots;
     private final CreekRoutePreview creekRoutePreview;
     private final PagePreview pagePreview;
@@ -103,6 +106,8 @@ public class GameData extends InstanceSetupData {
         this.survivorInventory = new SurvivorViewInventory(player, this.gameMapBuilder);
         this.pageInventory = createPageInventory(player);
         this.creekRouteInventory = createCreekRouteInventory(player);
+        this.pagePoolSlots = new ArrayList<>();
+        this.pagePoolInventory = createPagePoolInventory(player);
         this.creekRoutePreview = new CreekRoutePreview(player, () -> this.gameMapBuilder.getCreekRoutes(),
                 () -> this.activeCreekRoute, () -> this.gameMapBuilder.getCreekSettings().routeLinkDistance());
         this.pagePreview = new PagePreview(player, () -> this.gameMapBuilder.getPagePool(this.activePagePool));
@@ -131,6 +136,60 @@ public class GameData extends InstanceSetupData {
                 .layout(layout)
                 .values(new ArrayList<>())
                 .build();
+    }
+
+    /**
+     * Creates the {@link PageableInventory} to display the page pools of the map.
+     *
+     * @param player who owns the inventory
+     * @return the created inventory
+     */
+    private PageableInventory createPagePoolInventory(Player player) {
+        InventoryLayout layout = InventoryLayout.fromType(InventoryType.CHEST_6_ROW);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_1_ROW), SetupItems.DECORATION_PANE);
+        layout.setItems(LayoutCalculator.fillRow(InventoryType.CHEST_6_ROW), SetupItems.DECORATION_PANE);
+        return PageableInventory.builder()
+                .titleData(TitleData.builder()
+                        .title(Component.text("Page pools - "))
+                        .pageMapper(PageHeaderFormatter::format)
+                        .showPageNumbers(true)
+                        .build())
+                .player(player)
+                .slotRange(LayoutCalculator.quad(InventoryType.CHEST_1_ROW.getSize(), InventoryType.CHEST_5_ROW.getSize() - 1))
+                .layout(layout)
+                .values(new ArrayList<>())
+                .build();
+    }
+
+    /**
+     * Rebuilds the pool overview, so it shows the current pools, their page counts and the active one.
+     */
+    private void refreshPagePools() {
+        this.pagePoolSlots.forEach(this.pagePoolInventory::remove);
+        this.pagePoolSlots.clear();
+        for (String name : this.pagePoolNames()) {
+            PagePoolSlot slot = new PagePoolSlot(name, this.pagePoolSize(name), name.equals(this.activePagePool),
+                    this::selectPoolFromOverview, this::deletePoolFromOverview);
+            this.pagePoolSlots.add(slot);
+            this.pagePoolInventory.add(slot);
+        }
+    }
+
+    private void selectPoolFromOverview(Player player, String name) {
+        if (this.selectPagePool(name)) {
+            player.sendMessage(SetupMessages.getPagePoolSelected(name));
+        }
+    }
+
+    private void deletePoolFromOverview(Player player, String name) {
+        if (PagePoolFiles.DEFAULT_POOL.equals(name)) {
+            player.sendMessage(SetupMessages.DEFAULT_PAGE_POOL_NOT_DELETABLE);
+            return;
+        }
+        if (this.deletePagePool(name)) {
+            player.sendMessage(SetupMessages.getPagePoolDeleted(name));
+            this.refreshPagePools();
+        }
     }
 
     /**
@@ -569,6 +628,7 @@ public class GameData extends InstanceSetupData {
             if (hasPageMode()) {
                 player.sendMessage(SetupMessages.PAGE_MODE_ENABLED);
                 player.sendMessage(SetupMessages.getModeInform("page"));
+                player.sendMessage(SetupMessages.getPagePoolSelected(this.activePagePool));
                 SetupItems.setPageItems(player);
             } else {
                 player.sendMessage(SetupMessages.PAGE_MODE_DISABLED);
@@ -614,6 +674,18 @@ public class GameData extends InstanceSetupData {
 
         if (SetupItemId.PAGES == tagValue) {
             this.openInventory(InventoryTarget.PAGE);
+            return;
+        }
+
+        if (SetupItemId.PAGE_POOL_NEW == tagValue) {
+            EventDispatcher.call(new DialogRequestEvent(player, DialogTarget.PAGE_POOL_NAME));
+            return;
+        }
+
+        if (SetupItemId.PAGE_POOLS == tagValue) {
+            // Built when opened, so the page counts are current
+            this.refreshPagePools();
+            this.pagePoolInventory.open();
             return;
         }
 
@@ -780,6 +852,7 @@ public class GameData extends InstanceSetupData {
         this.inventory.unregister();
         this.pageInventory.unregister();
         this.creekRouteInventory.unregister();
+        this.pagePoolInventory.unregister();
         this.creekRoutePreview.hide();
         this.pagePreview.hide();
     }

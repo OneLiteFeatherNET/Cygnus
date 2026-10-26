@@ -25,6 +25,8 @@ public final class SetupItemId {
     public static final byte CREEK_LEAVE    = (byte) 0x0D;
     public static final byte CREEK_PAUSE    = (byte) 0x0E;
     public static final byte CREEK_FINISH   = (byte) 0x0F;
+    public static final byte PAGE_POOL_NEW  = (byte) 0x10;
+    public static final byte PAGE_POOLS     = (byte) 0x11;
 
     private SetupItemId() {
         // Nothing to do here
