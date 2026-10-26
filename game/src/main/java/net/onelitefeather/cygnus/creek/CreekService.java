@@ -17,7 +17,6 @@ import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
-import net.onelitefeather.cygnus.creek.state.Calm;
 import net.onelitefeather.cygnus.creek.state.CreekTuning;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
@@ -76,7 +75,7 @@ public final class CreekService {
     private final CreekRespite respite;
     private final CatchConsequence consequence;
     private final CreekMarks marks;
-    private final MoodClock mood;
+    private final CreekPressure pressure;
     private final CatchTrick stareTrick;
     private final LongSupplier clock;
     private final RandomGenerator random;
@@ -88,9 +87,6 @@ public final class CreekService {
     private final RepeatingTask task;
     private volatile @Nullable Creek creek;
     private volatile @Nullable CreekVariants variants;
-    /** The most survivors the round has had so far, which is what its calm is measured against. */
-    private int started;
-    private volatile Calm calm = Calm.NONE;
 
     /**
      * Sets up the service, with its step measured for the slow tick report.
@@ -129,7 +125,7 @@ public final class CreekService {
         this.respite = respite;
         this.consequence = consequence;
         this.marks = marks;
-        this.mood = mood;
+        this.pressure = new CreekPressure(config, mood);
         this.stareTrick = stareTrick;
         this.clock = clock;
         this.random = random;
@@ -147,7 +143,7 @@ public final class CreekService {
     public void registerListener(EventNode<Event> node) {
         node.addListener(GameStartEvent.class, _ -> this.start());
         node.addListener(GameFinishEvent.class, _ -> this.stop());
-        node.addListener(PageFoundEvent.class, _ -> this.mood.pageFound(this.clock.getAsLong()));
+        node.addListener(PageFoundEvent.class, _ -> this.pressure.pageFound(this.clock.getAsLong()));
     }
 
     /**
@@ -180,7 +176,7 @@ public final class CreekService {
         this.variants = new CreekVariants(this.config, this.settings, this.spots, this.random, showsUp,
                 (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state),
                 this::tuning);
-        this.mood.start(this.clock.getAsLong());
+        this.pressure.start(this.clock.getAsLong());
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }
 
@@ -197,11 +193,8 @@ public final class CreekService {
         if (current == null) return;
         // One snapshot for every creek: where the survivors are and how scared they are is the same for all.
         long now = this.clock.getAsLong();
-        if (this.mood.tick(now)) this.announceSwitch();
         SurvivorSnapshot survivors = SurvivorSnapshot.take(this.survivors.get(), this.dread, this.respite, now);
-        // Measured against the fullest the round has been: survivors may still be joining in its first steps.
-        this.started = Math.max(this.started, survivors.size());
-        this.calm = Calm.of(this.started, survivors.size());
+        if (this.pressure.step(survivors.size(), now)) this.announceSwitch();
         CreekVariants currentVariants = this.variants;
         // Count every survivor here: hiding the patrol from the haunted is not being down to the last one.
         if (!this.config.activeWithLastSurvivor() && survivors.size() <= 1) {
@@ -231,15 +224,13 @@ public final class CreekService {
         if (current != null) current.remove();
         this.consequence.cleanUp();
         this.marks.cleanUp();
-        this.mood.reset();
+        this.pressure.stop();
         CreekRound currentRound = this.round;
         this.round = null;
         if (currentRound != null) {
             currentRound.patrol().cleanUp();
             currentRound.decoys().clear();
         }
-        this.started = 0;
-        this.calm = Calm.NONE;
     }
 
     /**
@@ -259,7 +250,7 @@ public final class CreekService {
      * @return the values
      */
     CreekTuning tuning() {
-        return new CreekTuning(this.config, this.calm, this.mood.get());
+        return this.pressure.tuning();
     }
 
     @Nullable Creek creek() {
