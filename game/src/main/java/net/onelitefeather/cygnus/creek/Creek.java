@@ -283,6 +283,11 @@ final class Creek {
         }
 
         @Override
+        public void decoy(UUID survivor, Pos where) {
+            this.with(survivor, player -> this.round.decoys().spawn(player, where));
+        }
+
+        @Override
         public void stareBeat(UUID survivor, int beat) {
             this.with(survivor, player -> this.round.patrol().stareBeat(player, beat, this.body.position()));
         }

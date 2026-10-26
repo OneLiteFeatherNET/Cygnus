@@ -166,7 +166,8 @@ public final class CreekService implements PossessionTarget {
         }
         // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
-        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.marks, this.stareTrick, this.witness,
+        Decoys decoys = new Decoys(this.bodies, this.sight, this.config.stalk().revealMillis(), this.clock);
+        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.marks, this.stareTrick, decoys, this.witness,
                 new PatrolHelper(this.random), new StalkSounds(this.random), this.config, this.settings, this.random,
                 new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L), this::tuning);
         this.round = round;
@@ -214,6 +215,9 @@ public final class CreekService implements PossessionTarget {
             current.tick(survivors, haunted, now);
             if (currentVariants != null) currentVariants.tick(survivors, now);
         }
+        // Doppelgangers crumble or run out of time even once the creek is gone for good.
+        CreekRound currentRound = this.round;
+        if (currentRound != null) currentRound.decoys().tick(survivors, now);
     }
 
     /**
@@ -232,7 +236,10 @@ public final class CreekService implements PossessionTarget {
         this.mood.reset();
         CreekRound currentRound = this.round;
         this.round = null;
-        if (currentRound != null) currentRound.patrol().cleanUp();
+        if (currentRound != null) {
+            currentRound.patrol().cleanUp();
+            currentRound.decoys().clear();
+        }
         this.started = 0;
         this.calm = Calm.NONE;
     }

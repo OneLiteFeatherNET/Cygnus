@@ -22,7 +22,8 @@ import java.util.random.RandomGenerator;
  * </p>
  * <p>
  * In the shadow mood it comes back at the end distance right after a look, and once per stalk it
- * may turn up behind a teammate instead, where only the stalked survivor sees it.
+ * may turn up behind a teammate instead, where only the stalked survivor sees it. In the trickster
+ * mood it may leave a doppelganger in the survivor's view once per stalk when it moves unseen.
  * </p>
  * <p>
  * It turns into a hunt once the survivor is scared enough, but only after it has run for
@@ -57,6 +58,15 @@ public final class StalkState implements CreekState {
     /** How far behind the teammate the shadow stands, in blocks. */
     static final double BEHIND_DISTANCE = 2.0D;
 
+    /** The chance that the trickster leaves a doppelganger when it moves unseen, once per stalk. */
+    static final double DECOY_CHANCE = 0.35D;
+
+    /** How close to the target the doppelganger stands at the least, in blocks. */
+    static final double DECOY_MIN_DISTANCE = 10.0D;
+
+    /** How far from the target the doppelganger stands at the most, in blocks. */
+    static final double DECOY_MAX_DISTANCE = 18.0D;
+
     /** The shortest gap between two sounds at the start of a stalk, in milliseconds. */
     static final long FIRST_GAP_MIN_MILLIS = 6000L;
 
@@ -75,6 +85,7 @@ public final class StalkState implements CreekState {
     private long seenSince = -1L;
     private long nextSoundAt = -1L;
     private boolean stoodBehindTeammate;
+    private boolean leftDecoy;
 
     /**
      * Sets up the stalk.
@@ -157,6 +168,7 @@ public final class StalkState implements CreekState {
         boolean moved = (distance < this.minDistance(ctx) || distance > ctx.tuning().stretch(this.maxDistance(ctx)))
                 && this.relocate(ctx, view);
         if (this.nextSoundAt < 0) this.scheduleSound(ctx);
+        if (moved) this.mayLeaveDecoy(ctx, view);
         if (moved || ctx.now() >= this.nextSoundAt) {
             ctx.actions().stalkSound(this.target, this.progress(ctx.now()));
             this.scheduleSound(ctx);
@@ -193,6 +205,26 @@ public final class StalkState implements CreekState {
         double min = FIRST_GAP_MIN_MILLIS + (LAST_GAP_MIN_MILLIS - FIRST_GAP_MIN_MILLIS) * progress;
         double max = FIRST_GAP_MAX_MILLIS + (LAST_GAP_MAX_MILLIS - FIRST_GAP_MAX_MILLIS) * progress;
         return Math.round(min + (max - min) * roll);
+    }
+
+    /**
+     * Lets the trickster leave a doppelganger straight ahead of the survivor, once per stalk.
+     */
+    private void mayLeaveDecoy(CreekContext ctx, SurvivorView view) {
+        if (ctx.tuning().mood() != CreekMood.TRICKSTER || this.leftDecoy) return;
+        if (ctx.random().nextDouble() >= DECOY_CHANCE) return;
+        Pos target = view.position();
+        Vec ahead = target.direction().withY(0.0D);
+        // Looking straight up or down there is no ahead to put it in.
+        if (ahead.isZero()) return;
+        double distance = ctx.random().nextDouble(DECOY_MIN_DISTANCE, DECOY_MAX_DISTANCE);
+        Pos candidate = target.add(ahead.normalize().mul(distance));
+        ctx.spots().grounded(candidate)
+                .filter(spot -> !ctx.spots().isHidden(spot, List.of(view.eyes()), 0.0D))
+                .ifPresent(spot -> {
+                    this.leftDecoy = true;
+                    ctx.actions().decoy(this.target, spot);
+                });
     }
 
     /**

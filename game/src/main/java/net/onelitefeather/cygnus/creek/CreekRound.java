@@ -24,6 +24,7 @@ import java.util.random.RandomGenerator;
  * @param consequence what happens on a catch
  * @param marks       sometimes gives a survivor away to the slender outside of a catch
  * @param stareTrick  teleports a survivor at the end of a stare, for a mood that does so
+ * @param decoys      the trickster's doppelgangers
  * @param witness     hears about catches and sightings
  * @param patrol      what the patrolling creek does to the survivors around it
  * @param stalk       lets a stalked survivor hear the creek
@@ -43,6 +44,7 @@ record CreekRound(
         CatchConsequence consequence,
         CreekMarks marks,
         CatchTrick stareTrick,
+        Decoys decoys,
         CreekWitness witness,
         PatrolHelper patrol,
         StalkSounds stalk,
