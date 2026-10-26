@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.creek;
 import net.onelitefeather.cygnus.telemetry.TickSectionNames;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -34,7 +33,6 @@ import net.onelitefeather.cygnus.creek.world.PathRoute;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
-import net.onelitefeather.cygnus.possession.PossessionTarget;
 import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -58,10 +56,10 @@ import java.util.random.RandomGenerator;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.15.0
  */
-public final class CreekService implements PossessionTarget {
+public final class CreekService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CreekService.class);
 
@@ -262,38 +260,6 @@ public final class CreekService implements PossessionTarget {
      */
     CreekTuning tuning() {
         return new CreekTuning(this.config, this.calm, this.mood.get());
-    }
-
-    @Override
-    public @Nullable Entity possessable() {
-        Creek current = this.creek;
-        if (current == null) return null;
-        CreekState state = current.state();
-        if (state instanceof VanishState || state instanceof DoneState) return null;
-        return current.body().entity();
-    }
-
-    @Override
-    public void possess(UUID slender, double sightFactor) {
-        Creek current = this.creek;
-        if (current == null) return;
-        // The variants keep the normal sight. They haunt one survivor each and are none of the slender's business.
-        int range = (int) Math.round(this.settings.sightRange() * sightFactor);
-        current.body().observe(slender);
-        current.boost(new CreekSight(range, this.config.sight().viewAngle()));
-    }
-
-    @Override
-    public void release() {
-        Creek current = this.creek;
-        if (current == null) return;
-        current.body().observe(null);
-        current.boost(null);
-    }
-
-    @Override
-    public int sightRange() {
-        return this.settings.sightRange();
     }
 
     @Nullable Creek creek() {

@@ -42,6 +42,7 @@ public final class CreekModule implements GameFeature {
     private final CreekConfig config;
     private final GameMapProvider mapProvider;
     private final CreekService service;
+    private final CreekPossession possession;
 
     /**
      * Builds the creek, with its step measured for the slow tick report.
@@ -101,6 +102,7 @@ public final class CreekModule implements GameFeature {
                 System::currentTimeMillis,
                 random,
                 sections);
+        this.possession = new CreekPossession(this.service::creek, settings.sightRange(), this.config.sight().viewAngle());
         this.registerListeners();
     }
 
@@ -133,7 +135,7 @@ public final class CreekModule implements GameFeature {
      * @return the possession target
      */
     public PossessionTarget possessionTarget() {
-        return this.service;
+        return this.possession;
     }
 
     /**
