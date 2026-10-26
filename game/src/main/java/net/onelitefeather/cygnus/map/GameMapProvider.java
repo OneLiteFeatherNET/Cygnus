@@ -36,7 +36,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ThreadLocalRandom;
 
 public final class GameMapProvider extends AbstractMapProvider {
 
@@ -224,7 +223,7 @@ public final class GameMapProvider extends AbstractMapProvider {
 
         GameMap map = readGameMap();
         PagePoolDraw.Drawn pool = PagePoolDraw.drawFrom(this.gameEntry.getMapFile(), map.getPageFaces(),
-                map.getPageSettings().minActivePages(), ThreadLocalRandom.current());
+                map.getPageSettings().minActivePages());
         this.pagePool = pool.name();
         this.gameMap = map.withPageFaces(pool.pages());
         this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer(this.gameDimension);
