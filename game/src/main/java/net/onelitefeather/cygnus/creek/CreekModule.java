@@ -56,11 +56,13 @@ public final class CreekModule implements GameFeature {
      * @param jumpScareManager plays the jump scare of a catch
      * @param staminaService   the stamina bars a catch drains
      * @param sections         measures how long each step takes
+     * @param gameTimeSeconds  how long a round lasts, which the creek's mood switch is measured against
      * @since 2.15.0
      */
     public CreekModule(CreekConfig config, CreekSettings settings, TeamService teamService,
                        GameMapProvider mapProvider, DreadSource dread, CreekWitness witness, CreekRespite respite,
-                       JumpScareManager jumpScareManager, StaminaService staminaService, TickSections sections) {
+                       JumpScareManager jumpScareManager, StaminaService staminaService, TickSections sections,
+                       int gameTimeSeconds) {
         this.config = config;
         this.mapProvider = mapProvider;
         // Every step and every catch runs on the scheduler thread, but Random is thread-safe
@@ -91,6 +93,7 @@ public final class CreekModule implements GameFeature {
                         this.config,
                         random),
                 new RevealMarks(reveal, () -> TeamHelper.slenderOf(teamService), System::currentTimeMillis, random),
+                new MoodClock(gameTimeSeconds * 1000L, random),
                 System::currentTimeMillis,
                 random,
                 sections);

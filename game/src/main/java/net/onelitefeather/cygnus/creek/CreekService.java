@@ -16,6 +16,7 @@ import net.onelitefeather.cygnus.creek.consequence.catching.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
+import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.creek.state.Calm;
 import net.onelitefeather.cygnus.creek.state.CreekTuning;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
@@ -76,6 +77,7 @@ public final class CreekService implements PossessionTarget {
     private final CreekRespite respite;
     private final CatchConsequence consequence;
     private final CreekMarks marks;
+    private final MoodClock mood;
     private final LongSupplier clock;
     private final RandomGenerator random;
     private final CreekSight sight;
@@ -104,6 +106,7 @@ public final class CreekService implements PossessionTarget {
      * @param respite     tells who the creek leaves alone for now
      * @param consequence what happens on a catch
      * @param marks       sometimes gives a survivor away to the slender outside of a catch
+     * @param mood        decides when the creek's mood switches and to which
      * @param clock       supplies the current time in milliseconds
      * @param random      the random source
      * @param sections    measures how long each step takes
@@ -112,7 +115,7 @@ public final class CreekService implements PossessionTarget {
     public CreekService(CreekConfig config, CreekSettings settings, Supplier<Set<Player>> survivors,
                           Supplier<? extends @Nullable Instance> instance, Supplier<List<CreekRoute>> routes,
                           BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread, CreekWitness witness,
-                          CreekRespite respite, CatchConsequence consequence, CreekMarks marks, LongSupplier clock, RandomGenerator random,
+                          CreekRespite respite, CatchConsequence consequence, CreekMarks marks, MoodClock mood, LongSupplier clock, RandomGenerator random,
                           TickSections sections) {
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.CREEK, this::tick));
         this.config = config;
@@ -125,6 +128,7 @@ public final class CreekService implements PossessionTarget {
         this.respite = respite;
         this.consequence = consequence;
         this.marks = marks;
+        this.mood = mood;
         this.clock = clock;
         this.random = random;
         this.sight = new CreekSight(settings.sightRange(), config.sight().viewAngle());
@@ -141,6 +145,7 @@ public final class CreekService implements PossessionTarget {
     public void registerListener(EventNode<Event> node) {
         node.addListener(GameStartEvent.class, _ -> this.start());
         node.addListener(GameFinishEvent.class, _ -> this.stop());
+        node.addListener(PageFoundEvent.class, _ -> this.mood.pageFound(this.clock.getAsLong()));
     }
 
     /**
@@ -172,6 +177,7 @@ public final class CreekService implements PossessionTarget {
         this.variants = new CreekVariants(this.config, this.settings, this.spots, this.random, showsUp,
                 (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state),
                 this::tuning);
+        this.mood.start(this.clock.getAsLong());
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }
 
@@ -188,6 +194,7 @@ public final class CreekService implements PossessionTarget {
         if (current == null) return;
         // One snapshot for every creek: where the survivors are and how scared they are is the same for all.
         long now = this.clock.getAsLong();
+        if (this.mood.tick(now)) this.announceSwitch();
         SurvivorSnapshot survivors = SurvivorSnapshot.take(this.survivors.get(), this.dread, this.respite, now);
         // Measured against the fullest the round has been: survivors may still be joining in its first steps.
         this.started = Math.max(this.started, survivors.size());
@@ -218,11 +225,23 @@ public final class CreekService implements PossessionTarget {
         if (current != null) current.remove();
         this.consequence.cleanUp();
         this.marks.cleanUp();
+        this.mood.reset();
         CreekRound currentRound = this.round;
         this.round = null;
         if (currentRound != null) currentRound.patrol().cleanUp();
         this.started = 0;
         this.calm = Calm.NONE;
+    }
+
+    /**
+     * Lets everyone in the round hear that something changed, without telling them what.
+     */
+    private void announceSwitch() {
+        Instance world = this.instance.get();
+        if (world == null) return;
+        for (Player player : world.getPlayers()) {
+            player.playSound(MoodClock.SWITCH_SOUND);
+        }
     }
 
     /**

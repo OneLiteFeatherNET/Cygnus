@@ -285,7 +285,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor,
                                 new HuntTracer(this.roundTracer, Clock.systemUTC(), this::activeMapName,
                                         Cygnus::survivorActor, HuntMetrics.fromGlobal(serviceVersion()))),
-                                MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), creekRespite, this.jumpscareManager, this.staminaService, tickSections);
+                                MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), creekRespite, this.jumpscareManager, this.staminaService, tickSections,
+                        this.gameConfig.round().gameTime());
                 this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
                         new EpilepsyDisclaimer(),
                         this.slenderTakeover,
