@@ -19,6 +19,7 @@ import net.onelitefeather.cygnus.common.map.filter.MapFilters;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.PageFacesFile;
+import net.onelitefeather.cygnus.common.page.PagePoolDraw;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
@@ -35,6 +36,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class GameMapProvider extends AbstractMapProvider {
 
@@ -51,6 +53,7 @@ public final class GameMapProvider extends AbstractMapProvider {
     private final CreekSettings creekSettings;
     private @Nullable InstanceContainer gameInstance;
     private @Nullable GameMap gameMap;
+    private @Nullable String pagePool;
     private @Nullable InstanceContainer previousInstance;
     private boolean releasePending;
 
@@ -203,10 +206,27 @@ public final class GameMapProvider extends AbstractMapProvider {
         return this.creekSettings;
     }
 
+    /**
+     * Returns the name of the page pool the round is played with.
+     *
+     * @return the drawn pool, or {@code null} until {@link #loadGameMap()} ran
+     */
+    public @Nullable String pagePool() {
+        return this.pagePool;
+    }
+
+    /**
+     * Loads the game map into a fresh instance. The page pool of the round is drawn here, once, so
+     * the map carries only the spots of that pool (see {@link PagePoolDraw}).
+     */
     public void loadGameMap() {
         if (this.gameMap != null) return; // idempotent
 
-        this.gameMap = readGameMap();
+        GameMap map = readGameMap();
+        PagePoolDraw.Drawn pool = PagePoolDraw.drawFrom(this.gameEntry.getMapFile(), map.getPageFaces(),
+                map.getPageSettings().minActivePages(), ThreadLocalRandom.current());
+        this.pagePool = pool.name();
+        this.gameMap = map.withPageFaces(pool.pages());
         this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer(this.gameDimension);
         this.gameInstance.setTime(Helper.NEW_MOON_TIME);
         this.registerFalcoInstance(this.gameInstance, this.gameEntry);
