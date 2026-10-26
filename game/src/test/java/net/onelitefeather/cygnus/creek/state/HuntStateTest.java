@@ -52,6 +52,33 @@ class HuntStateTest {
     }
 
     @Test
+    @DisplayName("The hunter creeps on towards the target while it watches him")
+    void hunterCreepsWhileWatched() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 10));
+        CreekContext ctx = Contexts.mood(at(0L, body, new ArrayList<>(), true), CreekMood.HUNTER);
+
+        new HuntState(TARGET, 30_000L).tick(ctx);
+
+        assertFalse(body.frozen);
+        assertEquals(TARGET_POS, body.goal);
+        assertEquals(ctx.tuning().watchedHuntSpeed(), body.speed, 1.0E-9);
+    }
+
+    @Test
+    @DisplayName("Watched, the hunter never catches, however close he gets, but he does once the target looks away")
+    void creepingNeverCatchesWhileWatched() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 1));
+        List<UUID> caught = new ArrayList<>();
+        HuntState state = new HuntState(TARGET, 30_000L);
+
+        assertSame(state, state.tick(Contexts.mood(at(0L, body, caught, true), CreekMood.HUNTER)));
+        assertTrue(caught.isEmpty());
+
+        assertSame(DoneState.INSTANCE, state.tick(Contexts.mood(at(100L, body, caught, false), CreekMood.HUNTER)));
+        assertEquals(List.of(TARGET), caught);
+    }
+
+    @Test
     @DisplayName("Unseen, he closes in")
     void closesInWhenUnseen() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 10));
