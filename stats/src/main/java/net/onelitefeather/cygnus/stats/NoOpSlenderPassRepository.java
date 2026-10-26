@@ -1,5 +1,8 @@
 package net.onelitefeather.cygnus.stats;
 
+import java.time.YearMonth;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -79,6 +82,37 @@ public final class NoOpSlenderPassRepository implements SlenderPassRepository {
      */
     @Override
     public CompletableFuture<Adjustment> set(UUID player, int amount) {
+        return CompletableFuture.completedFuture(new Adjustment(0, 0));
+    }
+
+    /**
+     * Keeps no counter and credits nothing.
+     *
+     * @param survivors  the Survivors
+     * @param slenders   the Slender
+     * @param pityRounds the threshold
+     * @param maxBalance the cap
+     * @return an already completed, empty map
+     * @since 2.21.0
+     */
+    @Override
+    public CompletableFuture<Map<UUID, Adjustment>> recordRounds(Collection<UUID> survivors, Collection<UUID> slenders,
+                                                                 int pityRounds, int maxBalance) {
+        return CompletableFuture.completedFuture(Map.of());
+    }
+
+    /**
+     * Credits nothing.
+     *
+     * @param player     the player
+     * @param month      the month
+     * @param amount     the quota
+     * @param maxBalance the cap
+     * @return an already completed, empty adjustment
+     * @since 2.21.0
+     */
+    @Override
+    public CompletableFuture<Adjustment> grantQuota(UUID player, YearMonth month, int amount, int maxBalance) {
         return CompletableFuture.completedFuture(new Adjustment(0, 0));
     }
 }

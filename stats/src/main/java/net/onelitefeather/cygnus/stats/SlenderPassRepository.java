@@ -2,6 +2,9 @@ package net.onelitefeather.cygnus.stats;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.time.YearMonth;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -75,6 +78,38 @@ public interface SlenderPassRepository {
      * @throws IllegalArgumentException if the amount is negative
      */
     CompletableFuture<Adjustment> set(UUID player, int amount);
+
+    /**
+     * Applies one finished round to the pity counters of its players, in one transaction. A Survivor's counter goes up
+     * by one; when it reaches the threshold, it goes back to zero and one pass is credited, capped by the maximum
+     * balance. A Slender's counter goes back to zero. A credit that the cap reduces to nothing writes no ledger row and
+     * is not in the result.
+     *
+     * @param survivors  the players who played the round to the end as Survivors
+     * @param slenders   the players who were the Slender in the round, by any path
+     * @param pityRounds the Survivor rounds until one pass is earned, at least 1
+     * @param maxBalance the cap for earned passes, zero or more
+     * @return the players who received a pass, with their new balance and the delta
+     * @throws IllegalArgumentException if the threshold is below 1 or the cap is negative
+     * @since 2.21.0
+     */
+    CompletableFuture<Map<UUID, Adjustment>> recordRounds(Collection<UUID> survivors, Collection<UUID> slenders,
+                                                          int pityRounds, int maxBalance);
+
+    /**
+     * Credits the monthly quota of a player once per calendar month. The first call in a month marks the month and
+     * credits up to the quota within the cap; a later call in the same or an earlier month is not a new month, so it
+     * credits nothing and writes nothing. A quota of zero marks the month as well. Missed months are not paid back.
+     *
+     * @param player     the player
+     * @param month      the calendar month (UTC) of the join
+     * @param amount     the quota of the player's rank, zero or more
+     * @param maxBalance the cap for earned passes, zero or more
+     * @return the new balance and the delta; a delta of zero writes no ledger row
+     * @throws IllegalArgumentException if the amount or the cap is negative
+     * @since 2.21.0
+     */
+    CompletableFuture<Adjustment> grantQuota(UUID player, YearMonth month, int amount, int maxBalance);
 
     /**
      * The outcome of a balance change.

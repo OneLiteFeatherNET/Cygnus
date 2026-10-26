@@ -4,7 +4,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,8 @@ public final class InMemorySlenderPassRepository implements SlenderPassRepositor
 
     private final Clock clock;
     private final Map<UUID, Integer> balances = new HashMap<>();
+    private final Map<UUID, Integer> roundsSinceSlender = new HashMap<>();
+    private final Map<UUID, YearMonth> quotaMonths = new HashMap<>();
     private final List<LedgerEntry> ledger = new ArrayList<>();
 
     /**
@@ -116,6 +120,64 @@ public final class InMemorySlenderPassRepository implements SlenderPassRepositor
      */
     public synchronized List<LedgerEntry> ledger() {
         return List.copyOf(this.ledger);
+    }
+
+    /**
+     * Applies one finished round to the pity counters, with the rules of the database.
+     *
+     * @param survivors  the Survivors of the round
+     * @param slenders   the Slender of the round
+     * @param pityRounds the threshold, at least 1
+     * @param maxBalance the cap, zero or more
+     * @return the credits of the players who received a pass
+     */
+    @Override
+    public synchronized CompletableFuture<Map<UUID, Adjustment>> recordRounds(Collection<UUID> survivors,
+                                                                               Collection<UUID> slenders,
+                                                                               int pityRounds, int maxBalance) {
+        if (pityRounds < 1) {
+            throw new IllegalArgumentException("The pity threshold must be at least 1: " + pityRounds);
+        }
+        requireNonNegative(maxBalance);
+        slenders.forEach(this.roundsSinceSlender::remove);
+        Map<UUID, Adjustment> credits = new HashMap<>();
+        for (UUID player : survivors) {
+            int counted = this.roundsSinceSlender.getOrDefault(player, 0) + 1;
+            if (counted < pityRounds) {
+                this.roundsSinceSlender.put(player, counted);
+                continue;
+            }
+            this.roundsSinceSlender.remove(player);
+            if (Math.min(1, Math.max(0, maxBalance - balanceOf(player))) > 0) {
+                credits.put(player, record(player, 1, LedgerReason.EARNED_PITY, null));
+            }
+        }
+        return CompletableFuture.completedFuture(Map.copyOf(credits));
+    }
+
+    /**
+     * Credits the monthly quota once per month, with the rules of the database.
+     *
+     * @param player     the player
+     * @param month      the month of the join
+     * @param amount     the quota, zero or more
+     * @param maxBalance the cap, zero or more
+     * @return the adjustment
+     */
+    @Override
+    public synchronized CompletableFuture<Adjustment> grantQuota(UUID player, YearMonth month, int amount, int maxBalance) {
+        requireNonNegative(amount);
+        requireNonNegative(maxBalance);
+        YearMonth last = this.quotaMonths.get(player);
+        if (last != null && !last.isBefore(month)) {
+            return CompletableFuture.completedFuture(new Adjustment(balanceOf(player), 0));
+        }
+        this.quotaMonths.put(player, month);
+        int delta = Math.min(amount, Math.max(0, maxBalance - balanceOf(player)));
+        if (delta == 0) {
+            return CompletableFuture.completedFuture(new Adjustment(balanceOf(player), 0));
+        }
+        return CompletableFuture.completedFuture(record(player, delta, LedgerReason.RANK_QUOTA, null));
     }
 
     private int balanceOf(UUID player) {

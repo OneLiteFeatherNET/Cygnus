@@ -5,6 +5,10 @@ import org.hibernate.SessionFactory;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Clock;
+import java.time.YearMonth;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -138,6 +142,101 @@ public final class HibernateSlenderPassRepository implements SlenderPassReposito
             session.persist(new SlenderPassEntry(player, delta, reason, null, this.clock.instant()));
             return new Adjustment(current + delta, delta);
         });
+    }
+
+    /**
+     * Applies one finished round to the pity counters in one transaction.
+     *
+     * @param survivors  the Survivors of the round
+     * @param slenders   the Slender of the round
+     * @param pityRounds the threshold
+     * @param maxBalance the cap
+     * @return the credits of the players who received a pass
+     */
+    @Override
+    public CompletableFuture<Map<UUID, Adjustment>> recordRounds(Collection<UUID> survivors, Collection<UUID> slenders,
+                                                                 int pityRounds, int maxBalance) {
+        requirePityRounds(pityRounds);
+        requireNonNegative(maxBalance);
+        return write(session -> {
+            for (UUID player : slenders) {
+                SlenderPassBalance row = session.find(SlenderPassBalance.class, player);
+                if (row != null) {
+                    row.resetRounds();
+                }
+            }
+            Map<UUID, Adjustment> credits = new HashMap<>();
+            for (UUID player : survivors) {
+                SlenderPassBalance row = loadOrCreate(session, player);
+                row.countSurvivorRound();
+                if (row.roundsSinceSlender() < pityRounds) {
+                    continue;
+                }
+                row.resetRounds();
+                Adjustment credit = credit(session, player, row, 1, maxBalance, LedgerReason.EARNED_PITY);
+                if (credit.delta() > 0) {
+                    credits.put(player, credit);
+                }
+            }
+            return Map.copyOf(credits);
+        });
+    }
+
+    /**
+     * Credits the monthly quota once per month. The conditional update marks the month only when it is later than the
+     * last marked one, so two servers that see the same join cannot both credit it.
+     *
+     * @param player     the player
+     * @param month      the month of the join
+     * @param amount     the quota
+     * @param maxBalance the cap
+     * @return the adjustment
+     */
+    @Override
+    public CompletableFuture<Adjustment> grantQuota(UUID player, YearMonth month, int amount, int maxBalance) {
+        requireNonNegative(amount);
+        requireNonNegative(maxBalance);
+        return write(session -> {
+            SlenderPassBalance row = loadOrCreate(session, player);
+            int marked = session.createMutationQuery("update SlenderPassBalance b "
+                            + "set b.lastQuotaMonth = :month, b.version = b.version + 1 "
+                            + "where b.playerUuid = :player and (b.lastQuotaMonth is null or b.lastQuotaMonth < :month)")
+                    .setParameter("player", player)
+                    .setParameter("month", month)
+                    .executeUpdate();
+            if (marked == 0) {
+                return new Adjustment(row.balance(), 0);
+            }
+            session.refresh(row);
+            return credit(session, player, row, amount, maxBalance, LedgerReason.RANK_QUOTA);
+        });
+    }
+
+    private static SlenderPassBalance loadOrCreate(Session session, UUID player) {
+        SlenderPassBalance row = session.find(SlenderPassBalance.class, player);
+        if (row == null) {
+            row = new SlenderPassBalance(player);
+            session.persist(row);
+            session.flush();
+        }
+        return row;
+    }
+
+    private Adjustment credit(Session session, UUID player, SlenderPassBalance row, int amount, int maxBalance,
+                              LedgerReason reason) {
+        int delta = Math.min(amount, Math.max(0, maxBalance - row.balance()));
+        if (delta == 0) {
+            return new Adjustment(row.balance(), 0);
+        }
+        row.add(delta);
+        session.persist(new SlenderPassEntry(player, delta, reason, null, this.clock.instant()));
+        return new Adjustment(row.balance(), delta);
+    }
+
+    private static void requirePityRounds(int pityRounds) {
+        if (pityRounds < 1) {
+            throw new IllegalArgumentException("The pity threshold must be at least 1: " + pityRounds);
+        }
     }
 
     private <T> CompletableFuture<T> read(Function<Session, T> query) {
