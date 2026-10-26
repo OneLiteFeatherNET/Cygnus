@@ -73,7 +73,7 @@ public final class PagePoolDraw {
      */
     static Drawn draw(String map, Set<PageResource> defaultPages, Map<String, Set<PageResource>> pools,
                       int minActivePages) {
-        List<Drawn> candidates = new ArrayList<>(pools.size() + 1);
+        List<Drawn> candidates = new ArrayList<>();
         addIfBigEnough(candidates, map, new Drawn(PagePoolFiles.DEFAULT_POOL, defaultPages), minActivePages);
         for (Map.Entry<String, Set<PageResource>> pool : pools.entrySet()) {
             addIfBigEnough(candidates, map, new Drawn(pool.getKey(), pool.getValue()), minActivePages);
