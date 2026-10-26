@@ -31,7 +31,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -60,7 +59,6 @@ public final class RegenerationService implements GameFeature {
     private final RegenerationConfig config;
     private final DreadSource dread;
     private final Supplier<Set<Player>> survivors;
-    private final LongSupplier clock;
     private final RepeatingTask task;
     private final PlayerState<Boolean> used = new PlayerState<>();
     private final Map<CygnusPlayer, Double> healing = new ConcurrentHashMap<>();
@@ -72,15 +70,13 @@ public final class RegenerationService implements GameFeature {
      * @param config    the regeneration settings
      * @param dread     supplies each survivor's fear
      * @param survivors supplies the survivors of the round
-     * @param clock     supplies the current time in milliseconds
      * @param sections  measures how long each tick takes
      */
     public RegenerationService(RegenerationConfig config, DreadSource dread, Supplier<Set<Player>> survivors,
-                               LongSupplier clock, TickSections sections) {
+                               TickSections sections) {
         this.config = config;
         this.dread = dread;
         this.survivors = survivors;
-        this.clock = clock;
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.REGENERATION, this::tick));
         this.registerListeners();
     }
@@ -149,7 +145,8 @@ public final class RegenerationService implements GameFeature {
      * Moves every running healing on by one step.
      */
     void tick() {
-        long now = this.clock.getAsLong();
+        // One time for the whole tick, so every healing survivor is rated at the same moment.
+        long now = System.currentTimeMillis();
         for (Map.Entry<CygnusPlayer, Double> entry : Map.copyOf(this.healing).entrySet()) {
             CygnusPlayer survivor = entry.getKey();
             if (!affected(survivor)) {

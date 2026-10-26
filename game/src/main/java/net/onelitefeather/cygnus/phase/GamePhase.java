@@ -66,7 +66,7 @@ public final class GamePhase extends TimedPhase {
     @Override
     public void onStart() {
         super.onStart();
-        addListener(PlayerTickEvent.class, new CygnusPlayerTickListener(this.jumpscareManager, this.dreadSource, System::currentTimeMillis));
+        addListener(PlayerTickEvent.class, new CygnusPlayerTickListener(this.jumpscareManager, this.dreadSource));
         EventDispatcher.call(new GameStartEvent());
         EventDispatcher.call(new RoundInGameEvent());
     }
