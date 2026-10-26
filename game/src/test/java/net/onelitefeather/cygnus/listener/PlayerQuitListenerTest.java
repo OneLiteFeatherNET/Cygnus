@@ -78,7 +78,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         spectatorTeam.addPlayer(spectator);
         spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
                 new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
@@ -108,7 +108,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(survivor);
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
                 new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
@@ -141,7 +141,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(survivor2);
         survivor2.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
                 new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
@@ -174,7 +174,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(survivor);
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
                 new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
@@ -208,7 +208,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(otherSurvivor);
         otherSurvivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
                 new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
@@ -239,7 +239,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
         survivorTeam.addPlayer(survivor);
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
-        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), _ -> 0.0D);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
                 new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
         testNode.addListener(PlayerDisconnectEvent.class, listener);

@@ -69,7 +69,7 @@ class CygnusPlayerTickListenerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin corpse = registerCorpse(env, manager, instance, corpseOwner);
 
         Collector<SpawnEntityPacket> spawns = victimConnection.trackIncoming(SpawnEntityPacket.class);
-        driveTurnArounds(new CygnusPlayerTickListener(manager, _ -> 0.0D), victim);
+        driveTurnArounds(new CygnusPlayerTickListener(manager, (_, _) -> 0.0D, () -> 0L), victim);
 
         List<SpawnEntityPacket> packets = spawns.collect();
         assertTrue(packets.stream().anyMatch(packet -> packet.type() == EntityType.MANNEQUIN),
@@ -88,7 +88,7 @@ class CygnusPlayerTickListenerTest extends CygnusPlayerTestBase {
 
         // Terrified: a sound within at most 120 ticks. A calm survivor would wait at least 240.
         CygnusPlayerTickListener listener = new CygnusPlayerTickListener(new JumpScareManager(TickSections.NONE),
-                uuid -> uuid.equals(survivor.getUuid()) ? 1.0D : 0.0D);
+                (uuid, _) -> uuid.equals(survivor.getUuid()) ? 1.0D : 0.0D, () -> 0L);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         for (int i = 0; i < 120; i++) {
@@ -106,7 +106,7 @@ class CygnusPlayerTickListenerTest extends CygnusPlayerTestBase {
         Player slender = connection.connect(instance, VICTIM_POS);
         slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
 
-        CygnusPlayerTickListener listener = new CygnusPlayerTickListener(new JumpScareManager(TickSections.NONE), _ -> 1.0D);
+        CygnusPlayerTickListener listener = new CygnusPlayerTickListener(new JumpScareManager(TickSections.NONE), (_, _) -> 1.0D, () -> 0L);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
         for (int i = 0; i < 600; i++) {
@@ -143,7 +143,7 @@ class CygnusPlayerTickListenerTest extends CygnusPlayerTestBase {
         DeadPlayerMannequin corpse = registerCorpse(env, manager, instance, corpseOwner);
 
         Collector<SpawnEntityPacket> spawns = connection.trackIncoming(SpawnEntityPacket.class);
-        driveTurnArounds(new CygnusPlayerTickListener(manager, _ -> 0.0D), player);
+        driveTurnArounds(new CygnusPlayerTickListener(manager, (_, _) -> 0.0D, () -> 0L), player);
 
         assertTrue(spawns.collect().isEmpty(), description + " must never receive a jump scare phantom");
         assertTrue(corpse.isViewer(player), description + " must keep the untouched view on the corpse");

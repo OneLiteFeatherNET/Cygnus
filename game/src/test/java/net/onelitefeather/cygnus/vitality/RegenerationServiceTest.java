@@ -37,8 +37,8 @@ class RegenerationServiceTest extends CygnusPlayerTestBase {
     private Set<Player> survivors = new HashSet<>();
 
     private RegenerationService started(Env env) {
-        RegenerationService service = new RegenerationService(RegenerationConfig.DEFAULT, id -> this.fear,
-                () -> this.survivors, TickSections.NONE);
+        RegenerationService service = new RegenerationService(RegenerationConfig.DEFAULT, (_, _) -> this.fear,
+                () -> this.survivors, () -> 0L, TickSections.NONE);
         env.process().eventHandler().addChild(service.node());
         EventDispatcher.call(new GameStartEvent());
         return service;

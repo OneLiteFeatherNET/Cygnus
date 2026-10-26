@@ -29,7 +29,7 @@ class SurvivorSnapshotIntegrationTest extends CygnusPlayerTestBase {
         Player second = env.createConnection().connect(instance, new Pos(10, 40, 0));
 
         SurvivorSnapshot survivors = SurvivorSnapshot.take(List.of(first, second),
-                id -> id.equals(first.getUuid()) ? 0.7D : 0.2D, new CreekRespite(), 0L);
+                (id, _) -> id.equals(first.getUuid()) ? 0.7D : 0.2D, new CreekRespite(), 0L);
 
         assertEquals(List.of(first, second), survivors.players());
         SurvivorView view = survivors.views().getFirst();
@@ -41,11 +41,25 @@ class SurvivorSnapshotIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("Every survivor is rated at the time of the step")
+    void ratesAtTheStepTime(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player first = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        Player second = env.createConnection().connect(instance, new Pos(10, 40, 0));
+
+        SurvivorSnapshot survivors = SurvivorSnapshot.take(List.of(first, second),
+                (_, now) -> now / 1000.0D, new CreekRespite(), 500L);
+
+        assertEquals(0.5D, survivors.views().getFirst().dread());
+        assertEquals(0.5D, survivors.views().get(1).dread());
+    }
+
+    @Test
     @DisplayName("A survivor is found by id, anyone else is not")
     void findsPlayers(Env env) {
         Instance instance = env.createFlatInstance();
         Player first = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        SurvivorSnapshot survivors = SurvivorSnapshot.take(List.of(first), _ -> 0.0D, new CreekRespite(), 0L);
+        SurvivorSnapshot survivors = SurvivorSnapshot.take(List.of(first), (_, _) -> 0.0D, new CreekRespite(), 0L);
 
         assertSame(first, survivors.player(first.getUuid()));
         assertNull(survivors.player(UUID.randomUUID()));
@@ -69,8 +83,8 @@ class SurvivorSnapshotIntegrationTest extends CygnusPlayerTestBase {
         CreekRespite respite = new CreekRespite();
         respite.spare(first.getUuid(), 1000L);
 
-        SurvivorSnapshot during = SurvivorSnapshot.take(List.of(first, second), _ -> 0.0D, respite, 999L);
-        SurvivorSnapshot after = SurvivorSnapshot.take(List.of(first, second), _ -> 0.0D, respite, 1000L);
+        SurvivorSnapshot during = SurvivorSnapshot.take(List.of(first, second), (_, _) -> 0.0D, respite, 999L);
+        SurvivorSnapshot after = SurvivorSnapshot.take(List.of(first, second), (_, _) -> 0.0D, respite, 1000L);
 
         assertTrue(during.views().getFirst().spared());
         assertFalse(during.views().get(1).spared());
