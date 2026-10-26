@@ -106,6 +106,14 @@ class PagePoolFilesTest {
     }
 
     @Test
+    void defaultPoolFileIsLoaded(@TempDir Path root) {
+        Path mapFile = root.resolve("map.json");
+        PagePoolFiles.save(mapFile, PagePoolFiles.DEFAULT_POOL, Set.of(NORTH_PAGE));
+
+        assertEquals(Map.of("default", Set.of(NORTH_PAGE)), PagePoolFiles.load(mapFile, (_, _) -> {}));
+    }
+
+    @Test
     void fileWithInvalidNameIsSkippedAndReported(@TempDir Path root) throws IOException {
         Path mapFile = root.resolve("map.json");
         Path directory = root.resolve("pages");

@@ -103,4 +103,15 @@ class GameMapBuilderTest {
 
         assertTrue(builder.getPagePool("nord").isEmpty());
     }
+
+    @Test
+    void putPagePoolLoadsTheDefaultPool() {
+        GameMapBuilder builder = new GameMapBuilder();
+        builder.addPage("default", Vec.ZERO, Direction.SOUTH);
+
+        builder.putPagePool("default", Set.of(NORTH_PAGE));
+
+        assertEquals(Set.of(NORTH_PAGE), builder.getPagePool("default"));
+        assertEquals(List.of("default"), builder.getPagePoolNames());
+    }
 }

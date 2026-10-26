@@ -144,7 +144,7 @@ class GameMapAdapterTest {
     }
 
     @Test
-    void stillReadsPageFacesInlinedByAnOldMapFile() {
+    void ignoresPageFacesInlinedByAnOldMapFile() {
         String json = """
                 {
                   "name": "Forest",
@@ -154,6 +154,6 @@ class GameMapAdapterTest {
 
         GameMap gameMap = GsonHelper.GSON.fromJson(json, GameMap.class);
 
-        assertEquals(Set.of(new PageResource(new Vec(1, 2, 3), Direction.NORTH)), gameMap.getPageFaces());
+        assertEquals(Set.of(), gameMap.getPageFaces());
     }
 }

@@ -25,9 +25,9 @@ import net.onelitefeather.cygnus.common.map.GameMap;
 import net.onelitefeather.cygnus.common.map.GameMapBuilder;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
-import net.onelitefeather.cygnus.common.page.PageFacesFile;
 import net.onelitefeather.cygnus.common.page.PagePoolFiles;
 import net.onelitefeather.cygnus.common.page.PageResource;
+import net.onelitefeather.cygnus.common.page.PageSettingsFile;
 import net.onelitefeather.cygnus.setup.item.SetupItemId;
 import net.onelitefeather.cygnus.setup.map.MapDataCategory;
 import net.theevilreaper.aves.map.MapEntry;
@@ -102,7 +102,7 @@ class GameDataTest {
     }
 
     @Test
-    void saveWritesPageFacesToTheSiblingFileAndLeavesThemOutOfMapJson(@TempDir Path root) throws IOException {
+    void saveWritesTheDefaultPoolToThePagesFolderAndLeavesItOutOfMapJson(@TempDir Path root) throws IOException {
         GameData data = new GameData(player, MapEntry.of(root));
         data.selectPagePool("default");
         data.addPage(Vec.ZERO, Direction.NORTH);
@@ -110,7 +110,8 @@ class GameDataTest {
 
         String mapJson = Files.readString(root.resolve("map.json"), StandardCharsets.UTF_8);
         assertFalse(mapJson.contains("pageFaces"));
-        assertTrue(Files.exists(root.resolve("pages.json")));
+        assertEquals(Set.of(new PageResource(Vec.ZERO, Direction.NORTH)),
+                PagePoolFiles.load(root.resolve("map.json"), (_, _) -> {}).get("default"));
     }
 
     @Test
@@ -128,11 +129,13 @@ class GameDataTest {
     }
 
     @Test
-    void loadDataReadsPageFacesBackFromTheSiblingFile(@TempDir Path root) throws IOException {
+    void loadDataReadsTheDefaultPoolFromThePagesFolder(@TempDir Path root) throws IOException {
         Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
+        Path pagesDirectory = root.resolve("pages");
+        Files.createDirectories(pagesDirectory);
         Files.writeString(
-                root.resolve("pages.json"),
-                "[ { \"face\": \"NORTH\", \"position\": { \"x\": 1.0, \"y\": 2.0, \"z\": 3.0 } } ]",
+                pagesDirectory.resolve("default.json"),
+                "{ \"pages\": [ { \"face\": \"NORTH\", \"position\": { \"x\": 1.0, \"y\": 2.0, \"z\": 3.0 } } ] }",
                 StandardCharsets.UTF_8
         );
 
@@ -269,7 +272,7 @@ class GameDataTest {
         new GameData(player, mapEntry).save();
         PageSettings pages = new PageSettings(30, 6, 90, 20);
         CreekSettings creek = new CreekSettings(30, 18, 28, 20, 2.0D, 10, 0.0D);
-        PageFacesFile.save(mapFile, Set.of(), pages);
+        PageSettingsFile.save(mapFile, pages);
         CreekRoutesFile.save(mapFile, List.of(), creek);
 
         GameData second = new GameData(player, mapEntry);
@@ -277,12 +280,11 @@ class GameDataTest {
         second.addPage(Vec.ZERO, Direction.NORTH);
         second.save();
 
-        assertEquals(pages, PageFacesFile.loadSettings(mapFile), "saving a page must not reset the map's page settings");
+        assertEquals(pages, PageSettingsFile.loadSettings(mapFile), "saving a page must not reset the map's page settings");
         assertEquals(creek, CreekRoutesFile.loadSettings(mapFile));
     }
 
     private static final String PAGE_JSON = "{ \"face\": \"NORTH\", \"position\": { \"x\": 1.0, \"y\": 2.0, \"z\": 3.0 } }";
-    private static final PageResource FILE_PAGE = new PageResource(new Vec(1, 2, 3), Direction.NORTH);
 
     private static GameMapBuilder builderOf(GameData data) {
         return (GameMapBuilder) data.getMapBuilder();
@@ -362,36 +364,25 @@ class GameDataTest {
     }
 
     @Test
-    void changingOnlyAnotherPoolLeavesPagesJsonUntouched(@TempDir Path root) throws IOException {
+    void savingPagesLeavesPagesJsonUntouched(@TempDir Path root) throws IOException {
         Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
-        String pagesJson = "[ " + PAGE_JSON + " ]";
+        String pagesJson = "{ \"settings\": { \"proximityRange\": 12 } }";
         Files.writeString(root.resolve("pages.json"), pagesJson, StandardCharsets.UTF_8);
         GameData data = new GameData(player, MapEntry.of(root));
+        data.selectPagePool("default");
+        data.addPage(Vec.ZERO, Direction.NORTH);
         data.createPagePool("nord");
         data.addPage(Vec.ZERO, Direction.NORTH);
 
         data.save();
 
         assertEquals(pagesJson, Files.readString(root.resolve("pages.json"), StandardCharsets.UTF_8));
+        assertTrue(Files.exists(root.resolve("pages").resolve("default.json")));
         assertTrue(Files.exists(root.resolve("pages").resolve("nord.json")));
     }
 
     @Test
-    void changingTheDefaultPoolRewritesPagesJson(@TempDir Path root) throws IOException {
-        Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
-        Files.writeString(root.resolve("pages.json"), "[ " + PAGE_JSON + " ]", StandardCharsets.UTF_8);
-        GameData data = new GameData(player, MapEntry.of(root));
-        data.selectPagePool("default");
-        data.addPage(Vec.ZERO, Direction.NORTH);
-
-        data.save();
-
-        Path mapFile = root.resolve("map.json");
-        assertEquals(Set.of(FILE_PAGE, new PageResource(Vec.ZERO, Direction.NORTH)), PageFacesFile.load(mapFile));
-    }
-
-    @Test
-    void changingOnlyThePageSettingsRewritesPagesJson(@TempDir Path root) throws IOException {
+    void changingThePageSettingsWritesOnlyTheSettingsToPagesJson(@TempDir Path root) throws IOException {
         Files.writeString(root.resolve("map.json"), "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
         Files.writeString(root.resolve("pages.json"), "[ " + PAGE_JSON + " ]", StandardCharsets.UTF_8);
         GameData data = new GameData(player, MapEntry.of(root));
@@ -400,34 +391,30 @@ class GameDataTest {
 
         data.save();
 
-        Path mapFile = root.resolve("map.json");
-        assertEquals(settings, PageFacesFile.loadSettings(mapFile));
-        assertEquals(Set.of(FILE_PAGE), PageFacesFile.load(mapFile));
+        assertEquals(settings, PageSettingsFile.loadSettings(root.resolve("map.json")));
+        assertFalse(Files.readString(root.resolve("pages.json"), StandardCharsets.UTF_8).contains("\"pages\""));
     }
 
     @Test
-    void newMapWithoutDefaultPagesWritesNoPagesJson(@TempDir Path root) {
+    void newMapWritesTheEmptyDefaultPoolButNoPagesJson(@TempDir Path root) {
+        new GameData(player, MapEntry.of(root)).save();
+
+        assertFalse(Files.exists(root.resolve("pages.json")));
+        assertEquals(Set.of(), PagePoolFiles.load(root.resolve("map.json"), (_, _) -> {}).get("default"));
+    }
+
+    @Test
+    void brokenDefaultPoolFileIsReportedAndKept(@TempDir Path root) throws IOException {
+        Path broken = root.resolve("pages").resolve("default.json");
+        Files.createDirectories(broken.getParent());
+        Files.writeString(broken, "{ not valid json ]", StandardCharsets.UTF_8);
         GameData data = new GameData(player, MapEntry.of(root));
-        data.createPagePool("nord");
-        data.addPage(Vec.ZERO, Direction.NORTH);
+
+        assertEquals(List.of("default"), data.pagePoolNames());
 
         data.save();
 
-        assertFalse(Files.exists(root.resolve("pages.json")));
-        assertTrue(Files.exists(root.resolve("pages").resolve("nord.json")));
-    }
-
-    @Test
-    void inlinePagesFromAnOldMapJsonMoveIntoPagesJson(@TempDir Path root) throws IOException {
-        String inlinePage = "{ \"face\": \"SOUTH\", \"position\": { \"x\": 4.0, \"y\": 5.0, \"z\": 6.0 } }";
-        Files.writeString(root.resolve("map.json"),
-                "{ \"name\": \"Test\", \"pageFaces\": [ " + inlinePage + " ] }", StandardCharsets.UTF_8);
-        Files.writeString(root.resolve("pages.json"), "[ " + PAGE_JSON + " ]", StandardCharsets.UTF_8);
-
-        new GameData(player, MapEntry.of(root)).save();
-
-        assertEquals(Set.of(FILE_PAGE, new PageResource(new Vec(4, 5, 6), Direction.SOUTH)),
-                PageFacesFile.load(root.resolve("map.json")));
+        assertEquals("{ not valid json ]", Files.readString(broken, StandardCharsets.UTF_8));
     }
 
     @Test
@@ -511,12 +498,11 @@ class GameDataTest {
         Path mapFile = root.resolve("map.json");
         Files.writeString(mapFile, "{ \"name\": \"Test\" }", StandardCharsets.UTF_8);
         Files.writeString(root.resolve("pages.json"),
-                "{ \"pages\": [ " + PAGE_JSON + " ], \"settings\": { \"ttlSeconds\": 5 } }", StandardCharsets.UTF_8);
+                "{ \"settings\": { \"ttlSeconds\": 5 } }", StandardCharsets.UTF_8);
 
         new GameData(player, MapEntry.of(root)).save();
 
-        assertEquals(PageSettings.DEFAULT, PageFacesFile.loadSettings(mapFile));
-        assertEquals(Set.of(FILE_PAGE), PageFacesFile.load(mapFile));
+        assertEquals(PageSettings.DEFAULT, PageSettingsFile.loadSettings(mapFile));
     }
 
     @Test
