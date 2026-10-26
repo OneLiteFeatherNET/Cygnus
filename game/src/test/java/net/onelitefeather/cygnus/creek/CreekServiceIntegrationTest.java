@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.creek;
 
+import net.kyori.adventure.sound.Sound;
 import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.coordinate.Pos;
@@ -89,7 +90,10 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         clock.set(this.mood.switchAt());
         service.tick();
 
-        assertEquals(1, switchSounds(firstSounds.collect()));
+        List<SoundEffectPacket> heard = firstSounds.collect();
+        assertEquals(1, switchSounds(heard));
+        assertTrue(heard.stream().filter(packet -> packet.soundEvent() == SoundEvent.BLOCK_CREAKING_HEART_SPAWN)
+                .allMatch(packet -> packet.source() == Sound.Source.HOSTILE), "heard like the creek itself, not as ambience");
         assertEquals(1, switchSounds(secondSounds.collect()));
         assertNotSame(CreekMood.NORMAL, this.mood.get());
         service.stop();
