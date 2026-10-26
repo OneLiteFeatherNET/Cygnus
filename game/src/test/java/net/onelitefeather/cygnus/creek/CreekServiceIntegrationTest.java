@@ -320,12 +320,13 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
         CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), new AtomicLong());
+        CreekPossession possession = possessionOf(service, CreekSettings.DEFAULT);
 
-        assertNull(service.possessable(), "there is no creek before the start");
+        assertNull(possession.possessable(), "there is no creek before the start");
         service.start();
         service.tick();
 
-        assertNull(service.possessable(), "he starts out of sight");
+        assertNull(possession.possessable(), "he starts out of sight");
         service.stop();
     }
 
@@ -344,16 +345,17 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         // Next to the route, so the creek is within the slender's view distance.
         Player slender = env.createConnection().connect(instance, new Pos(15, 40, 0));
         CreekSight normal = creek.sight();
+        CreekPossession possession = possessionOf(service, CreekSettings.DEFAULT);
 
-        assertSame(creek.body().entity(), service.possessable());
-        service.possess(slender.getUuid(), 1.5D);
+        assertSame(creek.body().entity(), possession.possessable());
+        possession.possess(slender.getUuid(), 1.5D);
 
         assertNotSame(normal, creek.sight());
         assertSame(normal, variant.sight());
         assertTrue(creek.body().entity().getViewers().contains(slender));
-        assertEquals(48, service.sightRange());
+        assertEquals(48, possession.sightRange());
 
-        service.release();
+        possession.release();
 
         assertSame(normal, creek.sight());
         assertFalse(creek.body().entity().getViewers().contains(slender));
@@ -397,6 +399,10 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         CreekService service = new CreekService(CreekConfig.DEFAULT, settings, Set::of, () -> instance, List::of,
                 CreakingBody::spawn, (_, _) -> 0.0D, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE, this.mood, _ -> false, () -> 0L, new Random(3), TickSections.NONE);
 
-        assertEquals(30, service.sightRange());
+        assertEquals(30, possessionOf(service, settings).sightRange());
+    }
+
+    private static CreekPossession possessionOf(CreekService service, CreekSettings settings) {
+        return new CreekPossession(service::creek, settings.sightRange(), CreekConfig.DEFAULT.sight().viewAngle());
     }
 }
