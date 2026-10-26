@@ -146,7 +146,6 @@ public final class StalkState implements CreekState {
         if (found.isEmpty() || ctx.now() >= this.endsAt) return DoneState.INSTANCE;
 
         SurvivorView view = found.get();
-        CreekConfig config = ctx.config();
         if (this.mayHunt(ctx, view)) return HuntState.starting(this.target, ctx);
 
         CreekBody body = ctx.body();
@@ -180,7 +179,6 @@ public final class StalkState implements CreekState {
      * Tells whether the stalk may turn into a hunt in this step.
      */
     private boolean mayHunt(CreekContext ctx, SurvivorView view) {
-        CreekConfig config = ctx.config();
         CreekTuning tuning = ctx.tuning();
         if (view.dread() < tuning.huntThreshold()) return false;
         if (ctx.now() - this.startedAt < tuning.huntMinStalkMillis()) return false;

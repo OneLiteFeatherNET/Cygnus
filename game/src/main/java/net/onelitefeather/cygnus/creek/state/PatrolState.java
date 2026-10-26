@@ -6,6 +6,7 @@ import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.world.RouteStep;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -257,10 +258,18 @@ public final class PatrolState implements CreekState {
      * the slender) loses sight of it right away.
      */
     private void showToSurvivors(CreekContext ctx) {
-        Set<UUID> survivors = ctx.survivorIds();
-        if (survivors.equals(this.shownTo)) return;
-        this.shownTo = survivors;
-        ctx.body().showTo(survivors);
+        // Compared first without building a set, since the survivors stay the same almost every step.
+        if (this.showsExactly(ctx.survivors())) return;
+        this.shownTo = ctx.survivorIds();
+        ctx.body().showTo(this.shownTo);
+    }
+
+    private boolean showsExactly(List<SurvivorView> survivors) {
+        if (survivors.size() != this.shownTo.size()) return false;
+        for (SurvivorView view : survivors) {
+            if (!this.shownTo.contains(view.id())) return false;
+        }
+        return true;
     }
 
     private void markProgress(long now, Pos here) {
