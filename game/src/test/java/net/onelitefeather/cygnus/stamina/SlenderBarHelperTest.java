@@ -82,10 +82,11 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
 
         double pointsBefore = survivor.vitality().points();
-        helper.swing(instance, slender.getUuid(), CENTER, RANGE, HIT, CALM);
+        SlenderBarHelper.SwingOutcome outcome = helper.swing(instance, slender.getUuid(), CENTER, RANGE, HIT, CALM);
 
         assertEquals(pointsBefore - 0.6D * SlenderSwing.POINTS_PER_HEART, survivor.vitality().points(), 1.0E-9,
                 "a survivor must still take slender damage");
+        assertEquals(new SlenderBarHelper.SwingOutcome(true, false), outcome, "a hit is reported as a hit, not as a miss");
     }
 
     @Test
@@ -271,20 +272,6 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         assertFalse(outcome.hit());
         assertEquals(100.0D, survivor.vitality().points(), 1.0E-9);
         collector.assertEmpty();
-    }
-
-    @Test
-    @DisplayName("A hit is reported as a hit, not as a miss")
-    void hitIsReportedAsHit(Env env) {
-        Player slender = env.createPlayer(instance, CENTER);
-        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
-        Player survivor = env.createPlayer(instance, CENTER.add(1, 0, 0));
-        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
-
-        SlenderBarHelper.SwingOutcome outcome = this.helper.swing(instance, slender.getUuid(), CENTER, RANGE, HIT, CALM);
-
-        assertTrue(outcome.hit());
-        assertFalse(outcome.missed());
     }
 
     @Test
