@@ -145,9 +145,11 @@ final class Creek {
      * @param noticed the survivors this creek pays attention to in this step
      */
     private void reportSightings(List<SurvivorView> noticed) {
-        Set<UUID> seen = new HashSet<>();
+        // Nobody sees the creek in most steps, so the set is only made once someone does.
+        Set<UUID> seen = Set.of();
         for (SurvivorView view : noticed) {
             if (!view.seesCreek()) continue;
+            if (seen.isEmpty()) seen = new HashSet<>();
             seen.add(view.id());
             if (!this.seenLastStep.contains(view.id())) this.round.witness().sighted(view.id());
         }
