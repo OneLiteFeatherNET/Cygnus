@@ -35,12 +35,32 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
     private final List<CreekBody> spawned = new ArrayList<>();
 
     private Decoys decoys() {
+        return this.decoys(REVEAL_MILLIS);
+    }
+
+    private Decoys decoys(long revealMillis) {
         CreekSight sight = new CreekSight(30, CreekConfig.DEFAULT.sight().viewAngle());
         return new Decoys((instance, spot) -> {
             CreekBody body = CreakingBody.spawn(instance, spot);
             this.spawned.add(body);
             return body;
-        }, sight, REVEAL_MILLIS, () -> 0L);
+        }, sight, () -> revealMillis, () -> 0L);
+    }
+
+    @Test
+    @DisplayName("Late in a thinned out round the doppelganger holds out as long as the real creek does")
+    void revealFollowsTheCalm(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player viewer = env.createConnection().connect(instance, VIEWER_POS);
+        Decoys decoys = this.decoys(Math.round(REVEAL_MILLIS * 1.5D));
+        decoys.spawn(viewer, DECOY_SPOT);
+
+        decoys.tick(looking(viewer, true), 0L);
+        decoys.tick(looking(viewer, true), REVEAL_MILLIS);
+        assertFalse(this.removed());
+
+        decoys.tick(looking(viewer, true), Math.round(REVEAL_MILLIS * 1.5D));
+        assertTrue(this.removed());
     }
 
     /** Turns the viewer towards the doppelganger or away from it, and takes the snapshot. */

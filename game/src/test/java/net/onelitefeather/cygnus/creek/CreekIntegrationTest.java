@@ -56,7 +56,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
     private static final Decoys DECOYS = new Decoys(CreakingBody::spawn,
             new CreekSight(CreekSettings.DEFAULT.sightRange(), CreekConfig.DEFAULT.sight().viewAngle()),
-            CreekConfig.DEFAULT.stalk().revealMillis(), () -> 0L);
+            () -> CreekConfig.DEFAULT.stalk().revealMillis(), () -> 0L);
 
     private static Creek creek(CreekBody body, CreekConfig config, CreekState initial) {
         return creek(body, config, initial, CreekWitness.NONE);

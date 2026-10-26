@@ -49,7 +49,7 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
         }
     };
     private static final PatrolHelper PATROL = new PatrolHelper(new Random(1));
-    private static final Decoys DECOYS = new Decoys(CreakingBody::spawn, SIGHT, CONFIG.stalk().revealMillis(), () -> 0L);
+    private static final Decoys DECOYS = new Decoys(CreakingBody::spawn, SIGHT, () -> CONFIG.stalk().revealMillis(), () -> 0L);
 
     private static BiFunction<Pos, CreekState, Creek> spawner(Instance instance, CreekConfig config, SpotFinder spots) {
         CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, CreekMarks.NONE, _ -> false, DECOYS, CreekWitness.NONE, PATROL,
