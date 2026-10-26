@@ -54,6 +54,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CreekIntegrationTest extends CygnusPlayerTestBase {
 
+    private static final Decoys DECOYS = new Decoys(CreakingBody::spawn,
+            new CreekSight(CreekSettings.DEFAULT.sightRange(), CreekConfig.DEFAULT.sight().viewAngle()),
+            CreekConfig.DEFAULT.stalk().revealMillis(), () -> 0L);
+
     private static Creek creek(CreekBody body, CreekConfig config, CreekState initial) {
         return creek(body, config, initial, CreekWitness.NONE);
     }
@@ -73,7 +77,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         // nextBoolean() is true for -1, so a selection always ends in the stun.
         PatrolHelper patrol = new PatrolHelper(() -> -1L);
         CreekRound round = new CreekRound(sight, new SpotFinder(CreekSettings.DEFAULT.sightRange(), Optional::of), _ -> {}, marks,
-                stareTrick, witness, patrol, new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3),
+                stareTrick, DECOYS, witness, patrol, new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3),
                 HuntCooldowns.none(), () -> new CreekTuning(config, Calm.NONE, mood));
         return new Creek(body, Contexts.route(), round, initial);
     }

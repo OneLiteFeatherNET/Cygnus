@@ -232,6 +232,48 @@ class StalkStateTest {
         assertTrue(distance >= 20 - 1.0E-6 && distance <= 35 + 1.0E-6, "distance was " + distance);
     }
 
+    private static CreekContext decoying(long now, RecordingBody body, List<Pos> decoys, CreekMood mood) {
+        CreekActions actions = Contexts.actions(_ -> {}, _ -> {}, _ -> {}, (_, _) -> {}, _ -> {}, (_, _) -> {}, _ -> {},
+                (survivor, where) -> {
+                    assertEquals(TARGET, survivor);
+                    decoys.add(where);
+                });
+        return Contexts.mood(Contexts.context(now, body, Contexts.route(), actions, Contexts.rolling(0.0D),
+                target(0.3D, false)), mood);
+    }
+
+    @Test
+    @DisplayName("Moving unseen, the trickster once per stalk leaves a doppelganger in the target's view")
+    void tricksterPlacesADecoy() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -10));
+        StalkState state = new StalkState(TARGET, 60_000L);
+        List<Pos> decoys = new ArrayList<>();
+
+        state.tick(decoying(0L, body, decoys, CreekMood.TRICKSTER));
+
+        assertEquals(1, decoys.size());
+        Pos decoy = decoys.getFirst();
+        double distance = decoy.distance(target(0.3D, false).position());
+        assertTrue(distance >= StalkState.DECOY_MIN_DISTANCE - 1.0E-6 && distance <= StalkState.DECOY_MAX_DISTANCE + 1.0E-6,
+                "distance was " + distance);
+        assertTrue(Contexts.SIGHT.inView(target(0.3D, false).eyes(), decoy.add(0, SpotFinder.BODY_CENTRE, 0)));
+
+        body.position = new Pos(0, 40, -10);
+        state.tick(decoying(100L, body, decoys, CreekMood.TRICKSTER));
+        assertEquals(1, decoys.size(), "only one per stalk");
+    }
+
+    @Test
+    @DisplayName("The normal creek never leaves a doppelganger")
+    void normalPlacesNoDecoy() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -10));
+        List<Pos> decoys = new ArrayList<>();
+
+        new StalkState(TARGET, 60_000L).tick(decoying(0L, body, decoys, CreekMood.NORMAL));
+
+        assertTrue(decoys.isEmpty());
+    }
+
     @Test
     @DisplayName("Late in a thinned out round he stays visible longer before moving out of sight")
     void lingersLongerLate() {
