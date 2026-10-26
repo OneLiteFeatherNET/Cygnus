@@ -2,6 +2,7 @@ package net.onelitefeather.cygnus;
 
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.instance.Instance;
+import net.onelitefeather.cygnus.common.permission.LuckPermsSupport;
 import net.onelitefeather.cygnus.common.page.event.PageDiscoveryCompletedEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.common.page.event.PageSpawnEvent;
@@ -97,6 +98,9 @@ import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.pass.ConnectionPassFeedback;
+import net.onelitefeather.cygnus.pass.MonthlyQuota;
+import net.onelitefeather.cygnus.pass.PassFeedback;
+import net.onelitefeather.cygnus.pass.PityCounter;
 import net.onelitefeather.cygnus.pass.SlenderPassFeature;
 import net.onelitefeather.cygnus.pass.SlenderPassService;
 import net.onelitefeather.cygnus.phase.RestartPhase;
@@ -115,6 +119,7 @@ import net.onelitefeather.cygnus.stats.RoundStatsCollector;
 import net.onelitefeather.cygnus.stats.StatsConfig;
 import net.onelitefeather.cygnus.stats.StatsMetrics;
 import net.onelitefeather.cygnus.stats.StatsRepositories;
+import net.onelitefeather.cygnus.stats.SlenderPassRepository;
 import net.onelitefeather.cygnus.stats.StatsRepository;
 import net.onelitefeather.cygnus.utils.ScoreboardDisplay;
 import net.onelitefeather.cygnus.utils.StaminaHelper;
@@ -151,6 +156,7 @@ import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -186,6 +192,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final CygnusTracing tracing;
     private final RoundTracer roundTracer;
     private final SlenderPassService slenderPassService;
+    private final MonthlyQuota monthlyQuota;
     private final JoinTracer joinTracer;
     private final SlowTickTracer slowTickTracer;
     private final ActionTracer actionTracer;
@@ -231,15 +238,21 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             PlayerStatsService playerStats = new PlayerStatsService(statsRepository, Clock.systemUTC(),
                     statsConfig.timeZone(), MinecraftServer.getConnectionManager(),
                     task -> MinecraftServer.getSchedulerManager().scheduleNextTick(task));
-            this.roundStatsCollector = new RoundStatsCollector(statsRepository, Clock.systemUTC(),
-                    statsConfig.timeZone(), this.roundTracer::currentRoundId, Cygnus::onlineName, playerStats::roundSaved);
             // The single place that picks the pass storage: the same condition as the statistics, so a
             // missing database hides the feature for both. The repository shares the statistics' pool.
-            this.slenderPassService = new SlenderPassService(statsRepository.slenderPasses(Clock.systemUTC()),
-                    task -> MinecraftServer.getSchedulerManager().scheduleNextTick(task),
+            SlenderPassRepository passes = statsRepository.slenderPasses(Clock.systemUTC());
+            Executor tick = task -> MinecraftServer.getSchedulerManager().scheduleNextTick(task);
+            PassFeedback passFeedback = new ConnectionPassFeedback(MinecraftServer.getConnectionManager());
+            PityCounter pityCounter = new PityCounter(passes, this.gameConfig.pass(), tick, passFeedback);
+            this.monthlyQuota = new MonthlyQuota(passes, Clock.systemUTC(), LuckPermsSupport::monthlyQuota,
+                    this.gameConfig.pass(), tick, passFeedback);
+            this.roundStatsCollector = new RoundStatsCollector(statsRepository, Clock.systemUTC(),
+                    statsConfig.timeZone(), this.roundTracer::currentRoundId, Cygnus::onlineName, playerStats::roundSaved,
+                    pityCounter::roundFinished);
+            this.slenderPassService = new SlenderPassService(passes, tick,
                     MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid,
                     () -> this.linearPhaseSeries.getCurrentPhase() instanceof LobbyPhase,
-                    new ConnectionPassFeedback(MinecraftServer.getConnectionManager()),
+                    passFeedback,
                     (player, roundId, cause) -> LOGGER.warn("Spending the slender pass of {} for round {} failed, "
                             + "the player keeps the Slender role for this round", player, roundId, cause));
             this.slowTickTracer = new SlowTickTracer(this.tracing, this.roundTracer, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections,
@@ -472,7 +485,10 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(GameMapLoadedEvent.class, event -> this.roundTracer.pagePoolDrawn(event.pagePool().name()));
         manager.addListener(GameMapLoadedEvent.class, new GameMapLoadedListener());
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier,
-                this.slenderPassService::onLobbyJoin));
+                player -> {
+                    this.slenderPassService.onLobbyJoin(player);
+                    this.monthlyQuota.onLobbyJoin(player.getUuid());
+                }));
         PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.spectatorService::updateInventory, this.slenderTakeover);
         manager.addListener(PlayerDisconnectEvent.class, quitListener);
         manager.addListener(AsyncPlayerConfigurationEvent.class,

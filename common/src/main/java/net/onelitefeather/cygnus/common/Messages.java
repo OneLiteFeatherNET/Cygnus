@@ -176,6 +176,32 @@ public final class Messages {
     }
 
     /**
+     * Tells a player that a Survivor round earned a pass.
+     *
+     * @param balance the new balance
+     * @return the message
+     * @since 2.21.0
+     */
+    public static Component passEarnedPity(int balance) {
+        return withPrefix(Component.text("You earned a slender pass for playing as a Survivor. You have ", NamedTextColor.GREEN)
+                .append(Component.text(String.valueOf(balance), NamedTextColor.GREEN))
+                .append(Component.text(" slender pass(es).", NamedTextColor.GREEN)));
+    }
+
+    /**
+     * Tells a player that the monthly quota of their rank was credited.
+     *
+     * @param balance the new balance
+     * @return the message
+     * @since 2.21.0
+     */
+    public static Component passEarnedQuota(int balance) {
+        return withPrefix(Component.text("Your rank grants slender passes for this month. You have ", NamedTextColor.GREEN)
+                .append(Component.text(String.valueOf(balance), NamedTextColor.GREEN))
+                .append(Component.text(" slender pass(es).", NamedTextColor.GREEN)));
+    }
+
+    /**
      * Tells an administrator the new balance of a player.
      *
      * @param name    the player's name

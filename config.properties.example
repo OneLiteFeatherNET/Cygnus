@@ -455,6 +455,17 @@ survivorTeamSize=12
 #lunar.enabled=true
 #lunar.disabled-mods=minimap,waypoints,freelook,zoom,coordinates,directionhud
 
+# --- Slender pass -----------------------------------------------------------
+# Passes are earned by playing and by a monthly rank quota (the LuckPerms meta
+# cygnus.slender-pass.monthly-quota, once per UTC month in the lobby). Both need the statistics
+# database, the same as the feature itself.
+#
+# pity-rounds  Survivor rounds played to the end until one pass is earned. At least 1.
+# max-balance  The cap for earned passes: earning never lifts a balance above it. Administrator
+#              changes are not capped. Zero or more.
+#pass.pity-rounds=10
+#pass.max-balance=5
+
 # --- Statistics -------------------------------------------------------------
 # Yearly player statistics. Every finished round is written to a PostgreSQL database: one row
 # per player and round, plus one aggregate per player and calendar year. The schema is created
