@@ -26,7 +26,6 @@ import java.util.random.RandomGenerator;
 public final class PagePoolDraw {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PagePoolDraw.class);
-    private static final String UNKNOWN_MAP = "unknown map";
 
     private PagePoolDraw() {
         // Nothing to do here
@@ -39,20 +38,6 @@ public final class PagePoolDraw {
      * @param pages the spots of the pool
      */
     public record Drawn(String name, Set<PageResource> pages) {
-    }
-
-    /**
-     * Draws one of the given pools.
-     *
-     * @param defaultPages   the spots of the default pool
-     * @param pools          the other pools by name
-     * @param minActivePages how many pages a round starts with; a pool with fewer spots is skipped
-     * @param random         the random source
-     * @return the drawn pool, or the default pool if no pool has enough spots
-     */
-    public static Drawn draw(Set<PageResource> defaultPages, Map<String, Set<PageResource>> pools,
-                             int minActivePages, RandomGenerator random) {
-        return draw(UNKNOWN_MAP, defaultPages, pools, minActivePages, random);
     }
 
     /**
@@ -78,8 +63,18 @@ public final class PagePoolDraw {
         return draw(mapFile.toString(), defaultPages, pools, minActivePages, random);
     }
 
-    private static Drawn draw(String map, Set<PageResource> defaultPages, Map<String, Set<PageResource>> pools,
-                              int minActivePages, RandomGenerator random) {
+    /**
+     * Draws one of the given pools.
+     *
+     * @param map            the map the pools belong to, only for the log
+     * @param defaultPages   the spots of the default pool
+     * @param pools          the other pools by name
+     * @param minActivePages how many pages a round starts with; a pool with fewer spots is skipped
+     * @param random         the random source
+     * @return the drawn pool, or the default pool if no pool has enough spots
+     */
+    static Drawn draw(String map, Set<PageResource> defaultPages, Map<String, Set<PageResource>> pools,
+                      int minActivePages, RandomGenerator random) {
         List<Drawn> candidates = new ArrayList<>(pools.size() + 1);
         addIfBigEnough(candidates, map, new Drawn(PagePoolFiles.DEFAULT_POOL, defaultPages), minActivePages);
         for (Map.Entry<String, Set<PageResource>> pool : pools.entrySet()) {
