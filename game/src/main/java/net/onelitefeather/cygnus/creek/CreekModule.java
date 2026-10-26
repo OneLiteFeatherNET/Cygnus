@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek;
 
 import net.onelitefeather.cygnus.telemetry.TickSections;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.onelitefeather.cygnus.GameFeature;
@@ -11,6 +12,7 @@ import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.consequence.CatchEffects;
 import net.onelitefeather.cygnus.creek.consequence.CatchLaunch;
+import net.onelitefeather.cygnus.creek.consequence.CatchSpawnTeleport;
 import net.onelitefeather.cygnus.creek.consequence.CatchSwap;
 import net.onelitefeather.cygnus.creek.consequence.CatchTricks;
 import net.onelitefeather.cygnus.creek.consequence.LocatorReveal;
@@ -24,6 +26,7 @@ import net.onelitefeather.cygnus.possession.PossessionTarget;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.theevilreaper.xerus.api.team.TeamService;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Random;
@@ -76,6 +79,7 @@ public final class CreekModule implements GameFeature {
                         new CatchTricks(
                                 new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.catching().slownessSeconds()),
                                 new CatchSwap(() -> TeamHelper.survivorsOf(teamService), random),
+                                new CatchSpawnTeleport(this::slenderSpawn),
                                 new CatchLaunch(settings.launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
                                 this.config.catching().swapChance(),
                                 random),
@@ -129,5 +133,15 @@ public final class CreekModule implements GameFeature {
     private List<CreekRoute> routes() {
         GameMap map = this.mapProvider.getGameMap();
         return map != null ? map.getCreekRoutes() : List.of();
+    }
+
+    /**
+     * Returns the slender spawn of the current map.
+     *
+     * @return the spawn, {@code null} without a map or without a spawn
+     */
+    private @Nullable Pos slenderSpawn() {
+        GameMap map = this.mapProvider.getGameMap();
+        return map != null ? map.getSlenderSpawn() : null;
     }
 }
