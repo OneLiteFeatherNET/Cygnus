@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.setup.atmosphere;
 
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.world.DimensionType;
@@ -77,14 +78,19 @@ class AtmospherePreviewServiceTest {
     }
 
     @Test
-    void aSecondPreviewGetsItsOwnDimensionAndKeepsTheOrigin() {
+    void aSecondPreviewReusesThePlayersSlotAndKeepsTheOrigin() {
         service.preview(player, ATMOSPHERE, world);
         Instance first = service.pendingInstance(player);
+        int registrySize = MinecraftServer.getDimensionTypeRegistry().size();
+        int slotId = MinecraftServer.getDimensionTypeRegistry().getId(first.getDimensionType());
+
         service.preview(player, MapAtmosphere.from(StaticDimensionPreset.VERY_DARK), world);
         Instance second = service.pendingInstance(player);
 
         assertNotSame(first, second);
-        assertNotSame(first.getDimensionType(), second.getDimensionType());
+        assertEquals(first.getDimensionType().key(), second.getDimensionType().key());
+        assertEquals(registrySize, MinecraftServer.getDimensionTypeRegistry().size(), "a preview must not grow the registry");
+        assertEquals(slotId, MinecraftServer.getDimensionTypeRegistry().getId(second.getDimensionType()), "overwriting must keep the id");
         service.leave(player);
         assertSame(origin, service.pendingInstance(player), "leave() must aim back at the original instance");
     }
