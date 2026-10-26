@@ -5,7 +5,6 @@ import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -50,12 +49,14 @@ record SurvivorSnapshot(List<Player> players, List<SurvivorView> views) {
      */
     static SurvivorSnapshot take(Collection<Player> players, DreadSource dread, CreekRespite respite, long now) {
         List<Player> survivors = List.copyOf(players);
-        List<SurvivorView> views = new ArrayList<>(survivors.size());
-        for (Player survivor : survivors) {
-            views.add(new SurvivorView(survivor.getUuid(), survivor.getPosition(),
-                    dread.dreadOf(survivor.getUuid(), now), false, false, respite.spares(survivor.getUuid(), now)));
+        SurvivorView[] views = new SurvivorView[survivors.size()];
+        for (int index = 0; index < views.length; index++) {
+            Player survivor = survivors.get(index);
+            views[index] = new SurvivorView(survivor.getUuid(), survivor.getPosition(),
+                    dread.dreadOf(survivor.getUuid(), now), false, false, respite.spares(survivor.getUuid(), now));
         }
-        return new SurvivorSnapshot(survivors, views);
+        // Both lists are unmodifiable already, so the record keeps them as they are instead of copying again.
+        return new SurvivorSnapshot(survivors, List.of(views));
     }
 
     /**
