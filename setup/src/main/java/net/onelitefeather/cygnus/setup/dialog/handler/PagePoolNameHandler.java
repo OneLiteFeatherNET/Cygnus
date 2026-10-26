@@ -5,8 +5,11 @@ import net.kyori.adventure.nbt.StringBinaryTag;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
 import net.onelitefeather.cygnus.setup.data.GameData;
+import net.onelitefeather.cygnus.setup.item.SetupItems;
 import net.onelitefeather.cygnus.setup.util.SetupMessages;
 import net.onelitefeather.guira.SetupDataService;
+
+import java.util.Locale;
 
 /**
  * Creates a page pool from the name entered in the dialog.
@@ -31,7 +34,10 @@ public final class PagePoolNameHandler implements DialogHandler {
         this.dataService.get(player.getUuid()).ifPresent(data -> {
             if (!(data instanceof GameData gameData)) return;
             switch (gameData.createPagePool(name)) {
-                case CREATED -> player.sendMessage(SetupMessages.getPagePoolCreated(gameData.activePagePool()));
+                case CREATED -> {
+                    player.sendMessage(SetupMessages.getPagePoolCreated(name.toLowerCase(Locale.ROOT)));
+                    SetupItems.setPagePoolEditItems(player);
+                }
                 case INVALID_NAME -> player.sendMessage(SetupMessages.getInvalidPagePoolName(name));
                 case DUPLICATE -> player.sendMessage(SetupMessages.getDuplicatePagePool(name));
             }

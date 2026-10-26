@@ -28,6 +28,7 @@ public final class SetupItems {
     private static final HotBarLayout lobbySetupLayout;
     private static final HotBarLayout gameSetupLayout;
     private static final HotBarLayout pageLayout;
+    private static final HotBarLayout pagePoolEditLayout;
     private static final HotBarLayout survivorSpawnLayout;
     private static final HotBarLayout creekRouteOverviewLayout;
     private static final HotBarLayout creekRouteEditLayout;
@@ -163,29 +164,33 @@ public final class SetupItems {
                 .set(Tags.ITEM_TAG, SetupItemId.PAGE_POOLS)
                 .build()
         );
-        pageLayout.set(2, ItemStack.builder(Material.COMPASS)
+        ItemStack leavePageMode = ItemStack.builder(Material.BARRIER)
+                .customName(Component.text("Leave mode", NamedTextColor.RED))
+                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Exit the current mode", NamedTextColor.WHITE))))
+                .set(Tags.ITEM_TAG, SetupItemId.LEAVE_PAGE)
+                .build();
+        pageLayout.set(8, leavePageMode);
+
+        pagePoolEditLayout = new HotBarLayout();
+        pagePoolEditLayout.set(0, ItemStack.builder(Material.COMPASS)
                 .customName(Component.text("Pages", NamedTextColor.YELLOW))
                 .lore(
                         getLore(SPACE_SEPARATOR
-                                .append(Component.text("View all available ", NamedTextColor.WHITE))
-                                .append(Component.text("Pages", NamedTextColor.YELLOW))
+                                .append(Component.text("View all ", NamedTextColor.WHITE))
+                                .append(Component.text("Pages ", NamedTextColor.YELLOW))
+                                .append(Component.text("of the pool", NamedTextColor.WHITE))
                         )
                 )
                 .set(Tags.ITEM_TAG, SetupItemId.PAGES)
                 .build()
         );
-        pageLayout.set(6, ItemStack.builder(Material.BARRIER)
-                .customName(Component.text("Leave mode", NamedTextColor.RED))
-                .lore(
-                        getLore(
-                                SPACE_SEPARATOR.append(
-                                        Component.text("Exit the current mode", NamedTextColor.WHITE)
-                                )
-                        )
-                )
-                .set(Tags.ITEM_TAG, SetupItemId.LEAVE_PAGE)
+        pagePoolEditLayout.set(6, ItemStack.builder(Material.EMERALD)
+                .customName(Component.text("Finish pool", NamedTextColor.GREEN))
+                .lore(getLore(SPACE_SEPARATOR.append(Component.text("Stop editing and go back to the pools", NamedTextColor.WHITE))))
+                .set(Tags.ITEM_TAG, SetupItemId.PAGE_POOL_FINISH)
                 .build()
         );
+        pagePoolEditLayout.set(8, leavePageMode);
 
         survivorSpawnLayout = new HotBarLayout();
         survivorSpawnLayout.set(2, ItemStack.builder(Material.CHEST)
@@ -254,12 +259,22 @@ public final class SetupItems {
     }
 
     /**
-     * Set's the {@link ItemStack} which are required for the page setup.
+     * Sets the items for the page setup while no page pool is being edited.
      *
      * @param player the player who should receive the item
      */
     public static void setPageItems(Player player) {
         pageLayout.apply(player);
+        player.setHeldItemSlot(DEFAULT);
+    }
+
+    /**
+     * Sets the items for editing a page pool.
+     *
+     * @param player the player
+     */
+    public static void setPagePoolEditItems(Player player) {
+        pagePoolEditLayout.apply(player);
         player.setHeldItemSlot(DEFAULT);
     }
 

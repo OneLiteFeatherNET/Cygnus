@@ -46,6 +46,7 @@ public final class SetupMessages {
     public static final Component CREEK_ROUTE_NOT_USABLE;
     public static final Component CREEK_POINT_HINT;
     public static final Component DEFAULT_PAGE_POOL_NOT_DELETABLE;
+    public static final Component NO_ACTIVE_PAGE_POOL;
 
     static {
         SPACE_SEPARATOR = Component.text("» ", NamedTextColor.GRAY);
@@ -122,6 +123,9 @@ public final class SetupMessages {
         );
         DEFAULT_PAGE_POOL_NOT_DELETABLE = Messages.withPrefix(
                 Component.text("The default page pool is what the game loads and cannot be deleted", NamedTextColor.RED)
+        );
+        NO_ACTIVE_PAGE_POOL = Messages.withPrefix(
+                Component.text("Create or select a page pool first", NamedTextColor.RED)
         );
         NO_ACTIVE_CREEK_ROUTE = Messages.withPrefix(
                 Component.text("Create or select a creek route first", NamedTextColor.RED)
@@ -368,6 +372,17 @@ public final class SetupMessages {
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull Component getPagePoolSelected(@NotNull String name) {
         return Messages.withMiniPrefix("<gray>Now editing page pool <gold><name>", nameTag(name));
+    }
+
+    /**
+     * Creates a new {@link Component} instance which confirms that a page pool is no longer edited.
+     *
+     * @param name of the pool
+     * @return the created component
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull Component getPagePoolFinished(@NotNull String name) {
+        return Messages.withMiniPrefix("<gray>Stopped editing page pool <gold><name>", nameTag(name));
     }
 
     /**
