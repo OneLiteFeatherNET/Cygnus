@@ -23,16 +23,6 @@ import java.util.random.RandomGenerator;
 public record CreekTuning(CreekConfig config, Calm calm, CreekMood mood) {
 
     /**
-     * The values of the creek in its normal mood.
-     *
-     * @param config the settings
-     * @param calm   how far the round has thinned out
-     */
-    public CreekTuning(CreekConfig config, Calm calm) {
-        this(config, calm, CreekMood.NORMAL);
-    }
-
-    /**
      * How fast the creek hunts.
      *
      * @return the speed
