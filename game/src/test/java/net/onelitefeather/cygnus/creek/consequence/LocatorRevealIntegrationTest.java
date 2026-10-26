@@ -107,6 +107,26 @@ class LocatorRevealIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("Revealing another survivor takes the one shown before off the locator bar")
+    void onlyTheNewestRevealShows(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player first = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        Player second = env.createConnection().connect(instance, new Pos(10, 40, 0));
+        TestConnection slenderConnection = env.createConnection();
+        Player slender = slenderConnection.connect(instance, new Pos(5, 40, 0));
+        LocatorReveal reveal = new LocatorReveal(6, TickSections.NONE);
+        reveal.reveal(first, slender);
+        Collector<TrackedWaypointPacket> packets = slenderConnection.trackIncoming(TrackedWaypointPacket.class);
+
+        reveal.reveal(second, slender);
+
+        List<TrackedWaypointPacket> sent = packets.collect();
+        assertEquals(List.of(Operation.UNTRACK), operationsOf(sent, first));
+        assertEquals(List.of(Operation.TRACK), operationsOf(sent, second));
+        reveal.cleanUp();
+    }
+
+    @Test
     @DisplayName("The survivor is warned")
     void survivorIsWarned(Env env) {
         Instance instance = env.createFlatInstance();

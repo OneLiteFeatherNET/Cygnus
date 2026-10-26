@@ -50,10 +50,17 @@ public final class Contexts {
         return actions(caught, selected, vanished, stareBeats, staresBroken, (_, _) -> {});
     }
 
-    /** Actions that hand everything the creek does to the given consumers. */
+    /** Actions that hand everything but the looks at a stalking creek to the given consumers. */
     public static CreekActions actions(Consumer<UUID> caught, Consumer<UUID> selected, Consumer<Pos> vanished,
                                        BiConsumer<UUID, Integer> stareBeats, Consumer<UUID> staresBroken,
                                        BiConsumer<UUID, Double> stalkSounds) {
+        return actions(caught, selected, vanished, stareBeats, staresBroken, stalkSounds, _ -> {});
+    }
+
+    /** Actions that hand everything the creek does to the given consumers. */
+    public static CreekActions actions(Consumer<UUID> caught, Consumer<UUID> selected, Consumer<Pos> vanished,
+                                       BiConsumer<UUID, Integer> stareBeats, Consumer<UUID> staresBroken,
+                                       BiConsumer<UUID, Double> stalkSounds, Consumer<UUID> spotted) {
         return new CreekActions() {
             @Override
             public void caught(UUID survivor) {
@@ -83,6 +90,11 @@ public final class Contexts {
             @Override
             public void stalkSound(UUID survivor, double progress) {
                 stalkSounds.accept(survivor, progress);
+            }
+
+            @Override
+            public void spotted(UUID survivor) {
+                spotted.accept(survivor);
             }
         };
     }

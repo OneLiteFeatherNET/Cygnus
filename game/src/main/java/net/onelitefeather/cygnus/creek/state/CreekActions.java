@@ -48,6 +48,13 @@ public interface CreekActions {
     void stareBroken(UUID survivor);
 
     /**
+     * The stalked survivor looked at the creek long enough that it moved away.
+     *
+     * @param survivor the id of the survivor it stalks
+     */
+    void spotted(UUID survivor);
+
+    /**
      * The stalking creek makes itself heard by the survivor it stalks.
      *
      * @param survivor the id of the survivor it stalks

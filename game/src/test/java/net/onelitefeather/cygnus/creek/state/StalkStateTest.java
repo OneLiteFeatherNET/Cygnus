@@ -125,6 +125,24 @@ class StalkStateTest {
     }
 
     @Test
+    @DisplayName("Seen until he moves out of sight, he tells that the target spotted him")
+    void reportsBeingSpotted() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        List<UUID> spotted = new ArrayList<>();
+        CreekActions actions = Contexts.actions(_ -> {}, _ -> {}, _ -> {}, (_, _) -> {}, _ -> {}, (_, _) -> {},
+                spotted::add);
+
+        state.tick(Contexts.context(0L, body, Contexts.route(), actions, new Random(7), target(0.3D, true)));
+        state.tick(Contexts.context(699L, body, Contexts.route(), actions, new Random(7), target(0.3D, true)));
+        assertTrue(spotted.isEmpty(), "a glance is not enough");
+
+        state.tick(Contexts.context(700L, body, Contexts.route(), actions, new Random(7), target(0.3D, true)));
+
+        assertEquals(List.of(TARGET), spotted);
+    }
+
+    @Test
     @DisplayName("Late in a thinned out round he stays visible longer before moving out of sight")
     void lingersLongerLate() {
         RecordingBody body = new RecordingBody(IN_THE_BAND);

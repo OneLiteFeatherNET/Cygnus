@@ -270,8 +270,14 @@ final class Creek {
         public void selected(UUID survivor) {
             this.with(survivor, player -> {
                 this.round.patrol().selected(player, this::eyes, this.survivors.players());
+                this.round.marks().stared(player);
                 this.round.witness().selected(survivor);
             });
+        }
+
+        @Override
+        public void spotted(UUID survivor) {
+            this.with(survivor, this.round.marks()::spotted);
         }
 
         @Override

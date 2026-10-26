@@ -16,6 +16,7 @@ import net.onelitefeather.cygnus.creek.consequence.catching.CatchSpawnTeleport;
 import net.onelitefeather.cygnus.creek.consequence.catching.CatchSwap;
 import net.onelitefeather.cygnus.creek.consequence.catching.CatchTricks;
 import net.onelitefeather.cygnus.creek.consequence.LocatorReveal;
+import net.onelitefeather.cygnus.creek.consequence.RevealMarks;
 import net.onelitefeather.cygnus.creek.consequence.catching.LandingDamage;
 import net.onelitefeather.cygnus.creek.consequence.catching.StagedCatchConsequence;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
@@ -65,6 +66,8 @@ public final class CreekModule implements GameFeature {
         // Every step and every catch runs on the scheduler thread, but Random is thread-safe
         // anyway, which keeps a stray call from elsewhere harmless.
         Random random = new Random();
+        // One reveal for the catches and the marks, so the slender only ever sees the newest one.
+        LocatorReveal reveal = new LocatorReveal(this.config.catching().betrayalGlowSeconds(), sections);
         this.service = new CreekService(
                 this.config,
                 settings,
@@ -83,10 +86,11 @@ public final class CreekModule implements GameFeature {
                                 new CatchLaunch(settings.launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
                                 this.config.catching().swapChance(),
                                 random),
-                        new LocatorReveal(this.config.catching().betrayalGlowSeconds(), sections),
+                        reveal,
                         () -> TeamHelper.slenderOf(teamService),
                         this.config,
                         random),
+                new RevealMarks(reveal, () -> TeamHelper.slenderOf(teamService), System::currentTimeMillis, random),
                 System::currentTimeMillis,
                 random,
                 sections);
