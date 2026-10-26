@@ -12,6 +12,7 @@ import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
+import net.onelitefeather.cygnus.creek.consequence.catching.StagedCatchConsequence;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

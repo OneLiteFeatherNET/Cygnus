@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.creek.consequence;
+package net.onelitefeather.cygnus.creek.consequence.catching;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;

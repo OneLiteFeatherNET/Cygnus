@@ -13,7 +13,7 @@ import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
-import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
+import net.onelitefeather.cygnus.creek.consequence.catching.CatchConsequence;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import net.onelitefeather.cygnus.creek.state.PatrolState;
