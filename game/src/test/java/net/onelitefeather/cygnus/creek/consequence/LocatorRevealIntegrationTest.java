@@ -4,6 +4,7 @@ import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.network.packet.server.play.ActionBarPacket;
 import net.minestom.server.network.packet.server.play.SystemChatPacket;
 import net.minestom.server.network.packet.server.play.TrackedWaypointPacket;
 import net.minestom.server.network.packet.server.play.TrackedWaypointPacket.Operation;
@@ -127,18 +128,20 @@ class LocatorRevealIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("The survivor is warned")
+    @DisplayName("The survivor is warned in the action bar, not in the chat")
     void survivorIsWarned(Env env) {
         Instance instance = env.createFlatInstance();
         TestConnection survivorConnection = env.createConnection();
         Player survivor = survivorConnection.connect(instance, new Pos(0, 40, 0));
         Player slender = env.createConnection().connect(instance, new Pos(5, 40, 0));
+        Collector<ActionBarPacket> actionBar = survivorConnection.trackIncoming(ActionBarPacket.class);
         Collector<SystemChatPacket> messages = survivorConnection.trackIncoming(SystemChatPacket.class);
         LocatorReveal reveal = new LocatorReveal(6, TickSections.NONE);
 
         reveal.reveal(survivor, slender);
 
-        assertFalse(messages.collect().isEmpty());
+        assertEquals(List.of(LocatorReveal.WARNING), actionBar.collect().stream().map(ActionBarPacket::text).toList());
+        assertTrue(messages.collect().isEmpty());
         reveal.cleanUp();
     }
 
