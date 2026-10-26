@@ -85,6 +85,8 @@ final class Decoys {
      * @param now       the current time in milliseconds
      */
     void tick(SurvivorSnapshot survivors, long now) {
+        // Almost every step has none, so do not even make the iterator then.
+        if (this.running.isEmpty()) return;
         Iterator<Decoy> iterator = this.running.iterator();
         while (iterator.hasNext()) {
             Decoy decoy = iterator.next();
