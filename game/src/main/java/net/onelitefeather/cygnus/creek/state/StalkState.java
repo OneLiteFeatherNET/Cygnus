@@ -1,9 +1,11 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -17,6 +19,10 @@ import java.util.random.RandomGenerator;
  * just out of view. The longer the stalk lasts, the closer it creeps: it starts at
  * {@code stalkMinDistance} to {@code stalkMaxDistance} away, as the map sets them, and ends at {@link #END_MIN_DISTANCE}
  * to {@link #END_MAX_DISTANCE}. The stalk is over when time runs out or the survivor is gone.
+ * </p>
+ * <p>
+ * In the shadow mood it comes back at the end distance right after a look, and once per stalk it
+ * may turn up behind a teammate instead, where only the stalked survivor sees it.
  * </p>
  * <p>
  * It turns into a hunt once the survivor is scared enough, but only after it has run for
@@ -42,6 +48,15 @@ public final class StalkState implements CreekState {
     /** How far away it may still be at the end of a stalk, in blocks. */
     static final double END_MAX_DISTANCE = 15.0D;
 
+    /** The chance that the shadow turns up behind a teammate after a long look, once per stalk. */
+    static final double BEHIND_TEAMMATE_CHANCE = 0.35D;
+
+    /** How close to the target a teammate has to be for the shadow to stand behind them, in blocks. */
+    static final double TEAMMATE_RANGE = 30.0D;
+
+    /** How far behind the teammate the shadow stands, in blocks. */
+    static final double BEHIND_DISTANCE = 2.0D;
+
     /** The shortest gap between two sounds at the start of a stalk, in milliseconds. */
     static final long FIRST_GAP_MIN_MILLIS = 6000L;
 
@@ -59,6 +74,7 @@ public final class StalkState implements CreekState {
     private long startedAt;
     private long seenSince = -1L;
     private long nextSoundAt = -1L;
+    private boolean stoodBehindTeammate;
 
     /**
      * Sets up the stalk.
@@ -127,7 +143,7 @@ public final class StalkState implements CreekState {
 
         if (view.seesCreek()) {
             if (this.seenSince < 0) this.seenSince = ctx.now();
-            if (ctx.now() - this.seenSince >= ctx.tuning().revealMillis() && this.relocate(ctx, view)) {
+            if (ctx.now() - this.seenSince >= ctx.tuning().revealMillis() && this.moveAfterLook(ctx, view)) {
                 this.seenSince = -1L;
                 ctx.actions().spotted(this.target);
                 // Gone without a sound. The next one only comes after a full gap.
@@ -180,16 +196,62 @@ public final class StalkState implements CreekState {
     }
 
     /**
+     * Moves the creek away after the survivor looked at it long enough. The shadow comes back
+     * closer, and once per stalk it may turn up behind a teammate instead.
+     *
+     * @return {@code false} if there was no free spot in this step
+     */
+    private boolean moveAfterLook(CreekContext ctx, SurvivorView view) {
+        if (ctx.tuning().mood() != CreekMood.SHADOW) return this.relocate(ctx, view);
+        if (!this.stoodBehindTeammate && ctx.random().nextDouble() < BEHIND_TEAMMATE_CHANCE
+                && this.behindTeammate(ctx, view)) {
+            this.stoodBehindTeammate = true;
+            return true;
+        }
+        return this.relocate(ctx, view, END_MIN_DISTANCE, END_MAX_DISTANCE);
+    }
+
+    /**
+     * Puts the creek right behind the teammate closest to the survivor, where the survivor sees it.
+     * Only the survivor does, the teammate never sees this creek.
+     *
+     * @return {@code false} if no teammate is close enough or there is no floor behind them
+     */
+    private boolean behindTeammate(CreekContext ctx, SurvivorView view) {
+        Pos target = view.position();
+        Optional<SurvivorView> teammate = ctx.survivors().stream()
+                .filter(other -> !other.id().equals(this.target) && !other.spared())
+                .filter(other -> other.position().distance(target) <= TEAMMATE_RANGE)
+                .min(Comparator.comparingDouble(other -> other.position().distance(target)));
+        if (teammate.isEmpty()) return false;
+        Pos mate = teammate.get().position();
+        Vec away = new Vec(mate.x() - target.x(), 0.0D, mate.z() - target.z());
+        if (away.isZero()) return false;
+        Optional<Pos> spot = ctx.spots().grounded(mate.add(away.normalize().mul(BEHIND_DISTANCE)))
+                .filter(candidate -> !ctx.spots().isHidden(candidate, List.of(view.eyes()), 0.0D));
+        spot.ifPresent(ctx.body()::teleport);
+        return spot.isPresent();
+    }
+
+    /**
      * Moves the creek to a new spot just outside the survivor's view.
      *
      * @return {@code false} if there was no free spot in this step
      */
     private boolean relocate(CreekContext ctx, SurvivorView view) {
+        return this.relocate(ctx, view, this.minDistance(ctx), this.maxDistance(ctx));
+    }
+
+    /**
+     * Moves the creek to a new spot just outside the survivor's view, within the given band.
+     *
+     * @return {@code false} if there was no free spot in this step
+     */
+    private boolean relocate(CreekContext ctx, SurvivorView view, double min, double max) {
         CreekConfig config = ctx.config();
-        double min = this.minDistance(ctx);
         // The band's own minimum keeps the creek off the survivor. The fixed personal space would
         // find no spot at all once the band comes closer than that.
-        Optional<Pos> spot = ctx.spots().beside(view.position(), min, this.maxDistance(ctx),
+        Optional<Pos> spot = ctx.spots().beside(view.position(), min, max,
                 config.stalk().minAngle(), config.stalk().maxAngle(), List.of(view.eyes()), min, ctx.random());
         spot.ifPresent(ctx.body()::teleport);
         return spot.isPresent();
