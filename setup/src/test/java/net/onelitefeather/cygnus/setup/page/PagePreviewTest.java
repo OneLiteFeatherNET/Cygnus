@@ -8,6 +8,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
 import net.minestom.server.network.packet.server.play.EntityMetaDataPacket;
+import net.minestom.server.network.packet.server.play.EntityTeleportPacket;
 import net.minestom.server.network.packet.server.play.SpawnEntityPacket;
 import net.minestom.server.utils.Direction;
 import net.minestom.testing.Collector;
@@ -278,6 +279,30 @@ class PagePreviewTest {
 
         spawns.assertEmpty();
         destroys.assertSingle(packet -> assertEquals(2, packet.entityIds().size(), "the page and its box"));
+    }
+
+    @Test
+    @DisplayName("A label whose group grows moves along instead of being spawned again")
+    void aGrowingGroupMovesItsLabel() {
+        this.spots.addAll(List.of(NEAR, PAIRED));
+        Collector<SpawnEntityPacket> first = this.connection.trackIncoming(SpawnEntityPacket.class);
+        this.preview.show();
+        int labelId = first.collect().stream().filter(packet -> packet.type() == EntityType.TEXT_DISPLAY)
+                .findFirst().orElseThrow().entityId();
+        Collector<SpawnEntityPacket> spawns = this.connection.trackIncoming(SpawnEntityPacket.class);
+        Collector<DestroyEntitiesPacket> destroys = this.connection.trackIncoming(DestroyEntitiesPacket.class);
+        Collector<EntityTeleportPacket> moves = this.connection.trackIncoming(EntityTeleportPacket.class);
+
+        this.spots.add(new PageResource(new Pos(14, 40, 0), Direction.NORTH));
+        this.preview.refresh();
+
+        destroys.assertEmpty();
+        assertEquals(List.of(EntityType.ITEM_DISPLAY, EntityType.INTERACTION), types(spawns),
+                "only the new page and its box, the label is not spawned again");
+        moves.assertSingle(packet -> {
+            assertEquals(labelId, packet.entityId());
+            assertEquals(new Pos(12, 40 + PagePreview.LABEL_HEIGHT, 0), packet.position());
+        });
     }
 
     @Test
