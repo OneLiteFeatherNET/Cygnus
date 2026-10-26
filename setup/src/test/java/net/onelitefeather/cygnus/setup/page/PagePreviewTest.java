@@ -7,6 +7,7 @@ import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
+import net.minestom.server.network.packet.server.play.EntityMetaDataPacket;
 import net.minestom.server.network.packet.server.play.SpawnEntityPacket;
 import net.minestom.server.utils.Direction;
 import net.minestom.testing.Collector;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -38,6 +40,9 @@ class PagePreviewTest {
     private static final PageResource NEAR = new PageResource(new Pos(10, 40, 0), Direction.NORTH);
     private static final PageResource FAR = new PageResource(new Pos(100, 40, 0), Direction.NORTH);
     private static final PageResource PAIRED = new PageResource(new Pos(12, 40, 0), Direction.SOUTH);
+    private static final PageResource OTHER = new PageResource(new Pos(-30, 40, 0), Direction.NORTH);
+    private static final PageResource OTHER_PAIRED = new PageResource(new Pos(-32, 40, 0), Direction.NORTH);
+    private static final PageResource LONE = new PageResource(new Pos(0, 40, 30), Direction.EAST);
 
     private Instance instance;
     private TestConnection connection;
@@ -187,17 +192,112 @@ class PagePreviewTest {
     }
 
     @Test
-    @DisplayName("A crowded group glows red, a lone spot grey, any other group in its own colour")
+    @DisplayName("A crowded group glows red, a lone spot grey, other groups in colours of their own")
     void colourFollowsTheGroup() {
-        PageGroups.Group crowded = new PageGroups.Group(List.of(NEAR, PAIRED), 0.5D);
         PageGroups.Group calm = new PageGroups.Group(List.of(NEAR, PAIRED), 0.1D);
+        PageGroups.Group otherCalm = new PageGroups.Group(List.of(OTHER, OTHER_PAIRED), 0.1D);
         PageGroups.Group lone = new PageGroups.Group(List.of(FAR), 0.05D);
 
-        assertEquals(PagePreview.CROWDED_COLOUR, PagePreview.colourOf(crowded, 0));
-        assertEquals(PagePreview.LONE_COLOUR, PagePreview.colourOf(lone, 1));
-        assertEquals(PagePreview.GROUP_COLOURS[0], PagePreview.colourOf(calm, 0));
-        assertNotEquals(PagePreview.colourOf(calm, 0), PagePreview.colourOf(calm, 1),
-                "groups next in line must not look alike");
+        int[] colours = PagePreview.colours(List.of(calm, otherCalm, lone), Map.of());
+
+        assertNotEquals(colours[0], colours[1], "two groups must not look alike");
+        assertTrue(palette().containsAll(List.of(colours[0], colours[1])));
+        assertEquals(PagePreview.LONE_COLOUR, colours[2]);
+        assertEquals(PagePreview.CROWDED_COLOUR, PagePreview.colours(
+                List.of(new PageGroups.Group(List.of(NEAR, PAIRED), 0.5D)), Map.of())[0]);
+    }
+
+    @Test
+    @DisplayName("A group keeps the colour its spots had before")
+    void aGroupKeepsItsColour() {
+        int kept = PagePreview.GROUP_COLOURS[3];
+        PageGroups.Group calm = new PageGroups.Group(List.of(NEAR, PAIRED), 0.1D);
+
+        assertEquals(kept, PagePreview.colours(List.of(calm), Map.of(NEAR, kept, PAIRED, kept))[0]);
+    }
+
+    @Test
+    @DisplayName("Two groups that had the same colour do not keep it both")
+    void aKeptColourGoesToOneGroupOnly() {
+        int kept = PagePreview.GROUP_COLOURS[3];
+        PageGroups.Group calm = new PageGroups.Group(List.of(NEAR, PAIRED), 0.1D);
+        PageGroups.Group otherCalm = new PageGroups.Group(List.of(OTHER, OTHER_PAIRED), 0.1D);
+
+        int[] colours = PagePreview.colours(List.of(calm, otherCalm),
+                Map.of(NEAR, kept, PAIRED, kept, OTHER, kept, OTHER_PAIRED, kept));
+
+        assertEquals(kept, colours[0], "the larger group, which comes first, keeps it");
+        assertNotEquals(kept, colours[1]);
+    }
+
+    @Test
+    @DisplayName("A new spot is sent on its own, nothing shown is taken away")
+    void refreshSendsOnlyTheNewSpot() {
+        this.spots.addAll(List.of(NEAR, OTHER));
+        this.preview.show();
+        Collector<SpawnEntityPacket> spawns = this.connection.trackIncoming(SpawnEntityPacket.class);
+        Collector<DestroyEntitiesPacket> destroys = this.connection.trackIncoming(DestroyEntitiesPacket.class);
+
+        this.spots.add(LONE);
+        this.preview.refresh();
+
+        assertEquals(List.of(EntityType.ITEM_DISPLAY, EntityType.INTERACTION), types(spawns));
+        destroys.assertEmpty();
+    }
+
+    @Test
+    @DisplayName("A spot that joins a group only recolours its neighbour, it is not spawned again")
+    void joiningAGroupOnlyRecolours() {
+        this.spots.add(NEAR);
+        Collector<SpawnEntityPacket> first = this.connection.trackIncoming(SpawnEntityPacket.class);
+        this.preview.show();
+        int nearId = first.collect().getFirst().entityId();
+        Collector<SpawnEntityPacket> spawns = this.connection.trackIncoming(SpawnEntityPacket.class);
+        Collector<DestroyEntitiesPacket> destroys = this.connection.trackIncoming(DestroyEntitiesPacket.class);
+        Collector<EntityMetaDataPacket> looks = this.connection.trackIncoming(EntityMetaDataPacket.class);
+
+        this.spots.add(PAIRED);
+        this.preview.refresh();
+
+        destroys.assertEmpty();
+        assertEquals(List.of(EntityType.ITEM_DISPLAY, EntityType.INTERACTION, EntityType.TEXT_DISPLAY), types(spawns));
+        assertTrue(looks.collect().stream().anyMatch(packet -> packet.entityId() == nearId),
+                "the lone spot turned into a group and needs its new glow");
+    }
+
+    @Test
+    @DisplayName("A deleted spot takes only its own displays away")
+    void refreshRemovesOnlyTheDeletedSpot() {
+        this.spots.addAll(List.of(NEAR, PAIRED, OTHER));
+        this.preview.show();
+        Collector<SpawnEntityPacket> spawns = this.connection.trackIncoming(SpawnEntityPacket.class);
+        Collector<DestroyEntitiesPacket> destroys = this.connection.trackIncoming(DestroyEntitiesPacket.class);
+
+        this.spots.remove(OTHER);
+        this.preview.refresh();
+
+        spawns.assertEmpty();
+        destroys.assertSingle(packet -> assertEquals(2, packet.entityIds().size(), "the page and its box"));
+    }
+
+    @Test
+    @DisplayName("Nothing is sent when a refresh changes nothing")
+    void refreshWithoutChangeSendsNothing() {
+        this.spots.addAll(List.of(NEAR, PAIRED, OTHER));
+        this.preview.show();
+        Collector<SpawnEntityPacket> spawns = this.connection.trackIncoming(SpawnEntityPacket.class);
+        Collector<DestroyEntitiesPacket> destroys = this.connection.trackIncoming(DestroyEntitiesPacket.class);
+        Collector<EntityMetaDataPacket> looks = this.connection.trackIncoming(EntityMetaDataPacket.class);
+
+        this.preview.refresh();
+
+        spawns.assertEmpty();
+        destroys.assertEmpty();
+        looks.assertEmpty();
+    }
+
+    private static List<Integer> palette() {
+        return java.util.Arrays.stream(PagePreview.GROUP_COLOURS).boxed().toList();
     }
 
     @Test
