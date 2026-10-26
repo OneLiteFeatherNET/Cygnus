@@ -326,6 +326,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                                 System::currentTimeMillis),
                         new PageRevealFeature(this.pageProvider::interactablePages,
                                 () -> TeamHelper.survivorsOf(this.teamService),
+                                this.staminaService::getFoodBar,
                                 System::currentTimeMillis,
                                 tickSections),
                         new OverlayModule(this.gameConfig.glitch(), this.gameConfig.pageGlitch(), this.teamService,

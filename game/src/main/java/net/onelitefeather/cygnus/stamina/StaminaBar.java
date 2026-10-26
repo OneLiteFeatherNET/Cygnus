@@ -86,6 +86,15 @@ public abstract sealed class StaminaBar implements Runnable permits SlenderBar, 
     }
 
     /**
+     * Returns whether the bar ticks at the moment.
+     *
+     * @return {@code true} between {@link #start()} and {@link #stop()}
+     */
+    protected boolean isRunning() {
+        return task != null;
+    }
+
+    /**
      * The implementation of this method includes the logic which is executed on each tick of the {@link StaminaBar}.
      */
     public abstract void consume();

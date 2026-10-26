@@ -23,6 +23,7 @@ import net.onelitefeather.cygnus.common.page.PageProximityTarget;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
+import net.onelitefeather.cygnus.stamina.FoodBar;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.telemetry.TickSectionNames;
 import net.onelitefeather.cygnus.telemetry.TickSections;
@@ -37,6 +38,7 @@ import java.util.Set;
 import java.util.SplittableRandom;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
@@ -52,9 +54,16 @@ import java.util.random.RandomGenerator;
  * cooldown, it only tells the survivor so. The values are fixed on purpose, they are not part of
  * the config.
  * </p>
+ * <p>
+ * The locator bar shares its place with the experience bar, which carries the stamina. The client
+ * shows the experience bar for a few seconds after each change of it, so the pages would vanish
+ * while the stamina regenerates. The stamina bar therefore holds its display while the pages are
+ * shown. A sprint drains the bar, so it cannot be used while sprinting and a sprint takes the pages
+ * off the bar again. A use while sprinting costs no cooldown either.
+ * </p>
  *
  * @author Joltra
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2.22.0
  */
 public final class PageRevealFeature implements GameFeature {
@@ -79,6 +88,8 @@ public final class PageRevealFeature implements GameFeature {
 
     static final Component NOTHING_FOUND = Component.text("No pages nearby", NamedTextColor.GRAY, TextDecoration.ITALIC);
 
+    static final Component SPRINTING = Component.text("Stop sprinting first", NamedTextColor.GRAY, TextDecoration.ITALIC);
+
     private static final Sound DENIED = Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_BASS, Sound.Source.MASTER, 0.6F, 0.5F);
     private static final Sound REVEALED = Sound.sound(SoundEvent.BLOCK_AMETHYST_BLOCK_CHIME, Sound.Source.MASTER, 1.0F, 1.2F);
     private static final double TICK_MILLIS = 50.0D;
@@ -87,6 +98,7 @@ public final class PageRevealFeature implements GameFeature {
     private final EventNode<Event> node = EventNode.all("page-reveal");
     private final Supplier<? extends Collection<? extends PageProximityTarget>> pages;
     private final Supplier<Set<Player>> survivors;
+    private final Function<Player, @Nullable FoodBar> staminaBars;
     private final LongSupplier clock;
     private final TickSections sections;
     private final RandomGenerator random;
@@ -99,28 +111,33 @@ public final class PageRevealFeature implements GameFeature {
      * Creates the feature with its updates measured for the slow tick report.
      *
      * @param pages     supplies the pages that can be collected right now
-     * @param survivors supplies the survivors of the round
-     * @param clock     supplies the current time in milliseconds
-     * @param sections  measures how long the updates take
+     * @param survivors   supplies the survivors of the round
+     * @param staminaBars finds a survivor's stamina bar, whose display is held while the pages are shown
+     * @param clock       supplies the current time in milliseconds
+     * @param sections    measures how long the updates take
      */
     public PageRevealFeature(Supplier<? extends Collection<? extends PageProximityTarget>> pages,
-                             Supplier<Set<Player>> survivors, LongSupplier clock, TickSections sections) {
-        this(pages, survivors, clock, sections, new SplittableRandom());
+                             Supplier<Set<Player>> survivors, Function<Player, @Nullable FoodBar> staminaBars,
+                             LongSupplier clock, TickSections sections) {
+        this(pages, survivors, staminaBars, clock, sections, new SplittableRandom());
     }
 
     /**
      * Creates the feature with a given random source, for tests.
      *
      * @param pages     supplies the pages that can be collected right now
-     * @param survivors supplies the survivors of the round
-     * @param clock     supplies the current time in milliseconds
-     * @param sections  measures how long the updates take
-     * @param random    rolls the offsets of the waypoints
+     * @param survivors   supplies the survivors of the round
+     * @param staminaBars finds a survivor's stamina bar, whose display is held while the pages are shown
+     * @param clock       supplies the current time in milliseconds
+     * @param sections    measures how long the updates take
+     * @param random      rolls the offsets of the waypoints
      */
     PageRevealFeature(Supplier<? extends Collection<? extends PageProximityTarget>> pages,
-                      Supplier<Set<Player>> survivors, LongSupplier clock, TickSections sections, RandomGenerator random) {
+                      Supplier<Set<Player>> survivors, Function<Player, @Nullable FoodBar> staminaBars,
+                      LongSupplier clock, TickSections sections, RandomGenerator random) {
         this.pages = pages;
         this.survivors = survivors;
+        this.staminaBars = staminaBars;
         this.clock = clock;
         this.sections = sections;
         this.random = random;
@@ -179,6 +196,10 @@ public final class PageRevealFeature implements GameFeature {
             survivor.playSound(DENIED, Sound.Emitter.self());
             return;
         }
+        if (survivor.isSprinting()) {
+            survivor.sendActionBar(SPRINTING);
+            return;
+        }
         Pos center = survivor.getPosition();
         double rangeSquared = (double) RADIUS * RADIUS;
         List<PageProximityTarget> found = this.pages.get().stream()
@@ -191,7 +212,7 @@ public final class PageRevealFeature implements GameFeature {
         }
 
         this.hide(survivor);
-        Reveal reveal = new Reveal(survivor, SECONDS * TICKS_PER_SECOND);
+        Reveal reveal = new Reveal(survivor, this.staminaBars.apply(survivor), SECONDS * TICKS_PER_SECOND);
         for (PageProximityTarget page : found) {
             Shown shown = new Shown(UUID.randomUUID(), this.offset());
             shown.target = page.position().add(shown.offset);
@@ -199,6 +220,7 @@ public final class PageRevealFeature implements GameFeature {
             survivor.sendPacket(PageWaypoint.track(shown.id, shown.target));
         }
         this.shown.put(survivor, reveal);
+        if (reveal.staminaBar != null) reveal.staminaBar.holdDisplay();
         survivor.playSound(REVEALED, Sound.Emitter.self());
 
         long cooldown = COOLDOWN_SECONDS * 1000L;
@@ -220,7 +242,7 @@ public final class PageRevealFeature implements GameFeature {
 
     /**
      * Counts the shown pages down, takes found pages off the bar and moves the waypoints of pages
-     * that moved.
+     * that moved. A survivor who sprints loses all pages at once.
      */
     private void step() {
         if (this.shown.isEmpty()) return;
@@ -230,7 +252,7 @@ public final class PageRevealFeature implements GameFeature {
         }
         for (Reveal reveal : List.copyOf(this.shown.values())) {
             reveal.ticksLeft -= RESEND_TICKS;
-            if (reveal.ticksLeft <= 0 || !reveal.survivor.isOnline()) {
+            if (reveal.ticksLeft <= 0 || !reveal.survivor.isOnline() || reveal.survivor.isSprinting()) {
                 this.hide(reveal.survivor);
                 continue;
             }
@@ -252,17 +274,19 @@ public final class PageRevealFeature implements GameFeature {
             shown.target = target;
             reveal.survivor.sendPacket(PageWaypoint.update(shown.id, target));
         }
-        if (reveal.pages.isEmpty()) this.shown.remove(reveal.survivor, reveal);
+        if (reveal.pages.isEmpty() && this.shown.remove(reveal.survivor, reveal)) reveal.release();
     }
 
     /**
-     * Takes every page off the player's locator bar.
+     * Takes every page off the player's locator bar and lets the stamina show again.
      *
      * @param player the player
      */
     private void hide(Player player) {
         Reveal reveal = this.shown.remove(player);
-        if (reveal == null || !player.isOnline()) return;
+        if (reveal == null) return;
+        reveal.release();
+        if (!player.isOnline()) return;
         for (Shown shown : reveal.pages.values()) {
             player.sendPacket(PageWaypoint.untrack(shown.id));
         }
@@ -283,12 +307,18 @@ public final class PageRevealFeature implements GameFeature {
     private static final class Reveal {
 
         private final Player survivor;
+        private final @Nullable FoodBar staminaBar;
         private final Map<UUID, Shown> pages = new ConcurrentHashMap<>();
         private int ticksLeft;
 
-        private Reveal(Player survivor, int ticksLeft) {
+        private Reveal(Player survivor, @Nullable FoodBar staminaBar, int ticksLeft) {
             this.survivor = survivor;
+            this.staminaBar = staminaBar;
             this.ticksLeft = ticksLeft;
+        }
+
+        private void release() {
+            if (this.staminaBar != null) this.staminaBar.releaseDisplay();
         }
     }
 

@@ -18,7 +18,7 @@ import java.time.temporal.ChronoUnit;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.3.0
+ * @version 1.4.0
  * @since 1.0.0
  */
 public non-sealed class FoodBar extends StaminaBar {
@@ -27,6 +27,7 @@ public non-sealed class FoodBar extends StaminaBar {
     private static final int FOOD_TAKE = 2;
     private final StaminaConfig config;
     private float currentSpeedCount;
+    private boolean displayHeld;
 
     /**
      * Creates a new instance of the {@link FoodBar} for the specific player
@@ -47,7 +48,7 @@ public non-sealed class FoodBar extends StaminaBar {
     @Override
     protected void onStart() {
         this.state = State.READY;
-        this.player.setExp(normalize(this.currentSpeedCount));
+        this.display();
     }
 
     /**
@@ -70,7 +71,7 @@ public non-sealed class FoodBar extends StaminaBar {
      */
     private void handleFoodDraining() {
         this.currentSpeedCount = this.currentSpeedCount - FOOD_TAKE;
-        player.setExp(normalize(this.currentSpeedCount));
+        this.display();
 
         if (this.currentSpeedCount <= 0.0D) {
             player.setSprinting(false);
@@ -85,7 +86,7 @@ public non-sealed class FoodBar extends StaminaBar {
      */
     private void handleFoodRegeneration() {
         this.currentSpeedCount = (float) Math.min(MAX_FOOD, this.currentSpeedCount + this.config.regenPerSecond());
-        player.setExp(normalize(this.currentSpeedCount));
+        this.display();
 
         // A survivor who ran dry gets the sprint back long before the bar is full again
         if (this.canResume()) {
@@ -103,6 +104,35 @@ public non-sealed class FoodBar extends StaminaBar {
      */
     private boolean canResume() {
         return this.currentSpeedCount >= this.config.sprintResumeShare() * MAX_FOOD;
+    }
+
+    /**
+     * Mirrors the stamina into the experience bar, unless the display is held.
+     */
+    private void display() {
+        if (this.displayHeld) return;
+        player.setExp(normalize(this.currentSpeedCount));
+    }
+
+    /**
+     * Stops mirroring the stamina into the experience bar. The stamina itself goes on as before.
+     * <p>
+     * The client shows the experience bar for a few seconds after every change of it, on top of the
+     * locator bar. Holding the display keeps the locator bar visible while the bar regenerates.
+     * </p>
+     */
+    public void holdDisplay() {
+        this.displayHeld = true;
+    }
+
+    /**
+     * Mirrors the stamina into the experience bar again and brings it up to date. A bar that no
+     * longer runs leaves the experience bar alone, it may belong to something else by now.
+     */
+    public void releaseDisplay() {
+        if (!this.displayHeld) return;
+        this.displayHeld = false;
+        if (this.isRunning()) this.display();
     }
 
     /**
@@ -163,7 +193,7 @@ public non-sealed class FoodBar extends StaminaBar {
      */
     public void drain() {
         this.currentSpeedCount = 0;
-        player.setExp(0.0F);
+        this.display();
         if (player.isSprinting()) {
             player.setSprinting(false);
             EventDispatcher.call(new PlayerStopSprintingEvent(player));
@@ -187,7 +217,7 @@ public non-sealed class FoodBar extends StaminaBar {
         float target = (float) (Math.max(share, this.config.sprintResumeShare()) * MAX_FOOD);
         if (this.currentSpeedCount >= target) return;
         this.currentSpeedCount = target;
-        player.setExp(normalize(this.currentSpeedCount));
+        this.display();
         player.setBlockedSprinting(false);
     }
 }

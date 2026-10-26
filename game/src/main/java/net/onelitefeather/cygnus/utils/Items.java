@@ -107,7 +107,8 @@ public final class Items {
     private static final ItemStack pageReveal = ItemStack.builder(PAGE_REVEAL_MATERIAL)
             .customName(Component.text("Page Sense", NamedTextColor.LIGHT_PURPLE))
             .lore(lore("Right click to show the pages", "around you on your locator bar",
-                    "They show only roughly where they are"))
+                    "They show only roughly where they are",
+                    "Sprinting hides them again"))
             .set(Tags.ITEM_TAG, PAGE_REVEAL_ITEM)
             .build();
 

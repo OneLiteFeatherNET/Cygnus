@@ -34,6 +34,44 @@ class FoodBarTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("A held display keeps the experience bar still until it is released")
+    void heldDisplayKeepsTheExperienceBar(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina((CygnusPlayer) player);
+        bar.start();
+        try {
+            bar.holdDisplay();
+            bar.drain();
+
+            assertEquals(1.0f, player.getExp(), 1.0E-6f);
+            assertEquals(0.0f, bar.remainingShare(), 1.0E-6f, "the stamina itself goes on");
+
+            bar.releaseDisplay();
+
+            assertEquals(0.0f, player.getExp(), 1.0E-6f);
+        } finally {
+            bar.stop();
+        }
+    }
+
+    @Test
+    @DisplayName("Releasing a stopped bar leaves the experience bar alone")
+    void releasedStoppedBarLeavesTheExperienceBar(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        FoodBar bar = (FoodBar) StaminaFactory.createFoodStamina((CygnusPlayer) player);
+        bar.start();
+        bar.holdDisplay();
+        bar.stop();
+        player.setExp(0.5f);
+
+        bar.releaseDisplay();
+
+        assertEquals(0.5f, player.getExp(), 1.0E-6f);
+    }
+
+    @Test
     @DisplayName("Draining empties the bar and leaves it to regenerate")
     void drainEmptiesTheBar(Env env) {
         Instance instance = env.createFlatInstance();
