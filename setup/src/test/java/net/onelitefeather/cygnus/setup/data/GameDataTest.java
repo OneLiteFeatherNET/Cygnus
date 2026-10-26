@@ -1,5 +1,15 @@
 package net.onelitefeather.cygnus.setup.data;
 
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.minestom.server.event.Event;
+import net.minestom.server.event.EventNode;
+import net.minestom.server.network.packet.server.play.SystemChatPacket;
+import net.minestom.testing.Collector;
+import net.minestom.testing.TestConnection;
+import net.onelitefeather.cygnus.setup.event.dialog.DialogRequestEvent;
+import net.onelitefeather.cygnus.setup.event.dialog.DialogTarget;
+import java.util.concurrent.atomic.AtomicReference;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
@@ -458,5 +468,36 @@ class GameDataTest {
         data.save();
 
         assertEquals("{ not valid json ]", Files.readString(broken, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void newPoolItemRequestsTheNameDialog(Env env) {
+        AtomicReference<DialogRequestEvent> request = new AtomicReference<>();
+        EventNode<Event> node = EventNode.all("page-pool-dialog-test");
+        node.addListener(DialogRequestEvent.class, request::set);
+        env.process().eventHandler().addChild(node);
+        try {
+            gameData.handleItemInteraction(player, SetupItemId.PAGE_POOL_NEW);
+        } finally {
+            env.process().eventHandler().removeChild(node);
+        }
+
+        assertNotNull(request.get());
+        assertEquals(DialogTarget.PAGE_POOL_NAME, request.get().getTarget());
+    }
+
+    @Test
+    void enteringPageModeNamesTheActivePool(Env env) {
+        TestConnection connection = env.createConnection();
+        Player builder = connection.connect(this.instance, new Pos(0, 40, 0));
+        GameData data = new GameData(builder, MapEntry.of(Paths.get("")));
+        Collector<SystemChatPacket> chat = connection.trackIncoming(SystemChatPacket.class);
+
+        data.handleItemInteraction(builder, SetupItemId.PAGE);
+
+        assertTrue(chat.collect().stream()
+                .map(packet -> PlainTextComponentSerializer.plainText().serialize(packet.message()))
+                .anyMatch(line -> line.contains("Now editing page pool default")));
+        data.reset();
     }
 }
