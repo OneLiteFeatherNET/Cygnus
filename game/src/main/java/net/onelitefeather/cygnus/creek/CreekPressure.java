@@ -35,7 +35,7 @@ final class CreekPressure {
     CreekPressure(CreekConfig config, MoodClock mood) {
         this.config = config;
         this.mood = mood;
-        this.tuning = new CreekTuning(config, Calm.NONE, CreekMood.NORMAL);
+        this.forget();
     }
 
     /**
