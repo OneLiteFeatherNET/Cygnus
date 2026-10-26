@@ -40,6 +40,9 @@ survivorTeamSize=12
 # reporting off entirely: no client is created and nothing is sent anywhere.
 #sentryDsn=https://publickey@sentry.example.com/1
 
+# The Sentry environment (for example staging) comes from the environment variable SENTRY_ENVIRONMENT.
+# Unset keeps Sentry's default, production.
+
 # --- ResourcePack ----------------------------------------------------------
 
 # Location the client downloads the pack from. Leave it out to disable the
