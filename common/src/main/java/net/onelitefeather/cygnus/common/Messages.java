@@ -133,6 +133,62 @@ public final class Messages {
      */
     public static final Component LOBBY_RETURN_KICK = Component.text("Returning to the lobby", NamedTextColor.GRAY);
 
+    /** @since 2.21.0 */
+    public static final Component PASS_UNAVAILABLE = withPrefix(Component.text("Slender passes are not available on this server.", NamedTextColor.RED));
+    /** @since 2.21.0 */
+    public static final Component PASS_CLOSED = withPrefix(Component.text("Slender passes can only be reserved in the lobby.", NamedTextColor.RED));
+    /** @since 2.21.0 */
+    public static final Component PASS_NO_BALANCE = withPrefix(Component.text("You have no slender pass to reserve.", NamedTextColor.RED));
+    /** @since 2.21.0 */
+    public static final Component PASS_TAKEN = withPrefix(Component.text("Another player already holds the slender pass for this round.", NamedTextColor.RED));
+    /** @since 2.21.0 */
+    public static final Component PASS_ALREADY_RESERVED = withPrefix(Component.text("You already hold the slender pass for this round.", NamedTextColor.YELLOW));
+    /** @since 2.21.0 */
+    public static final Component PASS_RESERVED = withPrefix(Component.text("You will play the Slender this round. The pass is spent when the round starts.", NamedTextColor.GREEN));
+    /** @since 2.21.0 */
+    public static final Component PASS_CANCELLED = withPrefix(Component.text("Your slender pass reservation is cancelled.", NamedTextColor.GRAY));
+    /** @since 2.21.0 */
+    public static final Component PASS_NOTHING_TO_CANCEL = withPrefix(Component.text("You do not hold a slender pass reservation.", NamedTextColor.RED));
+    /** Lobby announcement, it names nobody on purpose. @since 2.21.0 */
+    public static final Component PASS_REDEEMED = withPrefix(Component.text("A slender pass has been redeemed for this round.", NamedTextColor.GRAY));
+    /** @since 2.21.0 */
+    public static final Component PASS_ONLY_PLAYERS = withPrefix(Component.text("Only players can hold a slender pass.", NamedTextColor.RED));
+    /** @since 2.21.0 */
+    public static final Component PASS_NO_PERMISSION = withPrefix(Component.text("You are not allowed to change slender passes.", NamedTextColor.RED));
+    /** @since 2.21.0 */
+    public static final Component PASS_TARGET_OFFLINE = withPrefix(Component.text("That player is not online.", NamedTextColor.RED));
+    /** @since 2.21.0 */
+    public static final Component PASS_NEGATIVE_AMOUNT = withPrefix(Component.text("The amount cannot be negative.", NamedTextColor.RED));
+    /** @since 2.21.0 */
+    public static final Component PASS_NOTHING_REMOVED = withPrefix(Component.text("Nothing was removed, the player has no slender passes.", NamedTextColor.RED));
+
+    /**
+     * Tells a player how many slender passes they have.
+     *
+     * @param balance the passes
+     * @return the message
+     * @since 2.21.0
+     */
+    public static Component passBalance(int balance) {
+        return withPrefix(Component.text("You have ", NamedTextColor.GRAY)
+                .append(Component.text(String.valueOf(balance), NamedTextColor.GREEN))
+                .append(Component.text(" slender pass(es).", NamedTextColor.GRAY)));
+    }
+
+    /**
+     * Tells an administrator the new balance of a player.
+     *
+     * @param name    the player's name
+     * @param balance the new balance
+     * @return the message
+     * @since 2.21.0
+     */
+    public static Component passChanged(String name, int balance) {
+        return withPrefix(Component.text(name + " has ", NamedTextColor.GRAY)
+                .append(Component.text(String.valueOf(balance), NamedTextColor.GREEN))
+                .append(Component.text(" slender pass(es) now.", NamedTextColor.GRAY)));
+    }
+
     @Contract(value = "_ -> new", pure = true)
     public static Component withPrefix(String component) {
         return PREFIX.append(MINI_MESSAGE.deserialize(component));

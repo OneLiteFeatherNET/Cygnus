@@ -100,4 +100,21 @@ class PlayerSpawnListenerTest extends CygnusPlayerTestBase {
 
         env.destroyInstance(instance, true);
     }
+
+    @Test
+    void testFirstSpawnInLobbyRunsTheLobbyJoinHook(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        LobbyPhase lobbyPhase = new LobbyPhase(lobbyConfig());
+
+        AtomicBoolean hooked = new AtomicBoolean(false);
+        PlayerSpawnListener listener = new PlayerSpawnListener(p -> {
+        }, () -> lobbyPhase, p -> hooked.set(true));
+
+        listener.accept(new PlayerSpawnEvent(player, instance, true));
+
+        assertTrue(hooked.get(), "the lobby join hook must run for a first spawn in the lobby");
+
+        env.destroyInstance(instance, true);
+    }
 }

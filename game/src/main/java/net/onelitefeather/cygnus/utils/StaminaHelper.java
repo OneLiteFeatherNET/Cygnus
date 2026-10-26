@@ -5,6 +5,7 @@ import net.onelitefeather.cygnus.team.TeamHelper;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.minestom.server.entity.Player;
+import org.jetbrains.annotations.Nullable;
 import net.onelitefeather.cygnus.stamina.FoodBar;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 
@@ -22,14 +23,15 @@ public final class StaminaHelper {
      * Initializes the stamina objects for the slender and the survivors.
      *
      * @param teamService    The service that contains the teams
-     * @param staminaService The service that contains the stamina bars
+     * @param staminaService  The service that contains the stamina bars
+     * @param reservedSlender The player who holds a slender pass for this round, or {@code null} to draw at random
      */
-    public static void initStaminaObjects(TeamService teamService, StaminaService staminaService) {
+    public static void initStaminaObjects(TeamService teamService, StaminaService staminaService, @Nullable Player reservedSlender) {
         Team slenderTeam = teamService.getTeam(GameConfig.SLENDER_KEY)
                 .orElseThrow(() -> new IllegalStateException("Slender team not found"));
         Team survivorTeam = teamService.getTeam(GameConfig.SURVIVOR_KEY)
                 .orElseThrow(() -> new IllegalStateException("Survivor team not found"));
-        TeamHelper.TeamAllocation allocation = TeamHelper.prepareTeamAllocation(slenderTeam, survivorTeam);
+        TeamHelper.TeamAllocation allocation = TeamHelper.prepareTeamAllocation(slenderTeam, survivorTeam, reservedSlender);
 
         staminaService.setSlenderBar(allocation.slender(), true);
         staminaService.createStaminaBars(allocation.survivors());

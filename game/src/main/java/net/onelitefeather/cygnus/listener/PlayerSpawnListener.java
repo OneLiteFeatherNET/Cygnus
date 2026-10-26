@@ -24,10 +24,25 @@ public final class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
 
     private final PlayerConsumer spawnSupplier;
     private final Supplier<Phase> phaseSupplier;
+    private final Consumer<Player> lobbyJoin;
 
     public PlayerSpawnListener(PlayerConsumer spawnSupplier, Supplier<Phase> phaseSupplier) {
+        this(spawnSupplier, phaseSupplier, player -> {
+        });
+    }
+
+    /**
+     * Creates the listener.
+     *
+     * @param spawnSupplier the spawn logic
+     * @param phaseSupplier reads the running phase
+     * @param lobbyJoin     runs for a player who first spawns in the lobby, after the lobby setup
+     * @since 2.21.0
+     */
+    public PlayerSpawnListener(PlayerConsumer spawnSupplier, Supplier<Phase> phaseSupplier, Consumer<Player> lobbyJoin) {
         this.spawnSupplier = spawnSupplier;
         this.phaseSupplier = phaseSupplier;
+        this.lobbyJoin = lobbyJoin;
     }
 
     @Override
@@ -46,6 +61,7 @@ public final class PlayerSpawnListener implements Consumer<PlayerSpawnEvent> {
             Broadcaster.broadcast(Messages.getJoinMessage(player));
             this.spawnSupplier.accept(player);
             lobbyPhase.setLevel(player);
+            this.lobbyJoin.accept(player);
             lobbyPhase.checkStartCondition();
             return;
         }

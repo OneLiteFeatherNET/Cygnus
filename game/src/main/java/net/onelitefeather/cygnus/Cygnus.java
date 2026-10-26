@@ -96,6 +96,9 @@ import net.onelitefeather.cygnus.movement.PlayerStartSprintingEvent;
 import net.onelitefeather.cygnus.movement.PlayerStopSprintingEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
+import net.onelitefeather.cygnus.pass.ConnectionPassFeedback;
+import net.onelitefeather.cygnus.pass.SlenderPassFeature;
+import net.onelitefeather.cygnus.pass.SlenderPassService;
 import net.onelitefeather.cygnus.phase.RestartPhase;
 import net.onelitefeather.cygnus.phase.WaitingPhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
@@ -182,6 +185,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
 
     private final CygnusTracing tracing;
     private final RoundTracer roundTracer;
+    private final SlenderPassService slenderPassService;
     private final JoinTracer joinTracer;
     private final SlowTickTracer slowTickTracer;
     private final ActionTracer actionTracer;
@@ -229,6 +233,15 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                     task -> MinecraftServer.getSchedulerManager().scheduleNextTick(task));
             this.roundStatsCollector = new RoundStatsCollector(statsRepository, Clock.systemUTC(),
                     statsConfig.timeZone(), this.roundTracer::currentRoundId, Cygnus::onlineName, playerStats::roundSaved);
+            // The single place that picks the pass storage: the same condition as the statistics, so a
+            // missing database hides the feature for both. The repository shares the statistics' pool.
+            this.slenderPassService = new SlenderPassService(statsRepository.slenderPasses(Clock.systemUTC()),
+                    task -> MinecraftServer.getSchedulerManager().scheduleNextTick(task),
+                    MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid,
+                    () -> this.linearPhaseSeries.getCurrentPhase() instanceof LobbyPhase,
+                    new ConnectionPassFeedback(MinecraftServer.getConnectionManager()),
+                    (player, roundId, cause) -> LOGGER.warn("Spending the slender pass of {} for round {} failed, "
+                            + "the player keeps the Slender role for this round", player, roundId, cause));
             this.slowTickTracer = new SlowTickTracer(this.tracing, this.roundTracer, this.gameConfig.telemetry(), Clock.systemUTC(), tickSections,
                     TickMetrics.fromGlobal(serviceVersion(), this.roundTracer::phaseLabel));
             this.staminaService = new StaminaService(this.gameConfig.stamina(), tickSections);
@@ -300,6 +313,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         this.spectatorService,
                         new StatsDisplayFeature(playerStats, this.linearPhaseSeries::getCurrentPhase,
                                 MinecraftServer.getConnectionManager()),
+                        new SlenderPassFeature(this.slenderPassService, MinecraftServer.getConnectionManager()),
                         new LobbyHintsFeature(ServiceName.of(path), this.linearPhaseSeries::getCurrentPhase,
                                 MinecraftServer.getConnectionManager()),
                         // Not part of the OverlayModule: the sound is the feedback a hit owes the player
@@ -383,6 +397,21 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         return activeMap == null ? null : activeMap.name();
     }
 
+    /**
+     * Reads the id of the running round as a UUID, the form the statistics store. A round id that is not a UUID
+     * leaves the pass out of the round.
+     */
+    private static @Nullable UUID roundUuid(@Nullable String id) {
+        if (id == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(id);
+        } catch (IllegalArgumentException exception) {
+            return null;
+        }
+    }
+
     private static @Nullable String onlineName(UUID uuid) {
         Player player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid);
         return player == null ? null : player.getUsername();
@@ -442,7 +471,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(GameMapLoadedEvent.class, event -> this.roundTracer.pagePoolDrawn(event.pagePool().name()));
         manager.addListener(GameMapLoadedEvent.class, new GameMapLoadedListener());
-        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier));
+        manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier,
+                this.slenderPassService::onLobbyJoin));
         PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.spectatorService::updateInventory, this.slenderTakeover);
         manager.addListener(PlayerDisconnectEvent.class, quitListener);
         manager.addListener(AsyncPlayerConfigurationEvent.class,
@@ -459,7 +489,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         manager.addListener(GamePrepareEvent.class, _ -> {
             // The roles are handed out inside initStaminaObjects; the name tag teams can only mirror
             // them afterwards.
-            StaminaHelper.initStaminaObjects(this.teamService, this.staminaService);
+            Player reserved = this.slenderPassService.claimRound(roundUuid(this.roundTracer.currentRoundId()));
+            StaminaHelper.initStaminaObjects(this.teamService, this.staminaService, reserved);
             this.scoreboardDisplay.sync(this.teamService);
         });
         registerCancelListener(manager);

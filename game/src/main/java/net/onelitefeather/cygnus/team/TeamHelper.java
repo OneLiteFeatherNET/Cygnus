@@ -47,9 +47,23 @@ public final class TeamHelper {
      * @return the resulting allocation, containing the slender player and the survivors
      */
     public static TeamAllocation prepareTeamAllocation(Team slenderTeam, Team survivorTeam) {
+        return prepareTeamAllocation(slenderTeam, survivorTeam, null);
+    }
+
+    /**
+     * Prepares the allocation with the player who holds a slender pass for the round as the slender. Without
+     * such a player the slender is drawn at random.
+     *
+     * @param slenderTeam     the team for the slender
+     * @param survivorTeam    the team for the survivors
+     * @param reservedSlender the player who plays the Slender by a pass, or {@code null} to draw one at random
+     * @return the resulting allocation, containing the slender player and the survivors
+     * @since 2.21.0
+     */
+    public static TeamAllocation prepareTeamAllocation(Team slenderTeam, Team survivorTeam, @Nullable Player reservedSlender) {
         Check.argCondition(slenderTeam.getCapacity() != 1, "The slender team must have a capacity from one");
 
-        Player slenderPlayer = selectSlenderPlayer();
+        Player slenderPlayer = reservedSlender != null ? reservedSlender : selectSlenderPlayer();
         assignSlender(slenderPlayer, slenderTeam);
 
         Set<Player> survivors = collectSurvivors(slenderPlayer);
