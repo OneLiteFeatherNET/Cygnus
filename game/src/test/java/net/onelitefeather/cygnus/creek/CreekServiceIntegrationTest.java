@@ -7,7 +7,15 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.event.Event;
+import net.minestom.server.event.EventNode;
+import net.minestom.server.network.packet.server.play.SoundEffectPacket;
 import net.minestom.server.potion.PotionEffect;
+import net.minestom.server.sound.SoundEvent;
+import net.minestom.testing.Collector;
+import net.minestom.testing.TestConnection;
+import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
+import net.onelitefeather.cygnus.creek.state.CreekMood;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
@@ -55,11 +63,73 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         }
     };
 
+    private final MoodClock mood = new MoodClock(900_000L, new Random(5));
+
     private static final CreekRoute ROUTE = CreekRoute.ofPositions("Test", List.of(new Vec(10, 40, 10), new Vec(20, 40, 10)));
 
     private CreekService service(Instance instance, Set<Player> survivors, List<CreekRoute> routes, AtomicLong clock) {
         return new CreekService(CreekConfig.DEFAULT, CreekSettings.DEFAULT, () -> survivors, () -> instance, () -> routes,
-                CreakingBody::spawn, (_, _) -> 0.0D, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE, clock::get, new Random(3), TickSections.NONE);
+                CreakingBody::spawn, (_, _) -> 0.0D, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE, this.mood, clock::get, new Random(3), TickSections.NONE);
+    }
+
+    @Test
+    @DisplayName("At the switch everyone in the round hears it, and the creek is in a mood")
+    void switchPlaysTheSoundToEveryone(Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection firstConnection = env.createConnection();
+        Player first = firstConnection.connect(instance, new Pos(0, 40, 0));
+        TestConnection secondConnection = env.createConnection();
+        Player second = secondConnection.connect(instance, new Pos(30, 40, 0));
+        AtomicLong clock = new AtomicLong();
+        CreekService service = service(instance, Set.of(first, second), List.of(ROUTE), clock);
+        service.start();
+        Collector<SoundEffectPacket> firstSounds = firstConnection.trackIncoming(SoundEffectPacket.class);
+        Collector<SoundEffectPacket> secondSounds = secondConnection.trackIncoming(SoundEffectPacket.class);
+
+        clock.set(this.mood.switchAt());
+        service.tick();
+
+        assertEquals(1, switchSounds(firstSounds.collect()));
+        assertEquals(1, switchSounds(secondSounds.collect()));
+        assertNotSame(CreekMood.NORMAL, this.mood.get());
+        service.stop();
+    }
+
+    @Test
+    @DisplayName("A found page pulls the switch forward")
+    void foundPagesReachTheClock(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), new AtomicLong());
+        EventNode<Event> node = EventNode.all("test");
+        service.registerListener(node);
+        service.start();
+        long before = this.mood.switchAt();
+
+        node.call(new PageFoundEvent(survivor, 1, 8, null));
+
+        assertTrue(this.mood.switchAt() < before);
+        service.stop();
+    }
+
+    @Test
+    @DisplayName("Stopping the round puts the creek back into its normal mood")
+    void stopResetsTheMood(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        AtomicLong clock = new AtomicLong();
+        CreekService service = service(instance, Set.of(survivor), List.of(ROUTE), clock);
+        service.start();
+        clock.set(this.mood.switchAt());
+        service.tick();
+
+        service.stop();
+
+        assertSame(CreekMood.NORMAL, this.mood.get());
+    }
+
+    private static long switchSounds(List<SoundEffectPacket> packets) {
+        return packets.stream().filter(packet -> packet.soundEvent() == SoundEvent.BLOCK_CREAKING_HEART_SPAWN).count();
     }
 
     @Test
@@ -303,7 +373,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
                 CreakingBody::spawn, (id, _) -> {
                     dreadCalls.incrementAndGet();
                     return id.equals(scared.getUuid()) ? 0.5D : 0.0D;
-                }, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE,
+                }, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE, this.mood,
                 clock::get, new Random(3), TickSections.NONE);
         service.start();
         clock.set(CreekConfig.DEFAULT.vanish().maxSeconds() * 1000L + 1L);
@@ -321,7 +391,7 @@ class CreekServiceIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         CreekSettings settings = new CreekSettings(30, 20, 25, 30, 3.0D, 15, 5.0D);
         CreekService service = new CreekService(CreekConfig.DEFAULT, settings, Set::of, () -> instance, List::of,
-                CreakingBody::spawn, (_, _) -> 0.0D, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE, () -> 0L, new Random(3), TickSections.NONE);
+                CreakingBody::spawn, (_, _) -> 0.0D, CreekWitness.NONE, new CreekRespite(), consequence, CreekMarks.NONE, this.mood, () -> 0L, new Random(3), TickSections.NONE);
 
         assertEquals(30, service.sightRange());
     }
