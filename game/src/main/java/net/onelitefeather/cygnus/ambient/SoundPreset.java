@@ -20,6 +20,9 @@ public enum SoundPreset {
     /** A creek stalks the survivor: the cave stays rare and quiet, and nothing eerie joins it. */
     STALK(false, 0.3D, 0.5F),
 
+    /** A creek stalks the survivor in a mood that wants silence: nothing plays. */
+    HUSH(true, 0.0D, 0.0F),
+
     /** A phantom just jumped at the survivor: a moment of silence lets it sink in. */
     SCARE(true, 0.0D, 0.0F),
 

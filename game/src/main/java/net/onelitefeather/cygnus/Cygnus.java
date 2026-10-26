@@ -282,6 +282,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             // Shared by the creek and the lure: whom the lure scared, the creek leaves alone for a while.
             CreekRespite creekRespite = new CreekRespite();
             this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase, tickSections);
+            SoundPresetSource soundPresets;
             try (TraceStep ignored = startup.child("cygnus.startup.features")) {
                 CreekModule creekModule = new CreekModule(this.gameConfig.creek(), this.mapProvider.creekSettings(), this.teamService, this.mapProvider,
                         sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor,
@@ -289,6 +290,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                                         Cygnus::survivorActor, HuntMetrics.fromGlobal(serviceVersion()))),
                                 MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), creekRespite, this.jumpscareManager, this.staminaService, tickSections,
                         this.gameConfig.round().gameTime());
+                // The fear knows the creek's hunts and stalks and every scare that moved it, the
+                // turnaround scare moves no fear and is added on its own. The mood colors the rest.
+                soundPresets = creekModule.soundPresets(sanityService.with(new ScareSilence(this.jumpscareManager::lastScareAt)));
                 this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
                         new EpilepsyDisclaimer(),
                         this.slenderTakeover,
@@ -338,9 +342,6 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             }
             this.wakeUpTransition = new WakeUpTransition();
             try (TraceStep ignored = startup.child("cygnus.startup.phases")) {
-                // The fear knows the creek's hunts and stalks and every scare that moved it, the
-                // turnaround scare moves no fear and is added on its own.
-                SoundPresetSource soundPresets = sanityService.with(new ScareSilence(this.jumpscareManager::lastScareAt));
                 this.initPhases(sanityService, soundPresets, tickSections);
             }
             try (TraceStep ignored = startup.child("cygnus.startup.listeners")) {
