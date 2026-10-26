@@ -128,7 +128,7 @@ Invalid values stop the server at start with a clear message, the same way other
   `InMemorySlenderPassRepository` (new methods, same rules as the database) and a fixed `Clock`. The month change is
   tested at the turn of the month in UTC (`2026-10-31T23:30Z` is October, and `2026-11-01T00:30Z` is November). The
   meta is a fake `MonthlyQuotaSource`.
-- Integration in `:stats`: `HibernateSlenderPassRepositoryEarningIntegrationTest` against H2 in PostgreSQL mode with
+- Integration in `:stats`: `HibernateSlenderPassEarningIntegrationTest` against H2 in PostgreSQL mode with
   the real migrations `V1` to `V3` and `hbm2ddl=validate`: the threshold in one transaction, the conditional quota
   grant by two calls (only one credit), the cap, the new reasons under the check constraint, and the constraint swap
   of `V3` keeping the existing rows and their ids.
