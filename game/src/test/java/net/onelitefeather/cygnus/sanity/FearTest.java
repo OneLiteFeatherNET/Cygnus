@@ -1,5 +1,6 @@
 package net.onelitefeather.cygnus.sanity;
 
+import net.onelitefeather.cygnus.ambient.SoundPreset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -165,5 +166,50 @@ class FearTest {
         fear.stalked(0.5D, 1_000L, 0.0D);
 
         assertEquals(0.0D, fear.read(1_000_000L, 0.0D), EPSILON);
+    }
+
+    @Test
+    @DisplayName("A hunt wins over the silence after a scare, the silence over a stalk")
+    void presetsFollowTheirOrder() {
+        Fear fear = calm();
+        assertEquals(SoundPreset.FREE, fear.preset(0L));
+
+        fear.stalked(0.015D, 1_000L, 0.0D);
+        assertEquals(SoundPreset.STALK, fear.preset(1_000L + Fear.STALK_GAP_MILLIS));
+        assertEquals(SoundPreset.FREE, fear.preset(1_001L + Fear.STALK_GAP_MILLIS));
+
+        fear.stalked(0.015D, 2_000L, 0.0D);
+        fear.hush(3_000L);
+        assertEquals(SoundPreset.SCARE, fear.preset(2_000L));
+
+        fear.hunted();
+        assertEquals(SoundPreset.HUNT, fear.preset(2_000L));
+        fear.huntEnded();
+        assertEquals(SoundPreset.SCARE, fear.preset(2_000L));
+    }
+
+    @Test
+    @DisplayName("A shorter silence does not cut a longer one short")
+    void longerSilenceHolds() {
+        Fear fear = calm();
+        fear.hush(5_000L);
+        fear.hush(2_000L);
+
+        assertEquals(SoundPreset.SCARE, fear.preset(4_999L));
+        assertEquals(SoundPreset.FREE, fear.preset(5_000L));
+    }
+
+    @Test
+    @DisplayName("Two creeks hunting count twice, and an extra end does not count below none")
+    void huntsAreCounted() {
+        Fear fear = calm();
+        fear.huntEnded();
+        fear.hunted();
+        fear.hunted();
+        fear.huntEnded();
+        assertEquals(SoundPreset.HUNT, fear.preset(0L));
+
+        fear.huntEnded();
+        assertEquals(SoundPreset.FREE, fear.preset(0L));
     }
 }

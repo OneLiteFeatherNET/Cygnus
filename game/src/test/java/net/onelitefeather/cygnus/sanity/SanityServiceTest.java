@@ -12,8 +12,10 @@ import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
+import net.onelitefeather.cygnus.ambient.SoundPreset;
 import net.onelitefeather.cygnus.common.config.SanityConfig;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
+import net.onelitefeather.cygnus.creek.dread.HuntEnd;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.event.SlenderReviveEvent;
@@ -467,5 +469,80 @@ class SanityServiceTest extends CygnusPlayerTestBase {
 
         assertEquals(0.3D, dread(service, survivor), EPSILON);
         assertEquals(java.util.List.of(SanityObserver.SOURCE_LURE + ":0.0>0.3"), heard);
+    }
+
+    @Test
+    @DisplayName("A catch silences the ambient sounds, longer the bigger the jump")
+    void catchSilences(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        service.track(survivor);
+        this.clock.set(10_000L);
+
+        service.caught(survivor.getUuid());
+
+        long silence = SanityService.silenceMillis(NO_DECAY.caughtGain());
+        assertEquals(SoundPreset.SCARE, service.presetOf(survivor.getUuid(), 10_000L + silence - 1));
+        assertEquals(SoundPreset.FREE, service.presetOf(survivor.getUuid(), 10_000L + silence));
+    }
+
+    @Test
+    @DisplayName("A found page leaves the ambient sounds alone")
+    void pageDoesNotSilence(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player finder = connect(env, instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        this.survivors = Set.of(finder);
+        env.process().eventHandler().addChild(service.node());
+        EventDispatcher.call(new GameStartEvent());
+
+        EventDispatcher.call(new PageFoundEvent(finder, 1, 8));
+
+        assertEquals(SoundPreset.FREE, service.presetOf(finder.getUuid(), 0L));
+    }
+
+    @Test
+    @DisplayName("A crumbled doppelganger silences without scaring")
+    void crumbleSilencesWithoutFear(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        service.track(survivor);
+
+        service.crumbled(survivor.getUuid());
+
+        assertEquals(0.0D, dread(service, survivor), EPSILON);
+        assertEquals(SoundPreset.SCARE, service.presetOf(survivor.getUuid(), SanityService.CRUMBLE_SILENCE_MILLIS - 1));
+        assertEquals(SoundPreset.FREE, service.presetOf(survivor.getUuid(), SanityService.CRUMBLE_SILENCE_MILLIS));
+    }
+
+    @Test
+    @DisplayName("A hunt holds the ambient sounds until it ends, however it ends")
+    void huntHoldsUntilItEnds(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = connect(env, instance, new Pos(0, 40, 0));
+        SanityService service = service(NO_DECAY);
+        service.track(survivor);
+
+        service.hunted(survivor.getUuid());
+        assertEquals(SoundPreset.HUNT, service.presetOf(survivor.getUuid(), 60_000L));
+
+        service.huntEnded(survivor.getUuid(), HuntEnd.TIMEOUT);
+        assertEquals(SoundPreset.FREE, service.presetOf(survivor.getUuid(), 60_000L));
+    }
+
+    @Test
+    @DisplayName("Someone who is not tracked leaves the ambient sounds to the fear")
+    void untrackedIsFree() {
+        assertEquals(SoundPreset.FREE, service(NO_DECAY).presetOf(UUID.randomUUID(), 0L));
+    }
+
+    @Test
+    @DisplayName("The silence after a jump stays between its shortest and longest")
+    void silenceIsClamped() {
+        assertEquals(SanityService.MIN_SILENCE_MILLIS, SanityService.silenceMillis(0.01D));
+        assertEquals(1_800L, SanityService.silenceMillis(0.15D));
+        assertEquals(SanityService.MAX_SILENCE_MILLIS, SanityService.silenceMillis(1.0D));
     }
 }
