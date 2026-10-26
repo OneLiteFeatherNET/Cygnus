@@ -26,7 +26,7 @@ class PagePoolDrawTest {
         Random random = new Random(1);
         Set<String> drawn = new HashSet<>();
         for (int i = 0; i < 200; i++) {
-            drawn.add(PagePoolDraw.draw(spots(4), pools, 4, random).name());
+            drawn.add(PagePoolDraw.draw("map.json", spots(4), pools, 4, random).name());
         }
         assertEquals(Set.of("default", "nord"), drawn);
     }
@@ -34,25 +34,25 @@ class PagePoolDrawTest {
     @Test
     void drawnPoolCarriesItsPages() {
         Set<PageResource> nord = spots(5);
-        PagePoolDraw.Drawn drawn = PagePoolDraw.draw(Set.of(), Map.of("nord", nord), 4, new Random(1));
+        PagePoolDraw.Drawn drawn = PagePoolDraw.draw("map.json", Set.of(), Map.of("nord", nord), 4, new Random(1));
         assertEquals(new PagePoolDraw.Drawn("nord", nord), drawn);
     }
 
     @Test
     void emptyDefaultIsSkippedWhenAnotherPoolFits() {
-        assertEquals("nord", PagePoolDraw.draw(Set.of(), Map.of("nord", spots(4)), 4, new Random(1)).name());
+        assertEquals("nord", PagePoolDraw.draw("map.json", Set.of(), Map.of("nord", spots(4)), 4, new Random(1)).name());
     }
 
     @Test
     void fallsBackToDefaultWhenNoPoolIsBigEnough() {
         Set<PageResource> defaults = spots(1);
-        PagePoolDraw.Drawn drawn = PagePoolDraw.draw(defaults, Map.of("nord", spots(2)), 4, new Random(1));
+        PagePoolDraw.Drawn drawn = PagePoolDraw.draw("map.json", defaults, Map.of("nord", spots(2)), 4, new Random(1));
         assertEquals(new PagePoolDraw.Drawn("default", defaults), drawn);
     }
 
     @Test
     void fallsBackToEmptyDefaultWithoutAnyPool() {
-        assertEquals(new PagePoolDraw.Drawn("default", Set.of()), PagePoolDraw.draw(Set.of(), Map.of(), 4, new Random(1)));
+        assertEquals(new PagePoolDraw.Drawn("default", Set.of()), PagePoolDraw.draw("map.json", Set.of(), Map.of(), 4, new Random(1)));
     }
 
     @Test
