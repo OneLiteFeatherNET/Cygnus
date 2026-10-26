@@ -10,6 +10,8 @@ import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.map.GameMap;
+import net.onelitefeather.cygnus.common.page.PagePool;
+import net.onelitefeather.cygnus.common.page.PagePoolFiles;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -42,7 +44,7 @@ class GameMapLoadedListenerTest extends CygnusPlayerTestBase {
                 null
         );
 
-        new GameMapLoadedListener().accept(new GameMapLoadedEvent(gameMap, gameInstance));
+        new GameMapLoadedListener().accept(new GameMapLoadedEvent(gameMap, gameInstance, new PagePool(PagePoolFiles.DEFAULT_POOL, gameMap.getPageFaces())));
 
         List<SystemChatPacket> received = packets.collect();
         assertEquals(1, received.size(), "Player should have received exactly one map announcement message.");
@@ -74,7 +76,7 @@ class GameMapLoadedListenerTest extends CygnusPlayerTestBase {
                 null
         );
 
-        new GameMapLoadedListener().accept(new GameMapLoadedEvent(gameMap, gameInstance));
+        new GameMapLoadedListener().accept(new GameMapLoadedEvent(gameMap, gameInstance, new PagePool(PagePoolFiles.DEFAULT_POOL, gameMap.getPageFaces())));
 
         List<SystemChatPacket> received = packets.collect();
         assertEquals(1, received.size(), "Player should have received exactly one map announcement message.");

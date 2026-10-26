@@ -32,26 +32,26 @@ class PagePoolDrawTest {
     @Test
     void emptyDefaultIsSkippedWhenAnotherPoolFits() {
         Set<PageResource> nord = spots(4);
-        PagePoolDraw.Drawn drawn = PagePoolDraw.draw("map.json", Set.of(), Map.of("nord", nord), 4);
-        assertEquals(new PagePoolDraw.Drawn("nord", nord), drawn);
+        PagePool drawn = PagePoolDraw.draw("map.json", Set.of(), Map.of("nord", nord), 4);
+        assertEquals(new PagePool("nord", nord), drawn);
     }
 
     @Test
     void fallsBackToDefaultWhenNoPoolIsBigEnough() {
         Set<PageResource> defaults = spots(1);
-        PagePoolDraw.Drawn drawn = PagePoolDraw.draw("map.json", defaults, Map.of("nord", spots(2)), 4);
-        assertEquals(new PagePoolDraw.Drawn("default", defaults), drawn);
+        PagePool drawn = PagePoolDraw.draw("map.json", defaults, Map.of("nord", spots(2)), 4);
+        assertEquals(new PagePool("default", defaults), drawn);
     }
 
     @Test
     void fallsBackToEmptyDefaultWithoutAnyPool() {
-        assertEquals(new PagePoolDraw.Drawn("default", Set.of()), PagePoolDraw.draw("map.json", Set.of(), Map.of(), 4));
+        assertEquals(new PagePool("default", Set.of()), PagePoolDraw.draw("map.json", Set.of(), Map.of(), 4));
     }
 
     @Test
     void drawFromWithoutPagesDirectoryUsesDefault(@TempDir Path root) {
         Set<PageResource> defaults = spots(4);
-        assertEquals(new PagePoolDraw.Drawn("default", defaults),
+        assertEquals(new PagePool("default", defaults),
                 PagePoolDraw.drawFrom(root.resolve("map.json"), defaults, 4));
     }
 
@@ -65,7 +65,7 @@ class PagePoolDrawTest {
         try {
             assumeFalse(Files.isReadable(directory), "running as a user that ignores permissions");
             Set<PageResource> defaults = spots(4);
-            assertEquals(new PagePoolDraw.Drawn("default", defaults),
+            assertEquals(new PagePool("default", defaults),
                     PagePoolDraw.drawFrom(mapFile, defaults, 4));
         } finally {
             Files.setPosixFilePermissions(directory, PosixFilePermissions.fromString("rwx------"));
