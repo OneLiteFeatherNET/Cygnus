@@ -139,7 +139,7 @@ public final class PatrolHelper {
      * other survivors standing next to them.
      */
     void stun(Player selected, Supplier<Pos> creekEyes, Collection<Player> survivors) {
-        CatchEffects.playScare(selected);
+        CreekScare.play(selected);
         this.effects.add(selected, new Potion(PotionEffect.SLOWNESS, STUN_AMPLIFIER, STUN_TICKS));
         this.faces.lock(selected, creekEyes, STUN_TICKS);
         for (Player other : near(selected.getPosition(), survivors)) {
@@ -155,7 +155,7 @@ public final class PatrolHelper {
      */
     public void vanished(Pos where, Collection<Player> survivors) {
         for (Player survivor : near(where, survivors)) {
-            CatchEffects.playScare(survivor);
+            CreekScare.play(survivor);
             this.blind(survivor);
         }
     }
@@ -190,7 +190,7 @@ public final class PatrolHelper {
             if (room < FLING_MIN_DISTANCE) continue;
             Vec push = direction.mul(room * FLING_SPEED_PER_BLOCK);
             selected.setVelocity(new Vec(push.x(), FLING_LIFT, push.z()));
-            CatchEffects.playScare(selected);
+            CreekScare.play(selected);
             return true;
         }
         return false;

@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version 1.0.0
  * @since 2.15.0
  */
-final class TrackedEffects {
+public final class TrackedEffects {
 
     private final Map<Key, TimedPotion> given = new ConcurrentHashMap<>();
 
@@ -31,7 +31,7 @@ final class TrackedEffects {
      * @param player the player
      * @param potion the effect to put on them
      */
-    void add(Player player, Potion potion) {
+    public void add(Player player, Potion potion) {
         player.addEffect(potion);
         TimedPotion active = player.getEffect(potion.effect());
         if (active != null) this.given.put(new Key(player, potion.effect()), active);
@@ -43,7 +43,7 @@ final class TrackedEffects {
      * @param player the player
      * @param effect the effect to take back
      */
-    void remove(Player player, PotionEffect effect) {
+    public void remove(Player player, PotionEffect effect) {
         TimedPotion given = this.given.remove(new Key(player, effect));
         if (given != null && Objects.equals(player.getEffect(effect), given)) {
             player.removeEffect(effect);
@@ -53,7 +53,7 @@ final class TrackedEffects {
     /**
      * Takes back every effect handed out that is still running, and forgets them all.
      */
-    void removeAll() {
+    public void removeAll() {
         for (Key key : List.copyOf(this.given.keySet())) {
             this.remove(key.player(), key.effect());
         }

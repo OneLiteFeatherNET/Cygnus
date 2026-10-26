@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.creek.consequence;
+package net.onelitefeather.cygnus.creek.consequence.catching;
 
 import net.minestom.server.entity.Player;
 
@@ -43,8 +43,14 @@ public final class CatchTricks implements CatchConsequence {
      * @param swapChance    chance for a teleport, from 0 (always launch) to 1 (always teleport)
      * @param random        the random source
      */
-    public CatchTricks(CatchConsequence base, CatchTrick swap, CatchTrick spawnTeleport, CatchTrick launch,
-                       double swapChance, RandomGenerator random) {
+    public CatchTricks(
+            CatchConsequence base,
+            CatchTrick swap,
+            CatchTrick spawnTeleport,
+            CatchTrick launch,
+            double swapChance,
+            RandomGenerator random
+    ) {
         this.base = base;
         this.swap = swap;
         this.spawnTeleport = spawnTeleport;

@@ -2,7 +2,7 @@ package net.onelitefeather.cygnus.creek;
 
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
-import net.onelitefeather.cygnus.creek.consequence.CatchConsequence;
+import net.onelitefeather.cygnus.creek.consequence.catching.CatchConsequence;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;

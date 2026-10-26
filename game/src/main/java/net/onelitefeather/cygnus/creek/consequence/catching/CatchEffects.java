@@ -1,10 +1,10 @@
-package net.onelitefeather.cygnus.creek.consequence;
+package net.onelitefeather.cygnus.creek.consequence.catching;
 
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
+import net.onelitefeather.cygnus.creek.consequence.CreekScare;
+import net.onelitefeather.cygnus.creek.consequence.TrackedEffects;
 import net.onelitefeather.cygnus.stamina.FoodBar;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,16 +20,13 @@ import java.util.function.Predicate;
  */
 public final class CatchEffects implements CatchConsequence {
 
-    /** The sound of the stand-in scare, for when there is no corpse to show yet. */
-    static final Key SCARE_SOUND = Key.key("entity.creaking.activate");
-
     /** How long the stand-in scare's darkness lasts, in ticks. */
     static final int SCARE_DARKNESS_TICKS = 40;
 
     private final Predicate<Player> jumpScare;
     private final Function<Player, @Nullable FoodBar> foodBars;
     private final int slownessTicks;
-    private final TrackedEffects effects = new TrackedEffects();
+    private final TrackedEffects effects;
 
     /**
      * Sets up the effects.
@@ -42,6 +39,7 @@ public final class CatchEffects implements CatchConsequence {
         this.jumpScare = jumpScare;
         this.foodBars = foodBars;
         this.slownessTicks = slownessSeconds * 20;
+        this.effects = new TrackedEffects();
     }
 
     @Override
@@ -66,16 +64,7 @@ public final class CatchEffects implements CatchConsequence {
     }
 
     private static void scareWithoutCorpse(Player survivor) {
-        playScare(survivor);
+        CreekScare.play(survivor);
         survivor.addEffect(new Potion(PotionEffect.DARKNESS, 0, SCARE_DARKNESS_TICKS));
-    }
-
-    /**
-     * Plays the creek's scare sound to a player.
-     *
-     * @param player the player
-     */
-    static void playScare(Player player) {
-        player.playSound(Sound.sound(SCARE_SOUND, Sound.Source.HOSTILE, 1.0F, 0.6F));
     }
 }

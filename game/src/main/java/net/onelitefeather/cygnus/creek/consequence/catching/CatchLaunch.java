@@ -1,4 +1,4 @@
-package net.onelitefeather.cygnus.creek.consequence;
+package net.onelitefeather.cygnus.creek.consequence.catching;
 
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
@@ -6,7 +6,7 @@ import net.minestom.server.entity.Player;
 /**
  * Throws a caught survivor up into the air.
  * <p>
- * {@link FaceLock} only turns the head and never holds the body, and slowness only changes
+ * {@code FaceLock} only turns the head and never holds the body, and slowness only changes
  * walking, so neither gets in the way of the throw: the velocity packet sets the client's motion
  * outright. There is no fall damage to suppress: Minestom has none and Cygnus adds none. A height
  * of 0 turns the launch off: nothing happens, which is not a failure. When they land again,
