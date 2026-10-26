@@ -165,7 +165,7 @@ public final class StalkState implements CreekState {
         this.seenSince = -1L;
 
         double distance = body.position().distance(view.position());
-        boolean moved = (distance < this.minDistance(ctx) || distance > ctx.tuning().stretch(this.maxDistance(ctx)))
+        boolean moved = (distance < this.tooClose(ctx) || distance > ctx.tuning().stretch(this.maxDistance(ctx)))
                 && this.relocate(ctx, view);
         if (this.nextSoundAt < 0) this.scheduleSound(ctx);
         if (moved) this.mayLeaveDecoy(ctx, view);
@@ -296,6 +296,15 @@ public final class StalkState implements CreekState {
         long length = this.endsAt - this.startedAt;
         if (length <= 0) return 1.0D;
         return Math.clamp((double) (now - this.startedAt) / length, 0.0D, 1.0D);
+    }
+
+    /**
+     * How close the creek may stand before it moves back. The shadow comes back closer after a look,
+     * so it only moves back once it is closer than the end of a stalk.
+     */
+    private double tooClose(CreekContext ctx) {
+        double min = this.minDistance(ctx);
+        return ctx.tuning().mood() == CreekMood.SHADOW ? Math.min(min, END_MIN_DISTANCE) : min;
     }
 
     private double minDistance(CreekContext ctx) {
