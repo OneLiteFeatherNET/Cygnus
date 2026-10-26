@@ -8,29 +8,33 @@ import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.team.TeamHelper;
 
 import java.util.function.Consumer;
+import java.util.function.LongSupplier;
 
 /**
  * Handles the per tick logic of a {@link Player} like the jump scare detection, the sprint blocking,
  * the heartbeat and the ambient sounds, which get more frequent the more scared a survivor is.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  */
 public final class CygnusPlayerTickListener implements Consumer<PlayerTickEvent> {
 
     private final JumpScareManager jumpscareManager;
     private final DreadSource dreadSource;
+    private final LongSupplier clock;
 
     /**
      * Creates a new instance of this listener implementation
      *
      * @param jumpscareManager the jump scare manager instance
      * @param dreadSource      rates how scared a survivor is, to pace their ambient sounds
+     * @param clock            supplies the current time in milliseconds
      */
-    public CygnusPlayerTickListener(JumpScareManager jumpscareManager, DreadSource dreadSource) {
+    public CygnusPlayerTickListener(JumpScareManager jumpscareManager, DreadSource dreadSource, LongSupplier clock) {
         this.jumpscareManager = jumpscareManager;
         this.dreadSource = dreadSource;
+        this.clock = clock;
     }
 
     @Override
@@ -52,7 +56,7 @@ public final class CygnusPlayerTickListener implements Consumer<PlayerTickEvent>
         cygnusPlayer.tickHeartbeat();
 
         if (livingSurvivor) {
-            cygnusPlayer.tickAmbient(this.dreadSource.dreadOf(player.getUuid()));
+            cygnusPlayer.tickAmbient(this.dreadSource.dreadOf(player.getUuid(), this.clock.getAsLong()));
         }
     }
 

@@ -31,6 +31,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -45,7 +46,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.17.0
  */
 public final class RegenerationService implements GameFeature {
@@ -59,6 +60,7 @@ public final class RegenerationService implements GameFeature {
     private final RegenerationConfig config;
     private final DreadSource dread;
     private final Supplier<Set<Player>> survivors;
+    private final LongSupplier clock;
     private final RepeatingTask task;
     private final PlayerState<Boolean> used = new PlayerState<>();
     private final Map<CygnusPlayer, Double> healing = new ConcurrentHashMap<>();
@@ -70,13 +72,15 @@ public final class RegenerationService implements GameFeature {
      * @param config    the regeneration settings
      * @param dread     supplies each survivor's fear
      * @param survivors supplies the survivors of the round
+     * @param clock     supplies the current time in milliseconds
      * @param sections  measures how long each tick takes
      */
     public RegenerationService(RegenerationConfig config, DreadSource dread, Supplier<Set<Player>> survivors,
-                               TickSections sections) {
+                               LongSupplier clock, TickSections sections) {
         this.config = config;
         this.dread = dread;
         this.survivors = survivors;
+        this.clock = clock;
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.REGENERATION, this::tick));
         this.registerListeners();
     }
@@ -145,6 +149,7 @@ public final class RegenerationService implements GameFeature {
      * Moves every running healing on by one step.
      */
     void tick() {
+        long now = this.clock.getAsLong();
         for (Map.Entry<CygnusPlayer, Double> entry : Map.copyOf(this.healing).entrySet()) {
             CygnusPlayer survivor = entry.getKey();
             if (!affected(survivor)) {
@@ -153,7 +158,7 @@ public final class RegenerationService implements GameFeature {
             }
             Vitality vitality = survivor.vitality();
             double rest = entry.getValue();
-            double speed = this.config.speedFor(this.dread.dreadOf(survivor.getUuid()));
+            double speed = this.config.speedFor(this.dread.dreadOf(survivor.getUuid(), now));
             double step = Math.min(rest, speed * TICK_MILLIS / 1000.0D);
             rest -= vitality.heal(step);
             // Done, or full already with nothing more to give

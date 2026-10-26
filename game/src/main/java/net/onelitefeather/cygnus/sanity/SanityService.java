@@ -50,7 +50,7 @@ import java.util.function.Supplier;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 2.16.0
  */
 public final class SanityService implements GameFeature, DreadSource, CreekWitness {
@@ -166,15 +166,7 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
      * {@inheritDoc}
      */
     @Override
-    public double dreadOf(UUID survivor) {
-        return this.dreadOf(survivor, this.clock.getAsLong());
-    }
-
-    /**
-     * How scared a survivor is at the given time. The fear and the floor are both read at that
-     * time, so one call never mixes two moments.
-     */
-    private double dreadOf(UUID survivor, long now) {
+    public double dreadOf(UUID survivor, long now) {
         double floor = this.floor(now);
         Fear fear = this.survivors.get(survivor);
         if (fear == null) return Math.min(this.config.floorCap(), floor);
