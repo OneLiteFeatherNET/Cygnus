@@ -15,6 +15,8 @@ class SoundPresetTest {
         assertEquals(SoundPreset.HUNT, SoundPreset.STALK.over(SoundPreset.HUNT));
         assertEquals(SoundPreset.HUNT, SoundPreset.HUNT.over(SoundPreset.STALK));
         assertEquals(SoundPreset.SCARE, SoundPreset.SCARE.over(SoundPreset.FREE));
+        assertEquals(SoundPreset.HUSH, SoundPreset.HUSH.over(SoundPreset.STALK));
+        assertEquals(SoundPreset.SCARE, SoundPreset.HUSH.over(SoundPreset.SCARE));
     }
 
     @Test
