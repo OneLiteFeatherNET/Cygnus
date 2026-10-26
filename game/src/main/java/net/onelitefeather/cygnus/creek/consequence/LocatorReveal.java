@@ -23,11 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  * The waypoint is sent to the slender only, see {@link SurvivorWaypoint}. It follows the survivor
  * with an update every {@value #RESEND_TICKS} ticks. A survivor revealed again while he is still
- * shown keeps his waypoint, and the time starts over.
+ * shown keeps his waypoint, and the time starts over. The slender only sees the newest reveal:
+ * revealing another survivor takes the one shown before off the locator bar.
  * </p>
  *
  * @author theEvilReaper
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2.15.0
  */
 public final class LocatorReveal implements SlenderReveal {
@@ -67,6 +68,9 @@ public final class LocatorReveal implements SlenderReveal {
         if (shown != null) {
             shown.ticksLeft = this.durationTicks;
             return;
+        }
+        for (Reveal older : List.copyOf(this.running)) {
+            if (older.slender == slender) this.end(older);
         }
         Reveal reveal = new Reveal(survivor, slender, this.durationTicks);
         this.running.add(reveal);
