@@ -62,7 +62,7 @@ public final class LocatorReveal implements SlenderReveal {
         slender.playSound(Sound.sound(SLENDER_SOUND, Sound.Source.HOSTILE, 1.0F, 0.5F), where.x(), where.y(), where.z());
         // Let the survivor know too. Being given away without any hint would feel unfair.
         survivor.playSound(Sound.sound(SURVIVOR_SOUND, Sound.Source.HOSTILE, 1.0F, 0.8F));
-        survivor.sendMessage(WARNING);
+        survivor.sendActionBar(WARNING);
 
         Reveal shown = this.find(survivor, slender);
         if (shown != null) {
