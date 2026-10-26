@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.creek;
 import net.minestom.server.coordinate.Pos;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.state.Calm;
+import net.onelitefeather.cygnus.creek.state.CreekMood;
 import net.onelitefeather.cygnus.creek.state.CreekTuning;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import org.junit.jupiter.api.DisplayName;
@@ -36,16 +37,16 @@ class CreekVariantsTest {
     @Test
     @DisplayName("The breather after a variant shrinks as the dread grows")
     void cooldownFollowsDread() {
-        assertEquals(40_000L, new CreekTuning(CreekConfig.DEFAULT, Calm.NONE).variantBreatherMillis(0.0D));
-        assertEquals(30_000L, new CreekTuning(CreekConfig.DEFAULT, Calm.NONE).variantBreatherMillis(0.5D));
-        assertEquals(20_000L, new CreekTuning(CreekConfig.DEFAULT, Calm.NONE).variantBreatherMillis(1.0D));
+        assertEquals(40_000L, new CreekTuning(CreekConfig.DEFAULT, Calm.NONE, CreekMood.NORMAL).variantBreatherMillis(0.0D));
+        assertEquals(30_000L, new CreekTuning(CreekConfig.DEFAULT, Calm.NONE, CreekMood.NORMAL).variantBreatherMillis(0.5D));
+        assertEquals(20_000L, new CreekTuning(CreekConfig.DEFAULT, Calm.NONE, CreekMood.NORMAL).variantBreatherMillis(1.0D));
     }
 
     @Test
     @DisplayName("Late in a thinned out round the breather after a variant lasts half as long again")
     void cooldownGrowsAsTheRoundThinsOut() {
-        assertEquals(60_000L, new CreekTuning(CreekConfig.DEFAULT, new Calm(1.0D)).variantBreatherMillis(0.0D));
-        assertEquals(30_000L, new CreekTuning(CreekConfig.DEFAULT, new Calm(1.0D)).variantBreatherMillis(1.0D));
+        assertEquals(60_000L, new CreekTuning(CreekConfig.DEFAULT, new Calm(1.0D), CreekMood.NORMAL).variantBreatherMillis(0.0D));
+        assertEquals(30_000L, new CreekTuning(CreekConfig.DEFAULT, new Calm(1.0D), CreekMood.NORMAL).variantBreatherMillis(1.0D));
     }
 
     @Test

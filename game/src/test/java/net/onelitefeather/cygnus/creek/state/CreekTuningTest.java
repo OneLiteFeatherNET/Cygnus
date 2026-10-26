@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class CreekTuningTest {
 
     private static final CreekConfig CONFIG = CreekConfig.DEFAULT;
-    private static final CreekTuning FULL = new CreekTuning(CONFIG, Calm.NONE);
-    private static final CreekTuning CALMEST = new CreekTuning(CONFIG, new Calm(1.0D));
+    private static final CreekTuning FULL = new CreekTuning(CONFIG, Calm.NONE, CreekMood.NORMAL);
+    private static final CreekTuning CALMEST = new CreekTuning(CONFIG, new Calm(1.0D), CreekMood.NORMAL);
 
     @Test
     @DisplayName("The hunter hunts sooner, faster and again sooner, and creeps on while watched")

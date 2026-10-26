@@ -6,6 +6,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.creek.state.Calm;
+import net.onelitefeather.cygnus.creek.state.CreekMood;
 import net.onelitefeather.cygnus.creek.state.CreekTuning;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
@@ -53,13 +54,13 @@ class CreekVariantsIntegrationTest extends CygnusPlayerTestBase {
 
     private static BiFunction<Pos, CreekState, Creek> spawner(Instance instance, CreekConfig config, SpotFinder spots) {
         CreekRound round = new CreekRound(SIGHT, spots, NO_CATCH, CreekMarks.NONE, _ -> false, DECOYS, CreekWitness.NONE, PATROL,
-                new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3), HuntCooldowns.none(), () -> new CreekTuning(config, Calm.NONE));
+                new StalkSounds(new Random(3)), config, CreekSettings.DEFAULT, new Random(3), HuntCooldowns.none(), () -> new CreekTuning(config, Calm.NONE, CreekMood.NORMAL));
         return (spot, initial) -> new Creek(CreakingBody.spawn(instance, spot), Contexts.route(), round, initial);
     }
 
     private static CreekVariants variants(Instance instance, CreekConfig config, Ground ground, long allowedAt) {
         SpotFinder spots = new SpotFinder(CreekSettings.DEFAULT.sightRange(), ground);
-        return new CreekVariants(config, CreekSettings.DEFAULT, spots, new Random(5), allowedAt, spawner(instance, config, spots), () -> new CreekTuning(config, Calm.NONE));
+        return new CreekVariants(config, CreekSettings.DEFAULT, spots, new Random(5), allowedAt, spawner(instance, config, spots), () -> new CreekTuning(config, Calm.NONE, CreekMood.NORMAL));
     }
 
     private static SurvivorView view(Player player, double dread) {
