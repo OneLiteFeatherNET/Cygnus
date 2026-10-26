@@ -56,7 +56,7 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
 
     private static final Decoys DECOYS = new Decoys(CreakingBody::spawn,
             new CreekSight(CreekSettings.DEFAULT.sightRange(), CreekConfig.DEFAULT.sight().viewAngle()),
-            () -> CreekConfig.DEFAULT.stalk().revealMillis(), () -> 0L);
+            () -> CreekConfig.DEFAULT.stalk().revealMillis());
 
     private static Creek creek(CreekBody body, CreekConfig config, CreekState initial) {
         return creek(body, config, initial, CreekWitness.NONE);
@@ -315,19 +315,19 @@ class CreekIntegrationTest extends CygnusPlayerTestBase {
         List<String> marked = new ArrayList<>();
         CreekMarks marks = new CreekMarks() {
             @Override
-            public void stared(Player player) {
-                marked.add("stared " + player.getUsername());
+            public void stared(Player player, long now) {
+                marked.add("stared " + player.getUsername() + " at " + now);
             }
 
             @Override
-            public void spotted(Player player) {
-                marked.add("spotted " + player.getUsername());
+            public void spotted(Player player, long now) {
+                marked.add("spotted " + player.getUsername() + " at " + now);
             }
         };
 
-        creek(body, CreekConfig.DEFAULT, acting, CreekWitness.NONE, marks).tick(survivors(survivor), 0L);
+        creek(body, CreekConfig.DEFAULT, acting, CreekWitness.NONE, marks).tick(survivors(survivor), 5_000L);
 
-        assertEquals(List.of("stared " + survivor.getUsername(), "spotted " + survivor.getUsername()), marked);
+        assertEquals(List.of("stared " + survivor.getUsername() + " at 5000", "spotted " + survivor.getUsername() + " at 5000"), marked);
     }
 
     @Test

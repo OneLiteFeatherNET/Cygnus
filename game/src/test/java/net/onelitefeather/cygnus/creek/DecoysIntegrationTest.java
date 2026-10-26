@@ -44,7 +44,7 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
             CreekBody body = CreakingBody.spawn(instance, spot);
             this.spawned.add(body);
             return body;
-        }, sight, () -> revealMillis, () -> 0L);
+        }, sight, () -> revealMillis);
     }
 
     @Test
@@ -53,7 +53,7 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player viewer = env.createConnection().connect(instance, VIEWER_POS);
         Decoys decoys = this.decoys(Math.round(REVEAL_MILLIS * 1.5D));
-        decoys.spawn(viewer, DECOY_SPOT);
+        decoys.spawn(viewer, DECOY_SPOT, 0L);
 
         decoys.tick(looking(viewer, true), 0L);
         decoys.tick(looking(viewer, true), REVEAL_MILLIS);
@@ -81,7 +81,7 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         Player viewer = env.createConnection().connect(instance, VIEWER_POS);
         Player other = env.createConnection().connect(instance, new Pos(5, 40, 0));
 
-        this.decoys().spawn(viewer, DECOY_SPOT);
+        this.decoys().spawn(viewer, DECOY_SPOT, 0L);
 
         assertTrue(this.spawned.getFirst().isVisibleTo(viewer.getUuid()));
         assertFalse(this.spawned.getFirst().isVisibleTo(other.getUuid()));
@@ -94,7 +94,7 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         TestConnection connection = env.createConnection();
         Player viewer = connection.connect(instance, VIEWER_POS);
         Decoys decoys = this.decoys();
-        decoys.spawn(viewer, DECOY_SPOT);
+        decoys.spawn(viewer, DECOY_SPOT, 0L);
         Collector<ParticlePacket> particles = connection.trackIncoming(ParticlePacket.class);
         Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
 
@@ -120,7 +120,7 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
             }
         }
         Decoys decoys = this.decoys();
-        decoys.spawn(viewer, DECOY_SPOT);
+        decoys.spawn(viewer, DECOY_SPOT, 0L);
 
         decoys.tick(looking(viewer, true), 0L);
         decoys.tick(looking(viewer, true), REVEAL_MILLIS);
@@ -134,7 +134,7 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player viewer = env.createConnection().connect(instance, VIEWER_POS);
         Decoys decoys = this.decoys();
-        decoys.spawn(viewer, DECOY_SPOT);
+        decoys.spawn(viewer, DECOY_SPOT, 0L);
 
         decoys.tick(looking(viewer, true), 0L);
         decoys.tick(looking(viewer, true), 600L);
@@ -151,7 +151,7 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player viewer = env.createConnection().connect(instance, VIEWER_POS);
         Decoys decoys = this.decoys();
-        decoys.spawn(viewer, DECOY_SPOT);
+        decoys.spawn(viewer, DECOY_SPOT, 0L);
 
         decoys.tick(new SurvivorSnapshot(List.of(), List.of()), 0L);
 
@@ -164,11 +164,11 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player viewer = env.createConnection().connect(instance, VIEWER_POS);
         Decoys decoys = this.decoys();
-        decoys.spawn(viewer, DECOY_SPOT);
+        decoys.spawn(viewer, DECOY_SPOT, 1_000L);
 
-        decoys.tick(looking(viewer, false), Decoys.LIFETIME_MILLIS - 1L);
+        decoys.tick(looking(viewer, false), 1_000L + Decoys.LIFETIME_MILLIS - 1L);
         assertFalse(this.removed());
-        decoys.tick(looking(viewer, false), Decoys.LIFETIME_MILLIS);
+        decoys.tick(looking(viewer, false), 1_000L + Decoys.LIFETIME_MILLIS);
 
         assertTrue(this.removed());
     }
@@ -179,7 +179,7 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player viewer = env.createConnection().connect(instance, VIEWER_POS);
         Decoys decoys = this.decoys();
-        decoys.spawn(viewer, DECOY_SPOT);
+        decoys.spawn(viewer, DECOY_SPOT, 0L);
 
         decoys.clear();
 
