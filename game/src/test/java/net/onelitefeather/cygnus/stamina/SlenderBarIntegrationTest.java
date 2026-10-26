@@ -572,6 +572,30 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("A swing that hits one survivor and misses another plays only the hit sound")
+    void hitAndMissPlayOnlyTheHitSound(@NotNull Env env) {
+        TestConnection slenderConnection = env.createConnection();
+        CygnusPlayer slender = (CygnusPlayer) slenderConnection.connect(instance, new Pos(0, 40, 0));
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        CygnusPlayer calm = survivor(env, new Pos(1, 40, 0));
+        CygnusPlayer terrified = survivor(env, new Pos(-1, 40, 0));
+        // Every draw is 0.1: a hit for the calm one (0.1 >= 0.05), a miss for the terrified one (0.1 < 0.15).
+        SlenderBar bar = (SlenderBar) StaminaFactory.createSlenderStamina(slender, StaminaConfig.DEFAULT, () -> 0L,
+                uuid -> uuid.equals(terrified.getUuid()) ? 1.0D : 0.0D, new SlenderSwing(() -> new FixedRandom(0.1D)));
+        bar.start();
+        bar.changeStatus();
+        bar.consume();
+        Collector<EntitySoundEffectPacket> slenderSounds = slenderConnection.trackIncoming(EntitySoundEffectPacket.class);
+
+        bar.consume();
+
+        assertTrue(calm.vitality().points() < 100.0D, "the calm survivor was hit");
+        assertEquals(100.0D, terrified.vitality().points(), DELTA, "the terrified survivor was missed");
+        slenderSounds.assertSingle(packet -> assertEquals(SlenderBar.HIT.name(), packet.soundEvent().key()));
+        bar.stop();
+    }
+
+    @Test
     void testDrainDamageDoesNotChangeTheBarSpeed(@NotNull Env env) {
         TestConnection connection = env.createConnection();
         CygnusPlayer slender = (CygnusPlayer) connection.connect(instance, new net.minestom.server.coordinate.Pos(0, 40, 0));
