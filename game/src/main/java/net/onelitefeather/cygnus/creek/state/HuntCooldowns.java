@@ -54,11 +54,11 @@ public final class HuntCooldowns {
      *
      * @param survivor the survivor to check
      * @param now      the current time in milliseconds
-     * @param calm     how far the round has thinned out; a calmer round stretches the breather
+     * @param tuning   the values the creek acts on right now, which may stretch the breather
      * @return {@code true} if they were never hunted or the breather is over
      */
-    public boolean ready(UUID survivor, long now, Calm calm) {
+    public boolean ready(UUID survivor, long now, CreekTuning tuning) {
         Long ended = this.endedAt.get(survivor);
-        return ended == null || now - ended >= calm.stretch(this.cooldownMillis);
+        return ended == null || now - ended >= tuning.huntCooldown(this.cooldownMillis);
     }
 }

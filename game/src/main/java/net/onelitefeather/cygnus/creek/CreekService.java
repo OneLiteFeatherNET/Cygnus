@@ -17,6 +17,7 @@ import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
 import net.onelitefeather.cygnus.creek.state.Calm;
+import net.onelitefeather.cygnus.creek.state.CreekTuning;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
@@ -158,7 +159,7 @@ public final class CreekService implements PossessionTarget {
         PathRoute pathRoute = new PathRoute(paths);
         CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.marks, this.witness,
                 new PatrolHelper(this.random), new StalkSounds(this.random), this.config, this.settings, this.random,
-                new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L), () -> this.calm);
+                new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L), this::tuning);
         this.round = round;
         List<Pos> points = paths.allPoints();
 
@@ -170,7 +171,7 @@ public final class CreekService implements PossessionTarget {
         this.creek = new Creek(body, pathRoute, round, new VanishState(showsUp));
         this.variants = new CreekVariants(this.config, this.settings, this.spots, this.random, showsUp,
                 (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state),
-                () -> this.calm);
+                this::tuning);
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }
 
@@ -222,6 +223,15 @@ public final class CreekService implements PossessionTarget {
         if (currentRound != null) currentRound.patrol().cleanUp();
         this.started = 0;
         this.calm = Calm.NONE;
+    }
+
+    /**
+     * The values every creek of the round acts on right now.
+     *
+     * @return the values
+     */
+    CreekTuning tuning() {
+        return new CreekTuning(this.config, this.calm);
     }
 
     @Override

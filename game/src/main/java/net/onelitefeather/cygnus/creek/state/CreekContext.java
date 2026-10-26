@@ -31,7 +31,7 @@ import java.util.random.RandomGenerator;
  * @param settings  the distances the map sets for the creek
  * @param random    the random source
  * @param hunts     when each survivor's last hunt ended, shared by every creek of the round
- * @param calm      how far the round has thinned out, which makes the creek slower and more patient
+ * @param tuning    the values the creek acts on right now
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -48,7 +48,7 @@ public record CreekContext(
         CreekSettings settings,
         RandomGenerator random,
         HuntCooldowns hunts,
-        Calm calm
+        CreekTuning tuning
 ) {
 
     /**

@@ -7,7 +7,7 @@ import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
-import net.onelitefeather.cygnus.creek.state.Calm;
+import net.onelitefeather.cygnus.creek.state.CreekTuning;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
@@ -29,7 +29,7 @@ import java.util.random.RandomGenerator;
  * @param settings    the distances the map sets for the creek
  * @param random      the random source
  * @param hunts       when each survivor's last hunt ended
- * @param calm        how far the round has thinned out right now
+ * @param tuning      the values every creek acts on right now
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -47,6 +47,6 @@ record CreekRound(
         CreekSettings settings,
         RandomGenerator random,
         HuntCooldowns hunts,
-        Supplier<Calm> calm
+        Supplier<CreekTuning> tuning
 ) {
 }

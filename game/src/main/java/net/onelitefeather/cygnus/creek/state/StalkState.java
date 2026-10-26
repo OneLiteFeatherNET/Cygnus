@@ -72,18 +72,16 @@ public final class StalkState implements CreekState {
     }
 
     /**
-     * Starts a stalk that lasts somewhere between {@code stalkMinSeconds} and
-     * {@code stalkMaxSeconds}.
+     * Starts a stalk that lasts as long as {@link CreekTuning#stalkMillis(RandomGenerator)} says.
      *
      * @param target the survivor to stalk
      * @param now    the current time in milliseconds
-     * @param config the settings
+     * @param tuning the values the creek acts on right now
      * @param random the random source
      * @return the state
      */
-    public static StalkState starting(UUID target, long now, CreekConfig config, RandomGenerator random) {
-        long seconds = random.nextLong(config.stalk().minSeconds(), config.stalk().maxSeconds() + 1L);
-        return new StalkState(target, now + seconds * 1000L);
+    public static StalkState starting(UUID target, long now, CreekTuning tuning, RandomGenerator random) {
+        return new StalkState(target, now + tuning.stalkMillis(random));
     }
 
     /**
@@ -129,7 +127,7 @@ public final class StalkState implements CreekState {
 
         if (view.seesCreek()) {
             if (this.seenSince < 0) this.seenSince = ctx.now();
-            if (ctx.now() - this.seenSince >= ctx.calm().stretch(config.stalk().revealMillis()) && this.relocate(ctx, view)) {
+            if (ctx.now() - this.seenSince >= ctx.tuning().revealMillis() && this.relocate(ctx, view)) {
                 this.seenSince = -1L;
                 ctx.actions().spotted(this.target);
                 // Gone without a sound. The next one only comes after a full gap.
@@ -140,7 +138,7 @@ public final class StalkState implements CreekState {
         this.seenSince = -1L;
 
         double distance = body.position().distance(view.position());
-        boolean moved = (distance < this.minDistance(ctx) || distance > ctx.calm().stretch(this.maxDistance(ctx)))
+        boolean moved = (distance < this.minDistance(ctx) || distance > ctx.tuning().stretch(this.maxDistance(ctx)))
                 && this.relocate(ctx, view);
         if (this.nextSoundAt < 0) this.scheduleSound(ctx);
         if (moved || ctx.now() >= this.nextSoundAt) {
@@ -155,9 +153,10 @@ public final class StalkState implements CreekState {
      */
     private boolean mayHunt(CreekContext ctx, SurvivorView view) {
         CreekConfig config = ctx.config();
-        if (view.dread() < config.hunt().threshold()) return false;
-        if (ctx.now() - this.startedAt < config.hunt().minStalkSeconds() * 1000L) return false;
-        return ctx.hunts().ready(this.target, ctx.now(), ctx.calm());
+        CreekTuning tuning = ctx.tuning();
+        if (view.dread() < tuning.huntThreshold()) return false;
+        if (ctx.now() - this.startedAt < tuning.huntMinStalkMillis()) return false;
+        return ctx.hunts().ready(this.target, ctx.now(), tuning);
     }
 
     /**
