@@ -51,6 +51,8 @@ import net.onelitefeather.cygnus.lunar.LunarModPolicy;
 import net.onelitefeather.cygnus.minimap.LabyModPolicy;
 import net.onelitefeather.cygnus.minimap.MinimapPolicy;
 import net.onelitefeather.cygnus.ambient.AmbientProvider;
+import net.onelitefeather.cygnus.ambient.ScareSilence;
+import net.onelitefeather.cygnus.ambient.SoundPresetSource;
 import net.onelitefeather.cygnus.clientguard.ClientGuard;
 import net.onelitefeather.cygnus.page.PageProximityService;
 import net.onelitefeather.cygnus.page.PageRevealFeature;
@@ -280,6 +282,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             // Shared by the creek and the lure: whom the lure scared, the creek leaves alone for a while.
             CreekRespite creekRespite = new CreekRespite();
             this.slenderTakeover = new SlenderTakeover(this.teamService, this.linearPhaseSeries::getCurrentPhase, tickSections);
+            SoundPresetSource soundPresets;
             try (TraceStep ignored = startup.child("cygnus.startup.features")) {
                 CreekModule creekModule = new CreekModule(this.gameConfig.creek(), this.mapProvider.creekSettings(), this.teamService, this.mapProvider,
                         sanityService, new HuntedTabWitness(new TracingCreekWitness(sanityService, this.actionTracer, Cygnus::survivorActor,
@@ -287,6 +290,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                                         Cygnus::survivorActor, HuntMetrics.fromGlobal(serviceVersion()))),
                                 MinecraftServer.getConnectionManager()::getOnlinePlayerByUuid), creekRespite, this.jumpscareManager, this.staminaService, tickSections,
                         this.gameConfig.round().gameTime());
+                // The fear knows the creek's hunts and stalks and every scare that moved it, the
+                // turnaround scare moves no fear and is added on its own. The mood colors the rest.
+                soundPresets = creekModule.soundPresets(sanityService.with(new ScareSilence(this.jumpscareManager::lastScareAt)));
                 this.features = Stream.concat(this.resourcePackService.stream(), Stream.of(
                         new EpilepsyDisclaimer(),
                         this.slenderTakeover,
@@ -336,7 +342,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             }
             this.wakeUpTransition = new WakeUpTransition();
             try (TraceStep ignored = startup.child("cygnus.startup.phases")) {
-                this.initPhases(sanityService, tickSections);
+                this.initPhases(sanityService, soundPresets, tickSections);
             }
             try (TraceStep ignored = startup.child("cygnus.startup.listeners")) {
                 this.initCommands();
@@ -492,7 +498,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         GameFeatures.register(handler, this.features);
     }
 
-    private void initPhases(DreadSource dreadSource, TickSections tickSections) {
+    private void initPhases(DreadSource dreadSource, SoundPresetSource soundPresets, TickSections tickSections) {
         VoidConsumer instanceSwitch = this.mapProvider::switchToGameMap;
         VoidConsumer teamInitializer = () -> {
             Instance activeInstance = this.mapProvider.getActiveInstance().get();
@@ -509,7 +515,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         LobbyPhase lobbyPhase = new LobbyPhase(this.gameConfig.round(), this.mapProvider.getActiveInstance(), tickSections);
         this.linearPhaseSeries.add(lobbyPhase);
         this.linearPhaseSeries.add(new WaitingPhase(this.view, instanceSwitch, teamInitializer, this.mapProvider.getActiveInstance(), this.wakeUpTransition));
-        GamePhase gamePhase = new GamePhase(this.view, this.gameConfig.round().gameTime(), this.jumpscareManager, dreadSource);
+        GamePhase gamePhase = new GamePhase(this.view, this.gameConfig.round().gameTime(), this.jumpscareManager, dreadSource, soundPresets);
         gamePhase.addFinishedCallback(this::finishGame);
         this.linearPhaseSeries.add(gamePhase);
         this.linearPhaseSeries.add(new RestartPhase());

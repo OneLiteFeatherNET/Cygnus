@@ -5,6 +5,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.onelitefeather.cygnus.GameFeature;
+import net.onelitefeather.cygnus.ambient.SoundPresetSource;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.map.GameMap;
@@ -43,6 +44,7 @@ public final class CreekModule implements GameFeature {
     private final GameMapProvider mapProvider;
     private final CreekService service;
     private final CreekPossession possession;
+    private final MoodClock mood;
 
     /**
      * Builds the creek, with its step measured for the slow tick report.
@@ -72,6 +74,7 @@ public final class CreekModule implements GameFeature {
         // One reveal for the catches and the marks, so the slender only ever sees the newest one.
         LocatorReveal reveal = new LocatorReveal(this.config.catching().betrayalGlowSeconds(), sections);
         MoodClock mood = new MoodClock(gameTimeSeconds * 1000L, random);
+        this.mood = mood;
         CatchTricks tricks = new CatchTricks(
                 new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.catching().slownessSeconds()),
                 new CatchSwap(() -> TeamHelper.survivorsOf(teamService), random),
@@ -136,6 +139,16 @@ public final class CreekModule implements GameFeature {
      */
     public PossessionTarget possessionTarget() {
         return this.possession;
+    }
+
+    /**
+     * Lets the creek's mood color the given sound presets.
+     *
+     * @param base the presets before the mood
+     * @return the presets as the mood has them
+     */
+    public SoundPresetSource soundPresets(SoundPresetSource base) {
+        return new MoodPresets(base, this.mood);
     }
 
     /**

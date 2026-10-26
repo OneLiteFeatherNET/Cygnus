@@ -103,4 +103,14 @@ public interface CreekWitness {
     default void huntEnded(UUID survivor, HuntEnd how) {
         this.huntEnded(survivor);
     }
+
+    /**
+     * A doppelganger crumbled in front of the survivor who looked at it.
+     *
+     * @param survivor the survivor who saw it crumble
+     * @since 2.21.0
+     */
+    default void crumbled(UUID survivor) {
+        // Nobody listens by default.
+    }
 }

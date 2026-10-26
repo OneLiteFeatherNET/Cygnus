@@ -32,12 +32,13 @@ public enum CreekMood {
             .watchedHuntSpeed(0.25D)
             .build()),
 
-    /** Stalks longer and more often, comes back closer, marks more and hunts less. */
+    /** Stalks longer and more often, comes back closer, marks more, hunts less and stalks in silence. */
     SHADOW(Traits.builder()
             .huntThreshold(1.3D)
             .stalkDuration(1.5D)
             .variantBreather(0.7D)
             .spotMarkChance(0.5D)
+            .silentStalk(true)
             .build()),
 
     /** Teleports whoever it gets hold of and vanishes more. */
@@ -75,10 +76,12 @@ public enum CreekMood {
      *                            marked for the slender
      * @param deadEndVanishChance the chance that the creek vanishes at a dead end instead of
      *                            resting there
+     * @param silentStalk         whether the ambient sounds of a stalked survivor fall silent
+     *                            instead of only getting quieter
      */
     public record Traits(double huntThreshold, double minStalk, double huntSpeed, double huntCooldown,
                          double watchedHuntSpeed, double stalkDuration, double variantBreather,
-                         double spotMarkChance, double deadEndVanishChance) {
+                         double spotMarkChance, double deadEndVanishChance, boolean silentStalk) {
 
         /** The values of the creek everyone knows. */
         public static final Traits NORMAL = builder().build();
@@ -108,6 +111,7 @@ public enum CreekMood {
             private double variantBreather = 1.0D;
             private double spotMarkChance = 0.25D;
             private double deadEndVanishChance = 0.5D;
+            private boolean silentStalk;
 
             private Builder() {
             }
@@ -157,10 +161,15 @@ public enum CreekMood {
                 return this;
             }
 
+            Builder silentStalk(boolean silent) {
+                this.silentStalk = silent;
+                return this;
+            }
+
             Traits build() {
                 return new Traits(this.huntThreshold, this.minStalk, this.huntSpeed, this.huntCooldown,
                         this.watchedHuntSpeed, this.stalkDuration, this.variantBreather, this.spotMarkChance,
-                        this.deadEndVanishChance);
+                        this.deadEndVanishChance, this.silentStalk);
             }
         }
     }

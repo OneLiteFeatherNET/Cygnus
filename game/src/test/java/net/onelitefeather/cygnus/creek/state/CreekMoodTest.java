@@ -10,7 +10,7 @@ class CreekMoodTest {
     @Test
     @DisplayName("An untouched builder gives the normal creek")
     void untouchedBuilderIsNormal() {
-        assertEquals(new CreekMood.Traits(1.0D, 1.0D, 1.0D, 1.0D, 0.0D, 1.0D, 1.0D, 0.25D, 0.5D),
+        assertEquals(new CreekMood.Traits(1.0D, 1.0D, 1.0D, 1.0D, 0.0D, 1.0D, 1.0D, 0.25D, 0.5D, false),
                 CreekMood.Traits.builder().build());
     }
 
@@ -27,8 +27,17 @@ class CreekMoodTest {
                 .variantBreather(7)
                 .spotMarkChance(8)
                 .deadEndVanishChance(9)
+                .silentStalk(true)
                 .build();
 
-        assertEquals(new CreekMood.Traits(1, 2, 3, 4, 5, 6, 7, 8, 9), traits);
+        assertEquals(new CreekMood.Traits(1, 2, 3, 4, 5, 6, 7, 8, 9, true), traits);
+    }
+
+    @Test
+    @DisplayName("Only the shadow stalks in silence")
+    void onlyTheShadowStalksInSilence() {
+        for (CreekMood mood : CreekMood.values()) {
+            assertEquals(mood == CreekMood.SHADOW, mood.traits().silentStalk(), mood.name());
+        }
     }
 }

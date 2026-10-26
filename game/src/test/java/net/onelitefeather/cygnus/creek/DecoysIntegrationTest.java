@@ -14,6 +14,7 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreakingBody;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
+import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.state.SurvivorView;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,13 +41,40 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         return this.decoys(REVEAL_MILLIS);
     }
 
+    private final List<UUID> crumbledFor = new ArrayList<>();
+
     private Decoys decoys(long revealMillis) {
         CreekSight sight = new CreekSight(30, CreekConfig.DEFAULT.sight().viewAngle());
         return new Decoys((instance, spot) -> {
             CreekBody body = CreakingBody.spawn(instance, spot);
             this.spawned.add(body);
             return body;
-        }, sight, () -> revealMillis);
+        }, sight, () -> revealMillis, new CreekWitness() {
+            @Override
+            public void sighted(UUID survivor) {
+                // Not part of these tests.
+            }
+
+            @Override
+            public void caught(UUID survivor) {
+                // Not part of these tests.
+            }
+
+            @Override
+            public void stalked(UUID survivor) {
+                // Not part of these tests.
+            }
+
+            @Override
+            public void selected(UUID survivor) {
+                // Not part of these tests.
+            }
+
+            @Override
+            public void crumbled(UUID survivor) {
+                crumbledFor.add(survivor);
+            }
+        });
     }
 
     @Test
@@ -107,6 +137,7 @@ class DecoysIntegrationTest extends CygnusPlayerTestBase {
         assertTrue(this.removed());
         assertFalse(particles.collect().isEmpty());
         assertTrue(sounds.collect().stream().anyMatch(packet -> packet.soundEvent() == SoundEvent.ENTITY_CREAKING_ACTIVATE));
+        assertEquals(List.of(viewer.getUuid()), this.crumbledFor);
     }
 
     @Test

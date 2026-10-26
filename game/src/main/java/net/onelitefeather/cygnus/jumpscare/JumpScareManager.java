@@ -295,6 +295,17 @@ public final class JumpScareManager {
     }
 
     /**
+     * Tells when a phantom last jumped at a survivor, whichever scare it was.
+     *
+     * @param survivor the survivor to check
+     * @return the time in milliseconds, {@code 0} if never
+     * @since 2.21.0
+     */
+    public long lastScareAt(UUID survivor) {
+        return jumpScareCooldowns.getOrDefault(survivor, 0L);
+    }
+
+    /**
      * Tells whether the turnaround scare is held back for a survivor.
      *
      * @param survivor the survivor to check

@@ -6,6 +6,8 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.onelitefeather.cygnus.GameFeature;
+import net.onelitefeather.cygnus.ambient.SoundPreset;
+import net.onelitefeather.cygnus.ambient.SoundPresetSource;
 import net.onelitefeather.cygnus.common.config.SanityConfig;
 import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
@@ -53,12 +55,24 @@ import java.util.function.Supplier;
  * @version 1.3.0
  * @since 2.16.0
  */
-public final class SanityService implements GameFeature, DreadSource, CreekWitness {
+public final class SanityService implements GameFeature, DreadSource, CreekWitness, SoundPresetSource {
 
     private static final long NOT_STARTED = Long.MIN_VALUE;
 
     /** How often the survivors' sanity is put on their level display. */
     static final long DISPLAY_MILLIS = 250L;
+
+    /** How long the ambient sounds stay quiet per unit of a jump in fear, in milliseconds. */
+    static final long SILENCE_MILLIS_PER_GAIN = 12_000L;
+
+    /** The shortest silence after a scare, in milliseconds. */
+    static final long MIN_SILENCE_MILLIS = 1000L;
+
+    /** The longest silence after a scare, in milliseconds. */
+    static final long MAX_SILENCE_MILLIS = 5000L;
+
+    /** How long the ambient sounds stay quiet after a doppelganger crumbled, in milliseconds. */
+    static final long CRUMBLE_SILENCE_MILLIS = 4000L;
 
     private final EventNode<Event> node = EventNode.all("sanity");
 
@@ -219,6 +233,44 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void hunted(UUID survivor) {
+        Fear fear = this.survivors.get(survivor);
+        if (fear != null) fear.hunted();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void huntEnded(UUID survivor) {
+        Fear fear = this.survivors.get(survivor);
+        if (fear != null) fear.huntEnded();
+    }
+
+    /**
+     * Keeps the ambient sounds quiet for a moment. The doppelganger is no jump in fear, so the
+     * creek's hunts stay as they are tuned.
+     */
+    @Override
+    public void crumbled(UUID survivor) {
+        Fear fear = this.survivors.get(survivor);
+        if (fear != null) fear.hush(this.clock.getAsLong() + CRUMBLE_SILENCE_MILLIS);
+    }
+
+    /**
+     * Tells what the survivor's ambient sounds have to make room for. A survivor who is not tracked
+     * leaves them to the fear alone.
+     */
+    @Override
+    public SoundPreset presetOf(UUID survivor, long now) {
+        Fear fear = this.survivors.get(survivor);
+        return fear == null ? SoundPreset.FREE : fear.preset(now);
+    }
+
+    /**
      * Scares a survivor whom a dead teammate's figure has just struck.
      *
      * @param survivor the survivor who was lured
@@ -246,9 +298,21 @@ public final class SanityService implements GameFeature, DreadSource, CreekWitne
         // the extra read changes nothing about the fear itself.
         double before = this.observed ? fear.read(now, floor) : 0.0D;
         fear.add(gain, now, floor);
+        // A page is good news with a shiver, not a scare, so the ambient sounds go on.
+        if (!SanityObserver.SOURCE_PAGE.equals(source)) fear.hush(now + silenceMillis(gain));
         if (this.observed) {
             this.observer.jumped(id, source, before, fear.read(now, floor));
         }
+    }
+
+    /**
+     * How long the ambient sounds stay quiet after a jump in fear: the bigger the jump, the longer.
+     *
+     * @param gain the jump, between {@code 0} and {@code 1}
+     * @return the silence in milliseconds
+     */
+    static long silenceMillis(double gain) {
+        return Math.clamp(Math.round(gain * SILENCE_MILLIS_PER_GAIN), MIN_SILENCE_MILLIS, MAX_SILENCE_MILLIS);
     }
 
     /**

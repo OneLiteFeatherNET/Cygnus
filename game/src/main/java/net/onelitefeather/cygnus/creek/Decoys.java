@@ -8,6 +8,7 @@ import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.CreekScare;
+import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.world.CreekSight;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 
@@ -42,6 +43,7 @@ final class Decoys {
     private final BiFunction<Instance, Pos, CreekBody> bodies;
     private final CreekSight sight;
     private final LongSupplier revealMillis;
+    private final CreekWitness witness;
     private final List<Decoy> running = new ArrayList<>();
 
     /**
@@ -53,9 +55,23 @@ final class Decoys {
      *                     for the real creek right now
      */
     Decoys(BiFunction<Instance, Pos, CreekBody> bodies, CreekSight sight, LongSupplier revealMillis) {
+        this(bodies, sight, revealMillis, CreekWitness.NONE);
+    }
+
+    /**
+     * Sets up the doppelgangers of a round that report when one crumbles.
+     *
+     * @param bodies       puts a creek body into the world
+     * @param sight        decides whether a survivor sees a doppelganger
+     * @param revealMillis how long a survivor has to look at one before it crumbles, the same as
+     *                     for the real creek right now
+     * @param witness      hears whom a doppelganger crumbled in front of
+     */
+    Decoys(BiFunction<Instance, Pos, CreekBody> bodies, CreekSight sight, LongSupplier revealMillis, CreekWitness witness) {
         this.bodies = bodies;
         this.sight = sight;
         this.revealMillis = revealMillis;
+        this.witness = witness;
     }
 
     /**
@@ -101,6 +117,7 @@ final class Decoys {
             if (decoy.seenSince < 0) decoy.seenSince = now;
             if (now - decoy.seenSince < this.revealMillis.getAsLong()) continue;
             crumble(viewer, decoy.body.position());
+            this.witness.crumbled(decoy.viewer);
             decoy.body.remove();
             iterator.remove();
         }
