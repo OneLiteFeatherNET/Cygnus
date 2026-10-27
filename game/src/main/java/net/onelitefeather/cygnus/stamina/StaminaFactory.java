@@ -18,7 +18,7 @@ import java.util.function.LongSupplier;
 public final class StaminaFactory {
 
     /** Fear that is never there, for a bar built without anyone tracking the survivors' fear. */
-    static final DreadSource CALM = _ -> 0.0D;
+    static final DreadSource CALM = (_, _) -> 0.0D;
 
     private StaminaFactory() {
     }

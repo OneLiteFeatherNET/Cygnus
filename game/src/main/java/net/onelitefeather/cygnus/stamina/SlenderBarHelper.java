@@ -95,11 +95,12 @@ public interface SlenderBarHelper {
     default SwingOutcome swing(Instance instance, UUID uuid, Pos center, int range, SlenderSwing swing, DreadSource dread) {
         boolean hit = false;
         boolean missed = false;
+        long now = System.currentTimeMillis();
         for (Entity nearbyEntity : instance.getNearbyEntities(center, range)) {
             if (!(nearbyEntity instanceof CygnusPlayer target)) continue;
             if (UUID_COMPARATOR.test(uuid, target.getUuid())) continue;
             if (!isDamageableSurvivor(target)) continue;
-            double hearts = swing.roll(dread.dreadOf(target.getUuid()));
+            double hearts = swing.roll(dread.dreadOf(target.getUuid(), now));
             if (hearts <= 0.0D) {
                 missed = true;
                 continue;

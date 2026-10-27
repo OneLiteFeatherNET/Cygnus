@@ -41,7 +41,7 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
     /** Hits a calm survivor with the lowest damage, 0.6 hearts, enough to drop the shown health. */
     private static final SlenderSwing HIT = new SlenderSwing(() -> new FixedRandom(0.99D, 0.0D));
     private static final SlenderSwing MISS = new SlenderSwing(() -> new FixedRandom(0.0D));
-    private static final DreadSource CALM = _ -> 0.0D;
+    private static final DreadSource CALM = (_, _) -> 0.0D;
 
     private final SlenderBarHelper helper = new SlenderBarHelper() {
     };
@@ -283,7 +283,7 @@ class SlenderBarHelperTest extends CygnusPlayerTestBase {
         calm.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
         CygnusPlayer terrified = (CygnusPlayer) env.createPlayer(instance, CENTER.add(-1, 0, 0));
         terrified.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
-        DreadSource dread = uuid -> uuid.equals(terrified.getUuid()) ? 1.0D : 0.0D;
+        DreadSource dread = (uuid, _) -> uuid.equals(terrified.getUuid()) ? 1.0D : 0.0D;
         // Every draw is 0.1: a hit for the calm one (0.1 >= 0.05), a miss for the terrified one (0.1 < 0.15).
         SlenderSwing swing = new SlenderSwing(() -> new FixedRandom(0.1D));
 
