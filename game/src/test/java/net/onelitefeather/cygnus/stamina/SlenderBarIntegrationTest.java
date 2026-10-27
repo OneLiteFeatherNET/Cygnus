@@ -540,7 +540,7 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
         CygnusPlayer terrified = survivor(env, new Pos(-1, 40, 0));
         // Every draw is 0.1: a hit for the calm one (0.1 >= 0.05), a miss for the terrified one (0.1 < 0.15).
         SlenderBar bar = (SlenderBar) StaminaFactory.createSlenderStamina(slender, StaminaConfig.DEFAULT, () -> 0L,
-                uuid -> uuid.equals(terrified.getUuid()) ? 1.0D : 0.0D, new SlenderSwing(() -> new FixedRandom(0.1D)));
+                (uuid, _) -> uuid.equals(terrified.getUuid()) ? 1.0D : 0.0D, new SlenderSwing(() -> new FixedRandom(0.1D)));
         bar.start();
         bar.changeStatus();
         bar.consume();
@@ -685,7 +685,7 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     private static final double DELTA = 1.0E-9D;
 
     private static SlenderBar bar(CygnusPlayer slender, StaminaConfig config, LongSupplier clock, double[] rolls) {
-        return (SlenderBar) StaminaFactory.createSlenderStamina(slender, config, clock, _ -> 0.0D,
+        return (SlenderBar) StaminaFactory.createSlenderStamina(slender, config, clock, (_, _) -> 0.0D,
                 new SlenderSwing(() -> new FixedRandom(rolls)));
     }
 
