@@ -67,7 +67,9 @@ class ItemsTest {
         Items.setTutorialItem(player);
         ItemStack tutorial = player.getInventory().getItemStack(Items.TUTORIAL_SLOT);
         assertTrue(Items.isTutorialItem(tutorial), "the tutorial item belongs in its own slot");
-        assertEquals(Material.KNOWLEDGE_BOOK, tutorial.material());
+        assertEquals(1, Items.TUTORIAL_SLOT, "the tutorial item sits right next to the server item");
+        assertEquals(Material.ENCHANTED_BOOK, tutorial.material(),
+                "a knowledge book is used up by the client on a right click, and a plain book is the statistics");
         assertFalse(tutorial.get(DataComponents.LORE, List.of()).isEmpty());
 
         env.destroyInstance(instance, true);

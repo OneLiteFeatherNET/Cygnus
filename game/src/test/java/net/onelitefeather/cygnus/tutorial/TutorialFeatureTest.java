@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -82,7 +83,7 @@ class TutorialFeatureTest {
 
     private static List<Key> buttonKeys(ShowDialogPacket packet) {
         Dialog.MultiAction dialog = assertInstanceOf(Dialog.MultiAction.class, packet.dialog());
-        return dialog.actions().stream()
+        return Stream.concat(dialog.actions().stream(), Stream.of(dialog.exitAction()))
                 .map(button -> assertInstanceOf(DialogAction.Custom.class, button.action()).key())
                 .toList();
     }
@@ -136,7 +137,7 @@ class TutorialFeatureTest {
                 this.player.getInventory().getItemStack(Items.TUTORIAL_SLOT), 0L));
 
         dialogs.assertSingle(packet -> assertEquals(
-                List.of(TutorialPages.SURVIVOR_RULES_KEY, TutorialPages.SLENDER_RULES_KEY, TutorialPages.CLOSE_KEY),
+                List.of(TutorialPages.SURVIVOR_PAGES_KEY, TutorialPages.SLENDER_HUNT_KEY, TutorialPages.CLOSE_KEY),
                 buttonKeys(packet)));
     }
 
@@ -156,12 +157,15 @@ class TutorialFeatureTest {
     @Test
     @DisplayName("Each button opens the page it names")
     void eachKeyOpensItsPage() {
-        assertOpens(TutorialPages.SURVIVOR_RULES_KEY, List.of(TutorialPages.SURVIVOR_ITEMS_KEY, TutorialPages.INTRO_KEY));
-        assertOpens(TutorialPages.SURVIVOR_ITEMS_KEY, List.of(TutorialPages.SURVIVOR_RULES_KEY, TutorialPages.INTRO_KEY));
-        assertOpens(TutorialPages.SLENDER_RULES_KEY, List.of(TutorialPages.SLENDER_ITEMS_KEY, TutorialPages.INTRO_KEY));
-        assertOpens(TutorialPages.SLENDER_ITEMS_KEY, List.of(TutorialPages.SLENDER_RULES_KEY, TutorialPages.INTRO_KEY));
-        assertOpens(TutorialPages.INTRO_KEY,
-                List.of(TutorialPages.SURVIVOR_RULES_KEY, TutorialPages.SLENDER_RULES_KEY, TutorialPages.CLOSE_KEY));
+        Key close = TutorialPages.CLOSE_KEY;
+        assertOpens(TutorialPages.SURVIVOR_PAGES_KEY, List.of(TutorialPages.INTRO_KEY, TutorialPages.SURVIVOR_DANGER_KEY, close));
+        assertOpens(TutorialPages.SURVIVOR_DANGER_KEY, List.of(TutorialPages.SURVIVOR_PAGES_KEY, TutorialPages.SURVIVOR_FEAR_KEY, close));
+        assertOpens(TutorialPages.SURVIVOR_FEAR_KEY, List.of(TutorialPages.SURVIVOR_DANGER_KEY, TutorialPages.SURVIVOR_ITEMS_KEY, close));
+        assertOpens(TutorialPages.SURVIVOR_ITEMS_KEY, List.of(TutorialPages.SURVIVOR_FEAR_KEY, TutorialPages.INTRO_KEY, close));
+        assertOpens(TutorialPages.SLENDER_HUNT_KEY, List.of(TutorialPages.INTRO_KEY, TutorialPages.SLENDER_CREEK_KEY, close));
+        assertOpens(TutorialPages.SLENDER_CREEK_KEY, List.of(TutorialPages.SLENDER_HUNT_KEY, TutorialPages.SLENDER_ITEMS_KEY, close));
+        assertOpens(TutorialPages.SLENDER_ITEMS_KEY, List.of(TutorialPages.SLENDER_CREEK_KEY, TutorialPages.INTRO_KEY, close));
+        assertOpens(TutorialPages.INTRO_KEY, List.of(TutorialPages.SURVIVOR_PAGES_KEY, TutorialPages.SLENDER_HUNT_KEY, close));
     }
 
     private void assertOpens(Key key, List<Key> expectedButtons) {
@@ -204,7 +208,7 @@ class TutorialFeatureTest {
         Collector<ShowDialogPacket> otherDialogs = otherConnection.trackIncoming(ShowDialogPacket.class);
         Collector<ShowDialogPacket> dialogs = this.connection.trackIncoming(ShowDialogPacket.class);
 
-        click(this.player, TutorialPages.SURVIVOR_RULES_KEY);
+        click(this.player, TutorialPages.SURVIVOR_PAGES_KEY);
 
         dialogs.assertSingle();
         assertEquals(List.of(), otherDialogs.collect(), "another reader must stay on their own page");
@@ -214,7 +218,7 @@ class TutorialFeatureTest {
     @DisplayName("Right before the teleport the item is taken away and the tutorial closed")
     void teleportTakesTheItemAndClosesTheDialog() {
         spawn();
-        click(this.player, TutorialPages.SURVIVOR_RULES_KEY);
+        click(this.player, TutorialPages.SURVIVOR_PAGES_KEY);
         this.player.getInventory().setItemStack(Items.HEAL_SLOT, ItemStack.of(Material.SUGAR));
         Collector<ClearDialogPacket> clears = this.connection.trackIncoming(ClearDialogPacket.class);
 
@@ -241,7 +245,7 @@ class TutorialFeatureTest {
     @DisplayName("Right before the teleport a player who already closed the tutorial keeps their dialog")
     void teleportLeavesClosedReadersAlone() {
         spawn();
-        click(this.player, TutorialPages.SURVIVOR_RULES_KEY);
+        click(this.player, TutorialPages.SURVIVOR_PAGES_KEY);
         click(this.player, TutorialPages.CLOSE_KEY);
         Collector<ClearDialogPacket> clears = this.connection.trackIncoming(ClearDialogPacket.class);
 
@@ -257,7 +261,7 @@ class TutorialFeatureTest {
         this.feature.node().call(new GamePrepareEvent());
         Collector<ShowDialogPacket> dialogs = this.connection.trackIncoming(ShowDialogPacket.class);
 
-        this.feature.node().call(new PlayerCustomClickEvent(this.player, TutorialPages.SURVIVOR_RULES_KEY, null));
+        this.feature.node().call(new PlayerCustomClickEvent(this.player, TutorialPages.SURVIVOR_PAGES_KEY, null));
 
         assertEquals(List.of(), dialogs.collect(), "a closed tutorial must not come back once the player left the lobby");
     }
