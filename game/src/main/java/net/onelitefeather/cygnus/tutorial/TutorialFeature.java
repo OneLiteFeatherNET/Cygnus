@@ -9,7 +9,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.network.ConnectionManager;
 import net.onelitefeather.cygnus.GameFeature;
-import net.onelitefeather.cygnus.event.GameStartEvent;
+import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.phase.WaitingPhase;
 import net.onelitefeather.cygnus.utils.Items;
@@ -26,9 +26,10 @@ import java.util.function.Supplier;
  * pushed on anyone. A right click opens the introduction, and each button there and on the
  * following pages names the page it leads to, see {@link TutorialPages}.</p>
  *
- * <p>When the round starts the item is taken away and an open tutorial is closed, so nobody walks
- * into the round with a dialog in front of their eyes. A click that still arrives afterwards opens
- * nothing. Dropping or moving the item is already ruled out by the game's global cancels.</p>
+ * <p>Right before the players are teleported onto the map, the item is taken away and an open
+ * tutorial is closed, so nobody arrives in the round with a dialog in front of their eyes. Buttons
+ * only answer a player who still holds the item, so a click that arrives after that opens nothing.
+ * Dropping or moving the item is already ruled out by the game's global cancels.</p>
  *
  * @author theEvilReaper
  * @version 1.0.0
@@ -45,7 +46,7 @@ public final class TutorialFeature implements GameFeature {
      * Creates the feature, builds the pages and puts its listeners on its node.
      *
      * @param phase       reads the running phase
-     * @param connections finds the online players when the round starts
+     * @param connections finds the online players right before the teleport
      */
     public TutorialFeature(Supplier<Phase> phase, ConnectionManager connections) {
         this.phase = phase;
@@ -67,7 +68,7 @@ public final class TutorialFeature implements GameFeature {
             }
         });
         this.node.addListener(PlayerCustomClickEvent.class, this::handleClick);
-        this.node.addListener(GameStartEvent.class, _ -> this.connections.getOnlinePlayers().forEach(player -> {
+        this.node.addListener(GamePrepareEvent.class, _ -> this.connections.getOnlinePlayers().forEach(player -> {
             Items.removeTutorialItem(player);
             player.closeDialog();
         }));
@@ -87,13 +88,13 @@ public final class TutorialFeature implements GameFeature {
 
     /**
      * Answers a tutorial button: close shuts the dialog, every other tutorial key opens its page for
-     * the player who clicked. Clicks of other dialogs, and every click once the round runs, are left
-     * alone.
+     * the player who clicked. Clicks of other dialogs, and every click of a player who no longer holds
+     * the item, are left alone.
      *
      * @param event the click the client sent back
      */
     void handleClick(PlayerCustomClickEvent event) {
-        if (!inLobby()) {
+        if (!Items.hasTutorialItem(event.getPlayer())) {
             return;
         }
         if (TutorialPages.CLOSE_KEY.equals(event.getKey())) {
