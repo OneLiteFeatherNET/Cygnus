@@ -35,6 +35,7 @@ public final class Items {
     public static final byte LOBBY_ITEM = (byte) 0x08;
     public static final byte PAGE_REVEAL_ITEM = (byte) 0x09;
     public static final byte PASS_ITEM = (byte) 0x0A;
+    public static final byte TUTORIAL_ITEM = (byte) 0x0B;
 
     /** The hotbar slot of the lobby's slender pass, the third one, between the server item and the statistics. */
     public static final int PASS_SLOT = 2;
@@ -68,6 +69,9 @@ public final class Items {
 
     /** The hotbar slot of the lobby's statistics item, the middle one. */
     public static final int STATS_SLOT = 4;
+
+    /** The hotbar slot of the lobby's tutorial item, left of the statistics item. */
+    public static final int TUTORIAL_SLOT = 2;
 
     /** The hotbar slot of the lobby's server item, the first one. */
     public static final int SERVER_SLOT = 0;
@@ -120,6 +124,12 @@ public final class Items {
             .customName(Component.text("Statistics", NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false))
             .lore(lore("Right click to open your", "statistics of this year"))
             .set(Tags.ITEM_TAG, STATS_ITEM)
+            .build();
+
+    private static final ItemStack tutorial = ItemStack.builder(Material.KNOWLEDGE_BOOK)
+            .customName(Component.text("How to play", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false))
+            .lore(lore("Right click to learn how", "each role plays"))
+            .set(Tags.ITEM_TAG, TUTORIAL_ITEM)
             .build();
 
     private static final HotBarLayout SPECTATOR_LAYOUT;
@@ -272,6 +282,102 @@ public final class Items {
     public static boolean isPassItem(ItemStack stack) {
         Byte tag = stack.getTag(Tags.ITEM_TAG);
         return tag != null && tag == PASS_ITEM;
+    }
+
+    /**
+     * Gives the player the lobby's item that opens the tutorial.
+     *
+     * @param player who should receive the item
+     */
+    public static void setTutorialItem(Player player) {
+        player.getInventory().setItemStack(TUTORIAL_SLOT, tutorial);
+    }
+
+    /**
+     * Takes the tutorial item out of the player's inventory, wherever it ended up. Everything else
+     * stays.
+     *
+     * @param player who should lose the item
+     */
+    public static void removeTutorialItem(Player player) {
+        var inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            if (isTutorialItem(inventory.getItemStack(slot))) {
+                inventory.setItemStack(slot, ItemStack.AIR);
+            }
+        }
+    }
+
+    /**
+     * Tells whether the stack is the tutorial item.
+     *
+     * @param stack the stack to look at
+     * @return {@code true} if the stack carries the tutorial tag
+     */
+    public static boolean isTutorialItem(ItemStack stack) {
+        Byte tag = stack.getTag(Tags.ITEM_TAG);
+        return tag != null && tag == TUTORIAL_ITEM;
+    }
+
+    /**
+     * Tells whether the player carries the tutorial item anywhere in their inventory.
+     *
+     * @param player the player to look at
+     * @return {@code true} if one slot holds it
+     */
+    public static boolean hasTutorialItem(Player player) {
+        var inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            if (isTutorialItem(inventory.getItemStack(slot))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns the slender's SlenderEye, the same stack the round hands out.
+     *
+     * @return the SlenderEye
+     */
+    public static ItemStack slenderEye() {
+        return slenderEye;
+    }
+
+    /**
+     * Returns the slender's tracker, the same stack the round hands out.
+     *
+     * @return the tracker
+     */
+    public static ItemStack tracker() {
+        return tracker;
+    }
+
+    /**
+     * Returns the slender's item to look through the creek's eyes, the same stack the round hands out.
+     *
+     * @return the possession item
+     */
+    public static ItemStack possession() {
+        return possession;
+    }
+
+    /**
+     * Returns the survivors' painkillers, the same stack the round hands out.
+     *
+     * @return the painkillers
+     */
+    public static ItemStack painkillers() {
+        return painkillers;
+    }
+
+    /**
+     * Returns the survivors' page reveal, the same stack the round hands out.
+     *
+     * @return the page reveal
+     */
+    public static ItemStack pageReveal() {
+        return pageReveal;
     }
 
     /**
