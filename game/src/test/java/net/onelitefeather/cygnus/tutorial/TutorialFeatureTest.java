@@ -21,8 +21,8 @@ import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.camera.WakeUpTransition;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.disclaimer.EpilepsyDisclaimer;
-import net.onelitefeather.cygnus.event.GameStartEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
+import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.phase.WaitingPhase;
@@ -70,7 +70,9 @@ class TutorialFeatureTest {
         this.feature.node().call(new PlayerSpawnEvent(this.player, this.instance, true));
     }
 
+    /** Clicks a button the way a player reading the tutorial does, with the item still in the hotbar. */
     private void click(Player clicker, Key key) {
+        Items.setTutorialItem(clicker);
         this.feature.node().call(new PlayerCustomClickEvent(clicker, key, null));
     }
 
@@ -209,27 +211,28 @@ class TutorialFeatureTest {
     }
 
     @Test
-    @DisplayName("The round start takes the item away and closes the tutorial")
-    void roundStartTakesTheItemAndClosesTheDialog() {
+    @DisplayName("Right before the teleport the item is taken away and the tutorial closed")
+    void teleportTakesTheItemAndClosesTheDialog() {
         spawn();
         this.player.getInventory().setItemStack(Items.HEAL_SLOT, ItemStack.of(Material.SUGAR));
         Collector<ClearDialogPacket> clears = this.connection.trackIncoming(ClearDialogPacket.class);
 
-        this.feature.node().call(new GameStartEvent());
+        this.feature.node().call(new GamePrepareEvent());
 
-        assertFalse(Items.hasTutorialItem(this.player), "the item must be gone when the round starts");
+        assertFalse(Items.hasTutorialItem(this.player), "the item must be gone before the teleport");
         assertEquals(Material.SUGAR, this.player.getInventory().getItemStack(Items.HEAL_SLOT).material(), "the painkillers stay");
         clears.assertSingle();
     }
 
     @Test
-    @DisplayName("A late click after the round started opens nothing")
-    void clickAfterRoundStartOpensNothing() {
-        startRound();
+    @DisplayName("A late click after the teleport opens nothing")
+    void clickAfterTeleportOpensNothing() {
+        spawn();
+        this.feature.node().call(new GamePrepareEvent());
         Collector<ShowDialogPacket> dialogs = this.connection.trackIncoming(ShowDialogPacket.class);
 
-        click(this.player, TutorialPages.SURVIVOR_RULES_KEY);
+        this.feature.node().call(new PlayerCustomClickEvent(this.player, TutorialPages.SURVIVOR_RULES_KEY, null));
 
-        assertEquals(List.of(), dialogs.collect(), "a closed tutorial must not come back during the round");
+        assertEquals(List.of(), dialogs.collect(), "a closed tutorial must not come back once the player left the lobby");
     }
 }
