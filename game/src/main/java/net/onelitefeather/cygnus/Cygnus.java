@@ -126,6 +126,7 @@ import net.onelitefeather.cygnus.utils.StaminaHelper;
 import net.onelitefeather.cygnus.view.GameView;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 
+import net.onelitefeather.cygnus.tutorial.TutorialFeature;
 import net.onelitefeather.cygnus.telemetry.ActionTracer;
 import net.onelitefeather.cygnus.telemetry.CygnusAttributes;
 import net.onelitefeather.cygnus.telemetry.TraceCookie;
@@ -329,6 +330,7 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
                         new SlenderPassFeature(this.slenderPassService, MinecraftServer.getConnectionManager()),
                         new LobbyHintsFeature(ServiceName.of(path), this.linearPhaseSeries::getCurrentPhase,
                                 MinecraftServer.getConnectionManager()),
+                        new TutorialFeature(this.linearPhaseSeries::getCurrentPhase, MinecraftServer.getConnectionManager()),
                         // Not part of the OverlayModule: the sound is the feedback a hit owes the player
                         // either way, and it needs neither the resource pack nor the overlay gate to be heard.
                         new MinimapPolicy(this.gameConfig.minimap()),
