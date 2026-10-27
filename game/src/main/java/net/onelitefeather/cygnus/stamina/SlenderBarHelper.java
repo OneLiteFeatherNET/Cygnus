@@ -9,6 +9,7 @@ import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
+import net.onelitefeather.cygnus.creek.dread.DreadSource;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
 import net.onelitefeather.cygnus.team.TeamHelper;
 import net.onelitefeather.cygnus.vitality.Vitality;
@@ -18,11 +19,11 @@ import java.util.UUID;
 import java.util.function.BiPredicate;
 
 /**
- * The StaminaDamage interface is designed to provide a method to apply damage to entities in a given range.
- * The method will iterate over all entities in the given range and apply the damage to the entity if it is a player.
+ * Shared behaviour of the slender's bar: his swing at the survivors in range, his blindness and the
+ * sounds survivors hear when he appears or vanishes.
  *
  * @author theEvilReaper
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  */
 @SuppressWarnings({"java:S3252"})
@@ -43,6 +44,16 @@ public interface SlenderBarHelper {
     TimedPotion BLINDNESS = new TimedPotion(new Potion(PotionEffect.BLINDNESS, (byte) 1, -1), 0);
 
     BiPredicate<UUID, UUID> UUID_COMPARATOR = UUID::equals;
+
+    /**
+     * What one swing did to the survivors in range. Both can be true at once, since every survivor
+     * rolls on their own.
+     *
+     * @param hit    whether at least one survivor was hit
+     * @param missed whether at least one survivor was missed
+     */
+    record SwingOutcome(boolean hit, boolean missed) {
+    }
 
     /**
      * Takes the blindness back off the given player.
@@ -67,26 +78,36 @@ public interface SlenderBarHelper {
     }
 
     /**
-     * Applies the damage to all entities in the given range.
+     * Swings once at every survivor in the given range.
+     * <p>
+     * Every survivor rolls on their own with their own fear, so the same swing can hit one and miss
+     * the other. A hit takes the rolled hearts as points through {@link Vitality}, a miss takes nothing.
+     * </p>
      *
      * @param instance the instance where the entities are located
-     * @param uuid     the uuid of the player who caused the damage
-     * @param center   the center position where the damage should be applied
-     * @param range    the range where the damage should be applied
-     * @param damage   the damage in health points, taken as points through {@link Vitality}
-     * @return {@code true} if at least one survivor was hit
+     * @param uuid     the uuid of the player who swings
+     * @param center   the center position of the swing, also where a hit comes from
+     * @param range    the range of the swing
+     * @param swing    rolls what the swing does to each survivor
+     * @param dread    supplies the fear of each survivor
+     * @return whether the swing hit and whether it missed at least one survivor in range
      */
-    default boolean applyDamage(Instance instance, UUID uuid, Pos center, int range, float damage) {
-        Collection<Entity> nearbyEntities = instance.getNearbyEntities(center, range);
+    default SwingOutcome swing(Instance instance, UUID uuid, Pos center, int range, SlenderSwing swing, DreadSource dread) {
         boolean hit = false;
-        for (Entity nearbyEntity : nearbyEntities) {
+        boolean missed = false;
+        for (Entity nearbyEntity : instance.getNearbyEntities(center, range)) {
             if (!(nearbyEntity instanceof CygnusPlayer target)) continue;
             if (UUID_COMPARATOR.test(uuid, target.getUuid())) continue;
             if (!isDamageableSurvivor(target)) continue;
-            target.vitality().damage(damage * Vitality.POINTS_PER_HEALTH, center);
+            double hearts = swing.roll(dread.dreadOf(target.getUuid()));
+            if (hearts <= 0.0D) {
+                missed = true;
+                continue;
+            }
+            target.vitality().damage(hearts * SlenderSwing.POINTS_PER_HEART, center);
             hit = true;
         }
-        return hit;
+        return new SwingOutcome(hit, missed);
     }
 
     /**

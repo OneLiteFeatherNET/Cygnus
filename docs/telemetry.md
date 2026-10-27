@@ -255,8 +255,8 @@ cannot bottom out: its floor grows with the pages found and the time played.
 
 - **Creek catches have no distance or line of sight.** The creek reports only the survivor's UUID to its
   witness; adding the creek's position would mean changing the creek.
-- **The slender's damage** (`PlayerDamagedEvent`) happens twice a second to everyone around him while he
-  drains; that is per-tick state. The kill is traced as the death.
+- **The slender's swings** (`PlayerDamagedEvent`) happen once a second against everyone around him while
+  he is visible; that is per-tick state. The kill is traced as the death.
 - **Sprinting, jump scares, the ambient sounds and the page proximity chime** are continuous or purely
   cosmetic.
 - **Players joining after the round started** do not exist: the login listener turns them away, so

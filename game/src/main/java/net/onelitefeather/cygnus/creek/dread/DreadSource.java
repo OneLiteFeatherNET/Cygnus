@@ -6,8 +6,8 @@ import java.util.UUID;
 /**
  * Rates how likely a survivor is to be haunted.
  * <p>
- * The creek only ever asks this interface. In a round it is answered by the survivors' fear,
- * {@code SanityService}.
+ * The creek asks it whom to haunt, and the slender's swing asks it how much a survivor is spared.
+ * In a round it is answered by the survivors' fear, {@code SanityService}.
  * </p>
  *
  * @author theEvilReaper

@@ -120,6 +120,23 @@ class DamageSoundServiceTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("The default cooldown lets the next swing of the slender through")
+    void defaultCooldownLetsTheNextSwingThrough(@NotNull Env env) {
+        TestConnection connection = env.createConnection();
+        Player player = connection.connect(instance);
+        AtomicLong clock = new AtomicLong();
+        DamageSoundService service = service(GameConfig.DamageSound.DEFAULT, clock);
+        service.play(player);
+        Collector<EntitySoundEffectPacket> sounds = connection.trackIncoming(EntitySoundEffectPacket.class);
+
+        // A swing a second later that the scheduler runs a little early must still be heard.
+        clock.set(800L);
+        service.play(player);
+
+        sounds.assertSingle(packet -> assertEquals(SoundEvent.ENTITY_PLAYER_HURT, packet.soundEvent()));
+    }
+
+    @Test
     @DisplayName("The cooldown is kept per player")
     void theCooldownIsKeptPerPlayer(@NotNull Env env) {
         TestConnection firstConnection = env.createConnection();
