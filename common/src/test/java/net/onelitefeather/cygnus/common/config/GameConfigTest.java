@@ -43,7 +43,7 @@ class GameConfigTest {
         assertRejected("lobbyAtmosphereShare (1.5) must be between 0 and 1", () -> new GameConfig(
                 defaults.round(), defaults.teams(), null, defaults.resourcePack(), defaults.pageProximity(),
                 defaults.damageSound(), defaults.glitch(), defaults.pageGlitch(), defaults.creek(),
-                defaults.sanity(), defaults.stamina(), defaults.adrenaline(), defaults.footprint(), defaults.possession(), defaults.telemetry(), defaults.minimap(), defaults.eightPages(), defaults.regeneration(), defaults.lure(), defaults.clientGuard(), defaults.clientApi(), defaults.lunar(), 1.5F));
+                defaults.sanity(), defaults.stamina(), defaults.adrenaline(), defaults.footprint(), defaults.possession(), defaults.telemetry(), defaults.minimap(), defaults.eightPages(), defaults.regeneration(), defaults.lure(), defaults.clientGuard(), defaults.clientApi(), defaults.lunar(), defaults.pass(), 1.5F));
     }
 
     @Test

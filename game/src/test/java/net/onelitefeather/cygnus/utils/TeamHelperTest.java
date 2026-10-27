@@ -109,6 +109,24 @@ class TeamHelperTest {
         createdPlayers.forEach(Entity::remove);
     }
 
+    @Test
+    void reservedPlayerBecomesTheSlender(@NotNull Env env) {
+        Player reserved = env.createPlayer(instance);
+        Set<Player> onlinePlayers = Set.copyOf(MinecraftServer.getConnectionManager().getOnlinePlayers());
+
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 11);
+
+        TeamHelper.TeamAllocation allocation = TeamHelper.prepareTeamAllocation(slenderTeam, survivorTeam, reserved);
+
+        assertEquals(reserved, allocation.slender(), "the holder of the slender pass must play the Slender");
+        assertTrue(TeamHelper.isSlenderTeam(reserved));
+        assertFalse(allocation.survivors().contains(reserved));
+
+        onlinePlayers.forEach(TeamHelperTest::resetRole);
+        reserved.remove();
+    }
+
     private static void resetRole(@NotNull Player player) {
         player.removeTag(Tags.TEAM_KEY);
         player.removeTag(Tags.HIDDEN);

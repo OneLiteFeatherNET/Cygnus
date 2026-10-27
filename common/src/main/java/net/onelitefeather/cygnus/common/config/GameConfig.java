@@ -72,6 +72,7 @@ public record GameConfig(
         ClientGuardConfig clientGuard,
         ClientApiConfig clientApi,
         LunarConfig lunar,
+        SlenderPassConfig pass,
         float lobbyAtmosphereShare
 ) {
 
@@ -152,6 +153,7 @@ public record GameConfig(
             ClientGuardConfig.DEFAULT,
             ClientApiConfig.DEFAULT,
             LunarConfig.DEFAULT,
+            SlenderPassConfig.DEFAULT,
             DEFAULT_LOBBY_ATMOSPHERE_SHARE
     );
 
@@ -190,6 +192,7 @@ public record GameConfig(
                 ClientGuardConfig.read(root.section("client-guard.")),
                 ClientApiConfig.read(root.section("client-api.")),
                 LunarConfig.read(root.section("lunar.")),
+                SlenderPassConfig.read(root.section("pass.")),
                 readLobbyAtmosphereShare(root)
         );
     }

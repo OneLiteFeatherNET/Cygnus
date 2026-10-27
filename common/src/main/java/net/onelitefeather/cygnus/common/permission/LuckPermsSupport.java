@@ -3,11 +3,14 @@ package net.onelitefeather.cygnus.common.permission;
 import me.lucko.luckperms.minestom.app.LuckPermsMinestomHandle;
 import me.lucko.luckperms.minestom.app.LuckPermsMinestomOptions;
 import me.lucko.luckperms.minestom.loader.MinestomLoader;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -28,6 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class LuckPermsSupport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LuckPermsSupport.class);
+    /** The LuckPerms meta that gives the monthly quota of slender passes of a player. @since 2.21.0 */
+    public static final String MONTHLY_QUOTA_META = "cygnus.slender-pass.monthly-quota";
     private static final List<String> COMMAND_ALIASES =
             List.of("luckperms", "lp", "perm", "perms", "permission", "permissions");
     private static final String LOADER_CLASS = "me.lucko.luckperms.minestom.loader.MinestomLoader";
@@ -91,6 +96,35 @@ public final class LuckPermsSupport {
      *
      * @return {@code true} if the class is available, {@code false} after logging a warning
      */
+    /**
+     * Reads the monthly quota of slender passes from the LuckPerms meta {@link #MONTHLY_QUOTA_META} of a player. The
+     * cached user data is read, so no I/O happens.
+     *
+     * @param player the player
+     * @return the quota, {@code 0} without LuckPerms, without user data, without the meta, or for a value that is not
+     * an integer
+     * @since 2.21.0
+     */
+    public static int monthlyQuota(UUID player) {
+        if (!PRESENT) {
+            return 0;
+        }
+        User user = LuckPermsProvider.get().getUserManager().getUser(player);
+        if (user == null) {
+            return 0;
+        }
+        String value = user.getCachedData().getMetaData().getMetaValue(MONTHLY_QUOTA_META);
+        if (value == null) {
+            return 0;
+        }
+        try {
+            return Math.max(0, Integer.parseInt(value.trim()));
+        } catch (NumberFormatException exception) {
+            LOGGER.warn("The meta {} of {} is not a whole number: {}", MONTHLY_QUOTA_META, player, value);
+            return 0;
+        }
+    }
+
     private static boolean detect() {
         try {
             Class.forName(LOADER_CLASS, false, LuckPermsSupport.class.getClassLoader());

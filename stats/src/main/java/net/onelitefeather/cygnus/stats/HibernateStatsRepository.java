@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.jetbrains.annotations.Nullable;
 
 import javax.sql.DataSource;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -126,6 +127,8 @@ public final class HibernateStatsRepository implements StatsRepository {
                     .addAnnotatedClass(PlayerRoundStats.class)
                     .addAnnotatedClass(PlayerYearStats.class)
                     .addAnnotatedClass(PlayerName.class)
+                    .addAnnotatedClass(SlenderPassBalance.class)
+                    .addAnnotatedClass(SlenderPassEntry.class)
                     .buildMetadata()
                     .buildSessionFactory();
         } catch (RuntimeException exception) {
@@ -275,7 +278,7 @@ public final class HibernateStatsRepository implements StatsRepository {
      * Tells whether another server won the race: an optimistic lock failure or a unique-key violation
      * anywhere in the cause chain.
      */
-    private static boolean conflict(Throwable exception) {
+    static boolean conflict(Throwable exception) {
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
             if (cause instanceof OptimisticLockException || cause instanceof StaleStateException
                     || cause instanceof EntityExistsException || cause instanceof ConstraintViolationException) {
@@ -286,7 +289,7 @@ public final class HibernateStatsRepository implements StatsRepository {
     }
 
     /**
-     * Deletes the player's round rows and year rows in one transaction.
+     * Deletes the player's round rows, year rows, stored name and slender pass rows in one transaction.
      *
      * @param playerUuid the player
      * @return how many rows were removed in total
@@ -303,8 +306,26 @@ public final class HibernateStatsRepository implements StatsRepository {
             int names = session.createMutationQuery("delete from PlayerName n where n.playerUuid = :player")
                     .setParameter("player", playerUuid)
                     .executeUpdate();
-            return rounds + years + names;
+            int passes = session.createMutationQuery("delete from SlenderPassEntry e where e.playerUuid = :player")
+                    .setParameter("player", playerUuid)
+                    .executeUpdate();
+            int balances = session.createMutationQuery("delete from SlenderPassBalance b where b.playerUuid = :player")
+                    .setParameter("player", playerUuid)
+                    .executeUpdate();
+            return rounds + years + names + passes + balances;
         });
+    }
+
+    /**
+     * Returns the slender pass repository on the same session factory and executor, so a deletion by player
+     * covers the passes in the same transaction.
+     *
+     * @param clock the time of every ledger row
+     * @return the Hibernate-backed pass repository
+     */
+    @Override
+    public SlenderPassRepository slenderPasses(Clock clock) {
+        return new HibernateSlenderPassRepository(this.sessionFactory, this.executor, clock);
     }
 
     /**

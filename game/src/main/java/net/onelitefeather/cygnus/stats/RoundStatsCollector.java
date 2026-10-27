@@ -47,6 +47,7 @@ public final class RoundStatsCollector {
     private final Supplier<@Nullable String> roundIds;
     private final Function<UUID, @Nullable String> names;
     private final Consumer<Map<UUID, YearStatsView>> totalsHandler;
+    private final Consumer<FinishedRound> roundHandler;
 
     /**
      * Creates the collector without names and without a hand-over of the committed totals.
@@ -75,11 +76,32 @@ public final class RoundStatsCollector {
      */
     public RoundStatsCollector(StatsRepository repository, Clock clock, ZoneId zone, Supplier<@Nullable String> roundIds,
                                Function<UUID, @Nullable String> names, Consumer<Map<UUID, YearStatsView>> totalsHandler) {
+        this(repository, clock, zone, roundIds, names, totalsHandler, _ -> {
+        });
+    }
+
+    /**
+     * Creates the collector with a hook that sees every finished round before it is written.
+     *
+     * @param repository    where finished rounds go
+     * @param clock         the source of every timestamp
+     * @param zone          the zone whose calendar decides the year of a round
+     * @param roundIds      the id of the running round as the round telemetry knows it
+     * @param names         reads the name of a participant when the round starts, {@code null} for an unknown one
+     * @param totalsHandler receives the year totals the repository committed for the round's participants
+     * @param roundHandler  receives each finished round on the thread that ends the round, before the write starts;
+     *                      a failure is logged and does not stop the write
+     * @since 2.21.0
+     */
+    public RoundStatsCollector(StatsRepository repository, Clock clock, ZoneId zone, Supplier<@Nullable String> roundIds,
+                               Function<UUID, @Nullable String> names, Consumer<Map<UUID, YearStatsView>> totalsHandler,
+                               Consumer<FinishedRound> roundHandler) {
         this.repository = repository;
         this.tracker = new RoundStatsTracker(clock, zone);
         this.roundIds = roundIds;
         this.names = names;
         this.totalsHandler = totalsHandler;
+        this.roundHandler = roundHandler;
     }
 
     /**
@@ -107,6 +129,11 @@ public final class RoundStatsCollector {
      */
     public void gameFinished(GameFinishEvent.Reason reason) {
         this.tracker.finish(FinishReason.valueOf(reason.name()), () -> roundId(this.roundIds.get())).ifPresent(round -> {
+            try {
+                this.roundHandler.accept(round);
+            } catch (RuntimeException exception) {
+                LOGGER.error("Handing the finished round {} to its listeners failed", round.roundId(), exception);
+            }
             try {
                 this.repository.saveRound(round).whenComplete((totals, failure) -> {
                     if (failure == null) {

@@ -76,6 +76,20 @@ class RoundStatsCollectorTest {
     }
 
     @Test
+    @DisplayName("The round handler sees the finished round before the repository writes it")
+    void roundHandlerSeesTheRoundBeforeTheWrite() {
+        List<Integer> roundsWrittenWhenHandled = new ArrayList<>();
+        RoundStatsCollector collector = new RoundStatsCollector(this.repository, CLOCK, ZoneOffset.UTC, () -> ROUND_ID,
+                _ -> null, _ -> { }, round -> roundsWrittenWhenHandled.add(this.rounds.size()));
+        collector.roundStarted(Map.of(ALICE, Role.SURVIVOR));
+
+        collector.gameFinished(GameFinishEvent.Reason.TIME_OVER);
+
+        assertEquals(List.of(0), roundsWrittenWhenHandled, "the hook runs before the round reaches the repository");
+        assertEquals(1, this.rounds.size(), "the round is still written after the hook");
+    }
+
+    @Test
     @DisplayName("A failing repository does not escape into the game")
     void repositoryFailureDoesNotEscape() {
         this.repository.saveThrows = new IllegalStateException("database is gone");

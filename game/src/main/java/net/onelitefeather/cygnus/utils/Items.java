@@ -34,6 +34,10 @@ public final class Items {
     public static final byte SERVER_ITEM = (byte) 0x07;
     public static final byte LOBBY_ITEM = (byte) 0x08;
     public static final byte PAGE_REVEAL_ITEM = (byte) 0x09;
+    public static final byte PASS_ITEM = (byte) 0x0A;
+
+    /** The hotbar slot of the lobby's slender pass, the third one, between the server item and the statistics. */
+    public static final int PASS_SLOT = 2;
 
     /** The tracker's material, which is also the client's cooldown group for it. */
     public static final Material TRACKING_MATERIAL = Material.RABBIT_FOOT;
@@ -224,6 +228,50 @@ public final class Items {
             }
         }
         return false;
+    }
+
+    /**
+     * Gives the player the lobby's slender pass item, with the balance last read shown in its name.
+     *
+     * @param player  who should receive the item
+     * @param balance the passes the player has
+     * @since 2.21.0
+     */
+    public static void setPassItem(Player player, int balance) {
+        player.getInventory().setItemStack(PASS_SLOT, ItemStack.builder(Material.PAPER)
+                .customName(Component.text("Slender Pass: " + balance, NamedTextColor.DARK_RED)
+                        .decoration(TextDecoration.ITALIC, false))
+                .lore(lore("Right click to play the Slender", "next round, one pass is spent",
+                        "Right click again to cancel"))
+                .set(Tags.ITEM_TAG, PASS_ITEM)
+                .build());
+    }
+
+    /**
+     * Takes the slender pass item out of the player's inventory, wherever it ended up.
+     *
+     * @param player who should lose the item
+     * @since 2.21.0
+     */
+    public static void removePassItem(Player player) {
+        var inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            if (isPassItem(inventory.getItemStack(slot))) {
+                inventory.setItemStack(slot, ItemStack.AIR);
+            }
+        }
+    }
+
+    /**
+     * Tells whether the stack is the slender pass item.
+     *
+     * @param stack the stack to look at
+     * @return {@code true} if the stack carries the pass tag
+     * @since 2.21.0
+     */
+    public static boolean isPassItem(ItemStack stack) {
+        Byte tag = stack.getTag(Tags.ITEM_TAG);
+        return tag != null && tag == PASS_ITEM;
     }
 
     /**
