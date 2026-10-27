@@ -5,6 +5,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerCustomClickEvent;
+import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.network.ConnectionManager;
@@ -16,6 +17,9 @@ import net.onelitefeather.cygnus.utils.Items;
 import net.onelitefeather.pica.dialog.DialogTemplate;
 import net.theevilreaper.xerus.api.phase.Phase;
 
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
@@ -27,7 +31,12 @@ import java.util.function.Supplier;
  * following pages names the page it leads to, see {@link TutorialPages}.</p>
  *
  * <p>Right before the players are teleported onto the map, the item is taken away and an open
- * tutorial is closed, so nobody arrives in the round with a dialog in front of their eyes. Buttons
+ * tutorial is closed, so nobody arrives in the round with a dialog in front of their eyes. Only the
+ * players who opened the tutorial and did not close it with its own button are sent the close: a
+ * player who never opened it may still have the epilepsy warning in front of them, and that one has
+ * to be answered, not swept away. Escape closes the tutorial on the client alone, so such a reader is
+ * still sent the close; by then no other dialog can be open, since the warning has to be answered
+ * before the tutorial can be opened at all. Buttons
  * only answer a player who still holds the item, so a click that arrives after that opens nothing.
  * Dropping or moving the item is already ruled out by the game's global cancels.</p>
  *
@@ -41,6 +50,7 @@ public final class TutorialFeature implements GameFeature {
     private final Supplier<Phase> phase;
     private final ConnectionManager connections;
     private final TutorialPages pages;
+    private final Set<UUID> readers;
 
     /**
      * Creates the feature, builds the pages and puts its listeners on its node.
@@ -52,6 +62,7 @@ public final class TutorialFeature implements GameFeature {
         this.phase = phase;
         this.connections = connections;
         this.pages = new TutorialPages();
+        this.readers = ConcurrentHashMap.newKeySet();
         registerListeners();
     }
 
@@ -70,8 +81,11 @@ public final class TutorialFeature implements GameFeature {
         this.node.addListener(PlayerCustomClickEvent.class, this::handleClick);
         this.node.addListener(GamePrepareEvent.class, _ -> this.connections.getOnlinePlayers().forEach(player -> {
             Items.removeTutorialItem(player);
-            player.closeDialog();
+            if (this.readers.remove(player.getUuid())) {
+                player.closeDialog();
+            }
         }));
+        this.node.addListener(PlayerDisconnectEvent.class, event -> this.readers.remove(event.getPlayer().getUuid()));
     }
 
     private boolean inLobby() {
@@ -98,6 +112,7 @@ public final class TutorialFeature implements GameFeature {
             return;
         }
         if (TutorialPages.CLOSE_KEY.equals(event.getKey())) {
+            this.readers.remove(event.getPlayer().getUuid());
             event.getPlayer().closeDialog();
             return;
         }
@@ -107,6 +122,7 @@ public final class TutorialFeature implements GameFeature {
     private void open(Player player, Key key) {
         DialogTemplate page = this.pages.page(key);
         if (page != null) {
+            this.readers.add(player.getUuid());
             page.open(player);
         }
     }
