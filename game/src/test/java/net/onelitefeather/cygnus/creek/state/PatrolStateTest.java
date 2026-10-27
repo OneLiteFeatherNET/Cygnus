@@ -135,6 +135,23 @@ class PatrolStateTest {
         assertEquals(Set.of(FIRST), body.viewers);
     }
 
+    @Test
+    @DisplayName("While the survivors stay the same he is not shown again, but a new one sees him at once")
+    void showsOnlyWhenTheSurvivorsChange() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        PatrolState state = new PatrolState();
+        SurvivorView second = new SurvivorView(SECOND, new Pos(40, 40, 40), 0.0D, false);
+        state.enter(Contexts.context(0L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.0D, false)));
+
+        state.tick(Contexts.context(100L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.0D, false)));
+        state.tick(Contexts.context(200L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.0D, false)));
+        assertEquals(1, body.shows);
+
+        state.tick(Contexts.context(300L, body, Contexts.route(A), new ArrayList<>(), far(FIRST, 0.0D, false), second));
+        assertEquals(2, body.shows);
+        assertEquals(Set.of(FIRST, SECOND), body.viewers);
+    }
+
     /** Hands out A, then B, then A again, each with the given pause. */
     private static RouteProvider alternating(int pauseMillis) {
         AtomicInteger calls = new AtomicInteger();
@@ -511,6 +528,28 @@ class PatrolStateTest {
         assertSame(state, state.tick(deadEndContext(100L, body, route, vanished, 0.99D)));
         assertNull(body.goal, "he rests at the end");
         assertTrue(vanished.isEmpty());
+    }
+
+    @Test
+    @DisplayName("The trickster vanishes at a dead end on a roll the normal creek rests on")
+    void tricksterVanishesMoreAtDeadEnds() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 0));
+        RouteProvider route = towardsA(3000, true);
+        List<Pos> vanished = new ArrayList<>();
+        PatrolState trickster = new PatrolState();
+        trickster.enter(Contexts.mood(deadEndContext(0L, body, route, vanished, 0.7D), CreekMood.TRICKSTER));
+        trickster.tick(Contexts.mood(deadEndContext(0L, body, route, vanished, 0.7D), CreekMood.TRICKSTER));
+        body.position = A;
+
+        assertInstanceOf(VanishState.class,
+                trickster.tick(Contexts.mood(deadEndContext(100L, body, route, vanished, 0.7D), CreekMood.TRICKSTER)));
+
+        body.position = new Pos(0, 40, 0);
+        PatrolState normal = new PatrolState();
+        normal.enter(deadEndContext(0L, body, route, vanished, 0.7D));
+        normal.tick(deadEndContext(0L, body, route, vanished, 0.7D));
+        body.position = A;
+        assertSame(normal, normal.tick(deadEndContext(100L, body, route, vanished, 0.7D)));
     }
 
     @Test

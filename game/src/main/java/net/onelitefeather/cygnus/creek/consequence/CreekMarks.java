@@ -14,11 +14,11 @@ public interface CreekMarks {
     /** Marks that never give anyone away. */
     CreekMarks NONE = new CreekMarks() {
         @Override
-        public void stared(Player survivor) {
+        public void stared(Player survivor, long now) {
         }
 
         @Override
-        public void spotted(Player survivor) {
+        public void spotted(Player survivor, long now) {
         }
     };
 
@@ -26,15 +26,17 @@ public interface CreekMarks {
      * The patrolling creek stared at a survivor until the end.
      *
      * @param survivor the survivor it stared at
+     * @param now      the current time in milliseconds
      */
-    void stared(Player survivor);
+    void stared(Player survivor, long now);
 
     /**
      * A stalked survivor looked at the creek long enough that it moved away.
      *
      * @param survivor the survivor it stalks
+     * @param now      the current time in milliseconds
      */
-    void spotted(Player survivor);
+    void spotted(Player survivor, long now);
 
     /**
      * Forgets everything about the round that ended.

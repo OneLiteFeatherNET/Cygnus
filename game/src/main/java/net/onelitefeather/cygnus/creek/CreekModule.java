@@ -5,6 +5,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.onelitefeather.cygnus.GameFeature;
+import net.onelitefeather.cygnus.ambient.SoundPresetSource;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.map.GameMap;
@@ -42,6 +43,8 @@ public final class CreekModule implements GameFeature {
     private final CreekConfig config;
     private final GameMapProvider mapProvider;
     private final CreekService service;
+    private final CreekPossession possession;
+    private final MoodClock mood;
 
     /**
      * Builds the creek, with its step measured for the slow tick report.
@@ -56,11 +59,13 @@ public final class CreekModule implements GameFeature {
      * @param jumpScareManager plays the jump scare of a catch
      * @param staminaService   the stamina bars a catch drains
      * @param sections         measures how long each step takes
+     * @param gameTimeSeconds  how long a round lasts, which the creek's mood switch is measured against
      * @since 2.15.0
      */
     public CreekModule(CreekConfig config, CreekSettings settings, TeamService teamService,
                        GameMapProvider mapProvider, DreadSource dread, CreekWitness witness, CreekRespite respite,
-                       JumpScareManager jumpScareManager, StaminaService staminaService, TickSections sections) {
+                       JumpScareManager jumpScareManager, StaminaService staminaService, TickSections sections,
+                       int gameTimeSeconds) {
         this.config = config;
         this.mapProvider = mapProvider;
         // Every step and every catch runs on the scheduler thread, but Random is thread-safe
@@ -68,6 +73,16 @@ public final class CreekModule implements GameFeature {
         Random random = new Random();
         // One reveal for the catches and the marks, so the slender only ever sees the newest one.
         LocatorReveal reveal = new LocatorReveal(this.config.catching().betrayalGlowSeconds(), sections);
+        MoodClock mood = new MoodClock(gameTimeSeconds * 1000L, random);
+        this.mood = mood;
+        CatchTricks tricks = new CatchTricks(
+                new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.catching().slownessSeconds()),
+                new CatchSwap(() -> TeamHelper.survivorsOf(teamService), random),
+                new CatchSpawnTeleport(this::slenderSpawn),
+                new CatchLaunch(settings.launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
+                this.config.catching().swapChance(),
+                random,
+                mood);
         this.service = new CreekService(
                 this.config,
                 settings,
@@ -79,21 +94,18 @@ public final class CreekModule implements GameFeature {
                 witness,
                 respite,
                 new StagedCatchConsequence(
-                        new CatchTricks(
-                                new CatchEffects(jumpScareManager::force, staminaService::getFoodBar, this.config.catching().slownessSeconds()),
-                                new CatchSwap(() -> TeamHelper.survivorsOf(teamService), random),
-                                new CatchSpawnTeleport(this::slenderSpawn),
-                                new CatchLaunch(settings.launchHeight(), new LandingDamage(this.config.catching().launchDamage())),
-                                this.config.catching().swapChance(),
-                                random),
+                        tricks,
                         reveal,
                         () -> TeamHelper.slenderOf(teamService),
                         this.config,
                         random),
-                new RevealMarks(reveal, () -> TeamHelper.slenderOf(teamService), System::currentTimeMillis, random),
+                new RevealMarks(reveal, () -> TeamHelper.slenderOf(teamService), random, mood),
+                mood,
+                tricks::teleport,
                 System::currentTimeMillis,
                 random,
                 sections);
+        this.possession = new CreekPossession(this.service::creek, settings.sightRange(), this.config.sight().viewAngle());
         this.registerListeners();
     }
 
@@ -126,7 +138,17 @@ public final class CreekModule implements GameFeature {
      * @return the possession target
      */
     public PossessionTarget possessionTarget() {
-        return this.service;
+        return this.possession;
+    }
+
+    /**
+     * Lets the creek's mood color the given sound presets.
+     *
+     * @param base the presets before the mood
+     * @return the presets as the mood has them
+     */
+    public SoundPresetSource soundPresets(SoundPresetSource base) {
+        return new MoodPresets(base, this.mood);
     }
 
     /**

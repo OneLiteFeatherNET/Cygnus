@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.creek;
 import net.onelitefeather.cygnus.telemetry.TickSectionNames;
 import net.onelitefeather.cygnus.telemetry.TickSections;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
@@ -13,10 +12,12 @@ import net.onelitefeather.cygnus.common.creek.CreekRoute;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.consequence.catching.CatchConsequence;
+import net.onelitefeather.cygnus.creek.consequence.catching.CatchTrick;
 import net.onelitefeather.cygnus.creek.consequence.CreekMarks;
 import net.onelitefeather.cygnus.creek.consequence.PatrolHelper;
 import net.onelitefeather.cygnus.creek.consequence.StalkSounds;
-import net.onelitefeather.cygnus.creek.state.Calm;
+import net.onelitefeather.cygnus.common.page.event.PageFoundEvent;
+import net.onelitefeather.cygnus.creek.state.CreekTuning;
 import net.onelitefeather.cygnus.creek.state.HuntCooldowns;
 import net.onelitefeather.cygnus.creek.dread.CreekWitness;
 import net.onelitefeather.cygnus.creek.dread.DreadSource;
@@ -31,7 +32,6 @@ import net.onelitefeather.cygnus.creek.world.PathRoute;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 import net.onelitefeather.cygnus.event.GameFinishEvent;
 import net.onelitefeather.cygnus.event.GameStartEvent;
-import net.onelitefeather.cygnus.possession.PossessionTarget;
 import net.onelitefeather.cygnus.utils.RepeatingTask;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -55,10 +55,10 @@ import java.util.random.RandomGenerator;
  * </p>
  *
  * @author theEvilReaper
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2.15.0
  */
-public final class CreekService implements PossessionTarget {
+public final class CreekService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CreekService.class);
 
@@ -75,6 +75,8 @@ public final class CreekService implements PossessionTarget {
     private final CreekRespite respite;
     private final CatchConsequence consequence;
     private final CreekMarks marks;
+    private final CreekPressure pressure;
+    private final CatchTrick stareTrick;
     private final LongSupplier clock;
     private final RandomGenerator random;
     private final CreekSight sight;
@@ -85,9 +87,6 @@ public final class CreekService implements PossessionTarget {
     private final RepeatingTask task;
     private volatile @Nullable Creek creek;
     private volatile @Nullable CreekVariants variants;
-    /** The most survivors the round has had so far, which is what its calm is measured against. */
-    private int started;
-    private volatile Calm calm = Calm.NONE;
 
     /**
      * Sets up the service, with its step measured for the slow tick report.
@@ -103,6 +102,8 @@ public final class CreekService implements PossessionTarget {
      * @param respite     tells who the creek leaves alone for now
      * @param consequence what happens on a catch
      * @param marks       sometimes gives a survivor away to the slender outside of a catch
+     * @param mood        decides when the creek's mood switches and to which
+     * @param stareTrick  teleports a survivor at the end of a stare, for the trickster
      * @param clock       supplies the current time in milliseconds
      * @param random      the random source
      * @param sections    measures how long each step takes
@@ -111,7 +112,7 @@ public final class CreekService implements PossessionTarget {
     public CreekService(CreekConfig config, CreekSettings settings, Supplier<Set<Player>> survivors,
                           Supplier<? extends @Nullable Instance> instance, Supplier<List<CreekRoute>> routes,
                           BiFunction<Instance, Pos, CreekBody> bodies, DreadSource dread, CreekWitness witness,
-                          CreekRespite respite, CatchConsequence consequence, CreekMarks marks, LongSupplier clock, RandomGenerator random,
+                          CreekRespite respite, CatchConsequence consequence, CreekMarks marks, MoodClock mood, CatchTrick stareTrick, LongSupplier clock, RandomGenerator random,
                           TickSections sections) {
         this.task = new RepeatingTask(sections.wrap(TickSectionNames.CREEK, this::tick));
         this.config = config;
@@ -124,6 +125,8 @@ public final class CreekService implements PossessionTarget {
         this.respite = respite;
         this.consequence = consequence;
         this.marks = marks;
+        this.pressure = new CreekPressure(config, mood);
+        this.stareTrick = stareTrick;
         this.clock = clock;
         this.random = random;
         this.sight = new CreekSight(settings.sightRange(), config.sight().viewAngle());
@@ -140,6 +143,7 @@ public final class CreekService implements PossessionTarget {
     public void registerListener(EventNode<Event> node) {
         node.addListener(GameStartEvent.class, _ -> this.start());
         node.addListener(GameFinishEvent.class, _ -> this.stop());
+        node.addListener(PageFoundEvent.class, _ -> this.pressure.pageFound(this.clock.getAsLong()));
     }
 
     /**
@@ -156,9 +160,10 @@ public final class CreekService implements PossessionTarget {
         }
         // Every creek walks with its own cursor, so this one belongs to the patrolling creek alone.
         PathRoute pathRoute = new PathRoute(paths);
-        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.marks, this.witness,
+        Decoys decoys = new Decoys(this.bodies, this.sight, () -> this.tuning().revealMillis(), this.witness);
+        CreekRound round = new CreekRound(this.sight, this.spots, this.consequence, this.marks, this.stareTrick, decoys, this.witness,
                 new PatrolHelper(this.random), new StalkSounds(this.random), this.config, this.settings, this.random,
-                new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L), () -> this.calm);
+                new HuntCooldowns(this.config.hunt().cooldownSeconds() * 1000L), this::tuning);
         this.round = round;
         List<Pos> points = paths.allPoints();
 
@@ -166,11 +171,13 @@ public final class CreekService implements PossessionTarget {
         CreekBody body = this.bodies.apply(world, this.ground.settle(point).orElse(point));
         // Start hidden. The creek and its variants only show up once the survivors have had time to
         // spread out, the creek somewhere far away from all of them.
-        long showsUp = this.clock.getAsLong() + this.config.vanish().minSeconds() * 1000L;
+        long now = this.clock.getAsLong();
+        long showsUp = now + this.config.vanish().minSeconds() * 1000L;
         this.creek = new Creek(body, pathRoute, round, new VanishState(showsUp));
         this.variants = new CreekVariants(this.config, this.settings, this.spots, this.random, showsUp,
                 (spot, state) -> new Creek(this.bodies.apply(world, spot), new PathRoute(paths), round, state),
-                () -> this.calm);
+                this::tuning);
+        this.pressure.start(now);
         this.task.start(TICK_MILLIS, ChronoUnit.MILLIS);
     }
 
@@ -188,9 +195,7 @@ public final class CreekService implements PossessionTarget {
         // One snapshot for every creek: where the survivors are and how scared they are is the same for all.
         long now = this.clock.getAsLong();
         SurvivorSnapshot survivors = SurvivorSnapshot.take(this.survivors.get(), this.dread, this.respite, now);
-        // Measured against the fullest the round has been: survivors may still be joining in its first steps.
-        this.started = Math.max(this.started, survivors.size());
-        this.calm = Calm.of(this.started, survivors.size());
+        if (this.pressure.step(survivors.size(), now)) this.announceSwitch();
         CreekVariants currentVariants = this.variants;
         // Count every survivor here: hiding the patrol from the haunted is not being down to the last one.
         if (!this.config.activeWithLastSurvivor() && survivors.size() <= 1) {
@@ -202,6 +207,9 @@ public final class CreekService implements PossessionTarget {
             current.tick(survivors, haunted, now);
             if (currentVariants != null) currentVariants.tick(survivors, now);
         }
+        // Doppelgängers crumble or run out of time even once the creek is gone for good.
+        CreekRound currentRound = this.round;
+        if (currentRound != null) currentRound.decoys().tick(survivors, now);
     }
 
     /**
@@ -217,43 +225,33 @@ public final class CreekService implements PossessionTarget {
         if (current != null) current.remove();
         this.consequence.cleanUp();
         this.marks.cleanUp();
+        this.pressure.stop();
         CreekRound currentRound = this.round;
         this.round = null;
-        if (currentRound != null) currentRound.patrol().cleanUp();
-        this.started = 0;
-        this.calm = Calm.NONE;
+        if (currentRound != null) {
+            currentRound.patrol().cleanUp();
+            currentRound.decoys().clear();
+        }
     }
 
-    @Override
-    public @Nullable Entity possessable() {
-        Creek current = this.creek;
-        if (current == null) return null;
-        CreekState state = current.state();
-        if (state instanceof VanishState || state instanceof DoneState) return null;
-        return current.body().entity();
+    /**
+     * Lets everyone in the round hear that something changed, without telling them what.
+     */
+    private void announceSwitch() {
+        Instance world = this.instance.get();
+        if (world == null) return;
+        for (Player player : world.getPlayers()) {
+            player.playSound(MoodClock.SWITCH_SOUND);
+        }
     }
 
-    @Override
-    public void possess(UUID slender, double sightFactor) {
-        Creek current = this.creek;
-        if (current == null) return;
-        // The variants keep the normal sight. They haunt one survivor each and are none of the slender's business.
-        int range = (int) Math.round(this.settings.sightRange() * sightFactor);
-        current.body().observe(slender);
-        current.boost(new CreekSight(range, this.config.sight().viewAngle()));
-    }
-
-    @Override
-    public void release() {
-        Creek current = this.creek;
-        if (current == null) return;
-        current.body().observe(null);
-        current.boost(null);
-    }
-
-    @Override
-    public int sightRange() {
-        return this.settings.sightRange();
+    /**
+     * The values every creek of the round acts on right now.
+     *
+     * @return the values
+     */
+    CreekTuning tuning() {
+        return this.pressure.tuning();
     }
 
     @Nullable Creek creek() {

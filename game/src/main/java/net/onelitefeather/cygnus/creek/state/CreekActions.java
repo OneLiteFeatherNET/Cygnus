@@ -55,6 +55,14 @@ public interface CreekActions {
     void spotted(UUID survivor);
 
     /**
+     * The stalking creek leaves a doppelganger where the survivor it stalks can see it.
+     *
+     * @param survivor the id of the survivor it stalks, the only one who sees the doppelganger
+     * @param where    where the doppelganger stands
+     */
+    void decoy(UUID survivor, Pos where);
+
+    /**
      * The stalking creek makes itself heard by the survivor it stalks.
      *
      * @param survivor the id of the survivor it stalks

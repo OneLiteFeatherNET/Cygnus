@@ -8,6 +8,7 @@ import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
 import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
+import net.onelitefeather.cygnus.ambient.SoundPreset;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -89,6 +90,40 @@ class CygnusPlayerAmbientTest extends CygnusPlayerTestBase {
 
         assertTrue(sounds.collect().stream().anyMatch(packet -> packet.soundEvent() != SoundEvent.AMBIENT_CAVE),
                 "a terrified player should also hear sounds other than the cave");
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testSilentPresetPlaysNothing(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        CygnusPlayer player = (CygnusPlayer) connection.connect(instance, Pos.ZERO);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        for (int i = 0; i < 6000; i++) {
+            player.tickAmbient(1.0D, SoundPreset.HUNT);
+        }
+
+        sounds.assertEmpty();
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testStalkPresetOnlyPlaysTheQuietCave(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        TestConnection connection = env.createConnection();
+        CygnusPlayer player = (CygnusPlayer) connection.connect(instance, Pos.ZERO);
+        Collector<SoundEffectPacket> sounds = connection.trackIncoming(SoundEffectPacket.class);
+
+        for (int i = 0; i < 6000; i++) {
+            player.tickAmbient(1.0D, SoundPreset.STALK);
+        }
+
+        List<SoundEffectPacket> packets = sounds.collect();
+        assertFalse(packets.isEmpty(), "a stalked player should still hear the cave now and then");
+        assertTrue(packets.stream().allMatch(packet -> packet.soundEvent() == SoundEvent.AMBIENT_CAVE
+                        && packet.volume() == SoundPreset.STALK.volume()),
+                "a stalked player should only hear the cave, and quieter");
         env.destroyInstance(instance, true);
     }
 }

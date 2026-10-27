@@ -7,6 +7,7 @@ import net.onelitefeather.cygnus.creek.body.CreekBody;
 import net.onelitefeather.cygnus.creek.dread.HuntEnd;
 import net.onelitefeather.cygnus.creek.state.CreekActions;
 import net.onelitefeather.cygnus.creek.state.CreekContext;
+import net.onelitefeather.cygnus.creek.state.CreekMood;
 import net.onelitefeather.cygnus.creek.state.CreekState;
 import net.onelitefeather.cygnus.creek.state.HuntState;
 import net.onelitefeather.cygnus.creek.state.StalkState;
@@ -145,9 +146,11 @@ final class Creek {
      * @param noticed the survivors this creek pays attention to in this step
      */
     private void reportSightings(List<SurvivorView> noticed) {
-        Set<UUID> seen = new HashSet<>();
+        // Nobody sees the creek in most steps, so the set is only made once someone does.
+        Set<UUID> seen = Set.of();
         for (SurvivorView view : noticed) {
             if (!view.seesCreek()) continue;
+            if (seen.isEmpty()) seen = new HashSet<>();
             seen.add(view.id());
             if (!this.seenLastStep.contains(view.id())) this.round.witness().sighted(view.id());
         }
@@ -162,8 +165,8 @@ final class Creek {
         List<SurvivorView> noticed = ignored.isEmpty() ? views
                 : views.stream().filter(view -> !ignored.contains(view.id())).toList();
         return new CreekContext(now, noticed, this.body, this.route, this.round.spots(),
-                new Actions(this.round, survivors, ignored, this.body),
-                this.round.config(), this.round.settings(), this.round.random(), this.round.hunts(), this.round.calm().get());
+                new Actions(this.round, survivors, ignored, this.body, now),
+                this.round.config(), this.round.settings(), this.round.random(), this.round.hunts(), this.round.tuning().get());
     }
 
     /**
@@ -254,8 +257,9 @@ final class Creek {
      * @param survivors the survivors of the step
      * @param ignored   the survivors the creek leaves alone in the step
      * @param body      the creek's body
+     * @param now       the time of the step in milliseconds
      */
-    private record Actions(CreekRound round, SurvivorSnapshot survivors, Set<UUID> ignored, CreekBody body)
+    private record Actions(CreekRound round, SurvivorSnapshot survivors, Set<UUID> ignored, CreekBody body, long now)
             implements CreekActions {
 
         @Override
@@ -269,15 +273,22 @@ final class Creek {
         @Override
         public void selected(UUID survivor) {
             this.with(survivor, player -> {
-                this.round.patrol().selected(player, this::eyes, this.survivors.players());
-                this.round.marks().stared(player);
+                boolean teleported = this.round.tuning().get().mood() == CreekMood.TRICKSTER
+                        && this.round.stareTrick().perform(player);
+                if (!teleported) this.round.patrol().selected(player, this::eyes, this.survivors.players());
+                this.round.marks().stared(player, this.now);
                 this.round.witness().selected(survivor);
             });
         }
 
         @Override
         public void spotted(UUID survivor) {
-            this.with(survivor, this.round.marks()::spotted);
+            this.with(survivor, player -> this.round.marks().spotted(player, this.now));
+        }
+
+        @Override
+        public void decoy(UUID survivor, Pos where) {
+            this.with(survivor, player -> this.round.decoys().spawn(player, where, this.now));
         }
 
         @Override

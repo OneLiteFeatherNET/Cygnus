@@ -7,12 +7,12 @@ import net.minestom.testing.Env;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.creek.state.Contexts;
 import org.jetbrains.annotations.Nullable;
+import net.onelitefeather.cygnus.creek.state.CreekMood;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,11 +20,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RevealMarksIntegrationTest extends CygnusPlayerTestBase {
 
     private final List<Player> revealed = new ArrayList<>();
-    private final AtomicLong clock = new AtomicLong();
 
     private RevealMarks marks(@Nullable Player slender, double roll) {
-        return new RevealMarks((survivor, _) -> this.revealed.add(survivor), () -> slender, this.clock::get,
-                Contexts.rolling(roll));
+        return this.marks(slender, roll, CreekMood.NORMAL);
+    }
+
+    private RevealMarks marks(@Nullable Player slender, double roll, CreekMood mood) {
+        return new RevealMarks((survivor, _) -> this.revealed.add(survivor), () -> slender, Contexts.rolling(roll), () -> mood);
+    }
+
+    @Test
+    @DisplayName("The shadow marks a look at it with a chance of one half")
+    void shadowMarksLooksAtHalf(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        Player slender = env.createConnection().connect(instance, new Pos(5, 40, 0));
+
+        this.marks(slender, 0.49D, CreekMood.NORMAL).spotted(survivor, 0L);
+        assertTrue(this.revealed.isEmpty(), "the normal creek misses at 0.49");
+
+        this.marks(slender, 0.49D, CreekMood.SHADOW).spotted(survivor, 0L);
+        assertEquals(List.of(survivor), this.revealed);
     }
 
     @Test
@@ -34,10 +50,10 @@ class RevealMarksIntegrationTest extends CygnusPlayerTestBase {
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
         Player slender = env.createConnection().connect(instance, new Pos(5, 40, 0));
 
-        this.marks(slender, 0.5D).stared(survivor);
+        this.marks(slender, 0.5D).stared(survivor, 0L);
         assertTrue(this.revealed.isEmpty(), "a roll of one half misses");
 
-        this.marks(slender, 0.49D).stared(survivor);
+        this.marks(slender, 0.49D).stared(survivor, 0L);
         assertEquals(List.of(survivor), this.revealed);
     }
 
@@ -48,10 +64,10 @@ class RevealMarksIntegrationTest extends CygnusPlayerTestBase {
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
         Player slender = env.createConnection().connect(instance, new Pos(5, 40, 0));
 
-        this.marks(slender, 0.25D).spotted(survivor);
+        this.marks(slender, 0.25D).spotted(survivor, 0L);
         assertTrue(this.revealed.isEmpty(), "a roll of one quarter misses");
 
-        this.marks(slender, 0.24D).spotted(survivor);
+        this.marks(slender, 0.24D).spotted(survivor, 0L);
         assertEquals(List.of(survivor), this.revealed);
     }
 
@@ -64,12 +80,10 @@ class RevealMarksIntegrationTest extends CygnusPlayerTestBase {
         Player slender = env.createConnection().connect(instance, new Pos(5, 40, 0));
         RevealMarks marks = this.marks(slender, 0.0D);
 
-        marks.stared(survivor);
-        this.clock.set(RevealMarks.COOLDOWN_MILLIS - 1L);
-        marks.spotted(survivor);
-        marks.stared(other);
-        this.clock.set(RevealMarks.COOLDOWN_MILLIS);
-        marks.spotted(survivor);
+        marks.stared(survivor, 0L);
+        marks.spotted(survivor, RevealMarks.COOLDOWN_MILLIS - 1L);
+        marks.stared(other, RevealMarks.COOLDOWN_MILLIS - 1L);
+        marks.spotted(survivor, RevealMarks.COOLDOWN_MILLIS);
 
         assertEquals(List.of(survivor, other, survivor), this.revealed);
     }
@@ -82,9 +96,9 @@ class RevealMarksIntegrationTest extends CygnusPlayerTestBase {
         Player slender = env.createConnection().connect(instance, new Pos(5, 40, 0));
         RevealMarks marks = this.marks(slender, 0.0D);
 
-        marks.stared(survivor);
+        marks.stared(survivor, 0L);
         marks.cleanUp();
-        marks.stared(survivor);
+        marks.stared(survivor, 0L);
 
         assertEquals(List.of(survivor, survivor), this.revealed);
     }
@@ -95,7 +109,7 @@ class RevealMarksIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player survivor = env.createConnection().connect(instance, new Pos(0, 40, 0));
 
-        this.marks(null, 0.0D).stared(survivor);
+        this.marks(null, 0.0D).stared(survivor, 0L);
 
         assertTrue(this.revealed.isEmpty());
     }

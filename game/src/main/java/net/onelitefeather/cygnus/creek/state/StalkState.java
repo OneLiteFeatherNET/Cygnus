@@ -1,9 +1,11 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.onelitefeather.cygnus.common.config.CreekConfig;
 import net.onelitefeather.cygnus.creek.body.CreekBody;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -17,6 +19,11 @@ import java.util.random.RandomGenerator;
  * just out of view. The longer the stalk lasts, the closer it creeps: it starts at
  * {@code stalkMinDistance} to {@code stalkMaxDistance} away, as the map sets them, and ends at {@link #END_MIN_DISTANCE}
  * to {@link #END_MAX_DISTANCE}. The stalk is over when time runs out or the survivor is gone.
+ * </p>
+ * <p>
+ * In the shadow mood it comes back at the end distance right after a look, and once per stalk it
+ * may turn up behind a teammate instead, where only the stalked survivor sees it. In the trickster
+ * mood it may leave a doppelganger in the survivor's view once per stalk when it moves unseen.
  * </p>
  * <p>
  * It turns into a hunt once the survivor is scared enough, but only after it has run for
@@ -42,6 +49,24 @@ public final class StalkState implements CreekState {
     /** How far away it may still be at the end of a stalk, in blocks. */
     static final double END_MAX_DISTANCE = 15.0D;
 
+    /** The chance that the shadow turns up behind a teammate after a long look, once per stalk. */
+    static final double BEHIND_TEAMMATE_CHANCE = 0.35D;
+
+    /** How close to the target a teammate has to be for the shadow to stand behind them, in blocks. */
+    static final double TEAMMATE_RANGE = 30.0D;
+
+    /** How far behind the teammate the shadow stands, in blocks. */
+    static final double BEHIND_DISTANCE = 2.0D;
+
+    /** The chance that the trickster leaves a doppelganger when it moves unseen, once per stalk. */
+    static final double DECOY_CHANCE = 0.35D;
+
+    /** How close to the target the doppelganger stands at the least, in blocks. */
+    static final double DECOY_MIN_DISTANCE = 10.0D;
+
+    /** How far from the target the doppelganger stands at the most, in blocks. */
+    static final double DECOY_MAX_DISTANCE = 18.0D;
+
     /** The shortest gap between two sounds at the start of a stalk, in milliseconds. */
     static final long FIRST_GAP_MIN_MILLIS = 6000L;
 
@@ -59,6 +84,8 @@ public final class StalkState implements CreekState {
     private long startedAt;
     private long seenSince = -1L;
     private long nextSoundAt = -1L;
+    private boolean stoodBehindTeammate;
+    private boolean leftDecoy;
 
     /**
      * Sets up the stalk.
@@ -72,18 +99,16 @@ public final class StalkState implements CreekState {
     }
 
     /**
-     * Starts a stalk that lasts somewhere between {@code stalkMinSeconds} and
-     * {@code stalkMaxSeconds}.
+     * Starts a stalk that lasts as long as {@link CreekTuning#stalkMillis(RandomGenerator)} says.
      *
      * @param target the survivor to stalk
      * @param now    the current time in milliseconds
-     * @param config the settings
+     * @param tuning the values the creek acts on right now
      * @param random the random source
      * @return the state
      */
-    public static StalkState starting(UUID target, long now, CreekConfig config, RandomGenerator random) {
-        long seconds = random.nextLong(config.stalk().minSeconds(), config.stalk().maxSeconds() + 1L);
-        return new StalkState(target, now + seconds * 1000L);
+    public static StalkState starting(UUID target, long now, CreekTuning tuning, RandomGenerator random) {
+        return new StalkState(target, now + tuning.stalkMillis(random));
     }
 
     /**
@@ -121,7 +146,6 @@ public final class StalkState implements CreekState {
         if (found.isEmpty() || ctx.now() >= this.endsAt) return DoneState.INSTANCE;
 
         SurvivorView view = found.get();
-        CreekConfig config = ctx.config();
         if (this.mayHunt(ctx, view)) return HuntState.starting(this.target, ctx);
 
         CreekBody body = ctx.body();
@@ -129,7 +153,7 @@ public final class StalkState implements CreekState {
 
         if (view.seesCreek()) {
             if (this.seenSince < 0) this.seenSince = ctx.now();
-            if (ctx.now() - this.seenSince >= ctx.calm().stretch(config.stalk().revealMillis()) && this.relocate(ctx, view)) {
+            if (ctx.now() - this.seenSince >= ctx.tuning().revealMillis() && this.moveAfterLook(ctx, view)) {
                 this.seenSince = -1L;
                 ctx.actions().spotted(this.target);
                 // Gone without a sound. The next one only comes after a full gap.
@@ -140,9 +164,10 @@ public final class StalkState implements CreekState {
         this.seenSince = -1L;
 
         double distance = body.position().distance(view.position());
-        boolean moved = (distance < this.minDistance(ctx) || distance > ctx.calm().stretch(this.maxDistance(ctx)))
+        boolean moved = (distance < this.tooClose(ctx) || distance > ctx.tuning().stretch(this.maxDistance(ctx)))
                 && this.relocate(ctx, view);
         if (this.nextSoundAt < 0) this.scheduleSound(ctx);
+        if (moved) this.mayLeaveDecoy(ctx, view);
         if (moved || ctx.now() >= this.nextSoundAt) {
             ctx.actions().stalkSound(this.target, this.progress(ctx.now()));
             this.scheduleSound(ctx);
@@ -154,10 +179,10 @@ public final class StalkState implements CreekState {
      * Tells whether the stalk may turn into a hunt in this step.
      */
     private boolean mayHunt(CreekContext ctx, SurvivorView view) {
-        CreekConfig config = ctx.config();
-        if (view.dread() < config.hunt().threshold()) return false;
-        if (ctx.now() - this.startedAt < config.hunt().minStalkSeconds() * 1000L) return false;
-        return ctx.hunts().ready(this.target, ctx.now(), ctx.calm());
+        CreekTuning tuning = ctx.tuning();
+        if (view.dread() < tuning.huntThreshold()) return false;
+        if (ctx.now() - this.startedAt < tuning.huntMinStalkMillis()) return false;
+        return ctx.hunts().ready(this.target, ctx.now(), tuning);
     }
 
     /**
@@ -181,16 +206,82 @@ public final class StalkState implements CreekState {
     }
 
     /**
+     * Lets the trickster leave a doppelganger straight ahead of the survivor, once per stalk.
+     */
+    private void mayLeaveDecoy(CreekContext ctx, SurvivorView view) {
+        if (ctx.tuning().mood() != CreekMood.TRICKSTER || this.leftDecoy) return;
+        if (ctx.random().nextDouble() >= DECOY_CHANCE) return;
+        Pos target = view.position();
+        Vec ahead = target.direction().withY(0.0D);
+        // Looking straight up or down there is no ahead to put it in.
+        if (ahead.isZero()) return;
+        double distance = ctx.random().nextDouble(DECOY_MIN_DISTANCE, DECOY_MAX_DISTANCE);
+        Pos candidate = target.add(ahead.normalize().mul(distance));
+        ctx.spots().grounded(candidate)
+                .filter(spot -> ctx.spots().visibleFrom(view.eyes(), spot))
+                .ifPresent(spot -> {
+                    this.leftDecoy = true;
+                    ctx.actions().decoy(this.target, spot);
+                });
+    }
+
+    /**
+     * Moves the creek away after the survivor looked at it long enough. The shadow comes back
+     * closer, and once per stalk it may turn up behind a teammate instead.
+     *
+     * @return {@code false} if there was no free spot in this step
+     */
+    private boolean moveAfterLook(CreekContext ctx, SurvivorView view) {
+        if (ctx.tuning().mood() != CreekMood.SHADOW) return this.relocate(ctx, view);
+        if (!this.stoodBehindTeammate && ctx.random().nextDouble() < BEHIND_TEAMMATE_CHANCE
+                && this.behindTeammate(ctx, view)) {
+            this.stoodBehindTeammate = true;
+            return true;
+        }
+        return this.relocate(ctx, view, END_MIN_DISTANCE, END_MAX_DISTANCE);
+    }
+
+    /**
+     * Puts the creek right behind the teammate closest to the survivor, where the survivor sees it.
+     * Only the survivor does, the teammate never sees this creek.
+     *
+     * @return {@code false} if no teammate is close enough or there is no floor behind them
+     */
+    private boolean behindTeammate(CreekContext ctx, SurvivorView view) {
+        Pos target = view.position();
+        Optional<SurvivorView> teammate = ctx.survivors().stream()
+                .filter(other -> !other.id().equals(this.target) && !other.spared())
+                .filter(other -> other.position().distance(target) <= TEAMMATE_RANGE)
+                .min(Comparator.comparingDouble(other -> other.position().distance(target)));
+        if (teammate.isEmpty()) return false;
+        Pos mate = teammate.get().position();
+        Vec away = new Vec(mate.x() - target.x(), 0.0D, mate.z() - target.z());
+        if (away.isZero()) return false;
+        Optional<Pos> spot = ctx.spots().grounded(mate.add(away.normalize().mul(BEHIND_DISTANCE)))
+                .filter(candidate -> ctx.spots().visibleFrom(view.eyes(), candidate));
+        spot.ifPresent(ctx.body()::teleport);
+        return spot.isPresent();
+    }
+
+    /**
      * Moves the creek to a new spot just outside the survivor's view.
      *
      * @return {@code false} if there was no free spot in this step
      */
     private boolean relocate(CreekContext ctx, SurvivorView view) {
+        return this.relocate(ctx, view, this.minDistance(ctx), this.maxDistance(ctx));
+    }
+
+    /**
+     * Moves the creek to a new spot just outside the survivor's view, within the given band.
+     *
+     * @return {@code false} if there was no free spot in this step
+     */
+    private boolean relocate(CreekContext ctx, SurvivorView view, double min, double max) {
         CreekConfig config = ctx.config();
-        double min = this.minDistance(ctx);
         // The band's own minimum keeps the creek off the survivor. The fixed personal space would
         // find no spot at all once the band comes closer than that.
-        Optional<Pos> spot = ctx.spots().beside(view.position(), min, this.maxDistance(ctx),
+        Optional<Pos> spot = ctx.spots().beside(view.position(), min, max,
                 config.stalk().minAngle(), config.stalk().maxAngle(), List.of(view.eyes()), min, ctx.random());
         spot.ifPresent(ctx.body()::teleport);
         return spot.isPresent();
@@ -203,6 +294,15 @@ public final class StalkState implements CreekState {
         long length = this.endsAt - this.startedAt;
         if (length <= 0) return 1.0D;
         return Math.clamp((double) (now - this.startedAt) / length, 0.0D, 1.0D);
+    }
+
+    /**
+     * How close the creek may stand before it moves back. The shadow comes back closer after a look,
+     * so it only moves back once it is closer than the end of a stalk.
+     */
+    private double tooClose(CreekContext ctx) {
+        double min = this.minDistance(ctx);
+        return ctx.tuning().mood() == CreekMood.SHADOW ? Math.min(min, END_MIN_DISTANCE) : min;
     }
 
     private double minDistance(CreekContext ctx) {

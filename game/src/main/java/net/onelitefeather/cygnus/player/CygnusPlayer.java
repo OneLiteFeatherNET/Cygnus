@@ -15,6 +15,7 @@ import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.TaskSchedule;
+import net.onelitefeather.cygnus.ambient.SoundPreset;
 import net.onelitefeather.cygnus.common.player.InstanceSwitchChunkPlayer;
 import net.onelitefeather.cygnus.telemetry.CygnusAttributes;
 import net.onelitefeather.cygnus.telemetry.KickTracer;
@@ -488,24 +489,38 @@ public final class CygnusPlayer extends InstanceSwitchChunkPlayer {
      * @param dread how scared the player is, between {@code 0} and {@code 1}
      */
     public void tickAmbient(double dread) {
-        double fear = Math.clamp(dread, 0.0D, 1.0D);
+        this.tickAmbient(dread, SoundPreset.FREE);
+    }
+
+    /**
+     * Plays the ambient sounds on player tick, as far as the given preset lets them.
+     *
+     * <p>A silent preset pauses the gap, so the next sound does not come right after the silence.
+     * Otherwise the preset caps the fear the gap is paced by and sets how loud the sound is.</p>
+     *
+     * @param dread  how scared the player is, between {@code 0} and {@code 1}
+     * @param preset what the ambient sounds may do right now
+     */
+    public void tickAmbient(double dread, SoundPreset preset) {
+        if (preset.silent()) return;
+        double fear = preset.cap(Math.clamp(dread, 0.0D, 1.0D));
         double interval = CALM_AMBIENT_INTERVAL_TICKS
                 - fear * (CALM_AMBIENT_INTERVAL_TICKS - TERRIFIED_AMBIENT_INTERVAL_TICKS);
         ambientTicks++;
 
         if (ambientTicks >= interval * ambientJitter) {
-            playAmbientSound(fear);
+            playAmbientSound(fear, preset.volume());
             ambientTicks = 0;
             ambientJitter = rollAmbientJitter();
         }
     }
 
-    private void playAmbientSound(double fear) {
+    private void playAmbientSound(double fear, float volume) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         SoundEvent event = fear >= EERIE_DREAD_THRESHOLD && random.nextBoolean()
                 ? EERIE_SOUNDS[random.nextInt(EERIE_SOUNDS.length)]
                 : SoundEvent.AMBIENT_CAVE;
-        playSound(Sound.sound(event, Sound.Source.MASTER, 1F, getRandomPitchValue()), getPosition());
+        playSound(Sound.sound(event, Sound.Source.MASTER, volume, getRandomPitchValue()), getPosition());
     }
 
     private static double rollAmbientJitter() {

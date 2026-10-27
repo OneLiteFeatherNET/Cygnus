@@ -1,6 +1,7 @@
 package net.onelitefeather.cygnus.creek.world;
 
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.instance.Instance;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,6 +16,9 @@ import java.util.function.Supplier;
  * @since 2.15.0
  */
 public final class InstanceGround implements Ground {
+
+    /** How far apart the points of a line of sight are checked, in blocks. */
+    static final double RAY_STEP = 0.25D;
 
     /** How many blocks above the candidate the search starts. */
     static final int SEARCH_UP = 4;
@@ -49,6 +53,19 @@ public final class InstanceGround implements Ground {
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public boolean open(Pos from, Pos to) {
+        Instance world = this.instance.get();
+        if (world == null) return false;
+        Vec line = to.sub(from).asVec();
+        int steps = (int) Math.ceil(line.length() / RAY_STEP);
+        for (int step = 1; step < steps; step++) {
+            Pos point = from.add(line.mul((double) step / steps));
+            if (!world.isChunkLoaded(point) || world.getBlock(point).solid()) return false;
+        }
+        return true;
     }
 
     private static boolean hasRoom(Instance world, int x, int y, int z) {

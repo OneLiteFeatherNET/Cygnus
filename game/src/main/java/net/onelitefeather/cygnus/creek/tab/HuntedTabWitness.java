@@ -136,6 +136,11 @@ public final class HuntedTabWitness implements CreekWitness {
         this.delegate.selected(survivor);
     }
 
+    @Override
+    public void crumbled(UUID survivor) {
+        this.delegate.crumbled(survivor);
+    }
+
     /**
      * A survivor's name before the mark, the marked name, and how many creeks hunt them.
      */

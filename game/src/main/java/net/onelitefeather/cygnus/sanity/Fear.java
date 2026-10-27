@@ -1,5 +1,7 @@
 package net.onelitefeather.cygnus.sanity;
 
+import net.onelitefeather.cygnus.ambient.SoundPreset;
+
 /**
  * One survivor's fear.
  * <p>
@@ -38,6 +40,8 @@ final class Fear {
     private long updatedAt;
     private long lastSightingAt;
     private long lastStalkedAt;
+    private long quietUntil;
+    private int hunts;
 
     /**
      * Creates a calm survivor's fear.
@@ -54,6 +58,7 @@ final class Fear {
         this.updatedAt = now;
         this.lastSightingAt = NEVER;
         this.lastStalkedAt = NEVER;
+        this.quietUntil = NEVER;
     }
 
     /**
@@ -109,6 +114,44 @@ final class Fear {
         if (this.lastSightingAt != NEVER && now - this.lastSightingAt < cooldownMillis) return false;
         this.lastSightingAt = now;
         return true;
+    }
+
+    /**
+     * Keeps the ambient sounds quiet for a while after a scare. A longer silence that is still
+     * running is kept.
+     *
+     * @param until the end of the silence, in milliseconds
+     */
+    synchronized void hush(long until) {
+        this.quietUntil = Math.max(this.quietUntil, until);
+    }
+
+    /**
+     * A creek started to hunt the survivor.
+     */
+    synchronized void hunted() {
+        this.hunts++;
+    }
+
+    /**
+     * A creek stopped hunting the survivor.
+     */
+    synchronized void huntEnded() {
+        if (this.hunts > 0) this.hunts--;
+    }
+
+    /**
+     * Tells what the ambient sounds have to make room for: a hunt, then the silence after a scare,
+     * then a stalk.
+     *
+     * @param now the current time in milliseconds
+     * @return the preset
+     */
+    synchronized SoundPreset preset(long now) {
+        if (this.hunts > 0) return SoundPreset.HUNT;
+        if (now < this.quietUntil) return SoundPreset.SCARE;
+        if (this.lastStalkedAt != NEVER && now - this.lastStalkedAt <= STALK_GAP_MILLIS) return SoundPreset.STALK;
+        return SoundPreset.FREE;
     }
 
     /**

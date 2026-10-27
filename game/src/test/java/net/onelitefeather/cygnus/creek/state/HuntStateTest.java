@@ -52,6 +52,33 @@ class HuntStateTest {
     }
 
     @Test
+    @DisplayName("The hunter creeps on towards the target while it watches him")
+    void hunterCreepsWhileWatched() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 10));
+        CreekContext ctx = Contexts.mood(at(0L, body, new ArrayList<>(), true), CreekMood.HUNTER);
+
+        new HuntState(TARGET, 30_000L).tick(ctx);
+
+        assertFalse(body.frozen);
+        assertEquals(TARGET_POS, body.goal);
+        assertEquals(ctx.tuning().watchedHuntSpeed(), body.speed, 1.0E-9);
+    }
+
+    @Test
+    @DisplayName("Watched, the hunter never catches, however close he gets, but he does once the target looks away")
+    void creepingNeverCatchesWhileWatched() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, 1));
+        List<UUID> caught = new ArrayList<>();
+        HuntState state = new HuntState(TARGET, 30_000L);
+
+        assertSame(state, state.tick(Contexts.mood(at(0L, body, caught, true), CreekMood.HUNTER)));
+        assertTrue(caught.isEmpty());
+
+        assertSame(DoneState.INSTANCE, state.tick(Contexts.mood(at(100L, body, caught, false), CreekMood.HUNTER)));
+        assertEquals(List.of(TARGET), caught);
+    }
+
+    @Test
     @DisplayName("Unseen, he closes in")
     void closesInWhenUnseen() {
         RecordingBody body = new RecordingBody(new Pos(0, 40, 10));
@@ -154,8 +181,8 @@ class HuntStateTest {
 
         new HuntState(TARGET, 30_000L).tick(Contexts.hunting(5_000L, body, hunts, new ArrayList<>(), target(false)));
 
-        assertFalse(hunts.ready(TARGET, 49_999L, Calm.NONE));
-        assertTrue(hunts.ready(TARGET, 50_000L, Calm.NONE));
+        assertFalse(hunts.ready(TARGET, 49_999L, new CreekTuning(Contexts.CONFIG, Calm.NONE, CreekMood.NORMAL)));
+        assertTrue(hunts.ready(TARGET, 50_000L, new CreekTuning(Contexts.CONFIG, Calm.NONE, CreekMood.NORMAL)));
     }
 
     @Test
@@ -168,7 +195,7 @@ class HuntStateTest {
                 .tick(Contexts.hunting(30_000L, body, hunts, new ArrayList<>(), target(false)));
 
         assertSame(DoneState.INSTANCE, next);
-        assertFalse(hunts.ready(TARGET, 74_999L, Calm.NONE));
+        assertFalse(hunts.ready(TARGET, 74_999L, new CreekTuning(Contexts.CONFIG, Calm.NONE, CreekMood.NORMAL)));
     }
 
     @Test
@@ -179,7 +206,7 @@ class HuntStateTest {
 
         new HuntState(TARGET, 30_000L).tick(Contexts.hunting(0L, body, hunts, new ArrayList<>(), target(false)));
 
-        assertTrue(hunts.ready(TARGET, 0L, Calm.NONE));
+        assertTrue(hunts.ready(TARGET, 0L, new CreekTuning(Contexts.CONFIG, Calm.NONE, CreekMood.NORMAL)));
     }
 
     @Test

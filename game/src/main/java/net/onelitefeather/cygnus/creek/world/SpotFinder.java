@@ -52,6 +52,29 @@ public final class SpotFinder {
     }
 
     /**
+     * Checks whether someone can see the creek at a spot: it is inside their view cone and no
+     * block is in the way.
+     *
+     * @param eyes where their eyes are, including where they are looking
+     * @param spot where the creek's feet would be
+     * @return {@code true} if they would see it
+     */
+    public boolean visibleFrom(Pos eyes, Pos spot) {
+        Pos body = spot.add(0, BODY_CENTRE, 0);
+        return this.sight.inView(eyes, body) && this.ground.open(eyes, body);
+    }
+
+    /**
+     * Puts a candidate onto the floor.
+     *
+     * @param candidate the spot to try
+     * @return the spot on the floor, or empty if there is no floor to stand on
+     */
+    public Optional<Pos> grounded(Pos candidate) {
+        return this.ground.settle(candidate);
+    }
+
+    /**
      * Puts a candidate onto the floor and keeps it only if nobody would see the creek there.
      *
      * @param candidate     the spot to try

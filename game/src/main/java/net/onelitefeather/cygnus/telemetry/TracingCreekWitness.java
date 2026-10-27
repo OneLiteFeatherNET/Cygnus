@@ -94,6 +94,11 @@ public final class TracingCreekWitness implements CreekWitness {
     }
 
     @Override
+    public void crumbled(UUID survivor) {
+        this.delegate.crumbled(survivor);
+    }
+
+    @Override
     public void hunted(UUID survivor) {
         if (this.hunts != null) {
             this.hunts.started(survivor);

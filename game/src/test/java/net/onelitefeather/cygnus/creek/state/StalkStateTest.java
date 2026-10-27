@@ -1,12 +1,14 @@
 package net.onelitefeather.cygnus.creek.state;
 
 import net.minestom.server.coordinate.Pos;
+import net.onelitefeather.cygnus.creek.world.Ground;
 import net.onelitefeather.cygnus.creek.world.SpotFinder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -140,6 +142,179 @@ class StalkStateTest {
         state.tick(Contexts.context(700L, body, Contexts.route(), actions, new Random(7), target(0.3D, true)));
 
         assertEquals(List.of(TARGET), spotted);
+    }
+
+    /** Answers the first roll with the given value and every later one from a seeded source. */
+    private static RandomGenerator firstRoll(double first) {
+        Random rest = new Random(7);
+        return new RandomGenerator() {
+            private boolean rolled;
+
+            @Override
+            public long nextLong() {
+                return rest.nextLong();
+            }
+
+            @Override
+            public double nextDouble() {
+                if (this.rolled) return rest.nextDouble();
+                this.rolled = true;
+                return first;
+            }
+        };
+    }
+
+    private static CreekContext looked(long now, RecordingBody body, RandomGenerator random, CreekMood mood,
+                                       SurvivorView... survivors) {
+        return Contexts.mood(Contexts.context(now, body, Contexts.route(), Contexts.NO_ACTIONS, random, survivors), mood);
+    }
+
+    /** Another survivor ten blocks in front of the target. */
+    private static final SurvivorView TEAMMATE = new SurvivorView(OTHER, new Pos(0, 40, 10), 0.0D, false);
+
+    @Test
+    @DisplayName("The shadow, looked at long enough, turns up right behind a teammate in the target's view")
+    void shadowStandsBehindATeammate() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        RandomGenerator random = firstRoll(0.0D);
+
+        state.tick(looked(0L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+        state.tick(looked(700L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+
+        assertEquals(new Pos(0, 40, 12).asVec(), body.position.asVec());
+        assertTrue(Contexts.SIGHT.inView(target(0.3D, true).eyes(), body.position.add(0, SpotFinder.BODY_CENTRE, 0)));
+    }
+
+    @Test
+    @DisplayName("The shadow stands behind a teammate only once per stalk")
+    void onlyOncePerStalk() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        RandomGenerator random = firstRoll(0.0D);
+        state.tick(looked(0L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+        state.tick(looked(700L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+
+        state.tick(looked(800L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+        state.tick(looked(1500L, body, random, CreekMood.SHADOW, target(0.3D, true), TEAMMATE));
+
+        assertEquals(2, body.teleports.size());
+        assertFalse(Contexts.SIGHT.inView(target(0.3D, true).eyes(), body.position.add(0, SpotFinder.BODY_CENTRE, 0)),
+                "the second time he moves out of sight as usual");
+    }
+
+    @Test
+    @DisplayName("Without a teammate nearby the shadow moves out of sight as usual, but comes back closer")
+    void noTeammateRelocatesAsUsual() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        RandomGenerator random = firstRoll(0.0D);
+
+        state.tick(looked(0L, body, random, CreekMood.SHADOW, target(0.3D, true)));
+        state.tick(looked(700L, body, random, CreekMood.SHADOW, target(0.3D, true)));
+
+        assertEquals(1, body.teleports.size());
+        double distance = body.position.distance(target(0.3D, true).position());
+        assertTrue(distance >= StalkState.END_MIN_DISTANCE - 1.0E-6 && distance <= StalkState.END_MAX_DISTANCE + 1.0E-6,
+                "distance was " + distance);
+        assertFalse(Contexts.SIGHT.inView(target(0.3D, true).eyes(), body.position.add(0, SpotFinder.BODY_CENTRE, 0)));
+    }
+
+    @Test
+    @DisplayName("After coming back closer, the shadow stays there unheard instead of jumping back into the band")
+    void shadowStaysCloserAfterLook() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        RandomGenerator random = firstRoll(0.99D);
+        List<Double> sounds = new ArrayList<>();
+        CreekActions actions = Contexts.actions(_ -> {}, _ -> {}, _ -> {}, (_, _) -> {}, _ -> {},
+                (_, progress) -> sounds.add(progress));
+        state.tick(Contexts.mood(Contexts.context(0L, body, Contexts.route(), actions, random, target(0.3D, true)), CreekMood.SHADOW));
+        state.tick(Contexts.mood(Contexts.context(700L, body, Contexts.route(), actions, random, target(0.3D, true)), CreekMood.SHADOW));
+        Pos closer = body.position;
+
+        state.tick(Contexts.mood(Contexts.context(800L, body, Contexts.route(), actions, random, target(0.3D, false)), CreekMood.SHADOW));
+
+        assertEquals(closer, body.position, "he stays where he came back to");
+        assertTrue(sounds.isEmpty(), "and makes no sound");
+    }
+
+    @Test
+    @DisplayName("The normal creek ignores teammates and keeps its distance after a look")
+    void normalUnchanged() {
+        RecordingBody body = new RecordingBody(IN_THE_BAND);
+        StalkState state = new StalkState(TARGET, 60_000L);
+        RandomGenerator random = firstRoll(0.0D);
+
+        state.tick(looked(0L, body, random, CreekMood.NORMAL, target(0.3D, true), TEAMMATE));
+        state.tick(looked(700L, body, random, CreekMood.NORMAL, target(0.3D, true), TEAMMATE));
+
+        double distance = body.position.distance(target(0.3D, true).position());
+        assertTrue(distance >= 20 - 1.0E-6 && distance <= 35 + 1.0E-6, "distance was " + distance);
+    }
+
+    private static CreekContext decoying(long now, RecordingBody body, List<Pos> decoys, CreekMood mood) {
+        CreekActions actions = Contexts.actions(_ -> {}, _ -> {}, _ -> {}, (_, _) -> {}, _ -> {}, (_, _) -> {}, _ -> {},
+                (survivor, where) -> {
+                    assertEquals(TARGET, survivor);
+                    decoys.add(where);
+                });
+        return Contexts.mood(Contexts.context(now, body, Contexts.route(), actions, Contexts.rolling(0.0D),
+                target(0.3D, false)), mood);
+    }
+
+    @Test
+    @DisplayName("Moving unseen, the trickster once per stalk leaves a doppelganger in the target's view")
+    void tricksterPlacesADecoy() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -10));
+        StalkState state = new StalkState(TARGET, 60_000L);
+        List<Pos> decoys = new ArrayList<>();
+
+        state.tick(decoying(0L, body, decoys, CreekMood.TRICKSTER));
+
+        assertEquals(1, decoys.size());
+        Pos decoy = decoys.getFirst();
+        double distance = decoy.distance(target(0.3D, false).position());
+        assertTrue(distance >= StalkState.DECOY_MIN_DISTANCE - 1.0E-6 && distance <= StalkState.DECOY_MAX_DISTANCE + 1.0E-6,
+                "distance was " + distance);
+        assertTrue(Contexts.SIGHT.inView(target(0.3D, false).eyes(), decoy.add(0, SpotFinder.BODY_CENTRE, 0)));
+
+        body.position = new Pos(0, 40, -10);
+        state.tick(decoying(100L, body, decoys, CreekMood.TRICKSTER));
+        assertEquals(1, decoys.size(), "only one per stalk");
+    }
+
+    @Test
+    @DisplayName("The trickster leaves no doppelganger where a wall hides it from the target")
+    void noDecoyBehindAWall() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -10));
+        List<Pos> decoys = new ArrayList<>();
+        SpotFinder walled = new SpotFinder(Contexts.SETTINGS.sightRange(), new Ground() {
+            @Override
+            public Optional<Pos> settle(Pos candidate) {
+                return Optional.of(candidate);
+            }
+
+            @Override
+            public boolean open(Pos from, Pos to) {
+                return false;
+            }
+        });
+
+        new StalkState(TARGET, 60_000L).tick(Contexts.spots(decoying(0L, body, decoys, CreekMood.TRICKSTER), walled));
+
+        assertTrue(decoys.isEmpty());
+    }
+
+    @Test
+    @DisplayName("The normal creek never leaves a doppelganger")
+    void normalPlacesNoDecoy() {
+        RecordingBody body = new RecordingBody(new Pos(0, 40, -10));
+        List<Pos> decoys = new ArrayList<>();
+
+        new StalkState(TARGET, 60_000L).tick(decoying(0L, body, decoys, CreekMood.NORMAL));
+
+        assertTrue(decoys.isEmpty());
     }
 
     @Test
