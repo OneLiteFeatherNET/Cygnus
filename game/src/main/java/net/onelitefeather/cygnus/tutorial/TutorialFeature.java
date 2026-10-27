@@ -34,9 +34,8 @@ import java.util.function.Supplier;
  * tutorial is closed, so nobody arrives in the round with a dialog in front of their eyes. Only the
  * players who opened the tutorial and did not close it with its own button are sent the close: a
  * player who never opened it may still have the epilepsy warning in front of them, and that one has
- * to be answered, not swept away. Escape closes the tutorial on the client alone, so such a reader is
- * still sent the close; by then no other dialog can be open, since the warning has to be answered
- * before the tutorial can be opened at all. Buttons
+ * to be answered, not swept away. Escape runs the close button in the footer of every page, so it
+ * reports back like a click on close. Buttons
  * only answer a player who still holds the item, so a click that arrives after that opens nothing.
  * Dropping or moving the item is already ruled out by the game's global cancels.</p>
  *

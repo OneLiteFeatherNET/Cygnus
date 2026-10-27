@@ -70,8 +70,8 @@ public final class Items {
     /** The hotbar slot of the lobby's statistics item, the middle one. */
     public static final int STATS_SLOT = 4;
 
-    /** The hotbar slot of the lobby's tutorial item, left of the statistics item. */
-    public static final int TUTORIAL_SLOT = 2;
+    /** The hotbar slot of the lobby's tutorial item, right next to the server item. */
+    public static final int TUTORIAL_SLOT = 1;
 
     /** The hotbar slot of the lobby's server item, the first one. */
     public static final int SERVER_SLOT = 0;
@@ -126,7 +126,7 @@ public final class Items {
             .set(Tags.ITEM_TAG, STATS_ITEM)
             .build();
 
-    private static final ItemStack tutorial = ItemStack.builder(Material.KNOWLEDGE_BOOK)
+    private static final ItemStack tutorial = ItemStack.builder(Material.ENCHANTED_BOOK)
             .customName(Component.text("How to play", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false))
             .lore(lore("Right click to learn how", "each role plays"))
             .set(Tags.ITEM_TAG, TUTORIAL_ITEM)
