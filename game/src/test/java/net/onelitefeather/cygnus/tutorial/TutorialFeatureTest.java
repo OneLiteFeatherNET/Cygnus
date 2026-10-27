@@ -214,6 +214,7 @@ class TutorialFeatureTest {
     @DisplayName("Right before the teleport the item is taken away and the tutorial closed")
     void teleportTakesTheItemAndClosesTheDialog() {
         spawn();
+        click(this.player, TutorialPages.SURVIVOR_RULES_KEY);
         this.player.getInventory().setItemStack(Items.HEAL_SLOT, ItemStack.of(Material.SUGAR));
         Collector<ClearDialogPacket> clears = this.connection.trackIncoming(ClearDialogPacket.class);
 
@@ -222,6 +223,31 @@ class TutorialFeatureTest {
         assertFalse(Items.hasTutorialItem(this.player), "the item must be gone before the teleport");
         assertEquals(Material.SUGAR, this.player.getInventory().getItemStack(Items.HEAL_SLOT).material(), "the painkillers stay");
         clears.assertSingle();
+    }
+
+    @Test
+    @DisplayName("Right before the teleport a player who never opened the tutorial keeps their dialog")
+    void teleportLeavesOtherDialogsOpen() {
+        spawn();
+        Collector<ClearDialogPacket> clears = this.connection.trackIncoming(ClearDialogPacket.class);
+
+        this.feature.node().call(new GamePrepareEvent());
+
+        assertEquals(List.of(), clears.collect(),
+                "the epilepsy warning may still be open and has to be answered, not swept away");
+    }
+
+    @Test
+    @DisplayName("Right before the teleport a player who already closed the tutorial keeps their dialog")
+    void teleportLeavesClosedReadersAlone() {
+        spawn();
+        click(this.player, TutorialPages.SURVIVOR_RULES_KEY);
+        click(this.player, TutorialPages.CLOSE_KEY);
+        Collector<ClearDialogPacket> clears = this.connection.trackIncoming(ClearDialogPacket.class);
+
+        this.feature.node().call(new GamePrepareEvent());
+
+        assertEquals(List.of(), clears.collect(), "a closed tutorial has nothing left to close");
     }
 
     @Test
