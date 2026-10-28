@@ -3,6 +3,7 @@ package net.onelitefeather.cygnus.common.config;
 import static net.onelitefeather.cygnus.common.config.ConfigChecks.atLeast;
 import static net.onelitefeather.cygnus.common.config.ConfigChecks.below;
 import static net.onelitefeather.cygnus.common.config.ConfigChecks.between;
+import static net.onelitefeather.cygnus.common.config.ConfigChecks.notNegative;
 
 import net.kyori.adventure.key.Key;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
@@ -215,17 +216,32 @@ public record GameConfig(
     /**
      * The player limits and timings of a round.
      *
-     * @param minPlayers the number of players needed to start the countdown
-     * @param maxPlayers the number of players allowed in a round
-     * @param lobbyTime  the countdown in seconds, longer than {@link #FORCE_START_TIME}
-     * @param gameTime   the length of a round in seconds
+     * @param minPlayers    the number of players needed to start the countdown
+     * @param maxPlayers    the number of players allowed in a round
+     * @param lobbyTime     the countdown in seconds, longer than {@link #FORCE_START_TIME}
+     * @param gameTime      the length of a round in seconds
+     * @param maxSpectators how many players who join a running round may watch it; 0 turns late joining off
      */
-    public record Round(int minPlayers, int maxPlayers, int lobbyTime, int gameTime) {
+    public record Round(int minPlayers, int maxPlayers, int lobbyTime, int gameTime, int maxSpectators) {
 
+        public static final int DEFAULT_MAX_SPECTATORS = 8;
         public static final Round DEFAULT = new Round(2, 13, 30, 900);
 
         public Round {
             atLeast("lobbyTime", lobbyTime, FORCE_START_TIME + 1);
+            notNegative("maxSpectators", maxSpectators);
+        }
+
+        /**
+         * Creates the round settings without a spectator limit, which takes {@link #DEFAULT_MAX_SPECTATORS}.
+         *
+         * @param minPlayers the number of players needed to start the countdown
+         * @param maxPlayers the number of players allowed in a round
+         * @param lobbyTime  the countdown in seconds, longer than {@link #FORCE_START_TIME}
+         * @param gameTime   the length of a round in seconds
+         */
+        public Round(int minPlayers, int maxPlayers, int lobbyTime, int gameTime) {
+            this(minPlayers, maxPlayers, lobbyTime, gameTime, DEFAULT_MAX_SPECTATORS);
         }
 
         /**
@@ -239,7 +255,8 @@ public record GameConfig(
                     root.getInt("minPlayers", DEFAULT.minPlayers()),
                     root.getInt("maxPlayers", DEFAULT.maxPlayers()),
                     root.getInt("lobbyTime", DEFAULT.lobbyTime()),
-                    root.getInt("gameTime", DEFAULT.gameTime())), DEFAULT);
+                    root.getInt("gameTime", DEFAULT.gameTime()),
+                    root.getInt("maxSpectators", DEFAULT.maxSpectators())), DEFAULT);
         }
     }
 

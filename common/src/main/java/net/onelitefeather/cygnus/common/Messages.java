@@ -38,6 +38,10 @@ public final class Messages {
     public static final Component ONLY_PLAYERS_CAN_PREVIEW;
     public static final Component SERVER_FULL;
     public static final Component GAME_ALREADY_STARTED;
+    /** @since 2.21.0 */
+    public static final Component SPECTATOR_PLACES_FULL;
+    /** @since 2.21.0 */
+    public static final Component LATE_JOIN_WATCHING;
     public static final Component CLIENT_BLOCKED;
     public static final Component INCOMPATIBLE_MODS;
     private static final Component PAGE_FOUND_PART;
@@ -77,6 +81,8 @@ public final class Messages {
         ONLY_PLAYERS_CAN_PREVIEW = withMiniPrefix("<red>Only players can preview the tunnel vision.");
         SERVER_FULL = withMiniPrefix("<red>The server is full! Unable to join!");
         GAME_ALREADY_STARTED = withMiniPrefix("<red>The game has already started! Unable to join!");
+        SPECTATOR_PLACES_FULL = withMiniPrefix("<red>All spectator places are taken.");
+        LATE_JOIN_WATCHING = withMiniPrefix("<yellow>The round is already running – you are watching as a spectator.");
         CLIENT_BLOCKED = withMiniPrefix("<red>Unsupported client detected! Remove your modifications to join.");
         INCOMPATIBLE_MODS = withMiniPrefix("<red>Incompatible mods detected! Remove them to join.");
 

@@ -32,6 +32,24 @@ class GameConfigTest {
     }
 
     @Test
+    void testTheFourArgumentRoundConstructorDefaultsMaxSpectatorsToEight() {
+        assertEquals(8, new GameConfig.Round(2, 13, 30, 900).maxSpectators(),
+                "the four argument constructor must keep the default spectator limit of 8");
+    }
+
+    @Test
+    void testZeroMaxSpectatorsIsAccepted() {
+        assertEquals(0, new GameConfig.Round(2, 13, 30, 900, 0).maxSpectators(),
+                "0 must be accepted and turn late joining off");
+    }
+
+    @Test
+    void testNegativeMaxSpectatorsIsRejected() {
+        assertRejected("maxSpectators (-1) must not be negative",
+                () -> new GameConfig.Round(2, 13, 30, 900, -1));
+    }
+
+    @Test
     void testInvalidDamageSoundCooldown() {
         assertRejected("damageSoundCooldown (0) must be at least 1",
                 () -> new GameConfig.DamageSound(true, 0, GameConfig.DamageSound.DEFAULT_SOUND));
