@@ -8,7 +8,6 @@ import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.world.DimensionType;
 import net.onelitefeather.cygnus.common.config.GameConfig;
-import net.onelitefeather.cygnus.common.creek.CreekRoutesFile;
 import net.onelitefeather.cygnus.common.dimension.BlendedAtmosphere;
 import net.onelitefeather.cygnus.common.dimension.DimensionAtmosphere;
 import net.onelitefeather.cygnus.common.dimension.DimensionFactory;
@@ -19,7 +18,6 @@ import net.onelitefeather.cygnus.common.map.filter.MapFilters;
 import net.onelitefeather.cygnus.common.map.settings.CreekSettings;
 import net.onelitefeather.cygnus.common.map.settings.PageSettings;
 import net.onelitefeather.cygnus.common.page.PagePool;
-import net.onelitefeather.cygnus.common.page.PageSettingsFile;
 import net.onelitefeather.cygnus.common.util.GsonHelper;
 import net.onelitefeather.cygnus.common.util.Helper;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
@@ -55,37 +53,34 @@ public final class GameMapProvider extends AbstractMapProvider {
     private @Nullable InstanceContainer previousInstance;
     private boolean releasePending;
 
-    public GameMapProvider(Path path) {
-        this(path, GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE);
+    /**
+     * Creates a provider for the given lobby and game map, with the default share of the game
+     * map's atmosphere in the lobby.
+     *
+     * @param lobbyEntry the entry of the lobby map
+     * @param game       the game map the round is played on
+     */
+    public GameMapProvider(MapEntry lobbyEntry, MapCandidate game) {
+        this(lobbyEntry, game, GameConfig.DEFAULT_LOBBY_ATMOSPHERE_SHARE);
     }
 
     /**
-     * Creates a provider for the maps below the given path.
+     * Creates a provider for the given lobby and game map.
      *
-     * @param path                 the directory holding {@code game/maps}
+     * <p>The game map has to be known here already: the lobby's dimension is derived from the game
+     * map's atmosphere, and both dimensions have to be registered before the lobby instance is
+     * created.</p>
+     *
+     * @param lobbyEntry           the entry of the lobby map
+     * @param game                 the game map the round is played on
      * @param lobbyAtmosphereShare how far the lobby's atmosphere is taken towards the game map's
      *                             own, between 0 and 1
      */
-    public GameMapProvider(Path path, float lobbyAtmosphereShare) {
+    public GameMapProvider(MapEntry lobbyEntry, MapCandidate game, float lobbyAtmosphereShare) {
         super(GsonHelper.FILE_HANDLER, MapFilters::filterMapsForGame);
-        this.loadMapEntries(path.resolve("game").resolve("maps"));
         this.chunkLoaders = new ArrayList<>();
-        if (this.mapEntries.isEmpty()) {
-            throw new IllegalStateException("No maps found in the given path");
-        }
-
-        // The lobby is taken out of the running first and the game map picked from what is left.
-        // The filter below cannot do that on its own: getDirectoryRoot() is a whole path, so it
-        // never equals "lobby" and the check passes everything through. That was harmless while
-        // loadLobbyMap() ran first and removed the entry, and stops being harmless the moment the
-        // order changes - which it has to here, because the lobby's dimension is derived from the
-        // game map's atmosphere and the map must be known before the lobby instance is created.
-        MapEntry lobbyEntry = this.takeLobbyEntry();
-        this.gameEntry = this.mapEntries.stream()
-                .filter(entry -> !isLobby(entry))
-                .findAny()
-                .orElseThrow(() -> new IllegalStateException("No game map found"));
-        GameMap map = readGameMap();
+        this.gameEntry = game.entry();
+        GameMap map = game.map();
         // Read with the map before any service is built, so every one of them gets the map's own values.
         this.pageSettings = map.getPageSettings();
         this.creekSettings = map.getCreekSettings();
@@ -167,24 +162,6 @@ public final class GameMapProvider extends AbstractMapProvider {
     }
 
     /**
-     * Reads the game map from its map file.
-     *
-     * <p>The page settings come from the sibling {@code pages.json} via
-     * {@link PageSettingsFile#loadInto(Path, GameMap)}, the creek routes and settings from the sibling
-     * {@code creek.json} via {@link CreekRoutesFile#loadInto(Path, GameMap)}. The pages themselves are
-     * only put in by {@link #loadGameMap()}, from the pool picked for the round.</p>
-     *
-     * @return the loaded game map
-     * @throws IllegalStateException if the file cannot be read
-     */
-    private GameMap readGameMap() {
-        GameMap map = this.fileHandler.load(this.gameEntry.getMapFile(), GameMap.class)
-                .orElseThrow(() -> new IllegalStateException("Failed to load GameMap from file: " + this.gameEntry.getMapFile()));
-        Path mapFile = this.gameEntry.getMapFile();
-        return CreekRoutesFile.loadInto(mapFile, PageSettingsFile.loadInto(mapFile, map));
-    }
-
-    /**
      * Returns the page values of the game map. Known as soon as the provider exists, long before
      * the map is loaded into an instance.
      *
@@ -211,7 +188,7 @@ public final class GameMapProvider extends AbstractMapProvider {
     public void loadGameMap() {
         if (this.gameMap != null) return; // idempotent
 
-        GameMap map = readGameMap();
+        GameMap map = MapCatalog.readGameMap(this.gameEntry.getMapFile());
         PagePool pool = PagePool.forRound(this.gameEntry.getMapFile(), map.getPageSettings().minActivePages());
         this.gameMap = map.withPageFaces(pool.pages());
         this.gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer(this.gameDimension);
@@ -271,35 +248,6 @@ public final class GameMapProvider extends AbstractMapProvider {
             this.releasePending = false;
             return TaskSchedule.stop();
         });
-    }
-
-    /**
-     * Takes the lobby out of the loaded entries, so what is left is the pool a game map is picked
-     * from.
-     *
-     * @return the lobby's entry
-     * @throws IllegalStateException if there is no lobby among the entries
-     */
-    private MapEntry takeLobbyEntry() {
-        MapEntry lobbyEntry = this.mapEntries.stream()
-                .filter(GameMapProvider::isLobby)
-                .findAny()
-                .orElseThrow(() -> new IllegalStateException("No lobby map found in the given path"));
-        this.mapEntries.remove(lobbyEntry);
-        return lobbyEntry;
-    }
-
-    /**
-     * Answers whether an entry is the lobby, by the name of its own directory rather than by the
-     * path leading to it - a temporary directory or a checkout below a folder called {@code lobby}
-     * would otherwise make every map the lobby.
-     *
-     * @param entry the entry to look at
-     * @return {@code true} if the entry is the lobby
-     */
-    private static boolean isLobby(MapEntry entry) {
-        Path directory = entry.getDirectoryRoot().getFileName();
-        return directory != null && directory.toString().equalsIgnoreCase("lobby");
     }
 
     private BaseMap loadLobbyMap(MapEntry lobbyEntry) {

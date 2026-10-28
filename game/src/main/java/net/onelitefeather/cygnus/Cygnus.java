@@ -12,6 +12,9 @@ import net.onelitefeather.cygnus.listener.page.PageSpawnListener;
 import net.onelitefeather.cygnus.listener.view.ViewUpdateListener;
 import net.onelitefeather.cygnus.listener.page.PageDiscoveryCompleteListener;
 import net.onelitefeather.cygnus.map.GameMapProvider;
+import net.onelitefeather.cygnus.map.MapCandidate;
+import net.onelitefeather.cygnus.map.MapCatalog;
+import net.onelitefeather.cygnus.map.RandomMapSelector;
 import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
@@ -180,6 +183,8 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
     private final PageProvider pageProvider;
     private final PageProximityService pageProximityService;
     private final GameView view;
+    // Kept for the map vote, which picks from the same maps once it exists.
+    private final MapCatalog mapCatalog;
     private final GameMapProvider mapProvider;
     private final GameConfig gameConfig;
     private final JumpScareManager jumpscareManager;
@@ -272,7 +277,9 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
             MinecraftServer.getConnectionManager().setPlayerProvider(
                     (connection, gameProfile) -> new CygnusPlayer(connection, gameProfile, resourcePackId, kickTracer));
             try (TraceStep ignored = startup.child("cygnus.startup.maps")) {
-                this.mapProvider = new GameMapProvider(path, this.gameConfig.lobbyAtmosphereShare());
+                this.mapCatalog = MapCatalog.load(path);
+                MapCandidate gameMap = this.mapCatalog.select(new RandomMapSelector());
+                this.mapProvider = new GameMapProvider(this.mapCatalog.lobby(), gameMap, this.gameConfig.lobbyAtmosphereShare());
             }
             // A moving page keeps away from the survivors, so it is not handed to one for free.
             this.pageProvider = new PageProvider(
