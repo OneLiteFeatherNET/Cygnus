@@ -3,7 +3,6 @@ package net.onelitefeather.cygnus.team;
 import net.onelitefeather.cygnus.common.strategy.TeleportStrategy;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import net.onelitefeather.cygnus.visibility.VisibilityRules;
-import net.theevilreaper.aves.util.Players;
 import net.theevilreaper.xerus.api.team.Team;
 import net.theevilreaper.xerus.api.team.TeamService;
 import net.kyori.adventure.text.Component;
@@ -19,7 +18,9 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.common.map.GameMap;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * This class provides utility methods for the team handling in the game.
@@ -73,13 +74,19 @@ public final class TeamHelper {
     }
 
     /**
-     * Picks a random online player to become the slender.
+     * Picks a random online player to become the slender. Late spectators are never drawn: they joined a
+     * running round to watch it and must not get a role.
      *
      * @return the chosen player
      */
     private static Player selectSlenderPlayer() {
-        return Players.getRandomPlayer()
-                .orElseThrow(() -> new IllegalStateException("No player found to be the slender"));
+        List<Player> candidates = MinecraftServer.getConnectionManager().getOnlinePlayers().stream()
+                .filter(player -> !isSpectatorTeam(player))
+                .toList();
+        if (candidates.isEmpty()) {
+            throw new IllegalStateException("No player found to be the slender");
+        }
+        return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
     }
 
     /**
@@ -100,7 +107,9 @@ public final class TeamHelper {
     }
 
     /**
-     * Collects all online players except the slender in a single pass.
+     * Collects all online players except the slender and the late spectators in a single pass. A player who
+     * joined a running round is tagged as spectator in the lobby and only watches the round, so they must not
+     * be given a survivor role either.
      *
      * @param slenderPlayer the player to exclude
      * @return the set of survivor candidates
@@ -108,6 +117,9 @@ public final class TeamHelper {
     private static Set<Player> collectSurvivors(Player slenderPlayer) {
         Set<Player> survivors = new HashSet<>();
         for (Player player : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
+            if (isSpectatorTeam(player)) {
+                continue;
+            }
             if (slenderPlayer == null || !player.getUuid().equals(slenderPlayer.getUuid())) {
                 survivors.add(player);
             }

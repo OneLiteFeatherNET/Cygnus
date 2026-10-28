@@ -20,6 +20,7 @@ import net.onelitefeather.cygnus.event.SlenderReviveEvent;
 import net.onelitefeather.cygnus.jumpscare.JumpScareManager;
 import net.onelitefeather.cygnus.listener.game.SlenderTakeover;
 import net.onelitefeather.cygnus.phase.GamePhase;
+import net.onelitefeather.cygnus.spectator.LateJoinSlots;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.onelitefeather.cygnus.view.GameViewImpl;
 import net.theevilreaper.xerus.api.team.Team;
@@ -80,7 +81,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE), new LateJoinSlots(0));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicBoolean finishFired = new AtomicBoolean(false);
@@ -110,7 +111,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE), new LateJoinSlots(0));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
@@ -143,7 +144,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE), new LateJoinSlots(0));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<SlenderReviveEvent> reviveEvent = new AtomicReference<>();
@@ -176,7 +177,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE), new LateJoinSlots(0));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
@@ -210,7 +211,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE), new LateJoinSlots(0));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         Collector<SystemChatPacket> slenderMessages = slenderConnection.trackIncoming(SystemChatPacket.class);
@@ -241,7 +242,7 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
 
         GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
         PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
-                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE));
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE), new LateJoinSlots(0));
         testNode.addListener(PlayerDisconnectEvent.class, listener);
 
         Collector<SystemChatPacket> survivorMessages = survivorConnection.trackIncoming(SystemChatPacket.class);
@@ -253,6 +254,71 @@ class PlayerQuitListenerTest extends CygnusPlayerTestBase {
                 "The survivors must be told that the slender left the round.");
         assertTrue(messages.stream().noneMatch(packet -> Messages.getLeaveMessage(slender).equals(packet.message())),
                 "The slender must not get the plain leave message.");
+    }
+
+    @Test
+    void testLateSpectatorDisconnectReleasesItsPlaceWithoutEndingTheRound(@NotNull Env env) {
+        Player lateSpectator = env.createPlayer(instance);
+        Player survivor = env.createPlayer(instance);
+        Player slender = env.createPlayer(instance);
+
+        TeamService teamService = TeamService.of();
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        Team spectatorTeam = Team.of(GameConfig.SPECTATOR_KEY, 5);
+        teamService.add(slenderTeam);
+        teamService.add(survivorTeam);
+        teamService.add(spectatorTeam);
+
+        slenderTeam.addPlayer(slender);
+        slender.setTag(Tags.TEAM_KEY, GameConfig.SLENDER_KEY);
+        survivorTeam.addPlayer(survivor);
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        spectatorTeam.addPlayer(lateSpectator);
+        lateSpectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
+
+        LateJoinSlots slots = new LateJoinSlots(1);
+        slots.tryReserve(lateSpectator.getUuid());
+
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE), slots);
+        testNode.addListener(PlayerDisconnectEvent.class, listener);
+
+        AtomicReference<GameFinishEvent> finishEvent = new AtomicReference<>();
+        testNode.addListener(GameFinishEvent.class, finishEvent::set);
+
+        playerQuit(lateSpectator, env);
+
+        assertNull(finishEvent.get(), "a late spectator leaving must not end the round");
+        assertFalse(survivor.hasEffect(PotionEffect.BLINDNESS), "a late spectator leaving must not start a takeover");
+        assertFalse(slots.holds(lateSpectator.getUuid()), "the late place must be free again after the late spectator left");
+    }
+
+    @Test
+    void testDisconnectOfAnotherPlayerKeepsALateSpectatorsPlace(@NotNull Env env) {
+        Player lateSpectator = env.createPlayer(instance);
+        Player survivor = env.createPlayer(instance);
+
+        LateJoinSlots slots = new LateJoinSlots(1);
+        slots.tryReserve(lateSpectator.getUuid());
+
+        TeamService teamService = TeamService.of();
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 5);
+        teamService.add(slenderTeam);
+        teamService.add(survivorTeam);
+        survivorTeam.addPlayer(survivor);
+        survivor.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
+        PlayerQuitListener listener = new PlayerQuitListener(() -> gamePhase, teamService, new StaminaService(), () -> {},
+                new SlenderTakeover(teamService, () -> gamePhase, TickSections.NONE), slots);
+        testNode.addListener(PlayerDisconnectEvent.class, listener);
+
+        playerQuit(survivor, env);
+
+        assertTrue(slots.holds(lateSpectator.getUuid()), "a disconnect of another player must not free a late place");
     }
 
     private static void playerQuit(Player player, Env env) {

@@ -21,6 +21,7 @@ import net.minestom.testing.extension.MicrotusExtension;
 import net.onelitefeather.cygnus.common.config.GameConfig;
 import net.onelitefeather.cygnus.listener.PlayerQuitListener;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.spectator.LateJoinSlots;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 import net.theevilreaper.xerus.api.team.TeamService;
 import org.jetbrains.annotations.NotNull;
@@ -148,7 +149,7 @@ class ResourcePackConfigurationKickTest {
                 () -> {
                     throw new AssertionError("the phase must not be consulted for a player that never joined");
                 },
-                TeamService.of(), new StaminaService(), () -> { }, null);
+                TeamService.of(), new StaminaService(), () -> { }, null, new LateJoinSlots(0));
 
         listener.accept(new PlayerDisconnectEvent(player));
     }

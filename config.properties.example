@@ -17,6 +17,10 @@ minPlayers=2
 # Players allowed on the service. Everyone beyond this is kicked on login.
 maxPlayers=13
 
+# Players who join a running round may watch it as spectators, up to this many.
+# 0 turns late joining off. Zero or more.
+maxSpectators=8
+
 # --- Timing (seconds) ------------------------------------------------------
 
 # Lobby countdown. Has to be greater than 11, the point at which the countdown

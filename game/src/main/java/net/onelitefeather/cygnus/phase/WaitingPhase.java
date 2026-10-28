@@ -3,16 +3,19 @@ package net.onelitefeather.cygnus.phase;
 import net.theevilreaper.aves.util.functional.VoidConsumer;
 import net.theevilreaper.xerus.api.phase.TimedPhase;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
 import net.onelitefeather.cygnus.attribute.AttributeHelper;
 import net.onelitefeather.cygnus.camera.WakeUpTransition;
 import net.onelitefeather.cygnus.common.event.GamePreLaunchEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
+import net.onelitefeather.cygnus.team.TeamHelper;
 import net.minestom.server.instance.Instance;
 import net.onelitefeather.cygnus.view.GameView;
 
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -72,7 +75,11 @@ public final class WaitingPhase extends TimedPhase {
             this.teleportLogic.apply();
             // The players may still be on their way into the game instance (the switch completes later), so the
             // transition names the target and spawns the spider once each player has arrived there
-            this.wakeUpTransition.open(MinecraftServer.getConnectionManager().getOnlinePlayers(), this.activeInstance.get());
+            // Late spectators joined the running round and only watch it, so they get no wake-up camera
+            List<Player> players = MinecraftServer.getConnectionManager().getOnlinePlayers().stream()
+                    .filter(player -> !TeamHelper.isSpectatorTeam(player))
+                    .toList();
+            this.wakeUpTransition.open(players, this.activeInstance.get());
         }
     }
 }

@@ -17,6 +17,7 @@ import java.util.Properties;
  * <ul>
  *     <li>minPlayers</li>
  *     <li>maxPlayers</li>
+ *     <li>maxSpectators</li>
  *     <li>lobbyTime</li>
  *     <li>gameTime</li>
  *     <li>survivorTeamSize</li>

@@ -48,6 +48,24 @@ class GameConfigReaderTest {
     }
 
     @Test
+    void testMaxSpectatorsDefaultsToEightWhenAbsent(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), "minPlayers=4\n");
+
+        assertEquals(8, new GameConfigReader(tempDir).getConfig().round().maxSpectators(),
+                "without maxSpectators in the file the default of 8 applies");
+    }
+
+    @Test
+    void testMaxSpectatorsIsReadWhenItIsConfigured(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("config.properties"), """
+                minPlayers=4
+                maxSpectators=3
+                """);
+
+        assertEquals(3, new GameConfigReader(tempDir).getConfig().round().maxSpectators());
+    }
+
+    @Test
     void testGroupsMissingFromTheFileKeepTheirDefaults() {
         GameConfig config = new GameConfigReader(Paths.get("src", "test", "resources")).getConfig();
 

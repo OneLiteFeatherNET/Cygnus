@@ -127,6 +127,56 @@ class TeamHelperTest {
         reserved.remove();
     }
 
+    @Test
+    void lateSpectatorIsNotPutInTheSurvivorTeam(@NotNull Env env) {
+        // The class-level player is the spectator, so this test leaves only one extra player online
+        Player reserved = env.createPlayer(instance);
+        player.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
+        Set<Player> onlinePlayers = Set.copyOf(MinecraftServer.getConnectionManager().getOnlinePlayers());
+
+        Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+        Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 11);
+
+        try {
+            TeamHelper.TeamAllocation allocation = TeamHelper.prepareTeamAllocation(slenderTeam, survivorTeam, reserved);
+
+            assertFalse(allocation.survivors().contains(player), "a player who joined the running round must not become a survivor");
+            assertFalse(survivorTeam.getPlayers().contains(player), "a player who joined the running round must not be on the survivor team");
+            assertEquals(GameConfig.SPECTATOR_KEY, player.getTag(Tags.TEAM_KEY), "a late spectator must keep the spectator tag");
+        } finally {
+            onlinePlayers.forEach(TeamHelperTest::resetRole);
+            reserved.remove();
+        }
+    }
+
+    @Test
+    void lateSpectatorIsNeverDrawnAsTheSlender(@NotNull Env env) {
+        // The class-level player is the normal player, so this test leaves only one extra player online
+        Player spectator = env.createPlayer(instance);
+        spectator.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY);
+        Set<Player> onlinePlayers = Set.copyOf(MinecraftServer.getConnectionManager().getOnlinePlayers());
+        // Players left online by other tests are spectators here, so the normal player is the only possible slender
+        onlinePlayers.stream()
+                .filter(online -> online != player)
+                .forEach(online -> online.setTag(Tags.TEAM_KEY, GameConfig.SPECTATOR_KEY));
+
+        try {
+            // Each draw is random; repeating it makes a wrong pick show up instead of passing by chance
+            for (int round = 0; round < 50; round++) {
+                Team slenderTeam = Team.of(GameConfig.SLENDER_KEY, 1);
+                Team survivorTeam = Team.of(GameConfig.SURVIVOR_KEY, 11);
+
+                TeamHelper.TeamAllocation allocation = TeamHelper.prepareTeamAllocation(slenderTeam, survivorTeam);
+
+                assertEquals(player, allocation.slender(), "round " + round + ": a late spectator must never be drawn as the Slender");
+                resetRole(player);
+            }
+        } finally {
+            onlinePlayers.forEach(TeamHelperTest::resetRole);
+            spectator.remove();
+        }
+    }
+
     private static void resetRole(@NotNull Player player) {
         player.removeTag(Tags.TEAM_KEY);
         player.removeTag(Tags.HIDDEN);

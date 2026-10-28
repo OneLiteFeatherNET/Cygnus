@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PlayerSpawnListenerTest extends CygnusPlayerTestBase {
 
     private static GameConfig.Round lobbyConfig() {
-        return new GameConfig.Round(2, 10, 30, 600);
+        return new GameConfig.Round(2, 10, 30, 600, 8);
     }
 
     @Test
@@ -114,6 +114,44 @@ class PlayerSpawnListenerTest extends CygnusPlayerTestBase {
         listener.accept(new PlayerSpawnEvent(player, instance, true));
 
         assertTrue(hooked.get(), "the lobby join hook must run for a first spawn in the lobby");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testLateJoinerOutsideLobbyIsTeleportedAndHandedToTheLateJoinHook(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        GamePhase gamePhase = new GamePhase(new GameViewImpl(), 600, new JumpScareManager(TickSections.NONE), (_, _) -> 0.0D);
+
+        AtomicBoolean spawned = new AtomicBoolean(false);
+        AtomicBoolean lateJoined = new AtomicBoolean(false);
+        PlayerSpawnListener listener = new PlayerSpawnListener(p -> spawned.set(true), () -> gamePhase, p -> {
+        }, p -> lateJoined.set(true));
+
+        listener.accept(new PlayerSpawnEvent(player, instance, true));
+
+        assertTrue(spawned.get(), "a late joiner must still be teleported to the spawn of the running map");
+        assertTrue(lateJoined.get(), "a late joiner without a team tag must be handed to the late join hook");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testLobbyJoinDoesNotRunTheLateJoinHook(@NotNull Env env) {
+        Instance instance = env.createFlatInstance();
+        Player player = env.createPlayer(instance);
+        LobbyPhase lobbyPhase = new LobbyPhase(lobbyConfig());
+
+        AtomicBoolean lobbyJoined = new AtomicBoolean(false);
+        AtomicBoolean lateJoined = new AtomicBoolean(false);
+        PlayerSpawnListener listener = new PlayerSpawnListener(p -> {
+        }, () -> lobbyPhase, p -> lobbyJoined.set(true), p -> lateJoined.set(true));
+
+        listener.accept(new PlayerSpawnEvent(player, instance, true));
+
+        assertTrue(lobbyJoined.get(), "the lobby join hook must still run for a lobby joiner");
+        assertFalse(lateJoined.get(), "a lobby joiner must never be handed to the late join hook");
 
         env.destroyInstance(instance, true);
     }
