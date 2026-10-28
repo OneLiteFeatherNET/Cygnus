@@ -16,6 +16,7 @@ import net.onelitefeather.cygnus.map.event.GameMapLoadEvent;
 import net.onelitefeather.cygnus.map.event.GameMapLoadedEvent;
 import net.onelitefeather.cygnus.map.event.GamePrepareEvent;
 import net.onelitefeather.cygnus.overlay.OverlayModule;
+import net.onelitefeather.cygnus.spectator.LateJoinSlots;
 import net.onelitefeather.cygnus.spectator.SpectatorService;
 import net.onelitefeather.cygnus.creek.CreekModule;
 import net.onelitefeather.cygnus.creek.CreekRespite;
@@ -60,6 +61,7 @@ import net.onelitefeather.cygnus.page.PageRevealFeature;
 import net.onelitefeather.cygnus.damage.DamageSoundService;
 import net.onelitefeather.cygnus.command.StartCommand;
 import net.onelitefeather.cygnus.common.ListenerHandling;
+import net.onelitefeather.cygnus.common.Messages;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceBootstrap;
 import net.onelitefeather.cygnus.common.bootstrap.ServiceShutdown;
 import net.onelitefeather.cygnus.common.config.GameConfig;
@@ -486,19 +488,28 @@ public final class Cygnus implements TeamCreator, ListenerHandling {
         );
         manager.addListener(GameMapLoadedEvent.class, event -> this.roundTracer.pagePoolDrawn(event.pagePool().name()));
         manager.addListener(GameMapLoadedEvent.class, new GameMapLoadedListener());
+        LateJoinSlots lateJoinSlots = new LateJoinSlots(this.gameConfig.round().maxSpectators());
         manager.addListener(PlayerSpawnEvent.class, new PlayerSpawnListener(player -> this.mapProvider.teleportToSpawn(player, false), phaseSupplier,
                 player -> {
                     this.slenderPassService.onLobbyJoin(player);
                     this.monthlyQuota.onLobbyJoin(player.getUuid());
+                },
+                player -> {
+                    // Only a joiner who got a late place watches; anybody else without a team is no spectator.
+                    if (!lateJoinSlots.holds(player.getUuid())) return;
+                    this.spectatorService.join(player);
+                    player.sendMessage(Messages.LATE_JOIN_WATCHING);
+                    this.spectatorService.updateInventory();
                 }));
-        PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.spectatorService::updateInventory, this.slenderTakeover);
+        PlayerQuitListener quitListener = new PlayerQuitListener(phaseSupplier, teamService, this.staminaService, this.spectatorService::updateInventory, this.slenderTakeover, lateJoinSlots);
         manager.addListener(PlayerDisconnectEvent.class, quitListener);
         manager.addListener(AsyncPlayerConfigurationEvent.class,
                 new PlayerLoginListener(
                         this.mapProvider.getActiveInstance(),
                         this.gameConfig.round().maxPlayers(),
                         linearPhaseSeries::getCurrentPhase,
-                        this.resourcePackService
+                        this.resourcePackService,
+                        lateJoinSlots
                 )
         );
         manager.addListener(ServerListPingEvent.class, new ServerListPingListener(this.gameConfig.round().maxPlayers()));

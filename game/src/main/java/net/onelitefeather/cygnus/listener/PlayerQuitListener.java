@@ -15,6 +15,7 @@ import net.onelitefeather.cygnus.listener.game.SlenderTakeover;
 import net.onelitefeather.cygnus.phase.GamePhase;
 import net.onelitefeather.cygnus.phase.LobbyPhase;
 import net.onelitefeather.cygnus.player.CygnusPlayer;
+import net.onelitefeather.cygnus.spectator.LateJoinSlots;
 import net.onelitefeather.cygnus.stamina.StaminaService;
 
 import java.util.Optional;
@@ -29,7 +30,9 @@ import static net.onelitefeather.cygnus.common.config.GameConfig.SURVIVOR_KEY;
  * <p>
  * Depending on the active game phase (Lobby or Game), this listener pauses the
  * countdown or triggers match termination and Slender player revivals if the
- * required player thresholds are no longer met.
+ * required player thresholds are no longer met. A late joiner's place in the
+ * running round is released on every disconnect, also for a player who was
+ * turned away before the spawn.
  *
  * @author theEvilReaper
  * @version 1.2.0
@@ -42,6 +45,7 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
     private final StaminaService staminaService;
     private final VoidConsumer inventoryUpdater;
     private final SlenderTakeover takeover;
+    private final LateJoinSlots lateJoinSlots;
 
     /**
      * Constructs a new PlayerQuitListener.
@@ -51,25 +55,31 @@ public final class PlayerQuitListener implements Consumer<PlayerDisconnectEvent>
      * @param staminaService   service to manage player stamina
      * @param inventoryUpdater refreshes the spectators' inventories
      * @param takeover         hands the slender's role to a survivor once he left
+     * @param lateJoinSlots    the late-join places, the place of the leaving player is released
+     * @since 2.21.0
      */
     public PlayerQuitListener(
             Supplier<Phase> phaseSupplier,
             TeamService teamService,
             StaminaService staminaService,
             VoidConsumer inventoryUpdater,
-            SlenderTakeover takeover
+            SlenderTakeover takeover,
+            LateJoinSlots lateJoinSlots
     ) {
         this.phaseSupplier = phaseSupplier;
         this.teamService = teamService;
         this.staminaService = staminaService;
         this.inventoryUpdater = inventoryUpdater;
         this.takeover = takeover;
+        this.lateJoinSlots = lateJoinSlots;
     }
 
     @Override
     public void accept(PlayerDisconnectEvent event) {
         Player player = event.getPlayer();
         this.staminaService.removePlayer(player);
+        // Before the early return below: a refused joiner must not keep a place either.
+        this.lateJoinSlots.release(player.getUuid());
         // Turned away before the spawn: never announced as joined, never counted as a participant.
         if (player instanceof CygnusPlayer cygnusPlayer && cygnusPlayer.isRejectedBeforeJoin()) {
             return;
