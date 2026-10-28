@@ -72,13 +72,6 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
      */
     static final int TICKS_PER_SWING = 2;
 
-    /**
-     * What only the slender hears when a swing hits nobody, quiet enough not to give anything away. A
-     * swing that hits one survivor and misses another plays {@link #HIT} alone, so the swoosh never
-     * makes him think he missed more often than he did.
-     */
-    static final Sound MISS = Sound.sound(SoundEvent.ENTITY_PLAYER_ATTACK_NODAMAGE, Sound.Source.PLAYER, 0.3F, 1F);
-
     /** How long one tick of the bar takes, in milliseconds. */
     private static final long TICK_MILLIS = 500L;
 
@@ -162,10 +155,9 @@ public final class SlenderBar extends StaminaBar implements SlenderBarHelper {
         currentTime -= TIME_STEP;
         if (++drainTicks % TICKS_PER_SWING == 0) {
             SwingOutcome outcome = swing(player.getInstance(), player.getUuid(), player.getPosition(), damageRange, swing, dread);
+            // A miss stays silent, so only a swing that lands tells him anything.
             if (outcome.hit()) {
                 player.playSound(HIT, Sound.Emitter.self());
-            } else if (outcome.missed()) {
-                player.playSound(MISS, Sound.Emitter.self());
             }
         }
         // Hides in the same tick the bar runs dry: one tick later he would stay visible and swing
