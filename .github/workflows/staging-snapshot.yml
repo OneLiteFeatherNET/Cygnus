@@ -1,0 +1,123 @@
+name: Staging Snapshot
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [labeled, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "Pull request number to build for staging"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: staging-snapshot-${{ inputs.pr || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    # Pull requests only build while they carry the staging label, and never from forks.
+    # A labeled event only counts when the label that was just added is staging.
+    if: >-
+      github.event_name != 'pull_request' || (
+        contains(github.event.pull_request.labels.*.name, 'staging') &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        (github.event.action != 'labeled' || github.event.label.name == 'staging')
+      )
+    runs-on: ubuntu-latest
+    env:
+      ONELITEFEATHER_MAVEN_USERNAME: ${{ secrets.ONELITEFEATHER_MAVEN_USERNAME }}
+      ONELITEFEATHER_MAVEN_PASSWORD: ${{ secrets.ONELITEFEATHER_MAVEN_PASSWORD }}
+      GRADLE_OPTS: "-Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.welcome=never"
+      PR_NUMBER: ${{ inputs.pr || github.event.pull_request.number }}
+    steps:
+      # Pull requests are checked out as GitHub merges them into main, so staging tests them together
+      # with main's latest changes. If that merge ref does not exist (merge conflict), this step fails.
+      # Dispatched PRs use the head commit, and pushes use the pushed ref.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || inputs.pr && format('refs/pull/{0}/head', inputs.pr) || github.ref }}
+
+      # Fork PRs must not get publish credentials, so they are refused before any build runs.
+      - name: Validate PR input
+        env:
+          INPUT_PR: ${{ env.PR_NUMBER }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$INPUT_PR" ]; then
+            echo "No PR number given, building the dispatched ref."
+            exit 0
+          fi
+          if ! [[ "$INPUT_PR" =~ ^[0-9]+$ ]]; then
+            echo "::error::pr input must be a pull request number, got '$INPUT_PR'"
+            exit 1
+          fi
+          cross=$(gh pr view "$INPUT_PR" --json isCrossRepository --jq .isCrossRepository)
+          if [ "$cross" = "true" ]; then
+            echo "::error::PR #$INPUT_PR is from a fork; fork PRs cannot be published as staging snapshots"
+            exit 1
+          fi
+
+      # Only one PR may carry the staging label, because the staging server follows that label.
+      - name: Remove staging label from other pull requests
+        if: env.PR_NUMBER != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh pr list --label staging --state open --json number --jq '.[].number' |
+            while read -r other; do
+              if [ "$other" != "$PR_NUMBER" ]; then
+                echo "Removing staging label from #$other"
+                gh pr edit "$other" --remove-label staging
+              fi
+            done
+
+      # The version in build.gradle.kts belongs to release-please, so it is rewritten only in this checkout.
+      - name: Compute snapshot version
+        id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          base=$(sed -n 's/^version = "\([0-9]*\.[0-9]*\.[0-9]*\)".*x-release-please-version.*/\1/p' build.gradle.kts)
+          if [ -z "$base" ]; then
+            echo "::error::could not read base version from build.gradle.kts"
+            exit 1
+          fi
+          if [ -n "$PR_NUMBER" ]; then
+            channel="pr-$PR_NUMBER"
+          else
+            channel=$(echo "$REF_NAME" | tr -c 'A-Za-z0-9.\n' '-')
+          fi
+          version="${base}-${channel}-SNAPSHOT"
+          sed -i "s/^version = \"[^\"]*\" \/\/ x-release-please-version/version = \"${version}\" \/\/ x-release-please-version/" build.gradle.kts
+          echo "Snapshot version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Staging snapshot"
+            echo "- Version: \`$version\`"
+            echo "- Commit: \`$(git rev-parse HEAD)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build and publish
+        run: ./gradlew build publish
