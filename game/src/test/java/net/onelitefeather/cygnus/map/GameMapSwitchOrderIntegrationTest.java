@@ -173,7 +173,7 @@ class GameMapSwitchOrderIntegrationTest {
                 new GameMap(ARENA_NAME, LOBBY_SPAWN, SLENDER_SPAWN, Set.of(), Set.of(SURVIVOR_SPAWN), List.of(), null),
                 true
         );
-        return new GameMapProvider(root);
+        return providerFor(root);
     }
 
     private void writeMap(Path directoryRoot, BaseMap map, boolean dimensionLayout) throws IOException {
@@ -182,5 +182,16 @@ class GameMapSwitchOrderIntegrationTest {
                 : directoryRoot.resolve("region");
         Files.createDirectories(regionDirectory);
         Files.writeString(directoryRoot.resolve("map.json"), GsonHelper.GSON.toJson(map), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Builds a provider the way the game does: through the catalog of the maps below the root.
+     *
+     * @param root the directory the {@code game/maps} tree was written below
+     * @return the provider for the selected map
+     */
+    private static GameMapProvider providerFor(Path root) {
+        MapCatalog catalog = MapCatalog.load(root);
+        return new GameMapProvider(catalog.lobby(), catalog.select(new RandomMapSelector()));
     }
 }

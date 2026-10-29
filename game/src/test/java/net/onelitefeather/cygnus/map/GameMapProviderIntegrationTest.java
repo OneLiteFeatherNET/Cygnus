@@ -247,7 +247,7 @@ class GameMapProviderIntegrationTest {
         PageSettingsFile.save(mapFile, pages);
         CreekRoutesFile.save(mapFile, List.of(), creek);
 
-        GameMapProvider provider = new GameMapProvider(root);
+        GameMapProvider provider = providerFor(root);
 
         assertEquals(pages, provider.pageSettings());
         assertEquals(creek, provider.creekSettings());
@@ -278,7 +278,7 @@ class GameMapProviderIntegrationTest {
      */
     private GameMapProvider createProvider(Path root, MapAtmosphere atmosphere) throws IOException {
         writeLayout(root, atmosphere);
-        return new GameMapProvider(root);
+        return providerFor(root);
     }
 
     /**
@@ -318,5 +318,16 @@ class GameMapProviderIntegrationTest {
                 : directoryRoot.resolve("region");
         Files.createDirectories(regionDirectory);
         Files.writeString(directoryRoot.resolve("map.json"), GsonHelper.GSON.toJson(map), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Builds a provider the way the game does: through the catalog of the maps below the root.
+     *
+     * @param root the directory the {@code game/maps} tree was written below
+     * @return the provider for the selected map
+     */
+    private static GameMapProvider providerFor(Path root) {
+        MapCatalog catalog = MapCatalog.load(root);
+        return new GameMapProvider(catalog.lobby(), catalog.select(new RandomMapSelector()));
     }
 }
