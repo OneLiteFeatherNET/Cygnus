@@ -116,6 +116,24 @@ class CatchTricksIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
+    @DisplayName("A survivor just sent to the spawn falls back to the next trick on the following catch")
+    void spawnCooldownFallsBack(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player caught = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        CatchTricks tricks = tricks(_ -> {
+        }, 1.0D, Set.of(caught), SPAWN, CreekMood.TRICKSTER);
+
+        tricks.apply(caught);
+        env.tick();
+        assertEquals(SPAWN.asVec(), caught.getPosition().asVec());
+        caught.setVelocity(Vec.ZERO);
+
+        tricks.apply(caught);
+
+        assertTrue(caught.getVelocity().y() > 0.0D, "without a partner and on cooldown the survivor is thrown");
+    }
+
+    @Test
     @DisplayName("A teleport chooses between the swap and the slender spawn")
     void teleportUsesBoth(Env env) {
         Instance instance = env.createFlatInstance();

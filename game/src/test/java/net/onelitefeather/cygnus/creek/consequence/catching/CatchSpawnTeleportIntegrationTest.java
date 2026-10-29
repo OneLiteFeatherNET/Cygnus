@@ -55,4 +55,42 @@ class CatchSpawnTeleportIntegrationTest extends CygnusPlayerTestBase {
 
         assertEquals(new Vec(0, 40, 0), caught.getPosition().asVec());
     }
+
+    @Test
+    @DisplayName("A survivor who was just sent to the spawn is not sent there again during the cooldown")
+    void refusesDuringTheCooldown(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player caught = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        CatchSpawnTeleport teleport = new CatchSpawnTeleport(() -> SPAWN);
+
+        assertTrue(teleport.perform(caught));
+
+        assertFalse(teleport.perform(caught));
+    }
+
+    @Test
+    @DisplayName("Once the cooldown is over the survivor can be sent to the spawn again")
+    void teleportsAgainAfterTheCooldown(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player caught = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        CatchSpawnTeleport teleport = new CatchSpawnTeleport(() -> SPAWN);
+
+        assertTrue(teleport.perform(caught));
+        caught.setTag(CatchSpawnTeleport.COOLDOWN_UNTIL, System.currentTimeMillis() - 1);
+
+        assertTrue(teleport.perform(caught));
+    }
+
+    @Test
+    @DisplayName("The cooldown of one survivor does not protect another one")
+    void cooldownIsPerSurvivor(Env env) {
+        Instance instance = env.createFlatInstance();
+        Player first = env.createConnection().connect(instance, new Pos(0, 40, 0));
+        Player second = env.createConnection().connect(instance, new Pos(5, 40, 0));
+        CatchSpawnTeleport teleport = new CatchSpawnTeleport(() -> SPAWN);
+
+        assertTrue(teleport.perform(first));
+
+        assertTrue(teleport.perform(second));
+    }
 }
