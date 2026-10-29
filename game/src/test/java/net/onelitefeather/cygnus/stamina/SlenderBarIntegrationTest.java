@@ -6,7 +6,6 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.potion.PotionEffect;
-import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.network.packet.server.ServerPacket;
 import net.minestom.server.network.packet.server.play.ActionBarPacket;
 import net.minestom.server.network.packet.server.play.EntitySoundEffectPacket;
@@ -510,8 +509,8 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
     }
 
     @Test
-    @DisplayName("A swing that misses everyone plays one swoosh to the slender and to nobody else")
-    void missPlaysOneSwooshToTheSlenderOnly(@NotNull Env env) {
+    @DisplayName("A swing that misses everyone plays no sound at all")
+    void missPlaysNoSound(@NotNull Env env) {
         TestConnection slenderConnection = env.createConnection();
         CygnusPlayer slender = slender(slenderConnection, new Pos(0, 40, 0));
         TestConnection survivorConnection = env.createConnection();
@@ -526,7 +525,7 @@ class SlenderBarIntegrationTest extends CygnusPlayerTestBase {
 
         bar.consume();
 
-        slenderSounds.assertSingle(packet -> assertEquals(SoundEvent.ENTITY_PLAYER_ATTACK_NODAMAGE, packet.soundEvent()));
+        slenderSounds.assertEmpty();
         survivorSounds.assertEmpty();
         bar.stop();
     }

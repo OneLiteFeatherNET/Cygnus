@@ -7,8 +7,11 @@ import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.PlayerHand;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.network.packet.server.play.EntitySoundEffectPacket;
 import net.minestom.server.utils.Direction;
+import net.minestom.testing.Collector;
 import net.minestom.testing.Env;
+import net.minestom.testing.TestConnection;
 import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import net.onelitefeather.cygnus.common.Tags;
 import net.onelitefeather.cygnus.common.config.GameConfig;
@@ -53,6 +56,35 @@ class PlayerPageInteractListenerTest extends CygnusPlayerTestBase {
         listener.accept(new PlayerEntityInteractEvent(player, target, PlayerHand.MAIN, Vec.ZERO));
 
         assertEquals(1, player.getPageFounds(), "Counter must increment upon successfully finding a page");
+
+        env.destroyInstance(instance, true);
+    }
+
+    @Test
+    void testPagePickupPlaysASoundToTheFinderOnly(@NotNull Env env) throws Exception {
+        Instance instance = env.createFlatInstance();
+        TestConnection finderConnection = env.createConnection();
+        CygnusPlayer finder = (CygnusPlayer) finderConnection.connect(instance, Pos.ZERO);
+        finder.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+        TestConnection otherConnection = env.createConnection();
+        CygnusPlayer other = (CygnusPlayer) otherConnection.connect(instance, Pos.ZERO);
+        other.setTag(Tags.TEAM_KEY, GameConfig.SURVIVOR_KEY);
+
+        PageProvider pageProvider = new PageProvider();
+        pageProvider.loadPageData(Set.of(new PageResource(Pos.ZERO, Direction.NORTH)));
+        pageProvider.setMaxPageAmount(1);
+        PageEntity pageEntity = PageFactory.createPage(new PageResource(Pos.ZERO, Direction.NORTH), 1);
+        pageEntity.place(instance).join();
+        seedActivePage(pageProvider, pageEntity);
+        Entity target = new Entity(EntityType.INTERACTION);
+        target.setTag(Tags.PAGE_TAG, pageEntity.getHitBoxUUID());
+        Collector<EntitySoundEffectPacket> finderSounds = finderConnection.trackIncoming(EntitySoundEffectPacket.class);
+        Collector<EntitySoundEffectPacket> otherSounds = otherConnection.trackIncoming(EntitySoundEffectPacket.class);
+
+        new PlayerPageInteractListener(pageProvider).accept(new PlayerEntityInteractEvent(finder, target, PlayerHand.MAIN, Vec.ZERO));
+
+        finderSounds.assertSingle(packet -> assertEquals(PlayerPageInteractListener.FOUND.name(), packet.soundEvent().key()));
+        otherSounds.assertEmpty();
 
         env.destroyInstance(instance, true);
     }
