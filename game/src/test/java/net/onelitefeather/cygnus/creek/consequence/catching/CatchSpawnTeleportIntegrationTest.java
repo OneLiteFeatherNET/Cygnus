@@ -9,8 +9,6 @@ import net.onelitefeather.cygnus.CygnusPlayerTestBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,11 +61,9 @@ class CatchSpawnTeleportIntegrationTest extends CygnusPlayerTestBase {
     void refusesDuringTheCooldown(Env env) {
         Instance instance = env.createFlatInstance();
         Player caught = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        AtomicLong now = new AtomicLong(1_000L);
-        CatchSpawnTeleport teleport = new CatchSpawnTeleport(() -> SPAWN, now::get);
+        CatchSpawnTeleport teleport = new CatchSpawnTeleport(() -> SPAWN);
 
         assertTrue(teleport.perform(caught));
-        now.addAndGet(CatchSpawnTeleport.COOLDOWN_MILLIS - 1);
 
         assertFalse(teleport.perform(caught));
     }
@@ -77,11 +73,10 @@ class CatchSpawnTeleportIntegrationTest extends CygnusPlayerTestBase {
     void teleportsAgainAfterTheCooldown(Env env) {
         Instance instance = env.createFlatInstance();
         Player caught = env.createConnection().connect(instance, new Pos(0, 40, 0));
-        AtomicLong now = new AtomicLong(1_000L);
-        CatchSpawnTeleport teleport = new CatchSpawnTeleport(() -> SPAWN, now::get);
+        CatchSpawnTeleport teleport = new CatchSpawnTeleport(() -> SPAWN);
 
         assertTrue(teleport.perform(caught));
-        now.addAndGet(CatchSpawnTeleport.COOLDOWN_MILLIS);
+        caught.setTag(CatchSpawnTeleport.COOLDOWN_UNTIL, System.currentTimeMillis() - 1);
 
         assertTrue(teleport.perform(caught));
     }
@@ -92,7 +87,7 @@ class CatchSpawnTeleportIntegrationTest extends CygnusPlayerTestBase {
         Instance instance = env.createFlatInstance();
         Player first = env.createConnection().connect(instance, new Pos(0, 40, 0));
         Player second = env.createConnection().connect(instance, new Pos(5, 40, 0));
-        CatchSpawnTeleport teleport = new CatchSpawnTeleport(() -> SPAWN, () -> 1_000L);
+        CatchSpawnTeleport teleport = new CatchSpawnTeleport(() -> SPAWN);
 
         assertTrue(teleport.perform(first));
 
