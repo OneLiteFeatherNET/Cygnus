@@ -7,7 +7,6 @@ import net.minestom.server.tag.Tag;
 import net.onelitefeather.cygnus.stamina.SlenderBarHelper;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -39,32 +38,20 @@ public final class CatchSpawnTeleport implements CatchTrick {
     static final Tag<Long> COOLDOWN_UNTIL = Tag.Transient("creekSpawnTeleportUntil");
 
     private final Supplier<@Nullable Pos> slenderSpawn;
-    private final LongSupplier clock;
-
-    /**
-     * Sets up the teleport on the system clock.
-     *
-     * @param slenderSpawn supplies the slender spawn of the current map, {@code null} without one
-     */
-    public CatchSpawnTeleport(Supplier<@Nullable Pos> slenderSpawn) {
-        this(slenderSpawn, System::currentTimeMillis);
-    }
 
     /**
      * Sets up the teleport.
      *
      * @param slenderSpawn supplies the slender spawn of the current map, {@code null} without one
-     * @param clock        supplies the current time in milliseconds
      */
-    public CatchSpawnTeleport(Supplier<@Nullable Pos> slenderSpawn, LongSupplier clock) {
+    public CatchSpawnTeleport(Supplier<@Nullable Pos> slenderSpawn) {
         this.slenderSpawn = slenderSpawn;
-        this.clock = clock;
     }
 
     @Override
     public boolean perform(Player caught) {
         if (caught.getInstance() == null) return false;
-        long now = this.clock.getAsLong();
+        long now = System.currentTimeMillis();
         Long cooldown = caught.getTag(COOLDOWN_UNTIL);
         if (cooldown != null && now < cooldown) return false;
         Pos spawn = this.slenderSpawn.get();
