@@ -5,6 +5,13 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.21.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.21.0...v2.21.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* **deps:** update flyway to v13.12.0 ([#447](https://github.com/OneLiteFeatherNET/Cygnus/issues/447)) ([12d3428](https://github.com/OneLiteFeatherNET/Cygnus/commit/12d3428b7dc4886977d4d11a5e26e08a35bd6508))
+
 ## [2.21.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.20.0...v2.21.0) (2026-10-29)
 
 
