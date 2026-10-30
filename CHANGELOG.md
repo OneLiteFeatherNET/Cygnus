@@ -5,6 +5,42 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.21.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.20.0...v2.21.0) (2026-10-29)
+
+
+### Features
+
+* **adrenaline:** refill the sprint bar to 75 percent on a rush ([#414](https://github.com/OneLiteFeatherNET/Cygnus/issues/414)) ([48d5677](https://github.com/OneLiteFeatherNET/Cygnus/commit/48d567761743583ca372d30b4449ab10265a152f))
+* **creek:** spawn teleport cooldown ([#445](https://github.com/OneLiteFeatherNET/Cygnus/issues/445)) ([a3c82e8](https://github.com/OneLiteFeatherNET/Cygnus/commit/a3c82e82ebe1ecfdc75a45975c3454f1a433da35))
+* **creek:** switch the creek into a new mood once per round ([#437](https://github.com/OneLiteFeatherNET/Cygnus/issues/437)) ([1f14392](https://github.com/OneLiteFeatherNET/Cygnus/commit/1f14392176e1a2fcf37ce64ea432ed48df4e5b00))
+* **creek:** teleport caught survivors to the slender spawn and mark survivors more often ([#431](https://github.com/OneLiteFeatherNET/Cygnus/issues/431)) ([e77ec72](https://github.com/OneLiteFeatherNET/Cygnus/commit/e77ec72c406747f1914b9df636f71a7e26e20810))
+* **game:** add page pickup sound and fix hit sounds ([#444](https://github.com/OneLiteFeatherNET/Cygnus/issues/444)) ([ee8f249](https://github.com/OneLiteFeatherNET/Cygnus/commit/ee8f249ecc2fdd70dc0967fb783af82ac269bf41))
+* **game:** play a different page pool each round ([#433](https://github.com/OneLiteFeatherNET/Cygnus/issues/433)) ([1dc7d40](https://github.com/OneLiteFeatherNET/Cygnus/commit/1dc7d40c6e1db27df91a5a6260b1ca470d18ad76))
+* **lure:** add lure scare ([#417](https://github.com/OneLiteFeatherNET/Cygnus/issues/417)) ([d7d1f85](https://github.com/OneLiteFeatherNET/Cygnus/commit/d7d1f85957151a7335a001725c84854caa80f0e4))
+* **map:** per-map page and creek settings ([#385](https://github.com/OneLiteFeatherNET/Cygnus/issues/385)) ([55573f8](https://github.com/OneLiteFeatherNET/Cygnus/commit/55573f8a1de38c91076ed1f5ea9c67e54425d514))
+* **monitoring:** let sentry read its environment from SENTRY_ENVIRONMENT ([#421](https://github.com/OneLiteFeatherNET/Cygnus/issues/421)) ([92d40c0](https://github.com/OneLiteFeatherNET/Cygnus/commit/92d40c09596c8dc1c59900d8b8726d493d45d661))
+* **page:** keep revealed pages on the locator bar until a sprint ([#426](https://github.com/OneLiteFeatherNET/Cygnus/issues/426)) ([dea6d7e](https://github.com/OneLiteFeatherNET/Cygnus/commit/dea6d7eee3b85a2f9b63a5bccb8016bdd0115f01))
+* **page:** show nearby pages on a survivor's locator bar ([#418](https://github.com/OneLiteFeatherNET/Cygnus/issues/418)) ([b6ddbcd](https://github.com/OneLiteFeatherNET/Cygnus/commit/b6ddbcd5941916e75c799f3cfa5b58fdb410e9f9))
+* **pass:** let players earn and redeem slender passes in the lobby ([#435](https://github.com/OneLiteFeatherNET/Cygnus/issues/435)) ([4eaf9cb](https://github.com/OneLiteFeatherNET/Cygnus/commit/4eaf9cb96e601155f998a19fd8dfd0a2b3c367f4))
+* **setup:** manage several page pools per map ([#428](https://github.com/OneLiteFeatherNET/Cygnus/issues/428)) ([890eeb1](https://github.com/OneLiteFeatherNET/Cygnus/commit/890eeb1a28957176f86050fcb0757b509138aaf1))
+* **setup:** show page spots as groups with their share of the pool ([#427](https://github.com/OneLiteFeatherNET/Cygnus/issues/427)) ([5dc126e](https://github.com/OneLiteFeatherNET/Cygnus/commit/5dc126e3c5c198c69cd249d031b3f6c39daebdbb))
+* **slender:** play a hit sound when the slender hurts a survivor ([#423](https://github.com/OneLiteFeatherNET/Cygnus/issues/423)) ([82e2c0e](https://github.com/OneLiteFeatherNET/Cygnus/commit/82e2c0e9885498a18cf1241bf2e4ad5e1d8c4922))
+* **slender:** swing once a second with misses and rolled damage ([#419](https://github.com/OneLiteFeatherNET/Cygnus/issues/419)) ([c9e41d9](https://github.com/OneLiteFeatherNET/Cygnus/commit/c9e41d916508030e8a1ab20b255152551b85b51d))
+* **spectator:** let late joiners watch the running round ([#443](https://github.com/OneLiteFeatherNET/Cygnus/issues/443)) ([5fd4932](https://github.com/OneLiteFeatherNET/Cygnus/commit/5fd493242d36944fbd2002677a7e70ae3c1bb689))
+* **spectator:** show health, spectators and stats in the overview ([#413](https://github.com/OneLiteFeatherNET/Cygnus/issues/413)) ([7c20a3f](https://github.com/OneLiteFeatherNET/Cygnus/commit/7c20a3ffb643411943e462e9d4ebdd3e07fe5cae))
+* **spectator:** teleport to other spectators from the overview ([#424](https://github.com/OneLiteFeatherNET/Cygnus/issues/424)) ([e7a1f3c](https://github.com/OneLiteFeatherNET/Cygnus/commit/e7a1f3c285f0f61fa4206d5e88eb9059f30b8380))
+* **tutorial:** add a lobby tutorial for both roles ([#441](https://github.com/OneLiteFeatherNET/Cygnus/issues/441)) ([ca6b8cc](https://github.com/OneLiteFeatherNET/Cygnus/commit/ca6b8cc49767c3d20c12723ad5167b0dd82d95eb))
+
+
+### Bug Fixes
+
+* **deps:** update dependency io.sentry:sentry to v8.62.0 ([#440](https://github.com/OneLiteFeatherNET/Cygnus/issues/440)) ([d24be79](https://github.com/OneLiteFeatherNET/Cygnus/commit/d24be79a8f112a0c7b20ae708f67d827573c7f93))
+* **deps:** update dependency net.onelitefeather:pica to v0.1.6 ([#425](https://github.com/OneLiteFeatherNET/Cygnus/issues/425)) ([8a63e67](https://github.com/OneLiteFeatherNET/Cygnus/commit/8a63e672e90c43306b672a78e75a98ad67edad72))
+* **deps:** update dependency org.hibernate.orm:hibernate-core to v7.4.14.final ([#412](https://github.com/OneLiteFeatherNET/Cygnus/issues/412)) ([57c34cb](https://github.com/OneLiteFeatherNET/Cygnus/commit/57c34cba31d97f48fbd19a6449078d67013ee909))
+* **game:** announce survivor and slender leav ([#422](https://github.com/OneLiteFeatherNET/Cygnus/issues/422)) ([ddffde8](https://github.com/OneLiteFeatherNET/Cygnus/commit/ddffde8689db06b7ab9daf33bdc2820cfa8210fe))
+* **setup:** let the atmosphere preview register dimensions on a running server ([#429](https://github.com/OneLiteFeatherNET/Cygnus/issues/429)) ([b0ad220](https://github.com/OneLiteFeatherNET/Cygnus/commit/b0ad2203b88d7b54ab0f78087f9bab578dfb15f4))
+* **slender:** rate the swing at the time it lands ([#439](https://github.com/OneLiteFeatherNET/Cygnus/issues/439)) ([d8c8092](https://github.com/OneLiteFeatherNET/Cygnus/commit/d8c8092586a5980b2ab08ce74c1807c7374a55d0))
+
 ## [2.20.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.19.0...v2.20.0) (2026-10-23)
 
 
