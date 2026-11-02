@@ -52,7 +52,7 @@ dependencyResolutionManagement {
             // Lunar Client's Apollo protobuf messages. 0.2.7 is the newest release; it needs protobuf-java 3.25.0 or later.
             version("apollo-protos", "0.2.7")
             version("protobuf", "3.25.9")
-            version("guava", "33.7.2-jre")
+            version("guava", "33.8.0-jre")
             version("falco", "3.0.1")
             version("minestom-extensions", "2.2.0")
             version("sentry", "8.62.0")
