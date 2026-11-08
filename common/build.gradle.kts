@@ -1,9 +1,12 @@
 plugins {
     id("cygnus.java-conventions")
     `java-library`
+    id("net.onelitefeather.vulpes") version "0.4.1"
 }
 
 dependencies {
+    // Content of the Vulpes project "cygnus", the published snapshot of the data JAR.
+    vulpes("net.onelitefeather.vulpes.content:cygnus:0.1.0-SNAPSHOT")
     implementation(platform(libs.aonyx.bom))
     implementation(libs.slf4j.api)
     api(libs.adventure)
