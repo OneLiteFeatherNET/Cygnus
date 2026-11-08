@@ -9,6 +9,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.onelitefeather.cygnus.common.Tags;
+import net.onelitefeather.vulpes.content.cygnus.CygnusItems;
 import net.theevilreaper.aves.hotbar.HotBarLayout;
 
 import java.util.ArrayList;
@@ -79,74 +80,29 @@ public final class Items {
     /** The hotbar slot of the lobby's item that leads back to the network lobby, the last one. */
     public static final int LOBBY_SLOT = 8;
 
-    private static final ItemStack lobbyReturn = ItemStack.builder(Material.DARK_OAK_DOOR)
-            .customName(Component.text("Back to Lobby", NamedTextColor.RED).decoration(TextDecoration.ITALIC, false))
-            .lore(lore("Right click to leave this", "round and return to the lobby"))
-            .set(Tags.ITEM_TAG, LOBBY_ITEM)
-            .build();
+    private static final ItemStack lobbyReturn = CygnusItems.BACK_TO_LOBBY.itemStack().withTag(Tags.ITEM_TAG, LOBBY_ITEM);
 
-    private static final ItemStack slenderEye =ItemStack.builder(Material.ENDER_EYE)
-            .customName(Component.text("SlenderEye").color(TextColor.fromHexString("#ff00d4")))
-            .lore(lore("Right click to hide yourself", "or to show yourself again"))
-            .set(Tags.ITEM_TAG, SLENDER_ITEM)
-            .build();
+    private static final ItemStack slenderEye = CygnusItems.SLENDER_EYE.itemStack().withTag(Tags.ITEM_TAG, SLENDER_ITEM);
 
-    private static final ItemStack tracker = ItemStack.builder(TRACKING_MATERIAL)
-            .customName(Component.text("Tracker", NamedTextColor.DARK_RED))
-            .lore(lore("Right click to reveal where survivors", "walked around you a little while ago",
-                    "Only you can see the tracks"))
-            .set(Tags.ITEM_TAG, TRACKING_ITEM)
-            .build();
+    private static final ItemStack tracker = CygnusItems.TRACKER.itemStack().withTag(Tags.ITEM_TAG, TRACKING_ITEM);
 
-    private static final ItemStack possession = ItemStack.builder(POSSESSION_MATERIAL)
-            .customName(Component.text("Creek's Eyes", NamedTextColor.DARK_GREEN))
-            .lore(lore("Right click while hidden to look", "through the eyes of the creek",
-                    "Survivors close to it show on your locator bar", "Sneak to return to your body"))
-            .set(Tags.ITEM_TAG, POSSESSION_ITEM)
-            .build();
+    private static final ItemStack possession = CygnusItems.CREEKS_EYES.itemStack().withTag(Tags.ITEM_TAG, POSSESSION_ITEM);
 
-    private static final ItemStack painkillers = ItemStack.builder(Material.SUGAR)
-            .customName(Component.text("Painkillers", NamedTextColor.WHITE))
-            .lore(lore("Right click to win back some health", "Only once per round",
-                    "A hit takes from what they give back"))
-            .set(Tags.ITEM_TAG, HEAL_ITEM)
-            .build();
+    private static final ItemStack painkillers = CygnusItems.PAINKILLERS.itemStack().withTag(Tags.ITEM_TAG, HEAL_ITEM);
 
-    private static final ItemStack pageReveal = ItemStack.builder(PAGE_REVEAL_MATERIAL)
-            .customName(Component.text("Page Sense", NamedTextColor.LIGHT_PURPLE))
-            .lore(lore("Right click to show the pages", "around you on your locator bar",
-                    "They show only roughly where they are",
-                    "Sprinting hides them again"))
-            .set(Tags.ITEM_TAG, PAGE_REVEAL_ITEM)
-            .build();
+    private static final ItemStack pageReveal = CygnusItems.PAGE_SENSE.itemStack().withTag(Tags.ITEM_TAG, PAGE_REVEAL_ITEM);
 
-    private static final ItemStack statistics = ItemStack.builder(Material.BOOK)
-            .customName(Component.text("Statistics", NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false))
-            .lore(lore("Right click to open your", "statistics of this year"))
-            .set(Tags.ITEM_TAG, STATS_ITEM)
-            .build();
+    private static final ItemStack statistics = CygnusItems.STATISTICS.itemStack().withTag(Tags.ITEM_TAG, STATS_ITEM);
 
-    private static final ItemStack tutorial = ItemStack.builder(Material.ENCHANTED_BOOK)
-            .customName(Component.text("How to play", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false))
-            .lore(lore("Right click to learn how", "each role plays"))
-            .set(Tags.ITEM_TAG, TUTORIAL_ITEM)
-            .build();
+    private static final ItemStack tutorial = CygnusItems.HOW_TO_PLAY.itemStack().withTag(Tags.ITEM_TAG, TUTORIAL_ITEM);
 
     private static final HotBarLayout SPECTATOR_LAYOUT;
 
     static {
         SPECTATOR_LAYOUT = new HotBarLayout();
-        SPECTATOR_LAYOUT.set(2, ItemStack.builder(Material.COMPASS)
-                .customName(Component.text("Spectate"))
-                .set(Tags.ITEM_TAG, SPECTATE_ITEM)
-                .build()
-        );
+        SPECTATOR_LAYOUT.set(2, CygnusItems.SPECTATE.itemStack().withTag(Tags.ITEM_TAG, SPECTATE_ITEM));
 
-        SPECTATOR_LAYOUT.set(6, ItemStack.builder(Material.OAK_DOOR)
-                .customName(Component.text("Leave", NamedTextColor.RED))
-                .set(Tags.ITEM_TAG, LEAVE_ITEM)
-                .build()
-        );
+        SPECTATOR_LAYOUT.set(6, CygnusItems.LEAVE.itemStack().withTag(Tags.ITEM_TAG, LEAVE_ITEM));
     }
 
     /**

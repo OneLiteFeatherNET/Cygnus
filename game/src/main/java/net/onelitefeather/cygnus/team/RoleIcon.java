@@ -4,6 +4,9 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.vulpes.content.cygnus.CygnusFontSymbols;
+import net.onelitefeather.vulpes.content.cygnus.CygnusSpaceGlyphs;
+import net.onelitefeather.vulpes.font.CustomFontSymbol;
 
 /**
  * Maps each game role to the tab list icon the {@code cygnus:icons} resource pack font provides.
@@ -19,16 +22,16 @@ import net.onelitefeather.cygnus.common.config.GameConfig;
  */
 public enum RoleIcon {
 
-    SLENDER(GameConfig.SLENDER_KEY, 0xF0005),
-    SURVIVOR(GameConfig.SURVIVOR_KEY, 0xF000A),
-    SPECTATOR(GameConfig.SPECTATOR_KEY, 0xF0000);
+    SLENDER(GameConfig.SLENDER_KEY, CygnusFontSymbols.ICONS_ICONS_PENTAGRAM),
+    SURVIVOR(GameConfig.SURVIVOR_KEY, CygnusFontSymbols.ICONS_ICONS_FLASHLIGHT),
+    SPECTATOR(GameConfig.SPECTATOR_KEY, CygnusFontSymbols.ICONS_ICONS_GHOST);
 
     private final Key roleKey;
     private final Component glyph;
 
-    RoleIcon(Key roleKey, int codepoint) {
+    RoleIcon(Key roleKey, CustomFontSymbol symbol) {
         this.roleKey = roleKey;
-        this.glyph = Component.text(new String(Character.toChars(codepoint)), NamedTextColor.WHITE).font(iconFont());
+        this.glyph = Component.text(symbol.chars().getFirst(), NamedTextColor.WHITE).font(symbol.font());
     }
 
     /**
@@ -40,10 +43,6 @@ public enum RoleIcon {
      *
      * @return the font key
      */
-    private static Key iconFont() {
-        return Key.key("cygnus", "icons");
-    }
-
     /**
      * Returns the {@link GameConfig} role key this icon represents.
      *
@@ -77,7 +76,7 @@ public enum RoleIcon {
     public Component prefix(Component name) {
         return Component.text()
                 .append(glyph)
-                .appendSpace()
+                .append(Component.text(CygnusSpaceGlyphs.POSITIVE_2).font(CygnusSpaceGlyphs.FONT))
                 .append(name)
                 .build();
     }

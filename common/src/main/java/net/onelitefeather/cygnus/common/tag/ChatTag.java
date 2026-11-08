@@ -4,6 +4,8 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.ShadowColor;
+import net.onelitefeather.vulpes.content.cygnus.CygnusFontSymbols;
+import net.onelitefeather.vulpes.font.CustomFontSymbol;
 
 /**
  * Maps each chat message context to its badge icon in the {@code cygnus:tags} resource pack font.
@@ -20,14 +22,14 @@ import net.kyori.adventure.text.format.ShadowColor;
  */
 public enum ChatTag {
 
-    SLENDER(0xF0020),
-    MAP(0xF0021);
+    SLENDER(CygnusFontSymbols.TAGS_TAGS_SLENDER),
+    MAP(CygnusFontSymbols.TAGS_TAGS_MAP_INFO);
 
     private final Component glyph;
 
-    ChatTag(int codepoint) {
-        this.glyph = Component.text(new String(Character.toChars(codepoint)), NamedTextColor.WHITE)
-                .font(tagFont())
+    ChatTag(CustomFontSymbol symbol) {
+        this.glyph = Component.text(symbol.chars().getFirst(), NamedTextColor.WHITE)
+                .font(symbol.font())
                 .shadowColor(ShadowColor.none());
     }
 
@@ -40,10 +42,6 @@ public enum ChatTag {
      *
      * @return the font key
      */
-    private static Key tagFont() {
-        return Key.key("cygnus", "tags");
-    }
-
     /**
      * Returns the styled glyph component for this tag.
      *

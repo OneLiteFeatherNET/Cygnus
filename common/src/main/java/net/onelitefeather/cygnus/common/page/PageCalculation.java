@@ -2,6 +2,9 @@ package net.onelitefeather.cygnus.common.page;
 
 import net.minestom.server.MinecraftServer;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.vulpes.content.cygnus.CygnusFormulas;
+
+import java.math.BigDecimal;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.random.RandomGenerator;
@@ -16,13 +19,13 @@ import java.util.random.RandomGenerator;
 public final class PageCalculation {
 
     /** The pages of an Eight Pages round before its small offset, and the base the normal round builds on. */
-    private static final int EIGHT_PAGES = 8;
+    private static final CygnusFormulas FORMULAS = new CygnusFormulas();
 
-    /** The largest amount an Eight Pages round may add on top of its {@value #EIGHT_PAGES} pages. */
+
+    /** The largest amount an Eight Pages round may add on top of its 8 pages. */
     private static final int EIGHT_PAGES_OFFSET_MAX = 2;
 
     /** Pages each survivor above the Eight Pages boundary adds. */
-    private static final int PAGES_PER_EXTRA_SURVIVOR = 4;
 
     /**
      * The largest amount a normal round may add on top of its base amount, so the total can't be
@@ -52,8 +55,8 @@ public final class PageCalculation {
     /**
      * Calculates the number of pages a round needs.
      * <p>
-     * An Eight Pages round has {@value #EIGHT_PAGES} pages plus 0 to {@value #EIGHT_PAGES_OFFSET_MAX}.
-     * A normal round builds on them: {@value #PAGES_PER_EXTRA_SURVIVOR} more for every survivor
+     * An Eight Pages round has 8 pages plus 0 to {@value #EIGHT_PAGES_OFFSET_MAX}.
+     * A normal round builds on them: 4 more for every survivor
      * above {@link GameConfig#SMALL_ROUND_SURVIVORS}, plus 0 to {@value #PAGE_COUNT_JITTER_MAX}.
      * Anchored to the boundary, the step from one mode to the other never jumps.
      * </p>
@@ -73,11 +76,9 @@ public final class PageCalculation {
      * @return the number of pages
      */
     static int calculatePageAmount(int survivors, RandomGenerator random) {
-        if (survivors <= GameConfig.SMALL_ROUND_SURVIVORS) {
-            return EIGHT_PAGES + random.nextInt(EIGHT_PAGES_OFFSET_MAX + 1);
-        }
-        return EIGHT_PAGES + (survivors - GameConfig.SMALL_ROUND_SURVIVORS) * PAGES_PER_EXTRA_SURVIVOR
-                + random.nextInt(PAGE_COUNT_JITTER_MAX + 1);
+        int jitterMax = survivors <= GameConfig.SMALL_ROUND_SURVIVORS ? EIGHT_PAGES_OFFSET_MAX : PAGE_COUNT_JITTER_MAX;
+        int extra = random.nextInt(jitterMax + 1);
+        return FORMULAS.requiredPages(BigDecimal.valueOf(survivors), BigDecimal.valueOf(extra)).intValueExact();
     }
 
     /**

@@ -5,6 +5,8 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeInstance;
 import net.minestom.server.entity.attribute.AttributeModifier;
+import net.onelitefeather.vulpes.content.cygnus.CygnusAttributeKeys;
+import net.onelitefeather.vulpes.content.cygnus.CygnusAttributes;
 import net.minestom.server.entity.attribute.AttributeOperation;
 
 import java.util.Set;
@@ -19,25 +21,25 @@ import java.util.Set;
 @SuppressWarnings("java:S3252")
 public final class AttributeHelper {
 
-    public static final Key SLENDER_DRAINING_SPEED_KEY = Key.key("cygnus", "slender_draining");
-    public static final Key ADRENALINE_KEY = Key.key("cygnus", "adrenaline");
-    public static final Key SPEED_SCALING_KEY = Key.key("cygnus", "speed_scaling");
-    public static final Key HEALTH_SCALING_KEY = Key.key("cygnus", "health_scaling");
-    public static final Key GAME_SPEED_KEY = Key.key("cygnus", "game_speed");
-    public static final Key GAME_JUMP_STRENGTH_KEY = Key.key("cygnus", "game_jump_strength");
-    public static final Key GAME_STEP_HEIGHT_KEY = Key.key("cygnus", "game_step_height");
-    public static final Key FREEZE_KEY = Key.key("cygnus", "freeze");
+    public static final Key SLENDER_DRAINING_SPEED_KEY = CygnusAttributeKeys.SLENDER_DRAINING;
+    public static final Key ADRENALINE_KEY = CygnusAttributeKeys.ADRENALINE;
+    public static final Key SPEED_SCALING_KEY = CygnusAttributeKeys.SPEED_SCALING;
+    public static final Key HEALTH_SCALING_KEY = CygnusAttributeKeys.HEALTH_SCALING;
+    public static final Key GAME_SPEED_KEY = CygnusAttributeKeys.GAME_SPEED;
+    public static final Key GAME_JUMP_STRENGTH_KEY = CygnusAttributeKeys.GAME_JUMP_STRENGTH;
+    public static final Key GAME_STEP_HEIGHT_KEY = CygnusAttributeKeys.GAME_STEP_HEIGHT;
+    public static final Key FREEZE_KEY = CygnusAttributeKeys.FREEZE;
 
     private static final AttributeModifier SLENDER_DRAINING_SPEED_MODIFIER = new AttributeModifier(
                     SLENDER_DRAINING_SPEED_KEY,
-            -0.331,
+            CygnusAttributes.SLENDER_DRAINING.defaultValue(),
             AttributeOperation.ADD_MULTIPLIED_TOTAL
     );
 
     // Multiplies the final value by zero, so it holds regardless of the other modifiers on the attribute
     private static final AttributeModifier FREEZE_MODIFIER = new AttributeModifier(
             FREEZE_KEY,
-            -1.0,
+            CygnusAttributes.FREEZE.defaultValue(),
             AttributeOperation.ADD_MULTIPLIED_TOTAL
     );
 
@@ -45,10 +47,8 @@ public final class AttributeHelper {
     // temporary ones like sprinting or the slender draining
     private static final Set<Key> WALKING_SPEED_KEYS = Set.of(GAME_SPEED_KEY, SPEED_SCALING_KEY);
 
-    private static final double DEFAULT_JUMP_STRENGTH = 0.42;
     private static final double GAME_JUMP_STRENGTH = 0.0;
 
-    private static final double DEFAULT_STEP_HEIGHT = 0.6;
     private static final double GAME_STEP_HEIGHT = 1.0;
 
     private static final double DEFAULT_MOVE_SPEED = 0.1;
@@ -56,19 +56,19 @@ public final class AttributeHelper {
 
     private static final AttributeModifier GAME_JUMP_STRENGTH_MODIFIER = new AttributeModifier(
             GAME_JUMP_STRENGTH_KEY,
-            GAME_JUMP_STRENGTH - DEFAULT_JUMP_STRENGTH,
+            CygnusAttributes.GAME_JUMP_STRENGTH.defaultValue(),
             AttributeOperation.ADD_VALUE
     );
 
     private static final AttributeModifier GAME_STEP_HEIGHT_MODIFIER = new AttributeModifier(
             GAME_STEP_HEIGHT_KEY,
-            GAME_STEP_HEIGHT - DEFAULT_STEP_HEIGHT,
+            CygnusAttributes.GAME_STEP_HEIGHT.defaultValue(),
             AttributeOperation.ADD_VALUE
     );
 
     private static final AttributeModifier GAME_SPEED_MODIFIER = new AttributeModifier(
             GAME_SPEED_KEY,
-            GAME_MOVE_SPEED - DEFAULT_MOVE_SPEED,
+            CygnusAttributes.GAME_SPEED.defaultValue(),
             AttributeOperation.ADD_VALUE
     );
 

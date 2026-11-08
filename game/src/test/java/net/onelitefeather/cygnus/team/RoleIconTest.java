@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.onelitefeather.cygnus.common.config.GameConfig;
+import net.onelitefeather.vulpes.content.cygnus.CygnusSpaceGlyphs;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,11 +39,12 @@ class RoleIconTest {
         assertNull(prefixed.style().font(), "the icon font must not leak onto the space and name, or the client shows missing-glyph boxes for them");
         assertEquals(3, prefixed.children().size());
         assertEquals(RoleIcon.SURVIVOR.glyph(), prefixed.children().get(0));
-        assertEquals(Component.space(), prefixed.children().get(1));
+        assertEquals(Component.text(CygnusSpaceGlyphs.POSITIVE_2).font(CygnusSpaceGlyphs.FONT), prefixed.children().get(1),
+                "the gap between icon and name is a 2 px glyph of the space font");
         assertEquals(name, prefixed.children().get(2));
 
         String plainText = PlainTextComponentSerializer.plainText().serialize(prefixed);
-        assertTrue(plainText.endsWith(" theEvilReaper"));
+        assertTrue(plainText.endsWith(CygnusSpaceGlyphs.POSITIVE_2 + "theEvilReaper"));
     }
 
     private void assertGlyph(RoleIcon icon, Key expectedRoleKey, int expectedCodepoint) {
