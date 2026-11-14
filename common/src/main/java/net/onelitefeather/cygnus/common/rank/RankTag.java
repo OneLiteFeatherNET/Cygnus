@@ -1,9 +1,10 @@
 package net.onelitefeather.cygnus.common.rank;
 
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.ShadowColor;
+import net.onelitefeather.vulpes.content.cygnus.CygnusFontSymbols;
+import net.onelitefeather.vulpes.font.CustomFontSymbol;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
@@ -24,33 +25,20 @@ import java.util.Optional;
  */
 public enum RankTag {
 
-    ADMINISTRATOR(0xF0190),
-    ASSISTENT(0xF219B),
-    MOD(0xF119B),
-    CONTENT(0xF2190),
-    MEDIA(0xF2195),
-    LITE(0xF2191),
-    PLAYER(0xF1196);
+    ADMINISTRATOR(CygnusFontSymbols.OLF_RANK_TAGS_PLAYER_RANK_TAGS_ADMINISTRATOR),
+    ASSISTENT(CygnusFontSymbols.OLF_RANK_TAGS_PLAYER_RANK_TAGS_ASSISTENT),
+    MOD(CygnusFontSymbols.OLF_RANK_TAGS_PLAYER_RANK_TAGS_MOD),
+    CONTENT(CygnusFontSymbols.OLF_RANK_TAGS_PLAYER_RANK_TAGS_CONTENT),
+    MEDIA(CygnusFontSymbols.OLF_RANK_TAGS_PLAYER_RANK_TAGS_MEDIA),
+    LITE(CygnusFontSymbols.OLF_RANK_TAGS_PLAYER_RANK_TAGS_LITE),
+    PLAYER(CygnusFontSymbols.OLF_RANK_TAGS_PLAYER_RANK_TAGS_PLAYER);
 
     private final Component glyph;
 
-    RankTag(int codepoint) {
-        this.glyph = Component.text(new String(Character.toChars(codepoint)), NamedTextColor.WHITE)
-                .font(rankFont())
+    RankTag(CustomFontSymbol symbol) {
+        this.glyph = Component.text(symbol.chars().getFirst(), NamedTextColor.WHITE)
+                .font(symbol.font())
                 .shadowColor(ShadowColor.none());
-    }
-
-    /**
-     * Returns the {@code olf:rank_tags} resource pack font every {@link #glyph()} is drawn from.
-     * <p>
-     * A method rather than a static field: enum constants are initialized before the class's other
-     * static fields, so a static field here would not yet be set while the constants above are built.
-     * </p>
-     *
-     * @return the font key
-     */
-    private static Key rankFont() {
-        return Key.key("olf", "rank_tags");
     }
 
     /**

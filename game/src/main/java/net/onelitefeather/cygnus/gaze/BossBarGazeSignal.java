@@ -7,6 +7,7 @@ import net.kyori.adventure.text.format.ShadowColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.minestom.server.entity.Player;
 import net.onelitefeather.cygnus.utils.PlayerState;
+import net.onelitefeather.vulpes.content.cygnus.CygnusFontSymbols;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -59,7 +60,7 @@ public final class BossBarGazeSignal implements GazeSink {
     static final BossBar.Color CARRIER_COLOR = BossBar.Color.PURPLE;
 
     /** The font the signal glyph is taken from; shipped by the resource pack. */
-    static final Key SIGNAL_FONT = Key.key("cygnus", "glitch");
+    static final Key SIGNAL_FONT = CygnusFontSymbols.GLITCH_GLITCH_MARKER.font();
 
     /** The private-use glyph carrying the signal. */
     static final String SIGNAL_GLYPH = "";

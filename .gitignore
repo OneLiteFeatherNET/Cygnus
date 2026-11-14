@@ -50,3 +50,6 @@ chunk-loader-report.csv
 .claude/
 .serena/
 .mcp.json
+
+# Local Vulpes content downloads (per-developer override files, never committed)
+/common/vulpes/

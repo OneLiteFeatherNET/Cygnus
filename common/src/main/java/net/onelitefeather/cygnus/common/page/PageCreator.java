@@ -1,11 +1,11 @@
 package net.onelitefeather.cygnus.common.page;
 
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import net.minestom.server.component.DataComponents;
 import net.minestom.server.item.ItemStack;
-import net.minestom.server.item.Material;
+import net.onelitefeather.vulpes.content.cygnus.CygnusItems;
+import net.onelitefeather.vulpes.item.CustomItem;
 
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -27,6 +27,12 @@ public interface PageCreator {
     int MAX_CUSTOM_PAGE_ID = 6;
 
     /**
+     * The page models, generated from the Vulpes content project.
+     */
+    List<CustomItem> PAGE_ITEMS = List.of(CygnusItems.PAGE_1, CygnusItems.PAGE_2, CygnusItems.PAGE_3,
+            CygnusItems.PAGE_4, CygnusItems.PAGE_5, CygnusItems.PAGE_6);
+
+    /**
      * Creates a page item with the given page number.
      * <p>
      * One of the available page models is chosen randomly.
@@ -36,13 +42,7 @@ public interface PageCreator {
      * @return the created page item
      */
     default ItemStack createPageItem(int pageCount) {
-        ItemStack.Builder builder = ItemStack.builder(Material.PAPER)
-                .customName(Component.text("Page: " + pageCount));
-
-        int randomPage = ThreadLocalRandom.current().nextInt(1, MAX_CUSTOM_PAGE_ID + 1);
-
-        return builder
-                .set(DataComponents.ITEM_MODEL, Key.key("cygnus", "page_" + randomPage).asString())
-                .build();
+        CustomItem page = PAGE_ITEMS.get(ThreadLocalRandom.current().nextInt(PAGE_ITEMS.size()));
+        return page.itemStack().withCustomName(Component.text("Page: " + pageCount));
     }
 }
