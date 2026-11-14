@@ -65,7 +65,7 @@ dependencyResolutionManagement {
             // markers top out at API 1.50, hence 1.51.0 as the most conservative release at or
             // above that ceiling. Raise it together with the agent, never ahead of it. Without the
             // agent every call lands on the no-op implementation.
-            version("opentelemetry", "1.67.0")
+            version("opentelemetry", "1.68.0")
             // Yearly player statistics (the :stats module). Hibernate runs on a Hikari pool, Flyway owns
             // the schema, PostgreSQL is the production database and H2 (PostgreSQL mode) backs the tests.
             version("hibernate", "7.4.15.Final")
