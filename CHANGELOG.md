@@ -5,6 +5,25 @@
 
 * **setup:** add support for data deletion ([#105](https://github.com/OneLiteFeatherNET/Cygnus/issues/105)) ([92670e5](https://github.com/OneLiteFeatherNET/Cygnus/commit/92670e5258e906c5c36e515185bebd678be9ba3a))
 
+## [2.21.1](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.21.0...v2.21.1) (2026-11-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.google.guava:guava to v33.8.0 ([#450](https://github.com/OneLiteFeatherNET/Cygnus/issues/450)) ([b1b4c33](https://github.com/OneLiteFeatherNET/Cygnus/commit/b1b4c3390138ffad8bfbd5dc122d31ea78232d16))
+* **deps:** update dependency com.lunarclient:apollo-protos to v0.2.8 ([#449](https://github.com/OneLiteFeatherNET/Cygnus/issues/449)) ([fa963df](https://github.com/OneLiteFeatherNET/Cygnus/commit/fa963dfc95e92729c100569ffd49460cb82739c4))
+* **deps:** update dependency com.lunarclient:apollo-protos to v0.2.9 ([#466](https://github.com/OneLiteFeatherNET/Cygnus/issues/466)) ([6398a5a](https://github.com/OneLiteFeatherNET/Cygnus/commit/6398a5a7c02735934b6f8ddca2c9601a68825013))
+* **deps:** update dependency io.sentry:sentry to v8.63.0 ([#452](https://github.com/OneLiteFeatherNET/Cygnus/issues/452)) ([aef7c8e](https://github.com/OneLiteFeatherNET/Cygnus/commit/aef7c8e3f08722c06fdd31304f716ea0639ec599))
+* **deps:** update dependency io.sentry:sentry to v8.64.0 ([#458](https://github.com/OneLiteFeatherNET/Cygnus/issues/458)) ([aa3361a](https://github.com/OneLiteFeatherNET/Cygnus/commit/aa3361a57c096b22db5d7b2066e3f9af1f208772))
+* **deps:** update dependency io.sentry:sentry to v8.65.0 ([#465](https://github.com/OneLiteFeatherNET/Cygnus/issues/465)) ([2cef059](https://github.com/OneLiteFeatherNET/Cygnus/commit/2cef05906109e2e36216102c653a4935fbac35bb))
+* **deps:** update dependency org.hibernate.orm:hibernate-core to v7.4.15.final ([#454](https://github.com/OneLiteFeatherNET/Cygnus/issues/454)) ([00d85e0](https://github.com/OneLiteFeatherNET/Cygnus/commit/00d85e0c3dd0b6ec63b9bdb27681525955b6ceaa))
+* **deps:** update dependency org.hibernate.orm:hibernate-core to v7.4.16.final ([#463](https://github.com/OneLiteFeatherNET/Cygnus/issues/463)) ([a75d20e](https://github.com/OneLiteFeatherNET/Cygnus/commit/a75d20ece3da22dbf100b34c58544b6fae232a33))
+* **deps:** update dependency org.hibernate.orm:hibernate-core to v7.4.17.final ([#467](https://github.com/OneLiteFeatherNET/Cygnus/issues/467)) ([cf8bf0a](https://github.com/OneLiteFeatherNET/Cygnus/commit/cf8bf0a3e3e456a04fe1927a66b6a1eb47b60025))
+* **deps:** update flyway to v13.12.0 ([#447](https://github.com/OneLiteFeatherNET/Cygnus/issues/447)) ([12d3428](https://github.com/OneLiteFeatherNET/Cygnus/commit/12d3428b7dc4886977d4d11a5e26e08a35bd6508))
+* **deps:** update flyway to v13.12.1 ([#451](https://github.com/OneLiteFeatherNET/Cygnus/issues/451)) ([b062101](https://github.com/OneLiteFeatherNET/Cygnus/commit/b06210176dbe4afefbd2710753db59631f6a8332))
+* **deps:** update flyway to v13.12.2 ([#459](https://github.com/OneLiteFeatherNET/Cygnus/issues/459)) ([0e5f807](https://github.com/OneLiteFeatherNET/Cygnus/commit/0e5f8076c058ee46dad423d9562e001590c6b163))
+* **deps:** update flyway to v13.13.0 ([#468](https://github.com/OneLiteFeatherNET/Cygnus/issues/468)) ([e84faa5](https://github.com/OneLiteFeatherNET/Cygnus/commit/e84faa5fe6ef9f2da8d25b69ea8fc81a8c51e290))
+
 ## [2.21.0](https://github.com/OneLiteFeatherNET/Cygnus/compare/v2.20.0...v2.21.0) (2026-10-29)
 
 
