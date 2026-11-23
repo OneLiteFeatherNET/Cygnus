@@ -71,7 +71,7 @@ dependencyResolutionManagement {
             version("hibernate", "7.4.17.Final")
             version("hikari", "7.1.0")
             version("flyway", "13.13.0")
-            version("postgresql", "42.7.14")
+            version("postgresql", "42.7.15")
             version("h2", "2.5.252")
 
             library("aonyx.bom", "net.onelitefeather", "aonyx-bom").versionRef("aonyx")
