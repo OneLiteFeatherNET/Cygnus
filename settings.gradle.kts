@@ -53,7 +53,7 @@ dependencyResolutionManagement {
             version("apollo-protos", "0.2.9")
             version("protobuf", "3.25.9")
             version("guava", "33.8.0-jre")
-            version("falco", "3.0.1")
+            version("falco", "3.0.2")
             version("minestom-extensions", "2.2.0")
             version("sentry", "8.65.1")
             // The API is the only OpenTelemetry artifact Cygnus ships. Production attaches the
